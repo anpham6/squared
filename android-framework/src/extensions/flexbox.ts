@@ -239,7 +239,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         }
         else {
             const autoMargin = node.autoMargin;
-            if (autoMargin.horizontal || autoMargin.vertical && node.hasHeight) {
+            if (autoMargin.horizontal || autoMargin.vertical && parent.hasHeight) {
                 const mainData: FlexboxData<T> = parent.data(FLEXBOX, 'mainData');
                 if (mainData) {
                     const children = mainData.children;
@@ -620,8 +620,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     }
                                                 }
                                                 else {
-                                                    chain.lockAttr('android', 'layout_' + HWL);
                                                     setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
+                                                    chain.lockAttr('android', 'layout_' + HWL);
                                                 }
                                             }
                                             break;

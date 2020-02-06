@@ -2,6 +2,8 @@ import { SvgPoint } from '../../@types/svg/object';
 
 import SvgBuild from './svgbuild';
 
+type SvgElement = squared.svg.SvgElement;
+
 const { getNamedItem } = squared.lib.dom;
 
 function adjustPoints(values: SvgPoint[], x: number, y: number, scaleX: number, scaleY: number) {
@@ -15,7 +17,7 @@ function adjustPoints(values: SvgPoint[], x: number, y: number, scaleX: number, 
     }
 }
 
-export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
+export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgBaseVal {
         private _baseVal: ObjectMap<any> = {};
 

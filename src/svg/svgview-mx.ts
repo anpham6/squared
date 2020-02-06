@@ -6,8 +6,10 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { KEYSPLINE_NAME } from './lib/constant';
+import { KEYSPLINE_NAME, STRING_CUBICBEZIER } from './lib/constant';
 import { TRANSFORM, getAttribute } from './lib/util';
+
+type SvgElement = squared.svg.SvgElement;
 
 const $lib = squared.lib;
 
@@ -15,8 +17,6 @@ const { calculateVar, isCustomProperty, getFontSize, getKeyframeRules, parseAngl
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;
 const { isString, replaceMap, sortNumber } = $lib.util;
-
-const { STRING_CUBICBEZIER } = squared.svg.lib.constant;
 
 type AttributeMap = ObjectMap<AttributeData[]>;
 
@@ -84,7 +84,7 @@ function getKeyframeOrigin(attrMap: AttributeMap, element: SVGGraphicsElement, o
     return undefined;
 }
 
-export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
+export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
         public transformed?: SvgTransform[];
         public translationOffset?: Point;
@@ -413,9 +413,9 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                 const lengthA = animation.length;
                                 for (let j = 0; j < lengthA; j++) {
                                     const item = animation[j];
-                                    const key = item.key;
+                                    const { key, value } = item;
                                     keyTimes.push(key);
-                                    values.push(item.value);
+                                    values.push(value);
                                     if (includeKeySplines && j < lengthA - 1) {
                                         const spline = keyframeMap['animation-timing-function']?.find(timing => timing.key === key);
                                         keySplines.push(spline?.value || timingFunction);

@@ -1350,7 +1350,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 value = this.actualPadding(attr, value);
                                 break;
                             case 'paddingBottom':
-                                if ((this.layoutVertical || this.layoutFrame) && !this.layoutElement && this.hasPX('height', false, true) ||  this.documentParent.gridElement && this.hasPX('height', false)) {
+                                if (this.hasPX('height', false, true) && (this.layoutVertical || this.layoutFrame) && !this.layoutElement ||  this.documentParent.gridElement && this.hasPX('height', false)) {
                                     continue;
                                 }
                                 else if (this.floatContainer) {
@@ -1535,7 +1535,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                if (this.naturalElement) {
+                if (this.naturalElement && !this.svgElement) {
                     const opacity = this.css('opacity');
                     if (opacity !== '1') {
                         this.android('alpha', opacity);

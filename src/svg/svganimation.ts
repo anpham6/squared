@@ -5,6 +5,10 @@ import SvgBuild from './svgbuild';
 import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
 import { getAttribute } from './lib/util';
 
+type SvgContainer = squared.svg.SvgContainer;
+type SvgView = squared.svg.SvgView;
+type SvgPath = squared.svg.SvgPath;
+
 const $lib = squared.lib;
 
 const { getFontSize, isLength, parseUnit } = $lib.css;
@@ -63,10 +67,10 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     public element: Null<SVGGraphicsElement> = null;
-    public paused = false;
+    public baseValue = '';
     public fillMode = 0;
     public synchronizeState = 0;
-    public baseValue?: string;
+    public paused = false;
     public replaceValue?: string;
     public id?: number;
     public companion?: NumberValue<SvgAnimation>;
@@ -76,11 +80,23 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     private _duration = -1;
     private _delay = 0;
     private _to = '';
-    private _parent?: squared.svg.SvgView | squared.svg.SvgPath;
+    private _dataset: ObjectMapNested<any> = {};
+    private _parent?: SvgView | SvgPath;
     private _group?: SvgAnimationGroup;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement) {
         if (element) {
+            const dataset = element.dataset;
+            for (const name in dataset) {
+                const value = dataset[name];
+                if (isString(value)) {
+                    try {
+                        this._dataset[name] = JSON.parse(value);
+                    }
+                    catch {
+                    }
+                }
+            }
             this.element = element;
         }
         if (animationElement) {
@@ -138,41 +154,48 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 this.fillMode |= value;
             }
         }
-        else {
-            if (valid) {
-                this.fillMode ^= value;
-            }
+        else if (valid) {
+            this.fillMode ^= value;
         }
     }
 
     set attributeName(value) {
         if (value !== 'transform' && !isString(this.baseValue)) {
-            let baseValue: Undef<string>;
-            const element = this.element;
-            if (element) {
-                switch (value) {
-                    case 'opacity':
-                    case 'stroke-opacity':
-                    case 'fill-opacity':
-                        baseValue = getAttribute(element, value, false) || '1';
-                        break;
-                    default:
-                        baseValue = getAttribute(element, value);
-                        break;
-                }
+            let baseValue: Undef<string> = this._dataset.baseValue?.[value]?.toString().trim();
+            if (baseValue) {
+                this.baseValue = baseValue;
             }
-            if (!isString(baseValue)) {
-                const animationElement = this.animationElement;
-                if (animationElement) {
-                    const parentElement = animationElement.parentElement;
-                    baseValue = optionalAsString(parentElement, value + '.baseVal.valueAsString');
-                    if (isLength(baseValue)) {
-                        baseValue = parseUnit(baseValue, getFontSize(parentElement)).toString();
+            else {
+                const element = this.element;
+                if (element) {
+                    switch (value) {
+                        case 'width':
+                        case 'height':
+                            baseValue = getAttribute(element, value, false);
+                            break;
+                        case 'opacity':
+                        case 'stroke-opacity':
+                        case 'fill-opacity':
+                            baseValue = getAttribute(element, value, false) || '1';
+                            break;
+                        default:
+                            baseValue = getAttribute(element, value);
+                            break;
                     }
                 }
-            }
-            if (baseValue !== undefined) {
-                this.baseValue = baseValue;
+                if (!isString(baseValue)) {
+                    const animationElement = this.animationElement;
+                    if (animationElement) {
+                        const parentElement = animationElement.parentElement;
+                        baseValue = optionalAsString(parentElement, value + '.baseVal.valueAsString');
+                        if (isLength(baseValue)) {
+                            this.baseValue = parseUnit(baseValue, getFontSize(parentElement)).toString();
+                        }
+                    }
+                }
+                else {
+                    this.baseValue = baseValue;
+                }
             }
         }
         this._attributeName = value;
@@ -229,7 +252,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get parentContainer() {
-        let result = <Undef<squared.svg.SvgContainer>> this._parent;
+        let result = <Undef<SvgContainer>> this._parent;
         while (result && !SvgBuild.isContainer(result)) {
             result = result.parent;
         }
@@ -253,6 +276,10 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     set setterType(value) {}
     get setterType() {
         return true;
+    }
+
+    get dataset() {
+        return this._dataset;
     }
 
     get instanceType() {

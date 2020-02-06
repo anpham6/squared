@@ -1139,6 +1139,7 @@ declare namespace svg {
         attributeName: string;
         delay: number;
         to: string;
+        baseValue: string;
         fillMode: number;
         fillBackwards: boolean;
         fillForwards: boolean;
@@ -1149,7 +1150,6 @@ declare namespace svg {
         group: SvgAnimationGroup;
         setterType: boolean;
         parent?: SvgView | SvgPath;
-        baseValue?: string;
         replaceValue?: string;
         id?: number;
         companion?: NumberValue<SvgAnimation>;
@@ -1157,6 +1157,7 @@ declare namespace svg {
         readonly animationElement: Null<SVGAnimationElement>;
         readonly instanceType: number;
         readonly fillReplace: boolean;
+        readonly dataset: ObjectMapNested<any>;
         readonly parentContainer?: SvgContainer;
         setAttribute(attr: string, equality?: string): void;
         addState(...values: number[]): void;
@@ -1170,13 +1171,13 @@ declare namespace svg {
         values: string[];
         keyTimes: number[];
         iterationCount: number;
+        timingFunction: string;
         reverse: boolean;
         alternate: boolean;
         additiveSum: boolean;
         accumulateSum: boolean;
         length: number;
         keySplines?: string[];
-        timingFunction?: string;
         by?: number;
         end?: number;
         synchronized?: NumberValue;

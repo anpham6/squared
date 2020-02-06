@@ -3,7 +3,7 @@ import { SvgAnimationAttribute } from '../../@types/svg/object';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
+import { INSTANCE_TYPE, KEYSPLINE_NAME, STRING_CUBICBEZIER } from './lib/constant';
 
 const $lib = squared.lib;
 
@@ -12,8 +12,6 @@ const { getFontSize, isLength, parseUnit } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { CHAR, XML } = $lib.regex;
 const { flatMap, isNumber, replaceMap, sortNumber, trimEnd } = $lib.util;
-
-const { STRING_CUBICBEZIER } = squared.svg.lib.constant;
 
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
@@ -173,7 +171,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     private _alternate = false;
     private _setterType = false;
     private _repeatDuration = -1;
-    private _timingFunction?: string;
+    private _timingFunction = '';
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement) {
         super(element, animationElement);
@@ -393,13 +391,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         this._iterationCount = isNaN(value) ? 1 : value;
         const animationElement = this.animationElement;
         if (animationElement) {
-            this.fillFreeze = this.iterationCount !== -1 && getNamedItem(animationElement, 'fill') === 'freeze';
-        }
-        if (this.iterationCount !== 1) {
-            this.setAttribute('accumulate', 'sum');
-        }
-        else {
-            this.accumulateSum = false;
+            if (this.iterationCount !== 1) {
+                this.setAttribute('accumulate', 'sum');
+                this.fillFreeze = getNamedItem(animationElement, 'fill') === 'freeze';
+            }
+            else {
+                this.accumulateSum = false;
+                this.fillFreeze = false;
+            }
         }
     }
     get iterationCount() {
@@ -490,7 +489,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         this._timingFunction = value ? SvgAnimate.convertTimingFunction(value) : value;
     }
     get timingFunction() {
-        return this._timingFunction || this.keySplines?.[0];
+        return this._timingFunction || this.keySplines?.[0] || '';
     }
 
     set reverse(value) {
@@ -508,12 +507,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 const keySplines: string[] = [];
                 for (let i = keySplinesBase.length - 1; i >= 0; i--) {
                     const points = replaceMap<string, number>(keySplinesBase[i].split(' '), pt => parseFloat(pt));
-                    if (points.length === 4) {
-                        keySplines.push(invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1]));
-                    }
-                    else {
-                        keySplines.push(KEYSPLINE_NAME.linear);
-                    }
+                    keySplines.push(points.length === 4 ? invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1]) : KEYSPLINE_NAME.linear);
                 }
                 this._keySplines = keySplines;
             }

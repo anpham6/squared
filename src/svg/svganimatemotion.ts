@@ -23,8 +23,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     public readonly type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
 
     private _offsetLength = 0;
+    private _keyPoints: number[] = [];
     private _offsetPath?: SvgOffsetPath[];
-    private _keyPoints?: number[];
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateMotionElement) {
         super(element, animationElement);
@@ -63,7 +63,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             this.setCalcMode();
         }
         else if (element) {
-            const path = /path\("([^"]+)"\)/.exec(getAttribute(element, 'offset-path'));
+            const path = /path\("([^"]+)"\)/.exec(getAttribute(element, 'offset-path', false));
             if (path) {
                 this.path = path[1];
             }
@@ -191,11 +191,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                 if (isPointEqual(key, value, rotate)) {
                                     continue;
                                 }
-                                previous = {
-                                    key,
-                                    value,
-                                    rotate
-                                };
+                                previous = { key, value, rotate };
                                 result.push(previous);
                             }
                             else {
@@ -210,11 +206,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                     for ( ; j < offsetDuration; j += increment) {
                                         const key = baseTime + j;
                                         if (key >= nextFrame) {
-                                            result.push({
-                                                key,
-                                                value,
-                                                rotate
-                                            });
+                                            result.push({ key, value, rotate });
                                             if (j < offsetDuration - 1) {
                                                 nextFrame += fps;
                                             }
@@ -352,7 +344,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         let keyTimes: Undef<number[]>;
         let keyPoints: Undef<number[]>;
         if (this.validKeyPoints()) {
-            keyPoints = (this._keyPoints as number[]).slice(0);
+            keyPoints = this._keyPoints.slice(0);
             keyPoints.reverse();
             keyTimes = [];
             for (const keyTime of super.keyTimes) {
@@ -411,19 +403,11 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     get rotateValues() {
         this.setOffsetPath();
         const path = this._offsetPath;
-        if (path) {
-            return objectMap<SvgOffsetPath, number>(path, item => item.rotate);
-        }
-        return undefined;
+        return path ? objectMap<SvgOffsetPath, number>(path, item => item.rotate) : undefined;
     }
 
     get keyPoints() {
-        let result = this._keyPoints;
-        if (result === undefined) {
-            result = [];
-            this._keyPoints = result;
-        }
-        return result;
+        return this._keyPoints;
     }
 
     set reverse(value) {

@@ -37,6 +37,24 @@ function setOriginPosition(element: Element, point: Point, attr: string, positio
     }
 }
 
+function getDataSetValue(element: SVGElement, attr: string) {
+    const data = element.dataset.baseValue;
+    if (data) {
+        try {
+            const obj: ObjectMap<any> = JSON.parse(data);
+            if (obj) {
+                return obj[attr]?.toString().trim() || '';
+            }
+        }
+        catch {
+
+        }
+    }
+    return '';
+}
+
+const getStyleValue = (element: SVGElement, attr: string) => getElementCache(element, 'styleMap')?.[convertCamelCase(attr)] || '';
+
 export const SVG = {
     svg: (element: Element): element is SVGSVGElement => {
         return element.tagName === 'svg';
@@ -394,10 +412,10 @@ export function getDOMRect(element: SVGElement) {
 export function getAttribute(element: SVGElement, attr: string, computed = true) {
     let value: string;
     if (computed) {
-        value = getElementCache(element, 'styleMap')?.[convertCamelCase(attr)] || getNamedItem(element, attr);
+        value = getStyleValue(element, attr) || getNamedItem(element, attr) || getDataSetValue(element, attr);
     }
     else {
-        value = getNamedItem(element, attr) || getElementCache(element, 'styleMap')?.[convertCamelCase(attr)];
+        value = getDataSetValue(element, attr) || getStyleValue(element, attr) || getNamedItem(element, attr);
     }
     if (!isString(value) && (computed || Array.from(element.style).includes(attr))) {
         value = getStyle(element).getPropertyValue(attr);

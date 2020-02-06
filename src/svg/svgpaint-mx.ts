@@ -9,6 +9,7 @@ const { calculateVar, getFontSize, isCustomProperty, isLength, isPercent, parseU
 const { CSS, STRING, XML } = $lib.regex;
 const { convertCamelCase, convertFloat, isNumber, isString, joinMap, objectMap, replaceMap } = $lib.util;
 
+type SvgElement = squared.svg.SvgElement;
 type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
@@ -22,7 +23,7 @@ const REGEX_CACHE: ObjectMap<RegExp> = {
     ellipse: new RegExp(`ellipse\\(${PERCENTAGE} ${PERCENTAGE}(?: at ${PERCENTAGE} ${PERCENTAGE})?\\)`)
 };
 
-export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
+export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgPaint {
         public fill!: string;
         public fillPattern!: string;

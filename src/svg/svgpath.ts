@@ -963,7 +963,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     item.values = values;
                                     item.keyTimes = keyTimes;
                                     const timingFunction = item.timingFunction;
-                                    if (timingFunction) {
+                                    if (timingFunction !== '') {
                                         item.keySplines = undefined;
                                         item.timingFunction = timingFunction;
                                     }
