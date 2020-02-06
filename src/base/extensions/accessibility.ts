@@ -1,4 +1,5 @@
 import ExtensionUI from '../extension-ui';
-import NodeUI from '../node-ui';
+
+type NodeUI = squared.base.NodeUI;
 
 export default abstract class Accessibility<T extends NodeUI> extends ExtensionUI<T> {}

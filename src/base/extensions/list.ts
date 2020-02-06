@@ -2,10 +2,11 @@ import { VisibleStyle } from '../../../@types/base/node';
 import { ListData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
-import NodeUI from '../node-ui';
 
 import { EXT_NAME } from '../lib/constant';
 import { NODE_RESOURCE } from '../lib/enumeration';
+
+type NodeUI = squared.base.NodeUI;
 
 const { convertListStyle } = squared.lib.css;
 

@@ -13,11 +13,26 @@ const { getNamedItem } = $lib.dom;
 const { CHAR, XML } = $lib.regex;
 const { flatMap, isNumber, replaceMap, sortNumber, trimEnd } = $lib.util;
 
+const { STRING_CUBICBEZIER } = squared.svg.lib.constant;
+
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
     public static getSplitValue(value: number, next: number, percent: number) {
         return value + (next - value) * percent;
+    }
+
+    public static convertTimingFunction(value: string) {
+        if (KEYSPLINE_NAME[value]) {
+            return KEYSPLINE_NAME[value];
+        }
+        else if (/^step/.test(value)) {
+            return KEYSPLINE_NAME.linear;
+        }
+        else {
+            const match = new RegExp(STRING_CUBICBEZIER).exec(value);
+            return match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : KEYSPLINE_NAME.ease;
+        }
     }
 
     public static convertStepTimingFunction(attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number, fontSize?: number): Undef<[number[], string[]]> {
@@ -142,10 +157,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public type = 0;
-    public from = '';
     public additiveSum = false;
     public accumulateSum = false;
-    public evaluateStart = false;
     public by?: number;
     public end?: number;
     public synchronized?: NumberValue;
@@ -155,6 +168,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     protected _keySplines?: string[];
 
     private _iterationCount = 1;
+    private _from = '';
     private _reverse = false;
     private _alternate = false;
     private _setterType = false;
@@ -182,28 +196,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
             else {
                 this.from = getNamedItem(animationElement, 'from');
-                if (this.to === '') {
-                    const by = getNamedItem(animationElement, 'by');
-                    const byCoords = SvgBuild.parseCoordinates(by);
-                    if (byCoords.length) {
-                        if (this.from === '') {
-                            this.from = this.baseValue || '';
-                            this.evaluateStart = true;
-                        }
-                        const fromCoords = SvgBuild.parseCoordinates(this.from);
-                        const length = fromCoords.length;
-                        if (byCoords.length === length) {
-                            const to: number[] = [];
-                            for (let i = 0; i < length; i++) {
-                                to.push(fromCoords[i] + byCoords[i]);
-                            }
-                            this.to = to.join(',');
-                        }
-                    }
-                }
-                if (SvgBuild.parseCoordinates(this.to).length) {
-                    this.setAttribute('additive', 'sum');
-                }
                 this.convertToValues(keyTimes);
             }
             const repeatDur = getNamedItem(animationElement, 'repeatDur');
@@ -218,6 +210,41 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
+    get from() {
+        return this._from;
+    }
+    set from(value) {
+        if (this._values === undefined) {
+            const animationElement = this.animationElement;
+            if (animationElement) {
+                if (this.to === '') {
+                    const by = getNamedItem(animationElement, 'by');
+                    const byCoords = SvgBuild.parseCoordinates(by);
+                    if (byCoords.length) {
+                        if (value === '') {
+                            value = this.baseValue || '';
+                        }
+                        if (value !== '') {
+                            const fromCoords = SvgBuild.parseCoordinates(value);
+                            const length = fromCoords.length;
+                            if (byCoords.length === length) {
+                                const to: number[] = [];
+                                for (let i = 0; i < length; i++) {
+                                    to.push(fromCoords[i] + byCoords[i]);
+                                }
+                                this.to = to.join(',');
+                            }
+                        }
+                    }
+                }
+                if (SvgBuild.parseCoordinates(this.to).length) {
+                    this.setAttribute('additive', 'sum');
+                }
+            }
+        }
+        this._from = value;
+    }
+
     public setCalcMode(attributeName?: string, mode?: string) {
         const animationElement = this.animationElement;
         if (animationElement) {
@@ -227,7 +254,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             const keyTimesBase = this.keyTimes;
             switch (mode) {
                 case 'discrete':
-                    if (keyTimesBase.length === 2 && keyTimesBase[0] === 0) {
+                    if (keyTimesBase[0] === 0 && keyTimesBase.length === 2) {
                         let keyTimes: number[] = [];
                         let values: string[] = [];
                         const valuesBase = this.values;
@@ -270,9 +297,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         const to = this.to;
         if (to) {
             this.values = [this.from, to];
-            if (this.from === '') {
-                this.evaluateStart = true;
-            }
             if (keyTimes && keyTimes.length === 2) {
                 const keyTimesBase = this.keyTimes;
                 if (keyTimesBase.length !== 2 || keyTimesBase[0] === 0 && keyTimesBase[1] <= 1) {
@@ -303,7 +327,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
 
-    public getIntervalEndTime(leadTime: number) {
+    public getIntervalEndTime(leadTime: number, complete = false) {
         const endTime = this.getTotalDuration();
         if (leadTime < endTime) {
             const { duration, keyTimes } = this;
@@ -311,7 +335,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             while (delay + duration <= leadTime) {
                 delay += duration;
             }
-            return Math.min(delay + keyTimes[keyTimes.length - 1] * duration, endTime);
+            return Math.min(delay + (complete ? 1 : keyTimes[keyTimes.length - 1]) * duration, endTime);
         }
         return endTime;
     }
@@ -340,7 +364,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     if (delay > endTime) {
                         this.end = endTime;
                         if (iterationCount === -1) {
-                            this.iterationCount = Math.ceil((this.end - delay) / duration);
+                            this.iterationCount = Math.ceil((endTime - delay) / duration);
                         }
                     }
                     else {
@@ -366,9 +390,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set iterationCount(value) {
-        const animationElement = this.animationElement;
         this._iterationCount = isNaN(value) ? 1 : value;
-        this.fillFreeze = this.iterationCount !== -1 && animationElement !== null && getNamedItem(animationElement, 'fill') === 'freeze';
+        const animationElement = this.animationElement;
+        if (animationElement) {
+            this.fillFreeze = this.iterationCount !== -1 && getNamedItem(animationElement, 'fill') === 'freeze';
+        }
         if (this.iterationCount !== 1) {
             this.setAttribute('accumulate', 'sum');
         }
@@ -415,7 +441,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
 
     get valueTo() {
         const values = this._values;
-        return values ? values[values.length - 1] : '';
+        return values?.[values.length - 1] || '';
     }
 
     get valueFrom() {
@@ -461,10 +487,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set timingFunction(value) {
-        this._timingFunction = value;
+        this._timingFunction = value ? SvgAnimate.convertTimingFunction(value) : value;
     }
     get timingFunction() {
-        return this._timingFunction || this.keySplines && this.keySplines[0];
+        return this._timingFunction || this.keySplines?.[0];
     }
 
     set reverse(value) {
@@ -506,7 +532,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     get playable() {
-        return !this.paused && this.duration > 0 && this.keyTimes.length > 1;
+        return !this.paused && this.duration > 0 && this.keyTimes.length > 0;
     }
 
     get fillReplace() {
@@ -518,9 +544,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return keyTimes.length === 2 && keyTimes[0] === 0 && keyTimes[1] === 1;
     }
 
-    get partialType() {
+    get evaluateStart() {
         const keyTimes = this.keyTimes;
-        return keyTimes.length > 1 && keyTimes[keyTimes.length - 1] < 1;
+        return keyTimes.length > 0 && keyTimes[0] > 0;
+    }
+    get evaluateEnd() {
+        const keyTimes = this.keyTimes;
+        return keyTimes.length > 0 && keyTimes[keyTimes.length - 1] < 1;
     }
 
     set setterType(value) {
@@ -543,8 +573,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         }
     }
     get length() {
-        const values = this._values;
-        return values ? values.length : 0;
+        return this._values?.length || 0;
     }
 
     get instanceType() {

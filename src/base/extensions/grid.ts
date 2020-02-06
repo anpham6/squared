@@ -91,13 +91,13 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             }
         }
         const nextCoordsX = Object.keys(nextMapX);
-        const lengthA = nextCoordsX.length;
-        if (lengthA) {
+        const length = nextCoordsX.length;
+        if (length) {
             let columnLength = -1;
-            for (let i = 0; i < lengthA; i++) {
+            for (let i = 0; i < length; i++) {
                 const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
                 if (i === 0) {
-                    columnLength = lengthA;
+                    columnLength = length;
                 }
                 else if (columnLength !== nextAxisX.length) {
                     columnLength = -1;
@@ -105,20 +105,20 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (columnLength !== -1) {
-                for (let i = 0; i < lengthA; i++) {
+                for (let i = 0; i < length; i++) {
                     columns.push(nextMapX[nextCoordsX[i]]);
                 }
             }
             else {
                 const columnRight: number[] = [];
-                for (let i = 0; i < lengthA; i++) {
+                for (let i = 0; i < length; i++) {
                     const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
-                    const lengthB = nextAxisX.length;
-                    if (i === 0 && lengthB === 0) {
+                    const lengthA = nextAxisX.length;
+                    if (i === 0 && lengthA === 0) {
                         return undefined;
                     }
                     columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
-                    for (let j = 0; j < lengthB; j++) {
+                    for (let j = 0; j < lengthA; j++) {
                         const nextX = nextAxisX[j];
                         const { left, right } = nextX.linear;
                         if (i === 0 || aboveRange(left, columnRight[i - 1])) {
@@ -127,7 +127,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                 row = [];
                                 columns[i] = row;
                             }
-                            if (i === 0 || columns[0].length === lengthB) {
+                            if (i === 0 || columns[0].length === lengthA) {
                                 row[j] = nextX;
                             }
                             else {
@@ -173,13 +173,13 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         columnRight[i] = Math.max(right, columnRight[i]);
                     }
                 }
-                const lengthC = columnRight.length;
-                for (let i = 0, j = -1; i < lengthC; i++) {
+                const lengthB = columnRight.length;
+                for (let i = 0, j = -1; i < lengthB; i++) {
                     if (columns[i] === undefined) {
                         if (j === -1) {
                             j = i - 1;
                         }
-                        else if (i === lengthC - 1) {
+                        else if (i === lengthB - 1) {
                             columnRight[j] = columnRight[i];
                         }
                     }
@@ -198,8 +198,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 const maxColumn = columns.reduce((a, b) => Math.max(a, b.length), 0);
                 for (let l = 0; l < maxColumn; l++) {
-                    const lengthD = columns.length;
-                    for (let m = 0; m < lengthD; m++) {
+                    const lengthC = columns.length;
+                    for (let m = 0; m < lengthC; m++) {
                         const row = columns[m];
                         if (row[l] === undefined) {
                             row[l] = { spacer: 1 } as any;
@@ -214,8 +214,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             const children: T[][] = [];
             const assigned = new Set<T>();
             for (let i = 0, count = 0; i < columnCount; i++) {
-                let spacer = 0;
                 const column = columns[i];
+                let spacer = 0;
                 for (let j = 0, start = 0; j < column.length; j++) {
                     const item = column[j];
                     const rowCount = column.length;

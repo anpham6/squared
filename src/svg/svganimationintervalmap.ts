@@ -5,7 +5,7 @@ import SvgBuild from './svgbuild';
 import { FILL_MODE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
-const { filterArray, sortNumber } = squared.lib.util;
+const { filterArray, hasValue, sortNumber } = squared.lib.util;
 
 type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimation = squared.svg.SvgAnimation;
@@ -101,7 +101,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 for (let i = 0; i < values.length; i++) {
                     const interval = values[i];
                     const animation = interval.animation;
-                    if (interval.value === '' || animation && interval.start && SvgBuild.isAnimate(animation) && animation.evaluateStart) {
+                    if (interval.value === '' || animation && interval.start && SvgBuild.isAnimate(animation) && animation.from === '') {
                         let value: Undef<string>;
                         for (const group of map[keyName].values()) {
                             for (const previous of group) {
@@ -302,19 +302,22 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     }
 
     public evaluateStart(item: SvgAnimate, otherValue?: any) {
-        if (item.evaluateStart) {
-            const value = this.get(item.attributeName, item.delay) || otherValue?.toString() || item.baseValue;
-            if (value) {
-                const values = item.values;
+        const values = item.values;
+        let value = item.reverse ? values[values.length - 1] : values[0];
+        if (value === '') {
+            value = this.get(item.attributeName, item.delay) || otherValue?.toString() || item.baseValue;
+            if (hasValue<string>(value)) {
+                value = value.toString();
                 if (item.reverse) {
                     values[values.length - 1] = value;
+                    item.to = value;
                 }
                 else {
                     values[0] = value;
+                    item.from = value;
                 }
             }
-            item.evaluateStart = false;
         }
-        return item.values;
+        return values;
     }
 }

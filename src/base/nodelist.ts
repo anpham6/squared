@@ -9,8 +9,8 @@ export default class NodeList<T extends squared.base.Node> extends squared.lib.b
 
     public append(node: T, delegate = true) {
         super.append(node);
-        if (delegate && this.afterAppend) {
-            this.afterAppend.call(this, node);
+        if (delegate) {
+            this.afterAppend?.call(this, node);
         }
         return this;
     }

@@ -2495,7 +2495,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 break;
                             }
                             parent = parent.actualParent;
-                        }parent
+                        }
                     }
                     break;
             }

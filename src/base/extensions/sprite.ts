@@ -1,9 +1,10 @@
 import { ImageAsset } from '../../../@types/base/application';
 
 import ExtensionUI from '../extension-ui';
-import NodeUI from '../node-ui';
 
 import { EXT_NAME } from '../lib/constant';
+
+type NodeUI = squared.base.NodeUI;
 
 const { getBackgroundPosition, resolveURL } = squared.lib.css;
 

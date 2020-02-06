@@ -1,7 +1,6 @@
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
-import NodeUI from '../node-ui';
 
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
@@ -11,6 +10,8 @@ const $lib = squared.lib;
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { CHAR, CSS } = $lib.regex;
 const { isNumber, trimString, withinRange } = $lib.util;
+
+type NodeUI = squared.base.NodeUI;
 
 type GridLayout = {
     placement: number[];

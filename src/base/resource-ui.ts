@@ -322,16 +322,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 let i = 0;
                 do {
-                    result = name;
-                    if (i > 0) {
-                        result += '_' + i;
-                    }
+                    result = name + (i > 0 ? '_' + i : '');
                     if (!stored.has(result)) {
                         stored.set(result, value);
+                        break;
                     }
-                    i++;
                 }
-                while (stored.has(result) && stored.get(result) !== value);
+                while (i++);
             }
             return result;
         }
@@ -345,26 +342,30 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const item = <HTMLOptionElement> children[i];
-            if (!showDisabled && item.disabled) {
+            if (item.disabled && !showDisabled) {
                 continue;
             }
-            if (item.tagName === 'OPTION') {
-                const value = item.text.trim() || item.value.trim();
-                if (value !== '') {
-                    if (numberArray && !isNumber(value)) {
+            switch (item.tagName) {
+                case 'OPTION': {
+                    const value = item.text.trim() || item.value.trim();
+                    if (value !== '') {
+                        if (numberArray && !isNumber(value)) {
+                            numberArray = false;
+                        }
+                        result.push(value);
+                    }
+                    break;
+                }
+                case 'OPTGROUP': {
+                    const [groupStringArray, groupNumberArray] = this.getOptionArray(item, showDisabled);
+                    if (groupStringArray) {
+                        result = result.concat(groupStringArray);
                         numberArray = false;
                     }
-                    result.push(value);
-                }
-            }
-            else if (item.tagName === 'OPTGROUP') {
-                const [groupStringArray, groupNumberArray] = this.getOptionArray(item, showDisabled);
-                if (groupStringArray) {
-                    result = result.concat(groupStringArray);
-                    numberArray = false;
-                }
-                else if (groupNumberArray) {
-                    result = result.concat(groupNumberArray);
+                    else if (groupNumberArray) {
+                        result = result.concat(groupNumberArray);
+                    }
+                    break;
                 }
             }
         }
@@ -400,7 +401,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 type,
                                 dimension,
                                 angle: getAngle(direction),
-                                center: getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension, '', screenDimension)
+                                center: getBackgroundPosition(position?.[2] || 'center', dimension, node.fontSize, imageDimension, '', screenDimension)
                             };
                             conic.colorStops = parseColorStops(node, conic, match[4]);
                             gradient = conic;
@@ -408,7 +409,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                         case 'radial': {
                             const position = getGradientPosition(direction);
-                            const center = getBackgroundPosition(position && position[2] || 'center', dimension, node.fontSize, imageDimension, '', screenDimension);
+                            const center = getBackgroundPosition(position?.[2] || 'center', dimension, node.fontSize, imageDimension, '', screenDimension);
                             const { left, top } = center;
                             const { width, height } = dimension;
                             let shape = 'ellipse';
@@ -610,7 +611,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static isInheritedStyle(node: NodeUI, attr: string) {
-        return node.styleElement && node.cssInitial(attr) === '' && node.style[attr] === node.actualParent?.style[attr];
+        return node.styleElement && node.style[attr] === node.actualParent?.style[attr] && (node.cssStyle[attr] === 'inherit' || node.cssInitial(attr) === '');
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak = false, trim = false) {
@@ -649,8 +650,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public reset() {
         super.reset();
-        for (const name in ResourceUI.STORED) {
-            ResourceUI.STORED[name].clear();
+        const STORED = ResourceUI.STORED;
+        for (const name in STORED) {
+            STORED[name].clear();
         }
     }
 
@@ -712,7 +714,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node, node.localSettings.screenDimension);
             }
             let backgroundColor = node.backgroundColor;
-            if (backgroundColor === '' && !node.documentParent.visible) {
+            if (backgroundColor === '' && !node.documentParent.visible && node.has('backgroundColor')) {
                 backgroundColor = node.css('backgroundColor');
             }
             if (backgroundColor !== '') {
@@ -850,7 +852,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         key = textContent.trim();
                         [value, inlined, trimming] = replaceWhiteSpace(node, this.removeExcludedFromText(element, node.sessionId));
                     }
-                    else if (node.naturalElements.length === 0 && textContent && textContent.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
+                    else if (node.naturalElements.length === 0 && textContent?.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                         value = textContent;
                     }
                     break;
@@ -874,7 +876,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                     if (inlined) {
                         const trailingSpace = !node.lineBreakTrailing && CHAR.TRAILINGSPACE.test(value);
-                        if (previousSibling && CHAR.LEADINGSPACE.test(value) && !previousSibling.block && !previousSibling.lineBreak && !previousSpaceEnd) {
+                        if (CHAR.LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
                             value = STRING_SPACE + value.trim();
                         }
                         else {

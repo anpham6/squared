@@ -1,10 +1,11 @@
 import { FlexboxData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
-import NodeUI from '../node-ui';
 
 import { EXT_NAME } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
+
+type NodeUI = squared.base.NodeUI;
 
 const { withinRange } = squared.lib.util;
 

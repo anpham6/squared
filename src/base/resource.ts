@@ -7,6 +7,8 @@ const $lib = squared.lib;
 const { CSS, STRING, XML } = $lib.regex;
 const { buildAlphaString, fromLastIndexOf } = $lib.util;
 
+const getFileName = () => buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
+
 export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
     public static ASSETS: ResourceAssetMap = {
         ids: new Map(),
@@ -23,8 +25,9 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public abstract get userSettings(): UserSettings;
 
     public reset() {
-        for (const name in Resource.ASSETS) {
-            Resource.ASSETS[name].clear();
+        const ASSETS = Resource.ASSETS;
+        for (const name in ASSETS) {
+            ASSETS[name].clear();
         }
         this.fileHandler?.reset();
     }
@@ -84,7 +87,6 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         const origin = location.origin;
         const valid = uri.startsWith(origin);
         const pathname = valid ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '';
-        const getFileName = () => buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
         let filename: Undef<string>;
         if (imageFormat === '*') {
             if (valid) {

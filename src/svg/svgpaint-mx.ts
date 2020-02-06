@@ -13,8 +13,13 @@ type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
-const CACHE_PATTERN: ObjectMap<RegExp> = {
-    url: CSS.URL
+const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
+const REGEX_CACHE: ObjectMap<RegExp> = {
+    url: CSS.URL,
+    polygon: /polygon\(([^)]+)\)/,
+    inset: new RegExp(`inset\\(${PERCENTAGE}\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\)`),
+    circle: new RegExp(`circle\\(${PERCENTAGE}(?: at ${PERCENTAGE} ${PERCENTAGE})?\\)`),
+    ellipse: new RegExp(`ellipse\\(${PERCENTAGE} ${PERCENTAGE}(?: at ${PERCENTAGE} ${PERCENTAGE})?\\)`)
 };
 
 export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
@@ -56,15 +61,8 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
             this.setAttribute('clip-rule');
             const clipPath = this.getAttribute('clip-path', true, false);
             if (clipPath !== '' && clipPath !== 'none') {
-                if (CACHE_PATTERN.polygon === undefined) {
-                    const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
-                    CACHE_PATTERN.polygon = /polygon\(([^)]+)\)/;
-                    CACHE_PATTERN.inset = new RegExp(`inset\\(${PERCENTAGE}\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\)`);
-                    CACHE_PATTERN.circle = new RegExp(`circle\\(${PERCENTAGE}(?: at ${PERCENTAGE} ${PERCENTAGE})?\\)`);
-                    CACHE_PATTERN.ellipse = new RegExp(`ellipse\\(${PERCENTAGE} ${PERCENTAGE}(?: at ${PERCENTAGE} ${PERCENTAGE})?\\)`);
-                }
-                for (const name in CACHE_PATTERN) {
-                    const match = CACHE_PATTERN[name].exec(clipPath);
+                for (const name in REGEX_CACHE) {
+                    const match = REGEX_CACHE[name].exec(clipPath);
                     if (match) {
                         if (name === 'url') {
                             this.clipPath = match[1];
@@ -104,9 +102,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         { x: x2, y: y2 },
                                         { x: x1, y: y2 }
                                     ];
-                                    if (parent) {
-                                        parent.refitPoints(points);
-                                    }
+                                    parent?.refitPoints(points);
                                     this.clipPath = SvgBuild.drawPolygon(points, precision);
                                     return;
                                 }
@@ -117,9 +113,7 @@ export default <T extends Constructor<squared.svg.SvgElement>>(Base: T) => {
                                         y += top;
                                         return { x, y };
                                     });
-                                    if (parent) {
-                                        parent.refitPoints(points);
-                                    }
+                                    parent?.refitPoints(points);
                                     this.clipPath = SvgBuild.drawPolygon(points, precision);
                                     return;
                                 }

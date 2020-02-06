@@ -1,10 +1,11 @@
 import { TableData, TableCellData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
-import NodeUI from '../node-ui';
 
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
+
+type NodeUI = squared.base.NodeUI;
 
 const $lib = squared.lib;
 
@@ -229,10 +230,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             mapWidth[j] = columnWidth || '0px';
                             mapBounds[j] = 0;
                         }
-                        else if (i === rowCount - 1) {
-                            if (reevaluate && mapBounds[j] === 0) {
-                                mapBounds[j] = width;
-                            }
+                        else if (i === rowCount - 1 && reevaluate && mapBounds[j] === 0) {
+                            mapBounds[j] = width;
                         }
                     }
                     else {

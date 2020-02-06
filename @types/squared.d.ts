@@ -1174,7 +1174,6 @@ declare namespace svg {
         alternate: boolean;
         additiveSum: boolean;
         accumulateSum: boolean;
-        evaluateStart: boolean;
         length: number;
         keySplines?: string[];
         timingFunction?: string;
@@ -1186,11 +1185,12 @@ declare namespace svg {
         readonly valueTo: string;
         readonly valueFrom: string;
         readonly fromToType: boolean;
-        readonly partialType: boolean;
+        readonly evaluateStart: boolean;
+        readonly evaluateEnd: boolean;
         setCalcMode(attributeName?: string, mode?: string): void;
         convertToValues(keyTimes?: number[]): void;
         setGroupOrdering(value: SvgAnimationAttribute[]): void;
-        getIntervalEndTime(leadTime: number): number;
+        getIntervalEndTime(leadTime: number, complete?: boolean): number;
         getTotalDuration(minimum?: boolean): number;
     }
 
@@ -1248,6 +1248,7 @@ declare namespace svg {
 
     class SvgAnimate implements SvgAnimate {
         public static getSplitValue(value: number, next: number, percent: number): number;
+        public static convertTimingFunction(value: string): string;
         public static convertStepTimingFunction(attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): Undef<[number[], string[]]>;
         public static toFractionList(value: string, delimiter?: string, ordered?: boolean): number[];
         constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement);

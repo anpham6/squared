@@ -1316,7 +1316,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let right = 0;
                 let bottom = 0;
                 let left = 0;
-                for (let i = 0 ; i < 4; i++) {
+                for (let i = 0; i < 4; i++) {
                     const attr = attrs[i];
                     let value: number = boxReset === undefined || boxReset[attr] === 0 ? this[attr] : 0;
                     if (value !== 0) {

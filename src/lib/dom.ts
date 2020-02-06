@@ -109,7 +109,7 @@ export function getRangeClientRect(element: Element) {
     if (length) {
         bounds = assignRect(domRect[0]);
         let numberOfLines = 1;
-        for (let i = 1 ; i < length; i++) {
+        for (let i = 1; i < length; i++) {
             const { left, right, top, bottom, width } = domRect[i];
             if (left < bounds.left) {
                 bounds.left = left;

@@ -15,7 +15,7 @@ const $lib = squared.lib;
 
 const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule, isLength, resolveURL } = $lib.css;
 const { getNamedItem, getRangeClientRect, isTextNode, removeElementsByClassName } = $lib.dom;
-const { aboveRange, captureMap, convertFloat, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;
+const { aboveRange, convertFloat, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;
 const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -1105,11 +1105,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                             else {
                                                                 let floatBottom = Number.NEGATIVE_INFINITY;
                                                                 if (!item.floating) {
-                                                                    captureMap(
-                                                                        horizontal,
-                                                                        node => node.floating,
-                                                                        node => floatBottom = Math.max(floatBottom, node.linear.bottom)
-                                                                    );
+                                                                    for (const node of horizontal) {
+                                                                        if (node.floating) {
+                                                                            floatBottom = Math.max(floatBottom, node.linear.bottom);
+                                                                        }
+                                                                    }
                                                                 }
                                                                 if (!item.floating && !aboveRange(item.linear.top, floatBottom) || item.floating && floatActive.has(item.float)) {
                                                                     horizontal.push(item);
