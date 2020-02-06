@@ -4,6 +4,8 @@ import { WIDGET_NAME } from '../lib/constant';
 
 import Resource = android.base.Resource;
 
+type View = android.base.View;
+
 const $lib = android.lib;
 
 const { getElementAsNode } = squared.lib.session;
@@ -14,7 +16,7 @@ const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $lib.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $lib.enumeration;
 const { createViewAttribute } = $lib.util;
 
-export default class Coordinator<T extends android.base.View> extends squared.base.ExtensionUI<T> {
+export default class Coordinator<T extends View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {
         const extensionManager = this.application.extensionManager;
         const options = createViewAttribute(this.options[node.elementId]);

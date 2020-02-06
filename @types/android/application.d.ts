@@ -1,5 +1,7 @@
 import { ControllerUISettings, ResourceStoredMap, UserUISettings } from '../base/application';
 
+type View = android.base.View;
+
 export interface UserSettingsAndroid extends UserUISettings {
     targetAPI: number;
     resolutionDPI: number;
@@ -42,4 +44,4 @@ export interface StyleAttribute {
     ids?: number[];
 }
 
-export type CustomizationResult = (result: {}, api?: number, node?: android.base.View) => boolean;
+export type CustomizationResult = (result: {}, api?: number, node?: View) => boolean;

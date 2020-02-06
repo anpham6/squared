@@ -1,11 +1,12 @@
 import { NodeXmlTemplate } from '../../../@types/base/application';
 
 import Resource from '../resource';
-import View from '../view';
 
 import { EXT_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
+
+type View = android.base.View;
 
 const { getDataSet } = squared.lib.css;
 

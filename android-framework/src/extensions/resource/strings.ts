@@ -1,10 +1,11 @@
 import { ResourceStringsOptions } from '../../../../@types/android/extension';
 
 import Resource from '../../resource';
-import View from '../../view';
 
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID } from '../../lib/enumeration';
+
+type View = android.base.View;
 
 const $lib = squared.lib;
 

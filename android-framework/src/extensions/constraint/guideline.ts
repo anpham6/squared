@@ -1,11 +1,11 @@
 import { ConstraintGuidelineOptions } from '../../../../@types/android/extension';
 
-import View from '../../view';
-
 import { STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
+
+type View = android.base.View;
 
 const $lib = squared.lib;
 

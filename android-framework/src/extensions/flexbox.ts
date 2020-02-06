@@ -63,15 +63,14 @@ function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") 
     let growShrinkType = 0;
     for (const item of items) {
         if (percent) {
-            const autoMargin = getAutoMargin(item);
             if (horizontal) {
-                if (autoMargin.horizontal) {
+                if (item.innerMostWrapped.autoMargin.horizontal) {
                     percent = false;
                     break;
                 }
             }
             else {
-                if (autoMargin.vertical) {
+                if (item.innerMostWrapped.autoMargin.vertical) {
                     percent = false;
                     break;
                 }
@@ -186,7 +185,15 @@ function setLayoutWeightOpposing(item: View, value: string, horizontal: boolean)
     }
 }
 
-const getAutoMargin = (node: View) => (node.innerMostWrapped || node).autoMargin;
+function getOuterFrameChild(item: Undef<View>) {
+    while (item) {
+        if (item.layoutFrame) {
+            return item.innerWrapped;
+        }
+        item = item.innerWrapped as View;
+    }
+    return undefined;
+}
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T) {
@@ -296,8 +303,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     const length = previous.length;
                                     let largest = previous[0];
                                     for (let j = 1; j < length; j++) {
-                                        if (previous[j].linear.right > largest.linear.right) {
-                                            largest = previous[j];
+                                        const sibling = previous[j];
+                                        if (sibling.linear.right > largest.linear.right) {
+                                            largest = sibling;
                                         }
                                     }
                                     if (wrapReverse) {
@@ -454,13 +462,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             chain.anchor(TL, 'parent');
                         }
                         else {
-                            const autoMargin = getAutoMargin(chain);
-                            const innerWrapped = <Undef<T>> chain.innerWrapped;
+                            const innerWrapped = getOuterFrameChild(chain);
+                            const autoMargin = chain.innerMostWrapped.autoMargin;
                             if (horizontal) {
                                 if (autoMargin.horizontal) {
                                     if (innerWrapped) {
-                                        const gravity = autoMargin.leftRight ? STRING_ANDROID.CENTER_HORIZONTAL : chain.localizeString(autoMargin.left ? 'right' : 'left');
-                                        innerWrapped.mergeGravity('layout_gravity', gravity);
+                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.leftRight ? STRING_ANDROID.CENTER_HORIZONTAL : chain.localizeString(autoMargin.left ? 'right' : 'left'));
                                         if (growAvailable > 0) {
                                             chain.flexbox.basis = '0%';
                                             layoutWeight.push(chain);
@@ -472,10 +479,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchorDelete(LRTB);
                                             }
                                         }
-                                        else {
-                                            if (next) {
-                                                chain.anchorDelete(RLBT);
-                                            }
+                                        else if (next) {
+                                            chain.anchorDelete(RLBT);
                                         }
                                     }
                                 }
@@ -495,10 +500,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchorDelete(LRTB);
                                             }
                                         }
-                                        else {
-                                            if (next) {
-                                                chain.anchorDelete(RLBT);
-                                            }
+                                        else if (next) {
+                                            chain.anchorDelete(RLBT);
                                         }
                                     }
                                 }
@@ -534,7 +537,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                     break;
                                 default: {
-                                    const childContent = chain.layoutFrame && chain.innerWrapped as T;
+                                    const childContent = getOuterFrameChild(chain);
                                     switch (alignContent) {
                                         case 'center':
                                             if (length % 2 === 1 && i === Math.floor(length / 2)) {
@@ -587,7 +590,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             break;
                                         default: {
                                             chain.anchorParent(orientationInverse);
-                                            if (innerWrapped === undefined || !getAutoMargin(chain)[orientationInverse]) {
+                                            if (innerWrapped === undefined || !chain.innerMostWrapped.autoMargin[orientationInverse]) {
                                                 chain.anchorStyle(orientationInverse, 'packed', wrapReverse ? 1 : 0);
                                             }
                                             if (chain[HWL] === 0) {
@@ -613,7 +616,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 else if ((chain.naturalElement ? (<BoxRectDimension> chain.data(FLEXBOX, 'boundsData') || chain.bounds)[HWL] : Number.POSITIVE_INFINITY) < maxSize) {
                                                     setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px', horizontal);
                                                     if (innerWrapped?.autoMargin[orientation] === false) {
-                                                        setLayoutWeightOpposing(innerWrapped, 'match_parent', horizontal);
+                                                        setLayoutWeightOpposing(innerWrapped as T, 'match_parent', horizontal);
                                                     }
                                                 }
                                                 else {
@@ -628,7 +631,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 }
                             }
                             [percentWidth, percentHeight] = Controller.setFlexDimension(chain, WHL, percentWidth, percentHeight);
-                            if (!(chain.innerMostWrapped || chain).has('flexGrow')) {
+                            if (!chain.innerMostWrapped.has('flexGrow')) {
                                 growAll = false;
                             }
                         }
@@ -642,7 +645,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                     else if (growAvailable > 0) {
                         for (const item of layoutWeight) {
-                            const autoMargin = getAutoMargin(item);
+                            const autoMargin = item.innerMostWrapped.autoMargin;
                             let ratio = 1;
                             if (horizontal) {
                                 if (autoMargin.leftRight) {

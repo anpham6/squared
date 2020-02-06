@@ -2,7 +2,8 @@ import { ChromeAsset } from '../../../../@types/chrome/application';
 import { CompressOptions } from '../../../../@types/chrome/extension';
 
 import Extension from '../../extension';
-import View from '../../view';
+
+type View = android.base.View;
 
 export default class Brotli<T extends View> extends Extension<T> {
     public readonly options: CompressOptions = {

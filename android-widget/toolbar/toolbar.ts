@@ -5,6 +5,8 @@ import { WIDGET_NAME } from '../lib/constant';
 
 import Resource = android.base.Resource;
 
+type View = android.base.View;
+
 const $lib = squared.lib;
 const $libA = android.lib;
 
@@ -25,7 +27,7 @@ type ToolbarThemeData = {
 
 const PREFIX_MENU = 'ic_menu_';
 
-export default class Toolbar<T extends android.base.View> extends squared.base.ExtensionUI<T> {
+export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(
         name: string,
         framework: number,

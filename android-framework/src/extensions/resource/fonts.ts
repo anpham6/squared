@@ -2,10 +2,11 @@ import { ResourceStoredMapAndroid, StyleAttribute } from '../../../../@types/and
 import { ResourceFontsOptions } from '../../../../@types/android/extension';
 
 import Resource from '../../resource';
-import View from '../../view';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
 import { convertLength } from '../../lib/util';
+
+type View = android.base.View;
 
 const $lib = squared.lib;
 

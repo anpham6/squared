@@ -3,6 +3,8 @@ import { UserSettingsAndroid } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
+type View = android.base.View;
+
 const $lib = android.lib;
 
 const { assignEmptyValue, optionalAsString } = squared.lib.util;
@@ -15,7 +17,7 @@ const { createStyleAttribute, createViewAttribute } = $lib.util;
 
 const Resource = android.base.Resource;
 
-export default class BottomNavigation<T extends android.base.View> extends squared.base.ExtensionUI<T> {
+export default class BottomNavigation<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(
         name: string,
         framework: number,

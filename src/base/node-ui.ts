@@ -288,14 +288,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < length; i++) {
                             const node = nodes[i];
-                            const { left, right } = node.linear;
+                            const { floating, linear } = node;
+                            const { left, right } = linear;
                             if (Math.floor(left) <= boxLeft) {
                                 j++;
                             }
                             if (Math.ceil(right) >= boxRight) {
                                 k++;
                             }
-                            if (!node.floating) {
+                            if (!floating) {
                                 if (left === floatLeft) {
                                     l++;
                                 }
@@ -311,7 +312,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 break;
                             }
                             const previous = nodes[i - 1];
-                            if (withinRange(left, previous.linear.left) || previous.floating && aboveRange(node.linear.top, previous.linear.bottom)) {
+                            if (withinRange(left, previous.linear.left) || previous.floating && aboveRange(linear.top, previous.linear.bottom)) {
                                 linearX = false;
                                 break;
                             }
@@ -348,7 +349,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     continue;
                 }
                 const wrapped = node.innerMostWrapped;
-                if (wrapped) {
+                if (wrapped !== node) {
                     active = wrapped;
                 }
             }
@@ -879,11 +880,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public previousSiblings(options: SiblingOptions = {}) {
-        return traverseElementSibling(options, <Element> (this.element?.previousSibling || this.innerMostWrapped?.element?.previousSibling || this.firstChild?.element?.previousSibling), 'previousSibling', this.sessionId);
+        return traverseElementSibling(options, <Element> (!this.nodeGroup && this.innerMostWrapped.element?.previousSibling || this.firstChild?.element?.previousSibling), 'previousSibling', this.sessionId);
     }
 
     public nextSiblings(options: SiblingOptions = {}) {
-        return traverseElementSibling(options, <Element> (this.element?.nextSibling || this.innerMostWrapped?.element?.nextSibling || this.firstChild?.element?.nextSibling), 'nextSibling', this.sessionId);
+        return traverseElementSibling(options, <Element> (!this.nodeGroup && this.innerMostWrapped.element?.nextSibling || this.firstChild?.element?.nextSibling), 'nextSibling', this.sessionId);
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {
@@ -1026,8 +1027,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
         if (value > 0) {
             if (!this.layoutElement) {
-                let node = (this as T).innerMostWrapped;
-                if (node) {
+                const node = (this as T).innerMostWrapped;
+                if (node !== this) {
                     if (node.naturalChild) {
                         if (node.getBox(attr === 'paddingTop' ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM)[0] === 0) {
                             return 0;
@@ -1036,9 +1037,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     else {
                         return value;
                     }
-                }
-                else {
-                    node = this as T;
                 }
                 if (node.naturalChild) {
                     let reset = false;
@@ -1136,7 +1134,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get element() {
-        return this._element || <Null<Element>> this.innerMostWrapped?.unsafe('element') || null;
+        return this._element || <Null<Element>> this.innerMostWrapped.unsafe('element') || null;
     }
 
     set naturalChild(value) {
@@ -1355,10 +1353,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             result = <Null<T>> super.actualParent;
             if (result === null) {
-                const innerWrapped = this.innerMostWrapped;
-                if (innerWrapped) {
-                    result = innerWrapped.actualParent;
-                }
+                result = this.innerMostWrapped.actualParent;
             }
             this._cached.actualParent = result;
         }
@@ -1464,11 +1459,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get containerIndex() {
         let result = this._containerIndex;
         if (result === Number.POSITIVE_INFINITY) {
-            const innerWrapped = this.innerMostWrapped;
-            if (innerWrapped) {
-                result = innerWrapped.containerIndex;
-                this._containerIndex = result;
-            }
+            result = this.innerMostWrapped.containerIndex;
+            this._containerIndex = result;
         }
         return this._containerIndex;
     }
@@ -1507,6 +1499,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get innerMostWrapped() {
+        if (this.naturalChild) {
+            return this;
+        }
         let result = this.innerWrapped;
         while (result) {
             const innerWrapped = result.innerWrapped;
@@ -1517,7 +1512,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 break;
             }
         }
-        return result || null;
+        return result || this;
     }
 
     get outerMostWrapper() {
@@ -1531,7 +1526,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 break;
             }
         }
-        return result || null;
+        return result || this;
     }
 
     get preserveWhiteSpace() {

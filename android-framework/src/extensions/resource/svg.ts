@@ -4,7 +4,6 @@ import { ResourceSvgOptions } from '../../../../@types/android/extension';
 import { GradientTemplate } from '../../../../@types/android/resource';
 
 import Resource from '../../resource';
-import View from '../../view';
 
 import { convertColorStops } from './background';
 
@@ -29,6 +28,12 @@ import SvgG = squared.svg.SvgG;
 import SvgPath = squared.svg.SvgPath;
 import SvgShape = squared.svg.SvgShape;
 
+type View = android.base.View;
+type SvgAnimation = squared.svg.SvgAnimation;
+type SvgGroup = squared.svg.SvgGroup;
+type SvgImage = squared.svg.SvgImage;
+type SvgView = squared.svg.SvgView;
+
 const $lib = squared.lib;
 const $svg_lib = squared.svg.lib;
 
@@ -41,10 +46,6 @@ const { applyTemplate } = $lib.xml;
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = $svg_lib.constant;
 const { MATRIX, SVG, TRANSFORM } = $svg_lib.util;
 
-type SvgAnimation = squared.svg.SvgAnimation;
-type SvgGroup = squared.svg.SvgGroup;
-type SvgImage = squared.svg.SvgImage;
-type SvgView = squared.svg.SvgView;
 type AnimateCompanion = NumberValue<SvgAnimation>;
 
 interface AnimatedVectorTemplate {

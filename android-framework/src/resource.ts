@@ -2,6 +2,8 @@ import { ResourceStoredMapAndroid, StyleAttribute } from '../../@types/android/a
 
 import { RESERVED_JAVA } from './lib/constant';
 
+type View = android.base.View;
+
 const $lib = squared.lib;
 
 const { findColorShade, parseColor } = $lib.color;
@@ -54,7 +56,7 @@ function formatObject(obj: {}, numberAlias = false) {
     }
 }
 
-export default class Resource<T extends android.base.View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
+export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
     public static formatOptions(options: ExternalData, numberAlias = false) {
         for (const namespace in options) {
             const obj: ExternalData = options[namespace];

@@ -4,9 +4,9 @@ import { VisibleStyle } from '../../../../@types/base/node';
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
-import View from '../../view';
-
 import LayoutUI = squared.base.LayoutUI;
+
+type View = android.base.View;
 
 const { resolveURL } = squared.lib.css;
 
@@ -29,9 +29,11 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
 
     public processNode(node: T, parent: T) {
         const controller = <android.base.Controller<T>> this.controller;
-        let target = <Null<T>> node.outerMostWrapper;
+        const outerWrapper = node.outerMostWrapper as T;
+        let target: Undef<T>;
         let targetParent: Undef<T>;
-        if (target) {
+        if (!outerWrapper.naturalChild) {
+            target = outerWrapper;
             targetParent = target.parent as T;
             const renderChildren = targetParent.renderChildren;
             const index = renderChildren.findIndex(item => item === target);
@@ -42,7 +44,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                 target.renderParent = undefined;
             }
             else {
-                target = null;
+                target = undefined;
                 targetParent = undefined;
             }
         }

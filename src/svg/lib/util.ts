@@ -7,7 +7,7 @@ const { getNamedItem } = $lib.dom;
 const { convertRadian } = $lib.math;
 const { CSS, STRING } = $lib.regex;
 const { getElementCache } = $lib.session;
-const { convertCamelCase } = $lib.util;
+const { convertCamelCase, isString } = $lib.util;
 
 const STRING_DECIMAL = `(${STRING.DECIMAL})`;
 const SHAPES = {
@@ -392,17 +392,17 @@ export function getDOMRect(element: SVGElement) {
 }
 
 export function getAttribute(element: SVGElement, attr: string, computed = true) {
-    let value = getNamedItem(element, attr);
-    if (value === '') {
-        const styleMap: StringMap = getElementCache(element, 'styleMap');
-        if (styleMap) {
-            value = styleMap[convertCamelCase(attr)] || '';
-        }
-        if (value === '' && (computed || Array.from(element.style).includes(attr))) {
-            value = getStyle(element).getPropertyValue(attr);
-        }
+    let value: string;
+    if (computed) {
+        value = getElementCache(element, 'styleMap')?.[convertCamelCase(attr)] || getNamedItem(element, attr);
     }
-    return value.trim();
+    else {
+        value = getNamedItem(element, attr) || getElementCache(element, 'styleMap')?.[convertCamelCase(attr)];
+    }
+    if (!isString(value) && (computed || Array.from(element.style).includes(attr))) {
+        value = getStyle(element).getPropertyValue(attr);
+    }
+    return value || '';
 }
 
 export function getParentAttribute(element: SVGElement, attr: string, computed = true) {

@@ -55,3 +55,5 @@ export const KEYSPLINE_NAME = {
     'step-start': '0 1 0 1',
     'step-end': '1 0 1 0'
 };
+
+export const STRING_CUBICBEZIER = 'cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)';

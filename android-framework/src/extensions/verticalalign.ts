@@ -1,8 +1,8 @@
-import View from '../view';
-
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
+
+type View = android.base.View;
 
 const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 

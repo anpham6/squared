@@ -2,7 +2,9 @@ import { AccessibilityOptions } from '../../../@types/android/extension';
 
 const { NODE_PROCEDURE } = squared.base.lib.enumeration;
 
-export default class <T extends android.base.View> extends squared.base.extensions.Accessibility<T> {
+type View = android.base.View;
+
+export default class <T extends View> extends squared.base.extensions.Accessibility<T> {
     public readonly eventOnly = true;
     public readonly options: AccessibilityOptions = {
         showLabel: false

@@ -53,7 +53,7 @@ function isHorizontalAlign(value: string) {
 }
 
 function setAutoMargin(node: T, autoMargin: AutoMargin) {
-    if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerMostWrapped?.has('width', CSS_UNIT.PERCENT, { not: '100%' }))) {
+    if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerMostWrapped.has('width', CSS_UNIT.PERCENT, { not: '100%' }))) {
         node.mergeGravity(
             (node.blockWidth || !node.pageFlow) && node.outerWrapper === undefined ? 'gravity' : 'layout_gravity',
             autoMargin.leftRight ? STRING_ANDROID.CENTER_HORIZONTAL : (autoMargin.left ? 'right' : 'left')
@@ -1409,7 +1409,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                     else if (top > 0 && this.inlineVertical && (this.actualParent as T)?.floatContainer) {
-                        const renderParent = (this.outerMostWrapper || this).renderParent as T;
+                        const renderParent = this.outerMostWrapper.renderParent as T;
                         if (renderParent.layoutVertical && !renderParent.hasAlign(NODE_ALIGNMENT.FLOAT)) {
                             const boundsTop = this.bounds.top;
                             const renderChildren = (this.renderParent as T).renderChildren;
@@ -1993,7 +1993,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         set innerWrapped(value) {
             if (value) {
-                value = (value.outerMostWrapper || value) as T;
+                value = value.outerMostWrapper as T;
                 this._innerWrapped = value;
                 value.outerWrapper = this;
             }

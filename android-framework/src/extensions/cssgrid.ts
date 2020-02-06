@@ -3,12 +3,11 @@ import { SpacerAttribute } from '../../../@types/android/node';
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@types/base/extension';
 
 import Resource from '../resource';
-import View from '../view';
 
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
-import CssGrid = squared.base.extensions.CssGrid;
+type View = android.base.View;
 
 const $lib = squared.lib;
 const $base = squared.base;
@@ -23,6 +22,8 @@ const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_li
 
 const { LayoutUI, Node } = $base;
 const CSS_GRID = $base_lib.constant.EXT_NAME.CSS_GRID;
+
+const CssGrid = squared.base.extensions.CssGrid;
 
 const REGEX_JUSTIFYSELF = /start|left|center|right|end/;
 const REGEX_JUSTIFYLEFT = /(start|left|baseline)$/;
@@ -555,7 +556,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread', 0);
                         }
                         else {
-                            const previousSibling = <Null<T>> (item.innerMostWrapped || item).previousSibling;
+                            const previousSibling = <Null<T>> item.innerMostWrapped.previousSibling;
                             if (previousSibling) {
                                 previousSibling.anchor('rightLeft', item.documentId);
                                 item.anchor('leftRight', previousSibling.anchorTarget.documentId);

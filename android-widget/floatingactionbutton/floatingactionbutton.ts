@@ -4,6 +4,8 @@ import { WIDGET_NAME } from '../lib/constant';
 
 import Resource = android.base.Resource;
 
+type View = android.base.View;
+
 const $lib = squared.lib;
 const $libA = android.lib;
 
@@ -20,7 +22,7 @@ const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
 const PREFIX_DIALOG = 'ic_dialog_';
 const SUPPORTED_INPUT = ['button', 'file', 'image', 'reset', 'search', 'submit'];
 
-export default class FloatingActionButton<T extends android.base.View> extends squared.base.ExtensionUI<T> {
+export default class FloatingActionButton<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
         const element = <HTMLInputElement> node.element;
         return super.is(node) && (element.tagName !== 'INPUT' || SUPPORTED_INPUT.includes(element.type));

@@ -1,7 +1,8 @@
 import { ResourceStoredMapAndroid } from '../../../../@types/android/application';
 
 import Resource from '../../resource';
-import View from '../../view';
+
+type View = android.base.View;
 
 const $lib = squared.lib;
 

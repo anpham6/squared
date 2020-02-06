@@ -29,7 +29,7 @@ function setSpacingOffset(node: NodeUI, region: number, value: number, adjustmen
     }
     offset -= adjustment;
     if (offset > 0) {
-        (node.renderAs || node.outerMostWrapper || node).modifyBox(region, offset);
+        (node.renderAs || node.outerMostWrapper).modifyBox(region, offset);
     }
 }
 
@@ -485,7 +485,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     public afterConstraints() {
         for (const node of this.cacheProcessing) {
             if (node.naturalChild && node.pageFlow && node.styleElement && node.inlineVertical && !node.positioned && !(node.actualParent as T).layoutElement) {
-                const renderParent = (node.outerMostWrapper || node).renderParent;
+                const renderParent = node.outerMostWrapper.renderParent;
                 if (renderParent?.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) === false) {
                     if (node.blockDimension && !node.floating) {
                         if (renderParent.layoutVertical) {

@@ -1,7 +1,7 @@
 import { STRING_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
-import View from '../view';
+type View = android.base.View;
 
 const { optionalAsString, isString } = squared.lib.util;
 

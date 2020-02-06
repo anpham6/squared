@@ -15,6 +15,8 @@ import STRING_TMPL from './template/resources/string';
 import STRINGARRAY_TMPL from './template/resources/string-array';
 import STYLE_TMPL from './template/resources/style';
 
+type View = android.base.View;
+
 const $lib = squared.lib;
 
 const { fromLastIndexOf, objectMap } = $lib.util;
@@ -62,7 +64,7 @@ const replaceDrawableLength = (value: string, format: string) => format === 'dp'
 const replaceThemeLength = (value: string, format: string) => format === 'dp' ? value.replace(REGEX_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], false) + '<') : value;
 const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
-export default class File<T extends android.base.View> extends squared.base.FileUI<T> implements android.base.File<T> {
+export default class File<T extends View> extends squared.base.FileUI<T> implements android.base.File<T> {
     public resource!: android.base.Resource<T>;
 
     public copyToDisk(directory: string, assets: FileAsset[], callback?: CallbackResult) {

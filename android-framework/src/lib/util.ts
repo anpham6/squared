@@ -1,7 +1,7 @@
 import { StyleAttribute } from '../../../@types/android/application';
 import { ViewAttribute } from '../../../@types/android/node';
 
-import View from '../view';
+type View = android.base.View;
 
 import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';

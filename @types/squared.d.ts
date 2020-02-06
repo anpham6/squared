@@ -527,8 +527,8 @@ declare namespace base {
         readonly layoutHorizontal: boolean;
         readonly layoutVertical: boolean;
         readonly onlyChild: boolean;
-        readonly outerMostWrapper: Null<NodeUI>;
-        readonly innerMostWrapped: Null<NodeUI>;
+        readonly outerMostWrapper: NodeUI;
+        readonly innerMostWrapped: NodeUI;
         readonly support: Support;
         readonly documentId: string;
         readonly extensions: string[];
@@ -1483,6 +1483,8 @@ declare namespace svg {
                 'step-start': string;
                 'step-end': string;
             };
+
+            const STRING_CUBICBEZIER: string;
         }
 
         namespace util {

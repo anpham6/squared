@@ -1,11 +1,11 @@
 import { MaxWidthHeightData } from './max-width-height';
 
-import View from '../../view';
-
 import { EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
+
+type View = android.base.View;
 
 const { aboveRange, belowRange } = squared.lib.util;
 

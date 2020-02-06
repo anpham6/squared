@@ -5,6 +5,8 @@ import { WIDGET_NAME } from '../lib/constant';
 
 import Resource = android.base.Resource;
 
+type View = android.base.View;
+
 const $lib = squared.lib;
 const $libA = android.lib;
 
@@ -17,7 +19,7 @@ const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
 const { createStyleAttribute, createViewAttribute } = $libA.util;
 
-export default class Drawer<T extends android.base.View> extends squared.base.ExtensionUI<T> {
+export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly documentBase = true;
 
     constructor(

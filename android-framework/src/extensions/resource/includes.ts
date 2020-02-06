@@ -1,8 +1,8 @@
 import { NodeTemplate, NodeIncludeTemplate } from '../../../../@types/base/application';
 
-import View from '../../view';
-
 import { getRootNs } from '../../lib/util';
+
+type View = android.base.View;
 
 const { NODE_TEMPLATE } = squared.base.lib.enumeration;
 

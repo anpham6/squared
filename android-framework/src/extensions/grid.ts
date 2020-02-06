@@ -1,11 +1,12 @@
 import { GridCellData } from '../../../@types/base/extension';
 
 import Resource from '../resource';
-import View from '../view';
 
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
+
+type View = android.base.View;
 
 const $lib = squared.lib;
 const $base_lib = squared.base.lib;

@@ -56,10 +56,8 @@ function sortHorizontalFloat(list: View[]) {
 function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
     if (templates.length > 1) {
         templates.sort((a, b) => {
-            const nodeA = a.node;
-            const nodeB = b.node;
-            const above = nodeA.innerMostWrapped as View || nodeA;
-            const below = nodeB.innerMostWrapped as View || nodeB;
+            const above = a.node.innerMostWrapped as View;
+            const below = b.node.innerMostWrapped as View;
             if (above.absoluteParent === below.absoluteParent) {
                 if (above.zIndex === below.zIndex) {
                     return above.childIndex < below.childIndex ? -1 : 1;
@@ -365,7 +363,7 @@ function isTargeted(parentElement: Null<Element>, node: View) {
     const target = node.dataset.target;
     if (target && parentElement) {
         const element = document.getElementById(target);
-        return element !== null && element !== parentElement;
+        return !!element && element !== parentElement;
     }
     return false;
 }
@@ -1786,9 +1784,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.constraint[value] = true;
             if (location <= 0) {
                 node.anchor(LT, 'parent', true);
-                if (location < 0) {
+                if (location < 0 && node.innerWrapped) {
                     const innerWrapped = node.innerMostWrapped;
-                    if (innerWrapped?.pageFlow === false) {
+                    if (!innerWrapped.pageFlow) {
                         let region = 0;
                         switch (LT) {
                             case 'top':

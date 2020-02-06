@@ -1,9 +1,9 @@
 import { NodeXmlTemplate } from '../../../../@types/base/application';
 
-import View from '../../view';
-
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
+
+type View = android.base.View;
 
 const { getElementAsNode } = squared.lib.session;
 
