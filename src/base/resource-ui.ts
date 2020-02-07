@@ -4,6 +4,8 @@ import Resource from './resource';
 
 import { NODE_RESOURCE } from './lib/enumeration';
 
+type NodeUI = squared.base.NodeUI;
+
 const $lib = squared.lib;
 
 const { USER_AGENT, isUserAgent } = $lib.client;
@@ -13,11 +15,8 @@ const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, 
 const { CHAR, ESCAPE, STRING, XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
 const { convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, trimEnd, trimStart } = $lib.util;
-const { STRING_TABSPACE } = $lib.xml;
+const { STRING_SPACE, STRING_TABSPACE } = $lib.xml;
 
-type NodeUI = squared.base.NodeUI;
-
-const STRING_SPACE = '&#160;';
 const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
 const REGEX_URL = /^url/;
 const REGEX_NOBREAKSPACE = /\u00A0/g;

@@ -3,8 +3,6 @@ import { UserSettingsAndroid } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
-import Resource = android.base.Resource;
-
 type View = android.base.View;
 
 const $lib = squared.lib;
@@ -19,6 +17,8 @@ const { NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumer
 const { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
 const { createStyleAttribute, createViewAttribute, getDocumentId } = $libA.util;
+
+const Resource = android.base.Resource;
 
 type ToolbarThemeData = {
     appBarOverlay: string;

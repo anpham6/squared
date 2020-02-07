@@ -13,7 +13,9 @@ module.exports = {
         "Atomics": "readonly",
         "SharedArrayBuffer": "readonly"
     },
-    "ignorePatterns": [],
+    "ignorePatterns": [
+        "*.d.ts"
+    ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "project": "tsconfig.json",
@@ -206,7 +208,7 @@ module.exports = {
         "radix": "off",
         "no-unused-expressions": "off",
         "no-constant-condition": "off",
-        "no-shadow": "off",
+        "no-shadow": "error",
         "no-empty": "off",
         "no-fallthrough": "off",
         "no-undef": "off",

@@ -608,9 +608,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                         if (styleData) {
                             const specificityData: ObjectMap<number> = getElementCache(element, attrSpecificity, sessionId) || {};
                             for (const attr in baseMap) {
-                                const revisedSpecificity = specificity + (important[attr] ? 1000 : 0);
-                                const value = specificityData[attr];
-                                if (value === undefined || revisedSpecificity >= value) {
+                                const previous = specificityData[attr];
+                                const revised = specificity + (important[attr] ? 1000 : 0);
+                                if (previous === undefined || revised >= previous) {
                                     const value = baseMap[attr];
                                     if (value === 'initial' && REGEX_BACKGROUND.test(attr)) {
                                         if (cssStyle.background === 'none') {
@@ -620,7 +620,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     else {
                                         styleData[attr] = value;
                                     }
-                                    specificityData[attr] = revisedSpecificity;
+                                    specificityData[attr] = revised;
                                 }
                             }
                         }

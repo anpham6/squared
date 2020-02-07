@@ -5,13 +5,13 @@ import ExtensionUI from '../extension-ui';
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
+type NodeUI = squared.base.NodeUI;
+
 const $lib = squared.lib;
 
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { CHAR, CSS } = $lib.regex;
 const { isNumber, trimString, withinRange } = $lib.util;
-
-type NodeUI = squared.base.NodeUI;
 
 type GridLayout = {
     placement: number[];
@@ -954,9 +954,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             if (setDataRows(item, placement, ITERATION)) {
                 const [a, b, c, d] = placement;
                 const rowStart = a - 1;
-                const rowSpan = c - a;
+                const rowCount = c - a;
                 const columnStart = b - 1;
-                const columnSpan = d - b;
                 if (!dense) {
                     const cellIndex = horizontal ? rowStart : columnStart;
                     if (cellIndex > 0) {
@@ -966,17 +965,17 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (rowSpan > 1) {
+                if (rowCount > 1) {
                     const rowSpanMultiple = mainData.rowSpanMultiple;
-                    for (let i = rowStart; i < rowStart + rowSpan; i++) {
+                    for (let i = rowStart; i < rowStart + rowCount; i++) {
                         rowSpanMultiple[i] = true;
                     }
                 }
                 item.data(CSS_GRID, 'cellData', <CssGridCellData> {
                     rowStart,
-                    rowSpan,
+                    rowSpan: rowCount,
                     columnStart,
-                    columnSpan
+                    columnSpan: d - b
                 });
             }
         });

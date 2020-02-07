@@ -171,7 +171,7 @@ function adjustAbsolutePaddingOffset(parent: View, direction: number, value: num
         }
         return Math.max(value, 0);
     }
-    return value;
+    return 0;
 }
 
 function adjustFloatingNegativeMargin(node: View, previous: View) {
@@ -250,8 +250,7 @@ function setConstraintPercent(node: View, value: string, horizontal: boolean, pe
     const parent = node.actualParent || node.documentParent;
     let basePercent = parseFloat(value) / 100;
     if (basePercent < 1 && !(parent.flexElement && isPercent(node.flexbox.basis)) && (percent < 1 || node.blockStatic && !parent.gridElement)) {
-        const parent = node.actualParent;
-        const marginPercent = parent ? (horizontal ? node.marginLeft + node.marginRight : node.marginTop + node.marginBottom) / parent.box.width : 0;
+        const marginPercent = (horizontal ? node.marginLeft + node.marginRight : node.marginTop + node.marginBottom) / parent.box.width;
         let boxPercent = horizontal ? node.contentBoxWidthPercent : node.contentBoxHeightPercent;
         if (boxPercent > 0) {
             if (percent < boxPercent) {

@@ -2,8 +2,6 @@ import { NodeXmlTemplate } from '../../@types/base/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
-import Resource = android.base.Resource;
-
 type View = android.base.View;
 
 const $lib = squared.lib;
@@ -18,6 +16,8 @@ const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
 
 const { EXT_ANDROID, STRING_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
+
+const Resource = android.base.Resource;
 
 const PREFIX_DIALOG = 'ic_dialog_';
 const SUPPORTED_INPUT = ['button', 'file', 'image', 'reset', 'search', 'submit'];

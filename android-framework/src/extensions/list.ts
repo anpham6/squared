@@ -14,6 +14,7 @@ const $base_lib = squared.base.lib;
 
 const { formatPX, getBackgroundPosition } = $lib.css;
 const { convertInt } = $lib.util;
+const { STRING_SPACE } = $lib.xml;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = $base_lib.enumeration;
 
@@ -161,7 +162,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         minWidth -= paddingRight;
                     }
                     else if (value !== '') {
-                        value += '&#160;'.repeat(value.length === 1 ? 3 : 2);
+                        value += STRING_SPACE.repeat(value.length === 1 ? 3 : 2);
                     }
                 }
                 if (columnCount === 3) {

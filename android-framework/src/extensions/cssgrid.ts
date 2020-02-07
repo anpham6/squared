@@ -16,14 +16,14 @@ const $base_lib = $base.lib;
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { maxArray, truncate } = $lib.math;
 const { CHAR, CSS } = $lib.regex;
-const { captureMap, flatMultiArray, isArray, objectMap } = $lib.util;
+const { captureMap, flatMultiArray, hasValue, isArray, objectMap } = $lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 
 const { LayoutUI, Node } = $base;
 const CSS_GRID = $base_lib.constant.EXT_NAME.CSS_GRID;
 
-const CssGrid = squared.base.extensions.CssGrid;
+const CssGrid = $base.extensions.CssGrid;
 
 const REGEX_JUSTIFYSELF = /start|left|center|right|end/;
 const REGEX_JUSTIFYLEFT = /(start|left|baseline)$/;
@@ -390,12 +390,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 invalid: {
                     for (let i = 0; i < rowCount; i++) {
                         const nodes: T[] = [];
-                        const row = rowData[i];
-                        const length = row.length;
+                        const data = rowData[i];
+                        const length = data.length;
                         for (let j = 0; j < length; j++) {
-                            const column = row[j];
-                            if (column && column.length === 1) {
-                                nodes.push(column[0]);
+                            const cell = data[j];
+                            if (cell?.length === 1) {
+                                nodes.push(cell[0]);
                             }
                             else {
                                 valid = false;
@@ -440,7 +440,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 let minUnitSize = 0;
                 let sizeWeight = 0;
                 let fitContent = false;
-                let auto = false;
+                let autoSize = false;
                 for (let i = 0, j = 0; i < cellSpan; i++) {
                     const k = cellStart + i;
                     const min = unitMin[k];
@@ -448,7 +448,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         minUnitSize += parent.parseUnit(min);
                     }
                     let value = unit[k];
-                    if (!value) {
+                    if (!hasValue(value)) {
                         const auto = data.auto;
                         if (auto[j]) {
                             value = auto[j];
@@ -461,7 +461,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                     }
                     if (value === 'auto' || value === 'max-content') {
-                        auto = true;
+                        autoSize = true;
                         if (cellSpan < unit.length && (!parent.hasPX(dimension) || unit.some(px => isLength(px)) || value === 'max-content')) {
                             size = node.bounds[dimension];
                             minSize = 0;
@@ -581,7 +581,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             if (item.contentBox) {
                                 size -= item.contentBoxHeight;
                             }
-                            item.css(auto ? 'minHeight' : 'height', formatPX(size), true);
+                            item.css(autoSize ? 'minHeight' : 'height', formatPX(size), true);
                         }
                     }
                 }
@@ -624,7 +624,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             if (item.contentBox) {
                                 size -= horizontal ? item.contentBoxWidth : item.contentBoxHeight;
                             }
-                            if (auto && !parent.hasPX(maxDimension)) {
+                            if (autoSize && !parent.hasPX(maxDimension)) {
                                 item.css(minDimension, formatPX(size), true);
                                 if (horizontal) {
                                     item.setLayoutWidth('wrap_content');
@@ -833,16 +833,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
                 else {
-                    const controller = <android.base.Controller<T>> this.controller;
-                    const column = mainData.column;
                     const { gap, length } = column;
                     let previousBarrierId = '';
                     for (let i = 0; i < rowCount; i++) {
-                        const row = barrierData[i];
-                        const barrierId = controller.addBarrier(row, 'bottom');
+                        const nodes = barrierData[i];
+                        const barrierId = controller.addBarrier(nodes, 'bottom');
                         let previousItem: Undef<T>;
                         for (let j = 0; j < length; j++) {
-                            const item = row[j];
+                            const item = nodes[j];
                             if (item) {
                                 if (i === 0) {
                                     item.anchor('top', 'parent');

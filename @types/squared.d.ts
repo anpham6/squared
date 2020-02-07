@@ -1010,6 +1010,7 @@ declare namespace lib {
 
     namespace xml {
         const STRING_XMLENCODING: string;
+        const STRING_SPACE: string;
         const STRING_TABSPACE: string;
 
         function isPlainText(value: string): string;

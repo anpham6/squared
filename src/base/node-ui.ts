@@ -6,6 +6,8 @@ import Node from './node';
 import { CSS_SPACING } from './lib/constant';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
+type T = NodeUI;
+
 const $lib = squared.lib;
 
 const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, isPercent } = $lib.css;
@@ -14,8 +16,6 @@ const { equal } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
 const { aboveRange, assignEmptyProperty, cloneObject, convertWord, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
-
-type T = NodeUI;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
@@ -288,15 +288,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < length; i++) {
                             const node = nodes[i];
-                            const { floating, linear } = node;
-                            const { left, right } = linear;
+                            const { left, right } = node.linear;
                             if (Math.floor(left) <= boxLeft) {
                                 j++;
                             }
                             if (Math.ceil(right) >= boxRight) {
                                 k++;
                             }
-                            if (!floating) {
+                            if (!node.floating) {
                                 if (left === floatLeft) {
                                     l++;
                                 }
@@ -312,7 +311,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 break;
                             }
                             const previous = nodes[i - 1];
-                            if (withinRange(left, previous.linear.left) || previous.floating && aboveRange(linear.top, previous.linear.bottom)) {
+                            if (withinRange(left, previous.linear.left) || previous.floating && aboveRange(node.linear.top, previous.linear.bottom)) {
                                 linearX = false;
                                 break;
                             }
@@ -1271,7 +1270,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textContent() {
         let result = this._cached.textContent;
         if (result === undefined) {
-            result = this.naturalChild ? (<Element> this._element).textContent as string : '';
+            result = this.naturalChild && (<Element> this._element).textContent || '';
             this._cached.textContent = result;
         }
         return result;
@@ -1473,7 +1472,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 result = value === '' || !this.preserveWhiteSpace && !this.pseudoElement && value.trim() === '';
             }
             else {
-                result = false;
+                result = true;
             }
             this._cached.textEmpty = result;
         }

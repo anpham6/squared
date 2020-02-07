@@ -4,6 +4,8 @@ import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
 
 import { EXT_NAME } from './lib/constant';
 
+type T = Node;
+
 const $lib = squared.lib;
 
 const { USER_AGENT, isUserAgent } = $lib.client;
@@ -14,8 +16,6 @@ const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsN
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, filterArray, hasBit, hasValue, isNumber, isObject, isString, spliceString } = $lib.util;
 
 const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
-
-type T = Node;
 
 const REGEX_INLINE = /^inline/;
 const REGEX_INLINEDASH = /^inline-/;
@@ -213,8 +213,8 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                                 const element = <HTMLElement> node.element;
                                 let valid = false;
                                 const children = (<Element> form.element).querySelectorAll('*');
-                                const lengthA = children.length;
-                                for (let j = 0; j < lengthA; j++) {
+                                const length = children.length;
+                                for (let j = 0; j < length; j++) {
                                     const item = <HTMLInputElement> children[index];
                                     if (item.tagName === 'BUTTON') {
                                         valid = element === item;
@@ -280,8 +280,8 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                                 }
                                 else if (element.name) {
                                     const children = (node.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
-                                    const lengthA = children.length;
-                                    for (let j = 0; j < lengthA; j++) {
+                                    const length = children.length;
+                                    for (let j = 0; j < length; j++) {
                                         if ((<HTMLInputElement> children[j]).checked) {
                                             return false;
                                         }
@@ -334,8 +334,8 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                     const element = node.element;
                     const children = (<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo);
                     let valid = false;
-                    const lengthA = children.length;
-                    for (let j = 0; j < lengthA; j++) {
+                    const length = children.length;
+                    for (let j = 0; j < length; j++) {
                         if (children.item(index) === element) {
                             valid = true;
                             break;
@@ -354,22 +354,22 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                         if (match[1]) {
                             children = children.slice(0).reverse();
                         }
-                        const index = (match[2] === 'child' ? children.indexOf(node) : filterArray(children, item => item.tagName === tagName).indexOf(node)) + 1;
-                        if (index > 0) {
+                        const i = (match[2] === 'child' ? children.indexOf(node) : filterArray(children, item => item.tagName === tagName).indexOf(node)) + 1;
+                        if (i > 0) {
                             if (isNumber(placement)) {
-                                if (parseInt(placement) !== index) {
+                                if (parseInt(placement) !== i) {
                                     return false;
                                 }
                             }
                             else {
                                 switch (placement) {
                                     case 'even':
-                                        if (index % 2 !== 0) {
+                                        if (i % 2 !== 0) {
                                             return false;
                                         }
                                         break;
                                     case 'odd':
-                                        if (index % 2 === 0) {
+                                        if (i % 2 === 0) {
                                             return false;
                                         }
                                         break;
@@ -383,30 +383,30 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                                                 }
                                                 const increment = parseInt(subMatch[2]);
                                                 if (increment !== 0) {
-                                                    if (index !== modifier) {
+                                                    if (i !== modifier) {
                                                         for (let j = increment; ; j += increment) {
                                                             const total = increment + modifier;
-                                                            if (total === index) {
+                                                            if (total === i) {
                                                                 break;
                                                             }
-                                                            else if (total > index) {
+                                                            else if (total > i) {
                                                                 return false;
                                                             }
                                                         }
                                                     }
                                                 }
-                                                else if (index !== modifier) {
+                                                else if (i !== modifier) {
                                                     return false;
                                                 }
                                             }
                                             else if (subMatch[3]) {
                                                 if (modifier > 0) {
                                                     if (subMatch[1]) {
-                                                        if (index > modifier) {
+                                                        if (i > modifier) {
                                                             return false;
                                                         }
                                                     }
-                                                    else if (index < modifier) {
+                                                    else if (i < modifier) {
                                                         return false;
                                                     }
                                                 }

@@ -5,9 +5,9 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 type View = android.base.View;
 
-const { getElementAsNode } = squared.lib.session;
-
 const $base = squared.base;
+
+const { getElementAsNode } = squared.lib.session;
 
 const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
 
@@ -125,8 +125,8 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             if (length > 1 && radiogroup.includes(node)) {
                 const controlName = CONTAINER_ANDROID.RADIOGROUP;
                 const data = new Map<T, number>();
-                for (const node of radiogroup) {
-                    const parents = node.ascend({ condition: (item: T) => item.layoutLinear, error: (item: T) => item.controlName === controlName, every: true }) as T[];
+                for (const radio of radiogroup) {
+                    const parents = radio.ascend({ condition: (item: T) => item.layoutLinear, error: (item: T) => item.controlName === controlName, every: true }) as T[];
                     if (parents.length) {
                         for (const item of parents) {
                             const value = (data.get(item) || 0) + 1;
@@ -138,18 +138,18 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                         break;
                     }
                 }
-                for (const [parent, value] of data.entries()) {
+                for (const [group, value] of data.entries()) {
                     if (value === length) {
-                        parent.unsafe('controlName', controlName);
-                        parent.containerType = CONTAINER_NODE.RADIO;
-                        const renderParent = parent.renderParent;
+                        group.unsafe('controlName', controlName);
+                        group.containerType = CONTAINER_NODE.RADIO;
+                        const renderParent = group.renderParent;
                         if (renderParent) {
-                            const template = <NodeXmlTemplate<T>> renderParent.renderTemplates?.find(item => item?.node === parent);
+                            const template = <NodeXmlTemplate<T>> renderParent.renderTemplates?.find(item => item?.node === group);
                             if (template) {
                                 template.controlName = controlName;
                             }
                         }
-                        setBaselineIndex(radiogroup, parent);
+                        setBaselineIndex(radiogroup, group);
                         return undefined;
                     }
                 }

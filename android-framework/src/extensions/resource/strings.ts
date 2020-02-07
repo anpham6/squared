@@ -12,7 +12,7 @@ const $lib = squared.lib;
 const { formatPX } = $lib.css;
 const { measureTextWidth } = $lib.dom;
 const { capitalizeString, lowerCaseString, isNumber, isString } = $lib.util;
-const { replaceCharacterData } = $lib.xml;
+const { STRING_SPACE, replaceCharacterData } = $lib.xml;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -131,7 +131,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     }
                                     if (indent > 0) {
                                         const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
-                                        value = '&#160;'.repeat(Math.max(Math.floor(indent / width), 1)) + value;
+                                        value = STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + value;
                                     }
                                     setTextValue(node, 'text', name, value);
                                 }

@@ -18,7 +18,8 @@ const REGEX_FORMAT = {
 };
 
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
-export const STRING_TABSPACE = '&#160;'.repeat(8);
+export const STRING_SPACE = '&#160;';
+export const STRING_TABSPACE = STRING_SPACE.repeat(8);
 
 export function isPlainText(value: string) {
     const length = value.length;

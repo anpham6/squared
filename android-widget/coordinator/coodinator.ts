@@ -2,8 +2,6 @@ import { NodeXmlTemplate } from '../../@types/base/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
-import Resource = android.base.Resource;
-
 type View = android.base.View;
 
 const $lib = android.lib;
@@ -15,6 +13,8 @@ const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $lib.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $lib.enumeration;
 const { createViewAttribute } = $lib.util;
+
+const Resource = android.base.Resource;
 
 export default class Coordinator<T extends View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {

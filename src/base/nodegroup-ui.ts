@@ -46,7 +46,7 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     get blockStatic() {
         let result = this._cached.blockStatic;
-        if (this._cached.blockStatic === undefined) {
+        if (result === undefined) {
             const documentParent = this.actualParent || this.documentParent;
             result = (
                 this.naturalChildren.length > 0 && this.naturalChildren[0].blockStatic ||

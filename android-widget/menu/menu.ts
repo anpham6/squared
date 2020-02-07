@@ -1,7 +1,7 @@
 import { ExtensionResult, NodeXmlTemplate } from '../../@types/base/application';
 import { ViewAttribute } from '../../@types/android/node';
 
-import Resource = android.base.Resource;
+type View = android.base.View;
 
 const { isNumber } = squared.lib.util;
 
@@ -13,7 +13,7 @@ const { EXT_ANDROID } = $lib.constant;
 const { CONTAINER_NODE } = $lib.enumeration;
 const { createViewAttribute } = $lib.util;
 
-type View = android.base.View;
+const Resource = android.base.Resource;
 
 const REGEX_ITEM = {
     id: /^@\+id\/\w+$/,
