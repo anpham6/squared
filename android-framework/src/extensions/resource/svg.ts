@@ -206,8 +206,9 @@ function getPaintAttribute(value: string) {
 }
 
 function createPathInterpolator(value: string) {
-    if (INTERPOLATOR_ANDROID[value]) {
-        return INTERPOLATOR_ANDROID[value];
+    const interpolator = INTERPOLATOR_ANDROID[value];
+    if (interpolator) {
+        return interpolator;
     }
     else {
         const name = 'path_interpolator_' + convertWord(value);
@@ -222,8 +223,8 @@ function createPathInterpolator(value: string) {
 function createTransformData(transform: SvgTransform[]) {
     const result: TransformData = {};
     for (const item of transform) {
-        const { matrix, origin } = item;
-        switch (item.type) {
+        const { matrix, origin, type } = item;
+        switch (type) {
             case SVGTransform.SVG_TRANSFORM_SCALE:
                 result.scaleX = matrix.a.toString();
                 result.scaleY = matrix.d.toString();

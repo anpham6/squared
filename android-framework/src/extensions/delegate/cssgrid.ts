@@ -52,11 +52,6 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
             }
         }
         container.unsetCache('contentBoxWidth', 'contentBoxHeight');
-        const visibleStyle = node.visibleStyle;
-        visibleStyle.background = false;
-        visibleStyle.backgroundImage = false;
-        visibleStyle.backgroundColor = false;
-        visibleStyle.borderWidth = false;
         return {
             parent: container,
             renderAs: container,

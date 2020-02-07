@@ -152,6 +152,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         td.css('height', formatPX(parseFloat(value)));
                     }
                 }
+                if (td.cssInitial('verticalAlign') === '') {
+                    td.css('verticalAlign', 'middle', true);
+                }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
                     if (colgroup) {
                         const { backgroundImage, backgroundColor } = getStyle(colgroup.children[index + 1]);
@@ -191,9 +194,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 switch (td.tagName) {
                     case 'TD': {
                         const including = td.parent as T;
-                        if (td.cssInitial('verticalAlign') === '') {
-                            td.css('verticalAlign', 'middle', true);
-                        }
                         if (td.borderTopWidth === 0) {
                             setBorderStyle('borderTop', including);
                         }

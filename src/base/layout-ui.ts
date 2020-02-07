@@ -1,4 +1,4 @@
-import { LayoutType } from '../../@types/base/application';
+import { LayoutOptions, LayoutType } from '../../@types/base/application';
 
 import NodeUI from './node-ui';
 
@@ -7,6 +7,21 @@ import { NODE_ALIGNMENT } from './lib/enumeration';
 const { aboveRange, hasBit } = squared.lib.util;
 
 export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements squared.base.LayoutUI<T> {
+    public static create<T extends NodeUI>(options: LayoutOptions<T>) {
+        const { parent, node, containerType, alignmentType, children, itemCount, rowCount, columnCount } = options;
+        const layout = new LayoutUI(parent, node, containerType, alignmentType, children);
+        if (itemCount) {
+            layout.itemCount = itemCount;
+        }
+        if (rowCount) {
+            layout.rowCount = rowCount;
+        }
+        if (columnCount) {
+            layout.columnCount = columnCount;
+        }
+        return layout;
+    }
+
     public rowCount = 0;
     public columnCount = 0;
     public renderType = 0;
@@ -94,6 +109,13 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
             this.alignmentType |= value;
         }
         return this.alignmentType;
+    }
+
+    public addRender(value: number) {
+        if (!hasBit(this.renderType, value)) {
+            this.renderType |= value;
+        }
+        return this.renderType;
     }
 
     public delete(value: number) {

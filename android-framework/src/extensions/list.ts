@@ -58,7 +58,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             let adjustPadding = false;
             let resetPadding = NaN;
             node.modifyBox(BOX_STANDARD.MARGIN_LEFT);
-            if (parent.is(CONTAINER_NODE.GRID)) {
+            if (parent.layoutGrid) {
                 columnCount = convertInt(parent.android('columnCount')) || 1;
                 adjustPadding = true;
             }

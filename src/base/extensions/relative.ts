@@ -42,7 +42,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
         else {
             right = node.right;
         }
-        if (renderParent.support.positionRelative && renderParent.layoutHorizontal && node.renderChildren.length === 0 && (top !== 0 || bottom !== 0 || verticalAlign !== 0)) {
+        if (renderParent.layoutHorizontal && renderParent.support.positionRelative && node.renderChildren.length === 0 && (top !== 0 || bottom !== 0 || verticalAlign !== 0)) {
             const application = this.application;
             target = node.clone(application.nextId, true, true) as T;
             target.baselineAltered = true;
@@ -109,13 +109,13 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
             for (const item of (node.actualParent as T).naturalElements as T[]) {
                 if (item === node) {
                     if (preceding) {
-                        if (renderParent.layoutVertical && hasVertical) {
+                        if (hasVertical && renderParent.layoutVertical) {
                             const rect = assignRect(node.boundingClientRect);
                             if (top !== 0) {
                                 top -= rect.top - bounds.top;
                             }
                             else {
-                                if (previous && previous.positionRelative && previous.has('top')) {
+                                if (previous?.positionRelative && previous.has('top')) {
                                     bottom += bounds.bottom - rect.bottom;
                                 }
                                 else {
@@ -123,13 +123,13 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                 }
                             }
                         }
-                        if (renderParent.layoutHorizontal && hasHorizontal && node.alignSibling('leftRight') === '') {
+                        if (hasHorizontal && renderParent.layoutHorizontal && node.alignSibling('leftRight') === '') {
                             const rect = assignRect(node.boundingClientRect);
                             if (left !== 0) {
                                 left -= rect.left - bounds.left;
                             }
                             else {
-                                if (previous && previous.positionRelative && previous.has('right')) {
+                                if (previous?.positionRelative && previous.has('right')) {
                                     right += bounds.right - rect.right;
                                 }
                                 else {

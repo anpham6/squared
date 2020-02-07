@@ -72,7 +72,7 @@ function traverseElementSibling(options: SiblingOptions = {}, element: Null<Elem
 
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth;
-const checkBlockDimension = (node: T, previous: T) => aboveRange(node.linear.top, previous.linear.bottom) && (isBlockWrap(node) || isBlockWrap(previous) || node.float !== previous.float);
+const checkBlockDimension = (node: T, previous: T) => node.blockDimension && aboveRange(node.linear.top, previous.linear.bottom) && (isBlockWrap(node) || isBlockWrap(previous) || node.float !== previous.float);
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static outerRegion(node: T): BoxRectDimension {
@@ -430,6 +430,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract actualRect(direction: string, dimension?: BoxType): number;
     public abstract localizeString(value: string): string;
 
+    public abstract get controlElement(): boolean;
     public abstract set containerType(value: number);
     public abstract get containerType(): number;
     public abstract set controlId(name: string);
@@ -654,15 +655,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }, true);
                     this.setCacheValue('backgroundColor', backgroundColor);
                     this.setCacheValue('backgroundImage', backgroundImage);
-                    node.cssApply({
-                        backgroundColor: 'transparent',
-                        backgroundImage: 'none',
-                        border: '0px none solid',
-                        borderRadius: '0px'
-                    }, true);
                     node.setCacheValue('backgroundColor', '');
                     node.setCacheValue('backgroundImage', '');
                     node.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING, this);
+                    const visibleStyle = node.visibleStyle;
+                    visibleStyle.background = false;
+                    visibleStyle.backgroundImage = false;
+                    visibleStyle.backgroundColor = false;
+                    visibleStyle.borderWidth = false;
                     break;
                 }
             }
@@ -776,7 +776,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return NODE_TRAVERSE.LINEBREAK;
         }
         else if (this.pageFlow || this.positionAuto) {
-            const blockDimension = this.blockDimension;
             if (isArray(siblings)) {
                 if (cleared?.has(this)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
@@ -816,17 +815,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                             maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
                                         }
                                     }
-                                    if (siblings.length > 2) {
-                                        if (this.multiline) {
-                                            if (this.styleText) {
-                                                const textBounds = this.textBounds;
-                                                if (textBounds) {
-                                                    bottom = textBounds.bottom;
-                                                }
+                                    if (this.multiline) {
+                                        if (this.styleText) {
+                                            const textBounds = this.textBounds;
+                                            if (textBounds) {
+                                                bottom = textBounds.bottom;
                                             }
-                                            const offset = bottom - maxBottom;
-                                            top = offset <= 0 || offset / (bottom - top) < 0.5 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
                                         }
+                                        const offset = bottom - maxBottom;
+                                        top = offset <= 0 || offset / (bottom - top) < 0.5 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
                                     }
                                     if (aboveRange(maxBottom, top)) {
                                         return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
@@ -841,7 +838,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                     }
-                    if (blockDimension && checkBlockDimension(this, previous)) {
+                    if (checkBlockDimension(this, previous)) {
                         return NODE_TRAVERSE.INLINE_WRAP;
                     }
                 }
@@ -859,7 +856,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         return NODE_TRAVERSE.VERTICAL;
                     }
                     else if (previous.floating) {
-                        if (blockDimension && this.css('width') === '100%' && !this.hasPX('maxWidth') || previous.float === 'left' && this.autoMargin.right || previous.float === 'right' && this.autoMargin.left) {
+                        if (this.blockDimension && this.css('width') === '100%' && !this.hasPX('maxWidth') || previous.float === 'left' && this.autoMargin.right || previous.float === 'right' && this.autoMargin.left) {
                             return NODE_TRAVERSE.VERTICAL;
                         }
                         else if (blockStatic && this.some(item => item.floating && aboveRange(item.linear.top, previous.linear.bottom))) {
@@ -870,7 +867,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (cleared?.get(previous) === 'both' && (!isArray(siblings) || siblings[0] !== previous)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
-                else if (blockDimension && checkBlockDimension(this, previous)) {
+                else if (checkBlockDimension(this, previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }
@@ -962,12 +959,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 const value = this[CSS_SPACING.get(key) as string];
                                 if (value >= 0) {
                                     node.modifyBox(key, value);
-                                    this.registerBox(key, node);
                                 }
                             }
-                            else {
-                                this.transferBox(key, node);
-                            }
+                            this.transferBox(key, node);
                         }
                     }
                 }
@@ -991,17 +985,17 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             for (let i = 0; i < 4; i++) {
                 const key = CSS_SPACING_KEYS[i + start];
                 if (hasBit(region, key)) {
-                    const name = attrs[i];
-                    const value: number = boxAdjustment[name];
-                    if (value !== 0) {
-                        node.modifyBox(key, value, false);
-                        boxAdjustment[name] = 0;
-                    }
                     const previous = this.registerBox(key);
                     if (previous) {
                         previous.transferBox(key, node);
                     }
                     else {
+                        const name = attrs[i];
+                        const value: number = boxAdjustment[name];
+                        if (value !== 0) {
+                            node.modifyBox(key, value, false);
+                            boxAdjustment[name] = 0;
+                        }
                         this.registerBox(key, node);
                     }
                 }
@@ -1427,10 +1421,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get childIndex() {
         let result = this._childIndex;
         if (result === Number.POSITIVE_INFINITY) {
-            const innerWrapped = this.innerMostWrapped;
-            if (innerWrapped) {
-                result = innerWrapped.childIndex;
-                this._childIndex = result;
+            let wrapped = this.innerWrapped;
+            if (wrapped) {
+                do {
+                    const index = wrapped.childIndex;
+                    if (index !== Number.POSITIVE_INFINITY) {
+                        result = index;
+                        this._childIndex = result;
+                        break;
+                    }
+                    wrapped = wrapped.innerWrapped;
+                }
+                while (wrapped);
             }
             else {
                 const element = this._element;
@@ -1458,10 +1460,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get containerIndex() {
         let result = this._containerIndex;
         if (result === Number.POSITIVE_INFINITY) {
-            result = this.innerMostWrapped.containerIndex;
-            this._containerIndex = result;
+            let wrapped = this.innerWrapped;
+            while (wrapped) {
+                const index = wrapped.containerIndex;
+                if (index !== Number.POSITIVE_INFINITY) {
+                    result = index;
+                    this._containerIndex = result;
+                    break;
+                }
+                wrapped = wrapped.innerWrapped;
+            }
         }
-        return this._containerIndex;
+        return result;
     }
 
     get textEmpty() {
@@ -1472,7 +1482,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 result = value === '' || !this.preserveWhiteSpace && !this.pseudoElement && value.trim() === '';
             }
             else {
-                result = true;
+                result = false;
             }
             this._cached.textEmpty = result;
         }

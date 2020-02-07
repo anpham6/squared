@@ -80,7 +80,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {
         const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData');
         if (mainData) {
-            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentId && !node.pageFlow });
+            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid });
             if (node.documentBody) {
                 let valid = false;
                 if (mainData.right) {

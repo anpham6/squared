@@ -13,8 +13,8 @@ const { resolveURL } = squared.lib.css;
 const { CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 const isHideMargin = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && (node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
-const isFullScreen = (node: View, visibleStyle: VisibleStyle) => node.backgroundColor !== '' && visibleStyle.borderWidth && !node.inline && node.css('height') !== '100%' && node.css('minHeight') !== '100%' && !(node.actualParent as View).visibleStyle.background || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
-const isParentVisible = (node: View, visibleStyle: VisibleStyle) => (node.actualParent as View).visibleStyle.background === true && (hasWidth(node) && node.css('height') !== '100%' && node.css('minHeight') !== '100%' || visibleStyle.backgroundImage && (visibleStyle.backgroundRepeatY || node.css('backgroundPositionY').includes('bottom')));
+const isFullScreen = (node: View, visibleStyle: VisibleStyle) => node.backgroundColor !== '' && visibleStyle.borderWidth && !node.inline && node.css('height') !== '100%' && node.css('minHeight') !== '100%' && !(<View> node.actualParent).visibleStyle.background || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
+const isParentVisible = (node: View, visibleStyle: VisibleStyle) => (<View> node.actualParent).visibleStyle.background === true && (hasWidth(node) && node.css('height') !== '100%' && node.css('minHeight') !== '100%' || visibleStyle.backgroundImage && (visibleStyle.backgroundRepeatY || node.css('backgroundPositionY').includes('bottom')));
 const hasWidth = (node: View) => !node.blockStatic || node.hasPX('width') || node.has('maxWidth', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' });
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {

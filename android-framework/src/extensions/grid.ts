@@ -46,16 +46,17 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         super.processNode(node, parent);
         const columnCount: number = node.data(GRID, 'columnCount');
         if (columnCount) {
-            const layout = new LayoutUI(
-                parent,
-                node,
-                CONTAINER_NODE.GRID,
-                NODE_ALIGNMENT.AUTO_LAYOUT,
-                node.children as T[]
-            );
-            layout.columnCount = columnCount;
             return {
-                output: this.application.renderNode(layout),
+                output: this.application.renderNode(
+                    LayoutUI.create({
+                        parent,
+                        node,
+                        containerType: CONTAINER_NODE.GRID,
+                        alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT,
+                        children: node.children as T[],
+                        columnCount
+                    })
+                ),
                 complete: true
             };
         }

@@ -10,14 +10,15 @@ import SvgPath from './svgpath';
 import { SYNCHRONIZE_MODE, SYNCHRONIZE_STATE } from './lib/constant';
 import { SVG, TRANSFORM } from './lib/util';
 
+type SvgContainer = squared.svg.SvgContainer;
+type SvgView = squared.svg.SvgView;
+
 const $lib = squared.lib;
 
 const { clampRange, equal, nextMultiple } = $lib.math;
 const { CHAR } = $lib.regex;
-const { hasBit, hasValue, isEqual, isNumber, joinMap, objectMap, replaceMap, spliceArray, sortNumber } = $lib.util;
+const { filterArray, hasBit, hasValue, isEqual, isNumber, joinMap, objectMap, replaceMap, spliceArray, sortNumber } = $lib.util;
 
-type SvgContainer = squared.svg.SvgContainer;
-type SvgView = squared.svg.SvgView;
 type AnimateValue = number | Point[] | string;
 type TimelineValue = Map<any, AnimateValue>;
 type TimelineIndex = Map<number, AnimateValue>;
@@ -411,14 +412,15 @@ function getIntermediateSplitValue(subTime: number, splitTime: number, item: Svg
 }
 
 function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: ForwardMap, baseValueMap: ObjectMap<AnimateValue>, interval: number, item: SvgAnimate, keyTimes: number[], values: string[], keySplines: Undef<string[]>, baseValue: AnimateValue, queued: SvgAnimate[], evaluateStart: boolean): [number[], string[], string[]] {
+    const length = values.length;
     if (keySplines === undefined) {
-        keySplines = new Array(values.length - 1).fill('');
+        keySplines = new Array(length - 1).fill('');
     }
     const { delay, duration } = item;
     const startTime = delay + duration * interval;
     const itemEndTime = item.getTotalDuration();
     const intervalEndTime = startTime + (evaluateStart ? keyTimes[0] : 1) * duration;
-    const finalValue = parseFloat(values[evaluateStart ? values.length - 1 : 0]);
+    const finalValue = parseFloat(values[evaluateStart ? 0 : length - 1]);
     let maxTime = startTime;
     complete: {
         for (let i = 0; i < queued.length; i++) {
@@ -449,15 +451,17 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                                     splitValue = getIntermediateSplitValue(subTime, splitTime, sub, subKeyTimes, subValues, subDuration, j, baseValue);
                                 }
                                 if (splitValue) {
-                                    splitValue = Math.round((parseFloat(splitValue) + finalValue) / 2).toString();
-                                    const length = keyTimes.length;
-                                    if (!(resultTime === keyTimes[length - 1] && splitValue === values[length - 1])) {
+                                    if (resultTime > 0) {
+                                        splitValue = Math.round((parseFloat(splitValue) + finalValue) / 2).toString();
+                                    }
+                                    const lengthA = keyTimes.length;
+                                    if (!(resultTime === keyTimes[lengthA - 1] && splitValue === values[lengthA - 1])) {
                                         const keySpline = joined || resultTime === 0 ? subKeySplines?.[index] || sub.timingFunction : '';
                                         if (evaluateStart) {
                                             if (!joined && resultTime > 0 && subTime === maxTime) {
                                                 resultTime += 1 / 1000;
                                             }
-                                            for (let l = 0; l < length; l++) {
+                                            for (let l = 0; l < lengthA; l++) {
                                                 if (resultTime <= keyTimes[l]) {
                                                     if (l === 0 || resultTime === 0) {
                                                         keyTimes.unshift(resultTime);
@@ -859,10 +863,9 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         }
                                     }
                                     else if (!itemB.evaluateStart && !itemB.evaluateEnd) {
-                                        const timeB = itemB.getTotalDuration();
-                                        if (itemA.delay === itemB.delay && (!itemB.fillReplace || timeA <= timeB || itemB.iterationCount === -1) ||
+                                        if (itemA.delay === itemB.delay && (!itemB.fillReplace || itemB.iterationCount === -1 || timeA <= itemB.getTotalDuration()) ||
                                             itemB.fillBackwards && itemA.delay <= itemB.delay && (itemB.fillForwards || itemA.fillReplace && timeA <= itemB.delay) ||
-                                            itemA.animationElement && itemB.animationElement === null && (itemA.delay >= itemB.delay && timeA <= timeB || itemB.fillForwards))
+                                            itemA.animationElement && itemB.animationElement === null && (itemA.delay >= itemB.delay && timeA <= itemB.getTotalDuration() || itemB.fillForwards))
                                         {
                                             excluded[i] = itemA;
                                             break;
@@ -1330,7 +1333,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     let startTime = maxTime + 1;
                                     let maxThreadTime = Math.min(nextDelayTime, item.end || Number.POSITIVE_INFINITY);
                                     let setterInterrupt: Undef<SvgAnimation>;
-                                    if (setterData.length && item.animationElement) {
+                                    if (item.animationElement && setterData.length) {
                                         const interruptTime = Math.min(nextDelayTime, totalDuration, maxThreadTime);
                                         setterInterrupt = setterData.find(set => set.delay >= actualMaxTime && set.delay <= interruptTime);
                                         if (setterInterrupt) {
@@ -1382,7 +1385,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                     [keyTimes, values, keySplines] = cloneKeyTimes(item);
                                                     const lengthB = data.length;
                                                     if (evaluateStart) {
-                                                        const pending = incomplete.concat(data.slice(j + 1, lengthB).filter(previous => !!previous.animationElement && previous.delay < maxThreadTime));
+                                                        const pending = filterArray(incomplete.concat(data.slice(j + 1, lengthB)), previous => !!previous.animationElement && previous.delay < maxThreadTime);
                                                         if (pending.length) {
                                                             sortEvaluateStart(pending, actualMaxTime);
                                                             [keyTimes, values, keySplines] = appendPartialKeyTimes(intervalMap, forwardMap, baseValueMap, k, item, keyTimes, values, keySplines, baseValue, pending, true);
@@ -1395,7 +1398,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                     }
                                                     if (evaluateEnd) {
                                                         if (item.getIntervalEndTime(actualMaxTime) < maxThreadTime && (incomplete.length || j < lengthB - 1)) {
-                                                            const pending = incomplete.filter(previous => !!previous.animationElement);
+                                                            const pending = filterArray(incomplete, previous => !!previous.animationElement);
                                                             for (let l = j + 1; l < lengthB; l++) {
                                                                 const previous = data[l];
                                                                 if (previous.animationElement) {
@@ -1736,15 +1739,17 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                 delay.push(item.delay);
                                 duration.push(item.duration);
                             }
-                            if (repeatingAnimations.size === 0 && new Set(delay).size === 1 && new Set(duration).size === 1 && delay[0] === keyTimesRepeating.values().next().value) {
-                                repeatingAsInfinite = delay[0] <= 0 ? 0 : delay[0];
+                            const start = delay[0];
+                            if (repeatingAnimations.size === 0 && new Set(delay).size === 1 && new Set(duration).size === 1 && start === keyTimesRepeating.values().next().value) {
+                                repeatingAsInfinite = start;
+                            }
+                            else if (duration.length > 1 && duration.every(value => value % 250 === 0)) {
+                                repeatingEndTime = nextMultiple(duration, repeatingEndTime, delay);
                             }
                             else {
-                                if (duration.length > 1 && duration.every(value => value % 250 === 0)) {
-                                    repeatingEndTime = nextMultiple(duration, repeatingEndTime, delay);
-                                }
-                                else if ((repeatingEndTime - delay[0]) % duration[0] !== 0) {
-                                    repeatingEndTime = duration[0] * Math.ceil(repeatingEndTime / duration[0]);
+                                const end = duration[0];
+                                if ((repeatingEndTime - start) % end !== 0) {
+                                    repeatingEndTime = end * Math.ceil(repeatingEndTime / end);
                                 }
                             }
                         }
@@ -1820,8 +1825,8 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         if (!transforming) {
                             for (const attr in repeatingMap) {
                                 const baseMap = repeatingMap[attr];
-                                const startTime = baseMap.keys().next().value;
-                                const startValue = baseMap.values().next().value;
+                                const startTime: number = baseMap.keys().next().value;
+                                const startValue: AnimateValue = baseMap.values().next().value;
                                 for (const keyTime of keyTimes) {
                                     if (keyTime <= repeatingMaxTime[attr]) {
                                         if (!baseMap.has(keyTime)) {
@@ -1831,7 +1836,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                 }
                                                 else {
                                                     let value = <AnimateValue> intervalMap.get(attr, keyTime);
-                                                    if (value) {
+                                                    if (value !== undefined) {
                                                         value = convertToAnimateValue(value, true);
                                                         if (value !== '') {
                                                             baseMap.set(keyTime, value);

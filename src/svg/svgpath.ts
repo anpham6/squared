@@ -11,15 +11,15 @@ import SvgElement from './svgelement';
 import { INSTANCE_TYPE, REGION_UNIT } from './lib/constant';
 import { SVG, TRANSFORM, getPathLength } from './lib/util';
 
+type SvgContainer = squared.svg.SvgContainer;
+type SvgShape = squared.svg.SvgShape;
+type SvgShapePattern = squared.svg.SvgShapePattern;
+
 const $lib = squared.lib;
 
 const { getNamedItem } = $lib.dom;
 const { equal, lessEqual, nextMultiple, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = $lib.math;
 const { cloneArray, convertInt, convertFloat } = $lib.util;
-
-type SvgContainer = squared.svg.SvgContainer;
-type SvgShape = squared.svg.SvgShape;
-type SvgShapePattern = squared.svg.SvgShapePattern;
 
 interface DashGroup {
     items: SvgStrokeDash[];

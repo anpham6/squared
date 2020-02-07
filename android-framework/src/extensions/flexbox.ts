@@ -190,7 +190,7 @@ function getOuterFrameChild(item: Undef<View>) {
         if (item.layoutFrame) {
             return item.innerWrapped;
         }
-        item = item.innerWrapped as View;
+        item = <View> item.innerWrapped;
     }
     return undefined;
 }
@@ -199,26 +199,28 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: FlexboxData<T> = node.data(FLEXBOX, 'mainData');
-        if (mainData.directionRow && mainData.rowCount === 1 || mainData.directionColumn && mainData.columnCount === 1) {
+        const { directionColumn, directionRow, rowCount, columnCount } = mainData;
+        if (directionRow && rowCount === 1 || directionColumn && columnCount === 1) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;
             node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
-            node.addAlign(mainData.directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL);
+            node.addAlign(directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL);
             mainData.wrap = false;
             return { include: true };
         }
         else {
-            const layout = new LayoutUI(parent, node, 0, NODE_ALIGNMENT.AUTO_LAYOUT);
-            layout.itemCount = node.length;
-            layout.rowCount = mainData.rowCount;
-            layout.columnCount = mainData.columnCount;
-            if (mainData.directionRow && node.hasHeight || mainData.directionColumn && node.hasWidth || node.some(item => !item.pageFlow)) {
-                layout.containerType = CONTAINER_NODE.CONSTRAINT;
-            }
-            else {
-                layout.containerType = CONTAINER_NODE.LINEAR;
-            }
-            layout.add(mainData.directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL);
-            return { output: this.application.renderNode(layout), complete: true };
+            const containerType = directionRow && node.hasHeight || directionColumn && node.hasWidth || node.some(item => !item.pageFlow) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.LINEAR;
+            return {
+                output: this.application.renderNode(LayoutUI.create({
+                    parent,
+                    node,
+                    containerType,
+                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
+                    itemCount: node.length,
+                    rowCount,
+                    columnCount
+                })),
+                complete: true
+            };
         }
     }
 

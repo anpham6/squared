@@ -1,4 +1,4 @@
-import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
+import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutOptions,LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
 import { AutoMargin, AscendOptions, ExcludeOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support, VisibleStyle } from './base/node';
 
@@ -306,10 +306,12 @@ declare namespace base {
         setContainerType(containerType: number, alignmentType?: number): void;
         hasAlign(value: number): boolean;
         add(value: number): number;
+        addRender(value: number): number;
         delete(value: number): number;
     }
 
     class LayoutUI<T extends NodeUI> implements LayoutUI<T> {
+        public static create<T extends NodeUI>(options: LayoutOptions<T>): LayoutUI<T>;
         constructor(parent: T, node: T, containerType?: number, alignmentType?: number, children?: T[]);
     }
 
@@ -519,6 +521,7 @@ declare namespace base {
         readonly nodeGroup: boolean;
         readonly textEmpty: boolean;
         readonly preserveWhiteSpace: boolean;
+        readonly controlElement: boolean;
         readonly baselineHeight: number;
         readonly baselineElement: boolean;
         readonly positiveAxis: boolean;

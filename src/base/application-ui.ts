@@ -1482,14 +1482,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else {
                     floatgroup = controllerHandler.createNodeGroup(grouping[0], grouping, node);
-                    const group = new LayoutUI(
-                        node,
-                        floatgroup,
+                    this.addLayout(LayoutUI.create({
+                        parent: node,
+                        node: floatgroup,
                         containerType,
-                        alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
-                    );
-                    group.itemCount = segments.length;
-                    this.addLayout(group);
+                        alignmentType: alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
+                        itemCount: segments.length
+                    }));
                 }
             }
             else {
@@ -1669,11 +1668,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 let hasSpacing = false;
                 for (const child of leftAbove) {
                     if (child.bounds.top < bottom) {
-                        const right = child.linear.right + Math.min(child.marginLeft, 0);
-                        if (right > floatPosition) {
-                            floatPosition = right;
-                            hasSpacing = child.marginRight > 0;
-                        }
+                        floatPosition = Math.max(child.linear.right + Math.min(child.marginLeft, 0), floatPosition);
+                        hasSpacing = child.marginRight > 0;
                     }
                 }
                 if (floatPosition !== Number.NEGATIVE_INFINITY) {
@@ -1686,7 +1682,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (invalid) {
                         const offset = floatPosition - parent.box.left - marginLeft;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this._localSettings.deviations.textMarginBoundarySize : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
                         }
                     }
                 }
@@ -1695,14 +1691,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 let floatPosition = Number.POSITIVE_INFINITY;
                 let marginRight = 0;
                 let invalid = false;
-                let hasSpacing = false;
                 for (const child of rightAbove) {
                     if (child.bounds.top < bottom) {
-                        const left = child.linear.left + Math.min(child.marginRight, 0);
-                        if (left < floatPosition) {
-                            floatPosition = left;
-                            hasSpacing = child.marginLeft > 0;
-                        }
+                        floatPosition = Math.min(child.linear.left + Math.min(child.marginRight, 0), floatPosition);
                     }
                 }
                 if (floatPosition !== Number.POSITIVE_INFINITY) {
@@ -1715,7 +1706,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (invalid) {
                         const offset = parent.box.right - floatPosition - marginRight;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? this._localSettings.deviations.textMarginBoundarySize : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (target.cascadeSome(child => child.multiline) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
                         }
                     }
                 }

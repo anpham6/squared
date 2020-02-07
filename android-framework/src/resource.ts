@@ -26,13 +26,14 @@ function formatObject(obj: {}, numberAlias = false) {
                 if (value) {
                     switch (attr) {
                         case 'text':
-                            if (!/^@string\//.test(value)) {
-                                value = Resource.addString(value, '', numberAlias);
-                                if (value !== '') {
-                                    obj[attr] = '@string/' + value;
-                                }
+                            if (/^@string\//.test(value)) {
+                                continue;
                             }
-                            continue;
+                            value = Resource.addString(value, '', numberAlias);
+                            if (value !== '') {
+                                obj[attr] = '@string/' + value;
+                            }
+                            break;
                         case 'src':
                         case 'srcCompat':
                             if (COMPONENT.PROTOCOL.test(value)) {
@@ -170,14 +171,18 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public static addImage(images: StringMap, prefix = '', imageFormat?: string[]) {
         const mdpi = images.mdpi;
         if (mdpi) {
-            if (CACHE_IMAGE[mdpi] && Object.keys(images).length === 1) {
-                return CACHE_IMAGE[mdpi];
+            if (Object.keys(images).length === 1) {
+                const asset = CACHE_IMAGE[mdpi];
+                if (asset) {
+                    return asset;
+                }
             }
             const src = fromLastIndexOf(mdpi, '/');
             const format = fromLastIndexOf(src, '.').toLowerCase();
             if (imageFormat === undefined || imageFormat.includes(format)) {
-                CACHE_IMAGE[mdpi] = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
-                return CACHE_IMAGE[mdpi];
+                const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
+                CACHE_IMAGE[mdpi] = asset;
+                return asset;
             }
         }
         return '';
@@ -276,14 +281,16 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             result.mdpi = mdpi;
             const resource = this.application.resourceHandler;
             const rawData = resource.getRawData(mdpi);
-            if (rawData?.base64) {
+            if (rawData) {
                 const { base64, filename } = rawData;
-                if (FILE.SVG.test(filename)) {
-                    return '';
+                if (base64) {
+                    if (FILE.SVG.test(filename)) {
+                        return '';
+                    }
+                    const pathname = prefix + filename;
+                    resource.writeRawImage(pathname, base64);
+                    return pathname.substring(0, pathname.lastIndexOf('.'));
                 }
-                const pathname = prefix + filename;
-                resource.writeRawImage(pathname, base64);
-                return pathname.substring(0, pathname.lastIndexOf('.'));
             }
         }
         return this.addImageSet(result, prefix);

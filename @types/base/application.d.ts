@@ -138,6 +138,17 @@ export interface LayoutType {
     renderType: number;
 }
 
+export interface LayoutOptions<T extends NodeUI> extends Optional<LayoutType> {
+    parent: T;
+    node: T;
+    containerType?: number;
+    alignmentType?: number;
+    children?: T[];
+    itemCount?: number;
+    rowCount?: number;
+    columnCount?: number;
+}
+
 export interface LayoutResult<T extends NodeUI> {
     layout: squared.base.LayoutUI<T>;
     next?: boolean;

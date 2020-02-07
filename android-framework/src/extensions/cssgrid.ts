@@ -373,15 +373,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const { column, row } = mainData;
             const unit = column.unit;
             const columnCount = column.length;
-            const layout = new LayoutUI(
+            const layout = LayoutUI.create({
                 parent,
                 node,
-                0,
-                NODE_ALIGNMENT.AUTO_LAYOUT,
-                node.children as T[]
-            );
-            layout.rowCount = row.length;
-            layout.columnCount = columnCount;
+                alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT,
+                children: node.children as T[],
+                rowCount: row.length,
+                columnCount
+            });
             if (!node.documentRoot && !node.hasWidth && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => REGEX_FR.test(value)) && checkFlexibleParent(node)) {
                 const rowData = mainData.rowData;
                 const rowCount = rowData.length;
@@ -824,7 +823,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
             }
-            const barrierData = <T[][]> node.data(CSS_GRID, 'barrierData');
+            const barrierData: T[][] = node.data(CSS_GRID, 'barrierData');
             if (barrierData) {
                 const rowCount = barrierData.length;
                 if (length === 1) {

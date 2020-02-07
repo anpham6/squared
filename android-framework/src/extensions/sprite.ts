@@ -21,7 +21,7 @@ type SpriteData = {
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {
-        const mainData = <SpriteData> node.data(SPRITE, 'mainData');
+        const mainData: SpriteData = node.data(SPRITE, 'mainData');
         if (mainData) {
             const drawable = (<android.base.Resource<T>> this.resource).addImageSrc(node.backgroundImage);
             if (drawable !== '') {

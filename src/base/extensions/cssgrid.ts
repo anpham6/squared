@@ -13,6 +13,8 @@ const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { CHAR, CSS } = $lib.regex;
 const { isNumber, trimString, withinRange } = $lib.util;
 
+const CSS_GRID = EXT_NAME.CSS_GRID;
+
 type GridLayout = {
     placement: number[];
     rowSpan: number;
@@ -28,7 +30,6 @@ type RepeatItem = {
 
 type RowData = Undef<NodeUI[]>[][];
 
-const CSS_GRID = EXT_NAME.CSS_GRID;
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
 const STRING_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
@@ -1123,8 +1124,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 node.cssSort('zIndex');
                 if (node.cssTry('display', 'block')) {
                     node.each((item: T) => {
-                        const rect = item.boundingClientRect;
-                        item.data(CSS_GRID, 'boundsData', { ...item.bounds, width: rect.width, height: rect.height });
+                        const { width, height } = item.boundingClientRect;
+                        item.data(CSS_GRID, 'boundsData', { ...item.bounds, width, height });
                     });
                     node.cssFinally('display');
                 }

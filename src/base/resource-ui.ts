@@ -327,7 +327,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         break;
                     }
                 }
-                while (i++);
+                while (++i);
             }
             return result;
         }

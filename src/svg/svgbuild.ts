@@ -3,13 +3,6 @@ import { SvgOffsetPath, SvgPathCommand, SvgPoint, SvgTransform } from '../../@ty
 import { INSTANCE_TYPE } from './lib/constant';
 import { MATRIX, SVG, TRANSFORM, createPath } from './lib/util';
 
-const $lib = squared.lib;
-const { isAngle, parseAngle } = $lib.css;
-const { getNamedItem } = $lib.dom;
-const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = $lib.math;
-const { CHAR, STRING, XML } = $lib.regex;
-const { convertWord, hasBit, isArray, isString } = $lib.util;
-
 type Svg = squared.svg.Svg;
 type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimateMotion = squared.svg.SvgAnimateMotion;
@@ -27,6 +20,13 @@ type SvgUse = squared.svg.SvgUse;
 type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
+
+const $lib = squared.lib;
+const { isAngle, parseAngle } = $lib.css;
+const { getNamedItem } = $lib.dom;
+const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = $lib.math;
+const { CHAR, STRING, XML } = $lib.regex;
+const { convertWord, hasBit, isArray, isString } = $lib.util;
 
 const REGEX_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
 const REGEX_COMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
@@ -314,7 +314,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const element = <SVGGeometryElement> (createPath(value) as unknown);
         const totalLength = Math.ceil(element.getTotalLength());
         const result: SvgOffsetPath[] = [];
-        if (totalLength > 0) {
+        if (totalLength) {
             const keyPoints: Point[] = [];
             const rotatingPoints: boolean[] = [];
             let rotateFixed = 0;

@@ -551,6 +551,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         if (horizontal.includes(item)) {
                                             break;
                                         }
+                                        else if (item.lineBreak) {
+                                            maxBottom = Number.NEGATIVE_INFINITY;
+                                        }
                                         else if (item.excluded) {
                                             continue;
                                         }

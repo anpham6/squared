@@ -5,12 +5,12 @@ import SvgBuild from './svgbuild';
 import { FILL_MODE } from './lib/constant';
 import { TRANSFORM } from './lib/util';
 
-const { filterArray, hasValue, sortNumber } = squared.lib.util;
-
 type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimation = squared.svg.SvgAnimation;
 type SvgAnimationIntervalValue = squared.svg.SvgAnimationIntervalValue;
 type SvgAnimationIntervalAttributeMap = squared.svg.SvgAnimationIntervalAttributeMap;
+
+const { filterArray, hasValue, sortNumber } = squared.lib.util;
 
 export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimationIntervalMap {
     public static getGroupEndTime(item: SvgAnimationAttribute) {

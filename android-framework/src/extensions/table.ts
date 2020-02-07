@@ -33,27 +33,29 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             if (mainData.columnCount > 1) {
                 requireWidth = mainData.expand;
                 node.each((item: T) => {
-                    const data = item.data(TABLE, 'cellData');
+                    const data: TableCellData = item.data(TABLE, 'cellData');
                     if (UNITZERO.test(item.css('width'))) {
                         item.android('layout_columnWeight', item.toElementString('colSpan', '1'));
                         item.setLayoutWidth('0px');
                     }
                     else {
-                        const expand: Undef<boolean> = data.expand;
+                        const { downsized, expand, percent } = data;
                         if (expand) {
-                            const percent = convertFloat(data.percent) / 100;
-                            if (percent > 0) {
-                                item.setLayoutWidth('0px');
-                                item.android('layout_columnWeight', trimEnd(percent.toPrecision(3), '0'));
-                                if (!requireWidth) {
-                                    requireWidth = !item.hasWidth;
+                            if (percent) {
+                                const value = convertFloat(percent) / 100;
+                                if (value > 0) {
+                                    item.setLayoutWidth('0px');
+                                    item.android('layout_columnWeight', trimEnd(value.toPrecision(3), '0'));
+                                    if (!requireWidth) {
+                                        requireWidth = !item.hasWidth;
+                                    }
                                 }
                             }
                         }
                         else if (expand === false) {
                             item.android('layout_columnWeight', '0');
                         }
-                        if (data.downsized) {
+                        if (downsized) {
                             if (data.exceed) {
                                 item.setLayoutWidth('0px');
                                 item.android('layout_columnWeight', '0.01');
@@ -106,16 +108,18 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 }
                 node.css('height', 'auto');
             }
-            const layout = new LayoutUI(
-                parent,
-                node,
-                CONTAINER_NODE.GRID,
-                NODE_ALIGNMENT.AUTO_LAYOUT,
-                node.children as T[]
-            );
-            layout.rowCount = mainData.rowCount;
-            layout.columnCount = mainData.columnCount;
-            return { output: this.application.renderNode(layout), complete: true };
+            return {
+                output: this.application.renderNode(LayoutUI.create({
+                    parent,
+                    node,
+                    containerType: CONTAINER_NODE.GRID,
+                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT,
+                    children: node.children as T[],
+                    rowCount: mainData.rowCount,
+                    columnCount: mainData.columnCount
+                })),
+                complete: true
+            };
         }
         return undefined;
     }

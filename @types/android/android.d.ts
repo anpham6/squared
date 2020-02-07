@@ -82,6 +82,7 @@ declare namespace base {
         readonly imageOrSvgElement: boolean;
         readonly layoutFrame: boolean;
         readonly layoutLinear: boolean;
+        readonly layoutGrid: boolean;
         readonly layoutRelative: boolean;
         readonly layoutConstraint: boolean;
         readonly anchorTarget: View;

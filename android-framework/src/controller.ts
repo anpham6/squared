@@ -56,8 +56,8 @@ function sortHorizontalFloat(list: View[]) {
 function sortConstraintAbsolute(templates: NodeXmlTemplate<View>[]) {
     if (templates.length > 1) {
         templates.sort((a, b) => {
-            const above = a.node.innerMostWrapped as View;
-            const below = b.node.innerMostWrapped as View;
+            const above = <View> a.node.innerMostWrapped;
+            const below = <View> b.node.innerMostWrapped;
             if (above.absoluteParent === below.absoluteParent) {
                 if (above.zIndex === below.zIndex) {
                     return above.childIndex < below.childIndex ? -1 : 1;
@@ -94,7 +94,7 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
                 continue;
             }
             else {
-                const imageElements = node.renderChildren.filter(item => item.imageOrSvgElement && item.baseline);
+                const imageElements = filterArray(node.renderChildren, item => item.imageOrSvgElement && item.baseline);
                 if (node.imageOrSvgElement || imageElements.length) {
                     for (const image of imageElements) {
                         height = Math.max(image.baselineHeight, height);
@@ -221,7 +221,7 @@ function constraintMinMax(node: View, horizontal: boolean) {
     if (isLength(maxWH, true)) {
         if (horizontal) {
             if (View.ascendFlexibleWidth(node)) {
-                node.setLayoutWidth((node.renderParent as  View).flexibleWidth ? 'match_parent' : '0px', node.innerWrapped?.naturalChild === true);
+                node.setLayoutWidth((<View> node.renderParent).flexibleWidth ? 'match_parent' : '0px', node.innerWrapped?.naturalChild === true);
                 if (node.flexibleWidth) {
                     const value = node.parseUnit(maxWH);
                     node.app('layout_constraintWidth_max', formatPX(value + node.contentBoxWidth));
@@ -237,7 +237,7 @@ function constraintMinMax(node: View, horizontal: boolean) {
             }
         }
         else if (View.ascendFlexibleHeight(node)) {
-            node.setLayoutHeight((node.renderParent as View).flexibleHeight ? 'match_parent' : '0px', node.innerWrapped?.naturalChild === true);
+            node.setLayoutHeight((<View> node.renderParent).flexibleHeight ? 'match_parent' : '0px', node.innerWrapped?.naturalChild === true);
             if (node.flexibleHeight) {
                 node.app('layout_constraintHeight_max', formatPX(node.parseUnit(maxWH, 'height') + node.contentBoxHeight));
                 node.css('maxHeight', 'auto');
@@ -315,7 +315,7 @@ function constraintPercentWidth(node: View, opposing: boolean, percent = 1) {
         const value = node.cssInitial('width', true);
         if (isPercent(value)) {
             if (value !== '100%') {
-                node.setLayoutWidth(formatPX(node.bounds.width));
+                node.setLayoutWidth(formatPX(node.actualWidth));
             }
             else {
                 node.setLayoutWidth('match_parent', false);
@@ -329,13 +329,13 @@ function constraintPercentWidth(node: View, opposing: boolean, percent = 1) {
 }
 
 function constraintPercentHeight(node: View, opposing: boolean, percent = 1) {
-    const parent = node.actualParent || node.documentParent;
-    if (parent.hasPX('height', false)) {
+    const parent = <View> (node.actualParent || node.documentParent);
+    if (parent.hasHeight) {
         if (!opposing && !parent.layoutElement) {
             const value = node.cssInitial('height', true);
             if (isPercent(value)) {
                 if (value !== '100%') {
-                    node.setLayoutHeight(formatPX(node.bounds.height));
+                    node.setLayoutHeight(formatPX(node.actualHeight));
                 }
                 else {
                     node.setLayoutHeight('match_parent', false);
@@ -348,11 +348,22 @@ function constraintPercentHeight(node: View, opposing: boolean, percent = 1) {
     }
     else {
         const height = node.cssInitial('height');
-        if (height === '100%' && node.alignParent('top') && node.alignParent('bottom')) {
-            node.setLayoutHeight('0px', false);
-        }
-        else if (isLength(height, true)) {
-            node.setLayoutHeight(formatPX(node.bounds.height), false);
+        if (isPercent(height)) {
+            if (height === '100%') {
+                if (node.alignParent('top') && node.alignParent('bottom')) {
+                    node.setLayoutHeight('0px', false);
+                    return percent;
+                }
+                else if (parent.flexibleHeight) {
+                    node.setLayoutHeight('match_parent', false);
+                    return percent;
+                }
+            }
+            if (!node.hasPX('minHeight')) {
+                const minHeight = node.parseUnit(height, 'height');
+                node.css('minHeight', formatPX(minHeight));
+            }
+            node.setLayoutHeight('wrap_content', false);
         }
     }
     return percent;
@@ -413,8 +424,8 @@ function setColumnVertical(partition: View[][], lastRow: boolean, previousRow?: 
     const length = partition.length;
     for (let i = 0; i < length; i++) {
         const seg = partition[i];
-        const lengthB = seg.length;
-        for (let j = 0; j < lengthB; j++) {
+        const lengthA = seg.length;
+        for (let j = 0; j < lengthA; j++) {
             const item = seg[j];
             if (j === 0) {
                 if (i === 0) {
@@ -434,13 +445,14 @@ function setColumnVertical(partition: View[][], lastRow: boolean, previousRow?: 
                 }
             }
             else {
-                seg[j - 1].anchor('bottomTop', item.documentId);
-                item.anchor('topBottom', seg[j - 1].documentId);
+                const previous = seg[j - 1];
+                previous.anchor('bottomTop', item.documentId);
+                item.anchor('topBottom', previous.documentId);
             }
             if (j > 0) {
                 item.anchor('left', seg[0].documentId);
             }
-            if (j === lengthB - 1) {
+            if (j === lengthA - 1) {
                 if (lastRow) {
                     item.anchor('bottom', 'parent');
                 }
@@ -569,9 +581,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public static setFlexDimension<T extends View>(node: T, dimension: "width" | "height", percentWidth = 1, percentHeight = 1): [number, number] {
-        const horizontal = dimension === 'width';
         const { grow, basis, shrink } = node.flexbox;
-        function setFlexGrow(value: number) {
+        const horizontal = dimension === 'width';
+        const setFlexGrow = (value: number) => {
             if (grow > 0) {
                 node.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', truncate(grow, node.localSettings.floatPrecision));
                 return true;
@@ -586,7 +598,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
             }
             return false;
-        }
+        };
         if (isLength(basis)) {
             setFlexGrow(node.parseUnit(basis, dimension));
             setLayoutDimension(node, '0px', horizontal, true);
@@ -784,7 +796,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (layout.linearX) {
             if (this.checkFrameHorizontal(layout)) {
-                layout.renderType |= NODE_ALIGNMENT.FLOAT | NODE_ALIGNMENT.HORIZONTAL;
+                layout.addRender(NODE_ALIGNMENT.FLOAT);
+                layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
             }
             else if (this.checkConstraintHorizontal(layout)) {
                 layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
@@ -805,7 +818,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (layout.every(item => item.inlineFlow)) {
             if (this.checkFrameHorizontal(layout)) {
-                layout.renderType |= NODE_ALIGNMENT.FLOAT | NODE_ALIGNMENT.HORIZONTAL;
+                layout.addRender(NODE_ALIGNMENT.FLOAT);
+                layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
             }
             else {
                 layout.setContainerType(getRelativeVertical(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
@@ -865,7 +879,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (this.checkFrameHorizontal(layout)) {
             layout.node = this.createNodeGroup(layout.node, layout.children, parent);
-            layout.renderType |= NODE_ALIGNMENT.FLOAT | NODE_ALIGNMENT.HORIZONTAL;
+            layout.addRender(NODE_ALIGNMENT.FLOAT);
+            layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (layout.length !== siblings.length || parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             layout.node = this.createNodeGroup(layout.node, layout.children, parent);
@@ -892,7 +907,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
             }
             else if (cleared.size) {
-                layout.renderType |= NODE_ALIGNMENT.FLOAT | NODE_ALIGNMENT.HORIZONTAL;
+                layout.addRender(NODE_ALIGNMENT.FLOAT);
+                layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
             }
             else {
                 layout.setContainerType(getRelativeVerticalAligned(layout), NODE_ALIGNMENT.VERTICAL);
@@ -900,11 +916,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else if (floatSize && cleared.size) {
             layout.node = this.createLayoutNodeGroup(layout);
-            layout.renderType |= NODE_ALIGNMENT.FLOAT | NODE_ALIGNMENT.VERTICAL;
+            layout.addRender(NODE_ALIGNMENT.FLOAT);
+            layout.addRender(NODE_ALIGNMENT.VERTICAL);
         }
         else if (floatSize && (layout.item(0) as T).floating) {
             layout.node = this.createLayoutNodeGroup(layout);
-            layout.renderType |= NODE_ALIGNMENT.FLOAT | NODE_ALIGNMENT.HORIZONTAL;
+            layout.addRender(NODE_ALIGNMENT.FLOAT);
+            layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (!layout.parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             layout.node = this.createLayoutNodeGroup(layout);
@@ -1050,7 +1068,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if ((floated.size === 0 || floated.size === 1 && floated.has('left')) && layout.node.lineHeight === 0 && layout.singleRowAligned) {
             const { fontSize, lineHeight } = layout.item(0) as T;
             for (const node of layout) {
-                if (!(node.naturalChild && node.baseline && node.length === 0 && !node.inputElement && !node.positionRelative && !node.blockVertical && !node.positionAuto && node.zIndex === 0 && (lineHeight === 0 || node.lineHeight === lineHeight && node.fontSize === fontSize))) {
+                if (!(node.naturalChild && node.length === 0 && !node.inputElement && !node.positionRelative && node.css('verticalAlign') === 'baseline' && !node.blockVertical && !node.positionAuto && node.zIndex === 0 && (lineHeight === 0 || node.lineHeight === lineHeight && node.fontSize === fontSize))) {
                     return false;
                 }
             }
@@ -1756,7 +1774,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             const guideline = parent.constraint.guideline || {};
             if (!node.pageFlow) {
-                if (node.parent === documentParent.outerMostWrapper) {
+                if (documentParent.outerWrapper && node.parent === documentParent.outerMostWrapper) {
                     location += documentParent[!opposing ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
                 }
                 else if (absoluteParent === node.documentParent) {
@@ -2364,10 +2382,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             previousRowLeft = item;
                         }
                     }
-                    if (siblings && !siblings.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element, item.sessionId))) {
+                    if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element, item.sessionId)) === false) {
                         const betweenStart = getRangeClientRect(siblings[0]);
                         if (!betweenStart.numberOfLines) {
-                            const betweenEnd = siblings.length > 1 ? getRangeClientRect(siblings[siblings.length - 1]) : undefined;
+                            const betweenEnd = siblings.length > 1 ? getRangeClientRect(<Element> siblings.pop()) : undefined;
                             if (betweenEnd === undefined || !betweenEnd.numberOfLines) {
                                 rowWidth += betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
                             }
@@ -2411,6 +2429,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     for (const item of items) {
                         if (item === baseline || item === textBottom) {
                             continue;
+                        }
+                        if (item.controlElement) {
+                            if (i === 0) {
+                                item.anchor('top', 'true');
+                                item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
+                                item.baselineAltered = true;
+                                continue;
+                            }
+                            else if (previousBaseline) {
+                                item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - previousBaseline.box.top);
+                                item.baselineAltered = true;
+                                continue;
+                            }
                         }
                         let alignTop = false;
                         if (item.baseline) {
@@ -2608,6 +2639,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let tallest: Undef<T>;
         let bottom: Undef<T>;
         let previous: Undef<T>;
+        const setAlignTop = (item: T) => {
+            item.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
+            item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
+            item.baselineAltered = true;
+            valid = false;
+        };
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const item = children[i];
@@ -2629,8 +2666,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             if (item.pageFlow) {
                 if (item !== baseline) {
-                    let alignTop = false;
-                    if (item.inlineVertical) {
+                    if (item.controlElement) {
+                        setAlignTop(item);                        
+                    }
+                    else if (item.inlineVertical) {
                         if (tallest === undefined || getMaxHeight(item) > getMaxHeight(tallest)) {
                             tallest = item;
                         }
@@ -2640,12 +2679,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     item.anchor('top', textBaseline.documentId);
                                 }
                                 else {
-                                    alignTop = true;
+                                    setAlignTop(item);
                                 }
                                 break;
                             case 'middle':
                                 if (baseline?.textElement === false || textBottom) {
-                                    alignTop = true;
+                                    setAlignTop(item);
                                 }
                                 else {
                                     item.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0.5);
@@ -2657,7 +2696,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         item.anchor('bottom', textBaseline.documentId);
                                     }
                                     else if (textBottom) {
-                                        alignTop = true;
+                                        setAlignTop(item);
                                     }
                                     break;
                                 }
@@ -2670,7 +2709,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                 }
                                 if (item === bottom) {
-                                    alignTop = true;
+                                    setAlignTop(item);
                                 }
                                 else {
                                     item.anchor('bottom', 'parent');
@@ -2678,14 +2717,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 break;
                             case 'baseline':
                                 if (baseline === null || item.blockVertical || !item.textElement && getMaxHeight(item) > getMaxHeight(baseline)) {
-                                    alignTop = true;
+                                    setAlignTop(item);
                                 }
                                 else {
                                     item.anchor('baseline', documentId);
                                 }
                                 break;
                             default:
-                                alignTop = true;
+                                setAlignTop(item);
                                 break;
                         }
                     }
@@ -2695,13 +2734,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     else {
-                        alignTop = true;
-                    }
-                    if (alignTop) {
-                        item.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
-                        item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
-                        item.baselineAltered = true;
-                        valid = false;
+                        setAlignTop(item);
                     }
                     item.anchored = true;
                 }
