@@ -3,9 +3,9 @@ import { ViewAttribute } from '../../@types/android/node';
 
 type View = android.base.View;
 
-const { isNumber } = squared.lib.util;
-
 const $lib = android.lib;
+
+const { isNumber } = squared.lib.util;
 
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 

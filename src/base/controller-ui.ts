@@ -4,6 +4,8 @@ import Controller from './controller';
 
 import { NODE_TEMPLATE } from './lib/enumeration';
 
+type NodeUI = squared.base.NodeUI;
+
 const $lib = squared.lib;
 
 const { USER_AGENT, isUserAgent } = $lib.client;
@@ -12,8 +14,6 @@ const { isTextNode } = $lib.dom;
 const { capitalize, convertFloat, flatArray } = $lib.util;
 const { actualClientRect, getElementCache, setElementCache } = $lib.session;
 const { pushIndent, pushIndentArray } = $lib.xml;
-
-type NodeUI = squared.base.NodeUI;
 
 function positionAbsolute(style: CSSStyleDeclaration) {
     const position = style.getPropertyValue('position');

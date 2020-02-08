@@ -29,8 +29,8 @@ function compareRange(operation: string, unit: number, range: number) {
     }
 }
 
-const getInnerWidth = (dimensions: Undef<Dimension>) => dimensions && dimensions.width || window.innerWidth;
-const getInnerHeight = (dimensions: Undef<Dimension>) => dimensions && dimensions.height || window.innerHeight;
+const getInnerWidth = (dimensions: Undef<Dimension>) => dimensions?.width || window.innerWidth;
+const getInnerHeight = (dimensions: Undef<Dimension>) => dimensions?.height || window.innerHeight;
 const convertLength = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize, screenDimension);
 const convertPercent = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => Math.min(isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize, screenDimension) / dimension, 1);
 
@@ -56,9 +56,9 @@ export function getStyle(element: Null<Element>, pseudoElt = ''): CSSStyleDeclar
             element['__style' + pseudoElt] = style;
             return style;
         }
-        return <CSSStyleDeclaration> { display: 'inline' };
+        return <CSSStyleDeclaration> { position: 'static', display: 'inline' };
     }
-    return <CSSStyleDeclaration> { display: 'none' };
+    return <CSSStyleDeclaration> { position: 'static', display: 'none' };
 }
 
 export function getFontSize(element: Null<Element>) {
@@ -270,7 +270,7 @@ export function parseKeyframeRule(rules: CSSRuleList) {
                         break;
                 }
                 result[percent] = {};
-                for (const property of match[2].split(';')) {
+                for (const property of match[2].split(XML.DELIMITER)) {
                     const [name, value] = property.split(':');
                     if (value) {
                         result[percent][name.trim()] = value.trim();
@@ -447,7 +447,7 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
                 dimension = rect.width;
             }
             else {
-                dimension = /top|bottom|height|vertical/.test(attr) || attr.length <= 2 && attr.includes('y') ? rect.height : rect.width;
+                dimension = /(top|bottom|height|vertical)/.test(attr) || attr.length <= 2 && attr.includes('y') ? rect.height : rect.width;
             }
         }
         return calculate(result, dimension, getFontSize(element));
@@ -706,11 +706,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                         pixelRatio = 1;
                         break;
                 }
-                result.push({
-                    src: resolvePath(match[1]),
-                    pixelRatio,
-                    width
-                });
+                result.push({ src: resolvePath(match[1]), pixelRatio, width });
             }
         }
         result.sort((a, b) => {
@@ -724,10 +720,8 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
             else {
                 const widthA = a.width;
                 const widthB = b.width;
-                if (widthA > 0 && widthB > 0) {
-                    if (widthA !== widthB) {
-                        return widthA < widthB ? -1 : 1;
-                    }
+                if (widthA > 0 && widthB > 0 && widthA !== widthB) {
+                    return widthA < widthB ? -1 : 1;
                 }
             }
             return 0;
@@ -865,9 +859,9 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
     if (value.charAt(0) !== '(' || value.charAt(value.length - 1) !== ')') {
         value = `(${value})`;
     }
+    let opened = 0;
     const opening: boolean[] = [];
     const closing: number[] = [];
-    let opened = 0;
     const length = value.length;
     for (let i = 0; i < length; i++) {
         switch (value.charAt(i)) {
@@ -977,60 +971,53 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
 }
 
 export function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension) {
-    if (value) {
-        const match = UNIT.LENGTH.exec(value);
-        if (match) {
-            let result = parseFloat(match[1]);
-            switch (match[2]) {
-                case 'px':
-                    return result;
-                case undefined:
-                case 'em':
-                case 'ch':
-                    result *= fontSize !== undefined && !isNaN(fontSize) ? fontSize : (getFontSize(document.body) || 16);
-                    break;
-                case 'rem':
-                    result *= getFontSize(document.body) || 16;
-                    break;
-                case 'pc':
-                    result *= 12;
-                case 'pt':
-                    result *= 4 / 3;
-                    break;
-                case 'mm':
-                    result /= 10;
-                case 'cm':
-                    result /= 2.54;
-                case 'in':
-                    result *= getDeviceDPI();
-                    break;
-                case 'vw':
-                    result *= getInnerWidth(screenDimension) / 100;
-                    break;
-                case 'vh':
-                    result *= getInnerHeight(screenDimension) / 100;
-                    break;
-                case 'vmin':
-                    result *= Math.min(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
-                    break;
-                case 'vmax':
-                    result *= Math.max(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
-                    break;
-            }
-            return result;
+    const match = UNIT.LENGTH.exec(value);
+    if (match) {
+        let result = parseFloat(match[1]);
+        switch (match[2]) {
+            case 'px':
+                return result;
+            case undefined:
+            case 'em':
+            case 'ch':
+                result *= fontSize !== undefined && !isNaN(fontSize) ? fontSize : (getFontSize(document.body) || 16);
+                break;
+            case 'rem':
+                result *= getFontSize(document.body) || 16;
+                break;
+            case 'pc':
+                result *= 12;
+            case 'pt':
+                result *= 4 / 3;
+                break;
+            case 'mm':
+                result /= 10;
+            case 'cm':
+                result /= 2.54;
+            case 'in':
+                result *= getDeviceDPI();
+                break;
+            case 'vw':
+                result *= getInnerWidth(screenDimension) / 100;
+                break;
+            case 'vh':
+                result *= getInnerHeight(screenDimension) / 100;
+                break;
+            case 'vmin':
+                result *= Math.min(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
+                break;
+            case 'vmax':
+                result *= Math.max(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
+                break;
         }
+        return result;
     }
     return 0;
 }
 
 export function parseAngle(value: string) {
-    if (value) {
-        const match = CSS.ANGLE.exec(value);
-        if (match) {
-            return convertAngle(match[1], match[2]);
-        }
-    }
-    return 0;
+    const match = CSS.ANGLE.exec(value);
+    return match ? convertAngle(match[1], match[2]) : 0;
 }
 
 export function formatPX(value: number) {

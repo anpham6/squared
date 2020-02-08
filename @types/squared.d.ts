@@ -334,13 +334,13 @@ declare namespace base {
         readonly box: BoxRectDimension;
         readonly bounds: BoxRectDimension;
         readonly linear: BoxRectDimension;
-        readonly element: Null<Element >;
+        readonly element: Null<Element>;
         readonly elementId: string;
         readonly tagName: string;
-        readonly htmlElement: boolean;
-        readonly styleElement: boolean;
         readonly naturalChild: boolean;
         readonly naturalElement: boolean;
+        readonly htmlElement: boolean;
+        readonly styleElement: boolean;
         readonly imageElement: boolean;
         readonly svgElement: boolean;
         readonly flexElement: boolean;
@@ -485,7 +485,7 @@ declare namespace base {
         controlName: string;
         documentParent: NodeUI;
         renderExclude: boolean;
-        element: Null<Element >;
+        element: Null<Element>;
         textContent: string;
         positionAuto: boolean;
         multiline: boolean;
@@ -864,8 +864,8 @@ declare namespace lib {
         function relativeAngle(start: Point, end: Point, orientation?: number): number;
         function offsetAngleX(angle: number, value: number): number;
         function offsetAngleY(angle: number, value: number): number;
-        function clampRange(value: number, min?: number, max?: number): number;
-        function nextMultiple(values: number[], minumum?: number, offset?: number[]): number;
+        function clamp(value: number, min?: number, max?: number): number;
+        function multipleOf(values: number[], min?: number, offset?: number[]): number;
         function sin(value: number, accuracy?: number): number;
         function cos(value: number, accuracy?: number): number;
         function tan(value: number, accuracy?: number): number;
@@ -943,11 +943,12 @@ declare namespace lib {
     namespace session {
         function actualClientRect(element: Element, sessionId: string, cache?: boolean): ClientRect;
         function actualTextRangeRect(element: Element, sessionId: string, cache?: boolean): BoxRectDimension;
-        function getPseudoElt(element: Element, sessionId: string): string;
+        function getPseudoElt(element: Element, sessionId?: string): string;
+        function getStyleValue(element: Element, attr: string, sessionId?: string): string;
+        function getElementAsNode<T>(element: Element, sessionId?: string): Null<T>;
         function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
         function getElementCache(element: Element, attr: string, sessionId?: string): any;
         function deleteElementCache(element: Element, attr: string, sessionId: string): void;
-        function getElementAsNode<T>(element: Element, sessionId: string): Null<T>;
     }
 
     namespace util {
@@ -971,7 +972,7 @@ declare namespace lib {
         function isArray<T>(value: any): value is Array<T>;
         function isObject(value: any): value is {};
         function isPlainObject(value: any): value is {};
-        function isEqual(source: any, values: any): boolean;
+        function isEqual(source: any, other: any): boolean;
         function includes(source: Undef<string>, value: string, delimiter?: RegExp): boolean;
         function cloneInstance<T>(value: T): T;
         function cloneArray(data: any[], result?: any[], object?: boolean): any[];

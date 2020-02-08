@@ -196,33 +196,35 @@ export function isPlainObject(value: any): value is {} {
     return isObject(value) && value.constructor === Object;
 }
 
-export function isEqual(source: any, values: any) {
-    if (source === values) {
+export function isEqual(source: any, other: any) {
+    if (source === other) {
         return true;
     }
-    else if (Array.isArray(source) && Array.isArray(values)) {
+    else if (Array.isArray(source) && Array.isArray(other)) {
         const length = source.length;
-        if (length === values.length) {
+        if (length === other.length) {
             for (let i = 0; i < length; i++) {
-                if (source[i] !== values[i]) {
+                if (source[i] !== other[i]) {
                     return false;
                 }
             }
             return true;
         }
     }
-    else if (Object.keys(source).length === Object.keys(values).length) {
-        for (const attr in source) {
-            const a = source[attr];
-            const b = values[attr];
-            if (a !== b) {
-                if (isPlainObject(a) && isPlainObject(b) && isEqual(a, b)) {
-                    continue;
+    else if (isObject(source) && isObject(other)) {
+        if (Object.keys(source).length === Object.keys(other).length) {
+            for (const attr in source) {
+                const a = source[attr];
+                const b = other[attr];
+                if (a !== b) {
+                    if (isPlainObject(a) && isPlainObject(b) && isEqual(a, b)) {
+                        continue;
+                    }
+                    return false;
                 }
-                return false;
             }
+            return true;
         }
-        return true;
     }
     return false;
 }
@@ -328,7 +330,7 @@ export function resolvePath(value: string, href?: string) {
             value = origin + value;
         }
         else {
-            if (/^\.\.\//.test(value)) {
+            if (value.startsWith('../')) {
                 const segments: string[] = [];
                 let levels = 0;
                 for (const dir of value.split('/')) {

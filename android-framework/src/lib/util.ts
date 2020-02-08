@@ -20,9 +20,7 @@ function calculateBias(start: number, end: number, accuracy = 3) {
     else if (end === 0) {
         return 1;
     }
-    else {
-        return parseFloat(truncate(Math.max(start / (start + end), 0), accuracy));
-    }
+    return parseFloat(truncate(Math.max(start / (start + end), 0), accuracy));
 }
 
 export function convertLength(value: string | number, font = false, precision = 3) {

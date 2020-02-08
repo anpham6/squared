@@ -125,7 +125,7 @@ const appBase: ChromeFramework<View> = {
             return result;
         },
         getElementMap() {
-            return controller ? controller.elementMap : new Map<Element, View>();
+            return controller?.elementMap || new Map<Element, View>();
         },
         clearElementMap() {
             controller?.elementMap.clear();

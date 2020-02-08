@@ -2,17 +2,17 @@ import SvgBuild from './svgbuild';
 
 import { getAttribute, getAttributeURL } from './lib/util';
 
+type SvgElement = squared.svg.SvgElement;
+type SvgShapePattern = squared.svg.SvgShapePattern;
+type SvgUse = squared.svg.SvgUse;
+type SvgUseSymbol = squared.svg.SvgUseSymbol;
+
 const $lib = squared.lib;
 
 const { parseColor } = $lib.color;
 const { calculateVar, getFontSize, isCustomProperty, isLength, isPercent, parseUnit } = $lib.css;
 const { CSS, STRING, XML } = $lib.regex;
 const { convertCamelCase, convertFloat, isNumber, isString, joinMap, objectMap, replaceMap } = $lib.util;
-
-type SvgElement = squared.svg.SvgElement;
-type SvgShapePattern = squared.svg.SvgShapePattern;
-type SvgUse = squared.svg.SvgUse;
-type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
 const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
 const REGEX_CACHE: ObjectMap<RegExp> = {
@@ -49,10 +49,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             this.resetPaint();
             this.setAttribute('color');
             this.setAttribute('fill');
-            this.setAttribute('fill-opacity', false);
+            this.setAttribute('fill-opacity');
             this.setAttribute('fill-rule');
             this.setAttribute('stroke');
-            this.setAttribute('stroke-opacity', false);
+            this.setAttribute('stroke-opacity');
             this.setAttribute('stroke-width');
             this.setAttribute('stroke-linecap');
             this.setAttribute('stroke-linejoin');
@@ -60,7 +60,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             this.setAttribute('stroke-dasharray');
             this.setAttribute('stroke-dashoffset');
             this.setAttribute('clip-rule');
-            const clipPath = this.getAttribute('clip-path', true, false);
+            const clipPath = this.getAttribute('clip-path', true);
             if (clipPath !== '' && clipPath !== 'none') {
                 for (const name in REGEX_CACHE) {
                     const match = REGEX_CACHE[name].exec(clipPath);
@@ -155,7 +155,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             }
         }
 
-        public setAttribute(attr: string, computed = true, inherited = true) {
+        public setAttribute(attr: string, computed = false, inherited = true) {
             let value = this.getAttribute(attr, computed, inherited);
             if (isString(value)) {
                 if (isCustomProperty(value)) {
@@ -187,7 +187,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     this[attr] = 'none';
                                     break;
                                 case 'currentcolor':
-                                    color = parseColor(this.color || getAttribute(this.element, attr));
+                                    color = parseColor(this.color || getAttribute(this.element, attr, true));
                                     break;
                                 default:
                                     color = parseColor(value);
@@ -204,7 +204,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             }
         }
 
-        public getAttribute(attr: string, computed = true, inherited = true) {
+        public getAttribute(attr: string, computed = false, inherited = true) {
             let value = getAttribute(this.element, attr, computed);
             if (inherited && !isString(value)) {
                 if (this.patternParent) {

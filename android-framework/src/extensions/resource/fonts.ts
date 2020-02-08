@@ -127,6 +127,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const styleKeys = Object.keys(FONT_STYLE);
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
+        let cache: T[] = [];
         for (const node of this.cache) {
             if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
                 const containerName = node.containerName;
@@ -141,6 +142,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const tag in nameMap) {
             const sorted: StyleList[] = [];
             const data = nameMap[tag];
+            cache = cache.concat(data);
             for (let node of data) {
                 const { id, companion } = node;
                 const targetAPI = node.api;
@@ -436,7 +438,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
             }
         }
-        for (const node of this.cache) {
+        for (const node of cache) {
             const styleData = nodeMap[node.id];
             if (styleData) {
                 if (styleData.length > 1) {
@@ -453,26 +455,27 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const styleName: string[] = [];
             let parent = '';
             let items: Undef<StringValue[]>;
-            value.split('.').forEach((tag, index, array) => {
-                const match = REGEX_TAGNAME.exec(tag);
+            value.split('.').forEach((name, index, array) => {
+                const match = REGEX_TAGNAME.exec(name);
                 if (match) {
                     const styleData = resourceMap[match[1].toUpperCase()][convertInt(match[2])];
                     if (styleData) {
                         if (index === 0) {
-                            parent = tag;
+                            parent = name;
                             if (array.length === 1) {
                                 items = <StringValue[]> styleData.items;
                             }
-                            else if (!styles.has(tag)) {
-                                styles.set(tag, { name: tag, parent: '', items: styleData.items });
+                            else if (!styles.has(name)) {
+                                styles.set(name, { name, parent: '', items: styleData.items });
                             }
                         }
                         else {
                             if (items) {
                                 for (const item of styleData.items as StringValue[]) {
-                                    const key = items.findIndex(previous => previous.key === item.key);
-                                    if (key !== -1) {
-                                        items[key] = item;
+                                    const key = item.key;
+                                    const previousIndex = items.findIndex(previous => previous.key === key);
+                                    if (previousIndex !== -1) {
+                                        items[previousIndex] = item;
                                     }
                                     else {
                                         items.push(item);
@@ -482,7 +485,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             else {
                                 items = (<StringValue[]> styleData.items).slice(0);
                             }
-                            styleName.push(tag);
+                            styleName.push(name);
                         }
                     }
                 }

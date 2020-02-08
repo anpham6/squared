@@ -44,17 +44,21 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             else {
                 const match = REGEX_CLOCK.exec(value);
                 if (match) {
-                    if (match[2]) {
-                        s += parseInt(match[2]) * 60 * 60;
+                    const hr = match[2];
+                    const mt = match[3];
+                    const sec = match[4];
+                    const mil = match[5];
+                    if (hr) {
+                        s += parseInt(hr) * 60 * 60;
                     }
-                    if (match[3]) {
-                        s += parseInt(match[3]) * 60;
+                    if (mt) {
+                        s += parseInt(mt) * 60;
                     }
-                    if (match[4]) {
-                        s += parseInt(match[4]);
+                    if (sec) {
+                        s += parseInt(sec);
                     }
-                    if (match[5]) {
-                        ms = parseInt(match[5]) * (match[5].length < 3 ? Math.pow(10, 3 - match[5].length) : 1);
+                    if (mil) {
+                        ms = parseInt(mil) * (mil.length < 3 ? Math.pow(10, 3 - mil.length) : 1);
                     }
                     if (match[1]) {
                         s *= -1;
@@ -168,33 +172,20 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             else {
                 const element = this.element;
                 if (element) {
-                    switch (value) {
-                        case 'width':
-                        case 'height':
-                            baseValue = getAttribute(element, value, false);
-                            break;
-                        case 'opacity':
-                        case 'stroke-opacity':
-                        case 'fill-opacity':
-                            baseValue = getAttribute(element, value, false) || '1';
-                            break;
-                        default:
-                            baseValue = getAttribute(element, value);
-                            break;
-                    }
-                }
-                if (!isString(baseValue)) {
-                    const animationElement = this.animationElement;
-                    if (animationElement) {
-                        const parentElement = animationElement.parentElement;
-                        baseValue = optionalAsString(parentElement, value + '.baseVal.valueAsString');
-                        if (isLength(baseValue)) {
-                            this.baseValue = parseUnit(baseValue, getFontSize(parentElement)).toString();
+                    baseValue = getAttribute(element, value);
+                    if (!isString(baseValue)) {
+                        const animationElement = this.animationElement;
+                        if (animationElement && getComputedStyle(element).animationPlayState === 'paused') {
+                            const parentElement = animationElement.parentElement;
+                            baseValue = optionalAsString(parentElement, value + '.baseVal.valueAsString');
+                            if (isLength(baseValue)) {
+                                this.baseValue = parseUnit(baseValue, getFontSize(parentElement)).toString();
+                            }
                         }
                     }
-                }
-                else {
-                    this.baseValue = baseValue;
+                    else {
+                        this.baseValue = baseValue;
+                    }
                 }
             }
         }

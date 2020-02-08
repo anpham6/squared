@@ -236,7 +236,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             const match = CSS.URL.exec(element);
             if (match) {
                 mdpi = match[1];
-                if (!/^data:image/.test(mdpi)) {
+                if (!mdpi.startsWith('data:image/')) {
                     return this.addImageSet({ mdpi: resolvePath(mdpi) }, prefix);
                 }
             }

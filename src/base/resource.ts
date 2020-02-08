@@ -35,7 +35,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public addImage(element: Undef<HTMLImageElement>) {
         if (element?.complete) {
             const uri = element.src;
-            if (/^data:image\//.test(uri)) {
+            if (uri.startsWith('data:image/')) {
                 const match = new RegExp(`^${STRING.DATAURI}$`).exec(uri);
                 if (match) {
                     const mimeType = match[1].split(XML.DELIMITER);

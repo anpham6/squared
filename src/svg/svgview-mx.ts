@@ -13,7 +13,7 @@ type SvgElement = squared.svg.SvgElement;
 
 const $lib = squared.lib;
 
-const { calculateVar, isCustomProperty, getFontSize, getKeyframeRules, parseAngle, parseVar, isAngle, isCalc } = $lib.css;
+const { calculateVar, isAngle, isCalc, isCustomProperty, getFontSize, getKeyframeRules, parseAngle, parseVar } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;
 const { isString, replaceMap, sortNumber } = $lib.util;
@@ -300,7 +300,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         else if (attrMap['offset-rotate']) {
                             const offsetRotate = attrMap['offset-rotate'];
                             if (attrMap['offset-distance'] || attrMap['rotate'] === undefined) {
-                                let rotate = getAttribute(element, 'offset-rotate', false);
+                                let rotate = getAttribute(element, 'offset-rotate');
                                 if (rotate === '' || rotate === 'auto') {
                                     rotate = 'auto 0deg';
                                 }
@@ -524,7 +524,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         get opacity() {
-            return getAttribute(this.element, 'opacity', false) || '1';
+            return getAttribute(this.element, 'opacity') || '1';
         }
     };
 };

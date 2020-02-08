@@ -1,5 +1,5 @@
 import { ResourceBackgroundOptions } from '../../../../@types/android/extension';
-import { GradientColorStop, GradientTemplate } from '../../../../@types/android/resource';
+import { GradientTemplate } from '../../../../@types/android/resource';
 
 import Resource from '../../resource';
 import ResourceSvg from './svg';
@@ -18,7 +18,7 @@ const { reduceRGBA } = $lib.color;
 const { formatPercent, formatPX, getBackgroundPosition, isLength, isPercent } = $lib.css;
 const { truncate } = $lib.math;
 const { CHAR, CSS, XML } = $lib.regex;
-const { flatArray, isEqual, resolvePath } = $lib.util;
+const { flatArray, isEqual, objectMap, resolvePath } = $lib.util;
 const { applyTemplate } = $lib.xml;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -394,31 +394,20 @@ function getPercentOffset(direction: string, position: BoxRectPosition, bounds: 
 }
 
 function createLayerList(boxStyle: BoxStyle, images?: BackgroundImageData[], borderOnly = true) {
-    const result: ExternalData[] = [{
-        'xmlns:android': XMLNS_ANDROID.android,
-        item: []
-    }];
+    const item: ExternalData[] = [];
+    const result: ExternalData[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
     if (solid) {
-        result[0].item.push({
-            shape: {
-                'android:shape': 'rectangle',
-                solid
-            }
-        });
+        item.push({ shape: { 'android:shape': 'rectangle', solid } });
     }
     if (images) {
         for (const image of images) {
-            if (image.gradient) {
-                result[0].item.push({
-                    shape: {
-                        'android:shape': 'rectangle',
-                        gradient: image.gradient
-                    }
-                });
+            const gradient = image.gradient;
+            if (gradient) {
+                item.push({ shape: { 'android:shape': 'rectangle', gradient } });
             }
             else {
-                result[0].item.push(image);
+                item.push(image);
             }
         }
     }
@@ -519,14 +508,7 @@ const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`
 const constrictedWidth = (node: View) => !node.inline && !node.floating && node.hasPX('width', true, true) && node.cssInitial('width') !== '100%';
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
-    const result: GradientColorStop[] = [];
-    for (const stop of list) {
-        result.push({
-            color: getColorValue(stop.color),
-            offset: truncate(stop.offset, precision)
-        });
-    }
-    return result;
+    return objectMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
 }
 
 export function drawRect(width: number, height: number, x = 0, y = 0, precision?: number) {
@@ -803,7 +785,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             let length = 0;
             let resizable = true;
             if (backgroundImage) {
-                const resourceInstance = this._resourceSvgInstance;
+                const svgInstance = this._resourceSvgInstance;
                 const lengthA = backgroundImage.length;
                 backgroundRepeat = fillBackgroundAttribute(backgroundRepeat, lengthA);
                 backgroundSize = fillBackgroundAttribute(backgroundSize, lengthA);
@@ -813,10 +795,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     let valid = false;
                     if (typeof value === 'string') {
                         if (value !== 'initial') {
-                            if (resourceInstance) {
-                                const [parentElement, element] = resourceInstance.createSvgElement(node, value);
+                            if (svgInstance) {
+                                const [parentElement, element] = svgInstance.createSvgElement(node, value);
                                 if (parentElement && element) {
-                                    const drawable = resourceInstance.createSvgDrawable(node, element);
+                                    const drawable = svgInstance.createSvgDrawable(node, element);
                                     if (drawable !== '') {
                                         images[length] = drawable;
                                         imageSvg[length] = true;
@@ -858,19 +840,23 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 const match = CSS.URL.exec(value);
                                 if (match) {
                                     const uri = match[1];
-                                    if (/^data:image/.test(uri)) {
+                                    if (uri.startsWith('data:image/')) {
                                         const rawData = resource.getRawData(uri);
-                                        if (rawData?.base64) {
-                                            images[length] = rawData.filename.substring(0, rawData.filename.lastIndexOf('.'));
-                                            imageDimensions[length] = rawData;
-                                            resource.writeRawImage(rawData.filename, rawData.base64);
-                                            valid = true;
+                                        if (rawData) {
+                                            const { base64, filename } = rawData;
+                                            if (base64) {
+                                                images[length] = filename.substring(0, filename.lastIndexOf('.'));
+                                                imageDimensions[length] = rawData;
+                                                resource.writeRawImage(filename, base64);
+                                                valid = true;
+                                            }
                                         }
                                     }
                                     else {
                                         value = resolvePath(uri);
-                                        images[length] = resource.addImageSet({ mdpi: value });
-                                        if (images[length] !== '') {
+                                        const src = resource.addImageSet({ mdpi: value });
+                                        images[length] = src;
+                                        if (src !== '') {
                                             imageDimensions[length] = resource.getImage(value);
                                             valid = true;
                                         }
@@ -936,7 +922,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         );
                         const stored = resource.getImage(element.src);
                         if (!node.hasPX('width')) {
-                            const offsetStart = (stored ? stored.width : 0) + position.left - (node.paddingLeft + node.borderLeftWidth);
+                            const offsetStart = (stored?.width || 0) + position.left - (node.paddingLeft + node.borderLeftWidth);
                             if (offsetStart > 0) {
                                 node.modifyBox(BOX_STANDARD.PADDING_LEFT, offsetStart);
                             }

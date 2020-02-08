@@ -17,17 +17,17 @@ export function maxArray(list: number[]): number {
     return Math.max.apply(null, list);
 }
 
-export function equal(valueA: number, valueB: number, precision = 5) {
-    precision += Math.floor(valueA).toString().length;
-    return valueA.toPrecision(precision) === valueB.toPrecision(precision);
+export function equal(a: number, b: number, precision = 5) {
+    precision += Math.floor(a).toString().length;
+    return a.toPrecision(precision) === b.toPrecision(precision);
 }
 
-export function moreEqual(valueA: number, valueB: number, precision = 5) {
-    return valueA > valueB || equal(valueA, valueB, precision);
+export function moreEqual(a: number, b: number, precision = 5) {
+    return a > b || equal(a, b, precision);
 }
 
-export function lessEqual(valueA: number, valueB: number, precision = 5) {
-    return valueA < valueB || equal(valueA, valueB, precision);
+export function lessEqual(a: number, b: number, precision = 5) {
+    return a < b || equal(a, b, precision);
 }
 
 export function truncate(value: number | string, precision = 3) {
@@ -124,7 +124,7 @@ export function offsetAngleY(angle: number, value: number) {
     return value * Math.cos(convertRadian(angle)) * -1;
 }
 
-export function clampRange(value: number, min = 0, max = 1) {
+export function clamp(value: number, min = 0, max = 1) {
     if (value < min) {
         value = min;
     }
@@ -134,21 +134,21 @@ export function clampRange(value: number, min = 0, max = 1) {
     return value;
 }
 
-export function nextMultiple(values: number[], minimum = 0, offset?: number[]) {
+export function multipleOf(values: number[], min = 0, offset?: number[]) {
     const length = values.length;
     if (length > 1) {
         const increment = minArray(values);
         if (offset?.length === length) {
             for (let i = 0; i < offset.length; i++) {
-                minimum = Math.max(minimum, offset[i] + values[i]);
+                min = Math.max(min, offset[i] + values[i]);
             }
         }
         else {
             offset = undefined;
-            minimum = Math.max(minimum, increment);
+            min = Math.max(min, increment);
         }
         let value = 0;
-        while (value < minimum) {
+        while (value < min) {
             value += increment;
         }
         const start = offset?.[0] || 0;

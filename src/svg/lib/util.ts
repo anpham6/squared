@@ -2,12 +2,12 @@ import { SvgMatrix, SvgPoint, SvgTransform } from '../../../@types/svg/object';
 
 const $lib = squared.lib;
 
-const { convertAngle, getFontSize, getStyle, isLength, isPercent, parseUnit } = $lib.css;
+const { convertAngle, getFontSize, isLength, isPercent, parseUnit } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { convertRadian } = $lib.math;
 const { CSS, STRING } = $lib.regex;
-const { getElementCache } = $lib.session;
-const { convertCamelCase, isString } = $lib.util;
+const { getStyleValue } = $lib.session;
+const { isString } = $lib.util;
 
 const STRING_DECIMAL = `(${STRING.DECIMAL})`;
 const SHAPES = {
@@ -47,13 +47,10 @@ function getDataSetValue(element: SVGElement, attr: string) {
             }
         }
         catch {
-
         }
     }
     return '';
 }
-
-const getStyleValue = (element: SVGElement, attr: string) => getElementCache(element, 'styleMap')?.[convertCamelCase(attr)] || '';
 
 export const SVG = {
     svg: (element: Element): element is SVGSVGElement => {
@@ -258,7 +255,7 @@ export const TRANSFORM = {
     },
     matrix(element: SVGElement, value?: string): Undef<SvgMatrix> {
         REGEX_TRANSFORM.MATRIX.lastIndex = 0;
-        const match = REGEX_TRANSFORM.MATRIX.exec(value || getStyle(element).transform || '');
+        const match = REGEX_TRANSFORM.MATRIX.exec(value || getComputedStyle(element).transform || '');
         if (match) {
             switch (match[1]) {
                 case 'matrix':
@@ -409,16 +406,16 @@ export function getDOMRect(element: SVGElement) {
     return <DOMRect> result;
 }
 
-export function getAttribute(element: SVGElement, attr: string, computed = true) {
+export function getAttribute(element: SVGElement, attr: string, computed = false) {
     let value: string;
     if (computed) {
-        value = getNamedItem(element, attr) || getStyleValue(element, attr) || getDataSetValue(element, attr);
+        value = getNamedItem(element, attr) || getStyleValue(element, attr);
     }
     else {
         value = getStyleValue(element, attr) || getDataSetValue(element, attr) || getNamedItem(element, attr);
     }
     if (!isString(value) && (computed || Array.from(element.style).includes(attr))) {
-        value = getStyle(element).getPropertyValue(attr);
+        value = getComputedStyle(element).getPropertyValue(attr);
     }
     return value || '';
 }
@@ -438,8 +435,7 @@ export function getParentAttribute(element: SVGElement, attr: string, computed =
 }
 
 export function getAttributeURL(value: string) {
-    const match = CSS.URL.exec(value);
-    return match ? match[1] : '';
+    return CSS.URL.exec(value)?.[1] || '';
 }
 
 export function getTargetElement(element: SVGElement, rootElement?: SVGElement) {

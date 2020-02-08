@@ -948,7 +948,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             for (let i = 0; i < 4; i++) {
                 const key = CSS_SPACING_KEYS[i + start];
                 if (hasBit(region, key)) {
-                    boxReset[attrs[i]] = 1;
+                    const name = attrs[i];
+                    boxReset[name] = 1;
                     if (node) {
                         const previous = this.registerBox(key);
                         if (previous) {
@@ -956,7 +957,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         else {
                             if (this.naturalChild) {
-                                const value = this[CSS_SPACING.get(key) as string];
+                                const value = this[name];
                                 if (value >= 0) {
                                     node.modifyBox(key, value);
                                 }
@@ -1497,7 +1498,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
         return result;
     }
-
     get percentHeight() {
         let result = this._cached.percentHeight;
         if (result === undefined) {

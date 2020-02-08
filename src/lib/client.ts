@@ -17,7 +17,7 @@ export function isPlatform(value: string | number) {
     if (typeof value === 'string') {
         return platform.includes(value.toLowerCase());
     }
-    return hasBit(value, PLATFORM.WINDOWS) && platform.includes('windows') || hasBit(value, PLATFORM.MAC) && /mac|iphone|ipad/.test(platform);
+    return hasBit(value, PLATFORM.WINDOWS) && platform.includes('win') || hasBit(value, PLATFORM.MAC) && /(mac|iphone|ipad|ipod)/.test(platform);
 }
 
 export function isUserAgent(value: string | number) {

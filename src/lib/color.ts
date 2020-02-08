@@ -1,4 +1,4 @@
-import { clampRange } from './math';
+import { clamp } from './math';
 import { CSS } from './regex';
 
 const STRING_HEX = '0123456789ABCDEF';
@@ -889,7 +889,7 @@ const COLOR_CSS3: ColorResult[] = [
 ];
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 
-const parseOpacity = (value: number) => clampRange(value) * 255;
+const parseOpacity = (value: number) => clamp(value) * 255;
 
 export function findColorName(value: string) {
     value = value.toLowerCase();

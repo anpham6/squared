@@ -1,5 +1,6 @@
 import { getStyle } from './css';
 import { getRangeClientRect } from './dom';
+import { convertCamelCase } from './util';
 
 export function actualClientRect(element: Element, sessionId: string, cache = true) {
     if (cache) {
@@ -51,8 +52,16 @@ export function actualTextRangeRect(element: Element, sessionId: string, cache =
     return bounds;
 }
 
-export function getPseudoElt(element: Element, sessionId: string) {
+export function getStyleValue(element: Element, attr: string, sessionId?: string) {
+    return getElementCache(element, 'styleMap', sessionId)?.[convertCamelCase(attr)] || '';
+}
+
+export function getPseudoElt(element: Element, sessionId?: string) {
     return getElementCache(element, 'pseudoElement', sessionId) || '';
+}
+
+export function getElementAsNode<T>(element: Element, sessionId?: string): Null<T> {
+    return getElementCache(element, 'node', sessionId) || null;
 }
 
 export function setElementCache(element: Element, attr: string, sessionId: string, data: any) {
@@ -68,8 +77,4 @@ export function getElementCache(element: Element, attr: string, sessionId?: stri
 
 export function deleteElementCache(element: Element, attr: string, sessionId: string) {
     delete element[`__${attr}::${sessionId}`];
-}
-
-export function getElementAsNode<T>(element: Element, sessionId: string): Null<T> {
-    return getElementCache(element, 'node', sessionId) || null;
 }

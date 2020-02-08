@@ -107,8 +107,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
                     data.uri = uri;
-                    if (element.type) {
-                        data.mimeType = element.type;
+                    const type = element.type;
+                    if (type) {
+                        data.mimeType = type;
                     }
                     this.processExtensions(data);
                     result.push(data);
@@ -158,6 +159,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
                 else if (content && mimeType) {
                     data = { pathname: 'generated/' + mimeType, filename, content };
+                }
+                else {
+                    continue;
                 }
                 if (this.validFile(data)) {
                     data.mimeType = mimeType;

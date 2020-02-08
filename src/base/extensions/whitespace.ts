@@ -140,7 +140,7 @@ function resetMargin(node: NodeUI, region: number) {
     else {
         const outerWrapper = node.registerBox(region);
         if (outerWrapper) {
-            const offset = node[CSS_SPACING.get(region) as string];
+            const offset: number = node[CSS_SPACING.get(region) as string];
             outerWrapper.modifyBox(region, -offset, false);
         }
     }

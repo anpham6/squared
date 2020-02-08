@@ -67,11 +67,11 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             if (path) {
                 this.path = path[1];
             }
-            const distance = getAttribute(element, 'offset-distance', false);
+            const distance = getAttribute(element, 'offset-distance');
             if (distance !== '') {
                 this.distance = distance;
             }
-            const rotate = getAttribute(element, 'offset-rotate', false);
+            const rotate = getAttribute(element, 'offset-rotate');
             if (rotate !== '' && rotate !== 'auto') {
                 this.rotate = rotate;
             }

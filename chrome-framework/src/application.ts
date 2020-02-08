@@ -4,8 +4,6 @@ import Resource from './resource';
 
 const { isTextNode } = squared.lib.dom;
 
-const ASSETS = Resource.ASSETS;
-
 export default class Application<T extends chrome.base.View> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public builtInExtensions: ObjectMap<chrome.base.Extension<T>> = {};
     public extensions: chrome.base.Extension<T>[] = [];
@@ -42,6 +40,7 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     }
 
     get length() {
-        return ASSETS.images.size + ASSETS.rawData.size + ASSETS.fonts.size;
+        const { images, rawData, fonts } = Resource.ASSETS;
+        return images.size + rawData.size + fonts.size;
     }
 }

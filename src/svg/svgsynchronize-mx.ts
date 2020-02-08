@@ -15,7 +15,7 @@ type SvgView = squared.svg.SvgView;
 
 const $lib = squared.lib;
 
-const { clampRange, equal, nextMultiple } = $lib.math;
+const { clamp, equal, multipleOf } = $lib.math;
 const { CHAR } = $lib.regex;
 const { filterArray, hasBit, hasValue, isEqual, isNumber, joinMap, objectMap, replaceMap, spliceArray, sortNumber } = $lib.util;
 
@@ -358,7 +358,7 @@ function insertSplitValue(item: SvgAnimate, actualTime: number, baseValue: Anima
     }
     const duration = item.duration;
     const offset = actualTime - (delay + duration * iteration);
-    const fraction = offset === 0 ? (index === 0 ? 0 : 1) : clampRange(offset / duration);
+    const fraction = offset === 0 ? (index === 0 ? 0 : 1) : clamp(offset / duration);
     let previousIndex = -1;
     let nextIndex = -1;
     const length = keyTimes.length;
@@ -509,7 +509,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                                         if (evaluateStart && time >= intervalEndTime) {
                                             break complete;
                                         }
-                                        insertSubstituteTimeValue(time, Math.min(time, totalDuration), l);
+                                        insertSubstituteTimeValue(time, Math.min(time, totalDuration, intervalEndTime), l);
                                         if (time >= intervalEndTime) {
                                             break complete;
                                         }
@@ -1686,7 +1686,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     }
                                 }
                             }
-                            if (previousComplete && previousComplete.fillReplace && infiniteMap[attr] === undefined) {
+                            if (previousComplete?.fillReplace && infiniteMap[attr] === undefined) {
                                 let key = 0;
                                 let value: Undef<AnimateValue>;
                                 if (forwardMap[attr]) {
@@ -1744,7 +1744,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                 repeatingAsInfinite = start;
                             }
                             else if (duration.length > 1 && duration.every(value => value % 250 === 0)) {
-                                repeatingEndTime = nextMultiple(duration, repeatingEndTime, delay);
+                                repeatingEndTime = multipleOf(duration, repeatingEndTime, delay);
                             }
                             else {
                                 const end = duration[0];
@@ -1866,7 +1866,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             duration.push(map.duration);
                             infiniteAnimations.push(map);
                         }
-                        const maxDuration = nextMultiple(duration);
+                        const maxDuration = multipleOf(duration);
                         for (const item of infiniteAnimations) {
                             const attr = item.attributeName;
                             timelineMap[attr] = new Map<number, AnimateValue>();

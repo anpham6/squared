@@ -108,7 +108,7 @@ export interface AppProcessing<T extends Node> {
 
 export interface AppNodeUIOptions<T extends NodeUI> {
     parent?: T;
-    element?: Null<Element >;
+    element?: Null<Element>;
     children?: T[];
     append?: boolean;
     replace?: T;

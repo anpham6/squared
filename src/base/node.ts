@@ -1,7 +1,6 @@
 import { AscendOptions, CachedValue, InitialData } from '../../@types/base/node';
 
 import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
-
 import { EXT_NAME } from './lib/constant';
 
 type T = Node;
@@ -210,8 +209,8 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                         case 'BUTTON': {
                             const form = node.ascend({ condition: item => item.tagName === 'FORM' })[0];
                             if (form) {
-                                const element = <HTMLElement> node.element;
                                 let valid = false;
+                                const element = <HTMLElement> node.element;
                                 const children = (<Element> form.element).querySelectorAll('*');
                                 const length = children.length;
                                 for (let j = 0; j < length; j++) {
@@ -243,11 +242,11 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                 case ':out-of-range': {
                     if (tagName === 'INPUT') {
                         const element = <HTMLInputElement> node.element;
-                        const rangeValue = parseFloat(element.value);
-                        if (!isNaN(rangeValue)) {
+                        const value = parseFloat(element.value);
+                        if (!isNaN(value)) {
                             const min = parseFloat(element.min);
                             const max = parseFloat(element.max);
-                            if (rangeValue >= min && rangeValue <= max) {
+                            if (value >= min && value <= max) {
                                 if (pseudo === ':out-of-range') {
                                     return false;
                                 }
@@ -331,9 +330,9 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                 case ':focus-within':
                 case ':valid':
                 case ':invalid': {
+                    let valid = false;
                     const element = node.element;
                     const children = (<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo);
-                    let valid = false;
                     const length = children.length;
                     for (let j = 0; j < length; j++) {
                         if (children.item(index) === element) {
@@ -454,14 +453,14 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                     const match = SELECTOR_ATTR.exec(not);
                     if (match) {
                         const caseInsensitive = match[6] === 'i';
-                        let attrValue = match[3] || match[4] || match[5] || '';
+                        let value = match[3] || match[4] || match[5] || '';
                         if (caseInsensitive) {
-                            attrValue = attrValue.toLowerCase();
+                            value = value.toLowerCase();
                         }
                         notData.attrList = [{
                             key: match[1],
                             symbol: match[2],
-                            value: attrValue,
+                            value,
                             caseInsensitive
                         }];
                     }
@@ -494,46 +493,46 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
     if (attrList) {
         const attributes = node.attributes;
         for (const attr of attrList) {
-            let actualValue = attributes[attr.key];
-            if (actualValue === undefined) {
+            let value = attributes[attr.key];
+            if (value === undefined) {
                 return false;
             }
             else {
-                const attrValue = attr.value;
-                if (attrValue) {
+                const valueA = attr.value;
+                if (valueA) {
                     if (attr.caseInsensitive) {
-                        actualValue = actualValue.toLowerCase();
+                        value = value.toLowerCase();
                     }
                     if (attr.symbol) {
                         switch (attr.symbol) {
                             case '~':
-                                if (!actualValue.split(CHAR.SPACE).includes(attrValue)) {
+                                if (!value.split(CHAR.SPACE).includes(valueA)) {
                                     return false;
                                 }
                                 break;
                             case '^':
-                                if (!actualValue.startsWith(attrValue)) {
+                                if (!value.startsWith(valueA)) {
                                     return false;
                                 }
                                 break;
                             case '$':
-                                if (!actualValue.endsWith(attrValue)) {
+                                if (!value.endsWith(valueA)) {
                                     return false;
                                 }
                                 break;
                             case '*':
-                                if (!actualValue.includes(attrValue)) {
+                                if (!value.includes(valueA)) {
                                     return false;
                                 }
                                 break;
                             case '|':
-                                if (actualValue !== attrValue && !actualValue.startsWith(attrValue + '-')) {
+                                if (value !== valueA && !value.startsWith(valueA + '-')) {
                                     return false;
                                 }
                                 break;
                         }
                     }
-                    else if (actualValue !== attrValue) {
+                    else if (value !== valueA) {
                         return false;
                     }
                 }

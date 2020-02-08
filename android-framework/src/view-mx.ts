@@ -16,7 +16,7 @@ const { Node, ResourceUI } = squared.base;
 
 const { BOX_MARGIN, BOX_PADDING, formatPX, getDataSet, isLength, isPercent } = $lib.css;
 const { getNamedItem } = $lib.dom;
-const { clampRange, truncate } = $lib.math;
+const { clamp, truncate } = $lib.math;
 const { CHAR } = $lib.regex;
 const { aboveRange, capitalize, convertFloat, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap, withinRange } = $lib.util;
 
@@ -1335,7 +1335,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         continue;
                                     }
                                     else if (inner + value > outer) {
-                                        value = clampRange(outer - inner, 0, value);
+                                        value = clamp(outer - inner, 0, value);
                                     }
                                 }
                                 break;
@@ -1358,7 +1358,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                             maxBottom = Math.max(item.bounds.bottom, maxBottom);
                                         }
                                     }
-                                    value = clampRange(this.bounds.bottom - maxBottom, 0, value);
+                                    value = clamp(this.bounds.bottom - maxBottom, 0, value);
                                 }
                                 else {
                                     value = this.actualPadding(attr, value);

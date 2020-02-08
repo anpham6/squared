@@ -18,7 +18,7 @@ type SvgShapePattern = squared.svg.SvgShapePattern;
 const $lib = squared.lib;
 
 const { getNamedItem } = $lib.dom;
-const { equal, lessEqual, nextMultiple, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = $lib.math;
+const { equal, lessEqual, multipleOf, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = $lib.math;
 const { cloneArray, convertInt, convertFloat } = $lib.util;
 
 interface DashGroup {
@@ -549,7 +549,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         else {
             arrayLength = valueArray.length;
             dashArray = valueArray.slice(0);
-            const dashLength = nextMultiple([2, arrayLength]);
+            const dashLength = multipleOf([2, arrayLength]);
             dashArrayTotal = 0;
             for (let i = 0; i < dashLength; i++) {
                 const value = valueArray[i % arrayLength];
