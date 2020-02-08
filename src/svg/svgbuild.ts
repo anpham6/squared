@@ -395,11 +395,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     rotate = rotateFixed;
                 }
                 rotate += rotateInitial;
-                result.push({
-                    key,
-                    value: nextPoint,
-                    rotate
-                });
+                result.push({ key, value: nextPoint, rotate });
                 rotatePrevious = Math.ceil(rotate);
             }
         }

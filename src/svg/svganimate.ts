@@ -13,6 +13,8 @@ const { getNamedItem } = $lib.dom;
 const { CHAR, XML } = $lib.regex;
 const { flatMap, isNumber, replaceMap, sortNumber, trimEnd } = $lib.util;
 
+const REGEX_BEZIER = /^\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$/;
+
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
@@ -21,8 +23,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public static convertTimingFunction(value: string) {
-        if (KEYSPLINE_NAME[value]) {
-            return KEYSPLINE_NAME[value];
+        const keySpline = KEYSPLINE_NAME[value];
+        if (keySpline) {
+            return keySpline;
+        }
+        else if (REGEX_BEZIER.test(value)) {
+            return value;
         }
         else if (/^step/.test(value)) {
             return KEYSPLINE_NAME.linear;
@@ -391,7 +397,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         this._iterationCount = isNaN(value) ? 1 : value;
         const animationElement = this.animationElement;
         if (animationElement) {
-            if (this.iterationCount !== 1) {
+            if (this.iterationCount !== -1) {
                 this.setAttribute('accumulate', 'sum');
                 this.fillFreeze = getNamedItem(animationElement, 'fill') === 'freeze';
             }

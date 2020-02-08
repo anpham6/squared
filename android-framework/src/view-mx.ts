@@ -18,7 +18,7 @@ const { BOX_MARGIN, BOX_PADDING, formatPX, getDataSet, isLength, isPercent } = $
 const { getNamedItem } = $lib.dom;
 const { clampRange, truncate } = $lib.math;
 const { CHAR } = $lib.regex;
-const { aboveRange, capitalize, convertFloat, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
+const { aboveRange, capitalize, convertFloat, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap, withinRange } = $lib.util;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
 
@@ -1407,15 +1407,19 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                     else if (top > 0 && (this.actualParent as T)?.floatContainer) {
-                        const renderParent = this.outerMostWrapper.renderParent as T;
-                        if (renderParent.layoutVertical && !renderParent.hasAlign(NODE_ALIGNMENT.FLOAT)) {
+                        const renderParent = this.renderParent as T;
+                        if (renderParent.layoutVertical && renderParent.ascend({ condition: (item: T) => item.hasAlign(NODE_ALIGNMENT.FLOAT) || item.hasAlign(NODE_ALIGNMENT.COLUMN), error: (item: T) => item.naturalChild, attr: 'renderParent' }).length === 0) {
                             const boundsTop = this.bounds.top;
-                            const renderChildren = (this.renderParent as T).renderChildren;
+                            const renderChildren = renderParent.renderChildren;
+                            let previous: Undef<T>;
                             for (const node of (this.actualParent as T).naturalElements as T[]) {
-                                if (node.floating && node.bounds.top === boundsTop && !renderChildren.includes(node)) {
-                                    top = Math.max(top - node.linear.height, 0);
+                                if (node.floating && withinRange(node.bounds.top, boundsTop) && !renderChildren.includes(node)) {
+                                    if (previous === undefined || !previous.lineBreak && previous.css('clear') === 'none') {
+                                        top = Math.max(top - node.bounds.height, 0);
+                                    }
                                     break;
                                 }
+                                previous = node;
                             }
                         }
                     }

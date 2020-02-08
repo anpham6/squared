@@ -1536,7 +1536,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 setReadOnly(node);
                 break;
             case CONTAINER_ANDROID.EDIT:
-                if (!node.companion && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
+                if (node.companion === undefined && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
                         if (sibling?.visible && sibling.pageFlow) {
                             const element = <HTMLInputElement> node.element;
@@ -2667,7 +2667,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (item.pageFlow) {
                 if (item !== baseline) {
                     if (item.controlElement) {
-                        setAlignTop(item);                        
+                        setAlignTop(item);
                     }
                     else if (item.inlineVertical) {
                         if (tallest === undefined || getMaxHeight(item) > getMaxHeight(tallest)) {

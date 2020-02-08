@@ -1,4 +1,4 @@
-/* android.widget.toolbar 1.4.0
+/* android.widget.toolbar 1.4.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,7 +6,6 @@ this.android.widget = this.android.widget || {};
 this.android.widget.toolbar = (function () {
     'use strict';
 
-    var Resource = android.base.Resource;
     const $lib = squared.lib;
     const $libA = android.lib;
     const { formatPX } = $lib.css;
@@ -16,6 +15,7 @@ this.android.widget.toolbar = (function () {
     const { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
     const { createStyleAttribute, createViewAttribute, getDocumentId } = $libA.util;
+    const Resource = android.base.Resource;
     const PREFIX_MENU = 'ic_menu_';
     class Toolbar extends squared.base.ExtensionUI {
         constructor(name, framework, options, tagNames) {

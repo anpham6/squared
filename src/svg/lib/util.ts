@@ -412,10 +412,10 @@ export function getDOMRect(element: SVGElement) {
 export function getAttribute(element: SVGElement, attr: string, computed = true) {
     let value: string;
     if (computed) {
-        value = getStyleValue(element, attr) || getNamedItem(element, attr) || getDataSetValue(element, attr);
+        value = getNamedItem(element, attr) || getStyleValue(element, attr) || getDataSetValue(element, attr);
     }
     else {
-        value = getDataSetValue(element, attr) || getStyleValue(element, attr) || getNamedItem(element, attr);
+        value = getStyleValue(element, attr) || getDataSetValue(element, attr) || getNamedItem(element, attr);
     }
     if (!isString(value) && (computed || Array.from(element.style).includes(attr))) {
         value = getStyle(element).getPropertyValue(attr);

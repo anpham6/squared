@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 1.4.0
+/* android.widget.floatingactionbutton 1.4.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,7 +6,6 @@ this.android.widget = this.android.widget || {};
 this.android.widget.floatingactionbutton = (function () {
     'use strict';
 
-    var Resource = android.base.Resource;
     const $lib = squared.lib;
     const $libA = android.lib;
     const { parseColor } = $lib.color;
@@ -15,6 +14,7 @@ this.android.widget.floatingactionbutton = (function () {
     const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
     const { EXT_ANDROID, STRING_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
+    const Resource = android.base.Resource;
     const PREFIX_DIALOG = 'ic_dialog_';
     const SUPPORTED_INPUT = ['button', 'file', 'image', 'reset', 'search', 'submit'];
     class FloatingActionButton extends squared.base.ExtensionUI {

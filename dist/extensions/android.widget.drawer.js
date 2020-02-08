@@ -1,4 +1,4 @@
-/* android.widget.drawer 1.4.0
+/* android.widget.drawer 1.4.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,7 +6,6 @@ this.android.widget = this.android.widget || {};
 this.android.widget.drawer = (function () {
     'use strict';
 
-    var Resource = android.base.Resource;
     const $lib = squared.lib;
     const $libA = android.lib;
     const { assignEmptyValue, cloneObject, includes, optionalAsString } = $lib.util;
@@ -15,6 +14,7 @@ this.android.widget.drawer = (function () {
     const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
     const { createStyleAttribute, createViewAttribute } = $libA.util;
+    const Resource = android.base.Resource;
     class Drawer extends squared.base.ExtensionUI {
         constructor(name, framework, options, tagNames) {
             super(name, framework, options, tagNames);

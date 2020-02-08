@@ -245,10 +245,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                                 name = 'scale';
                                                 value = m.a + ' ' + m.d + ' ' + (origin ? origin.x + ' ' + origin.y : '0 0');
                                                 if (origin && (key !== 0 || origin.x !== 0 || origin.y !== 0)) {
-                                                    transformOrigin = {
-                                                        x: origin.x * (1 - m.a),
-                                                        y: origin.y * (1 - m.d)
-                                                    };
+                                                    transformOrigin = { x: origin.x * (1 - m.a), y: origin.y * (1 - m.d) };
                                                 }
                                                 break;
                                             case SVGTransform.SVG_TRANSFORM_ROTATE:
@@ -259,20 +256,14 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                                 name = 'skewX';
                                                 value = item.angle.toString();
                                                 if (origin && (key !== 0 || origin.y !== 0)) {
-                                                    transformOrigin = {
-                                                        x: origin.y * m.c * -1,
-                                                        y: 0
-                                                    };
+                                                    transformOrigin = { x: origin.y * m.c * -1, y: 0 };
                                                 }
                                                 break;
                                             case SVGTransform.SVG_TRANSFORM_SKEWY:
                                                 name = 'skewY';
                                                 value = item.angle.toString();
                                                 if (origin && (key !== 0 || origin.x !== 0)) {
-                                                    transformOrigin = {
-                                                        x: 0,
-                                                        y: origin.x * m.b * -1
-                                                    };
+                                                    transformOrigin = { x: 0, y: origin.x * m.b * -1 };
                                                 }
                                                 break;
                                             default:
@@ -474,7 +465,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     if (includeKeySplines) {
                                         animate.keySplines = keySplines;
                                     }
-                                    animate.timingFunction = timingFunction;
+                                    else {
+                                        animate.timingFunction = timingFunction;
+                                    }
                                 }
                             }
                             animate.paused = paused;

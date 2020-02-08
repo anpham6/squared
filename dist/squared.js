@@ -1,4 +1,4 @@
-/* squared 1.4.0
+/* squared 1.4.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1011,15 +1011,15 @@
     function maxArray(list) {
         return Math.max.apply(null, list);
     }
-    function isEqual$1(valueA, valueB, precision = 5) {
+    function equal(valueA, valueB, precision = 5) {
         precision += Math.floor(valueA).toString().length;
         return valueA.toPrecision(precision) === valueB.toPrecision(precision);
     }
     function moreEqual(valueA, valueB, precision = 5) {
-        return valueA > valueB || isEqual$1(valueA, valueB, precision);
+        return valueA > valueB || equal(valueA, valueB, precision);
     }
     function lessEqual(valueA, valueB, precision = 5) {
-        return valueA < valueB || isEqual$1(valueA, valueB, precision);
+        return valueA < valueB || equal(valueA, valueB, precision);
     }
     function truncate(value, precision = 3) {
         if (typeof value === 'string') {
@@ -1152,12 +1152,41 @@
         }
         return values[0];
     }
+    function sin(value, accuracy = 11) {
+        value = convertRadian(value);
+        let result = value;
+        for (let i = 3, j = 0; i <= accuracy; i += 2, j++) {
+            result += Math.pow(value, i) / factorial(i) * (j % 2 === 0 ? -1 : 1);
+        }
+        return result;
+    }
+    function cos(value, accuracy = 10) {
+        value = convertRadian(value);
+        let result = 1;
+        for (let i = 2, j = 0; i <= accuracy; i += 2, j++) {
+            result += Math.pow(value, i) / factorial(i) * (j % 2 === 0 ? -1 : 1);
+        }
+        return result;
+    }
+    function tan(value, accuracy = 11) {
+        return sin(value, accuracy) / cos(value, accuracy);
+    }
+    function factorial(value) {
+        let result = 2;
+        for (let i = 3; i <= value; i++) {
+            result *= i;
+        }
+        return result;
+    }
+    function hypotenuse(a, b) {
+        return Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+    }
 
     var math = /*#__PURE__*/Object.freeze({
         __proto__: null,
         minArray: minArray,
         maxArray: maxArray,
-        isEqual: isEqual$1,
+        equal: equal,
         moreEqual: moreEqual,
         lessEqual: lessEqual,
         truncate: truncate,
@@ -1171,7 +1200,12 @@
         offsetAngleX: offsetAngleX,
         offsetAngleY: offsetAngleY,
         clampRange: clampRange,
-        nextMultiple: nextMultiple
+        nextMultiple: nextMultiple,
+        sin: sin,
+        cos: cos,
+        tan: tan,
+        factorial: factorial,
+        hypotenuse: hypotenuse
     });
 
     const STRING_HEX = '0123456789ABCDEF';
@@ -3690,7 +3724,8 @@
         AMP: /&/g
     };
     const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
-    const STRING_TABSPACE = '&#160;'.repeat(8);
+    const STRING_SPACE = '&#160;';
+    const STRING_TABSPACE = STRING_SPACE.repeat(8);
     function isPlainText(value) {
         const length = value.length;
         for (let i = 0; i < length; i++) {
@@ -3950,6 +3985,7 @@
     var xml = /*#__PURE__*/Object.freeze({
         __proto__: null,
         STRING_XMLENCODING: STRING_XMLENCODING,
+        STRING_SPACE: STRING_SPACE,
         STRING_TABSPACE: STRING_TABSPACE,
         isPlainText: isPlainText,
         pushIndent: pushIndent,
