@@ -17,11 +17,12 @@ const { getElementAsNode } = $lib.session;
 const { convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, trimEnd, trimStart } = $lib.util;
 const { STRING_SPACE, STRING_TABSPACE } = $lib.xml;
 
-const STRING_COLORSTOP = `(rgba?\\(\\d+, \\d+, \\d+(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
+const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+, \\d+%?, \\d+%?(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
 const REGEX_URL = /^url/;
 const REGEX_NOBREAKSPACE = /\u00A0/g;
 const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
+const REGEX_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     const { width, height } = <Dimension> gradient.dimension;
@@ -36,7 +37,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
         }
         case 'radial': {
             const { repeating, radiusExtent, radius } = <RadialGradient> gradient;
-            horizontal = node.actualWidth <= node.actualHeight;
+            horizontal = node.actualWidth >= node.actualHeight;
             repeat = repeating;
             extent = radiusExtent / radius;
             size = radius;
@@ -182,15 +183,24 @@ function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boole
             inlined = true;
             break;
         case 'pre':
-        case 'pre-wrap':
+        case 'pre-wrap': {
             if (node.renderParent?.layoutVertical === false) {
                 value = value.replace(/^\s*?\n/, '');
+            }
+            const preIndent = ResourceUI.checkPreIndent(node)
+            if (preIndent) {
+                const [indent, adjacent] = preIndent;
+                if (indent !== '') {
+                    adjacent.textContent = indent + adjacent.textContent;
+                }
+                value = value.replace(REGEX_TRAILINGINDENT, '');
             }
             value = value
                 .replace(/\n/g, '\\n')
                 .replace(/\t/g, STRING_TABSPACE)
                 .replace(/\s/g, STRING_SPACE);
             return [value, true, false];
+        }
         case 'pre-line':
             value = value
                 .replace(/\n/g, '\\n')
@@ -234,6 +244,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
                     break;
                 case 'inherit':
                 case 'currentcolor':
+                case 'currentColor':
                     color = getInheritedStyle(<HTMLElement> node.element, border[2]);
                     break;
             }
@@ -626,6 +637,30 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             return value.includes('\n') && (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap') || /^pre/.test(node.css('whiteSpace')));
         }
         return false;
+    }
+
+    public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]> {
+        if (node.plainText) {
+            const parent = <NodeUI> node.actualParent;
+            if (parent?.preserveWhiteSpace && parent.ascend({ condition: item => item.tagName === 'PRE', startSelf: true }).length) {
+                let nextSibling = <Undef<NodeUI>> node.nextSibling;
+                if (nextSibling?.naturalElement) {
+                    const textContent = node.textContent;
+                    if (textContent.trim() !== '') {
+                        const match = REGEX_TRAILINGINDENT.exec(textContent);
+                        if (match) {
+                            if (!nextSibling.textElement) {
+                                nextSibling = <Undef<NodeUI>> nextSibling.cascadeFind(item => item.naturalChild && item.textElement, item => item.naturalChild && !item.textElement && item.length === 0);
+                            }
+                            if (nextSibling) {
+                                return [match[1] ? match[0] : '', nextSibling];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
     }
 
     private static getStoredName(asset: string, value: any): string {

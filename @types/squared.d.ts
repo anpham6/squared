@@ -195,6 +195,7 @@ declare namespace base {
         public static getBackgroundSize<T extends NodeUI>(node: T, value: string, screenDimension?: Dimension): Undef<Dimension>;
         public static isInheritedStyle<T extends NodeUI>(node: T, attr: string): boolean;
         public static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
+        public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
     }
 
     interface Extension<T extends Node> {
@@ -649,7 +650,7 @@ declare namespace base {
                 SEGMENTED = 128,
                 COLUMN = 256,
                 FLOAT = 512,
-                TOP = 1024,
+                BOTTOM = 1024,
                 RIGHT = 2048,
                 SINGLE = 4096,
                 EXTENDABLE = 8192,
@@ -744,7 +745,7 @@ declare namespace lib {
             map<U>(predicate: IteratorPredicate<T, U>): U[];
             flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
             cascade(predicate?: (item: T) => boolean): T[];
-            cascadeSome(predicate: IteratorPredicate<T, boolean>): boolean;
+            cascadeFind(predicate: IteratorPredicate<T, boolean>, error?: IteratorPredicate<T, boolean>): Undef<T>;
         }
 
         class Container<T> implements Container<T> {
@@ -761,6 +762,7 @@ declare namespace lib {
         function getHexCode(...values: number[]): string;
         function convertHex(value: RGBA): string;
         function convertHSLA(value: RGBA): HSLA;
+        function convertRGBA(value: HSLA): RGBA;
         function formatRGBA(value: RGBA): string;
         function formatHSLA(value: HSLA): string;
     }
@@ -904,6 +906,7 @@ declare namespace lib {
             CUSTOM_PROPERTY: RegExp;
             HEX: RegExp;
             RGBA: RegExp;
+            HSLA: RegExp;
             SELECTOR_G: RegExp;
             SELECTOR_LABEL: RegExp;
             SELECTOR_PSEUDO_ELEMENT: RegExp;

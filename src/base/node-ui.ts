@@ -657,7 +657,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this.setCacheValue('backgroundImage', backgroundImage);
                     node.setCacheValue('backgroundColor', '');
                     node.setCacheValue('backgroundImage', '');
-                    node.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING, this);
+                    node.resetBox(BOX_STANDARD.MARGIN, this);
+                    node.resetBox(BOX_STANDARD.PADDING, this);
                     const visibleStyle = node.visibleStyle;
                     visibleStyle.background = false;
                     visibleStyle.backgroundImage = false;
@@ -807,11 +808,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
                             }
-                            else if (siblings[0].float === 'right') {
+                            else if (siblings[0].floating) {
                                 if (siblings.length > 1) {
+                                    const float = siblings[0].float;
                                     let maxBottom = Number.NEGATIVE_INFINITY;
                                     for (const item of siblings) {
-                                        if (item.float === 'right') {
+                                        if (item.float === float) {
                                             maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
                                         }
                                     }
@@ -1501,7 +1503,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get percentHeight() {
         let result = this._cached.percentHeight;
         if (result === undefined) {
-            result = isPercent(this.cssInitial('height'));
+            result = isPercent(this.cssInitial('height')) && this.actualParent?.hasHeight === true;
             this._cached.percentHeight = result;
         }
         return result;

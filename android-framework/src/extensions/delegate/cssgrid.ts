@@ -25,8 +25,7 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, {
             controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
             containerType: CONTAINER_NODE.CONSTRAINT,
-            resource: NODE_RESOURCE.ASSET,
-            resetMargin: !node.documentBody
+            resource: NODE_RESOURCE.ASSET
         });
         container.inherit(node, 'styleMap', 'boxStyle');
         if (CssGrid.isJustified(node)) {

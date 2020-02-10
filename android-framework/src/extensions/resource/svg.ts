@@ -517,10 +517,7 @@ function getTileMode(value: number) {
 
 function createFillGradient(gradient: Gradient, path: SvgPath, precision?: number) {
     const type = gradient.type;
-    const result: GradientTemplate = {
-        type,
-        item: convertColorStops(gradient.colorStops, precision)
-    };
+    const result: GradientTemplate = { type, item: convertColorStops(gradient.colorStops, precision) };
     switch (type) {
         case 'radial': {
             const { cxAsString, cyAsString, rAsString, spreadMethod } = <SvgRadialGradient> gradient;
@@ -759,6 +756,18 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     public createSvgDrawable(node: T, element: SVGSVGElement) {
         const svg = new Svg(element);
+        let { width, height } = svg;
+        {
+            const { width: screenWidth, height: screenHeight } = node.localSettings.screenDimension;
+            if (width > screenWidth) {
+                height *= screenWidth / width;
+                width = screenWidth;
+            }
+            else if (height > screenHeight) {
+                width *= screenHeight / height;
+                height = screenHeight;
+            }
+        }
         const { floatPrecisionValue: precision, floatPrecisionKeyTime, transformExclude: exclude } = this.options;
         const supportedKeyFrames = node.api >= BUILD_ANDROID.MARSHMALLOW;
         const keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyFrames ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
@@ -785,10 +794,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 'xmlns:android': XMLNS_ANDROID.android,
                 'xmlns:aapt': this._namespaceAapt ? XMLNS_ANDROID.aapt : '',
                 'android:name': svg.name,
-                'android:width': formatPX(svg.width),
-                'android:height': formatPX(svg.height),
-                'android:viewportWidth': (viewBox.width || svg.width).toString(),
-                'android:viewportHeight': (viewBox.height || svg.height).toString(),
+                'android:width': formatPX(width),
+                'android:height': formatPX(height),
+                'android:viewportWidth': (viewBox.width || width).toString(),
+                'android:viewportHeight': (viewBox.height || height).toString(),
                 'android:alpha': parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : '',
                 include: vectorData
             }])
@@ -1440,16 +1449,16 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const scaleY = svg.height / box.height;
                 let x = image.getBaseValue('x', 0) * scaleX;
                 let y = image.getBaseValue('y', 0) * scaleY;
-                let width: number = image.getBaseValue('width', 0);
-                let height: number = image.getBaseValue('height', 0);
+                let w: number = image.getBaseValue('width', 0);
+                let h: number = image.getBaseValue('height', 0);
                 const offset = getParentOffset(image.element, svg.element);
                 x += offset.x;
                 y += offset.y;
-                width *= scaleX;
-                height *= scaleY;
+                w *= scaleX;
+                h *= scaleY;
                 const data: ExternalData = {
-                    width: formatPX(width),
-                    height: formatPX(height),
+                    width: formatPX(w),
+                    height: formatPX(h),
                     left: x !== 0 ? formatPX(x) : '',
                     top: y !== 0 ? formatPX(y) : ''
                 };

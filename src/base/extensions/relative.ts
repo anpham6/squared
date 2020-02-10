@@ -115,7 +115,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                 top -= rect.top - bounds.top;
                             }
                             else {
-                                if (previous?.positionRelative && previous.has('top')) {
+                                if (previous?.positionRelative && previous.hasPX('top')) {
                                     bottom += bounds.bottom - rect.bottom;
                                 }
                                 else {
@@ -129,7 +129,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                 left -= rect.left - bounds.left;
                             }
                             else {
-                                if (previous?.positionRelative && previous.has('right')) {
+                                if (previous?.positionRelative && previous.hasPX('right')) {
                                     right += bounds.right - rect.right;
                                 }
                                 else {

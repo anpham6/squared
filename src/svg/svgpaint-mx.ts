@@ -180,13 +180,14 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         }
                         else {
                             let color: Undef<ColorData>;
-                            switch (value.toLowerCase()) {
+                            switch (value) {
                                 case 'none':
                                 case 'transparent':
                                 case 'rgba(0, 0, 0, 0)':
                                     this[attr] = 'none';
                                     break;
                                 case 'currentcolor':
+                                case 'currentColor':
                                     color = parseColor(this.color || getAttribute(this.element, attr, true));
                                     break;
                                 default:

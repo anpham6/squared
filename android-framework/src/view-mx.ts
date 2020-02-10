@@ -18,6 +18,7 @@ const { BOX_MARGIN, BOX_PADDING, formatPX, getDataSet, isLength, isPercent } = $
 const { getNamedItem } = $lib.dom;
 const { clamp, truncate } = $lib.math;
 const { CHAR } = $lib.regex;
+const { actualTextRangeRect } = $lib.session;
 const { aboveRange, capitalize, convertFloat, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap, withinRange } = $lib.util;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
@@ -69,14 +70,14 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean, autoPaddi
         node.android('lineHeight', formatPX(lineHeight), overwrite);
     }
     else {
-        const offset = (lineHeight - node.actualHeight) / 2;
+        const offset = getLineSpacingExtra(node, lineHeight);
         if (offset > 0) {
             node.android('lineSpacingExtra', formatPX(offset), overwrite);
         }
     }
-    if (autoPadding && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
+    if (autoPadding && node.styleText && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
         if (node.cssTry('white-space', 'nowrap')) {
-            const offset = (lineHeight - (node.textBounds || node.boundingClientRect).height) / 2;
+            const offset = getLineSpacingExtra(node, lineHeight);
             const upper = Math.round(offset);
             if (upper > 0) {
                 node.modifyBox(BOX_STANDARD.PADDING_TOP, upper);
@@ -100,14 +101,13 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
     else if ((node.renderChildren.length === 0 || node.inline) && (node.pageFlow || node.textContent.length)) {
         if (inlineStyle && !node.inline && node.inlineText) {
             setMinHeight(node, lineHeight);
-            setMultiline(node, lineHeight, false, false);
         }
         else {
             let offset = 0;
             let usePadding = true;
             if (!inlineStyle && node.inlineText && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
                 if (node.cssTry('white-space', 'nowrap')) {
-                    offset = (lineHeight - (node.textBounds || node.boundingClientRect).height) / 2;
+                    offset = getLineSpacingExtra(node, lineHeight);
                     usePadding = false;
                     node.cssFinally('white-space');
                 }
@@ -170,6 +170,14 @@ function checkMergableGravity(value: string, direction: Set<string>) {
         direction.delete(vertical);
         direction.add(value);
     }
+}
+
+function getLineSpacingExtra(node: T, lineHeight: number) {
+    let height = Number.POSITIVE_INFINITY;
+    if (node.naturalChild) {
+        height = actualTextRangeRect(<Element> node.element, node.sessionId, false).height;
+    }
+    return (lineHeight - Math.min(height, node.boundingClientRect.height)) / 2;
 }
 
 const excludeHorizontal = (node: T) => node.textEmpty && (node.bounds.width === 0 && node.contentBoxWidth === 0 && node.marginLeft <= 0 && node.marginRight <= 0 && !node.visibleStyle.background || node.bounds.height === 0 && node.contentBoxHeight === 0 && node.marginTop <= 0 && node.marginBottom <= 0);
@@ -722,12 +730,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     let value = 0;
                     if (isPercent(width)) {
                         if (this.inputElement) {
-                            if (width === '100%' && !renderParent.inlineWidth) {
-                                layoutWidth = 'match_parent';
-                            }
-                            else {
-                                value = this.bounds.width;
-                            }
+                            value = this.actualWidth;
                         }
                         else if (renderParent.layoutConstraint && !renderParent.hasPX('width', false)) {
                             if (width === '100%') {
@@ -845,8 +848,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     if (!parent.inlineWidth) {
                                         layoutWidth = 'match_parent';
                                     }
-                                    else if (this.styleElement && this.cssTry('display', 'inline-block')) {
-                                        if (this.boundingClientRect.width < this.bounds.width) {
+                                    else if (this.styleText && this.cssTry('display', 'inline-block')) {
+                                        if (actualTextRangeRect(<Element> this.element, this.sessionId, false).width < this.bounds.width) {
                                             layoutWidth = 'match_parent';
                                         }
                                         this.cssFinally('display');
@@ -865,7 +868,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         };
                         if (this.blockStatic && !this.inputElement && !renderParent.layoutGrid) {
                             if (!actualParent.layoutElement) {
-                                if (this.nodeGroup || this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
+                                if (this.nodeGroup || renderParent.hasWidth || this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
                                     layoutWidth = 'match_parent';
                                 }
                                 else {
@@ -951,7 +954,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (this.is(CONTAINER_NODE.LINE) && this.tagName !== 'HR' && this.hasPX('height', true, true)) {
                             value += this.borderTopWidth + this.borderBottomWidth;
                         }
-                        layoutHeight = formatPX(value);
+                        if (this.multiline && this.styleText && !this.hasPX('minHeight') && !actualParent.layoutElement) {
+                            this.android('minHeight', formatPX(value));
+                            layoutHeight = 'wrap_content';
+                        }
+                        else {
+                            layoutHeight = formatPX(value);
+                        }
                     }
                 }
                 if (layoutHeight === '') {
@@ -1447,10 +1456,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                else if (this.visibleStyle.borderWidth && (this.layoutElement || this.contentBox && (this.bounds.height > 0 || this.renderChildren.length === 0 || !this.naturalChildren.every(node => !node.pageFlow && node.absoluteParent === this)) && !this.is(CONTAINER_NODE.LINE))) {
+                else if (this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE)) {
                     top += this.borderTopWidth;
-                    right += this.borderRightWidth;
                     bottom += this.borderBottomWidth;
+                    right += this.borderRightWidth;
                     left += this.borderLeftWidth;
                 }
                 if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
@@ -1557,7 +1566,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (this.positionRelative && this.floating) {
                 switch (direction) {
                     case 'top':
-                        if (this.has('top')) {
+                        if (this.hasPX('top')) {
                             value += this.top;
                         }
                         else {
@@ -1565,7 +1574,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         break;
                     case 'bottom':
-                        if (!this.has('top')) {
+                        if (!this.hasPX('top')) {
                             value -= this.bottom;
                         }
                         else {
@@ -1573,14 +1582,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         break;
                     case 'left':
-                        if (this.has('left')) {
+                        if (this.hasPX('left')) {
                             value += this.left;
                         }
                         else {
                             value -= this.right;
                         }
                     case 'right':
-                        if (!this.has('left')) {
+                        if (!this.hasPX('left')) {
                             value -= this.right;
                         }
                         else {
@@ -1912,7 +1921,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (absoluteParent === documentParent) {
                                 result = true;
                             }
-                            else if (absoluteParent.box.right === documentParent.linear.right && this.has('right') && !this.has('left')) {
+                            else if (absoluteParent.box.right === documentParent.linear.right && this.hasPX('right') && !this.hasPX('left')) {
                                 this.css('top', formatPX(this.linear.top - documentParent.box.top), true);
                                 result = true;
                             }

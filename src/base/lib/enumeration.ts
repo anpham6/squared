@@ -14,7 +14,7 @@ export const enum NODE_ALIGNMENT {
     SEGMENTED = 128,
     COLUMN = 256,
     FLOAT = 512,
-    TOP = 1024,
+    BOTTOM = 1024,
     RIGHT = 2048,
     SINGLE = 4096,
     EXTENDABLE = 8192,

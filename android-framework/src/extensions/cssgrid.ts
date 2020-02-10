@@ -657,7 +657,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'base', 'initial');
                 renderAs.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.CUSTOMIZATION });
-                renderAs.resetBox(BOX_STANDARD.MARGIN | BOX_STANDARD.PADDING);
+                renderAs.resetBox(BOX_STANDARD.MARGIN);
+                renderAs.resetBox(BOX_STANDARD.PADDING);
                 renderAs.render(parent);
                 node.transferBox(BOX_STANDARD.MARGIN, renderAs);
                 let inlineWidth = true;

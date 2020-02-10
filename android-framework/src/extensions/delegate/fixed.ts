@@ -101,10 +101,10 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 }
             }
             if (!node.pageFlow) {
-                if (!node.hasPX('width') && node.has('left') && node.has('right')) {
+                if (!node.hasPX('width') && node.hasPX('left') && node.hasPX('right')) {
                     node.setLayoutWidth('match_parent');
                 }
-                if (!node.hasPX('height') && node.has('top') && node.has('bottom')) {
+                if (!node.hasPX('height') && node.hasPX('top') && node.hasPX('bottom')) {
                     node.setLayoutHeight('match_parent');
                 }
             }

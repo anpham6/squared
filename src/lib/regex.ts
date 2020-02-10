@@ -34,6 +34,7 @@ export const CSS = {
     CUSTOM_PROPERTY: /^\s*(?:var|calc)\(.+\)$/,
     HEX: /[A-Za-z\d]{3,8}/,
     RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/,
+    HSLA: /hsla?\((\d+), (\d+)%, (\d+)%(?:, ([\d.]+))?\)/,
     SELECTOR_G: new RegExp(`\\s*((?:${STRING.CSS_SELECTOR_ATTR}|${STRING.CSS_SELECTOR_PSEUDO_CLASS}|${STRING.CSS_SELECTOR_PSEUDO_ELEMENT}|${STRING.CSS_SELECTOR_LABEL})+|[>~+])\\s*`, 'g'),
     SELECTOR_LABEL: new RegExp(STRING.CSS_SELECTOR_LABEL),
     SELECTOR_PSEUDO_ELEMENT: new RegExp(STRING.CSS_SELECTOR_PSEUDO_ELEMENT),

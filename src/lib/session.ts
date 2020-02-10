@@ -10,7 +10,9 @@ export function actualClientRect(element: Element, sessionId: string, cache = tr
         }
     }
     const bounds = element.getBoundingClientRect();
-    setElementCache(element, 'clientRect', sessionId, bounds);
+    if (cache) {
+        setElementCache(element, 'clientRect', sessionId, bounds);
+    }
     return bounds;
 }
 
@@ -48,7 +50,9 @@ export function actualTextRangeRect(element: Element, sessionId: string, cache =
             item[0].style.display = item[1];
         }
     }
-    setElementCache(element, 'textRangeRect', sessionId, bounds);
+    if (cache) {
+        setElementCache(element, 'textRangeRect', sessionId, bounds);
+    }
     return bounds;
 }
 

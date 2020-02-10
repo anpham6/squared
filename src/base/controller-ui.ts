@@ -137,6 +137,41 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         break;
                 }
             }
+            else if (isUserAgent(USER_AGENT.EDGE)) {
+                switch (tagName) {
+                    case 'INPUT':
+                        switch ((<HTMLInputElement> element).type) {
+                            case 'text':
+                            case 'password':
+                            case 'time':
+                            case 'date':
+                            case 'datetime-local':
+                            case 'week':
+                            case 'month':
+                            case 'url':
+                            case 'email':
+                            case 'search':
+                            case 'number':
+                            case 'tel':
+                                if (styleMap.fontSize === undefined) {
+                                    styleMap.fontSize = '13.3333px';
+                                }
+                                break;
+                        }
+                        break;
+                    case 'CODE':
+                        if (styleMap.fontFamily === undefined) {
+                            styleMap.fontFamily = 'monospace';
+                        }
+                        break;
+                    case 'LEGEND':
+                    case 'RT':
+                        if (styleMap.display === undefined) {
+                            styleMap.display = 'block';
+                        }
+                        break;
+                }
+            }
             switch (tagName) {
                 case 'INPUT': {
                     const type = (<HTMLInputElement> element).type;

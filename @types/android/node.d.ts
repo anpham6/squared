@@ -37,6 +37,7 @@ export interface WrapperOptions extends ExcludeOptions {
     containerType?: number;
     alignmentType?: number;
     resetMargin?: boolean;
+    ignoreRoot?: boolean;
 }
 
 export interface SupportAndroid extends Support {

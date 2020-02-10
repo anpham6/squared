@@ -25,6 +25,7 @@ const REGEX_BACKGROUND = /\s*(url\(.+?\))\s*/;
 const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
+const REGEX_PX = CSS.PX;
 const REGEX_EM = /em$/;
 const REGEX_GRID = /grid$/;
 const REGEX_FLEX = /flex$/;
@@ -543,6 +544,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
 }
 
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
+const hasTextAlign = (node: T, value: string) => node.textElement && !node.autoMargin.horizontal && node.cssAscend('textAlign', true) === value && (node.blockStatic || node.actualParent?.naturalChildren.length === 1);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static isFlexDirection(node: T, direction: string) {
@@ -1109,8 +1111,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public hasPX(attr: string, percent = true, initial = false) {
-        const value = (initial && this._initial?.styleMap || this._styleMap)[attr];
-        return value ? isLength(value, percent) : false;
+        return isLength((initial && this._initial?.styleMap || this._styleMap)[attr], percent);
     }
 
     public setBounds(cache = true) {
@@ -2253,7 +2254,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get centerAligned() {
         let result = this._cached.centerAligned;
         if (result === undefined) {
-            result = this.autoMargin.leftRight || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'center' || this.inlineStatic && this.cssAscend('textAlign', true) === 'center';
+            if (!this.pageFlow) {
+                result = this.hasPX('left') && this.hasPX('right');
+            }
+            else {
+                result = this.autoMargin.leftRight || hasTextAlign(this, 'center');
+            }
             this._cached.centerAligned = result;
         }
         return result;
@@ -2266,8 +2272,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (parent?.flexElement) {
                 result = /(right|end)$/.test(parent.css('justifyContent'));
             }
+            else if (!this.pageFlow) {
+                result = this.hasPX('right') && !this.hasPX('left');
+            }
             else {
-                result = this.float === 'right' || this.autoMargin.left || !this.pageFlow && this.hasPX('right') || this.textElement && this.blockStatic && this.cssInitial('textAlign') === 'right';
+                result = this.float === 'right' || this.autoMargin.left || hasTextAlign(this, 'right');
             }
             this._cached.rightAligned = result;
         }
@@ -2277,7 +2286,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get bottomAligned() {
         let result = this._cached.bottomAligned;
         if (result === undefined) {
-            result = !this.pageFlow && this.hasPX('bottom') && this.bottom >= 0 && !this.hasPX('top');
+            if (!this.pageFlow) {
+                result = this.hasPX('bottom') && !this.hasPX('top');
+            }
+            else {
+                result = this.actualParent?.hasHeight === true && this.autoMargin.top === true;
+            }
             this._cached.bottomAligned = result;
         }
         return result;
@@ -2744,19 +2758,30 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._fontSize;
         if (result === undefined) {
             const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
-            result = this.naturalElement ? getFontSize(this.style) : parseUnit(this.css('fontSize'));
+            if (this.naturalElement) {
+                const value = this.css('fontSize');
+                result = REGEX_PX.test(value) ? parseFloat(value) : getFontSize(this.style);
+            }
+            else {
+                result = parseUnit(this.css('fontSize'));
+            }
             if (result === 0 && !this.naturalChild) {
                 const element = this.element;
-                result = element && hasComputedStyle(element) ? getFontSize(getStyle(element)) : NaN;
-            }
-            while (isNaN(result)) {
-                const parent = this.actualParent;
-                if (parent) {
-                    result = getFontSize(parent.style);
+                if (element && hasComputedStyle(element)) {
+                    result = getFontSize(getStyle(element));
                 }
                 else {
-                    result = getFontSize(getStyle(document.body));
-                    break;
+                    do {
+                        const parent = this.actualParent;
+                        if (parent) {
+                            result = getFontSize(parent.style);
+                        }
+                        else {
+                            result = getFontSize(getStyle(document.body));
+                            break;
+                        }
+                    }
+                    while (result === 0);
                 }
             }
             this._fontSize = result;

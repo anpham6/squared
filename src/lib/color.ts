@@ -957,8 +957,8 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
         if (value.charAt(0) === '#') {
             rgba = parseRGBA(value);
         }
-        else if (/^rgb/.test(value)) {
-            const match = CSS.RGBA.exec(value);
+        else {
+            let match = CSS.RGBA.exec(value);
             if (match) {
                 rgba = {
                     r: parseInt(match[1]),
@@ -967,51 +967,65 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
                     a: match[4] ? parseFloat(match[4]) * 255 : parseOpacity(opacity)
                 };
             }
-        }
-        else {
-            switch (value) {
-                case 'transparent':
-                    rgba = { r: 0, g: 0, b: 0, a: 0 };
-                    key = 'transparent';
-                    break;
-                case 'initial':
-                    rgba = { r: 0, g: 0, b: 0, a: 255 };
-                    key = 'black';
-                    break;
-                default: {
-                    const color = findColorName(value);
-                    if (color) {
-                        rgba = <RGBA> { ...color.rgb, a: parseOpacity(opacity) };
-                        key = value;
+            else {
+                match = CSS.HSLA.exec(value);
+                if (match) {
+                    rgba = convertRGBA({
+                        h: parseInt(match[1]),
+                        s: parseInt(match[2]),
+                        l: parseInt(match[3]),
+                        a: clamp(match[4] ? parseFloat(match[4]) : opacity)
+                    });
+                }
+                else {
+                    switch (value) {
+                        case 'transparent':
+                            rgba = { r: 0, g: 0, b: 0, a: 0 };
+                            key = 'transparent';
+                            break;
+                        case 'initial':
+                            rgba = { r: 0, g: 0, b: 0, a: 255 };
+                            key = 'black';
+                            break;
+                        default: {
+                            const color = findColorName(value);
+                            if (color) {
+                                rgba = <RGBA> { ...color.rgb, a: parseOpacity(opacity) };
+                                key = value;
+                            }
+                            break;
+                        }
                     }
-                    break;
                 }
             }
         }
-        if (rgba && (rgba.a > 0 || transparency)) {
-            const hexAsString = getHexCode(rgba.r, rgba.g, rgba.b);
-            const alphaAsString = getHexCode(rgba.a);
-            const valueAsRGBA = '#' + hexAsString + alphaAsString;
-            if (CACHE_COLORDATA[valueAsRGBA]) {
-                return CACHE_COLORDATA[valueAsRGBA];
+        if (rgba) {
+            const { r, g, b, a } = rgba;
+            if (a > 0 || transparency) {
+                const hexAsString = getHexCode(r, g, b);
+                const alphaAsString = getHexCode(a);
+                const valueAsRGBA = '#' + hexAsString + alphaAsString;
+                if (CACHE_COLORDATA[valueAsRGBA]) {
+                    return CACHE_COLORDATA[valueAsRGBA];
+                }
+                opacity = a / 255;
+                value = '#' + hexAsString;
+                colorData = <ColorData> {
+                    key,
+                    value,
+                    valueAsRGBA,
+                    valueAsARGB: '#' + alphaAsString + hexAsString,
+                    rgba,
+                    hsl: convertHSLA(rgba),
+                    opacity,
+                    transparent: opacity === 0
+                };
+                if (opacity === 1) {
+                    CACHE_COLORDATA[value] = colorData;
+                }
+                CACHE_COLORDATA[valueAsRGBA] = colorData;
+                return colorData;
             }
-            opacity = rgba.a / 255;
-            value = '#' + hexAsString;
-            colorData = <ColorData> {
-                key,
-                value,
-                valueAsRGBA,
-                valueAsARGB: '#' + alphaAsString + hexAsString,
-                rgba,
-                hsl: convertHSLA(rgba),
-                opacity,
-                transparent: opacity === 0
-            };
-            if (opacity === 1) {
-                CACHE_COLORDATA[value] = colorData;
-            }
-            CACHE_COLORDATA[valueAsRGBA] = colorData;
-            return colorData;
         }
     }
     return undefined;
@@ -1025,8 +1039,11 @@ export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
             return colorData;
         }
     }
-    if (value.r === 0 && value.g === 0 && value.b === 0) {
-        value = { r: 255, g: 255, b: 255, a: value.a };
+    let { r, g, b } = value;
+    if (r === 0 && g === 0 && b === 0) {
+        r = 255;
+        g = 255;
+        b = 255;
         if (percent > 0) {
             percent *= -1;
         }
@@ -1035,9 +1052,9 @@ export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
     percent = Math.abs(percent);
     const result = <ColorData> parseColor(
         formatRGBA({
-            r: (value.r + Math.round((base - value.r) * percent)) % 255,
-            g: (value.g + Math.round((base - value.g) * percent)) % 255,
-            b: (value.b + Math.round((base - value.b) * percent)) % 255,
+            r: (r + Math.round((base - r) * percent)) % 255,
+            g: (g + Math.round((base - g) * percent)) % 255,
+            b: (b + Math.round((base - b) * percent)) % 255,
             a: value.a
         })
     );
@@ -1092,7 +1109,7 @@ export function parseRGBA(value: string) {
     return undefined;
 }
 
-export function convertHSLA(value: RGBA) {
+export function convertHSLA(value: RGBA): HSLA {
     const r = value.r / 255;
     const g = value.g / 255;
     const b = value.b / 255;
@@ -1121,12 +1138,57 @@ export function convertHSLA(value: RGBA) {
         }
         h /= 6;
     }
-    return <HSLA> {
+    return {
         h: Math.round(h * 360),
         s: Math.round(s * 100),
         l: Math.round(l * 100),
         a: value.a / 255
     };
+}
+
+export function convertRGBA(value: HSLA): RGBA {
+    let { h, s, l, a } = value;
+    h /= 360;
+    s /= 100;
+    l /= 100;
+    let r;
+    let g;
+    let b;
+    if (s === 0) {
+        r = l;
+        g = l
+        b = l;
+    }
+    else {
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        const hue2rgb = (t: number) => {
+            if (t < 0) {
+                t += 1;
+            }
+            else if (t > 1) {
+                t -= 1;
+            }
+            if (t < 1/6) {
+                return p + (q - p) * 6 * t;
+            }
+            else if (t < 1/2) {
+                return q;
+            }
+            else if (t < 2/3) {
+                return p + (q - p) * (2/3 - t) * 6;
+            }
+            return p;
+        };
+        r = hue2rgb(h + 1/3);
+        g = hue2rgb(h);
+        b = hue2rgb(h - 1/3);
+    }
+    r = Math.round(Math.min(r, 1) * 255);
+    g = Math.round(Math.min(g, 1) * 255);
+    b = Math.round(Math.min(b, 1) * 255);
+    a = Math.round(Math.min(a, 1) * 255);
+    return { r, g, b, a };
 }
 
 export function formatRGBA(value: RGBA) {

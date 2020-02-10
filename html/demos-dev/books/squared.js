@@ -1,4 +1,4 @@
-var squared = null;
+/*var squared = null;
 
 System.config({
     packages: {
@@ -34,7 +34,7 @@ System.import('/build/src/main.js').then(result => {
     });
 });
 
-/*System.import('/build/src/main.js').then(result => {
+System.import('/build/src/main.js').then(result => {
     squared = result;
     System.import('/build/src/base/main.js').then(result => {
         squared.base = result;
@@ -51,7 +51,7 @@ System.import('/build/src/main.js').then(result => {
             });
         });
     });
-});
+});*/
 
 document.addEventListener('DOMContentLoaded', function() {
     squared.setFramework(android);
@@ -60,4 +60,4 @@ document.addEventListener('DOMContentLoaded', function() {
         squared.saveToArchive();
         console.log(new Date().getTime() - time);
     });
-});*/
+});

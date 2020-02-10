@@ -323,7 +323,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     return LAYOUT_TABLE.VARIABLE;
                 }
                 else if (mapWidth.every(value => value === mapWidth[0])) {
-                    if (node.cascadeSome(td => td.hasHeight)) {
+                    if (node.cascadeFind(td => td.hasHeight)) {
                         mainData.expand = true;
                         return LAYOUT_TABLE.VARIABLE;
                     }

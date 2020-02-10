@@ -38,6 +38,7 @@ interface BackgroundImageData extends PositionAttribute {
     width?: number | string;
     height?: number | string;
     gravity?: string;
+    order: number;
 }
 
 interface BitmapData {
@@ -289,10 +290,7 @@ function checkBackgroundPosition(value: string, adjacent: string, fallback: stri
 
 function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIPOP, precision?: number) {
     const type = gradient.type;
-    const result: GradientTemplate = {
-        type,
-        item: false
-    };
+    const result: GradientTemplate = { type, item: false };
     const hasStop = api >= BUILD_ANDROID.LOLLIPOP;
     switch (type) {
         case 'conic': {
@@ -933,11 +931,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
             }
-            for (let i = length - 1; i >= 0; i--) {
+            for (let i = length - 1, j = 0; i >= 0; i--) {
                 const value = images[i];
                 const position = backgroundPosition[i];
                 const size = backgroundSize[i];
-                const imageData: BackgroundImageData = {};
+                const imageData: BackgroundImageData = { order: Number.POSITIVE_INFINITY };
                 let dimension = imageDimensions[i];
                 let dimenWidth = NaN;
                 let dimenHeight = NaN;
@@ -1606,40 +1604,40 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         imageData.drawable = src;
                     }
                 }
-                else if (value.item) {
-                    const [width, height] = dimension ? [Math.round(dimenWidth), Math.round(dimenHeight)] : [Math.round(node.actualWidth), Math.round(node.actualHeight)];
-                    if (size.split(' ').some(dimen => dimen !== '100%' && isLength(dimen, true))) {
-                        imageData.width = width;
-                        imageData.height = height;
-                    }
-                    const src = Resource.insertStoredAsset(
-                        'drawables',
-                        `${node.controlId}_gradient_${i + 1}`,
-                        applyTemplate('vector', VECTOR_TMPL, [{
-                            'xmlns:android': XMLNS_ANDROID.android,
-                            'xmlns:aapt': XMLNS_ANDROID.aapt,
-                            'android:width': formatPX(imageData.width as number || width),
-                            'android:height': formatPX(imageData.height as number || height),
-                            'android:viewportWidth': width.toString(),
-                            'android:viewportHeight': height.toString(),
-                            'path': {
-                                pathData: drawRect(width, height),
-                                'aapt:attr': {
-                                    name: 'android:fillColor',
-                                    gradient: value
+                else {
+                    if (value.item) {
+                        const [width, height] = dimension ? [Math.round(dimenWidth), Math.round(dimenHeight)] : [Math.round(node.actualWidth), Math.round(node.actualHeight)];
+                        if (size.split(' ').some(dimen => dimen !== '100%' && isLength(dimen, true))) {
+                            imageData.width = width;
+                            imageData.height = height;
+                        }
+                        const src = Resource.insertStoredAsset(
+                            'drawables',
+                            `${node.controlId}_gradient_${i + 1}`,
+                            applyTemplate('vector', VECTOR_TMPL, [{
+                                'xmlns:android': XMLNS_ANDROID.android,
+                                'xmlns:aapt': XMLNS_ANDROID.aapt,
+                                'android:width': formatPX(imageData.width as number || width),
+                                'android:height': formatPX(imageData.height as number || height),
+                                'android:viewportWidth': width.toString(),
+                                'android:viewportHeight': height.toString(),
+                                'path': {
+                                    pathData: drawRect(width, height),
+                                    'aapt:attr': {
+                                        name: 'android:fillColor',
+                                        gradient: value
+                                    }
                                 }
-                            }
-                        }])
-                    );
-                    if (src !== '') {
-                        imageData.drawable = '@drawable/' + src;
-                        if (position.static && node.tagName !== 'HTML') {
-                            imageData.gravity = 'fill';
+                            }])
+                        );
+                        if (src !== '') {
+                            imageData.drawable = '@drawable/' + src;
+                            imageData.order = j++;
                         }
                     }
-                }
-                else {
-                    imageData.gradient = value;
+                    else {
+                        imageData.gradient = value;
+                    }
                     if (position.static && node.tagName !== 'HTML') {
                         imageData.gravity = 'fill';
                     }
@@ -1686,7 +1684,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     result.push(imageData);
                 }
             }
-            return result;
+            return result.sort((a, b) => {
+                const orderA = a.order;
+                const orderB = b.order;
+                if (orderA === orderB) {
+                    return 0;
+                }
+                return orderA < orderB ? -1 : 1;
+            });
         }
         return undefined;
     }

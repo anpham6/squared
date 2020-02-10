@@ -45,7 +45,7 @@ function saveAlignment(preAlignment: ObjectIndex<StringMap>, element: HTMLElemen
     element.style.setProperty(attr, value);
 }
 
-function getCounterValue(name: string, counterName: string) {
+function getCounterValue(name: string, counterName: string, fallback = 1) {
     if (name !== 'none') {
         const pattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
         let match: Null<RegExpExecArray>;
@@ -54,16 +54,14 @@ function getCounterValue(name: string, counterName: string) {
                 return parseInt(match[2]);
             }
         }
+        return fallback;
     }
     return undefined;
 }
 
-function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string) {
-    const pseduoStyle: StringMap = getElementCache(parent, 'styleMap' + pseudoElt, sessionId);
-    if (pseduoStyle?.counterIncrement) {
-        return getCounterValue(pseduoStyle.counterIncrement, counterName);
-    }
-    return undefined;
+function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) {
+    const counterIncrement = getElementCache(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement;
+    return counterIncrement ? getCounterValue(counterIncrement, counterName, fallback) : undefined;
 }
 
 function checkTraverseHorizontal(node: NodeUI, horizontal: NodeUI[], vertical: NodeUI[], extended: boolean) {
@@ -400,6 +398,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const pseudoElements: T[] = [];
             let resetBounds = false;
             if (node.documentBody) {
+                parent.naturalChild = true;
                 parent.visible = false;
                 parent.exclude({
                     resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING,
@@ -832,7 +831,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 else if (match[2] || match[5]) {
                                     const counterType = match[2] === 'counter';
                                     const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
-                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName) || 0);
+                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
                                     const subcounter: number[] = [];
                                     let current: Null<Element> = element;
                                     let counter = initialValue;
@@ -890,7 +889,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 incrementCounter(pesudoIncrement, true);
                                             }
                                             const currentStyle = getStyle(current);
-                                            const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment'), counterName) || 0;
+                                            const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment'), counterName);
                                             if (counterIncrement) {
                                                 incrementCounter(counterIncrement, false);
                                             }
@@ -1659,7 +1658,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     private setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
-        if (inlineAbove.some((child: T) => requirePadding(child) || child.blockStatic && child.cascadeSome((nested: T) => requirePadding(nested)))) {
+        if (inlineAbove.some((child: T) => requirePadding(child) || child.blockStatic && child.cascadeFind((nested: T) => requirePadding(nested)))) {
             const bottom = target.bounds.bottom;
             if (leftAbove.length) {
                 let floatPosition = Number.NEGATIVE_INFINITY;
@@ -1682,7 +1681,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (invalid) {
                         const offset = floatPosition - parent.box.left - marginLeft;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeSome(child => child.multiline) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeFind(child => child.multiline) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
                         }
                     }
                 }
@@ -1706,7 +1705,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (invalid) {
                         const offset = parent.box.right - floatPosition - marginRight;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (target.cascadeSome(child => child.multiline) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (target.cascadeFind(child => child.multiline) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
                         }
                     }
                 }
