@@ -650,7 +650,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         const match = REGEX_TRAILINGINDENT.exec(textContent);
                         if (match) {
                             if (!nextSibling.textElement) {
-                                nextSibling = <Undef<NodeUI>> nextSibling.cascadeFind(item => item.naturalChild && item.textElement, item => item.naturalChild && !item.textElement && item.length === 0);
+                                nextSibling = <Undef<NodeUI>> nextSibling.find(item => item.naturalChild && item.textElement, { cascade: true, error: item => item.naturalChild && !item.textElement && item.length === 0 });
                             }
                             if (nextSibling) {
                                 return [match[1] ? match[0] : '', nextSibling];

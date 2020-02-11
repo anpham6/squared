@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { CachedValueUI, ExcludeOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support } from '../../@types/base/node';
+import { BoxType, CachedValueUI, ExcludeOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support } from '../../@types/base/node';
 
 import Node from './node';
 

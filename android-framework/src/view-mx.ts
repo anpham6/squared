@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { AutoMargin } from '../../@types/base/node';
+import { AutoMargin, BoxType } from '../../@types/base/node';
 import { CustomizationResult } from '../../@types/android/application';
 import { CachedValueAndroidUI, Constraint, LocalSettingsAndroidUI, SupportAndroid } from '../../@types/android/node';
 

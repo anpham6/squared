@@ -83,28 +83,6 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this;
     }
 
-    public find(predicate: IteratorPredicate<T, boolean> | string, value?: any) {
-        const children = this._children;
-        const length = children.length;
-        if (typeof predicate === 'string') {
-            for (let i = 0; i < length; i++) {
-                const item = children[i];
-                if (item[predicate] === value) {
-                    return item;
-                }
-            }
-        }
-        else {
-            for (let i = 0; i < length; i++) {
-                const item = children[i];
-                if (predicate(item, i, children)) {
-                    return item;
-                }
-            }
-        }
-        return undefined;
-    }
-
     public sort(predicate: (a: T, b: T) => number) {
         if (predicate) {
             this._children.sort(predicate);
@@ -138,17 +116,6 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return false;
     }
 
-    public some(predicate: IteratorPredicate<T, boolean>) {
-        const children = this._children;
-        const length = children.length;
-        for (let i = 0; i < length; i++) {
-            if (predicate(children[i], i, children)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public same(predicate: IteratorPredicate<T, any>) {
         return sameArray(this._children, predicate);
     }
@@ -173,44 +140,66 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return flatMap(this._children, predicate);
     }
 
-    public cascadeFind(predicate: IteratorPredicate<T, boolean>, error?: IteratorPredicate<T, boolean>) {
-        function cascade(container: Container<T>): Undef<T> {
+    public find(predicate: IteratorPredicate<T, boolean>, options: ContainerFindOptions<T> = {}) {
+        const { cascade, error } = options;
+        let invalid = false;
+        function recurse(container: Container<T>): Undef<T> {
             const children = container.children;
             const length = children.length;
             for (let i = 0; i < length; i++) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
-                    return undefined;
+                    invalid = true;
+                    break;
                 }
                 if (predicate(item, i, children)) {
                     return item;
                 }
-                if (item instanceof Container && item.length) {
-                    const result = cascade(item);
+                if (cascade && item instanceof Container && item.length) {
+                    const result = recurse(item);
                     if (result) {
                         return result;
+                    }
+                    else if (invalid) {
+                        break;
                     }
                 }
             }
             return undefined;
         }
-        return cascade(this);
+        return recurse(this);
     }
 
-    public cascade(predicate?: (item: T) => boolean) {
-        function cascade(container: Container<T>) {
+    public some(predicate: IteratorPredicate<T, boolean>, options: ContainerFindOptions<T> = {}) {
+        return this.find(predicate, options) !== undefined;
+    }
+
+    public cascade(predicate?: (item: T) => boolean, options: ContainerCascadeOptions<T> = {}) {
+        const { error } = options;
+        let invalid = false;
+        function recurse(container: Container<T>) {
             let result: T[] = [];
-            for (const item of container.children) {
+            const children = container.children;
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                const item = children[i];
+                if (error && error(item, i, children)) {
+                    invalid = true;
+                    break;
+                }
                 if (predicate === undefined || predicate(item)) {
                     result.push(item);
                 }
                 if (item instanceof Container && item.length) {
-                    result = result.concat(cascade(item));
+                    result = result.concat(recurse(item));
+                    if (invalid) {
+                        break;
+                    }
                 }
             }
             return result;
         }
-        return cascade(this);
+        return recurse(this);
     }
 
     get children() {

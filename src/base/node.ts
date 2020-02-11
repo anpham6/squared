@@ -1,4 +1,4 @@
-import { AscendOptions, CachedValue, InitialData } from '../../@types/base/node';
+import { AscendOptions, BoxType, CachedValue, InitialData, QueryAttribute, QueryData } from '../../@types/base/node';
 
 import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
 import { EXT_NAME } from './lib/constant';
@@ -25,7 +25,6 @@ const REGEX_BACKGROUND = /\s*(url\(.+?\))\s*/;
 const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
-const REGEX_PX = CSS.PX;
 const REGEX_EM = /em$/;
 const REGEX_GRID = /grid$/;
 const REGEX_FLEX = /flex$/;
@@ -2760,7 +2759,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
             if (this.naturalElement) {
                 const value = this.css('fontSize');
-                result = REGEX_PX.test(value) ? parseFloat(value) : getFontSize(this.style);
+                result = PX.test(value) ? parseFloat(value) : getFontSize(this.style);
             }
             else {
                 result = parseUnit(this.css('fontSize'));

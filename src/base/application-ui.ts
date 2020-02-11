@@ -1658,7 +1658,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     private setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
-        if (inlineAbove.some((child: T) => requirePadding(child) || child.blockStatic && child.cascadeFind((nested: T) => requirePadding(nested)))) {
+        if (inlineAbove.some((child: T) => requirePadding(child) || child.blockStatic && child.find((nested: T) => requirePadding(nested), { cascade: true }))) {
             const bottom = target.bounds.bottom;
             if (leftAbove.length) {
                 let floatPosition = Number.NEGATIVE_INFINITY;
@@ -1681,7 +1681,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (invalid) {
                         const offset = floatPosition - parent.box.left - marginLeft;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.cascadeFind(child => child.multiline) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
                         }
                     }
                 }
@@ -1705,7 +1705,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (invalid) {
                         const offset = parent.box.right - floatPosition - marginRight;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (target.cascadeFind(child => child.multiline) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
                         }
                     }
                 }

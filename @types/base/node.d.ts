@@ -1,5 +1,7 @@
 type Node = squared.base.Node;
 
+export type BoxType = "bounds" | "box" | "linear";
+
 export interface LocalSettingsUI {
     screenDimension: Dimension;
 }
@@ -147,4 +149,20 @@ export interface LinearData<T> {
     linearY: boolean;
     floated: Set<string>;
     cleared: Map<T, string>;
+}
+
+export interface QueryData {
+    all: boolean;
+    tagName?: string;
+    id?: string;
+    adjacent?: string;
+    classList?: string[];
+    attrList?: QueryAttribute[];
+    pseudoList?: string[];
+    notList?: string[];
+}
+
+export interface QueryAttribute extends StringValue {
+    symbol?: string;
+    caseInsensitive: boolean;
 }

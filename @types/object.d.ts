@@ -27,20 +27,6 @@ interface HSLA extends HSL {
     a: number;
 }
 
-interface ColorData extends StringValue {
-    valueAsRGBA: string;
-    valueAsARGB: string;
-    rgba: RGBA;
-    hsl: HSL;
-    opacity: number;
-    transparent: boolean;
-}
-
-interface ColorResult extends StringValue {
-    rgb: RGB;
-    hsl: HSL;
-}
-
 interface Point {
     x: number;
     y: number;

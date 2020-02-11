@@ -1,6 +1,6 @@
 import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutOptions,LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
-import { AutoMargin, AscendOptions, ExcludeOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support, VisibleStyle } from './base/node';
+import { AutoMargin, AscendOptions, BoxType, ExcludeOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgMatrix, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
@@ -732,20 +732,19 @@ declare namespace lib {
             duplicate(): T[];
             clear(): this;
             each(predicate: IteratorPredicate<T, void>): this;
-            find(predicate: IteratorPredicate<T, boolean> | string, value?: any): Undef<T>;
             sort(predicate: (a: T, b: T) => number): this;
             concat(list: T[]): this;
             join(...other: Container<T>[]): this;
             every(predicate: IteratorPredicate<T, boolean>): boolean;
-            some(predicate: IteratorPredicate<T, boolean>): boolean;
             same(predicate: IteratorPredicate<T, any>): boolean;
             filter(predicate: IteratorPredicate<T, void>): T[];
             splice(predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[];
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             map<U>(predicate: IteratorPredicate<T, U>): U[];
             flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
-            cascade(predicate?: (item: T) => boolean): T[];
-            cascadeFind(predicate: IteratorPredicate<T, boolean>, error?: IteratorPredicate<T, boolean>): Undef<T>;
+            find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
+            some(predicate: IteratorPredicate<T, boolean>, options?: ContainerSomeOptions<T>): boolean;
+            cascade(predicate?: (item: T) => boolean, options?: ContainerCascadeOptions<T>): T[];
         }
 
         class Container<T> implements Container<T> {

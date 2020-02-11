@@ -127,21 +127,3 @@ interface ImageSrcSet {
     pixelRatio: number;
     actualWidth?: number;
 }
-
-interface QueryData {
-    all: boolean;
-    tagName?: string;
-    id?: string;
-    adjacent?: string;
-    classList?: string[];
-    attrList?: QueryAttribute[];
-    pseudoList?: string[];
-    notList?: string[];
-}
-
-interface QueryAttribute extends StringValue {
-    symbol?: string;
-    caseInsensitive: boolean;
-}
-
-type BoxType = "bounds" | "box" | "linear";
