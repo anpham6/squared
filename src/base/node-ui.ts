@@ -10,7 +10,7 @@ type T = NodeUI;
 
 const $lib = squared.lib;
 
-const { BOX_MARGIN, BOX_PADDING, BOX_POSITION, isPercent } = $lib.css;
+const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = $lib.css;
 const { isTextNode, newBoxModel } = $lib.dom;
 const { equal } = $lib.math;
 const { XML } = $lib.regex;
@@ -793,7 +793,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             return NODE_TRAVERSE.FLOAT_WRAP;
                         }
                     }
-                    else if (floating && siblings.every(item => !item.floating)) {
+                    else if (floating && siblings.every(item => item.inline && !item.floating)) {
                         return NODE_TRAVERSE.FLOAT_WRAP;
                     }
                     else if (!floating && siblings.every(item => item.float === 'right' && aboveRange(this.textBounds?.top || Number.NEGATIVE_INFINITY, item.bounds.bottom))) {
@@ -840,6 +840,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 }
                             }
                         }
+                    }
+                    else if ((floating || this.inline) && siblings.reduce((a, b) => a + (b.inline || b.floating ? b.percentWidth : 0), this.percentWidth) > 1) {
+                        return NODE_TRAVERSE.PERCENT_WRAP;
                     }
                     if (checkBlockDimension(this, previous)) {
                         return NODE_TRAVERSE.INLINE_WRAP;
@@ -1501,23 +1504,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 result = false;
             }
             this._cached.textEmpty = result;
-        }
-        return result;
-    }
-
-    get percentWidth() {
-        let result = this._cached.percentWidth;
-        if (result === undefined) {
-            result = isPercent(this.cssInitial('width'));
-            this._cached.percentWidth = result;
-        }
-        return result;
-    }
-    get percentHeight() {
-        let result = this._cached.percentHeight;
-        if (result === undefined) {
-            result = isPercent(this.cssInitial('height')) && this.actualParent?.hasHeight === true;
-            this._cached.percentHeight = result;
         }
         return result;
     }

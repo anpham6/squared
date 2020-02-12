@@ -76,6 +76,8 @@ export interface CachedValue<T> {
     absoluteParent?: Null<T>;
     actualWidth?: number;
     actualHeight?: number;
+    percentWidth?: number;
+    percentHeight?: number;
     attributes?: StringMap;
     flexbox?: Flexbox;
     autoMargin?: AutoMargin;
@@ -87,8 +89,6 @@ export interface CachedValue<T> {
 export interface CachedValueUI<T> extends CachedValue<T> {
     positionAuto?: boolean;
     positiveAxis?: boolean;
-    percentWidth?: boolean;
-    percentHeight?: boolean;
     renderExclude?: boolean;
     containerName?: string;
     baselineHeight?: number;

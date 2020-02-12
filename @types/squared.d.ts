@@ -417,6 +417,8 @@ declare namespace base {
         readonly actualWidth: number;
         readonly actualHeight: number;
         readonly actualDimension: Dimension;
+        readonly percentWidth: number;
+        readonly percentHeight: number;
         readonly firstChild: Null<Node>;
         readonly lastChild: Null<Node>;
         readonly firstStaticChild: Null<Node>;
@@ -526,8 +528,6 @@ declare namespace base {
         readonly baselineHeight: number;
         readonly baselineElement: boolean;
         readonly positiveAxis: boolean;
-        readonly percentWidth: boolean;
-        readonly percentHeight: boolean;
         readonly layoutHorizontal: boolean;
         readonly layoutVertical: boolean;
         readonly onlyChild: boolean;

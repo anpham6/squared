@@ -2553,6 +2553,30 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
+    get percentWidth() {
+        let result = this._cached.percentWidth;
+        if (result === undefined) {
+            const value = this.cssInitial('width');
+            result = isPercent(value) ? parseFloat(value) / 100 : 0;
+            this._cached.percentWidth = result;
+        }
+        return result;
+    }
+    get percentHeight() {
+        let result = this._cached.percentHeight;
+        if (result === undefined) {
+            if (this.actualParent?.hasHeight) {
+                const value = this.cssInitial('height');
+                result = isPercent(value) ? parseFloat(value) / 100 : 0;
+            }
+            else {
+                result = 0;
+            }
+            this._cached.percentHeight = result;
+        }
+        return result;
+    }
+
     get visibleStyle() {
         let result = this._cached.visibleStyle;
         if (result === undefined) {
