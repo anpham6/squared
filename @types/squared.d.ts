@@ -1,4 +1,4 @@
-import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutOptions,LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
+import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
 import { AutoMargin, AscendOptions, BoxType, ExcludeOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support, VisibleStyle } from './base/node';
 
@@ -780,6 +780,7 @@ declare namespace lib {
 
         function isPlatform(value: string | number): boolean;
         function isUserAgent(value: string | number): boolean;
+        function isWinEdge(): boolean;
         function getDeviceDPI(): number;
     }
 

@@ -12,6 +12,10 @@ export const enum USER_AGENT {
     EDGE = 16
 }
 
+export function isWinEdge() {
+    return isUserAgent(USER_AGENT.EDGE) && isPlatform(PLATFORM.WINDOWS);
+}
+
 export function isPlatform(value: string | number) {
     const platform = navigator.platform.toLowerCase();
     if (typeof value === 'string') {

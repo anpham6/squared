@@ -9,7 +9,7 @@ html {
 body {
 	font-family: Arial, Helvetica, sans-serif;
     font-size: 100%;
-    width: 800px;
+    width: 600px;
     margin: 0 auto;
     border: 3px solid #931420;
     background-color: #fffded;
@@ -21,7 +21,7 @@ a:focus, a:hover {
 header {
 	padding: 1.5em 0 2em 0;
 	border-bottom: 3px solid #931420;
-		background-image: -moz-linear-gradient(
+	background-image: -moz-linear-gradient(
 	    30deg, #f6bb73 0%, #f6bb73 30%, white 50%, #f6bb73 80%, #f6bb73 100%);
 	background-image: -webkit-linear-gradient(
 	    30deg, #f6bb73 0%, #f6bb73 30%, white 50%, #f6bb73 80%, #f6bb73 100%);
@@ -48,72 +48,56 @@ header img {
 /* the styles for the main content */
 main {
 	clear: left;
+	padding: 0 30px;
 }
-
-/* the styles for the section */
-section {
-	width: 525px;
-	float: right;
-	padding: 0 20px 20px 20px;
-}
-section h1 {
-	color: #800000;
+/* the h1 styles for exercise 5-1
+main h1 {
 	font-size: 150%;
-	padding-top: .5em;
-	margin: 0;
-}
-section p {
-	padding-bottom: .5em;
-}
-section blockquote {
-	padding: 0 2em;
-	font-style: italic;
-}
-section ul {
-	padding: 0 0 .25em 1.25em;
-}
-section li {
-	padding-bottom: .35em;
-}
+    border-top: 3px solid #931420;
+    border-bottom: 3px solid #931420;
+    padding: .3em 0;
+} */
 
-/* the styles for the article */
-article {
-	padding: .5em 0;
-}
-article h2 {
-	font-size: 115%;
-	padding: 0 0 .25em 0;
-}
-article img {
-	float: right;
-	margin: .5em 0 1em 1em;
-	border: 1px solid black;
-}
 
-/* the styles for the aside */
-aside {
-	width: 215px;
-	float: right;
-	padding: 0 0 20px 20px;
+/* the h1 styles for exercise 5-2 */
+main h1 {
+	font-size: 150%;
+	border: 3px double #800000;
+	margin-bottom: .75em;
+	border-radius: 10px;
+	box-shadow: 5px 5px;
+	padding: .5em 0 .5em 2em;
+	background-color: white;
 }
-aside h2 {
+main h2 {
 	color: #800000;
 	font-size: 130%;
 	padding: .5em 0 .25em 0;
 }
-
-aside h3 {
+main h3 {
 	font-size: 105%;
 	padding-bottom: .25em;
 }
-aside img {
+main img {
 	padding-bottom: 1em;
+}
+main p {
+	padding-bottom: .5em;
+}
+main blockquote {
+	padding: 0 2em;
+	font-style: italic;
+}
+main ul {
+	padding: 0 0 .25em 1.25em;
+}
+main li {
+	padding-bottom: .35em;
 }
 
 /* the styles for the footer */
 footer {
 	background-color: #931420;
-	clear: both;
 
 }
 footer p {

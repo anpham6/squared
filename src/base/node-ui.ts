@@ -793,7 +793,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             return NODE_TRAVERSE.FLOAT_WRAP;
                         }
                     }
-                    else if (floating && siblings.some(item => item.multiline)) {
+                    else if (floating && siblings.every(item => !item.floating)) {
                         return NODE_TRAVERSE.FLOAT_WRAP;
                     }
                     else if (!floating && siblings.every(item => item.float === 'right' && aboveRange(this.textBounds?.top || Number.NEGATIVE_INFINITY, item.bounds.bottom))) {
@@ -805,6 +805,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                         else if (!/^inline-/.test(this.display)) {
                             let { top, bottom } = this.linear;
+                            top = Math.ceil(top);
                             if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
                             }
@@ -827,7 +828,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         const offset = bottom - maxBottom;
                                         top = offset <= 0 || offset / (bottom - top) < 0.5 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
                                     }
-                                    if (aboveRange(maxBottom, top)) {
+                                    if (top < maxBottom) {
                                         return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
                                     }
                                     else {
@@ -902,7 +903,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     if (node) {
                         const value: number = this[attr] || node.getBox(region)[1];
                         if (value > 0) {
-                            node.modifyBox(region, -value, false);
+                            node.modifyBox(region, -value, negative);
                         }
                     }
                     else {
@@ -1017,7 +1018,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (node) {
             boxRegister[region] = node;
         }
-        return boxRegister[region];
+        else {
+            node = boxRegister[region];
+        }
+        while (node) {
+            const next: Undef<NodeUI> = (<ObjectIndex<T>> node.unsafe('boxRegister'))[region];
+            if (next) {
+                node = next;
+            }
+            else {
+                break;
+            }
+        }
+        return node;
     }
 
     public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
@@ -1130,7 +1143,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get element() {
-        return this._element || <Null<Element>> this.innerMostWrapped.unsafe('element') || null;
+        return this._element || !!this.innerWrapped && <Null<Element>> this.innerMostWrapped.unsafe('element') || null;
     }
 
     set naturalChild(value) {

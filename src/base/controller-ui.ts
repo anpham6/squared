@@ -8,7 +8,7 @@ type NodeUI = squared.base.NodeUI;
 
 const $lib = squared.lib;
 
-const { USER_AGENT, isUserAgent } = $lib.client;
+const { USER_AGENT, isUserAgent, isWinEdge } = $lib.client;
 const { BOX_BORDER, BOX_PADDING, formatPX, getStyle, isLength, isPercent } = $lib.css;
 const { isTextNode } = $lib.dom;
 const { capitalize, convertFloat, flatArray } = $lib.util;
@@ -137,7 +137,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         break;
                 }
             }
-            else if (isUserAgent(USER_AGENT.EDGE)) {
+            else if (isWinEdge()) {
                 switch (tagName) {
                     case 'INPUT':
                         switch ((<HTMLInputElement> element).type) {

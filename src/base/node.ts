@@ -542,8 +542,32 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
     return true;
 }
 
+function hasTextAlign(node: T, value: string) {
+    if (node.cssAscend('textAlign', true) === value) {
+        if (node.textElement && node.blockStatic) {
+            return !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true);
+        }
+        else {
+            const parent = node.actualParent;
+            if (parent) {
+                const children = parent.naturalChildren;
+                if (children.length === 1) {
+                    return true;
+                }
+                else {
+                    const index = node.childIndex;
+                    const previousSibling = children[index - 1];
+                    const nextSibling = children[index + 1];
+                    return (previousSibling === undefined || !previousSibling.pageFlow || previousSibling.blockStatic) && (nextSibling === undefined || !nextSibling.pageFlow || nextSibling.blockStatic);
+                }
+            }
+        }
+    }
+    return false;
+}
+
+const canTextAlign = (node: T) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && !node.autoMargin.horizontal;
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
-const hasTextAlign = (node: T, value: string) => node.textElement && !node.autoMargin.horizontal && node.cssAscend('textAlign', true) === value && (node.blockStatic || node.actualParent?.naturalChildren.length === 1);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static isFlexDirection(node: T, direction: string) {
@@ -2257,7 +2281,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 result = this.hasPX('left') && this.hasPX('right');
             }
             else {
-                result = this.autoMargin.leftRight || hasTextAlign(this, 'center');
+                result = this.autoMargin.leftRight || canTextAlign(this) && hasTextAlign(this, 'center');
             }
             this._cached.centerAligned = result;
         }
@@ -2275,7 +2299,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 result = this.hasPX('right') && !this.hasPX('left');
             }
             else {
-                result = this.float === 'right' || this.autoMargin.left || hasTextAlign(this, 'right');
+                result = this.float === 'right' || this.autoMargin.left || canTextAlign(this) && (hasTextAlign(this, 'right') || hasTextAlign(this, 'end'));
             }
             this._cached.rightAligned = result;
         }
@@ -2753,13 +2777,21 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return <DOMRect> (this.naturalElement && this._element?.getBoundingClientRect() || this._bounds || newBoxRectDimension());
     }
 
-    get fontSize() {
+    get fontSize(): number {
         let result = this._fontSize;
         if (result === undefined) {
             const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
             if (this.naturalElement) {
                 const value = this.css('fontSize');
-                result = PX.test(value) ? parseFloat(value) : getFontSize(this.style);
+                if (PX.test(value)) {
+                    result = parseFloat(value);
+                }
+                else if (isPercent(value)) {
+                    result = (this.actualParent?.fontSize || getFontSize(getStyle(document.body))) * parseFloat(value) / 100;
+                }
+                else {
+                    result = getFontSize(this.style);
+                }
             }
             else {
                 result = parseUnit(this.css('fontSize'));
@@ -2767,7 +2799,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (result === 0 && !this.naturalChild) {
                 const element = this.element;
                 if (element && hasComputedStyle(element)) {
-                    result = getFontSize(getStyle(element));
+                    const node = getElementAsNode<T>(element, this.sessionId);
+                    if (node) {
+                        result = node.fontSize;
+                    }
+                    else {
+                        result = getFontSize(getStyle(element));
+                    }
                 }
                 else {
                     do {

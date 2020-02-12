@@ -6,6 +6,7 @@
   "scripts": {
     "express": "node app.js",
     "watch": "tsc -w -p tsconfig.json",
+    "eslint": "eslint **/*.ts --no-ignore",
     "dev-base": "tsc --inlineSourceMap false && rollup -c rollup.config.dev-base.js && cd ./android-framework && rollup -c rollup.config.dev.js",
     "dev": "tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js && cd ../chrome-framework && rollup -c rollup.config.js",
     "prod": "npm run clean && eslint **/*.ts && tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js",
@@ -54,7 +55,7 @@
     "decompress": "^4.2.0",
     "express": "^4.17.1",
     "mkdirp": "^1.0.3",
-    "request": "^2.88.0",
+    "request": "^2.88.2",
     "rimraf": "^3.0.2",
     "uuid": "^3.4.0"
   },

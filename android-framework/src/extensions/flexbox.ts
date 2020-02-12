@@ -203,7 +203,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         if (directionRow && rowCount === 1 || directionColumn && columnCount === 1) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;
             node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
-            node.addAlign(directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL);
+            node.addAlign(directionColumn ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL);
             mainData.wrap = false;
             return { include: true };
         }
@@ -214,7 +214,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     parent,
                     node,
                     containerType,
-                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
+                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (directionColumn ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL),
                     itemCount: node.length,
                     rowCount,
                     columnCount

@@ -20,7 +20,7 @@ const { createElement, getElementsBetweenSiblings, getRangeClientRect } = $lib.d
 const { maxArray, truncate } = $lib.math;
 const { CHAR } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { aboveRange, assignEmptyValue, convertFloat, filterArray, hasBit, isString, objectMap, optionalAsObject, partitionArray, withinRange } = $lib.util;
+const { aboveRange, assignEmptyValue, convertFloat, flatArray, filterArray, hasBit, isString, objectMap, optionalAsObject, partitionArray, withinRange } = $lib.util;
 const { STRING_XMLENCODING, replaceTab } = $lib.xml;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
@@ -795,7 +795,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else if (this.checkConstraintFloat(layout)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
         }
-        else if (layout.linearX) {
+        else if (layout.linearX || layout.singleRowAligned) {
             if (this.checkFrameHorizontal(layout)) {
                 layout.addRender(NODE_ALIGNMENT.FLOAT);
                 layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
@@ -952,69 +952,79 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public sortRenderPosition(parent: T, templates: NodeXmlTemplate<T>[]) {
-        if (parent.layoutRelative && templates.some(item => item.node.zIndex !== 0)) {
-            templates.sort((a, b) => {
-                const indexA = a.node.zIndex;
-                const indexB = b.node.zIndex;
-                if (indexA === indexB) {
-                    return 0;
-                }
-                else if (indexA > indexB) {
-                    return 1;
-                }
-                else {
-                    return -1;
-                }
-            });
-        }
-        else if (parent.layoutConstraint && templates.some(item => !item.node.pageFlow || item.node.zIndex !== 0)) {
-            const below: NodeXmlTemplate<T>[] = [];
-            const middle: NodeXmlTemplate<T>[] = [];
-            const above: NodeXmlTemplate<T>[] = [];
-            for (const item of templates) {
-                const node = item.node;
-                if (node.pageFlow) {
-                    middle.push(item);
-                }
-                else if (node.zIndex >= 0) {
-                    above.push(item);
-                }
-                else {
-                    below.push(item);
-                }
+        if (parent.layoutRelative) {
+            templates = flatArray(templates);
+            if (templates.some(item => item.node.zIndex !== 0)) {
+                templates.sort((a, b) => {
+                    const indexA = a.node.zIndex;
+                    const indexB = b.node.zIndex;
+                    if (indexA === indexB) {
+                        return 0;
+                    }
+                    else if (indexA > indexB) {
+                        return 1;
+                    }
+                    else {
+                        return -1;
+                    }
+                });
             }
-            sortConstraintAbsolute(below);
-            sortConstraintAbsolute(above);
-            return below.concat(middle, above);
+        }
+        else if (parent.layoutConstraint) {
+            templates = flatArray(templates);
+            if (templates.some(item => !item.node.pageFlow || item.node.zIndex !== 0)) {
+                const below: NodeXmlTemplate<T>[] = [];
+                const middle: NodeXmlTemplate<T>[] = [];
+                const above: NodeXmlTemplate<T>[] = [];
+                for (const item of templates) {
+                    const node = item.node;
+                    if (node.pageFlow) {
+                        middle.push(item);
+                    }
+                    else if (node.zIndex >= 0) {
+                        above.push(item);
+                    }
+                    else {
+                        below.push(item);
+                    }
+                }
+                sortConstraintAbsolute(below);
+                sortConstraintAbsolute(above);
+                return below.concat(middle, above);
+            }
         }
         return templates;
     }
 
     public checkFrameHorizontal(layout: squared.base.LayoutUI<T>) {
-        const floated = layout.floated;
-        if (floated.size === 2 || floated.size === 1 && layout.node.cssAscend('textAlign', true) === 'center' && layout.some(node => node.pageFlow)) {
-            return true;
-        }
-        else if (floated.has('right')) {
-            let pageFlow = 0;
-            let multiline = false;
-            for (const node of layout) {
-                if (node.floating) {
-                    if (multiline) {
-                        return false;
+        switch (layout.floated.size) {
+            case 1:
+                if (layout.node.cssAscend('textAlign', true) === 'center' && layout.some(node => node.pageFlow)) {
+                    return true;
+                }
+                else if (layout.length > 2) {
+                    if (layout.floated.has('right')) {
+                        let pageFlow = 0;
+                        let multiline = false;
+                        for (const node of layout) {
+                            if (node.floating) {
+                                if (multiline) {
+                                    return false;
+                                }
+                                continue;
+                            }
+                            else if (node.multiline) {
+                                multiline = true;
+                            }
+                            pageFlow++;
+                        }
+                        return pageFlow > 0;
                     }
-                    continue;
+                    return (<View> layout.item(0)).floating && !layout.singleRowAligned;
                 }
-                else if (node.multiline) {
-                    multiline = true;
-                }
-                pageFlow++;
-            }
-            return pageFlow > 0;
-        }
-        else if (floated.has('left') && !layout.linearX) {
-            const node = layout.item(0) as T;
-            return node.pageFlow && node.floating;
+                break;
+            case 2:
+                return true;
         }
         return false;
     }
@@ -1402,6 +1412,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 'search':
                         node.android('inputType', 'text');
                         setInputMinDimension(node, element);
+                        break;
+                    case 'image':
+                        if (node.width === 0) {
+                            node.css('width', formatPX(node.bounds.width));
+                        }
                         break;
                 }
                 break;
@@ -2614,14 +2629,24 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     protected processConstraintHorizontal(node: T, children: T[]) {
-        const baseline = NodeUI.baseline(children);
-        const textBaseline = NodeUI.baseline(children, true);
         const reverse = node.hasAlign(NODE_ALIGNMENT.RIGHT);
+        const baseline = NodeUI.baseline(children);
         const textBottom = getTextBottom(children)[0];
-        const documentId = baseline ? baseline.documentId : '';
+        const documentId = baseline?.documentId;
         const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
         let percentWidth = View.availablePercent(children, 'width', node.box.width);
         let bias = 0;
+        let valid = true;
+        let tallest: Undef<T>;
+        let bottom: Undef<T>;
+        let previous: Undef<T>;
+        let textBaseline: Null<T> = null;
+        const setAlignTop = (item: T) => {
+            item.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
+            item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
+            item.baselineAltered = true;
+            valid = false;
+        };
         switch (node.cssAscend('textAlign', true)) {
             case 'center':
                 bias = 0.5;
@@ -2637,16 +2662,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (!node.hasPX('width') && children.some(item => item.percentWidth)) {
             node.setLayoutWidth('match_parent');
         }
-        let valid = true;
-        let tallest: Undef<T>;
-        let bottom: Undef<T>;
-        let previous: Undef<T>;
-        const setAlignTop = (item: T) => {
-            item.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
-            item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
-            item.baselineAltered = true;
-            valid = false;
-        };
         const length = children.length;
         for (let i = 0; i < length; i++) {
             const item = children[i];
@@ -2677,6 +2692,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         switch (item.css('verticalAlign')) {
                             case 'text-top':
+                                if (textBaseline === null) {
+                                    textBaseline = NodeUI.baseline(children, true);
+                                }
                                 if (textBaseline && item !== textBaseline) {
                                     item.anchor('top', textBaseline.documentId);
                                 }
@@ -2693,6 +2711,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 break;
                             case 'text-bottom':
+                                if (textBaseline === null) {
+                                    textBaseline = NodeUI.baseline(children, true);
+                                }
                                 if (textBaseline && item !== textBaseline) {
                                     if (item !== textBottom) {
                                         item.anchor('bottom', textBaseline.documentId);
@@ -2722,7 +2743,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     setAlignTop(item);
                                 }
                                 else {
-                                    item.anchor('baseline', documentId);
+                                    item.anchor('baseline', documentId || 'parent');
                                 }
                                 break;
                             default:
@@ -2745,9 +2766,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 previous = item;
             }
             else if (item.positionAuto) {
-                item.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
-                item.anchored = true;
-                valid = false;
+                if (documentId) {
+                    item.anchor('top', documentId);
+                }
+                else {
+                    item.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
+                    item.anchored = true;
+                    valid = false;
+                }
             }
         }
         if (baseline) {
@@ -2778,7 +2804,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else {
-                if (valid && baseline.baselineElement && !baseline.imageOrSvgElement) {
+                if (valid && baseline.baselineElement && !baseline.imageOrSvgElement && node.ascend({ condition: (item: T) => item.layoutHorizontal, error: (item: T) => item.layoutVertical || item.layoutGrid, attr: 'renderParent' }).length) {
                     baseline.anchorParent(STRING_ANDROID.VERTICAL);
                     baseline.anchor('baseline', 'parent');
                 }

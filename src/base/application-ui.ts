@@ -1658,17 +1658,23 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     private setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
-        if (inlineAbove.some((child: T) => requirePadding(child) || child.blockStatic && child.find((nested: T) => requirePadding(nested), { cascade: true }))) {
+        if (inlineAbove.some((above: T) => requirePadding(above) || leftAbove.some(item => above.childIndex < item.childIndex) || rightAbove.some(item => above.childIndex < item.childIndex) || above.blockStatic && above.find((nested: T) => requirePadding(nested), { cascade: true }))) {
             const bottom = target.bounds.bottom;
             if (leftAbove.length) {
                 let floatPosition = Number.NEGATIVE_INFINITY;
                 let marginLeft = 0;
                 let invalid = false;
-                let hasSpacing = false;
+                let spacing = false;
                 for (const child of leftAbove) {
                     if (child.bounds.top < bottom) {
-                        floatPosition = Math.max(child.linear.right + Math.min(child.marginLeft, 0), floatPosition);
-                        hasSpacing = child.marginRight > 0;
+                        const right = child.linear.right + Math.min(child.marginLeft, 0);
+                        if (right > floatPosition) {
+                            floatPosition = right;
+                            spacing = child.marginRight > 0;
+                        }
+                        else if (right === floatPosition && child.marginRight <= 0) {
+                            spacing = false;
+                        }
                     }
                 }
                 if (floatPosition !== Number.NEGATIVE_INFINITY) {
@@ -1681,7 +1687,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (invalid) {
                         const offset = floatPosition - parent.box.left - marginLeft;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!hasSpacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
                         }
                     }
                 }
@@ -1690,9 +1696,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 let floatPosition = Number.POSITIVE_INFINITY;
                 let marginRight = 0;
                 let invalid = false;
+                let spacing = false;
                 for (const child of rightAbove) {
                     if (child.bounds.top < bottom) {
-                        floatPosition = Math.min(child.linear.left + Math.min(child.marginRight, 0), floatPosition);
+                        const left = child.linear.left + Math.min(child.marginRight, 0);
+                        if (left < floatPosition) {
+                            floatPosition = left;
+                            spacing = child.marginLeft > 0;
+                        }
+                        else if (left === floatPosition && child.marginLeft <= 0) {
+                            spacing = false;
+                        }
                     }
                 }
                 if (floatPosition !== Number.POSITIVE_INFINITY) {
@@ -1705,7 +1719,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (invalid) {
                         const offset = parent.box.right - floatPosition - marginRight;
                         if (offset > 0) {
-                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
                         }
                     }
                 }

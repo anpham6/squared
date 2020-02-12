@@ -193,6 +193,24 @@ export default abstract class NodeGroupUI extends NodeUI {
         return result;
     }
 
+    get centerAligned() {
+        let result = this._cached.centerAligned;
+        if (result === undefined) {
+            result = this.every(node => node.centerAligned);
+            this._cached.centerAligned = result;
+        }
+        return result;
+    }
+
+    get rightAligned() {
+        let result = this._cached.rightAligned;
+        if (result === undefined) {
+            result = this.every(node => node.rightAligned);
+            this._cached.rightAligned = result;
+        }
+        return result || this.hasAlign(NODE_ALIGNMENT.RIGHT);
+    }
+
     get tagName() {
         return '';
     }

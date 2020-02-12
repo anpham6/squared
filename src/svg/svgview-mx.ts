@@ -14,7 +14,7 @@ type SvgElement = squared.svg.SvgElement;
 const $lib = squared.lib;
 
 const { calculateVar, isAngle, isCalc, isCustomProperty, getFontSize, getKeyframeRules, parseAngle, parseVar } = $lib.css;
-const { USER_AGENT, isUserAgent } = $lib.client;
+const { isWinEdge } = $lib.client;
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;
 const { isString, replaceMap, sortNumber } = $lib.util;
@@ -104,7 +104,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
 
         public getAnimations(element?: SVGGraphicsElement) {
             const result: SvgAnimation[] = [];
-            if (!isUserAgent(USER_AGENT.EDGE)) {
+            if (!isWinEdge()) {
                 if (element === undefined) {
                     element = this.element;
                 }
