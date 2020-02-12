@@ -20,7 +20,7 @@ const { createElement, getElementsBetweenSiblings, getRangeClientRect } = $lib.d
 const { maxArray, truncate } = $lib.math;
 const { CHAR } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { aboveRange, assignEmptyValue, convertFloat, flatArray, filterArray, hasBit, isString, objectMap, optionalAsObject, partitionArray, withinRange } = $lib.util;
+const { assignEmptyValue, convertFloat, flatArray, filterArray, hasBit, isString, objectMap, optionalAsObject, partitionArray, withinRange } = $lib.util;
 const { STRING_XMLENCODING, replaceTab } = $lib.xml;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
@@ -753,8 +753,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else if (layout.some(item => !item.pageFlow && !item.positionAuto)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.ABSOLUTE | NODE_ALIGNMENT.UNKNOWN);
         }
-        else if (layout.visible.length <= 1) {
-            const child = node.find((item: T) => item.visible) as T;
+        else if (layout.length <= 1) {
+            const child = <Undef<T>> node.item(0);
             if (child) {
                 if (node.documentRoot && isTargeted(node.element, child)) {
                     node.hide();
@@ -771,7 +771,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.SINGLE);
                 }
                 else {
-                    if (child.percentWidth) {
+                    if (child.percentWidth > 0) {
                         if (!node.hasPX('width')) {
                             node.setLayoutWidth('match_parent');
                         }
@@ -907,7 +907,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (layout.same(node => node.float)) {
                 layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
             }
-            else if (cleared.size) {
+            else if (cleared.size || this.checkFrameHorizontal(layout)) {
                 layout.addRender(NODE_ALIGNMENT.FLOAT);
                 layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
             }
@@ -1002,27 +1002,28 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (layout.node.cssAscend('textAlign', true) === 'center' && layout.some(node => node.pageFlow)) {
                     return true;
                 }
-                else if (layout.length > 2) {
-                    if (layout.floated.has('right')) {
-                        let pageFlow = 0;
-                        let multiline = false;
-                        for (const node of layout) {
-                            if (node.floating) {
-                                if (multiline) {
-                                    return false;
-                                }
-                                continue;
+                if (layout.floated.has('right')) {
+                    let pageFlow = 0;
+                    let multiline = false;
+                    for (const node of layout) {
+                        if (node.floating) {
+                            if (multiline) {
+                                return false;
                             }
-                            else if (node.multiline) {
-                                multiline = true;
-                            }
-                            pageFlow++;
+                            continue;
                         }
-                        return pageFlow > 0;
+                        else if (node.multiline) {
+                            multiline = true;
+                        }
+                        pageFlow++;
                     }
-                    return (<View> layout.item(0)).floating && !layout.singleRowAligned;
+                    return pageFlow > 0;
                 }
-                break;
+                return (<View> layout.item(0)).floating && (
+                    layout.linearY ||
+                    layout.length > 2 && !layout.singleRowAligned ||
+                    layout.every(item => item.floating || item.block && (item.length > 0 || !(item.textElement || item.inputElement || item.imageElement || item.svgElement || item.controlElement)))
+                );
             case 2:
                 return true;
         }
@@ -1043,7 +1044,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (!(node.positiveAxis && (node.floating || node.autoMargin.horizontal) && (!node.positionRelative || node.positionAuto))) {
                         A = false;
                     }
-                    if (!node.percentWidth || node.blockStatic && node.css('width') === '100%') {
+                    if (node.percentWidth === 0 || node.blockStatic && node.css('width') === '100%') {
                         B = false;
                     }
                     if (!A && !B) {
@@ -1218,8 +1219,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const absoluteParent = node.absoluteParent || node.documentParent;
                 let width = node.toFloat('width', 0);
                 let height = node.toFloat('height', 0);
-                let percentWidth = node.percentWidth ? width : -1;
-                const percentHeight = node.percentHeight ? height : -1;
+                let percentWidth = node.percentWidth > 0 ? width : -1;
+                const percentHeight = node.percentHeight > 0 ? height : -1;
                 let scaleType = 'fitXY';
                 let imageSet: Undef<ImageSrcSet[]>;
                 if (isString(element.srcset) || node.actualParent?.tagName === 'PICTURE') {
@@ -2327,7 +2328,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         siblings = item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, <Element> item.element) : undefined;
                         if (textNewRow ||
                             item.nodeGroup && !item.hasAlign(NODE_ALIGNMENT.SEGMENTED) ||
-                            aboveRange(item.linear.top, previous.linear.bottom) && (item.blockStatic || item.floating && previous.float === item.float) ||
+                            Math.ceil(item.bounds.top) > previous.bounds.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
                             !item.textElement && !checkFloatWrap() && checkWrapWidth() && Math.floor(baseWidth) > maxWidth ||
                             !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element, node.sessionId))) ||
                             previous.autoMargin.horizontal ||
@@ -2335,7 +2336,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             Resource.checkPreIndent(previous) !== undefined)
                         {
                             if (leftForward) {
-                                if (previousRowLeft && (item.linear.bottom <= previousRowLeft.bounds.bottom || textIndentSpacing)) {
+                                if (previousRowLeft && (item.bounds.bottom <= previousRowLeft.bounds.bottom || textIndentSpacing)) {
                                     if (!anchored) {
                                         item.anchor(alignSibling, previousRowLeft.documentId);
                                     }
@@ -2391,7 +2392,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     if (item.float === 'left' && leftAlign) {
                         if (previousRowLeft) {
-                            if (aboveRange(item.linear.bottom, previousRowLeft.linear.bottom)) {
+                            if (item.linear.bottom > previousRowLeft.linear.bottom) {
                                 previousRowLeft = item;
                             }
                         }
@@ -2820,6 +2821,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     protected processConstraintColumn(node: T, children: T[]) {
         let items: T[] = [];
         const rows: T[][] = [items];
+        let maxSize = 0;
+        let multiline = false;
         for (const item of children) {
             if (item.css('columnSpan') === 'all') {
                 if (items.length) {
@@ -2832,35 +2835,25 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 rows.push(items);
             }
             else {
-                items.push(item);
-            }
-            if (!(item.textElement && (item.plainText || item.inlineText))) {
+                if (item.multiline) {
+                    multiline = true;
+                }
+                else {
+                    const width = item.bounds.width;
+                    maxSize = maxSize > 0 ? Math.min(width, maxSize) : width;
+                }
                 item.modifyBox(BOX_STANDARD.MARGIN_RIGHT);
+                items.push(item);
             }
         }
         if (items.length === 0) {
             rows.pop();
         }
-        const columnGap = node.parseUnit(node.css('columnGap')) || node.fontSize;
-        const columnWidth = node.parseUnit(node.css('columnWidth'), 'width');
         const columnCount = node.toInt('columnCount');
-        let columnSized = 0;
-        if (columnWidth > 0) {
-            let boxWidth: number;
-            if (isUserAgent(USER_AGENT.SAFARI)) {
-                boxWidth = Math.min(node.width > 0 ? node.width - node.contentBoxWidth : Number.POSITIVE_INFINITY, node.box.width * (columnCount || 1), node.documentParent.box.width - node.contentBoxWidth);
-            }
-            else {
-                boxWidth = node.box.width;
-            }
-            while (boxWidth - columnWidth >= 0) {
-                columnSized++;
-                boxWidth -= columnWidth + columnGap;
-            }
-        }
-        else {
-            columnSized = Number.POSITIVE_INFINITY;
-        }
+        const columnWidth = node.parseUnit(node.css('columnWidth'));
+        const columnGap = node.parseUnit(node.css('columnGap')) || (columnWidth > 0 ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
+        const boxWidth = !isUserAgent(USER_AGENT.SAFARI) ? node.box.width : Math.min(node.documentParent.box.width - node.contentBoxWidth, columnCount ? node.box.width * columnCount : Number.POSITIVE_INFINITY);
+        const columnSized = isNaN(columnCount) && columnWidth > 0 ? Math.ceil(boxWidth / (columnWidth + columnGap)) : Number.POSITIVE_INFINITY;
         let previousRow: Undef<T | string>;
         const length = rows.length;
         for (let i = 0; i < length; i++) {
@@ -2897,14 +2890,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let columnMin = Math.min(lengthA, columnSized, columnCount || Number.POSITIVE_INFINITY);
                 let percentGap = 0;
                 if (columnMin > 1) {
-                    let perRowCount = lengthA >= columnMin ? Math.ceil(lengthA / columnMin) : 1;
                     const maxHeight = Math.floor(row.reduce((a, b) => a + b.bounds.height, 0) / columnMin);
-                    let excessCount = perRowCount > 1 && lengthA % columnMin !== 0 ? lengthA - columnMin : Number.POSITIVE_INFINITY;
+                    let perRowCount = lengthA >= columnMin ? Math.ceil(lengthA / columnMin) : 1;
+                    let rowReduce = multiline || perRowCount > 1 && (lengthA % perRowCount !== 0 || !isNaN(columnCount) && perRowCount * columnCount % lengthA > 1);
+                    let excessCount = rowReduce && lengthA % columnMin !== 0 ? lengthA - columnMin : Number.POSITIVE_INFINITY;
                     let totalGap = 0;
                     for (let j = 0, k = 0, l = 0; j < lengthA; j++, l++) {
                         const column = row[j];
                         const rowIteration = l % perRowCount === 0;
-                        if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && (row.length - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
+                        if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < lengthA - 2 && (lengthA - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                             if (j > 0) {
                                 k++;
                                 if (rowIteration) {
@@ -2915,6 +2909,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                             l = 0;
+                            if (!rowIteration && excessCount > 0) {
+                                rowReduce = true;
+                            }
                         }
                         let col = columns[k];
                         if (col === undefined) {
@@ -2926,20 +2923,20 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             totalGap += maxArray(objectMap<T, number>(column.children as T[], child => child.marginLeft + child.marginRight));
                         }
                         if (j > 0 && /^H\d/.test(column.tagName)) {
-                            if (col.length === 1 && j === row.length - 2) {
+                            if (col.length === 1 && j === lengthA - 2) {
                                 columnMin--;
                                 excessCount = 0;
                             }
-                            else if ((l + 1) % perRowCount === 0 && row.length - j > columnMin && !row[j + 1].multiline && row[j + 1].bounds.height < maxHeight) {
+                            else if ((l + 1) % perRowCount === 0 && lengthA - j > columnMin && !row[j + 1].multiline && row[j + 1].bounds.height < maxHeight) {
                                 col.push(row[++j]);
                                 l = -1;
                             }
                         }
-                        else if (row.length - j === columnMin - k && excessCount !== Number.POSITIVE_INFINITY) {
+                        else if (rowReduce && lengthA - j === columnMin - k && excessCount !== Number.POSITIVE_INFINITY) {
                             perRowCount = 1;
                         }
                     }
-                    percentGap = columnMin > 1 ? Math.max(((totalGap + (columnGap * (columnMin - 1))) / node.box.width) / columnMin, 0.01) : 0;
+                    percentGap = columnMin > 1 ? Math.max(((totalGap + (columnGap * (columnMin - 1))) / boxWidth) / columnMin, 0.01) : 0;
                 }
                 else {
                     columns.push(row);
@@ -3116,7 +3113,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (i > 0 && j === 0) {
                             let checkBottom = false;
                             for (const item of previousSiblings) {
-                                if (Math.ceil(chain.linear.top) < Math.floor(item.linear.bottom)) {
+                                if (Math.ceil(chain.bounds.top) < item.bounds.bottom) {
                                     checkBottom = true;
                                     break;
                                 }
@@ -3201,7 +3198,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     get containerTypeHorizontal(): LayoutType {
         return {
-            containerType: CONTAINER_NODE.LINEAR,
+            containerType: CONTAINER_NODE.RELATIVE,
             alignmentType: NODE_ALIGNMENT.HORIZONTAL,
             renderType: 0
         };

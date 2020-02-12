@@ -618,10 +618,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     protected _styleMap!: StringMap;
     protected _cssStyle!: StringMap;
+    protected _textBounds!: Null<BoxRectDimension>;
     protected _box?: BoxRectDimension;
     protected _bounds?: BoxRectDimension;
     protected _linear?: BoxRectDimension;
-    protected _textBounds?: BoxRectDimension;
     protected _fontSize?: number;
     protected _initial?: InitialData<T>;
 
@@ -1871,7 +1871,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = parseFloat(value) > 0;
                 }
                 else {
-                    result = false;
+                    result = this.css('position') === 'fixed';
                 }
             }
             else {
@@ -2454,35 +2454,42 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
     get textBounds() {
         let result = this._textBounds;
-        if (this.naturalChild && result === undefined) {
-            if (this.textElement) {
-                result = actualTextRangeRect(<Element> this._element, this.sessionId);
-            }
-            else if (this.length) {
-                const nodes = this.cascade(node => node.length === 0);
-                if (nodes.length && nodes.every(item => item.textElement)) {
-                    let top = Number.POSITIVE_INFINITY;
-                    let right = Number.NEGATIVE_INFINITY;
-                    let left = Number.POSITIVE_INFINITY;
-                    let bottom = Number.NEGATIVE_INFINITY;
-                    let numberOfLines = 0;
-                    for (const node of nodes) {
-                        const rect = actualTextRangeRect(<Element> node.element, node.sessionId);
-                        top = Math.min(rect.top, top);
-                        right = Math.max(rect.right, right);
-                        left = Math.min(rect.left, left);
-                        bottom = Math.max(rect.bottom, bottom);
-                        numberOfLines += rect.numberOfLines || 0;
+        if (result === undefined) {
+            result = null;
+            if (this.naturalChild) {
+                if (this.textElement) {
+                    result = actualTextRangeRect(<Element> this._element, this.sessionId);
+                }
+                else {
+                    const children = this.naturalChildren;
+                    if (children.length) {
+                        let top = Number.POSITIVE_INFINITY;
+                        let right = Number.NEGATIVE_INFINITY;
+                        let left = Number.POSITIVE_INFINITY;
+                        let bottom = Number.NEGATIVE_INFINITY;
+                        let numberOfLines = 0;
+                        for (const node of children) {
+                            if (node.textElement) {
+                                const rect = actualTextRangeRect(<Element> node.element, node.sessionId);
+                                top = Math.min(rect.top, top);
+                                right = Math.max(rect.right, right);
+                                left = Math.min(rect.left, left);
+                                bottom = Math.max(rect.bottom, bottom);
+                                numberOfLines += rect.numberOfLines || 0;
+                            }
+                        }
+                        if (numberOfLines > 0) {
+                            result = {
+                                top,
+                                right,
+                                left,
+                                bottom,
+                                width: right - left,
+                                height: bottom - top,
+                                numberOfLines
+                            };
+                        }
                     }
-                    result = {
-                        top,
-                        right,
-                        left,
-                        bottom,
-                        width: right - left,
-                        height: bottom - top,
-                        numberOfLines
-                    };
                 }
             }
             this._textBounds = result;
@@ -2810,7 +2817,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (PX.test(value)) {
                     result = parseFloat(value);
                 }
-                else if (isPercent(value)) {
+                else if (isPercent(value) && !this.documentBody) {
                     result = (this.actualParent?.fontSize || getFontSize(getStyle(document.body))) * parseFloat(value) / 100;
                 }
                 else {

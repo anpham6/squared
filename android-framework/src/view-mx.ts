@@ -22,6 +22,8 @@ const { aboveRange, capitalize, convertFloat, convertWord, fromLastIndexOf, isNu
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
 
+const SPACING_CHECKBOX = 4;
+const SPACING_SELECT = 2;
 const REGEX_DATASETATTR = /^attr[A-Z]/;
 const REGEX_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
 const REGEX_VALIDSTRING = /[^\w$\-_.]/g;
@@ -714,11 +716,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const maxDimension = this.support.maxDimension;
             let adjustViewBounds = false;
             if (this.documentBody) {
-                const fixedContainer = renderParent.id === 0 && this.renderChildren.some(node => !node.pageFlow && node.css('position') === 'fixed');
-                if (fixedContainer || this.css('width') === '100%' || this.css('minWidth') === '100%' || this.blockStatic && !this.hasPX('width') && !this.hasPX('maxWidth')) {
+                const fixed = renderParent.id === 0 && this.renderChildren.some(node => node.css('position') === 'fixed');
+                if (fixed || this.css('width') === '100%' || this.css('minWidth') === '100%' || this.blockStatic && !this.hasPX('width') && !this.hasPX('maxWidth')) {
                     this.setLayoutWidth('match_parent', false);
                 }
-                if (fixedContainer || this.css('height') === '100%' || this.css('minHeight') === '100%') {
+                if (fixed || this.css('height') === '100%' || this.css('minHeight') === '100%') {
                     this.setLayoutHeight('match_parent', false);
                 }
             }
@@ -939,7 +941,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                 }
                             }
-                            if (layoutHeight === '' && (this.documentRoot || this.onlyChild && !renderParent.inlineHeight)) {
+                            if (layoutHeight === '' && (this.documentRoot || this.onlyChild && !renderParent.inlineHeight || this.css('position') === 'fixed')) {
                                 layoutHeight = 'match_parent';
                             }
                         }
@@ -1183,7 +1185,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public mergeGravity(attr: string, alignment: string, overwrite = true) {
-            if (attr === 'layout_gravity') {
+            const layout = attr === 'layout_gravity';
+            if (layout) {
                 const renderParent = this.renderParent;
                 if (renderParent) {
                     if (isHorizontalAlign(alignment) && (this.blockWidth || renderParent.inlineWidth && this.onlyChild || !overwrite && this.outerWrapper && this.hasPX('maxWidth'))) {
@@ -1219,7 +1222,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     break;
                                 case STRING_ANDROID.CENTER_HORIZONTAL:
                                     if (this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
-                                        this.anchorParent(STRING_ANDROID.HORIZONTAL, undefined, undefined, true);
+                                        this.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed', 0.5);
                                     }
                                     break;
                             }
@@ -1228,61 +1231,76 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             }
-            else if (this.is(CONTAINER_NODE.TEXT) && this.textEmpty) {
-                return;
+            else {
+                switch (this.tagName) {
+                    case '#text':
+                    case 'IMG':
+                    case 'SVG':
+                    case 'HR':
+                        return;
+                    case 'INPUT':
+                        switch (this.toElementString('type')) {
+                            case 'radio':
+                            case 'checkbox':
+                            case 'range':
+                                return;
+                        }
+                        break;
+                    default:
+                        if (this.controlElement || this.is(CONTAINER_NODE.TEXT) && this.textEmpty) {
+                            return;
+                        }
+                        break;
+                }
             }
-            const stored = this.android(attr);
-            const direction = new Set<string>();
             let result = '';
+            const gravity = this.localizeString(alignment);
+            const direction = new Set<string>();
+            const stored = this.android(attr);
             if (stored !== '') {
                 for (const value of stored.split('|')) {
                     direction.add(value);
                 }
             }
-            direction.add(this.localizeString(alignment));
-            switch (direction.size) {
-                case 0:
-                    break;
-                case 1:
-                    result = checkTextAlign(direction.values().next().value, false);
-                default: {
+            if (!direction.has(gravity)) {
+                direction.add(gravity);
+                if (direction.size > 1) {
                     checkMergableGravity('center', direction);
                     checkMergableGravity('fill', direction);
-                    let x = '';
-                    let y = '';
-                    let z = '';
-                    for (const value of direction.values()) {
-                        switch (value) {
-                            case 'left':
-                            case 'start':
-                            case 'right':
-                            case 'end':
-                            case STRING_ANDROID.CENTER_HORIZONTAL:
-                                if (x === '' || overwrite) {
-                                    x = value;
-                                }
-                                break;
-                            case 'top':
-                            case 'bottom':
-                            case STRING_ANDROID.CENTER_VERTICAL:
-                                if (y === '' || overwrite) {
-                                    y = value;
-                                }
-                                break;
-                            default:
-                                z += (z !== '' ? '|' : '') + value;
-                                break;
-                        }
-                    }
-                    result = x !== '' && y !== '' ? x + '|' + y : x || y;
-                    if (z !== '') {
-                        result += (result !== '' ? '|' : '') + z;
-                    }
-                    break;
                 }
-            }
-            if (result !== '') {
-                this.android(attr, result);
+                let x = '';
+                let y = '';
+                let z = '';
+                for (const value of direction.values()) {
+                    switch (value) {
+                        case 'left':
+                        case 'start':
+                        case 'right':
+                        case 'end':
+                        case STRING_ANDROID.CENTER_HORIZONTAL:
+                            if (x === '' || overwrite) {
+                                x = value;
+                            }
+                            break;
+                        case 'top':
+                        case 'bottom':
+                        case STRING_ANDROID.CENTER_VERTICAL:
+                            if (y === '' || overwrite) {
+                                y = value;
+                            }
+                            break;
+                        default:
+                            z += (z !== '' ? '|' : '') + value;
+                            break;
+                    }
+                }
+                result = x !== '' && y !== '' ? x + '|' + y : x || y;
+                if (z !== '') {
+                    result += (result !== '' ? '|' : '') + z;
+                }
+                if (result !== '') {
+                    this.android(attr, result);
+                }
             }
         }
 
@@ -1460,12 +1478,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     switch (this.controlName) {
                         case CONTAINER_ANDROID.RADIO:
                         case CONTAINER_ANDROID.CHECKBOX:
-                            top = Math.max(top - 4, 0);
-                            bottom = Math.max(bottom - 4, 0);
+                            top = Math.max(top - SPACING_CHECKBOX, 0);
+                            bottom = Math.max(bottom - SPACING_CHECKBOX, 0);
                             break;
                         case CONTAINER_ANDROID.SELECT:
-                            top = Math.max(top - 2, 0);
-                            bottom = Math.max(bottom - 2, 0);
+                            top = Math.max(top - SPACING_SELECT, 0);
+                            bottom = Math.max(bottom - SPACING_SELECT, 0);
                             break;
                     }
                 }
@@ -1906,11 +1924,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         switch (this.controlName) {
                             case CONTAINER_ANDROID.RADIO:
                             case CONTAINER_ANDROID.CHECKBOX:
-                                result += 8;
+                                result += SPACING_CHECKBOX * 2;
                                 break;
                             case CONTAINER_ANDROID.SELECT:
-                                result += 4;
                                 result /= this.toElementInt('size') || 1;
+                                result += SPACING_SELECT * 2;
                                 break;
                             default:
                                 result += Math.max(convertFloat(this.verticalAlign) * -1, 0);

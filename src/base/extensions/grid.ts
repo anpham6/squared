@@ -8,7 +8,6 @@ import { BOX_STANDARD } from '../lib/enumeration';
 
 const $lib = squared.lib;
 
-const { formatPX, isLength, isPercent } = $lib.css;
 const { aboveRange, belowRange, withinRange } = $lib.util;
 
 const GRID = EXT_NAME.GRID;
@@ -42,17 +41,17 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        if (node.length > 1 && !node.layoutElement && !node.has('listStyle')) {
+        if (node.length > 1 && !node.layoutElement && !node.tableElement && !node.has('listStyle')) {
             if (node.display === 'table') {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }
             else {
-                let length = 0;
+                let minLength = false;
                 let itemCount = 0;
                 for (const item of node) {
-                    if (item.pageFlow && !item.visibleStyle.background && item.blockStatic && !item.autoMargin.leftRight && !item.autoMargin.left) {
+                    if (item.pageFlow && !item.visibleStyle.background && item.blockStatic && item.percentWidth === 0 && !item.autoMargin.leftRight && !item.autoMargin.left) {
                         if (item.length > 1) {
-                            length++;
+                            minLength = true;
                         }
                         if (item.display === 'list-item' && !item.has('listStyleType')) {
                             itemCount++;
@@ -62,12 +61,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         return false;
                     }
                 }
-                if (itemCount === node.length) {
-                    return true;
-                }
-                else if (length) {
-                    return node.every(item => item.length > 0 && NodeUI.linearData(item.children as T[]).linearX);
-                }
+                return itemCount === node.length || minLength && node.every(item => item.length > 0 && NodeUI.linearData(item.children as T[]).linearX);
             }
         }
         return false;
@@ -211,7 +205,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         }
         const columnCount = columns.length;
         if (columnCount > 1 && columns[0].length === node.length) {
-            const children: T[][] = [];
+            node.each((item: T) => item.hide());
+            node.clear();
             const assigned = new Set<T>();
             for (let i = 0, count = 0; i < columnCount; i++) {
                 const column = columns[i];
@@ -219,12 +214,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 for (let j = 0, start = 0; j < column.length; j++) {
                     const item = column[j];
                     const rowCount = column.length;
-                    let rowData = children[j];
-                    if (rowData === undefined) {
-                        rowData = [];
-                        children[j] = rowData;
-                    }
-                    if (!item['spacer']) {
+                     if (!item['spacer']) {
                         const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(GRID, 'cellData'));
                         let rowSpan = 1;
                         let columnSpan = 1 + spacer;
@@ -275,60 +265,11 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         data.index = i;
                         spacer = 0;
                         item.data(GRID, 'cellData', data);
-                        rowData.push(item);
+                        item.parent = node;
                         assigned.add(item);
                     }
                     else if (item['spacer'] === 1) {
                         spacer++;
-                    }
-                }
-            }
-            node.each((item: T) => item.hide());
-            node.clear();
-            for (const group of children) {
-                let hasLength = true;
-                let hasPercent = false;
-                for (const item of group) {
-                    const width = item.css('width');
-                    if (isPercent(width)) {
-                        hasPercent = true;
-                    }
-                    else if (!isLength(width)) {
-                        hasLength = false;
-                        break;
-                    }
-                }
-                const lengthA = group.length;
-                if (lengthA > 1 && hasLength && hasPercent) {
-                    const cellData: GridCellData<T> = group[0].data(GRID, 'cellData');
-                    if (cellData?.rowSpan === 1) {
-                        let siblings: T[] = cellData.siblings?.slice(0) || [];
-                        for (let i = 1; i < lengthA; i++) {
-                            const item = group[i];
-                            const siblingData: GridCellData<T> = item.data(GRID, 'cellData');
-                            if (siblingData?.rowSpan === 1) {
-                                siblings.push(item);
-                                if (siblingData.siblings) {
-                                    siblings = siblings.concat(siblingData.siblings);
-                                }
-                            }
-                            else {
-                                siblings.length = 0;
-                                break;
-                            }
-                        }
-                        if (siblings.length) {
-                            cellData.block = true;
-                            cellData.columnSpan = columnCount;
-                            cellData.siblings = siblings;
-                            group.length = 1;
-                        }
-                    }
-                }
-                for (const item of group) {
-                    item.parent = node;
-                    if (item.percentWidth && !hasLength) {
-                        item.css('width', formatPX(item.bounds.width), true);
                     }
                 }
             }

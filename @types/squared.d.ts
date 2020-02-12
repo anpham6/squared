@@ -302,7 +302,6 @@ declare namespace base {
         readonly cleared: Map<T, string>;
         readonly singleRowAligned: boolean;
         readonly unknownAligned: boolean;
-        readonly visible: T[];
         init(): void;
         setContainerType(containerType: number, alignmentType?: number): void;
         hasAlign(value: number): boolean;
@@ -329,7 +328,6 @@ declare namespace base {
         style: CSSStyleDeclaration;
         parent?: Node;
         queryMap?: Node[][];
-        textBounds?: BoxRectDimension;
         readonly sessionId: string;
         readonly initial: Undef<InitialData<Node>>;
         readonly box: BoxRectDimension;
@@ -387,6 +385,7 @@ declare namespace base {
         readonly plainText: boolean;
         readonly styleText: boolean;
         readonly textContent: string;
+        readonly textBounds: Null<BoxRectDimension>;
         readonly lineBreak: boolean;
         readonly positionStatic: boolean;
         readonly block: boolean;

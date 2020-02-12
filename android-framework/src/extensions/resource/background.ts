@@ -544,16 +544,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             if (value !== '') {
                 const drawable = '@drawable/' + Resource.insertStoredAsset('drawables', node.containerName.toLowerCase() + '_' + node.controlId, value);
                 if (!themeBackground) {
-                    if (node.documentBody) {
-                        themeBackground = true;
+                    if (node.documentRoot && node.innerMostWrapped.documentBody) {
                         if (!setHtmlBackground(node) && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY) && node.css('backgroundImage') !== 'none') {
                             setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                            themeBackground = true;
                             return;
                         }
                     }
                     else if (node.tagName === 'HTML') {
-                        themeBackground = true;
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                        themeBackground = true;
                         return;
                     }
                 }
@@ -615,7 +615,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (backgroundColor) {
                         const color = getColorValue(backgroundColor, false);
                         if (color !== '') {
-                            if (node.documentBody) {
+                            if (node.documentRoot && node.innerMostWrapped.documentBody) {
                                 if (!themeBackground) {
                                     setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
                                     themeBackground = true;
@@ -931,6 +931,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
             }
+            const documentBody = node.innerMostWrapped.documentBody;
             for (let i = length - 1, j = 0; i >= 0; i--) {
                 const value = images[i];
                 const position = backgroundPosition[i];
@@ -961,7 +962,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         tileModeX = '';
                         tileModeY = '';
                         repeating = false;
-                        if (node.documentBody) {
+                        if (documentBody) {
                             const visibleStyle = node.visibleStyle;
                             visibleStyle.backgroundRepeat = true;
                             visibleStyle.backgroundRepeatY = true;
@@ -979,8 +980,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         resizable = false;
                         recalibrate = false;
                     };
-                    const canResizeHorizontal = () => resizable && gravityX !== 'fill_horizontal' && tileMode !== 'repeat' && tileModeX === '';
-                    const canResizeVertical = () => resizable && gravityY !== 'fill_vertical' && tileMode !== 'repeat' && tileModeY === '';
+                    const canResizeHorizontal = () => resizable && gravityX === '' && tileMode !== 'repeat' && tileModeX !== 'repeat';
+                    const canResizeVertical = () => resizable && gravityY === '' && tileMode !== 'repeat' && tileModeY !== 'repeat';
                     const src = '@drawable/' + value;
                     let repeat = backgroundRepeat[i];
                     if (repeat.includes(' ')) {
@@ -1119,7 +1120,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     else {
                         switch (repeat) {
                             case 'repeat-x':
-                                if (!node.documentBody) {
+                                if (!documentBody) {
                                     if (!node.blockStatic && dimenWidth > boundsWidth) {
                                         width = dimenWidth;
                                     }
@@ -1137,17 +1138,22 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                                 break;
                             case 'repeat-y':
-                                if (!node.documentBody) {
+                                if (!documentBody) {
                                     if (dimenHeight > boundsHeight) {
                                         height = dimenHeight;
+                                        if (gravityY === '') {
+                                            gravityY = 'top';
+                                        }
                                     }
                                     else {
                                         tileModeY = 'repeat';
+                                        gravityY = '';
                                     }
                                 }
                                 else {
                                     if (dimenHeight < boundsHeight) {
                                         tileModeY = 'repeat';
+                                        gravityY = '';
                                     }
                                     else {
                                         gravityY = 'fill_vertical';
@@ -1162,9 +1168,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (dimension) {
                         if (gravityX !== '' && tileModeY === 'repeat' && dimenWidth < boundsWidth) {
                             const resetX = () => {
-                                if (gravityY === '' && gravityX !== node.localizeString('left') && node.renderChildren.length) {
-                                    tileModeY = '';
-                                }
                                 gravityAlign = gravityX;
                                 gravityX = '';
                                 tileModeX = '';
@@ -1191,9 +1194,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         if (gravityY !== '' && tileModeX === 'repeat' && dimenHeight < boundsHeight) {
                             const resetY = () => {
-                                if (gravityX === '' && gravityY !== 'top' && node.renderChildren.length) {
-                                    tileModeX = '';
-                                }
                                 gravityAlign += (gravityAlign !== '' ? '|' : '') + gravityY;
                                 gravityY = '';
                                 tileModeY = 'disabled';
@@ -1396,9 +1396,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         gravityY = '';
                         recalibrate = false;
                     }
-                    else if (width === 0 && height === 0 && dimenWidth < boundsWidth && dimenHeight < boundsHeight && !svg && canResizeHorizontal() && canResizeVertical()) {
-                        width = dimenWidth;
-                        height = dimenHeight;
+                    else if (width === 0 && height === 0 && !svg) {
+                        if (dimenWidth < boundsWidth && canResizeHorizontal()) {
+                            width = dimenWidth;
+                        }
+                        if (dimenHeight < boundsHeight && canResizeVertical()) {
+                            height = dimenHeight;
+                        }
                     }
                     if (recalibrate) {
                         if (!repeating) {
@@ -1451,7 +1455,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 recalibrate = false;
                             }
                         }
-                        if (!node.documentBody && !node.is(CONTAINER_NODE.IMAGE) && !svg) {
+                        if (!documentBody && !node.is(CONTAINER_NODE.IMAGE) && !svg) {
                             if (resizable) {
                                 let fillX = false;
                                 let fillY = false;
@@ -1500,16 +1504,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                     }
-                    if (width > 0) {
-                        imageData.width = width;
-                    }
-                    if (height > 0) {
-                        imageData.height = height;
-                    }
                     if (gravityAlign === '') {
                         if ((width || dimenWidth) + position.left >= boundsWidth && (!node.blockStatic || node.hasPX('width', false))) {
                             tileModeX = '';
-                            if (!resizable && !height && position.left < 0 && gravity !== 'fill' && !gravityX.includes('fill_horizontal')) {
+                            if (!resizable && height === 0 && position.left < 0 && gravity !== 'fill' && !gravityX.includes('fill_horizontal')) {
                                 gravityX += (gravityX !== '' ? '|' : '') + 'fill_horizontal';
                             }
                             if (tileMode === 'repeat') {
@@ -1517,7 +1515,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 tileMode = '';
                             }
                         }
-                        if ((height || dimenHeight) + position.top >= boundsHeight && !node.documentBody && !node.percentHeight) {
+                        if ((height || dimenHeight) + position.top >= boundsHeight && !documentBody && node.percentHeight === 0) {
                             tileModeY = '';
                             if (!resizable && position.top < 0 && gravity !== 'fill' && !gravityY.includes('fill_vertical') && !node.hasPX('height')) {
                                 gravityY += (gravityY !== '' ? '|' : '') + 'fill_vertical';
@@ -1541,6 +1539,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 tileModeY = '';
                             }
                         }
+                    }
+                    if (width > 0) {
+                        imageData.width = width;
+                        if (height === 0) {
+                            tileModeY = '';
+                        }
+                    }
+                    if (height > 0) {
+                        imageData.height = height;
                     }
                     if (gravity === undefined) {
                         if (gravityX === STRING_ANDROID.CENTER_HORIZONTAL && gravityY === STRING_ANDROID.CENTER_VERTICAL) {
@@ -1568,7 +1575,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         gravityY = '';
                     }
                     const covering = size === 'cover' || size === 'contain';
-                    if (node.documentBody && !covering && tileModeX !== 'repeat' && gravity !== '' && gravityAlign === '') {
+                    if (documentBody && !covering && tileModeX !== 'repeat' && gravity !== '' && gravityAlign === '') {
                         imageData.gravity = gravity;
                         imageData.drawable = src;
                     }

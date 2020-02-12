@@ -14,8 +14,8 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 const $lib = squared.lib;
 
 const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule, isLength, resolveURL } = $lib.css;
-const { getNamedItem, getRangeClientRect, isTextNode, removeElementsByClassName } = $lib.dom;
-const { aboveRange, convertFloat, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;
+const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
+const { convertFloat, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;
 const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -99,6 +99,32 @@ function prioritizeExtensions<T extends NodeUI>(value: Undef<string>, extensions
         }
     }
     return extensions;
+}
+
+function getFloatAlignmentType(nodes: NodeUI[]) {
+    let result = 0;
+    let floating = true;
+    let right = true;
+    const length = nodes.length;
+    for (let i = 0; i < length; i++) {
+        const item = nodes[i];
+        if (!item.floating) {
+            floating = false;
+        }
+        if (!item.rightAligned) {
+            right = false;
+        }
+        if (!floating && !right) {
+            break;
+        }
+    }
+    if (floating) {
+        result |= NODE_ALIGNMENT.FLOAT;
+    }
+    if (right) {
+        result |= NODE_ALIGNMENT.RIGHT;
+    }
+    return result;
 }
 
 const requirePadding = (node: NodeUI) => node.textElement && (node.blockStatic || node.multiline);
@@ -447,9 +473,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             for (const item of cache) {
                 if (!item.pseudoElement) {
                     item.setBounds(preAlignment[item.id] === undefined && !resetBounds);
-                    if (node.styleText) {
-                        item.textBounds = getRangeClientRect(<Element> node.element);
-                    }
                 }
                 else {
                     pseudoElements.push(item);
@@ -1091,7 +1114,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             if (status > 0) {
                                                 if (horizontal.length) {
                                                     if (status < NODE_TRAVERSE.FLOAT_BLOCK && floatActive.size && floatCleared.get(item) !== 'both' && !item.siblingsLeading.some((node: T) => node.lineBreak && !cleared.has(node))) {
-                                                         if (!item.floating || previous.floating && !aboveRange(item.linear.top, previous.linear.bottom)) {
+                                                         if (!item.floating || previous.floating && item.bounds.top < previous.bounds.bottom) {
                                                             if (floatCleared.has(item)) {
                                                                 if (!item.floating) {
                                                                     item.addAlign(NODE_ALIGNMENT.EXTENDABLE);
@@ -1106,13 +1129,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                                 if (!item.floating) {
                                                                     for (const node of horizontal) {
                                                                         if (node.floating) {
-                                                                            floatBottom = Math.max(floatBottom, node.linear.bottom);
+                                                                            floatBottom = Math.max(floatBottom, node.bounds.bottom);
                                                                         }
                                                                     }
                                                                 }
-                                                                if (!item.floating && !aboveRange(item.linear.top, floatBottom) || item.floating && floatActive.has(item.float)) {
+                                                                if (!item.floating && item.bounds.top < floatBottom || floatActive.has(item.float)) {
                                                                     horizontal.push(item);
-                                                                    if (!item.floating && aboveRange(item.linear.bottom, floatBottom)) {
+                                                                    if (!item.floating && item.bounds.bottom > floatBottom) {
                                                                         break traverse;
                                                                     }
                                                                     else {
@@ -1497,15 +1520,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const node = floatgroup || layout.node;
                 const first = seg[0];
                 const target = controllerHandler.createNodeGroup(first, seg, node, true);
-                const group = new LayoutUI(
-                    node,
-                    target,
-                    0,
-                    NODE_ALIGNMENT.SEGMENTED | (seg === inlineAbove ? NODE_ALIGNMENT.COLUMN : 0),
-                    seg
-                );
+                const group = new LayoutUI(node, target, 0, NODE_ALIGNMENT.SEGMENTED | (seg === inlineAbove ? NODE_ALIGNMENT.COLUMN : 0) | getFloatAlignmentType(seg), seg);
                 if (seg.length === 1) {
-                    if (first.percentWidth) {
+                    if (first.percentWidth > 0) {
                         group.type = controllerHandler.containerTypePercent;
                     }
                     else {
@@ -1631,7 +1648,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             subgroup = controllerHandler.createNodeGroup(pageFlow[0], pageFlow, basegroup);
                             children.push(subgroup);
                         }
-                        basegroup.init();
                         group.itemCount = children.length;
                         this.addLayout(group);
                         for (let item of children) {

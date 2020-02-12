@@ -12,7 +12,7 @@ const $lib = squared.lib;
 const $base_lib = squared.base.lib;
 
 const { formatPX } = $lib.css;
-const { captureMap, withinRange } = $lib.util;
+const { withinRange } = $lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 
@@ -82,14 +82,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 );
                 node = layout.node;
                 if (cellData.block) {
-                    node.css('display', 'block');
-                }
-                else {
-                    for (const item of siblings) {
-                        if (item.percentWidth) {
-                            item.css('width', formatPX(item.bounds.width), true);
-                        }
-                    }
+                    node.css('display', 'block', true);
                 }
                 transferData(node, siblings);
             }
@@ -168,11 +161,11 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
         }
         if (!node.hasWidth) {
             let maxRight = Number.NEGATIVE_INFINITY;
-            captureMap(
-                node.renderChildren,
-                item => item.inlineFlow || !item.blockStatic,
-                item => maxRight = Math.max(maxRight, item.linear.right)
-            );
+            node.renderEach(item => {
+                if (item.inlineFlow || !item.blockStatic) {
+                    maxRight = Math.max(maxRight, item.linear.right);
+                }
+            });
             if (withinRange(node.box.right, maxRight)) {
                 node.setLayoutWidth('wrap_content');
             }

@@ -14,10 +14,10 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public condition(node: T, parent: T) {
-        if (node.percentWidth && !parent.layoutConstraint && node.cssInitial('width') !== '100%' && (node.documentRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width')))) {
+        if (node.percentWidth > 0 && !parent.layoutConstraint && node.cssInitial('width') !== '100%' && (node.documentRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width')))) {
             return isFlexible(node);
         }
-        else if (node.percentHeight && node.cssInitial('height') !== '100%' && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
+        else if (node.percentHeight > 0 && node.cssInitial('height') !== '100%' && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
             return isFlexible(node);
         }
         return false;
@@ -25,7 +25,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
 
     public processNode(node: T, parent: T) {
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, { resetMargin: true });
-        if (node.percentWidth) {
+        if (node.percentWidth > 0) {
             container.css('display', 'block');
             container.setLayoutWidth('match_parent');
             node.setLayoutWidth(node.cssInitial('width') === '100%' ? 'match_parent' : '0px');
@@ -33,7 +33,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         else {
             container.setLayoutWidth('wrap_content');
         }
-        if (node.percentHeight) {
+        if (node.percentHeight > 0) {
             container.setLayoutHeight('match_parent');
             node.setLayoutHeight(node.cssInitial('height') === '100%' ? 'match_parent' : '0px');
         }

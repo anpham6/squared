@@ -2,8 +2,6 @@ import { LayoutOptions, LayoutType } from '../../@types/base/application';
 
 import NodeUI from './node-ui';
 
-import { NODE_ALIGNMENT } from './lib/enumeration';
-
 const { aboveRange, hasBit } = squared.lib.util;
 
 export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements squared.base.LayoutUI<T> {
@@ -26,8 +24,9 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     public columnCount = 0;
     public renderType = 0;
     public renderIndex = -1;
-    public itemCount = 0;
 
+    private _initialized?: boolean;
+    private _itemCount?: number;
     private _linearX?: boolean;
     private _linearY?: boolean;
     private _floated?: Set<string>;
@@ -42,55 +41,22 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         children?: T[])
     {
         super(children);
-        if (children?.length) {
-            this.init();
-        }
     }
 
     public init() {
-        const children = this.children;
-        const length = children.length;
-        if (length) {
-            let floatedSize: number;
-            if (length > 1) {
-                const linearData = NodeUI.linearData(children);
-                const floated = linearData.floated;
-                this._floated = floated;
-                this._cleared = linearData.cleared;
-                this._linearX = linearData.linearX;
-                this._linearY = linearData.linearY;
-                floatedSize = floated.size;
-            }
-            else {
-                this._linearY = children[0].blockStatic;
-                this._linearX = !this._linearY;
-                floatedSize = 0;
-            }
-            let A = true;
-            let B = true;
-            for (let i = 0; i < length; i++) {
-                const item = children[i];
-                if (!item.floating) {
-                    A = false;
-                }
-                if (!item.rightAligned) {
-                    B = false;
-                }
-                if (!A && !B) {
-                    break;
-                }
-            }
-            if (A || floatedSize === 2) {
-                this.add(NODE_ALIGNMENT.FLOAT);
-                if (this.some(node => node.blockStatic)) {
-                    this.add(NODE_ALIGNMENT.BLOCK);
-                }
-            }
-            if (B) {
-                this.add(NODE_ALIGNMENT.RIGHT);
-            }
-            this.itemCount = length;
+        const length = this.length;
+        if (length > 1) {
+            const linearData = NodeUI.linearData(this.children);
+            this._floated = linearData.floated;
+            this._cleared = linearData.cleared;
+            this._linearX = linearData.linearX;
+            this._linearY = linearData.linearY;
         }
+        else if (length > 0) {
+            this._linearY = (this.item(0) as T).blockStatic;
+            this._linearX = !this._linearY;
+        }
+        this._initialized = true;
     }
 
     public setContainerType(containerType: number, alignmentType?: number) {
@@ -131,19 +97,38 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         return this;
     }
 
+    set itemCount(value) {
+        this._itemCount = value;
+    }
+    get itemCount() {
+        return this._itemCount ?? this.length;
+    }
+
     get linearX() {
+        if (!this._initialized) {
+            this.init();
+        }
         return this._linearX ?? true;
     }
 
     get linearY() {
+        if (!this._initialized) {
+            this.init();
+        }
         return this._linearY ?? false;
     }
 
     get floated() {
+        if (!this._initialized) {
+            this.init();
+        }
         return this._floated || new Set<string>();
     }
 
     get cleared() {
+        if (!this._initialized) {
+            this.init();
+        }
         return this._cleared || new Map<T, string>();
     }
 
@@ -178,9 +163,5 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     get unknownAligned() {
         return this.length > 1 && !this.linearX && !this.linearY;
-    }
-
-    get visible() {
-        return this.filter(node => node.visible);
     }
 }

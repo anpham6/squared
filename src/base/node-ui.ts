@@ -19,6 +19,7 @@ const { aboveRange, assignEmptyProperty, cloneObject, convertWord, filterArray, 
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
+const REGEX_INLINEDASH = /^inline-/;
 
 function cascadeActualPadding(children: T[], attr: string, value: number) {
     let valid = false;
@@ -71,8 +72,8 @@ function traverseElementSibling(options: SiblingOptions = {}, element: Null<Elem
 }
 
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
-const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth;
-const checkBlockDimension = (node: T, previous: T) => node.blockDimension && aboveRange(node.linear.top, previous.linear.bottom) && (isBlockWrap(node) || isBlockWrap(previous) || node.float !== previous.float);
+const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth > 0;
+const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) > previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous) || node.float !== previous.float);
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static outerRegion(node: T): BoxRectDimension {
@@ -218,7 +219,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             for (const item of previousFloat) {
                                 if (item) {
                                     const float = item.float;
-                                    if (floating.has(float) && aboveRange(node.linear.top, item.linear.bottom)) {
+                                    if (floating.has(float) && Math.ceil(node.bounds.top) > item.bounds.bottom) {
                                         floating.delete(float);
                                         clearable[float] = undefined;
                                     }
@@ -311,7 +312,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 break;
                             }
                             const previous = nodes[i - 1];
-                            if (withinRange(left, previous.linear.left) || previous.floating && aboveRange(node.linear.top, previous.linear.bottom)) {
+                            if (withinRange(left, previous.linear.left) || previous.floating && Math.ceil(node.bounds.top) > previous.bounds.bottom) {
                                 linearX = false;
                                 break;
                             }
@@ -777,36 +778,35 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             return NODE_TRAVERSE.LINEBREAK;
         }
         else if (this.pageFlow || this.positionAuto) {
+            const floating = this.floating;
             if (isArray(siblings)) {
                 if (cleared?.has(this)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else {
                     const previous = siblings[siblings.length - 1];
-                    const floating = this.floating;
                     if (floating && previous.floating) {
                         const float = this.float;
                         if (horizontal && (float === previous.float || cleared?.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === float))) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (aboveRange(this.linear.top, previous.linear.bottom)) {
+                        else if (aboveRange(this.bounds.top, previous.bounds.bottom)) {
                             return NODE_TRAVERSE.FLOAT_WRAP;
                         }
                     }
                     else if (floating && siblings.every(item => item.inline && !item.floating)) {
                         return NODE_TRAVERSE.FLOAT_WRAP;
                     }
-                    else if (!floating && siblings.every(item => item.float === 'right' && aboveRange(this.textBounds?.top || Number.NEGATIVE_INFINITY, item.bounds.bottom))) {
+                    else if (!floating && siblings.every(item => item.floating && Math.ceil(this.bounds.top) > item.bounds.bottom)) {
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                     else if (horizontal !== undefined) {
                         if (floating && previous.blockStatic && !horizontal) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (!/^inline-/.test(this.display)) {
-                            let { top, bottom } = this.linear;
-                            top = Math.ceil(top);
-                            if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => top < item.linear.top && bottom > item.linear.bottom)) {
+                        else if (!REGEX_INLINEDASH.test(this.display)) {
+                            let { top, bottom } = this.bounds;
+                            if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
                                 return NODE_TRAVERSE.FLOAT_INTERSECT;
                             }
                             else if (siblings[0].floating) {
@@ -827,6 +827,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         }
                                         const offset = bottom - maxBottom;
                                         top = offset <= 0 || offset / (bottom - top) < 0.5 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+                                    }
+                                    else {
+                                        top = Math.ceil(top);
                                     }
                                     if (top < maxBottom) {
                                         return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
@@ -858,19 +861,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
                 else {
                     const blockStatic = this.blockStatic || this.display === 'table';
-                    if (blockStatic && (!previous.floating || !previous.rightAligned && withinRange(previous.linear.right, (this.actualParent || this.documentParent).box.right) || cleared?.has(previous))) {
+                    if (blockStatic && (!previous.floating || cleared?.has(previous))) {
                         return NODE_TRAVERSE.VERTICAL;
                     }
                     else if (previous.floating) {
-                        if (this.blockDimension && this.css('width') === '100%' && !this.hasPX('maxWidth') || previous.float === 'left' && this.autoMargin.right || previous.float === 'right' && this.autoMargin.left) {
-                            return NODE_TRAVERSE.VERTICAL;
+                        if (previous.float === 'left') {
+                            if (this.autoMargin.right) {
+                                return NODE_TRAVERSE.FLOAT_BLOCK;
+                            }
                         }
-                        else if (blockStatic && this.some(item => item.floating && aboveRange(item.linear.top, previous.linear.bottom))) {
+                        else if (this.autoMargin.left) {
+                            return NODE_TRAVERSE.FLOAT_BLOCK;
+                        }
+                        if (this.floatContainer && this.some(item => item.floating && Math.ceil(item.bounds.top) > previous.bounds.bottom)) {
                             return NODE_TRAVERSE.FLOAT_BLOCK;
                         }
                     }
                 }
-                if (cleared?.get(previous) === 'both' && (!isArray(siblings) || siblings[0] !== previous)) {
+                if (cleared?.get(previous) === 'both' && !(siblings?.[0] === previous)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else if (checkBlockDimension(this, previous)) {
