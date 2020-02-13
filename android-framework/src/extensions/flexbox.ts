@@ -1,6 +1,5 @@
 import { FlexboxData } from '../../../@types/base/extension';
 
-import Controller from '../controller';
 import View from '../view';
 
 import { STRING_ANDROID } from '../lib/constant';
@@ -214,7 +213,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     parent,
                     node,
                     containerType,
-                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (directionColumn ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL),
+                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
                     itemCount: node.length,
                     rowCount,
                     columnCount
@@ -632,7 +631,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 }
                             }
-                            [percentWidth, percentHeight] = Controller.setFlexDimension(chain, WHL, percentWidth, percentHeight);
+                            [percentWidth, percentHeight] = View.setFlexDimension(chain, WHL, percentWidth, percentHeight);
                             if (!chain.innerMostWrapped.has('flexGrow')) {
                                 growAll = false;
                             }

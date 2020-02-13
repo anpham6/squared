@@ -451,6 +451,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         const auto = data.auto;
                         if (auto[j]) {
                             value = auto[j];
+                            if (REGEX_FR.test(value) && unit.length === 0 && !horizontal && !parent.hasHeight && auto.every(px => px === value)) {
+                                continue;
+                            }
                             if (auto[j + 1]) {
                                 j++;
                             }
@@ -893,10 +896,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 let k = -1;
                 let l = 0;
                 const createSpacer = (i: number, horizontal: boolean, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) => {
-                    let width = '';
-                    let height = '';
                     if (k !== -1) {
                         const section = unitData.slice(k, k + l);
+                        let width = '';
+                        let height = '';
                         let layout_columnWeight = '';
                         let layout_rowWeight = '';
                         let rowSpan = 1;
@@ -967,7 +970,6 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         k = -1;
                     }
                     l = 0;
-                    return [width, height];
                 };
                 let length = Math.max(rowData.length, 1);
                 for (let i = 0; i < length; i++) {
@@ -984,9 +986,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 l++;
                             }
                         }
+                        createSpacer(i, rowDirection, unit, gap);
                     }
                 }
-                createSpacer(length - 1, rowDirection, unit, gap);
                 length = emptyRows.length;
                 for (let i = 0; i < length; i++) {
                     const emptyRow = emptyRows[i];

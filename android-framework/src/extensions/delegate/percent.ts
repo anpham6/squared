@@ -4,7 +4,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
+const { CSS_UNIT, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const isFlexible = (node: View) => !node.documentParent.layoutElement && !/^table/.test(node.display);
 
@@ -14,10 +14,10 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public condition(node: T, parent: T) {
-        if (node.percentWidth > 0 && !parent.layoutConstraint && node.cssInitial('width') !== '100%' && (node.documentRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width')))) {
+        if (node.percentWidth > 0 && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', CSS_UNIT.PERCENT, { not: '100%' })) && (node.documentRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width')))) {
             return isFlexible(node);
         }
-        else if (node.percentHeight > 0 && node.cssInitial('height') !== '100%' && (node.documentRoot || parent.hasHeight && node.onlyChild)) {
+        else if (node.percentHeight > 0 && (node.cssInitial('height') !== '100%' || node.has('maxHeight', CSS_UNIT.PERCENT, { not: '100%' })) && (node.documentRoot || parent.hasHeight)) {
             return isFlexible(node);
         }
         return false;
@@ -28,14 +28,14 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         if (node.percentWidth > 0) {
             container.css('display', 'block');
             container.setLayoutWidth('match_parent');
-            node.setLayoutWidth(node.cssInitial('width') === '100%' ? 'match_parent' : '0px');
+            node.setLayoutWidth(node.cssInitial('width') === '100%' && !node.hasPX('maxWidth') ? 'match_parent' : '0px');
         }
         else {
             container.setLayoutWidth('wrap_content');
         }
         if (node.percentHeight > 0) {
             container.setLayoutHeight('match_parent');
-            node.setLayoutHeight(node.cssInitial('height') === '100%' ? 'match_parent' : '0px');
+            node.setLayoutHeight(node.cssInitial('height') === '100%' && !node.hasPX('maxHeight') ? 'match_parent' : '0px');
         }
         else {
             container.setLayoutHeight('wrap_content');

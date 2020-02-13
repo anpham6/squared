@@ -15,7 +15,7 @@ const { isTextNode, newBoxModel } = $lib.dom;
 const { equal } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { aboveRange, assignEmptyProperty, cloneObject, convertWord, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
+const { assignEmptyProperty, cloneObject, convertWord, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
@@ -790,7 +790,23 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         if (horizontal && (float === previous.float || cleared?.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === float))) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (aboveRange(this.bounds.top, previous.bounds.bottom)) {
+                        else if (Math.ceil(this.bounds.top) > previous.bounds.bottom) {
+                            if (horizontal !== false && siblings.every(item => item.floating)) {
+                                const actualParent = this.actualParent;
+                                if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: item => item.layoutElement, startSelf: true })) {
+                                    const naturalElements = actualParent.naturalElements;
+                                    if (naturalElements.length === siblings.length + 1) {
+                                        const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
+                                        let width = actualParent.box.width - getLayoutWidth(this);
+                                        for (const item of siblings) {
+                                            width -= getLayoutWidth(item);
+                                        }
+                                        if (width >= 0) {
+                                            return NODE_TRAVERSE.HORIZONTAL;
+                                        }
+                                    }
+                                }
+                            }
                             return NODE_TRAVERSE.FLOAT_WRAP;
                         }
                     }
