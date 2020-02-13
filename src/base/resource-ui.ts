@@ -1,10 +1,9 @@
 import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } from '../../@types/base/application';
 
+import NodeUI from './node-ui';
 import Resource from './resource';
 
 import { NODE_RESOURCE } from './lib/enumeration';
-
-type NodeUI = squared.base.NodeUI;
 
 const $lib = squared.lib;
 
@@ -402,7 +401,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const type = match[2];
                     const direction = match[3];
                     const imageDimension = getBackgroundSize(node, i, node.css('backgroundSize'), screenDimension);
-                    const dimension = imageDimension || node.actualDimension;
+                    const dimension = NodeUI.refitScreen(node, imageDimension || node.actualDimension);
                     let gradient: Undef<Gradient>;
                     switch (type) {
                         case 'conic': {

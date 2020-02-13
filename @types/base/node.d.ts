@@ -47,6 +47,7 @@ export interface CachedValue<T> {
     inline?: boolean;
     inlineStatic?: boolean;
     inlineVertical?: boolean;
+    inlineDimension?: boolean;
     block?: boolean;
     blockStatic?: boolean;
     blockDimension?: boolean;

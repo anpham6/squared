@@ -382,6 +382,7 @@ declare namespace base {
         readonly inline: boolean;
         readonly inlineStatic: boolean;
         readonly inlineVertical: boolean;
+        readonly inlineDimension: boolean;
         readonly plainText: boolean;
         readonly styleText: boolean;
         readonly textContent: string;
@@ -587,6 +588,7 @@ declare namespace base {
     }
 
     class NodeUI implements NodeUI {
+        public static refitScreen<T>(node: T, value: Dimension): Dimension;
         public static linearData<T>(list: T[], clearOnly?: boolean): LinearData<T>;
         public static outerRegion<T>(node: T): BoxRectDimension;
         public static baseline<T>(list: T[], text?: boolean): Null<T>;
@@ -954,6 +956,13 @@ declare namespace lib {
     }
 
     namespace util {
+        type DelimitStringOptions = {
+            value: string;
+            delimiter?: string;
+            remove?: boolean;
+            sort?: boolean;
+        }
+
         function capitalize(value: string, upper?: boolean): string;
         function capitalizeString(value: string): string;
         function lowerCaseString(value: string): string;
@@ -968,6 +977,7 @@ declare namespace lib {
         function convertEnum(value: number, base: {}, derived: {}): string;
         function buildAlphaString(length: number): string;
         function formatString(value: string, ...params: string[]): string;
+        function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
         function hasBit(value: number, offset: number): boolean;
         function isNumber(value: any): boolean;
         function isString(value: any): value is string;

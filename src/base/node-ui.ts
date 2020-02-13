@@ -73,9 +73,26 @@ function traverseElementSibling(options: SiblingOptions = {}, element: Null<Elem
 
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth > 0;
-const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) > previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous) || node.float !== previous.float);
+const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous) || node.float !== previous.float);
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
+    public static refitScreen(node: T, value: Dimension): Dimension {
+        const { width: screenWidth, height: screenHeight } = node.localSettings.screenDimension;
+        let { width, height } = value;
+        if (width > screenWidth) {
+            height = Math.round(height * screenWidth / width);
+            width = screenWidth;
+        }
+        else if (height > screenHeight) {
+            width = Math.round(width * screenHeight / height);
+            height = screenHeight;
+        }
+        else {
+            return value;
+        }
+        return { width, height };
+    }
+
     public static outerRegion(node: T): BoxRectDimension {
         let top = Number.POSITIVE_INFINITY;
         let right = Number.NEGATIVE_INFINITY;
@@ -219,7 +236,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             for (const item of previousFloat) {
                                 if (item) {
                                     const float = item.float;
-                                    if (floating.has(float) && Math.ceil(node.bounds.top) > item.bounds.bottom) {
+                                    if (floating.has(float) && Math.ceil(node.bounds.top) >= item.bounds.bottom) {
                                         floating.delete(float);
                                         clearable[float] = undefined;
                                     }
@@ -312,7 +329,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 break;
                             }
                             const previous = nodes[i - 1];
-                            if (withinRange(left, previous.linear.left) || previous.floating && Math.ceil(node.bounds.top) > previous.bounds.bottom) {
+                            if (withinRange(left, previous.linear.left) || previous.floating && Math.ceil(node.bounds.top) >= previous.bounds.bottom) {
                                 linearX = false;
                                 break;
                             }
@@ -790,8 +807,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         if (horizontal && (float === previous.float || cleared?.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === float))) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
-                        else if (Math.ceil(this.bounds.top) > previous.bounds.bottom) {
-                            if (horizontal !== false && siblings.every(item => item.floating)) {
+                        else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
+                            if (horizontal !== false && siblings.every(item => item.inlineDimension)) {
                                 const actualParent = this.actualParent;
                                 if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: item => item.layoutElement, startSelf: true })) {
                                     const naturalElements = actualParent.naturalElements;
@@ -813,7 +830,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     else if (floating && siblings.every(item => item.inline && !item.floating)) {
                         return NODE_TRAVERSE.FLOAT_WRAP;
                     }
-                    else if (!floating && siblings.every(item => item.floating && Math.ceil(this.bounds.top) > item.bounds.bottom)) {
+                    else if (!floating && siblings.every(item => item.floating && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                     else if (horizontal !== undefined) {
@@ -860,7 +877,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                     }
-                    else if ((floating || this.inline) && siblings.reduce((a, b) => a + (b.inline || b.floating ? b.percentWidth : 0), this.percentWidth) > 1) {
+                    else if (this.inlineDimension && siblings.reduce((a, b) => a + (b.inlineDimension ? b.percentWidth : 0), this.percentWidth) > 1) {
                         return NODE_TRAVERSE.PERCENT_WRAP;
                     }
                     if (checkBlockDimension(this, previous)) {
@@ -889,7 +906,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         else if (this.autoMargin.left) {
                             return NODE_TRAVERSE.FLOAT_BLOCK;
                         }
-                        if (this.floatContainer && this.some(item => item.floating && Math.ceil(item.bounds.top) > previous.bounds.bottom)) {
+                        if (this.floatContainer && this.some(item => item.floating && Math.ceil(item.bounds.top) >= previous.bounds.bottom)) {
                             return NODE_TRAVERSE.FLOAT_BLOCK;
                         }
                     }

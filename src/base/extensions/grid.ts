@@ -17,7 +17,7 @@ function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     for (const column of columns) {
         const index = column.findIndex(item => {
             const top = item.linear.top;
-            return withinRange(topA, top) || topA > top && topA < item.linear.bottom;
+            return withinRange(topA, top) || Math.ceil(topA) >= top && Math.floor(topA) <= item.linear.bottom;
         });
         if (index !== -1) {
             return index;
@@ -35,8 +35,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             cellStart: false,
             cellEnd: false,
             rowEnd: false,
-            rowStart: false,
-            block: false
+            rowStart: false
         };
     }
 
@@ -45,7 +44,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             if (node.display === 'table') {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }
-            else {
+            else if (node.percentWidth === 0 || node.find(item => item.percentWidth > 0, { cascade: true }) === undefined) {
                 let minLength = false;
                 let itemCount = 0;
                 for (const item of node) {
@@ -135,19 +134,15 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         else {
-                            const endIndex = columns.length - 1;
-                            if (columns[endIndex]) {
+                            const columnLast = columns[columns.length - 1];
+                            if (columnLast) {
                                 let minLeft = Number.POSITIVE_INFINITY;
                                 let maxRight = Number.NEGATIVE_INFINITY;
-                                columns[endIndex].forEach(item => {
-                                    const { left: leftA, right: rightA } = item.linear;
-                                    if (leftA < minLeft) {
-                                        minLeft = leftA;
-                                    }
-                                    if (rightA > maxRight) {
-                                        maxRight = rightA;
-                                    }
-                                });
+                                for (const item of columnLast) {
+                                    const linear = item.linear;
+                                    minLeft = Math.min(linear.left, minLeft);
+                                    maxRight = Math.max(linear.right, maxRight);
+                                }
                                 if (Math.floor(left) > Math.ceil(minLeft) && Math.floor(right) > Math.ceil(maxRight)) {
                                     const index = getRowIndex(columns, nextX);
                                     if (index !== -1) {
@@ -155,7 +150,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                             const row = columns[k];
                                             if (row) {
                                                 if (row[index] === undefined) {
-                                                    columns[endIndex].length = 0;
+                                                    columnLast.length = 0;
                                                 }
                                                 break;
                                             }
@@ -205,8 +200,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         }
         const columnCount = columns.length;
         if (columnCount > 1 && columns[0].length === node.length) {
-            node.each((item: T) => item.hide());
-            node.clear();
+            const children: T[][] = [];
             const assigned = new Set<T>();
             for (let i = 0, count = 0; i < columnCount; i++) {
                 const column = columns[i];
@@ -214,6 +208,11 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 for (let j = 0, start = 0; j < column.length; j++) {
                     const item = column[j];
                     const rowCount = column.length;
+                    let rowData = children[j];
+                    if (rowData === undefined) {
+                        rowData = [];
+                        children[j] = rowData;
+                    }
                      if (!item['spacer']) {
                         const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(GRID, 'cellData'));
                         let rowSpan = 1;
@@ -265,12 +264,19 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         data.index = i;
                         spacer = 0;
                         item.data(GRID, 'cellData', data);
-                        item.parent = node;
+                        rowData.push(item);
                         assigned.add(item);
                     }
                     else if (item['spacer'] === 1) {
                         spacer++;
                     }
+                }
+            }
+            node.each((item: T) => item.hide());
+            node.clear();
+            for (const group of children) {
+                for (const item of group) {
+                    item.parent = node;
                 }
             }
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {

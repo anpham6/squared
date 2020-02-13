@@ -832,10 +832,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const { left, right } = this[dimension];
             const { left: leftA, right: rightA } = rect;
             return (
-                aboveRange(leftA, left) && Math.ceil(leftA) < right ||
-                rightA > Math.ceil(left) && belowRange(rightA, right) ||
-                aboveRange(left, leftA) && belowRange(right, rightA) ||
-                aboveRange(leftA, left) && belowRange(rightA, right)
+                Math.ceil(left) >= leftA && Math.floor(left) <= rightA ||
+                right >= Math.floor(leftA) && right <= Math.ceil(rightA) ||
+                Math.ceil(leftA) >= left && Math.floor(leftA) <= right ||
+                rightA >= Math.floor(left) && rightA <= Math.ceil(right)
             );
         }
         return false;
@@ -846,10 +846,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const { top, bottom } = this[dimension];
             const { top: topA, bottom: bottomA } = rect;
             return (
-                aboveRange(topA, top) && Math.ceil(topA) < bottom ||
-                bottomA > Math.ceil(top) && belowRange(bottomA, bottom) ||
-                aboveRange(top, topA) && belowRange(bottom, bottomA) ||
-                aboveRange(topA, top) && belowRange(bottomA, bottom)
+                Math.ceil(top) >= topA && Math.floor(top) <= bottomA ||
+                bottom >= Math.floor(topA) && bottom <= Math.ceil(bottomA) ||
+                Math.ceil(topA) >= top && Math.floor(topA) <= bottom ||
+                bottomA >= Math.floor(top) && bottomA <= Math.ceil(bottom)
             );
         }
         return false;
@@ -866,7 +866,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public withinY(rect: BoxRectDimension, dimension: BoxType = 'linear') {
         if (this.pageFlow || rect.height > 0) {
             const bounds = this[dimension];
-            return aboveRange(bounds.top, rect.top) && belowRange(bounds.bottom, rect.bottom);
+            return Math.ceil(bounds.top) >= rect.top && Math.floor(bounds.bottom) <= rect.bottom;
         }
         return true;
     }
@@ -2153,7 +2153,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get inlineVertical() {
         let result = this._cached.inlineVertical;
         if (result === undefined) {
-            if (this.naturalElement && !this.plainText && !this.floating) {
+            if (this.naturalElement && !this.floating) {
                 const value = this.display;
                 result = REGEX_INLINE.test(value) || value === 'table-cell';
             }
@@ -2161,6 +2161,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 result = false;
             }
             this._cached.inlineVertical = result;
+        }
+        return result;
+    }
+
+    get inlineDimension() {
+        let result = this._cached.inlineDimension;
+        if (result === undefined) {
+            if (this.naturalElement) {
+                result = REGEX_INLINEDASH.test(this.display) || this.floating;
+            }
+            else {
+                result = false;
+            }
+            this._cached.inlineDimension = result;
         }
         return result;
     }

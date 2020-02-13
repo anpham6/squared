@@ -1,5 +1,7 @@
 import { CHAR, COMPONENT, UNIT, XML } from './regex';
 
+type DelimitStringOptions = squared.lib.util.DelimitStringOptions;
+
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
     '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
@@ -170,6 +172,31 @@ export function formatString(value: string, ...params: string[]) {
         value = value.replace(`{${i}}`, params[i]);
     }
     return value;
+}
+
+export function delimitString(options: DelimitStringOptions, ...appending: string[]) {
+    const value = options.value || '';
+    if (value === '' && appending.length === 1) {
+        return appending[0];
+    }
+    const delimiter = options.delimiter || '|';
+    const remove = options.remove || false;
+    const values = value !== '' ? value.split(delimiter) : [];
+    for (const append of appending) {
+        if (append !== '') {
+            const index = values.findIndex(a => a === append);
+            if (index === -1) {
+                values.push(append);
+            }
+            else if (remove) {
+                values.splice(index, 1);
+            }
+        }
+    }
+    if (options.sort) {
+        values.sort();
+    }
+    return values.join(delimiter);
 }
 
 export function hasBit(value: number, offset: number) {

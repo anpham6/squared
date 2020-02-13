@@ -23,6 +23,8 @@ const { applyTemplate } = $lib.xml;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
+const NodeUI = squared.base.NodeUI;
+
 interface PositionAttribute {
     top?: string;
     right?: string;
@@ -901,8 +903,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundSize.length = 0;
                 }
                 const embedded = extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'));
-                for (let i = 0; i < embedded.length; i++) {
-                    const image = embedded[i];
+                for (const image of embedded) {
                     const element = <HTMLImageElement> image.element;
                     const src = resource.addImageSrc(element);
                     if (src !== '') {
@@ -1527,7 +1528,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         if (tileMode !== 'repeat' && gravity !== 'fill') {
                             if (tileModeX !== '') {
-                                if (tileModeY === '' && (gravityY === '' || gravityY.includes('top') || gravityY.includes('fill_vertical'))) {
+                                if (tileModeY === '' && (gravityY === '' || /(top|fill_vertical)/.test(gravityY))) {
                                     gravityAlign = gravityY;
                                     gravityY = '';
                                     if (node.renderChildren.length) {
@@ -1535,7 +1536,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                 }
                             }
-                            else if (tileModeY !== '' && node.renderChildren.length && (gravityX === '' || gravityX.includes('start') || gravityX.includes('left') || gravityX.includes('fill_horizontal'))) {
+                            else if (tileModeY !== '' && node.renderChildren.length && (gravityX === '' || /(start|left|fill_horizontal)/.test(gravityX))) {
                                 tileModeY = '';
                             }
                         }
@@ -1575,7 +1576,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         gravityY = '';
                     }
                     const covering = size === 'cover' || size === 'contain';
-                    if (documentBody && !covering && tileModeX !== 'repeat' && gravity !== '' && gravityAlign === '') {
+                    if (documentBody && !covering && tileMode !== 'repeat' && tileModeX !== 'repeat' && gravity !== '' && gravityAlign === '') {
                         imageData.gravity = gravity;
                         imageData.drawable = src;
                     }
@@ -1613,7 +1614,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 else {
                     if (value.item) {
-                        const [width, height] = dimension ? [Math.round(dimenWidth), Math.round(dimenHeight)] : [Math.round(node.actualWidth), Math.round(node.actualHeight)];
+                        const { width, height } = dimension || NodeUI.refitScreen(node, node.actualDimension);
                         if (size.split(' ').some(dimen => dimen !== '100%' && isLength(dimen, true))) {
                             imageData.width = width;
                             imageData.height = height;

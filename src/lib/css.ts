@@ -120,7 +120,7 @@ export function getSpecificity(value: string) {
                     continue;
             }
         }
-        else if (/\|\*^/.test(segment)) {
+        else if (segment.endsWith('|*')) {
             continue;
         }
         else if (segment.charAt(0) === '*') {
@@ -137,7 +137,7 @@ export function getSpecificity(value: string) {
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
         while ((subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
-            if (/^:not\(/.test(subMatch[0])) {
+            if (subMatch[0].startsWith(':not(')) {
                 if (subMatch[1]) {
                     const lastIndex = CSS.SELECTOR_G.lastIndex;
                     result += getSpecificity(subMatch[1]);

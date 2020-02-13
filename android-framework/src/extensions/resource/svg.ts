@@ -46,6 +46,8 @@ const { applyTemplate } = $lib.xml;
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = $svg_lib.constant;
 const { MATRIX, SVG, TRANSFORM } = $svg_lib.util;
 
+const NodeUI = squared.base.NodeUI;
+
 type AnimateCompanion = NumberValue<SvgAnimation>;
 
 interface AnimatedVectorTemplate {
@@ -755,20 +757,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     public createSvgDrawable(node: T, element: SVGSVGElement) {
-        const svg = new Svg(element);
-        let { width, height } = svg;
-        {
-            const { width: screenWidth, height: screenHeight } = node.localSettings.screenDimension;
-            if (width > screenWidth) {
-                height *= screenWidth / width;
-                width = screenWidth;
-            }
-            else if (height > screenHeight) {
-                width *= screenHeight / height;
-                height = screenHeight;
-            }
-        }
         const { floatPrecisionValue: precision, floatPrecisionKeyTime, transformExclude: exclude } = this.options;
+        const svg = new Svg(element);
         const supportedKeyFrames = node.api >= BUILD_ANDROID.MARSHMALLOW;
         const keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyFrames ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
         const animateData = this._animateData;
@@ -787,22 +777,26 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const vectorData = this.parseVectorData(svg);
         const viewBox = svg.viewBox;
         const imageLength = imageData.length;
-        let vectorName = Resource.insertStoredAsset(
-            'drawables',
-            getTemplateFilename(templateName, imageLength),
-            applyTemplate('vector', VECTOR_TMPL, [{
-                'xmlns:android': XMLNS_ANDROID.android,
-                'xmlns:aapt': this._namespaceAapt ? XMLNS_ANDROID.aapt : '',
-                'android:name': svg.name,
-                'android:width': formatPX(width),
-                'android:height': formatPX(height),
-                'android:viewportWidth': (viewBox.width || width).toString(),
-                'android:viewportHeight': (viewBox.height || height).toString(),
-                'android:alpha': parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : '',
-                include: vectorData
-            }])
-        );
         let drawable: string;
+        let vectorName: string;
+        {
+            const { width, height } = NodeUI.refitScreen(node, { width: svg.width, height: svg.height });
+            vectorName = Resource.insertStoredAsset(
+                'drawables',
+                getTemplateFilename(templateName, imageLength),
+                applyTemplate('vector', VECTOR_TMPL, [{
+                    'xmlns:android': XMLNS_ANDROID.android,
+                    'xmlns:aapt': this._namespaceAapt ? XMLNS_ANDROID.aapt : '',
+                    'android:name': svg.name,
+                    'android:width': formatPX(width),
+                    'android:height': formatPX(height),
+                    'android:viewportWidth': (viewBox.width || width).toString(),
+                    'android:viewportHeight': (viewBox.height || height).toString(),
+                    'android:alpha': parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : '',
+                    include: vectorData
+                }])
+            );
+        }
         if (animateData.size) {
             const data: AnimatedVectorTemplate[] = [{
                 'xmlns:android': XMLNS_ANDROID.android,

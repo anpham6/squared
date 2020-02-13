@@ -36,7 +36,7 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     protected _cache!: squared.base.NodeList<T>;
     protected _cacheProcessing!: squared.base.NodeList<T>;
 
-    private _isAll = false;
+    private readonly _isAll: boolean;
 
     constructor(
         name: string,

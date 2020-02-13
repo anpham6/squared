@@ -15,7 +15,8 @@ const $lib = squared.lib;
 
 const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule, isLength, resolveURL } = $lib.css;
 const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
-const { convertFloat, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;
+const { minArray } = $lib.math;
+const { convertFloat, convertWord, filterArray, flatArray, fromLastIndexOf, hasBit, isString, objectMap, partitionArray, trimString } = $lib.util;
 const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -1676,6 +1677,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
         let paddingNodes: T[] = [];
         for (const child of inlineAbove) {
+            if (requirePadding(child)) {
+                paddingNodes.push(child);
+            }
             if (child.blockStatic) {
                 paddingNodes = paddingNodes.concat(child.cascade((item: T) => requirePadding(item)) as T[]);
             }
@@ -1706,7 +1710,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (invalid) {
-                    const offset = floatPosition - parent.box.left - marginLeft;
+                    const offset = floatPosition - parent.box.left - marginLeft - minArray(objectMap<T, number>(target.children as T[], child => child.marginLeft));
                     if (offset > 0) {
                         target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
                     }
@@ -1732,13 +1736,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             if (floatPosition !== Number.POSITIVE_INFINITY) {
                 for (const child of paddingNodes) {
-                    if (Math.ceil(child.linear.right) >= floatPosition) {
+                    if (child.multiline || Math.ceil(child.linear.right) >= floatPosition) {
                         marginRight = Math.max(marginRight, child.marginRight);
                         invalid = true;
                     }
                 }
                 if (invalid) {
-                    const offset = parent.box.right - floatPosition - marginRight;
+                    const offset = parent.box.right - floatPosition - marginRight - minArray(objectMap<T, number>(target.children as T[], child => child.marginRight));
                     if (offset > 0) {
                         target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
                     }

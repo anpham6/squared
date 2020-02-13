@@ -2,7 +2,7 @@ import { LayoutOptions, LayoutType } from '../../@types/base/application';
 
 import NodeUI from './node-ui';
 
-const { aboveRange, hasBit } = squared.lib.util;
+const { hasBit } = squared.lib.util;
 
 export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements squared.base.LayoutUI<T> {
     public static create<T extends NodeUI>(options: LayoutOptions<T>) {
@@ -145,7 +145,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
                 if (length > 1) {
                     let previousBottom = Number.POSITIVE_INFINITY;
                     for (const node of this.children) {
-                        if (node.blockStatic || node.multiline || aboveRange(node.bounds.top, previousBottom)) {
+                        if (node.blockStatic || node.multiline || Math.ceil(node.bounds.top) >= previousBottom) {
                             result = false;
                             break;
                         }

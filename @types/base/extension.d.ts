@@ -58,7 +58,6 @@ export interface GridCellData<T> {
     cellEnd: boolean;
     rowEnd: boolean;
     rowStart: boolean;
-    block: boolean;
     siblings?: T[];
 }
 

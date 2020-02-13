@@ -75,9 +75,9 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected _cache: squared.base.NodeList<T>;
     protected _nodeAfterInsert: BindGeneric<Node, void>;
 
-    private _controllerHandler: Controller<T>;
-    private _resourceHandler: Resource<T>;
-    private _extensionManager: ExtensionManager<T>;
+    private readonly _controllerHandler: Controller<T>;
+    private readonly _resourceHandler: Resource<T>;
+    private readonly _extensionManager: ExtensionManager<T>;
 
     protected constructor(
         public framework: number,

@@ -214,8 +214,21 @@ module.exports = {
         "no-undef": "off",
         "no-unused-vars": "off",
         "no-invalid-this": "off",
+        "@typescript-eslint/prefer-for-of": "error",
         "@typescript-eslint/prefer-function-type": "error",
         "@typescript-eslint/unified-signatures": "error",
+        "@typescript-eslint/member-ordering": ["error", {
+            "default": [
+                "static-field",
+                "static-method",
+                "public-field",
+                "protected-field",
+                "private-field",
+                "public-method",
+                "protected-method",
+                "private-method"
+            ]
+        }],
         "@typescript-eslint/array-type": "off",
         "@typescript-eslint/consistent-type-assertions": "off",
         "@typescript-eslint/consistent-type-definitions": "off",
@@ -225,7 +238,6 @@ module.exports = {
         "@typescript-eslint/no-explicit-any": "off",
         "@typescript-eslint/no-parameter-properties": "off",
         "@typescript-eslint/no-use-before-define": "off",
-        "@typescript-eslint/prefer-for-of": "off",
         "@typescript-eslint/quotes": "off",
         "@typescript-eslint/explicit-function-return-type": "off",
         "@typescript-eslint/prefer-string-starts-ends-with": "off",

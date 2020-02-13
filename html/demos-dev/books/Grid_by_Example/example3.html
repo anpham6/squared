@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Example 3</title>
+    <title>Example 8</title>
     <style>
         body {
             margin: 40px;
@@ -11,7 +11,8 @@
         .wrapper {
             display: grid;
             grid-gap: 10px;
-            grid-template-columns: 100px 100px 100px;
+            grid-template-columns: [col] 100px [col] 100px [col] 100px [col] 100px;
+            grid-template-rows: [row] auto [row] auto [row];
             background-color: #fff;
             color: #444;
         }
@@ -25,33 +26,96 @@
         }
         
         .a {
-            grid-column: 2 / 3;
-            grid-row: 1 / 2;
+            grid-column: col / span 2;
+            grid-row: row;
         }
         
         .b {
-            grid-column: 2 / 3;
-            grid-row: 2 / 3;
+            grid-column: col 3 / span 2;
+            grid-row: row;
         }
         
         .c {
-            grid-column: 3 / 4;
-            grid-row: 2 / 3;
+            grid-column: col;
+            grid-row: row 2;
         }
         
         .d {
-            grid-column: 1 / 2;
-            grid-row: 1 / 2;
+            grid-column: col 2 / span 3;
+            grid-row: row 2;
         }
         
         .e {
-            grid-column: 1 / 2;
-            grid-row: 2 / 3;
+            grid-column: col / span 4;
+            grid-row: row 3;
+        }
+
+        .wrapper1 {
+            display: grid;
+            grid-gap: 10px;
+            grid-template-columns: repeat(4, [col] 100px);
+            grid-template-rows: repeat(3, [row] auto);
+            background-color: #fff;
+            color: #444;
         }
         
-        .f {
-            grid-column: 3 / 4;
-            grid-row: 1 / 2;
+        .wrapper1 .a {
+            grid-column: col / span 2;
+            grid-row: row;
+        }
+        
+        .wrapper1 .b {
+            grid-column: col 3 / span 2;
+            grid-row: row;
+        }
+        
+        .wrapper1 .c {
+            grid-column: col;
+            grid-row: row 2;
+        }
+        
+        .wrapper1 .d {
+            grid-column: col 2 / span 3;
+            grid-row: row 2;
+        }
+        
+        .wrapper1 .e {
+            grid-column: col / span 4;
+            grid-row: row 3;
+        }
+
+        .wrapper2 {
+            display: grid;
+            grid-gap: 10px;
+            grid-template-columns: 100px 100px 100px;
+            grid-auto-columns: 100px;
+            background-color: #fff;
+            color: #444;
+        }
+        
+        .wrapper2 .a {
+            grid-column: 1 / 3;
+            grid-row: 1;
+        }
+        
+        .wrapper2 .b {
+            grid-column: 3;
+            grid-row: 1 / 3;
+        }
+        
+        .wrapper2 .c {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        .wrapper2 .d {
+            grid-column: 2;
+            grid-row: 2;
+        }
+        
+        .wrapper2 .e {
+            grid-column: 4 / 5;
+            grid-row: 1 / 4;
         }
     </style>
     <script src="/node_modules/systemjs/dist/system.js"></script>
@@ -68,7 +132,22 @@
         <div class="box c">C</div>
         <div class="box d">D</div>
         <div class="box e">E</div>
-        <div class="box f">F</div>
+    </div>
+    <br />
+    <div class="wrapper1">
+        <div class="box a">A</div>
+        <div class="box b">B</div>
+        <div class="box c">C</div>
+        <div class="box d">D</div>
+        <div class="box e">E</div>
+    </div>
+    <br />
+    <div class="wrapper2">
+        <div class="box a">A</div>
+        <div class="box b">B</div>
+        <div class="box c">C</div>
+        <div class="box d">D</div>
+        <div class="box e">E</div>
     </div>
 
 </body>

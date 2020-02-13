@@ -208,7 +208,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    private _imageFormat: string[];
+    private readonly _imageFormat: string[];
 
     constructor(
         public application: android.base.Application<T>,

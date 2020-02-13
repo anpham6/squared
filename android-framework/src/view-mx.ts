@@ -18,7 +18,7 @@ const { BOX_MARGIN, BOX_PADDING, formatPX, getDataSet, isLength, isPercent } = $
 const { getNamedItem } = $lib.dom;
 const { clamp, truncate } = $lib.math;
 const { actualTextRangeRect } = $lib.session;
-const { aboveRange, capitalize, convertFloat, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap, withinRange } = $lib.util;
+const { aboveRange, capitalize, convertFloat, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
 
@@ -343,7 +343,7 @@ function constraintPercentWidth(node: T, opposing: boolean, percent = 1) {
 function constraintPercentHeight(node: T, opposing: boolean, percent = 1) {
     const parent = node.renderParent as T;
     if (parent.hasHeight) {
-        if (!opposing && !(node.actualParent || node.documentParent).layoutElement) {
+        if (!opposing && parent.hasPX('height', false) && !(node.actualParent || node.documentParent).layoutElement) {
             const value = node.percentHeight;
             if (value > 0) {
                 if (value < 1) {
@@ -548,12 +548,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _boxReset?: BoxModel;
         protected _innerWrapped?: T;
 
-        private _localization = false;
         private _containerType = 0;
         private _controlId?: string;
         private _labelFor?: T;
         private __android: StringMap = {};
         private __app: StringMap = {};
+        private readonly _localization: boolean;
 
         constructor(
             id = 0,
@@ -566,6 +566,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (afterInit) {
                 afterInit(this);
                 this._localization = this.hasProcedure(NODE_PROCEDURE.LOCALIZATION) && this.localSettings.supportRTL;
+            }
+            else {
+                this._localization = false;
             }
         }
 
@@ -1503,7 +1506,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         break;
                     default:
-                        if (this.controlElement || this.is(CONTAINER_NODE.TEXT) && this.textEmpty) {
+                        if (this.controlElement || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.renderParent?.layoutFrame) {
                             return;
                         }
                         break;
@@ -1547,8 +1550,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (renderParent) {
                 this.alignLayout(renderParent);
                 this.setLineHeight(renderParent);
-                this.finalizeGravity('gravity');
-                this.finalizeGravity('layout_gravity');
+                this.finalizeGravity(renderParent, 'layout_gravity');
+                this.finalizeGravity(renderParent, 'gravity');
                 if (this.imageElement) {
                     const layoutWidth = this.layoutWidth;
                     const layoutHeight = this.layoutHeight;
@@ -1562,46 +1565,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         this.android('adjustViewBounds', 'true');
                     }
                 }
-            }
-        }
-
-        private finalizeGravity(attr: string) {
-            const direction = getGravityValues(this, attr);
-            if (direction.size > 1) {
-                checkMergableGravity('center', direction);
-                checkMergableGravity('fill', direction);
-            }
-            const invalid = attr === 'gravity' && this.renderChildren.length === 0;
-            let result = '';
-            let x = '';
-            let y = '';
-            let z = '';
-            for (const value of direction.values()) {
-                if (isHorizontalAlign(value)) {
-                    if (invalid && this.inlineWidth && this.android('minWidth') === '') {
-                        continue;
-                    }
-                    x = value;
-                }
-                else if (isVerticalAlign(value)) {
-                    if (invalid && this.inlineHeight && this.android('minHeight') === '') {
-                        continue;
-                    }
-                    y = value;
-                }
-                else {
-                    z += (z !== '' ? '|' : '') + value;
-                }
-            }
-            result = x !== '' && y !== '' ? x + '|' + y : x || y;
-            if (z !== '') {
-                result += (result !== '' ? '|' : '') + z;
-            }
-            if (result !== '') {
-                this.android(attr, result);
-            }
-            else {
-                this.delete('android', attr);
             }
         }
 
@@ -1710,9 +1673,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (this.floating) {
                         let node = <Undef<T>> (this.renderParent as T).renderChildren.find(item => !item.floating);
                         if (node) {
-                            const boundsTop = this.bounds.top;
+                            const boundsTop = Math.floor(this.bounds.top);
                             let actualNode: Undef<T>;
-                            while (node.bounds.top === boundsTop) {
+                            while (Math.floor(node.bounds.top) === boundsTop) {
                                 actualNode = node;
                                 const innerWrapped = node.innerWrapped as T;
                                 if (innerWrapped) {
@@ -1731,11 +1694,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else if (top > 0 && (this.actualParent as T)?.floatContainer) {
                         const renderParent = this.renderParent as T;
                         if (renderParent.layoutVertical && renderParent.ascend({ condition: (item: T) => item.hasAlign(NODE_ALIGNMENT.FLOAT) || item.hasAlign(NODE_ALIGNMENT.COLUMN), error: (item: T) => item.naturalChild, attr: 'renderParent' }).length === 0) {
-                            const boundsTop = this.bounds.top;
+                            const boundsTop = Math.floor(this.bounds.top);
                             const renderChildren = renderParent.renderChildren;
                             let previous: Undef<T>;
                             for (const node of (this.actualParent as T).naturalElements as T[]) {
-                                if (node.floating && withinRange(node.bounds.top, boundsTop) && !renderChildren.includes(node)) {
+                                if (node.floating && Math.floor(node.bounds.top) === boundsTop && !renderChildren.includes(node)) {
                                     if (previous === undefined || !previous.lineBreak && previous.css('clear') === 'none') {
                                         top = Math.max(top - node.bounds.height, 0);
                                     }
@@ -2034,6 +1997,46 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
+            }
+        }
+
+        private finalizeGravity(renderParent: T, attr: string) {
+            const direction = getGravityValues(this, attr);
+            if (direction.size > 1) {
+                checkMergableGravity('center', direction);
+                checkMergableGravity('fill', direction);
+            }
+            const invalid = attr === 'gravity' && this.renderChildren.length === 0 && !renderParent.layoutGrid;
+            let result = '';
+            let x = '';
+            let y = '';
+            let z = '';
+            for (const value of direction.values()) {
+                if (isHorizontalAlign(value)) {
+                    if (invalid && this.inlineWidth && this.android('minWidth') === '') {
+                        continue;
+                    }
+                    x = value;
+                }
+                else if (isVerticalAlign(value)) {
+                    if (invalid && this.inlineHeight && this.android('minHeight') === '') {
+                        continue;
+                    }
+                    y = value;
+                }
+                else {
+                    z += (z !== '' ? '|' : '') + value;
+                }
+            }
+            result = x !== '' && y !== '' ? x + '|' + y : x || y;
+            if (z !== '') {
+                result += (result !== '' ? '|' : '') + z;
+            }
+            if (result !== '') {
+                this.android(attr, result);
+            }
+            else {
+                this.delete('android', attr);
             }
         }
 

@@ -6,7 +6,7 @@
   "scripts": {
     "express": "node app.js",
     "watch": "tsc -w -p tsconfig.json",
-    "eslint": "eslint **/*.ts --no-ignore",
+    "lint": "eslint **/*.ts --no-ignore",
     "dev-base": "tsc --inlineSourceMap false && rollup -c rollup.config.dev-base.js && cd ./android-framework && rollup -c rollup.config.dev.js",
     "dev": "tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js && cd ../chrome-framework && rollup -c rollup.config.js",
     "prod": "npm run clean && eslint **/*.ts && tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js",

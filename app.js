@@ -77,31 +77,28 @@ app.post('/api/assets/copy', (req, res) => {
                 mkdirp.sync(dirname);
             }
             else if (!fs.lstatSync(dirname).isDirectory()) {
-                throw 'Path is not a directory.';
+                throw new Error('Path is not a directory.');
             }
         }
         catch (err) {
             res.json({ application: `DIRECTORY: ${dirname}`, system: err });
             return;
         }
-        let { directory, timeout, finalizeTime } = getQueryData(req, dirname);
+        const { directory, timeout, finalizeTime } = getQueryData(req, dirname);
         let delayed = 0;
         let fileerror = '';
-        function finalize(valid = false) {
-            if (valid && --delayed === 0 || Date.now() >= finalizeTime) {
+        const finalize = (valid = false) => {
+            if (delayed !== Number.POSITIVE_INFINITY && (valid && --delayed === 0 || Date.now() >= finalizeTime)) {
                 delayed = Number.POSITIVE_INFINITY;
-                finalizeTime = Number.POSITIVE_INFINITY;
-                res.json({
-                    success: delayed === 0,
-                    directory: dirname
-                });
+                res.json({ success: delayed === 0, directory: dirname });
             }
-        }
+        };
         try {
             const invalid = {};
             for (const file of req.body) {
                 const { pathname, filename, level, quality } = getFileData(file, directory);
-                function writeBuffer() {
+                const { content, base64, uri } = file;
+                const writeBuffer = () => {
                     if (level > 0) {
                         delayed++;
                         const filename_gz = filename + '.gz';
@@ -116,29 +113,29 @@ app.post('/api/assets/copy', (req, res) => {
                             filename_br,
                             brotli.compress(
                                 fs.readFileSync(filename),
-                                { mode: file.mimeType && file.mimeType.startsWith('font/') ? 2 : 1, quality }
+                                { mode: /^font\//.test(file.mimeType) ? 2 : 1, quality }
                             ),
                             () => finalize(true)
                         );
                     }
-                }
+                };
                 fileerror = filename;
                 mkdirp.sync(pathname);
-                if (file.content || file.base64) {
+                if (content || file.base64) {
                     delayed++;
                     fs.writeFile(
                         filename,
-                        file.base64 || file.content,
-                        file.base64 ? 'base64' : 'utf8',
+                        base64 || content,
+                        base64 ? 'base64' : 'utf8',
                         err => {
                             if (!err) {
                                 writeBuffer();
-                            } 
+                            }
                             finalize(true);
                         }
                     );
                 }
-                else if (file.uri) {
+                else if (uri) {
                     delayed++;
                     const stream = fs.createWriteStream(filename);
                     stream.on('finish', () => {
@@ -147,12 +144,13 @@ app.post('/api/assets/copy', (req, res) => {
                             finalize(true);
                         }
                     });
-                    request(file.uri)
-                        .on('response', res => {
-                            if (res.statusCode !== 200) {
+                    request(uri)
+                        .on('response', err => {
+                            const statusCode = err.statusCode;
+                            if (statusCode !== 200) {
                                 invalid[filename] = true;
-                                if (res.statusCode === 404) {
-                                    console.log(`FAIL: ${file.uri} (File not found)`);
+                                if (statusCode === 404) {
+                                    console.log(`FAIL: ${uri} (File not found)`);
                                 }
                                 finalize(true);
                             }
@@ -190,7 +188,7 @@ app.post('/api/assets/archive', (req, res) => {
     let fileerror = '';
     let zipname = '';
     function resume(unzip_to = '') {
-        let { directory, timeout, finalizeTime } = getQueryData(req, unzip_to || dirname);
+        const { directory, timeout, finalizeTime } = getQueryData(req, unzip_to || dirname);
         try {
             mkdirp.sync(directory);
         }
@@ -213,14 +211,13 @@ app.post('/api/assets/archive', (req, res) => {
             });
         });
         archive.pipe(output);
-        function finalize(valid = false) {
-            if (valid && --delayed === 0 || Date.now() >= finalizeTime) {
+        const finalize = (valid = false) => {
+            if (delayed !== Number.POSITIVE_INFINITY && (valid && --delayed === 0 || Date.now() >= finalizeTime)) {
                 success = delayed === 0;
                 delayed = Number.POSITIVE_INFINITY;
-                finalizeTime = Number.POSITIVE_INFINITY;
                 archive.finalize();
             }
-        }
+        };
         try {
             if (unzip_to) {
                 archive.directory(unzip_to, false);
@@ -228,8 +225,9 @@ app.post('/api/assets/archive', (req, res) => {
             const invalid = {};
             for (const file of req.body) {
                 const { pathname, filename, level, quality } = getFileData(file, directory);
+                const { content, base64, uri } = file;
                 const data = { name: `${(query.directory ? `${query.directory}/` : '') + file.pathname}/${file.filename}` };
-                function writeBuffer() {
+                const writeBuffer = () => {
                     if (delayed !== Number.POSITIVE_INFINITY) {
                         if (level > 0) {
                             delayed++;
@@ -248,7 +246,7 @@ app.post('/api/assets/archive', (req, res) => {
                                 filename_br,
                                 brotli.compress(
                                     fs.readFileSync(filename),
-                                    { mode: file.mimeType && file.mimeType.startsWith('font/') ? 2 : 1, quality }
+                                    { mode: /^font\//.test(file.mimeType) ? 2 : 1, quality }
                                 ),
                                 () => {
                                     if (delayed !== Number.POSITIVE_INFINITY) {
@@ -260,24 +258,24 @@ app.post('/api/assets/archive', (req, res) => {
                         }
                         archive.file(filename, data);
                     }
-                }
+                };
                 fileerror = filename;
                 mkdirp.sync(pathname);
-                if (file.content || file.base64) {
+                if (content || base64) {
                     delayed++;
                     fs.writeFile(
                         filename,
-                        file.base64 || file.content,
-                        file.base64 ? 'base64' : 'utf8',
+                        base64 || content,
+                        base64 ? 'base64' : 'utf8',
                         err => {
                             if (!err) {
                                 writeBuffer();
-                            } 
+                            }
                             finalize(true);
                         }
                     );
                 }
-                else if (file.uri) {
+                else if (uri) {
                     delayed++;
                     const stream = fs.createWriteStream(filename);
                     stream.on('finish', () => {
@@ -286,12 +284,13 @@ app.post('/api/assets/archive', (req, res) => {
                             finalize(true);
                         }
                     });
-                    request(file.uri)
-                        .on('response', res => {
-                            if (res.statusCode !== 200) {
+                    request(uri)
+                        .on('response', err => {
+                            const statusCode = err.statusCode;
+                            if (statusCode !== 200) {
                                 invalid[filename] = true;
-                                if (res.statusCode === 404) {
-                                    console.log(`FAIL: ${file.uri} (File not found)`);
+                                if (statusCode === 404) {
+                                    console.log(`FAIL: ${uri} (File not found)`);
                                 }
                                 finalize(true);
                             }
@@ -315,13 +314,13 @@ app.post('/api/assets/archive', (req, res) => {
         if (match) {
             zipname = `${dirname}/${match[0]}`;
             try {
-                function copied() {
+                const copied = () => {
                     format = match[2].toLowerCase();
                     const unzip_to = `${dirname}/${match[1]}`;
                     decompress(zipname, unzip_to).then(() => {
                         resume(unzip_to);
                     });
-                }
+                };
                 if (/^[A-Za-z]+:\/\//.test(append_to)) {
                     const stream = fs.createWriteStream(zipname);
                     stream.on('finish', copied);
@@ -350,7 +349,7 @@ app.post('/api/assets/archive', (req, res) => {
 });
 
 app.get('/api/browser/download', (req, res) => {
-    const filename = req.query.filename && req.query.filename.trim();
+    const filename = req.query.filename;
     if (filename) {
         res.sendFile(filename, err => {
             if (err) {

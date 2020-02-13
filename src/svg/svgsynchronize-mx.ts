@@ -1573,8 +1573,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         for (let k = i; k < length; k++) {
                                             if (groupDelay[k] < actualMaxTime) {
                                                 const dataA = groupData[k];
-                                                for (let l = 0; l < dataA.length; l++) {
-                                                    const next = dataA[l];
+                                                for (const next of dataA) {
                                                     const nextDuration = next.getTotalDuration();
                                                     if (nextDuration > actualMaxTime && !next.hasState(SYNCHRONIZE_STATE.INTERRUPTED, SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID)) {
                                                         queueIncomplete(incomplete, next);

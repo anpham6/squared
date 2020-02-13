@@ -173,8 +173,8 @@ function getOpenRowIndex(cells: number[][]) {
     const length = cells.length;
     for (let i = 0; i < length; i++) {
         const cell = cells[i];
-        for (let j = 0; j < cell.length; j++) {
-            if (cell[j] === 0) {
+        for (const value of cell) {
+            if (value === 0) {
                 return i;
             }
         }

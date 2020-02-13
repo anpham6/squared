@@ -76,14 +76,11 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                         parent,
                         controller.createNodeGroup(node, siblings, parent, true),
                         0,
-                        cellData.block ? NODE_ALIGNMENT.BLOCK : 0,
+                        0,
                         siblings
                     )
                 );
                 node = layout.node;
-                if (cellData.block) {
-                    node.css('display', 'block', true);
-                }
                 transferData(node, siblings);
             }
             if (cellData.rowSpan > 1) {

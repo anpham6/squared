@@ -284,7 +284,7 @@ function setColumnVertical(partition: View[][], lastRow: boolean, previousRow?: 
                 }
                 else if (i > 0 && !item.multiline) {
                     const adjacent = partition[i - 1][j];
-                    if (adjacent?.multiline === false && withinRange(item.bounds.top, adjacent.bounds.top)) {
+                    if (adjacent?.multiline === false && Math.floor(item.bounds.top) === Math.floor(adjacent.bounds.top)) {
                         item.anchor('top', adjacent.documentId);
                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, -adjacent.marginTop);
                     }
@@ -2066,7 +2066,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         siblings = item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, <Element> item.element) : undefined;
                         if (textNewRow ||
                             item.nodeGroup && !item.hasAlign(NODE_ALIGNMENT.SEGMENTED) ||
-                            Math.ceil(item.bounds.top) > previous.bounds.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
+                            Math.ceil(item.bounds.top) >= previous.bounds.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
                             !item.textElement && !checkFloatWrap() && checkWrapWidth() && Math.floor(baseWidth) > maxWidth ||
                             !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element, node.sessionId))) ||
                             previous.autoMargin.horizontal ||
@@ -2589,9 +2589,23 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         const columnCount = node.toInt('columnCount');
         const columnWidth = node.parseUnit(node.css('columnWidth'));
-        const columnGap = node.parseUnit(node.css('columnGap')) || (columnWidth > 0 ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
-        const boxWidth = !isUserAgent(USER_AGENT.SAFARI) ? node.box.width : Math.min(node.documentParent.box.width - node.contentBoxWidth, columnCount ? node.box.width * columnCount : Number.POSITIVE_INFINITY);
-        const columnSized = isNaN(columnCount) && columnWidth > 0 ? Math.ceil(boxWidth / (columnWidth + columnGap)) : Number.POSITIVE_INFINITY;
+        let columnGap = node.parseUnit(node.css('columnGap'));
+        let columnSized: number;
+        let boxWidth: number;
+        const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Number.POSITIVE_INFINITY;
+        if (isUserAgent(USER_AGENT.SAFARI)) {
+            boxWidth = Math.min(node.width > 0 ? node.width - (!node.contentBox ? node.contentBoxWidth : 0) : Number.POSITIVE_INFINITY, node.box.width * (columnCount || 1), node.documentParent.box.width - node.contentBoxWidth);
+        }
+        else {
+            boxWidth = node.box.width;
+        }
+        if (columnGap > 0) {
+            columnSized = Math.floor(getColumnSizing());
+        }
+        else {
+            columnGap = (columnWidth > 0 ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
+            columnSized = Math.ceil(getColumnSizing());
+        }
         let previousRow: Undef<T | string>;
         const length = rows.length;
         for (let i = 0; i < length; i++) {
@@ -2634,7 +2648,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     let excessCount = rowReduce && lengthA % columnMin !== 0 ? lengthA - columnMin : Number.POSITIVE_INFINITY;
                     let totalGap = 0;
                     for (let j = 0, k = 0, l = 0; j < lengthA; j++, l++) {
-                        const column = row[j];
+                        const item = row[j];
                         const rowIteration = l % perRowCount === 0;
                         if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < lengthA - 2 && (lengthA - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                             if (j > 0) {
@@ -2651,22 +2665,22 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 rowReduce = true;
                             }
                         }
-                        let col = columns[k];
-                        if (col === undefined) {
-                            col = [];
-                            columns[k] = col;
+                        let column = columns[k];
+                        if (column === undefined) {
+                            column = [];
+                            columns[k] = column;
                         }
-                        col.push(column);
-                        if (column.length) {
-                            totalGap += maxArray(objectMap<T, number>(column.children as T[], child => child.marginLeft + child.marginRight));
+                        column.push(item);
+                        if (item.length) {
+                            totalGap += maxArray(objectMap<T, number>(item.children as T[], child => child.marginLeft + child.marginRight));
                         }
-                        if (j > 0 && /^H\d/.test(column.tagName)) {
-                            if (col.length === 1 && j === lengthA - 2) {
+                        if (j > 0 && /^H\d/.test(item.tagName)) {
+                            if (column.length === 1 && j === lengthA - 2) {
                                 columnMin--;
                                 excessCount = 0;
                             }
                             else if ((l + 1) % perRowCount === 0 && lengthA - j > columnMin && !row[j + 1].multiline && row[j + 1].bounds.height < maxHeight) {
-                                col.push(row[++j]);
+                                column.push(row[++j]);
                                 l = -1;
                             }
                         }
@@ -2851,7 +2865,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (i > 0 && j === 0) {
                             let checkBottom = false;
                             for (const item of previousSiblings) {
-                                if (Math.ceil(chain.bounds.top) < item.bounds.bottom) {
+                                if (chain.bounds.top < item.bounds.bottom) {
                                     checkBottom = true;
                                     break;
                                 }
