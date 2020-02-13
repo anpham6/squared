@@ -212,9 +212,6 @@ function constraintMinMax(node: T, horizontal: boolean) {
                 if (node.flexibleWidth) {
                     node.app('layout_constraintWidth_min', formatPX(node.parseUnit(minWH) + node.contentBoxWidth));
                     node.css('minWidth', 'auto');
-                    if (node.imageElement) {
-                        node.android('adjustViewBounds', 'true');
-                    }
                 }
             }
         }
@@ -223,9 +220,6 @@ function constraintMinMax(node: T, horizontal: boolean) {
             if (node.flexibleHeight) {
                 node.app('layout_constraintHeight_min', formatPX(node.parseUnit(minWH, 'height') + node.contentBoxHeight));
                 node.css(horizontal ? 'minWidth' : 'minHeight', 'auto');
-                if (node.imageElement) {
-                    node.android('adjustViewBounds', 'true');
-                }
             }
         }
     }
@@ -238,9 +232,6 @@ function constraintMinMax(node: T, horizontal: boolean) {
                     const value = node.parseUnit(maxWH);
                     node.app('layout_constraintWidth_max', formatPX(value + node.contentBoxWidth));
                     node.css('maxWidth', 'auto');
-                    if (node.imageElement) {
-                        node.android('adjustViewBounds', 'true');
-                    }
                     if (node.layoutVertical) {
                         node.each(item => {
                             if (item.textElement && !item.hasPX('maxWidth')) {
@@ -256,9 +247,6 @@ function constraintMinMax(node: T, horizontal: boolean) {
             if (node.flexibleHeight) {
                 node.app('layout_constraintHeight_max', formatPX(node.parseUnit(maxWH, 'height') + node.contentBoxHeight));
                 node.css('maxHeight', 'auto');
-                if (node.imageElement) {
-                    node.android('adjustViewBounds', 'true');
-                }
             }
         }
     }
@@ -998,7 +986,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const actualParent = this.actualParent || this.documentParent;
             const renderParent = this.renderParent as T;
             const maxDimension = this.support.maxDimension;
-            let adjustViewBounds = false;
             if (this.documentBody) {
                 const fixed = renderParent.id === 0 && this.renderChildren.some(node => node.css('position') === 'fixed');
                 if (fixed || this.css('width') === '100%' || this.css('minWidth') === '100%' || this.blockStatic && !this.hasPX('width') && !this.hasPX('maxWidth')) {
@@ -1029,14 +1016,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             else {
                                 View.setConstraintDimension(this);
-                                layoutWidth = '0px';
+                                layoutWidth = this.layoutWidth;
                             }
-                            adjustViewBounds = true;
                         }
                         else if (renderParent.layoutGrid) {
                             layoutWidth = '0px';
                             this.android('layout_columnWeight', truncate(parseFloat(width) / 100, this.localSettings.floatPrecision));
-                            adjustViewBounds = true;
                         }
                         else if (this.imageElement) {
                             if (expandable()) {
@@ -1045,7 +1030,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             else {
                                 value = this.bounds.width;
                             }
-                            adjustViewBounds = true;
                         }
                         else if (width === '100%') {
                             if (!maxDimension && this.hasPX('maxWidth')) {
@@ -1128,7 +1112,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else if (this.imageElement && this.hasPX('height')) {
                         layoutWidth = 'wrap_content';
-                        adjustViewBounds = true;
                     }
                     else {
                         const checkParentWidth = () => {
@@ -1199,7 +1182,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                             else {
                                 value = this.bounds.height;
-                                adjustViewBounds = true;
                             }
                         }
                         else if (height === '100%') {
@@ -1260,7 +1242,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else if (this.imageElement && this.hasPX('width')) {
                         layoutHeight = 'wrap_content';
-                        adjustViewBounds = true;
                     }
                     else if (this.display === 'table-cell') {
                         layoutHeight = 'match_parent';
@@ -1293,12 +1274,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 this.setLayoutHeight('wrap_content');
                                 width = -1;
                                 maxHeight = '';
-                                adjustViewBounds = true;
                             }
                         }
                         else if (!renderParent.inlineWidth) {
                             this.setLayoutWidth('match_parent');
-                            adjustViewBounds = true;
                         }
                     }
                     else {
@@ -1310,14 +1289,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (width >= 0) {
                     this.android('maxWidth', formatPX(width), false);
-                    adjustViewBounds = true;
                 }
                 if (isLength(maxHeight, true)) {
                     let height = -1;
                     if (maxHeight === '100%' && !this.svgElement) {
                         if (!renderParent.inlineHeight) {
                             this.setLayoutHeight('match_parent');
-                            adjustViewBounds = true;
                         }
                         else {
                             height = this.imageElement ? this.toElementInt('naturalHeight') : this.parseUnit(maxHeight, 'height');
@@ -1328,12 +1305,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (height >= 0) {
                         this.android('maxHeight', formatPX(height));
-                        adjustViewBounds = true;
                     }
                 }
-            }
-            if (this.imageElement && (adjustViewBounds || this.blockWidth || this.blockHeight)) {
-                this.android('adjustViewBounds', 'true');
             }
         }
 
@@ -1576,6 +1549,19 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 this.setLineHeight(renderParent);
                 this.finalizeGravity('gravity');
                 this.finalizeGravity('layout_gravity');
+                if (this.imageElement) {
+                    const layoutWidth = this.layoutWidth;
+                    const layoutHeight = this.layoutHeight;
+                    if (layoutWidth === 'wrap_content' && layoutHeight !== 'wrap_content' ||
+                        layoutWidth !== 'wrap_content' && layoutHeight === 'wrap_content' ||
+                        layoutWidth === 'match_parent' || layoutHeight === 'match_parent' ||
+                        layoutWidth === '0px' || layoutHeight === '0px' ||
+                        this.android('minWidth') !== '' || this.android('minHeight') !== '' ||
+                        this.android('maxWidth') !== '' || this.android('maxHeight') !== '')
+                    {
+                        this.android('adjustViewBounds', 'true');
+                    }
+                }
             }
         }
 
@@ -2057,7 +2043,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 case 'METER':
                     return true;
                 case 'INPUT':
-                    return (<HTMLInputElement> this.element)?.type === 'range';
+                    return this.toElementString('type') === 'range';
             }
             return false;
         }

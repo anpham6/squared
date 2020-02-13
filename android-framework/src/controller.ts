@@ -362,9 +362,6 @@ function setImageDimension(node: View, value: number, width: number, height: num
         height = image.height * (width / image.width);
         node.css('height', formatPX(height), true);
     }
-    else {
-        node.android('adjustViewBounds', 'true');
-    }
     return [width, height];
 }
 
@@ -984,7 +981,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             else {
                                 width = node.bounds.width;
-                                node.android('adjustViewBounds', 'true');
                                 percentWidth = -1;
                             }
                         }
@@ -996,7 +992,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 else {
                                     width = node.bounds.width;
-                                    node.android('adjustViewBounds', 'true');
                                     percentWidth = -1;
                                 }
                             }
@@ -1011,14 +1006,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         width *= absoluteParent.box.width / 100;
                         if (percentWidth < 100 && !parent.layoutConstraint) {
                             node.css('width', formatPX(width));
-                            node.android('adjustViewBounds', 'true');
                         }
                     }
                     if (percentHeight >= 0) {
                         height *= absoluteParent.box.height / 100;
                         if (percentHeight < 100 && !(parent.layoutConstraint && absoluteParent.hasHeight)) {
                             node.css('height', formatPX(height));
-                            node.android('adjustViewBounds', 'true');
                         }
                     }
                 }
@@ -1037,9 +1030,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             scaleType = 'center';
                             break;
                     }
-                    if (width === 0 && height > 0 || height === 0 && width > 0) {
-                        node.android('adjustViewBounds', 'true');
-                    }
                 }
                 node.android('scaleType', scaleType);
                 if (width > 0 && parent.hasPX('maxWidth', false) && (percentWidth === -1 || percentWidth === 100)) {
@@ -1047,7 +1037,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (parentWidth <= width) {
                         width = parentWidth;
                         node.css('width', formatPX(width));
-                        node.android('adjustViewBounds', 'true');
                     }
                 }
                 else if (height > 0 && parent.hasPX('maxHeight', false) && (percentHeight === -1 || percentHeight === 100)) {
@@ -1055,7 +1044,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (parentHeight <= height) {
                         height = parentHeight;
                         node.css('maxHeight', formatPX(height));
-                        node.android('adjustViewBounds', 'true');
                         node.setLayoutHeight('wrap_content');
                     }
                 }

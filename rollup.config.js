@@ -11,7 +11,6 @@ export default [
             format: 'umd'
         },
         plugins: [
-            async(),
             terser({
                 compress: {
                     pure_getters: true,
@@ -47,7 +46,6 @@ export default [
             format: 'umd'
         },
         plugins: [
-            async(),
             terser({
                 compress: {
                     pure_getters: true,
