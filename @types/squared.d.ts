@@ -568,6 +568,7 @@ declare namespace base {
         exclude(options: ExcludeOptions): void;
         hide(invisible?: boolean): void;
         appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
+        deleteTry(replacement?: NodeUI): boolean;
         sort(predicate?: (a: Node, b: Node) => number): this;
         render(parent?: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;

@@ -8,15 +8,18 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { resolveURL } = squared.lib.css;
-
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const isParentTransfer = (parent: View) => parent.tagName === 'HTML' && (parent.contentBoxWidth > 0 || parent.contentBoxHeight > 0 || parent.marginTop > 0 || parent.marginBottom > 0 || parent.marginRight > 0 || parent.marginLeft > 0);
-const isParentVisible = (node: View, visibleStyle: VisibleStyle) => (<View> node.actualParent).visibleStyle.background && (hasWidth(node) && node.css('height') !== '100%' && node.css('minHeight') !== '100%' || visibleStyle.backgroundImage && (visibleStyle.backgroundRepeatY || node.css('backgroundPositionY').includes('bottom')));
-const isHideMargin = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && (node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
-const isFullScreen = (node: View, visibleStyle: VisibleStyle) => node.backgroundColor !== '' && visibleStyle.borderWidth && !node.inline && node.css('height') !== '100%' && node.css('minHeight') !== '100%' && !(<View> node.actualParent).visibleStyle.background || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY;
-const hasWidth = (node: View) => !node.blockStatic || node.hasPX('width') || node.has('maxWidth', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' });
+const RESOURCE_IGNORE = NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING;
+
+const hasVisibleWidth = (node: View) => !node.blockStatic && !node.hasPX('width') || node.has('width', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' }) && node.css('minWidth') !== '100%' || node.has('maxWidth', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' });
+const hasFullHeight = (node: View) => node.css('height') === '100%' || node.css('minHeight') === '100%';
+const hasMargin = (node: View) => node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0;
+const isParentVisible = (node: View) => (<View> node.actualParent).visibleStyle.background && (hasVisibleWidth(node) || !hasFullHeight(node));
+const isParentTransfer = (parent: View) => parent.tagName === 'HTML' && (parent.contentBoxWidth > 0 || parent.contentBoxHeight > 0 || hasMargin(parent));
+const isFullScreen = (node: View, visibleStyle: VisibleStyle) => (node.backgroundColor || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY) && visibleStyle.borderWidth && !node.inline && !hasFullHeight(node) && !isParentVisible(node);
+const isHideMargin = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && hasMargin(node);
+const isBackgroundSeperate = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundColor && visibleStyle.backgroundImage && (node.has('backgroundPositionY') || hasVisibleWidth(node));
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -25,35 +28,16 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
 
     public condition(node: T, parent: T) {
         const visibleStyle = node.visibleStyle;
-        return isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle) || isParentTransfer(parent);
+        return isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle) || isBackgroundSeperate(node, visibleStyle) || isParentTransfer(parent);
     }
 
     public processNode(node: T, parent: T) {
         const controller = <android.base.Controller<T>> this.controller;
-        const outerWrapper = node.outerMostWrapper as T;
-        let target: Undef<T>;
-        let targetParent: Undef<T>;
-        if (!outerWrapper.naturalChild) {
-            target = outerWrapper;
-            targetParent = target.parent as T;
-            const renderChildren = targetParent.renderChildren;
-            const index = renderChildren.findIndex(item => item === target);
-            if (index !== -1) {
-                renderChildren.splice(index, 1);
-                targetParent.renderTemplates?.splice(index, 1);
-                target.rendered = false;
-                target.renderParent = undefined;
-            }
-            else {
-                target = undefined;
-                targetParent = undefined;
-            }
-        }
-        const actualNode = target || node;
-        const actualParent = targetParent || parent;
-        const { backgroundColor, visibleStyle } = node;
-        const parentVisible = isParentVisible(node, visibleStyle);
-        let renderParent = actualParent;
+        const { backgroundColor, backgroundImage, visibleStyle } = node;
+        const backgroundRepeatY = visibleStyle.backgroundRepeatY;
+        const backgroundSeperate = isBackgroundSeperate(node, visibleStyle);
+        const hasHeight = node.hasHeight || node.actualParent?.hasHeight === true;
+        let renderParent = parent;
         let container: Undef<T>;
         let parentAs!: T;
         const createFrameWrapper = (wrapper: T) => {
@@ -72,46 +56,44 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             parentAs = wrapper;
             renderParent = parentAs;
         };
+        const parentVisible = isParentVisible(node);
         if (backgroundColor !== '') {
-            container = controller.createNodeWrapper(actualNode, renderParent, undefined, { resource: NODE_RESOURCE.BOX_SPACING });
-            container.css('backgroundColor', backgroundColor);
-            container.setCacheValue('backgroundColor', backgroundColor);
-            if (!parentVisible) {
-                container.setLayoutWidth('match_parent');
-                container.setLayoutHeight('match_parent');
+            if (!(visibleStyle.backgroundImage && visibleStyle.backgroundRepeatX && backgroundRepeatY)) {
+                container = controller.createNodeWrapper(node, renderParent, undefined, { resource: RESOURCE_IGNORE });
+                container.css('backgroundColor', backgroundColor);
+                container.setCacheValue('backgroundColor', backgroundColor);
+                if (!parentVisible) {
+                    container.setLayoutWidth('match_parent');
+                    container.setLayoutHeight('match_parent');
+                }
+                else {
+                    container.setLayoutWidth(hasVisibleWidth(node) ? 'wrap_content' : 'match_parent');
+                    container.setLayoutHeight('wrap_content');
+                }
+                container.unsetCache('visibleStyle');
             }
-            else {
-                container.setLayoutWidth(hasWidth(node) ? 'wrap_content' : 'match_parent');
-                container.setLayoutHeight('wrap_content');
-            }
-            container.unsetCache('visibleStyle');
             node.css('backgroundColor', 'transparent');
             node.setCacheValue('backgroundColor', '');
             visibleStyle.backgroundColor = false;
         }
-        const backgroundImage = node.backgroundImage;
-        if (backgroundImage !== '') {
-            const image = this.application.resourceHandler.getImage(resolveURL(backgroundImage));
-            const fitContent = !!image && image.height < node.actualHeight;
-            if (container === undefined || parentVisible || actualParent.visibleStyle.background || !visibleStyle.backgroundRepeatY || fitContent) {
-                if (container) {
-                    createFrameWrapper(container);
-                    container = controller.createNodeWrapper(actualNode, parentAs, undefined, { resource: NODE_RESOURCE.BOX_SPACING, ignoreRoot: true });
-                }
-                else {
-                    container = controller.createNodeWrapper(actualNode, renderParent, undefined, { resource: NODE_RESOURCE.BOX_SPACING });
-                }
+        if (backgroundImage !== '' && (parentVisible || backgroundSeperate || backgroundRepeatY || parent.visibleStyle.background || hasMargin(node))) {
+            if (container) {
+                createFrameWrapper(container);
+                container = controller.createNodeWrapper(node, parentAs, undefined, { resource: NODE_RESOURCE.BOX_SPACING, ignoreRoot: true });
+            }
+            else {
+                container = controller.createNodeWrapper(node, renderParent, undefined, { resource: RESOURCE_IGNORE });
             }
             container.setLayoutWidth('match_parent');
-            const height = actualParent.cssInitial('height');
-            const minHeight = actualParent.cssInitial('minHeight');
+            const height = parent.cssInitial('height');
+            const minHeight = parent.cssInitial('minHeight');
             let backgroundSize: Undef<string>;
             if (height === '' && minHeight === '') {
-                container.setLayoutHeight(!parentVisible && (visibleStyle.backgroundRepeatY || image && !fitContent || node.has('backgroundSize')) ? 'match_parent' : 'wrap_content');
+                container.setLayoutHeight(!parentVisible && !(backgroundSeperate && hasHeight) && (backgroundRepeatY || node.has('backgroundSize')) ? 'match_parent' : 'wrap_content');
             }
             else {
                 if (height !== '100%' && minHeight !== '100%') {
-                    const offsetHeight = actualParent.toElementInt('offsetHeight');
+                    const offsetHeight = parent.toElementInt('offsetHeight');
                     if (offsetHeight < window.innerHeight) {
                         backgroundSize = `auto ${offsetHeight}px`;
                     }
@@ -135,63 +117,32 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             visibleStyle.backgroundImage = false;
         }
         if (isParentTransfer(parent)) {
-            if (container) {
-                createFrameWrapper(container);
-                container = controller.createNodeWrapper(actualNode, parentAs, undefined, { ignoreRoot: true });
+            if (container === undefined) {
+                container = controller.createNodeWrapper(node, renderParent);
             }
-            else {
-                container = controller.createNodeWrapper(actualNode, renderParent);
-            }
+            container.unsafe('excludeResource', NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING);
             parent.resetBox(BOX_STANDARD.MARGIN, container);
             parent.resetBox(BOX_STANDARD.PADDING, container);
-            container.setLayoutWidth('match_parent');
-            container.setLayoutHeight('wrap_content');
+            container.setLayoutWidth('match_parent', false);
+            container.setLayoutHeight('wrap_content', false);
         }
-        visibleStyle.background = visibleStyle.borderWidth || visibleStyle.backgroundImage || visibleStyle.backgroundColor;
         if (container) {
-            if (target) {
-                target.render(container);
-                this.application.addLayoutTemplate(
-                    container,
-                    target,
-                    <NodeXmlTemplate<T>> {
-                        type: NODE_TEMPLATE.XML,
-                        node: target,
-                        controlName: target.controlName
-                    }
-                );
-                return {
-                    parent: target,
-                    parentAs: renderParent,
-                    renderAs: container,
-                    outputAs: this.application.renderNode(
-                        new LayoutUI(
-                            renderParent,
-                            container,
-                            CONTAINER_NODE.FRAME,
-                            NODE_ALIGNMENT.SINGLE,
-                            container.children as T[]
-                        )
-                    ),
-                };
-            }
-            else {
-                return {
-                    parent: container,
-                    parentAs,
-                    renderAs: container,
-                    outputAs: this.application.renderNode(
-                        new LayoutUI(
-                            parentAs || parent,
-                            container,
-                            CONTAINER_NODE.FRAME,
-                            NODE_ALIGNMENT.SINGLE,
-                            container.children as T[]
-                        )
-                    ),
-                    remove: true
-                };
-            }
+            visibleStyle.background = visibleStyle.borderWidth || visibleStyle.backgroundImage || visibleStyle.backgroundColor;
+            return {
+                parent: container,
+                parentAs,
+                renderAs: container,
+                outputAs: this.application.renderNode(
+                    new LayoutUI(
+                        parentAs || parent,
+                        container,
+                        CONTAINER_NODE.FRAME,
+                        NODE_ALIGNMENT.SINGLE,
+                        container.children as T[]
+                    )
+                ),
+                remove: true
+            };
         }
         return { remove: true };
     }

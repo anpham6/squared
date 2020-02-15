@@ -136,7 +136,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         excluded: new NodeList<T>(),
         extensionMap: new Map<number, ExtensionUI<T>[]>(),
         active: [],
-        documentRoot: [],
         targetQueue: new Map<T, NodeTemplate<T>>()
     };
     public readonly builtInExtensions: ObjectMap<ExtensionUI<T>> = {};
@@ -201,21 +200,26 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 ext.postOptimize(node);
             }
         }
+        const documentRoot: { node: T; layoutName: string }[] = [];
+        const root = this.processing.node;
         for (const node of rendered) {
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
+            }
+            if (node.documentRoot) {
+                documentRoot.push({ node, layoutName: node.innerMostWrapped === root && root.dataset.layoutName || '' });
             }
         }
         for (const ext of extensions) {
             ext.beforeCascade();
         }
         const baseTemplate = this._localSettings.layout.baseTemplate;
-        for (const layout of session.documentRoot) {
+        for (const layout of documentRoot) {
             const node = layout.node;
             if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.naturalElements.every(item => item.documentRoot)) {
                 continue;
             }
-            const renderTemplates = node.renderParent?.renderTemplates;
+            const renderTemplates = (node.renderParent as T).renderTemplates;
             if (renderTemplates) {
                 this.saveDocument(
                     layout.layoutName,
@@ -255,7 +259,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         session.cache.reset();
         session.excluded.reset();
         session.extensionMap.clear();
-        session.documentRoot.length = 0;
         session.targetQueue.clear();
         this._layouts.length = 0;
     }
@@ -555,7 +558,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         dataset.layoutName = layoutName;
         this.setBaseLayout();
         this.setConstraints();
-        this.setResources(layoutName);
+        this.setResources();
     }
 
     public resolveTarget(target: Undef<string>) {
@@ -1340,12 +1343,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
     }
 
-    protected setResources(layoutName: string) {
+    protected setResources() {
         const resourceHandler = this.resourceHandler;
         for (const node of this._cache) {
-            if (node.documentRoot && node.renderParent) {
-                this.session.documentRoot.push({ node, layoutName: node === this.processing.node ? layoutName : '' });
-            }
             resourceHandler.setBoxStyle(node);
             if (!node.imageElement && !node.svgElement && node.visible) {
                 resourceHandler.setFontStyle(node);
@@ -1467,6 +1467,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             wrapper.childIndex = node.childIndex;
             wrapper.containerName = node.containerName;
             wrapper.inherit(node, 'boxStyle');
+            node.resetBox(BOX_STANDARD.MARGIN, wrapper);
+            node.resetBox(BOX_STANDARD.PADDING, wrapper);
             wrapper.innerWrapped = node;
             this.addLayout(new LayoutUI(
                 parent,
@@ -1790,6 +1792,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     get length() {
-        return this.session.documentRoot.length;
+        return this.session.cache.length;
     }
 }

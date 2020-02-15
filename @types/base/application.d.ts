@@ -95,7 +95,6 @@ export interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
     cache: squared.base.NodeList<T>;
     excluded: squared.base.NodeList<T>;
     extensionMap: Map<number, squared.base.Extension<T>[]>;
-    documentRoot: { node: T; layoutName: string }[];
     targetQueue: Map<T, NodeTemplate<T>>;
 }
 

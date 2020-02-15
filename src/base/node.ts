@@ -1097,7 +1097,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'none':
                 case 'initial':
                 case 'normal':
-                case 'transparent':
                 case 'rgba(0, 0, 0, 0)':
                     return false;
                 case 'baseline':

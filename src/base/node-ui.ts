@@ -73,7 +73,8 @@ function traverseElementSibling(options: SiblingOptions = {}, element: Null<Elem
 
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth > 0;
-const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous) || node.float !== previous.float);
+const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous));
+const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : Number.NEGATIVE_INFINITY;
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static refitScreen(node: T, value: Dimension): Dimension {
@@ -572,19 +573,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public hide(invisible?: boolean) {
-        const renderParent = this.renderParent;
-        if (renderParent) {
-            const renderTemplates = renderParent.renderTemplates;
-            if (renderTemplates) {
-                const index = renderParent.renderChildren.findIndex(node => node === this);
-                if (index !== -1) {
-                    const template = renderTemplates[index];
-                    if (template?.node === this) {
-                        renderTemplates[index] = null;
-                    }
-                }
-            }
-        }
+        this.deleteTry();
         this.rendered = true;
         this.visible = false;
     }
@@ -675,8 +664,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this.setCacheValue('backgroundImage', backgroundImage);
                     node.setCacheValue('backgroundColor', '');
                     node.setCacheValue('backgroundImage', '');
-                    node.resetBox(BOX_STANDARD.MARGIN, this);
-                    node.resetBox(BOX_STANDARD.PADDING, this);
                     const visibleStyle = node.visibleStyle;
                     visibleStyle.background = false;
                     visibleStyle.backgroundImage = false;
@@ -761,23 +748,65 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public appendTry(node: T, replacement: T, append = true) {
-        let valid = false;
         const children = this.children as T[];
         const length = children.length;
         for (let i = 0; i < length; i++) {
-            if (children[i] === node) {
+            const item = children[i];
+            if (item === node || item === node.innerMostWrapped || item === node.outerMostWrapper) {
                 children[i] = replacement;
                 replacement.parent = this;
                 replacement.containerIndex = node.containerIndex;
-                valid = true;
-                break;
+                return true;
             }
         }
-        if (!valid && append) {
+        if (append) {
             replacement.parent = this;
-            valid = true;
+            return true;
         }
-        return valid;
+        return false;
+    }
+
+    public deleteTry(replacement?: T) {
+        const renderParent = this.renderParent;
+        if (renderParent) {
+            const { renderTemplates, renderChildren } = renderParent;
+            if (renderTemplates) {
+                const index = renderChildren.findIndex(node => node === this);
+                if (index !== -1) {
+                    const template = renderTemplates[index];
+                    if (template?.node === this) {
+                        if (replacement) {
+                            const parent = replacement.renderParent;
+                            if (parent === this) {
+                                const templates = parent.renderTemplates;
+                                if (templates) {
+                                    const replaceIndex = templates.findIndex(item => item?.node === replacement);
+                                    if (replaceIndex !== -1) {
+                                        parent.renderChildren.splice(replaceIndex, 1);
+                                    }
+                                    if (renderParent.appendTry(this, replacement, false)) {
+                                        renderTemplates[index] = templates[replaceIndex];
+                                        replacement.renderParent = renderParent;
+                                        renderChildren[index] = replacement;
+                                        if (this.documentRoot) {
+                                            replacement.documentRoot = true;
+                                            this.documentRoot = false;
+                                        }
+                                        this.renderParent = undefined;
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            renderTemplates[index] = null;
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     public sort(predicate?: (a: T, b: T) => number) {
@@ -808,7 +837,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                         else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
-                            if (horizontal !== false && siblings.every(item => item.inlineDimension)) {
+                            if (siblings[0].childIndex === 0 && siblings.every(item => item.inlineDimension)) {
                                 const actualParent = this.actualParent;
                                 if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: item => item.layoutElement, startSelf: true })) {
                                     const naturalElements = actualParent.naturalElements;
@@ -827,14 +856,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             return NODE_TRAVERSE.FLOAT_WRAP;
                         }
                     }
-                    else if (floating && siblings.every(item => item.inline && !item.floating)) {
-                        return NODE_TRAVERSE.FLOAT_WRAP;
-                    }
-                    else if (!floating && siblings.every(item => item.floating && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
+                    else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                     else if (horizontal !== undefined) {
-                        if (floating && previous.blockStatic && !horizontal) {
+                        if (floating && !horizontal && previous.blockStatic) {
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                         else if (!REGEX_INLINEDASH.test(this.display)) {
@@ -877,38 +903,38 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                     }
-                    else if (this.inlineDimension && siblings.reduce((a, b) => a + (b.inlineDimension ? b.percentWidth : 0), this.percentWidth) > 1) {
-                        return NODE_TRAVERSE.PERCENT_WRAP;
-                    }
                     if (checkBlockDimension(this, previous)) {
                         return NODE_TRAVERSE.INLINE_WRAP;
+                    }
+                    else {
+                        const percentWidth = getPercentWidth(this);
+                        if (percentWidth > 0 && siblings.reduce((a, b) => a + getPercentWidth(b), percentWidth) > 1) {
+                            return NODE_TRAVERSE.PERCENT_WRAP;
+                        }
                     }
                 }
             }
             for (const previous of this.siblingsLeading) {
-                if (previous.blockStatic || previous.autoMargin.leftRight) {
+                if (previous.blockStatic || previous.autoMargin.leftRight || floating && previous.childIndex === 0 && previous.plainText && previous.multiline) {
                     return NODE_TRAVERSE.VERTICAL;
                 }
                 else if (previous.lineBreak) {
                     return NODE_TRAVERSE.LINEBREAK;
                 }
-                else {
-                    const blockStatic = this.blockStatic || this.display === 'table';
-                    if (blockStatic && (!previous.floating || cleared?.has(previous))) {
-                        return NODE_TRAVERSE.VERTICAL;
+                else if ((this.blockStatic || this.display === 'table') && (!previous.floating || cleared?.has(previous))) {
+                    return NODE_TRAVERSE.VERTICAL;
+                }
+                else if (previous.floating) {
+                    if (previous.float === 'left') {
+                        if (this.autoMargin.right) {
+                            return NODE_TRAVERSE.FLOAT_BLOCK;
+                        }
                     }
-                    else if (previous.floating) {
-                        if (previous.float === 'left') {
-                            if (this.autoMargin.right) {
-                                return NODE_TRAVERSE.FLOAT_BLOCK;
-                            }
-                        }
-                        else if (this.autoMargin.left) {
-                            return NODE_TRAVERSE.FLOAT_BLOCK;
-                        }
-                        if (this.floatContainer && this.some(item => item.floating && Math.ceil(item.bounds.top) >= previous.bounds.bottom)) {
-                            return NODE_TRAVERSE.FLOAT_BLOCK;
-                        }
+                    else if (this.autoMargin.left) {
+                        return NODE_TRAVERSE.FLOAT_BLOCK;
+                    }
+                    if (this.floatContainer && this.some(item => item.floating && Math.ceil(item.bounds.top) >= previous.bounds.bottom)) {
+                        return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                 }
                 if (cleared?.get(previous) === 'both' && !(siblings?.[0] === previous)) {
