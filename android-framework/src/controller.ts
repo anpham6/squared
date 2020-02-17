@@ -345,10 +345,10 @@ function setLeftTopAxis(node: View, parent: View, hasDimension: boolean, horizon
         }
         if (expand === 2 && !hasDimension && !(autoMargin[orientation] && !autoMargin[a1] && !autoMargin[b1])) {
             if (horizontal) {
-                node.setLayoutWidth('match_parent');
+                node.setLayoutWidth('0px');
             }
             else {
-                node.setLayoutHeight('match_parent');
+                node.setLayoutHeight('0px');
             }
         }
     }
@@ -382,6 +382,30 @@ function setInputMinMax(node: View, element: HTMLInputElement) {
     }
     if (isString(max)) {
         node.android('max', max);
+    }
+}
+
+function setVerticalAlignment(node: View) {
+    const autoMargin = node.autoMargin;
+    let bias = NaN;
+    if (node.imageOrSvgElement && !autoMargin.vertical) {
+        switch (node.verticalAlign) {
+            case 'top':
+                bias = 0;
+                break;
+            case 'middle':
+                bias = 0.5;
+                break;
+            default:
+                bias = 1;
+                break;
+        }
+    }
+    else if (!autoMargin.topBottom) {
+        bias = autoMargin.top ? 1 : 0;
+    }
+    if (!isNaN(bias)) {
+        node.anchorStyle(STRING_ANDROID.VERTICAL, 'packed', bias);
     }
 }
 
@@ -540,7 +564,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.setContainerType(getRelativeVerticalAligned(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (this.checkConstraintFloat(layout)) {
-            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
+            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, layout.floated.size ? NODE_ALIGNMENT.FLOAT : NODE_ALIGNMENT.SEGMENTED);
         }
         else if (layout.linearX || layout.singleRowAligned) {
             if (this.checkFrameHorizontal(layout)) {
@@ -621,7 +645,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]) {
         const parent = layout.parent;
-        if (layout.floated.size === 1 && layout.same((item, index) => item.floating && (item.positiveAxis || item.renderExclude) ? -1 : index)) {
+        if (layout.floated.size === 1 && layout.same((item, index) => item.floating && item.positiveAxis ? -1 : index)) {
             layout.node = this.createNodeGroup(layout.node, layout.children, parent);
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
         }
@@ -784,14 +808,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             let A = true;
             let B = true;
             for (const node of layout) {
-                if (cleared.has(node) || node.renderExclude) {
+                if (cleared.has(node)) {
                     continue;
                 }
                 else {
-                    if (!(node.positiveAxis && (node.floating || node.autoMargin.horizontal) && (!node.positionRelative || node.positionAuto))) {
+                    if (A && !(node.positiveAxis && (node.floating || node.autoMargin.horizontal || node.inlineDimension && (node.autoMargin.vertical || node.imageOrSvgElement) || node.positionAuto))) {
                         A = false;
                     }
-                    if (node.percentWidth === 0 || node.blockStatic && node.css('width') === '100%') {
+                    if (B && node.percentWidth === 0) {
                         B = false;
                     }
                     if (!A && !B) {
@@ -817,7 +841,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
         }
         if (valid || layout.some(node => node.blockVertical || node.percentWidth > 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight)) {
-            return layout.singleRowAligned && layout.every(node => node.positiveAxis || node.renderExclude);
+            return layout.singleRowAligned && layout.every(node => node.positiveAxis);
         }
         return false;
     }
@@ -849,8 +873,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             else if (node.layoutConstraint) {
                 const pageFlow: T[] = new Array(length);
                 let j = 0;
-                for (let i = 0; i < length; i++) {
-                    const item = renderChildren[i];
+                for (const item of renderChildren) {
                     if (!item.positioned) {
                         if (item.pageFlow || item.positionAuto) {
                             pageFlow[j++] = item;
@@ -888,8 +911,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     else {
                         const item = pageFlow[0];
-                        const { top, topBottom } = item.autoMargin;
-                        item.anchorParent(STRING_ANDROID.VERTICAL, 'packed', topBottom ? 0.5 : (top ? 1 : 0), false);
+                        item.anchorParent(STRING_ANDROID.VERTICAL);
+                        setVerticalAlignment(item);
                         item.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed', item.centerAligned ? 0.5 : (item.rightAligned ? 1 : 0), false);
                         View.setConstraintDimension(item);
                     }
@@ -1556,27 +1579,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.constraint[value] = true;
             if (location <= 0) {
                 node.anchor(LT, 'parent', true);
-                if (location < 0 && node.innerWrapped) {
-                    const innerWrapped = node.innerMostWrapped;
-                    if (!innerWrapped.pageFlow) {
-                        let region = 0;
-                        switch (LT) {
-                            case 'top':
-                                region = BOX_STANDARD.MARGIN_TOP;
-                                break;
-                            case 'left':
-                                region = BOX_STANDARD.MARGIN_LEFT;
-                                break;
-                            case 'bottom':
-                                region = BOX_STANDARD.MARGIN_BOTTOM;
-                                break;
-                            case 'right':
-                                region = BOX_STANDARD.MARGIN_RIGHT;
-                                break;
-                        }
-                        innerWrapped.modifyBox(region, location);
-                    }
-                }
             }
             else if (horizontal && location + bounds.width >= box.right && documentParent.hasPX('width') && !node.hasPX('right') || !horizontal && location + bounds.height >= box.bottom && documentParent.hasPX('height') && !node.hasPX('bottom')) {
                 node.anchor(RB, 'parent', true);
@@ -2775,7 +2777,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.horizontalRows = horizontal;
         }
         if (!node.hasWidth && children.some(item => item.percentWidth > 0)) {
-            node.setLayoutWidth('match_parent');
+            node.setLayoutWidth('match_parent', false);
         }
         let previousSiblings: T[] = [];
         let bottomFloating = false;
@@ -2795,7 +2797,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const rowEnd = seg[lengthA - 1];
                 rowStart.anchor(anchorStart, 'parent');
                 if (!floating && parent.css('textAlign') === 'center') {
-                    rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread');
+                    rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 'packed', 0.5);
                 }
                 else if (lengthA > 1) {
                     if (reverse) {
@@ -2818,10 +2820,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (i === 0) {
                         if (length === 1) {
                             chain.anchorParent(STRING_ANDROID.VERTICAL);
-                            chain.anchorStyle(STRING_ANDROID.VERTICAL, 'packed', chain.autoMargin.topBottom ? 0.5 : (chain.autoMargin.top ? 1 : 0));
+                            setVerticalAlignment(chain);
                         }
                         else {
                             chain.anchor('top', 'parent');
+                            chain.anchorStyle(STRING_ANDROID.VERTICAL);
                         }
                     }
                     else if (!bottomFloating && i === length - 1) {
@@ -2907,37 +2910,55 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 previousSiblings = previousSiblings.concat(floatingLeft, floatingRight);
             }
             if (i > 0) {
-                if (aboveRowEnd === undefined) {
-                    aboveRowEnd = previousRow[0];
-                    const lengthB = previousRow.length;
-                    for (let k = 1; k < lengthB; k++) {
-                        const item = previousRow[k];
-                        if (item.linear.bottom >= aboveRowEnd.linear.bottom) {
-                            aboveRowEnd = item;
+                if (bottomFloating) {
+                    if (aboveRowEnd === undefined) {
+                        aboveRowEnd = previousRow[0];
+                        const lengthA = previousRow.length;
+                        for (let k = 1; k < lengthA; k++) {
+                            const item = previousRow[k];
+                            if (item.linear.bottom >= aboveRowEnd.linear.bottom) {
+                                aboveRowEnd = item;
+                            }
+                        }
+                    }
+                    if (currentRowBottom === undefined) {
+                        currentRowBottom = partition[0];
+                        const lengthA = partition.length;
+                        for (let k = 1; k < lengthA; k++) {
+                            const item = partition[k];
+                            if (item.linear.top < currentRowBottom.linear.bottom) {
+                                currentRowBottom = item;
+                            }
+                        }
+                        bottomFloating = false;
+                    }
+                    currentRowBottom.anchor('topBottom', aboveRowEnd.documentId);
+                    aboveRowEnd.anchor('bottomTop', currentRowBottom.documentId);
+                    const marginTop = currentRowBottom.marginTop * -1;
+                    for (const chain of partition) {
+                        if (chain !== currentRowBottom) {
+                            setVerticalAlignment(chain);
+                            chain.anchor('top', currentRowBottom.documentId);
+                            chain.modifyBox(BOX_STANDARD.MARGIN_TOP, marginTop, false);
                         }
                     }
                 }
-                if (currentRowBottom === undefined) {
-                    currentRowBottom = partition[0];
-                    const lengthB = partition.length;
-                    for (let k = 1; k < lengthB; k++) {
-                        const item = partition[k];
-                        if (item.linear.bottom >= currentRowBottom.linear.bottom) {
-                            currentRowBottom = item;
-                        }
+                else {
+                    if (previousRow.length === 1 && partition.length === 1) {
+                        const above = previousRow[0];
+                        const current = partition[0];
+                        above.anchor('bottomTop', current.documentId);
+                        current.anchor('topBottom', above.documentId);
                     }
-                    bottomFloating = false;
-                }
-                currentRowBottom.anchor('topBottom', aboveRowEnd.documentId);
-                aboveRowEnd.anchor('bottomTop', currentRowBottom.documentId);
-                for (const chain of partition) {
-                    if (chain !== currentRowBottom) {
-                        const autoMargin = chain.autoMargin;
-                        if (!autoMargin.topBottom) {
-                            chain.anchorStyle(STRING_ANDROID.VERTICAL, 'packed', autoMargin.top ? 1 : 0);
+                    else {
+                        const barrierId = this.addBarrier(previousRow, 'bottom');
+                        for (const chain of previousRow) {
+                            chain.anchor('bottomTop', barrierId);
                         }
-                        chain.anchor('top', currentRowBottom.documentId);
-                        chain.modifyBox(BOX_STANDARD.MARGIN_TOP, currentRowBottom.marginTop * -1);
+                        for (const chain of partition) {
+                            setVerticalAlignment(chain);
+                            chain.anchor('topBottom', barrierId);
+                        }
                     }
                 }
             }

@@ -6,7 +6,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 const $base = squared.base;
 
-const { NODE_ALIGNMENT, NODE_RESOURCE } = $base.lib.enumeration;
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE } = $base.lib.enumeration;
 
 const CssGrid = $base.extensions.CssGrid;
 
@@ -28,6 +28,8 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
             resource: NODE_RESOURCE.ASSET
         });
         container.inherit(node, 'styleMap', 'boxStyle');
+        node.resetBox(BOX_STANDARD.MARGIN, container);
+        node.resetBox(BOX_STANDARD.PADDING, container);
         if (CssGrid.isJustified(node)) {
             node.setLayoutWidth(getLayoutDimension(node.css('justifyContent')));
         }

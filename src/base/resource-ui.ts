@@ -747,7 +747,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node, node.localSettings.screenDimension);
             }
             let backgroundColor = node.backgroundColor;
-            if (backgroundColor === '' && node.has('backgroundColor') && !node.documentParent.visible && node.outerWrapper === undefined) {
+            if (backgroundColor === '' && node.has('backgroundColor') && !node.documentParent.visible) {
                 backgroundColor = node.css('backgroundColor');
             }
             if (backgroundColor !== '') {

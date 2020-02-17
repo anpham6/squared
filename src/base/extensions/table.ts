@@ -30,6 +30,22 @@ function setAutoWidth(node: NodeUI, td: NodeUI, data: ExternalData) {
     data.expand = true;
 }
 
+function setBorderStyle(td: NodeUI, attr: string, including: NodeUI) {
+    const cssStyle = attr + 'Style';
+    td.ascend({ including }).some((item: NodeUI) => {
+        if (item.has(cssStyle)) {
+            const cssColor = attr + 'Color';
+            const cssWidth = attr + 'Width';
+            td.css(cssStyle, item.css(cssStyle));
+            td.css(cssColor, item.css(cssColor));
+            td.css(cssWidth, item.css(cssWidth), true);
+            td.css('border', 'inherit');
+            return true;
+        }
+        return false;
+    });
+}
+
 const setBoundsWidth = (td: NodeUI) => td.css('width', formatPX(td.bounds.width), true);
 
 export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
@@ -50,7 +66,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         let table: T[] = [];
         let tfoot: Undef<T>;
         let thead: Undef<T>;
-        function inheritStyles(parent: Undef<T>) {
+        const inheritStyles = (parent: Undef<T>) => {
             if (parent) {
                 for (const item of parent.cascade() as T[]) {
                     switch (item.tagName) {
@@ -64,7 +80,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 table = table.concat(parent.children as T[]);
                 parent.hide();
             }
-        }
+        };
         node.each((item: T) => {
             switch (item.tagName) {
                 case 'THEAD':
@@ -176,35 +192,20 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                function setBorderStyle(attr: string, including: T) {
-                    const cssStyle = attr + 'Style';
-                    td.ascend({ including }).some((item: T) => {
-                        if (item.has(cssStyle)) {
-                            const cssColor = attr + 'Color';
-                            const cssWidth = attr + 'Width';
-                            td.css(cssStyle, item.css(cssStyle));
-                            td.css(cssColor, item.css(cssColor));
-                            td.css(cssWidth, item.css(cssWidth), true);
-                            td.css('border', 'inherit');
-                            return true;
-                        }
-                        return false;
-                    });
-                }
                 switch (td.tagName) {
                     case 'TD': {
                         const including = td.parent as T;
                         if (td.borderTopWidth === 0) {
-                            setBorderStyle('borderTop', including);
+                            setBorderStyle(td, 'borderTop', including);
                         }
                         if (td.borderRightWidth === 0) {
-                            setBorderStyle('borderRight', including);
+                            setBorderStyle(td, 'borderRight', including);
                         }
                         if (td.borderBottomWidth === 0) {
-                            setBorderStyle('borderBottom', including);
+                            setBorderStyle(td, 'borderBottom', including);
                         }
                         if (td.borderLeftWidth === 0) {
-                            setBorderStyle('borderLeft', including);
+                            setBorderStyle(td, 'borderLeft', including);
                         }
                         break;
                     }
@@ -213,10 +214,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             td.css('textAlign', 'center');
                         }
                         if (td.borderTopWidth === 0) {
-                            setBorderStyle('borderTop', node);
+                            setBorderStyle(td, 'borderTop', node);
                         }
                         if (td.borderBottomWidth === 0) {
-                            setBorderStyle('borderBottom', node);
+                            setBorderStyle(td, 'borderBottom', node);
                         }
                         break;
                     }

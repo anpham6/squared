@@ -7,9 +7,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { aboveRange, belowRange } = squared.lib.util;
-
-const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 export interface FixedData {
     children: View[];
@@ -39,6 +37,9 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     if (value >= 0 && value < paddingLeft) {
                         children.add(item);
                     }
+                    else if (!item.hasPX('right') && item.marginLeft < 0 && (node.documentRoot || item.linear.left < Math.floor(node.bounds.left))) {
+                        children.add(item);
+                    }
                 }
                 else if (item.hasPX('right')) {
                     const value = item.right;
@@ -46,18 +47,16 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                         children.add(item);
                         right = true;
                     }
-                }
-                else if (!item.rightAligned) {
-                    if (item.marginLeft < 0 && (node.documentRoot || belowRange(item.linear.left, node.bounds.left))) {
+                    else if (item.marginRight < 0 && (node.documentRoot || item.linear.right > Math.ceil(node.bounds.right))) {
                         children.add(item);
                     }
-                }
-                else if (item.marginRight < 0 && (node.documentRoot || aboveRange(item.linear.right, node.bounds.right))) {
-                    children.add(item);
                 }
                 if (item.hasPX('top')) {
                     const value = item.top;
                     if (value >= 0 && value < paddingTop) {
+                        children.add(item);
+                    }
+                    else if (!item.hasPX('bottom') && item.marginTop < 0 && (node.documentRoot || item.linear.top < Math.floor(node.bounds.top))) {
                         children.add(item);
                     }
                 }
@@ -66,6 +65,9 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     if (value >= 0 && (fixed || value < paddingBottom || node.documentBody && node.hasPX('height') && node.positionStatic)) {
                         children.add(item);
                         bottom = true;
+                    }
+                    else if (item.marginBottom < 0 && (node.documentRoot || item.linear.bottom > Math.ceil(node.bounds.bottom))) {
+                        children.add(item);
                     }
                 }
             }
@@ -80,24 +82,25 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     public processNode(node: T, parent: T) {
         const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData');
         if (mainData) {
-            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid });
+            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resource: NODE_RESOURCE.ASSET, resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid });
+            if (container.documentRoot) {
+                const visibleStyle = node.visibleStyle;
+                if (visibleStyle.backgroundColor || visibleStyle.backgroundImage) {
+                    container.inherit(node, 'boxStyle');
+                }
+                else {
+                    container.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
+                }
+            }
             if (node.documentBody) {
-                let valid = false;
                 if (mainData.right) {
                     container.setLayoutWidth('match_parent');
-                    valid = true;
+                    container.css('width', 'auto');
+                    container.addAlign(NODE_ALIGNMENT.BLOCK);
                 }
                 if (mainData.bottom) {
                     container.setLayoutHeight('match_parent');
-                    valid = true;
-                }
-                if (valid) {
-                    container.cssApply({
-                        width: 'auto',
-                        height: 'auto',
-                        display: 'block',
-                        float: 'none'
-                    });
+                    container.css('height', 'auto');
                 }
             }
             if (!node.pageFlow) {

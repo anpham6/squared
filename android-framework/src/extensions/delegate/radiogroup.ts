@@ -97,7 +97,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 container.setCacheValue('verticalAlign', 'middle');
             }
             for (const item of removeable) {
-                item.hide();
+                item.hide({ remove: true });
             }
             this.subscribers.add(container);
             return {

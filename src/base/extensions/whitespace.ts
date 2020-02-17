@@ -71,7 +71,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                     else {
                         const outside = offsetParent >= offsetChild;
                         if (height === 0 && outside && target.textEmpty && target.extensions.length === 0) {
-                            target.hide();
+                            target.hide({ collapse: true });
                         }
                         else if (target.getBox(region)[0] !== 1) {
                             if (outside) {
@@ -376,31 +376,24 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         }
                                     }
                                     if (inheritedTop) {
-                                        (current.registerBox(BOX_STANDARD.MARGIN_TOP) || current).setCacheValue('marginTop', marginTop);
+                                        const previousSibling = previous.previousSibling;
+                                        const adjacentBottom = previousSibling && isBlockElement(previousSibling, false) ? Math.max(previousSibling.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1], previousSibling.marginBottom) : 0;
+                                        if (marginTop >= adjacentBottom) {
+                                            (current.registerBox(BOX_STANDARD.MARGIN_TOP) || current).setCacheValue('marginTop', marginTop);
+                                        }
                                     }
                                     if (inheritedBottom) {
-                                        (previous.registerBox(BOX_STANDARD.MARGIN_BOTTOM) || previous).setCacheValue('marginBottom', marginBottom);
+                                        const nextSibling = previous.nextSibling;
+                                        const adjacentTop = nextSibling && isBlockElement(nextSibling, true) ? Math.max(nextSibling.getBox(BOX_STANDARD.MARGIN_TOP)[1], nextSibling.marginTop) : 0;
+                                        if (marginBottom > adjacentTop) {
+                                            (previous.registerBox(BOX_STANDARD.MARGIN_BOTTOM) || previous).setCacheValue('marginBottom', marginBottom);
+                                        }
                                     }
                                 }
-                                if (!inheritedTop && previousSiblings.length > 1) {
-                                    if (previousSiblings[0].floating && (node.layoutVertical || current.renderParent?.layoutVertical)) {
-                                        const offset = previousSiblings[0].linear.top - current.linear.top;
-                                        if (current === firstChild) {
-                                            if (offset > 0) {
-                                                const marginTop = current.marginTop;
-                                                if (marginTop > 0) {
-                                                    if (offset < marginTop) {
-                                                        current.modifyBox(BOX_STANDARD.MARGIN_TOP, -offset, false);
-                                                    }
-                                                    else {
-                                                        current.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        else if (offset < 0) {
-                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset, false);
-                                        }
+                                if (!inheritedTop && current !== firstChild && previousSiblings.length > 1 && (node.layoutVertical || current.renderParent?.layoutVertical)) {
+                                    const previousSibling = previousSiblings.pop() as T;
+                                    if (previousSibling.floating && Math.floor(previousSibling.bounds.top) === Math.floor(current.bounds.top)) {
+                                        current.modifyBox(BOX_STANDARD.MARGIN_TOP, -previousSibling.bounds.height, false);
                                     }
                                 }
                             }

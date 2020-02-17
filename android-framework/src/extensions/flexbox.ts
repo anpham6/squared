@@ -288,6 +288,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             const chainHorizontal: T[][] = [];
             const chainVertical: T[][] = [];
             const segmented: T[] = [];
+            const parentBottom = node.hasPX('height', false) || node.percentHeight > 0 ? node.linear.bottom : 0;
+            let marginBottom = 0;
             if (wrap) {
                 let previous: Undef<T[]>;
                 node.each((item: T) => {
@@ -635,6 +637,13 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             if (!chain.innerMostWrapped.has('flexGrow')) {
                                 growAll = false;
                             }
+                            if (parentBottom > 0 && i === length - 1) {
+                                const offset = chain.linear.bottom - parentBottom;
+                                if (offset > 0) {
+                                    marginBottom = Math.max(chain.linear.bottom - parentBottom, marginBottom);
+                                }
+                                chain.modifyBox(BOX_STANDARD.MARGIN_BOTTOM);
+                            }
                         }
                         chain.anchored = true;
                         chain.positioned = true;
@@ -724,6 +733,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         else if (!centered) {
                             segStart.anchorStyle(orientation, 'packed', directionReverse ? 1 : 0, false);
                         }
+                    }
+                    if (marginBottom > 0) {
+                        node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, marginBottom);
                     }
                 }
             };

@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { BoxType, CachedValueUI, ExcludeOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support } from '../../@types/base/node';
+import { BoxType, CachedValueUI, ExcludeOptions, HideOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support } from '../../@types/base/node';
 
 import Node from './node';
 
@@ -572,8 +572,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return filterArray(this.renderChildren, predicate);
     }
 
-    public hide(invisible?: boolean) {
-        this.deleteTry();
+    public hide(options?: HideOptions<T>) {
+        let remove: Undef<boolean>;
+        let replacement: Undef<T>;
+        if (options) {
+            ({ remove, replacement } = options);
+        }
+        if (remove) {
+            this.removeTry(replacement);
+        }
         this.rendered = true;
         this.visible = false;
     }
@@ -664,6 +671,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this.setCacheValue('backgroundImage', backgroundImage);
                     node.setCacheValue('backgroundColor', '');
                     node.setCacheValue('backgroundImage', '');
+                    node.cssApply({
+                        backgroundColor: 'rgba(0, 0, 0, 0)',
+                        backgroundImage: 'none'
+                    });
                     const visibleStyle = node.visibleStyle;
                     visibleStyle.background = false;
                     visibleStyle.backgroundImage = false;
@@ -766,7 +777,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return false;
     }
 
-    public deleteTry(replacement?: T) {
+    public removeTry(replacement?: T) {
         const renderParent = this.renderParent;
         if (renderParent) {
             const { renderTemplates, renderChildren } = renderParent;
@@ -823,7 +834,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;
         }
-        else if (this.pageFlow || this.positionAuto) {
+        else if (this.positionAuto) {
+            if (isArray(siblings)) {
+                const previous = siblings[siblings.length - 1];
+                if (previous.blockStatic) {
+                    return NODE_TRAVERSE.VERTICAL;
+                }
+            }
+            return NODE_TRAVERSE.HORIZONTAL;
+        }
+        else if (this.pageFlow) {
             const floating = this.floating;
             if (isArray(siblings)) {
                 if (cleared?.has(this)) {
@@ -837,7 +857,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             return NODE_TRAVERSE.HORIZONTAL;
                         }
                         else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
-                            if (siblings[0].childIndex === 0 && siblings.every(item => item.inlineDimension)) {
+                            if (siblings.every(item => item.inlineDimension)) {
                                 const actualParent = this.actualParent;
                                 if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: item => item.layoutElement, startSelf: true })) {
                                     const naturalElements = actualParent.naturalElements;

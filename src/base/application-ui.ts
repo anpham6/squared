@@ -384,7 +384,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             else {
-                node.hide();
+                node.hide({ remove: true });
                 node.excluded = true;
             }
             return true;
@@ -1118,7 +1118,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             if (status > 0) {
                                                 if (horizontal.length) {
                                                     if (status < NODE_TRAVERSE.FLOAT_BLOCK && floatActive.size && floatCleared.get(item) !== 'both' && !item.siblingsLeading.some((node: T) => node.lineBreak && !cleared.has(node))) {
-                                                         if (!item.floating || previous.floating && item.bounds.top < previous.bounds.bottom) {
+                                                         if (!item.floating || previous.floating && item.bounds.top < Math.floor(previous.bounds.bottom)) {
                                                             if (floatCleared.has(item)) {
                                                                 if (!item.floating) {
                                                                     item.addAlign(NODE_ALIGNMENT.EXTENDABLE);
@@ -1137,9 +1137,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                                         }
                                                                     }
                                                                 }
-                                                                if (!item.floating && item.bounds.top < floatBottom || floatActive.has(item.float)) {
+                                                                if (!item.floating && item.bounds.top < Math.floor(floatBottom) || floatActive.has(item.float)) {
                                                                     horizontal.push(item);
-                                                                    if (!item.floating && item.bounds.bottom > floatBottom) {
+                                                                    if (!item.floating && Math.ceil(item.bounds.bottom) > floatBottom) {
                                                                         break traverse;
                                                                     }
                                                                     else {
@@ -1307,14 +1307,33 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (a.depth === b.depth) {
                 const groupA = a.nodeGroup;
                 const groupB = b.nodeGroup;
-                if (groupA || groupB) {
-                    if (groupA && groupB) {
-                        return a.id < b.id ? -1 : 1;
-                    }
-                    else {
-                        return groupA ? -1 : 1;
-                    }
+                if (groupA && groupB) {
+                    return a.id < b.id ? -1 : 1;
                 }
+                else if (groupA) {
+                    return -1;
+                }
+                else if (groupB) {
+                    return 1;
+                }
+                const wrapperA = a.outerWrapper;
+                const wrapperB = b.outerWrapper;
+                if (wrapperA && wrapperB) {
+                    if (a === wrapperB) {
+                        return -1;
+                    }
+                    else if (b === wrapperA) {
+                        return 1;
+                    }
+                    return a.id > b.id ? -1 : 1;
+                }
+                else if (wrapperA) {
+                    return -1;
+                }
+                else if (wrapperB) {
+                    return 1;
+                }
+                return 0;
             }
             return a.depth < b.depth ? -1 : 1;
         });

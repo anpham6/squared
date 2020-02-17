@@ -46,7 +46,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
             const application = this.application;
             target = node.clone(application.nextId, true, true) as T;
             target.baselineAltered = true;
-            node.hide(true);
+            node.hide({ hidden: true });
             this.cache.append(target, false);
             const layout = new LayoutUI(
                 renderParent,

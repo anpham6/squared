@@ -9,8 +9,8 @@ const { isLength } = $lib.css;
 const { convertFloat } = $lib.util;
 
 export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
-    public is() {
-        return true;
+    public is(node: T) {
+        return node.length > 0;
     }
 
     public condition(node: T) {

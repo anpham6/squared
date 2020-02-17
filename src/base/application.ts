@@ -21,7 +21,7 @@ type PreloadImage = HTMLImageElement | string;
 
 const REGEX_MEDIATEXT = /all|screen/;
 const REGEX_BACKGROUND = /^background/;
-const REGEX_IMPORTANT = /\s*([a-z-]+):.*?!important;/g;
+const REGEX_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
 const REGEX_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
 const REGEX_FONTFAMILY = /\s*font-family:[^\w]*([^'";]+)/;
 const REGEX_FONTSRC = /\s*src:\s*([^;]+);/;
@@ -493,6 +493,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             case CSSRule.STYLE_RULE: {
                 const cssStyle = item.style;
                 const important: ObjectMap<boolean> = {};
+                const baseMap: StringMap = {};
                 const parseImageUrl = (styleMap: StringMap, attr: string) => {
                     const value = styleMap[attr];
                     if (value && value !== 'initial') {
@@ -517,86 +518,83 @@ export default abstract class Application<T extends Node> implements squared.bas
                         REGEX_DATAURI.lastIndex = 0;
                     }
                 };
-                const baseMap: StringMap = {};
                 for (const attr of Array.from(cssStyle)) {
                     baseMap[convertCamelCase(attr)] = cssStyle[attr];
                 }
                 parseImageUrl(baseMap, 'backgroundImage');
                 parseImageUrl(baseMap, 'listStyleImage');
                 parseImageUrl(baseMap, 'content');
-                if (cssText.includes('!important')) {
-                    let match: Null<RegExpExecArray>;
-                    while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
-                        const attr = convertCamelCase(match[1]);
-                        switch (attr) {
-                            case 'margin':
-                                important.marginTop = true;
-                                important.marginRight = true;
-                                important.marginBottom = true;
-                                important.marginLeft = true;
-                                break;
-                            case 'padding':
-                                important.paddingTop = true;
-                                important.paddingRight = true;
-                                important.paddingBottom = true;
-                                important.paddingLeft = true;
-                                break;
-                            case 'background':
-                                important.backgroundColor = true;
-                                important.backgroundImage = true;
-                                important.backgroundSize = true;
-                                important.backgroundRepeat = true;
-                                important.backgroundPositionX = true;
-                                important.backgroundPositionY = true;
-                                break;
-                            case 'backgroundPosition':
-                                important.backgroundPositionX = true;
-                                important.backgroundPositionY = true;
-                                break;
-                            case 'border':
-                                important.borderTopStyle = true;
-                                important.borderRightStyle = true;
-                                important.borderBottomStyle = true;
-                                important.borderLeftStyle = true;
-                                important.borderTopWidth = true;
-                                important.borderRightWidth = true;
-                                important.borderBottomWidth = true;
-                                important.borderLeftWidth = true;
-                                important.borderTopColor = true;
-                                important.borderRightColor = true;
-                                important.borderBottomColor = true;
-                                important.borderLeftColor = true;
-                                break;
-                            case 'borderStyle':
-                                important.borderTopStyle = true;
-                                important.borderRightStyle = true;
-                                important.borderBottomStyle = true;
-                                important.borderLeftStyle = true;
-                                break;
-                            case 'borderWidth':
-                                important.borderTopWidth = true;
-                                important.borderRightWidth = true;
-                                important.borderBottomWidth = true;
-                                important.borderLeftWidth = true;
-                                break;
-                            case 'borderColor':
-                                important.borderTopColor = true;
-                                important.borderRightColor = true;
-                                important.borderBottomColor = true;
-                                important.borderLeftColor = true;
-                                break;
-                            case 'font':
-                                important.fontFamily = true;
-                                important.fontStyle = true;
-                                important.fontSize = true;
-                                important.fontWeight = true;
-                                important.lineHeight = true;
-                                break;
-                        }
-                        important[attr] = true;
+                let match: Null<RegExpExecArray>;
+                while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
+                    const attr = convertCamelCase(match[1]);
+                    switch (attr) {
+                        case 'margin':
+                            important.marginTop = true;
+                            important.marginRight = true;
+                            important.marginBottom = true;
+                            important.marginLeft = true;
+                            break;
+                        case 'padding':
+                            important.paddingTop = true;
+                            important.paddingRight = true;
+                            important.paddingBottom = true;
+                            important.paddingLeft = true;
+                            break;
+                        case 'background':
+                            important.backgroundColor = true;
+                            important.backgroundImage = true;
+                            important.backgroundSize = true;
+                            important.backgroundRepeat = true;
+                            important.backgroundPositionX = true;
+                            important.backgroundPositionY = true;
+                            break;
+                        case 'backgroundPosition':
+                            important.backgroundPositionX = true;
+                            important.backgroundPositionY = true;
+                            break;
+                        case 'border':
+                            important.borderTopStyle = true;
+                            important.borderRightStyle = true;
+                            important.borderBottomStyle = true;
+                            important.borderLeftStyle = true;
+                            important.borderTopWidth = true;
+                            important.borderRightWidth = true;
+                            important.borderBottomWidth = true;
+                            important.borderLeftWidth = true;
+                            important.borderTopColor = true;
+                            important.borderRightColor = true;
+                            important.borderBottomColor = true;
+                            important.borderLeftColor = true;
+                            break;
+                        case 'borderStyle':
+                            important.borderTopStyle = true;
+                            important.borderRightStyle = true;
+                            important.borderBottomStyle = true;
+                            important.borderLeftStyle = true;
+                            break;
+                        case 'borderWidth':
+                            important.borderTopWidth = true;
+                            important.borderRightWidth = true;
+                            important.borderBottomWidth = true;
+                            important.borderLeftWidth = true;
+                            break;
+                        case 'borderColor':
+                            important.borderTopColor = true;
+                            important.borderRightColor = true;
+                            important.borderBottomColor = true;
+                            important.borderLeftColor = true;
+                            break;
+                        case 'font':
+                            important.fontFamily = true;
+                            important.fontStyle = true;
+                            important.fontSize = true;
+                            important.fontWeight = true;
+                            important.lineHeight = true;
+                            break;
                     }
-                    REGEX_IMPORTANT.lastIndex = 0;
+                    important[attr] = true;
                 }
+                REGEX_IMPORTANT.lastIndex = 0;
                 for (const selectorText of parseSelectorText(item.selectorText)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');

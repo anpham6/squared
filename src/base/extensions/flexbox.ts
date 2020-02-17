@@ -40,7 +40,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         const controller = this.controller;
-        const [children, absolute] = node.partition((item: T) => item.pageFlow && !item.renderExclude) as [T[], T[]];
+        const [children, absolute] = node.partition((item: T) => item.pageFlow) as [T[], T[]];
         const mainData = Flexbox.createDataAttribute(node, children);
         if (node.cssTry('align-items', 'start')) {
             if (node.cssTry('justify-items', 'start')) {

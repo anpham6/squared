@@ -1,6 +1,6 @@
 import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
-import { AutoMargin, AscendOptions, BoxType, ExcludeOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support, VisibleStyle } from './base/node';
+import { AutoMargin, AscendOptions, BoxType, ExcludeOptions, HideOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgMatrix, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
@@ -566,9 +566,9 @@ declare namespace base {
         hasResource(value: number): boolean;
         hasSection(value: number): boolean;
         exclude(options: ExcludeOptions): void;
-        hide(invisible?: boolean): void;
+        hide(options?: HideOptions<NodeUI>): void;
         appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
-        deleteTry(replacement?: NodeUI): boolean;
+        removeTry(replacement?: NodeUI): boolean;
         sort(predicate?: (a: Node, b: Node) => number): this;
         render(parent?: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;

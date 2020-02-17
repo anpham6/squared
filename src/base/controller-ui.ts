@@ -416,13 +416,22 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
                 return !positionAbsolute(style);
             }
-            if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none') {
-                return true;
+            else if (!pseudoElt) {
+                const children = element.children;
+                const length = children.length;
+                for (let i = 0; i < length; i++) {
+                    if (this.visibleElement(children[i])) {
+                        return true;
+                    }
+                }
+                if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none') {
+                    return true;
+                }
             }
-            else if (!positionAbsolute(style)) {
+            if (!positionAbsolute(style)) {
                 return (
                     width > 0 && style.getPropertyValue('float') !== 'none' ||
-                    style.getPropertyValue('clear') !== 'none' ||
+                    style.getPropertyValue('clear') !== 'none' && !pseudoElt ||
                     style.getPropertyValue('display') === 'block' && (getNumberValue(style, 'margin-top') !== 0 || getNumberValue(style, 'margin-bottom') !== 0)
                 );
             }
@@ -435,46 +444,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         for (const node of cache) {
             if (!node.documentRoot) {
                 const actualParent = node.parent as T;
-                const absoluteParent = node.absoluteParent as T;
                 let parent: Undef<T>;
                 switch (node.css('position')) {
-                    case 'relative':
-                        if (!actualParent.layoutElement && node === actualParent.lastChild) {
-                            let valid = false;
-                            const box = actualParent.box;
-                            if (node.outsideX(box)) {
-                                if (!actualParent.hasPX('width') || actualParent.css('overflowX') === 'hidden') {
-                                    continue;
-                                }
-                                valid = true;
-                            }
-                            if (node.outsideY(box)) {
-                                if (!actualParent.hasHeight && !actualParent.hasPX('height') || actualParent.css('overflowY') === 'hidden') {
-                                    continue;
-                                }
-                                valid = true;
-                            }
-                            if (valid) {
-                                parent = actualParent.actualParent as T;
-                                while (parent && parent !== documentRoot) {
-                                    if (node.withinX(parent.box) && node.withinY(parent.box) || parent.css('overflow') === 'hidden') {
-                                        break;
-                                    }
-                                    parent = parent.actualParent as T;
-                                }
-                                if (parent) {
-                                    node.css('position', 'absolute', true);
-                                    node.setBounds(false);
-                                }
-                            }
-                        }
-                        break;
                     case 'fixed':
                         if (!node.positionAuto) {
                             parent = documentRoot;
                             break;
                         }
-                    case 'absolute':
+                    case 'absolute': {
+                        const absoluteParent = node.absoluteParent as T;
                         if (absoluteParent) {
                             parent = absoluteParent;
                             if (node.positionAuto) {
@@ -486,32 +464,29 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                 }
                                 parent = actualParent;
                             }
-                            else if (this.userSettings.supportNegativeLeftTop) {
-                                const box = parent.box;
+                            else if (this.userSettings.supportNegativeLeftTop && parent !== documentRoot) {
                                 let outside = false;
-                                while (parent && parent !== documentRoot) {
+                                do {
+                                    const bounds = parent.bounds;
                                     if (!outside) {
                                         const overflowX = parent.css('overflowX') === 'hidden';
                                         const overflowY = parent.css('overflowY') === 'hidden';
-                                        if (overflowX && overflowY || parseFloat(node.cssInitial('top')) === 0 || parseFloat(node.cssInitial('right')) === 0 || parseFloat(node.cssInitial('bottom')) === 0 || parseFloat(node.cssInitial('left')) === 0) {
+                                        if (overflowX && overflowY || node.hasPX('top') && node.hasPX('bottom') || node.hasPX('left') && node.hasPX('right')) {
                                             break;
                                         }
                                         else {
-                                            const outsideX = !overflowX && node.outsideX(box);
-                                            const outsideY = !overflowY && node.outsideY(box);
-                                            if (!overflowY && node.linear.top < Math.floor(box.top) && (node.top < 0 || node.marginTop < 0)) {
+                                            const outsideX = !overflowX && node.outsideX(bounds);
+                                            const outsideY = !overflowY && node.outsideY(bounds);
+                                            if (!overflowY && node.linear.top < Math.floor(bounds.top) && (node.top < 0 || node.marginTop < 0) || !overflowX && node.linear.left < Math.floor(bounds.left) && (node.left < 0 || node.marginLeft < 0)) {
                                                 outside = true;
                                             }
-                                            else if (outsideX && !node.hasPX('left') && node.right > 0 || outsideY && !node.hasPX('top') && node.bottom !== 0) {
+                                            else if (outsideX && node.right > 0 || outsideY && node.bottom > 0) {
                                                 outside = true;
                                             }
                                             else if (outsideX && outsideY && (!parent.pageFlow || (parent.actualParent as T).documentBody) && (node.top > 0 || node.left > 0)) {
                                                 outside = true;
                                             }
-                                            else if (!overflowX && node.outsideX(parent.linear) && !node.pseudoElement && (node.left < 0 || node.marginLeft < 0 || !node.hasPX('left') && node.right < 0 && node.linear.left >= parent.linear.right)) {
-                                                outside = true;
-                                            }
-                                            else if (!overflowX && !overflowY && !node.intersectX(box) && !node.intersectY(box)) {
+                                            else if (!overflowX && !overflowY && bounds.width > 0 && bounds.height > 0 && !node.intersectX(bounds) && !node.intersectY(bounds)) {
                                                 outside = true;
                                             }
                                             else {
@@ -523,19 +498,22 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                         parent = absoluteParent;
                                         break;
                                     }
-                                    else if (node.withinX(box) && node.withinY(box)) {
+                                    else if (node.withinX(bounds) && node.withinY(bounds)) {
                                         break;
                                     }
                                     parent = parent.actualParent as T;
                                 }
+                                while (parent && parent !== documentRoot);
                             }
                         }
                         break;
+                    }
                 }
                 if (parent === undefined) {
                     parent = !node.pageFlow ? documentRoot : actualParent;
                 }
                 if (parent !== actualParent) {
+                    const absoluteParent = node.absoluteParent as T;
                     if (absoluteParent?.positionRelative && parent !== absoluteParent) {
                         const { left, right, top, bottom } = absoluteParent;
                         const bounds = node.bounds;

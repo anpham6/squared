@@ -145,6 +145,13 @@ export interface ExcludeOptions {
     section?: number;
 }
 
+export interface HideOptions<T> {
+    hidden?: boolean;
+    collapse?: boolean;
+    remove?: boolean;
+    replacement?: T;
+}
+
 export interface LinearData<T> {
     linearX: boolean;
     linearY: boolean;
