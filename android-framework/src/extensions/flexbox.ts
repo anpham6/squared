@@ -410,10 +410,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     parentEnd = false;
                                     break;
                             }
-                            segStart.anchorStyle(orientation, chainStyle, bias);
+                            segStart.anchorStyle(orientation, bias, chainStyle);
                         }
                         else {
-                            segStart.anchorStyle(orientation);
+                            segStart.anchorStyle(orientation, 0);
                         }
                     }
                     else {
@@ -528,13 +528,13 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 chain.anchor('baseline', baseline.documentId);
                                             }
                                             else {
-                                                chain.anchorParent(orientationInverse, 'packed');
+                                                chain.anchorParent(orientationInverse, 0);
                                             }
                                         }
                                     }
                                     break;
                                 case 'center':
-                                    chain.anchorParent(orientationInverse, 'packed', 0.5);
+                                    chain.anchorParent(orientationInverse, 0.5);
                                     if (!horizontal && chain.textElement) {
                                         chain.mergeGravity('gravity', 'center');
                                     }
@@ -594,7 +594,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         default: {
                                             chain.anchorParent(orientationInverse);
                                             if (innerWrapped === undefined || !chain.innerMostWrapped.autoMargin[orientationInverse]) {
-                                                chain.anchorStyle(orientationInverse, 'packed', wrapReverse ? 1 : 0);
+                                                chain.anchorStyle(orientationInverse, wrapReverse ? 1 : 0);
                                             }
                                             if (chain[HWL] === 0) {
                                                 if (!horizontal && chain.blockStatic) {
@@ -676,7 +676,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             switch (justifyContent) {
                                 case 'normal':
                                     if (directionColumn) {
-                                        segStart.anchorStyle(orientation, 'packed', directionReverse ? 1 : 0);
+                                        segStart.anchorStyle(orientation, directionReverse ? 1 : 0);
                                     }
                                     break;
                                 case 'left':
@@ -685,11 +685,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                 case 'start':
                                 case 'flex-start':
-                                    segStart.anchorStyle(orientation, 'packed', directionReverse ? 1 : 0);
+                                    segStart.anchorStyle(orientation, directionReverse ? 1 : 0);
                                     break;
                                 case 'center':
                                     if (lengthA > 1) {
-                                        segStart.anchorStyle(orientation, 'packed', 0.5);
+                                        segStart.anchorStyle(orientation, 0.5);
                                     }
                                     centered = true;
                                     break;
@@ -699,7 +699,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                 case 'end':
                                 case 'flex-end':
-                                    segStart.anchorStyle(orientation, 'packed', 1);
+                                    segStart.anchorStyle(orientation, 1);
                                     break;
                                 case 'space-between':
                                     if (lengthA === 1) {
@@ -708,7 +708,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 case 'space-evenly':
                                     if (lengthA > 1) {
-                                        segStart.anchorStyle(orientation, 'spread');
+                                        segStart.anchorStyle(orientation, 0, 'spread');
                                     }
                                     else {
                                         centered = true;
@@ -728,10 +728,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             }
                         }
                         if (spreadInside || !wrap && seg.some(item => item.app(orientationWeight) !== '') && !sameArray(seg, item => item.app(orientationWeight))) {
-                            segStart.anchorStyle(orientation, 'spread_inside', 0, false);
+                            segStart.anchorStyle(orientation, 0, 'spread_inside', false);
                         }
                         else if (!centered) {
-                            segStart.anchorStyle(orientation, 'packed', directionReverse ? 1 : 0, false);
+                            segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed', false);
                         }
                     }
                     if (marginBottom > 0) {

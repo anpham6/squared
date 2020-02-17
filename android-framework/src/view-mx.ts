@@ -670,7 +670,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public anchorParent(orientation: string, style?: string, bias?: number, overwrite?: boolean) {
+        public anchorParent(orientation: string, bias?: number, style?: string, overwrite?: boolean) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent) {
@@ -687,8 +687,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             node.anchor('bottom', 'parent', overwrite);
                             node.constraint.vertical = true;
                         }
-                        if (style) {
-                            node.anchorStyle(orientation, style, bias, overwrite);
+                        if (bias !== undefined) {
+                            node.anchorStyle(orientation, bias, style, overwrite);
                         }
                         return true;
                     }
@@ -701,7 +701,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public anchorStyle(orientation: string, value = 'packed', bias = 0, overwrite = true) {
+        public anchorStyle(orientation: string, bias: number, value = 'packed', overwrite = true) {
             const node = this.anchorTarget;
             if (orientation === STRING_ANDROID.HORIZONTAL) {
                 node.app('layout_constraintHorizontal_chainStyle', value, overwrite);
@@ -1492,7 +1492,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     break;
                                 case STRING_ANDROID.CENTER_HORIZONTAL:
                                     if (this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
-                                        this.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed', 0.5);
+                                        this.anchorParent(STRING_ANDROID.HORIZONTAL, 0.5);
                                     }
                                     break;
                             }

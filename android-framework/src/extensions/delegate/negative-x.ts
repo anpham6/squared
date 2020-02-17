@@ -135,15 +135,15 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             let firstChild = mainData.firstChild;
             if (firstChild) {
                 firstChild = (firstChild.ascend(options).pop() || firstChild) as T;
-                firstChild.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed');
-                firstChild.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
+                firstChild.anchorParent(STRING_ANDROID.HORIZONTAL, 0);
+                firstChild.anchorParent(STRING_ANDROID.VERTICAL, 0);
                 firstChild.modifyBox(BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
                 View.setConstraintDimension(firstChild);
                 firstChild.positioned = true;
             }
             const nextSibling = (mainData.nextSibling.ascend(options).pop() || mainData.nextSibling) as T;
-            nextSibling.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed');
-            nextSibling.anchorParent(STRING_ANDROID.VERTICAL, 'packed');
+            nextSibling.anchorParent(STRING_ANDROID.HORIZONTAL, 0);
+            nextSibling.anchorParent(STRING_ANDROID.VERTICAL, 0);
             View.setConstraintDimension(nextSibling);
             nextSibling.positioned = true;
         }

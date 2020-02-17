@@ -51,11 +51,11 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
             const linear = item.linear;
             if (withinRange(linear.left, left)) {
                 item.anchor('left', 'parent');
-                item.anchorStyle(STRING_ANDROID.HORIZONTAL);
+                item.anchorStyle(STRING_ANDROID.HORIZONTAL, 0);
             }
             if (withinRange(linear.top, top)) {
                 item.anchor('top', 'parent');
-                item.anchorStyle(STRING_ANDROID.VERTICAL);
+                item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
             }
             if (circlePosition) {
                 if (item.anchored) {

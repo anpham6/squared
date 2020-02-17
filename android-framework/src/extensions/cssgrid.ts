@@ -190,7 +190,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
         if (outerWrapper) {
             switch (alignment) {
                 case 'center':
-                    node.anchorParent(horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL, 'packed', 0.5, true);
+                    node.anchorParent(horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL, 0.5, 'packed', true);
                     break;
                 case 'right':
                     if (!horizontal) {
@@ -198,7 +198,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                     }
                 case 'end':
                 case 'flex-end':
-                    node.anchorParent(horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL, 'packed', 1, true);
+                    node.anchorParent(horizontal ? STRING_ANDROID.HORIZONTAL : STRING_ANDROID.VERTICAL, 1, 'packed', true);
                     break;
             }
         }
@@ -555,7 +555,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                         if (cellStart === 0) {
                             item.anchor('left', 'parent');
-                            item.anchorStyle(STRING_ANDROID.HORIZONTAL, 'spread', 0);
+                            item.anchorStyle(STRING_ANDROID.HORIZONTAL, 0, 'spread');
                         }
                         else {
                             const previousSibling = <Null<T>> item.innerMostWrapped.previousSibling;
@@ -737,7 +737,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     case 'space-around':
                     case 'space-evenly':
                         if (outerWrapper) {
-                            node.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed', 0.5, true);
+                            node.anchorParent(STRING_ANDROID.HORIZONTAL, 0.5, 'packed', true);
                         }
                         break;
                     default:
@@ -773,7 +773,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (outerWrapper) {
                     if (node.contentBoxWidth > 0 && node.hasPX('width', false)) {
-                        node.anchorParent(STRING_ANDROID.HORIZONTAL, 'packed', 0.5, true);
+                        node.anchorParent(STRING_ANDROID.HORIZONTAL, 0.5, 'packed', true);
                     }
                     else if (length === 1) {
                         node.setLayoutWidth('match_parent');
@@ -789,7 +789,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     switch (alignContent) {
                         case 'space-around':
                         case 'space-evenly':
-                            node.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0.5, true);
+                            node.anchorParent(STRING_ANDROID.VERTICAL, 0.5, 'packed', true);
                             break;
                     }
                 }
@@ -820,7 +820,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (outerWrapper) {
                     if (node.contentBoxHeight > 0 && node.hasPX('height', false)) {
-                        node.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0.5, true);
+                        node.anchorParent(STRING_ANDROID.VERTICAL, 0.5, 'packed', true);
                     }
                     else {
                         node.setLayoutHeight('wrap_content', false);
@@ -832,7 +832,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const rowCount = barrierData.length;
                 if (length === 1) {
                     for (const item of barrierData[0]) {
-                        item.anchorParent(STRING_ANDROID.VERTICAL, 'packed', 0);
+                        item.anchorParent(STRING_ANDROID.VERTICAL, 0);
                     }
                 }
                 else {
@@ -848,7 +848,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 if (i === 0) {
                                     item.anchor('top', 'parent');
                                     item.anchor('bottomTop', barrierId);
-                                    item.anchorStyle(STRING_ANDROID.VERTICAL);
+                                    item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
                                 }
                                 else {
                                     if (i === rowCount - 1) {
