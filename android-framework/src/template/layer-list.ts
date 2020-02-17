@@ -6,7 +6,7 @@ export default {
         '>': {
             'item': {
                 '^': 'android',
-                '@': ['left', 'top', 'right', 'bottom', 'drawable', 'width', 'height', 'gravity'],
+                '@': ['left', 'start', 'top', 'right', 'end', 'bottom', 'drawable', 'width', 'height', 'gravity'],
                 '>': {
                     'shape': SHAPE.shape,
                     'bitmap': {

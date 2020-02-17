@@ -1,5 +1,12 @@
 
 .bg { background:url("bg.gif") bottom left repeat-x white; margin-top:20px; }
+.bg-nav1 { background:url("bg_nav.png") top 20px left repeat-x white; margin-top:20px; }
+.bg-nav2 { background:url("bg_nav.png") top -20px left repeat-x white; margin-top:20px; }
+.bg-nav3 { background:url("bg_nav.png") top left repeat-x white; margin-top:20px; }
+.bg-nav4 { background:url("bg_nav.png") center left repeat-x white; margin-top:20px; }
+.bg-nav5 { background:url("bg_nav.png") bottom left repeat-x white; margin-top:20px; }
+.bg-nav6 { background:url("bg_nav.png") bottom -20px left repeat-x white; margin-top:20px; }
+.bg-nav7 { background:url("bg_nav.png") bottom 20px left repeat-x white; margin-top:20px; }
 
 .tl { background:url("rc.gif") top left     no-repeat;  }
 .br { background:url("rc.gif") bottom right no-repeat;  }
