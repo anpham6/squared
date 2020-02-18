@@ -24,11 +24,11 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
 
     public postOptimize(node: T) {
         const renderParent = node.renderParent as T;
+        const verticalAlign = convertFloat(node.verticalAlign);
         let top = 0;
         let right = 0;
         let bottom = 0;
         let left = 0;
-        let verticalAlign = convertFloat(node.verticalAlign);
         if (node.hasPX('top')) {
             top = node.top;
         }

@@ -134,7 +134,7 @@ export interface ExtensionResult<T extends NodeUI> {
 export interface LayoutType {
     containerType: number;
     alignmentType: number;
-    renderType: number;
+    renderType?: number;
 }
 
 export interface LayoutOptions<T extends NodeUI> extends Optional<LayoutType> {

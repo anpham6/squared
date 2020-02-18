@@ -1,5 +1,7 @@
 import { AccessibilityOptions } from '../../../@types/android/extension';
 
+import Resource from '../resource';
+
 const { NODE_PROCEDURE } = squared.base.lib.enumeration;
 
 type View = android.base.View;
@@ -11,8 +13,19 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
     };
 
     public beforeBaseLayout() {
-        for (const node of this.cacheProcessing) {
+        const cache = this.cacheProcessing;
+        for (const node of cache) {
             if (node.inputElement && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
+                const describedby = node.attributes['aria-describedby'];
+                if (describedby) {
+                    const sibling = cache.find(item => item.elementId === describedby);
+                    if (sibling) {
+                        const value = sibling.textContent.trim();
+                        if (value !== '') {
+                            node.data(Resource.KEY_NAME, 'titleString', value);
+                        }
+                    }
+                }
                 switch (node.containerName) {
                     case 'INPUT_RADIO':
                     case 'INPUT_CHECKBOX': {

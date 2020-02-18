@@ -134,6 +134,10 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
 
     set type(value: LayoutType) {
         this.setContainerType(value.containerType, value.alignmentType);
+        const renderType = value.renderType;
+        if (renderType) {
+            this.addRender(renderType);
+        }
     }
 
     get singleRowAligned() {

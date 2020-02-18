@@ -25,12 +25,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
 
     public afterResources() {
         const numberResourceValue = this.options.numberResourceValue;
-        function setTextValue(node: T, attr: string, name: string, value: string) {
+        const setTextValue = (node: T, attr: string, name: string, value: string) => {
             name = Resource.addString(value, name, numberResourceValue);
             if (name !== '') {
                 node.android(attr, numberResourceValue || !isNumber(name) ? '@string/' + name : name, false);
             }
-        }
+        };
         for (const node of this.cacheProcessing) {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
@@ -155,7 +155,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     }
                 }
                 if (node.styleElement) {
-                    const title = node.toElementString('title');
+                    const title: string =  node.data(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
                     if (title !== '') {
                         setTextValue(node, 'tooltipText', node.controlId.toLowerCase() + '_title', title);
                     }
