@@ -400,7 +400,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             checkAutoDimension(column, true);
             checkAutoDimension(row, false);
             layout.setContainerType(CONTAINER_NODE.GRID);
-            return { output: this.application.renderNode(layout), complete: true };
+            return { output: this.application.renderNode(layout), include: true, complete: true };
         }
         return undefined;
     }

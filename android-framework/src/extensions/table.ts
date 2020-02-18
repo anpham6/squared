@@ -118,6 +118,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     rowCount: mainData.rowCount,
                     columnCount: mainData.columnCount
                 })),
+                include: true,
                 complete: true
             };
         }

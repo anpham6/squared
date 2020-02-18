@@ -53,8 +53,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                     NODE_ALIGNMENT.SINGLE,
                     container.children as T[]
                 )
-            ),
-            include: true
+            )
         };
     }
 }

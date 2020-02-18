@@ -1006,8 +1006,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let extensions = filterArray(this.extensions, item => !item.eventOnly);
         let maxDepth = 0;
         function setMapY(depth: number, id: number, node: T) {
-            const index = mapY.get(depth) || new Map<number, T>();
-            mapY.set(depth, index.set(id, node));
+            const index = mapY.get(depth);
+            if (index) {
+                index.set(id, node);
+            }
+            else {
+                mapY.set(depth, new Map<number, T>([[id, node]]));
+            }
         }
         function removeMapY(node: T) {
             const index = mapY.get(node.depth);
@@ -1260,7 +1265,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 this.addLayoutTemplate(result.parentAs || parentY, renderAs, outputAs);
                                             }
                                             parentY = result.parent || parentY;
-                                            if (output && include !== false || include) {
+                                            if (include) {
                                                 let renderExt = nodeY.renderExtension;
                                                 if (renderExt === undefined) {
                                                     renderExt = [];

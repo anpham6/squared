@@ -57,6 +57,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                         columnCount
                     })
                 ),
+                include: true,
                 complete: true
             };
         }

@@ -56,9 +56,13 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         const fonts = Resource.ASSETS.fonts;
         const fontFamily = data.fontFamily.trim().toLowerCase();
         data.fontFamily = fontFamily;
-        const items = fonts.get(fontFamily) || [];
-        items.push(data);
-        fonts.set(fontFamily, items);
+        const items = fonts.get(fontFamily);
+        if (items) {
+            items.push(data);
+        }
+        else {
+            fonts.set(fontFamily, [data]);
+        }
     }
 
     public getFont(fontFamily: string, fontStyle = 'normal', fontWeight?: string) {

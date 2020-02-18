@@ -18,8 +18,9 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
         return true;
     }
 
-    public processNode() {
-        return { include: true };
+    public processNode(node: T) {
+        this.subscribers.add(node);
+        return undefined;
     }
 
     public postOptimize(node: T) {

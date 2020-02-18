@@ -49,7 +49,8 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                 item.baselineAltered = true;
             }
         });
-        return { include: true };
+        this.subscribers.add(node);
+        return undefined;
     }
 
     public postConstraints(node: T) {

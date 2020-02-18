@@ -215,8 +215,7 @@ function createPathInterpolator(value: string) {
     else {
         const name = 'path_interpolator_' + convertWord(value);
         if (!STORED.animators.has(name)) {
-            const xml = formatString(INTERPOLATOR_XML, ...value.split(CHAR.SPACE));
-            STORED.animators.set(name, xml);
+            STORED.animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(CHAR.SPACE)));
         }
         return '@anim/' + name;
     }
@@ -854,14 +853,22 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             if (synchronized) {
                                 const value = synchronized.value;
                                 if (SvgBuild.isAnimateTransform(item)) {
-                                    const values = transformMap.get(value) || [];
-                                    values.push(item);
-                                    transformMap.set(value, values);
+                                    const values = transformMap.get(value);
+                                    if (values) {
+                                        values.push(item);
+                                    }
+                                    else {
+                                        transformMap.set(value, [item]);
+                                    }
                                 }
                                 else {
-                                    const values = sequentialMap.get(value) || [];
-                                    values.push(item);
-                                    sequentialMap.set(value, values);
+                                    const values = sequentialMap.get(value);
+                                    if (values) {
+                                        values.push(item);
+                                    }
+                                    else {
+                                        sequentialMap.set(value, [item]);
+                                    }
                                 }
                             }
                             else {

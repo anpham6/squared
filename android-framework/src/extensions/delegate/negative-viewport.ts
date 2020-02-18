@@ -38,8 +38,7 @@ export default class NegativeViewport<T extends View> extends squared.base.Exten
                     NODE_ALIGNMENT.SINGLE,
                     container.children as T[]
                 )
-            ),
-            include: true
+            )
         };
     }
 }

@@ -295,11 +295,12 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                 output,
                 outerParent: node.parent as T,
                 renderAs: appBarNode,
-                outputAs
+                outputAs,
+                include: true
             };
         }
         else {
-            return { output };
+            return { output, include: true };
         }
     }
 

@@ -237,6 +237,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         node.children as T[]
                     )
                 ),
+                include: true,
                 complete: true
             };
         }
