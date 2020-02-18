@@ -1,8 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const fs = require('fs');
-const mkdirp = require('mkdirp');
+const fs = require('fs-extra');
 const uuid = require('uuid/v1');
 const archiver = require('archiver');
 const decompress = require('decompress');
@@ -28,14 +27,17 @@ if (env === 'development') {
     app.use('/demos-dev', express.static(path.join(__dirname, 'html/demos-dev')));
 }
 
+const separator = process.platform === 'win32' ? '\\' : '/';
+const separator_opposing = separator === '/' ? '\\' : '/';
+
 function getQueryData(req, directory) {
     const query = req.query;
     const timeout = Math.max(parseInt(query.timeout) || 60, 1) * 1000;
     if (query.directory) {
-        if (!directory.endsWith('/')) {
-            directory += '/';
+        if (!directory.endsWith(separator)) {
+            directory += separator;
         }
-        directory += query.directory;
+        directory += replaceSeparator(query.directory);
     }
     return {
         directory,
@@ -45,13 +47,13 @@ function getQueryData(req, directory) {
 }
 
 function getFileData(file, directory) {
-    if (!directory.endsWith('/')) {
-        directory += '/';
+    if (!directory.endsWith(separator)) {
+        directory += separator;
     }
-    const pathname = directory + file.pathname;
+    const pathname = replaceSeparator(directory + file.pathname);
     return {
         pathname,
-        filename: pathname + (!pathname.endsWith('/') ? '/' : '') + file.filename,
+        filename: pathname + (!pathname.endsWith(separator) ? separator : '') + file.filename,
         level: file.gzipQuality > 0 ? Math.min(file.gzipQuality, 9) : 0,
         quality: file.brotliQuality > 0 ? Math.min(file.brotliQuality, 11) : 0
     };
@@ -65,16 +67,16 @@ function createGzipWriteStream(level, filename, filenameOut) {
     return out;
 }
 
-function encodeString(value) {
-    return value.replace(/[<>:"/\\|?*]/g, '_');
-}
+const replaceSeparator = (value) => value.replace(new RegExp(separator_opposing, 'g'), separator);
+const encodeString = (value) => value.replace(/[<>:"/\\|?*]/g, '_');
 
 app.post('/api/assets/copy', (req, res) => {
-    const dirname = req.query.to;
+    const dirname = replaceSeparator(req.query.to);
+    const empty = req.query.empty;
     if (dirname) {
         try {
             if (!fs.existsSync(dirname)) {
-                mkdirp.sync(dirname);
+                fs.mkdirpSync(dirname);
             }
             else if (!fs.lstatSync(dirname).isDirectory()) {
                 throw new Error('Path is not a directory.');
@@ -95,6 +97,7 @@ app.post('/api/assets/copy', (req, res) => {
         };
         try {
             const invalid = {};
+            const emptied = {};
             for (const file of req.body) {
                 const { pathname, filename, level, quality } = getFileData(file, directory);
                 const { content, base64, uri } = file;
@@ -120,7 +123,15 @@ app.post('/api/assets/copy', (req, res) => {
                     }
                 };
                 fileerror = filename;
-                mkdirp.sync(pathname);
+                if (!emptied[pathname]) {
+                    if (empty === '1') {
+                        fs.emptyDirSync(pathname);
+                    }
+                    else {
+                        fs.mkdirpSync(pathname);
+                    }
+                    emptied[pathname] = true;
+                }
                 if (content || file.base64) {
                     delayed++;
                     fs.writeFile(
@@ -172,9 +183,9 @@ app.post('/api/assets/copy', (req, res) => {
 });
 
 app.post('/api/assets/archive', (req, res) => {
-    const dirname = `${__dirname.replace(/\\/g, '/')}/temp/${uuid()}`;
+    const dirname = __dirname + separator + 'temp' + separator + uuid();
     try {
-        mkdirp.sync(dirname);
+        fs.mkdirpSync(dirname);
     }
     catch (err) {
         res.json({ application: `DIRECTORY: ${directory}`, system: err });
@@ -182,6 +193,7 @@ app.post('/api/assets/archive', (req, res) => {
     }
     const query = req.query;
     const append_to = query.append_to;
+    const queryDirectory = replaceSeparator(query.directory);
     let format = query.format.toLowerCase() === 'tar' ? 'tar' : 'zip';
     let success = false;
     let delayed = 0;
@@ -190,7 +202,7 @@ app.post('/api/assets/archive', (req, res) => {
     function resume(unzip_to = '') {
         const { directory, timeout, finalizeTime } = getQueryData(req, unzip_to || dirname);
         try {
-            mkdirp.sync(directory);
+            fs.mkdirpSync(directory);
         }
         catch (err) {
             res.json({ application: `DIRECTORY: ${directory}`, system: err });
@@ -198,7 +210,7 @@ app.post('/api/assets/archive', (req, res) => {
         }
         const archive = archiver(format, { zlib: { level: 9 } });
         if (!zipname) {
-            zipname = `${dirname}/${query.filename || 'squared'}.${format}`;
+            zipname = dirname + separator + (query.filename || 'squared') + '.' + format;
         }
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
@@ -226,7 +238,7 @@ app.post('/api/assets/archive', (req, res) => {
             for (const file of req.body) {
                 const { pathname, filename, level, quality } = getFileData(file, directory);
                 const { content, base64, uri } = file;
-                const data = { name: `${(query.directory ? `${query.directory}/` : '') + file.pathname}/${file.filename}` };
+                const data = { name: (queryDirectory ? queryDirectory + separator : '') + file.pathname + separator + file.filename };
                 const writeBuffer = () => {
                     if (delayed !== Number.POSITIVE_INFINITY) {
                         if (level > 0) {
@@ -260,7 +272,7 @@ app.post('/api/assets/archive', (req, res) => {
                     }
                 };
                 fileerror = filename;
-                mkdirp.sync(pathname);
+                fs.mkdirpSync(pathname);
                 if (content || base64) {
                     delayed++;
                     fs.writeFile(
@@ -312,11 +324,11 @@ app.post('/api/assets/archive', (req, res) => {
     if (append_to) {
         const match = /([^/\\]+)\.(zip|tar)$/i.exec(append_to);
         if (match) {
-            zipname = `${dirname}/${match[0]}`;
+            zipname = dirname + separator + replaceSeparator(match[0]);
             try {
                 const copied = () => {
                     format = match[2].toLowerCase();
-                    const unzip_to = `${dirname}/${match[1]}`;
+                    const unzip_to = dirname + separator + replaceSeparator(match[1]);
                     decompress(zipname, unzip_to).then(() => {
                         resume(unzip_to);
                     });
@@ -332,7 +344,7 @@ app.post('/api/assets/archive', (req, res) => {
                         .pipe(stream);
                 }
                 else {
-                    fs.copyFileSync(append_to, zipname);
+                    fs.copyFileSync(replaceSeparator(append_to), zipname);
                     copied();
                 }
             }

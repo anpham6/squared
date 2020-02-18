@@ -13,6 +13,7 @@ const settings: UserSettingsChrome = {
     excludePlainText: true,
     outputFileExclusions: ['squared.*', 'chrome.framework.*'],
     outputDirectory: '',
+    outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip',
     outputArchiveTimeout: 60

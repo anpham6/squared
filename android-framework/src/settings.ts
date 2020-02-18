@@ -51,6 +51,7 @@ const settings: UserSettingsAndroid = {
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
     outputMainFileName: 'activity_main.xml',
     outputDirectory: 'app/src/main',
+    outputEmptyCopyDirectory: false,
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip',
     outputArchiveTimeout: 30
