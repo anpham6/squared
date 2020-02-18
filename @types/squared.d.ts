@@ -1,6 +1,6 @@
 import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
-import { AutoMargin, AscendOptions, BoxType, ExcludeOptions, HideOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support, VisibleStyle } from './base/node';
+import { AutoMargin, AscendOptions, BoxType, ExcludeOptions, HideOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, SupportUI, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgMatrix, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
@@ -295,6 +295,7 @@ declare namespace base {
         itemCount: number;
         rowCount: number;
         columnCount: number;
+        renderType: number;
         renderIndex: number;
         readonly linearX: boolean;
         readonly linearY: boolean;
@@ -533,7 +534,7 @@ declare namespace base {
         readonly onlyChild: boolean;
         readonly outerMostWrapper: NodeUI;
         readonly innerMostWrapped: NodeUI;
-        readonly support: Support;
+        readonly support: SupportUI;
         readonly documentId: string;
         readonly extensions: string[];
         readonly outerExtensionElement: Null<HTMLElement>;
@@ -586,9 +587,11 @@ declare namespace base {
         extractAttributes(depth: number): string;
         setCacheValue(attr: string, value: any): void;
         cssSet(attr: string, value: string, cache?: boolean): string;
+        translateX(value: number, accumulate?: boolean): boolean;
+        translateY(value: number, accumulate?: boolean): boolean;
     }
 
-    class NodeUI implements NodeUI {
+    class NodeUI implements NodeUI, LayoutType {
         public static refitScreen<T>(node: T, value: Dimension): Dimension;
         public static linearData<T>(list: T[], clearOnly?: boolean): LinearData<T>;
         public static outerRegion<T>(node: T): BoxRectDimension;

@@ -741,7 +741,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     continue;
                 }
                 else {
-                    if (A && !(node.floating || node.autoMargin.horizontal || node.imageOrSvgElement || node.autoPosition)) {
+                    if (A && !(node.floating || node.autoMargin.horizontal || node.imageOrSvgElement || node.autoPosition || node.marginTop < 0)) {
                         A = false;
                     }
                     if (B && node.percentWidth === 0) {
@@ -769,7 +769,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 valid = floated.size === 0 || floated.has('right') && floated.size === 1 && layout.cleared.size === 0;
                 break;
         }
-        if (valid || layout.some(node => node.blockVertical || node.percentWidth > 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight)) {
+        if (valid || layout.some(node => node.blockVertical || node.percentWidth > 0  || node.marginTop < 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight)) {
             return layout.singleRowAligned;
         }
         return false;
@@ -2941,32 +2941,28 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     get containerTypeHorizontal(): LayoutType {
         return {
             containerType: CONTAINER_NODE.RELATIVE,
-            alignmentType: NODE_ALIGNMENT.HORIZONTAL,
-            renderType: 0
+            alignmentType: NODE_ALIGNMENT.HORIZONTAL
         };
     }
 
     get containerTypeVertical(): LayoutType {
         return {
             containerType: CONTAINER_NODE.LINEAR,
-            alignmentType: NODE_ALIGNMENT.VERTICAL,
-            renderType: 0
+            alignmentType: NODE_ALIGNMENT.VERTICAL
         };
     }
 
     get containerTypeVerticalMargin(): LayoutType {
         return {
             containerType: CONTAINER_NODE.FRAME,
-            alignmentType: NODE_ALIGNMENT.COLUMN,
-            renderType: 0
+            alignmentType: NODE_ALIGNMENT.COLUMN
         };
     }
 
     get containerTypePercent(): LayoutType {
         return {
             containerType: CONTAINER_NODE.CONSTRAINT,
-            alignmentType: NODE_ALIGNMENT.HORIZONTAL,
-            renderType: 0
+            alignmentType: NODE_ALIGNMENT.HORIZONTAL
         };
     }
 

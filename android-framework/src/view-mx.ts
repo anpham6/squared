@@ -18,15 +18,21 @@ const { BOX_MARGIN, BOX_PADDING, formatPX, getDataSet, isLength, isPercent } = $
 const { getNamedItem } = $lib.dom;
 const { clamp, truncate } = $lib.math;
 const { actualTextRangeRect } = $lib.session;
-const { aboveRange, capitalize, convertFloat, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
+const { aboveRange, capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
 
-const SPACING_CHECKBOX = 4;
+const LAYOUT_RELATIVE_PARENT = LAYOUT_ANDROID.relativeParent;
+const LAYOUT_RELATIVE = LAYOUT_ANDROID.relative;
+const LAYOUT_CONSTRAINT = LAYOUT_ANDROID.constraint;
+const DEPRECATED: ObjectMap<CustomizationResult> = DEPRECATED_ANDROID.android;
+
 const SPACING_SELECT = 2;
+const SPACING_CHECKBOX = 4;
 const REGEX_DATASETATTR = /^attr[A-Z]/;
 const REGEX_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
-const REGEX_VALIDSTRING = /[^\w$\-_.]/g;
+const REGEX_STRINGVALID = /[^\w$\-_.]/g;
+const REGEX_CLIPNONE = /^rect(0[a-z]*, 0[a-z]*, 0[a-z]*, 0[a-z]*)$/;
 
 function checkTextAlign(value: string, ignoreStart: boolean) {
     switch (value) {
@@ -201,7 +207,6 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
     }
     return (lineHeight - Math.min(height, node.boundingClientRect.height)) / 2;
 }
-
 
 function constraintMinMax(node: T, horizontal: boolean) {
     const minWH = node.cssInitial(horizontal ? 'minWidth' : 'minHeight', true);
@@ -415,11 +420,6 @@ export function ascendFlexibleHeight(node: T) {
 
 const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && node.marginLeft <= 0 && node.marginRight <= 0 && !node.visibleStyle.background;
 const excludeVertical = (node: T) => (node.bounds.height === 0 || node.pseudoElement && node.textEmpty) && node.contentBoxHeight === 0 && (node.marginTop <= 0 && node.marginBottom <= 0 || node.css('overflow') === 'hidden' && parseFloat(node.css('height')) === 0);
-
-const LAYOUT_RELATIVE_PARENT = LAYOUT_ANDROID.relativeParent;
-const LAYOUT_RELATIVE = LAYOUT_ANDROID.relative;
-const LAYOUT_CONSTRAINT = LAYOUT_ANDROID.constraint;
-const DEPRECATED: ObjectMap<CustomizationResult> = DEPRECATED_ANDROID.android;
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
@@ -997,6 +997,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 case 'collapse':
                     this.hide({ collapse: true });
                     break;
+            }
+            if (REGEX_CLIPNONE.test(this.css('clip'))) {
+                this.hide({ collapse: true });
             }
             const actualParent = this.actualParent || this.documentParent;
             const renderParent = this.renderParent as T;
@@ -1754,6 +1757,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             bottom = Math.max(bottom - SPACING_SELECT, 0);
                             break;
                     }
+                    if (top < 0 && this.translateY(top)) {
+                        top = 0;
+                    }
+                    if (left < 0 && !this.pageFlow && this.translateX(left)) {
+                        left = 0;
+                    }
                 }
                 else if (this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE)) {
                     top += this.borderTopWidth;
@@ -1912,6 +1921,30 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             return value;
+        }
+
+        public translateX(value: number, accumulate = false) {
+            const renderParent = this.renderParent;
+            if (renderParent && renderParent.layoutConstraint) {
+                if (accumulate) {
+                    value += convertInt(this.android('translationX'));
+                }
+                this.android('translationX', formatPX(value));
+                return true;
+            }
+            return false;
+        }
+
+        public translateY(value: number, accumulate = false) {
+            const renderParent = this.renderParent;
+            if (renderParent && renderParent.layoutConstraint) {
+                if (accumulate) {
+                    value += convertInt(this.android('translationY'));
+                }
+                this.android('translationY', formatPX(value));
+                return true;
+            }
+            return false;
         }
 
         public setLayoutWidth(value: string, overwrite = true) {
@@ -2073,7 +2106,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (this.styleElement) {
                         const value = this.elementId?.trim() || getNamedItem(<HTMLElement> this.element, 'name');
                         if (value !== '') {
-                            name = value.replace(REGEX_VALIDSTRING, '_').toLowerCase();
+                            name = value.replace(REGEX_STRINGVALID, '_').toLowerCase();
                             if (name === 'parent' || RESERVED_JAVA.includes(name)) {
                                 name = '_' + name;
                             }

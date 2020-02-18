@@ -15,11 +15,13 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
 
     public condition(node: T) {
         let valid = false;
-        let alignable = 0;
         let inlineVertical = 0;
         let sameValue = 0;
         for (const item of node) {
-            if (item.inlineVertical) {
+            if (!(item.positionStatic || item.positionRelative && item.length)) {
+                return false;
+            }
+            else if (item.inlineVertical) {
                 const value = convertFloat(item.verticalAlign);
                 if (value !== 0) {
                     valid = true;
@@ -37,11 +39,8 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
             else {
                 sameValue = NaN;
             }
-            if (item.positionStatic || item.positionRelative && item.length) {
-                alignable++;
-            }
         }
-        return valid && isNaN(sameValue) && inlineVertical > 1 && alignable === node.length && NodeUI.linearData(node.children as T[]).linearX;
+        return valid && isNaN(sameValue) && inlineVertical > 1 && NodeUI.linearData(node.children as T[]).linearX;
     }
 
     public processNode(node: T) {
