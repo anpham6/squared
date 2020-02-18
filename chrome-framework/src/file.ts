@@ -1,4 +1,4 @@
-import { FileAsset } from '../../@types/base/application';
+import { FileAsset, FileActionOptions } from '../../@types/base/application';
 import { ChromeAsset } from '../../@types/chrome/application';
 
 import Resource from './resource';
@@ -61,16 +61,29 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         this._outputFileExclusions = undefined;
     }
 
-    public copyToDisk(directory: string, assets: FileAsset[] = [], callback?: CallbackResult) {
-        this.copying(directory, assets.concat(<FileAsset[]> this.getAssetsAll()), callback);
+    public copyToDisk(directory: string, options?: FileActionOptions) {
+        this.copying({
+            ...options,
+            assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
+            directory
+        });
     }
 
-    public appendToArchive(pathname: string, assets: FileAsset[] = []) {
-        this.archiving(this.userSettings.outputArchiveName, assets.concat(<FileAsset[]> this.getAssetsAll()), pathname);
+    public appendToArchive(pathname: string, options?: FileActionOptions) {
+        this.archiving({
+            ...options,
+            assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
+            filename: this.userSettings.outputArchiveName,
+            appendTo: pathname
+        });
     }
 
-    public saveToArchive(filename: string) {
-        this.archiving(filename, <FileAsset[]> this.getAssetsAll());
+    public saveToArchive(filename: string, options?: FileActionOptions) {
+        this.archiving({
+            ...options,
+            assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
+            filename
+        });
     }
 
     public getHtmlPage(name?: string) {

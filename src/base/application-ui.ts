@@ -1,4 +1,4 @@
-import { AppNodeUIOptions, AppSessionUI, ControllerUISettings, FileAsset, LayoutResult, NodeTemplate, UserUISettings } from '../../@types/base/application';
+import { AppNodeUIOptions, AppSessionUI, ControllerUISettings, FileAsset, FileActionOptions, LayoutResult, NodeTemplate, UserUISettings } from '../../@types/base/application';
 
 import Application from './application';
 import ControllerUI from './controller-ui';
@@ -238,16 +238,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.closed = true;
     }
 
-    public copyToDisk(directory: string, callback?: CallbackResult) {
-        super.copyToDisk(directory, callback, this.layouts);
+    public copyToDisk(directory: string, options?: FileActionOptions) {
+        super.copyToDisk(directory, this.createAssetOptions(options));
     }
 
-    public appendToArchive(pathname: string) {
-        super.appendToArchive(pathname, this.layouts);
+    public appendToArchive(pathname: string, options?: FileActionOptions) {
+        super.appendToArchive(pathname, this.createAssetOptions(options));
     }
 
-    public saveToArchive(filename?: string) {
-        super.saveToArchive(filename, this.layouts);
+    public saveToArchive(filename?: string, options?: FileActionOptions) {
+        super.saveToArchive(filename, this.createAssetOptions(options));
     }
 
     public reset() {
@@ -1698,6 +1698,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         return layout;
+    }
+
+    protected createAssetOptions(options?: FileActionOptions) {
+        let assets = options?.assets;
+        if (assets) {
+            assets = this.layouts.concat(assets);
+        }
+        else {
+            assets = this.layouts;
+        }
+        return { ...options, assets };
     }
 
     private setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {

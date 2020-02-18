@@ -1,5 +1,5 @@
 import { AppFramework } from '../../@types/base/application';
-import { UserSettingsAndroid } from '../../@types/android/application';
+import { FileOutputOptions, UserSettingsAndroid } from '../../@types/android/application';
 
 import Application from './application';
 import Controller from './controller';
@@ -62,6 +62,14 @@ function autoClose() {
         return true;
     }
     return false;
+}
+
+function createAssetsOptions(options?: FileOutputOptions, directory?: string, filename?: string): FileOutputOptions {
+    return {
+        ...options,
+        directory,
+        filename
+    };
 }
 
 const checkApplication = (main: Application<View>): main is Application<View> => initialized && (main.closed || autoClose());
@@ -135,179 +143,179 @@ const appBase: AppFramework<View> = {
         addXmlNs(name: string, uri: string) {
             constant.XMLNS_ANDROID[name] = uri;
         },
-        copyLayoutAllXml(directory: string, callback?: CallbackResult) {
+        copyLayoutAllXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.layoutAllToXml({ assets: application.layouts, copyTo: directory, callback });
+                file.layoutAllToXml(application.layouts, createAssetsOptions(options, directory));
             }
         },
-        copyResourceAllXml(directory: string, callback?: CallbackResult) {
+        copyResourceAllXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceAllToXml({ copyTo: directory, callback });
+                file.resourceAllToXml(createAssetsOptions(options, directory));
             }
         },
-        copyResourceStringXml(directory: string, callback?: CallbackResult) {
+        copyResourceStringXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceStringToXml({ copyTo: directory, callback });
+                file.resourceStringToXml(createAssetsOptions(options, directory));
             }
         },
-        copyResourceArrayXml(directory: string, callback?: CallbackResult) {
+        copyResourceArrayXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceStringArrayToXml({ copyTo: directory, callback });
+                file.resourceStringArrayToXml(createAssetsOptions(options, directory));
             }
         },
-        copyResourceFontXml(directory: string, callback?: CallbackResult) {
+        copyResourceFontXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceFontToXml({ copyTo: directory, callback });
+                file.resourceFontToXml(createAssetsOptions(options, directory));
             }
         },
-        copyResourceColorXml(directory: string, callback?: CallbackResult) {
+        copyResourceColorXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceColorToXml({ copyTo: directory, callback });
+                file.resourceColorToXml(createAssetsOptions(options, directory));
             }
         },
-        copyResourceStyleXml(directory: string, callback?: CallbackResult) {
+        copyResourceStyleXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceStyleToXml({ copyTo: directory, callback });
+                file.resourceStyleToXml(createAssetsOptions(options, directory));
             }
         },
-        copyResourceDimenXml(directory: string, callback?: CallbackResult) {
+        copyResourceDimenXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceDimenToXml({ copyTo: directory, callback });
+                file.resourceDimenToXml(createAssetsOptions(options, directory));
             }
         },
-        copyResourceDrawableXml(directory: string, callback?: CallbackResult) {
+        copyResourceDrawableXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceDrawableToXml({ copyTo: directory, callback });
+                file.resourceDrawableToXml(createAssetsOptions(options, directory));
             }
         },
-        copyResourceDrawableImageXml(directory: string, callback?: CallbackResult) {
+        copyResourceDrawableImageXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceDrawableImageToXml({ copyTo: directory, callback });
+                file.resourceDrawableImageToXml(createAssetsOptions(options, directory));
             }
         },
-        copyResourceAnimXml(directory: string, callback?: CallbackResult) {
+        copyResourceAnimXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceAnimToXml({ copyTo: directory, callback });
+                file.resourceAnimToXml(createAssetsOptions(options, directory));
             }
         },
-        saveLayoutAllXml(filename?: string) {
+        saveLayoutAllXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.layoutAllToXml({ assets: application.layouts, archiveTo: filename || userSettings.outputArchiveName + '-layouts' });
+                file.layoutAllToXml(application.layouts, createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-layouts'));
             }
         },
-        saveResourceAllXml(filename?: string) {
+        saveResourceAllXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceAllToXml({ archiveTo: filename || userSettings.outputArchiveName + '-resources' });
+                file.resourceAllToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-resources'));
             }
         },
-        saveResourceStringXml(filename?: string) {
+        saveResourceStringXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceStringToXml({ archiveTo: filename || userSettings.outputArchiveName + '-string' });
+                file.resourceStringToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-string'));
             }
         },
-        saveResourceArrayXml(filename?: string) {
+        saveResourceArrayXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceStringArrayToXml({ archiveTo: filename || userSettings.outputArchiveName + '-array' });
+                file.resourceStringArrayToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-array'));
             }
         },
-        saveResourceFontXml(filename?: string) {
+        saveResourceFontXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceFontToXml({ archiveTo: filename || userSettings.outputArchiveName + '-font' });
+                file.resourceFontToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-font'));
             }
         },
-        saveResourceColorXml(filename?: string) {
+        saveResourceColorXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceColorToXml({ archiveTo: filename || userSettings.outputArchiveName + '-color' });
+                file.resourceColorToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-color'));
             }
         },
-        saveResourceStyleXml(filename?: string) {
+        saveResourceStyleXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceStyleToXml({ archiveTo: filename || userSettings.outputArchiveName + '-style' });
+                file.resourceStyleToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-style'));
             }
         },
-        saveResourceDimenXml(filename?: string) {
+        saveResourceDimenXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceDimenToXml({ archiveTo: filename || userSettings.outputArchiveName + '-dimen' });
+                file.resourceDimenToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-dimen'));
             }
         },
-        saveResourceDrawableXml(filename?: string) {
+        saveResourceDrawableXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceDrawableToXml({ archiveTo: filename || userSettings.outputArchiveName + '-drawable' });
+                file.resourceDrawableToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-drawable'));
             }
         },
-        saveResourceDrawableImageXml(filename?: string) {
+        saveResourceDrawableImageXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceDrawableImageToXml({ archiveTo: filename || userSettings.outputArchiveName + '-drawable-image' });
+                file.resourceDrawableImageToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-drawable-image'));
             }
         },
-        saveResourceAnimXml(filename?: string) {
+        saveResourceAnimXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                file.resourceAnimToXml({ archiveTo: filename || userSettings.outputArchiveName + '-anim' });
+                file.resourceAnimToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-anim'));
             }
         },
-        writeLayoutAllXml() {
+        writeLayoutAllXml(options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                return file.layoutAllToXml({ assets: application.layouts });
-            }
-            return {};
-        },
-        writeResourceAllXml() {
-            if (checkApplication(application)) {
-                return file.resourceAllToXml();
+                return file.layoutAllToXml(application.layouts, options);
             }
             return {};
         },
-        writeResourceStringXml() {
+        writeResourceAllXml(options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                return file.resourceStringToXml();
+                return file.resourceAllToXml(options);
+            }
+            return {};
+        },
+        writeResourceStringXml(options?: FileOutputOptions) {
+            if (checkApplication(application)) {
+                return file.resourceStringToXml(options);
             }
             return [];
         },
-        writeResourceArrayXml() {
+        writeResourceArrayXml(options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                return file.resourceStringArrayToXml();
+                return file.resourceStringArrayToXml(options);
             }
             return [];
         },
-        writeResourceFontXml() {
+        writeResourceFontXml(options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                return file.resourceFontToXml();
+                return file.resourceFontToXml(options);
             }
             return [];
         },
-        writeResourceColorXml() {
+        writeResourceColorXml(options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                return file.resourceColorToXml();
+                return file.resourceColorToXml(options);
             }
             return [];
         },
-        writeResourceStyleXml() {
+        writeResourceStyleXml(options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                return file.resourceStyleToXml();
+                return file.resourceStyleToXml(options);
             }
             return [];
         },
-        writeResourceDimenXml() {
+        writeResourceDimenXml(options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                return file.resourceDimenToXml();
+                return file.resourceDimenToXml(options);
             }
             return [];
         },
-        writeResourceDrawableXml() {
+        writeResourceDrawableXml(options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                return file.resourceDrawableToXml();
+                return file.resourceDrawableToXml(options);
             }
             return [];
         },
-        writeResourceDrawableImageXml() {
+        writeResourceDrawableImageXml(options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                return file.resourceDrawableImageToXml();
+                return file.resourceDrawableImageToXml(options);
             }
             return [];
         },
-        writeResourceAnimXml() {
+        writeResourceAnimXml(options?: FileOutputOptions) {
             if (checkApplication(application)) {
-                return file.resourceAnimToXml();
+                return file.resourceAnimToXml(options);
             }
             return [];
         }

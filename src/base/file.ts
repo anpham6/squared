@@ -1,6 +1,6 @@
-import { FileAsset, RawAsset, UserSettings } from '../../@types/base/application';
+import { FileActionOptions, FileCopyingOptions, FileArchivingOptions, RawAsset, UserSettings } from '../../@types/base/application';
 
-const { fromLastIndexOf, trimString } = squared.lib.util;
+const { fromLastIndexOf, isString, trimString } = squared.lib.util;
 
 const isHttpProtocol = () => /^http/.test(location.protocol);
 
@@ -177,9 +177,9 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public readonly assets: RawAsset[] = [];
     public abstract resource: squared.base.Resource<T>;
 
-    public abstract copyToDisk(directory: string, assets?: FileAsset[], callback?: CallbackResult): void;
-    public abstract appendToArchive(pathname: string, assets?: FileAsset[]): void;
-    public abstract saveToArchive(filename: string, assets?: FileAsset[]): void;
+    public abstract copyToDisk(directory: string, options?: FileActionOptions): void;
+    public abstract appendToArchive(pathname: string, options?: FileActionOptions): void;
+    public abstract saveToArchive(filename: string, options?: FileActionOptions): void;
 
     public abstract get userSettings(): UserSettings;
 
@@ -201,40 +201,46 @@ export default abstract class File<T extends squared.base.Node> implements squar
         this.assets.length = 0;
     }
 
-    public copying(directory: string, assets: FileAsset[], callback?: CallbackResult) {
+    public copying(options: FileCopyingOptions) {
         if (isHttpProtocol()) {
-            assets = assets.concat(this.assets);
-            if (assets.length) {
-                const { outputDirectory, outputArchiveTimeout } = this.userSettings;
-                fetch(
-                    '/api/assets/copy' +
-                    '?to=' + encodeURIComponent(directory.trim()) +
-                    '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
-                    '&timeout=' + outputArchiveTimeout, {
-                        method: 'POST',
-                        headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
-                        body: JSON.stringify(assets)
-                    }
-                )
-                .then((response: Response) => response.json())
-                .then((result: ExpressResult) => {
-                    if (result) {
-                        if (typeof callback === 'function') {
-                            callback(result);
+            const directory = options.directory;
+            if (isString(directory)) {
+                let assets = options.assets || [];
+                assets = assets.concat(this.assets);
+                if (assets.length) {
+                    const { outputDirectory, outputEmptyCopyDirectory, outputArchiveTimeout } = this.userSettings;
+                    fetch(
+                        '/api/assets/copy' +
+                        '?to=' + encodeURIComponent(directory.trim()) +
+                        '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
+                        '&empty=' + (outputEmptyCopyDirectory ? '1' : '0') +
+                        '&timeout=' + outputArchiveTimeout, {
+                            method: 'POST',
+                            headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
+                            body: JSON.stringify(assets)
                         }
-                        if (this.userSettings.showErrorMessages) {
-                            const { application, system } = result;
-                            if (system) {
-                                alert(application + '\n\n' + system);
+                    )
+                    .then((response: Response) => response.json())
+                    .then((result: ExpressResult) => {
+                        if (result) {
+                            const callback = options.callback;
+                            if (typeof callback === 'function') {
+                                callback(result);
+                            }
+                            if (this.userSettings.showErrorMessages) {
+                                const { application, system } = result;
+                                if (system) {
+                                    alert(application + '\n\n' + system);
+                                }
                             }
                         }
-                    }
-                })
-                .catch(err => {
-                    if (this.userSettings.showErrorMessages) {
-                        alert('ERROR: ' + err);
-                    }
-                });
+                    })
+                    .catch(err => {
+                        if (this.userSettings.showErrorMessages) {
+                            alert('ERROR: ' + err);
+                        }
+                    });
+                }
             }
         }
         else if (this.userSettings.showErrorMessages) {
@@ -242,45 +248,53 @@ export default abstract class File<T extends squared.base.Node> implements squar
         }
     }
 
-    public archiving(filename: string, assets: FileAsset[], appendTo = '') {
+    public archiving(options: FileArchivingOptions) {
         if (isHttpProtocol()) {
-            assets = assets.concat(this.assets);
-            if (assets.length) {
-                const { outputDirectory, outputArchiveFormat, outputArchiveTimeout } = this.userSettings;
-                fetch(
-                    '/api/assets/archive' +
-                    '?filename=' + encodeURIComponent(filename.trim()) +
-                    '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
-                    '&format=' + outputArchiveFormat +
-                    '&append_to=' + encodeURIComponent(appendTo.trim()) +
-                    '&timeout=' + outputArchiveTimeout, {
-                        method: 'POST',
-                        headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
-                        body: JSON.stringify(assets)
-                    }
-                )
-                .then((response: Response) => response.json())
-                .then((result: ExpressResult) => {
-                    if (result) {
-                        const zipname = result.zipname;
-                        if (zipname) {
-                            fetch('/api/browser/download?filename=' + encodeURIComponent(zipname))
-                                .then((response: Response) => response.blob())
-                                .then((blob: Blob) => File.downloadFile(blob, fromLastIndexOf(zipname, '/')));
+            const filename = options.filename;
+            if (isString(filename)) {
+                let assets = options.assets || [];
+                assets = assets.concat(this.assets);
+                if (assets.length) {
+                    const { outputDirectory, outputArchiveFormat, outputArchiveTimeout } = this.userSettings;
+                    fetch(
+                        '/api/assets/archive' +
+                        '?filename=' + encodeURIComponent(filename.trim()) +
+                        '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
+                        '&format=' + outputArchiveFormat +
+                        '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
+                        '&timeout=' + outputArchiveTimeout, {
+                            method: 'POST',
+                            headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
+                            body: JSON.stringify(assets)
                         }
-                        else if (this.userSettings.showErrorMessages) {
-                            const { application, system } = result;
-                            if (system) {
-                                alert(application + '\n\n' + system);
+                    )
+                    .then((response: Response) => response.json())
+                    .then((result: ExpressResult) => {
+                        if (result) {
+                            const callback = options.callback;
+                            if (typeof callback === 'function') {
+                                callback(result);
+                            }
+                            const zipname = result.zipname;
+                            if (zipname) {
+                                fetch('/api/browser/download?filename=' + encodeURIComponent(zipname))
+                                    .then((response: Response) => response.blob())
+                                    .then((blob: Blob) => File.downloadFile(blob, fromLastIndexOf(zipname, '/', '\\')));
+                            }
+                            else if (this.userSettings.showErrorMessages) {
+                                const { application, system } = result;
+                                if (system) {
+                                    alert(application + '\n\n' + system);
+                                }
                             }
                         }
-                    }
-                })
-                .catch(err => {
-                    if (this.userSettings.showErrorMessages) {
-                        alert('ERROR: ' + err);
-                    }
-                });
+                    })
+                    .catch(err => {
+                        if (this.userSettings.showErrorMessages) {
+                            alert('ERROR: ' + err);
+                        }
+                    });
+                }
             }
         }
         else if (this.userSettings.showErrorMessages) {

@@ -392,17 +392,13 @@ export function trimEnd(value: string, char: string) {
 }
 
 export function fromLastIndexOf(value: string, ...char: string[]) {
-    let result = value;
     for (const ch of char) {
-        const index = result.lastIndexOf(ch);
+        const index = value.lastIndexOf(ch);
         if (index !== -1) {
-            result = result.substring(result.lastIndexOf(ch) + 1);
-        }
-        else {
-            return value;
+            return value.substring(index + 1);
         }
     }
-    return result;
+    return value;
 }
 
 export function searchObject(obj: StringMap, value: string | StringMap) {

@@ -1,4 +1,4 @@
-import { AppFramework, UserSettings } from '../@types/base/application';
+import { AppFramework, FileActionOptions, UserSettings } from '../@types/base/application';
 
 import Container from './lib/base/container';
 
@@ -189,30 +189,30 @@ export function close() {
     }
 }
 
-export function copyToDisk(value: string, callback?: CallbackResult) {
+export function copyToDisk(value: string, options?: FileActionOptions) {
     if (checkMain() && util.isString(value)) {
         if (!main.closed) {
             main.finalize();
         }
-        main.copyToDisk(value, callback);
+        main.copyToDisk(value, options);
     }
 }
 
-export function appendToArchive(value: string) {
+export function appendToArchive(value: string, options?: FileActionOptions) {
     if (checkMain() && util.isString(value)) {
         if (!main.closed) {
             main.finalize();
         }
-        main.appendToArchive(value);
+        main.appendToArchive(value, options);
     }
 }
 
-export function saveToArchive(value?: string) {
+export function saveToArchive(value?: string, options?: FileActionOptions) {
     if (checkMain()) {
         if (!main.closed) {
             main.finalize();
         }
-        main.saveToArchive(value);
+        main.saveToArchive(value, options);
     }
 }
 

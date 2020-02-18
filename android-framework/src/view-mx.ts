@@ -1757,10 +1757,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             bottom = Math.max(bottom - SPACING_SELECT, 0);
                             break;
                     }
-                    if (top < 0 && this.translateY(top)) {
+                    if (top < 0 && (this.pageFlow || this.alignParent('top') || this.alignParent('bottom')) && this.translateY(top, true)) {
                         top = 0;
                     }
-                    if (left < 0 && !this.pageFlow && this.translateX(left)) {
+                    if (left < 0 && !this.pageFlow && (this.alignParent('left') || this.alignParent('right')) && this.translateX(left, true)) {
                         left = 0;
                     }
                 }

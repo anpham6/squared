@@ -1,4 +1,4 @@
-import { AppProcessing, AppSession, FileAsset, UserSettings } from '../../@types/base/application';
+import { AppProcessing, AppSession, FileActionOptions, UserSettings } from '../../@types/base/application';
 
 import Controller from './controller';
 import Extension from './extension';
@@ -101,16 +101,16 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract afterCreateCache(element: HTMLElement): void;
     public abstract finalize(): void;
 
-    public copyToDisk(directory: string, callback?: CallbackResult, assets?: FileAsset[]) {
-        this.fileHandler?.copyToDisk(directory, assets, callback);
+    public copyToDisk(directory: string, options?: FileActionOptions) {
+        this.fileHandler?.copyToDisk(directory, options);
     }
 
-    public appendToArchive(pathname: string, assets?: FileAsset[]) {
-        this.fileHandler?.appendToArchive(pathname, assets);
+    public appendToArchive(pathname: string, options?: FileActionOptions) {
+        this.fileHandler?.appendToArchive(pathname, options);
     }
 
-    public saveToArchive(filename?: string, assets?: FileAsset[]) {
-        this.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, assets);
+    public saveToArchive(filename?: string, options?: FileActionOptions) {
+        this.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, options);
     }
 
     public reset() {

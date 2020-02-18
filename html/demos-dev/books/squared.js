@@ -27,7 +27,21 @@ System.import('/build/src/main.js').then(result => {
             squared.setFramework(android);
             const time = new Date().getTime();
             squared.parseDocument().then(function() {
-                squared.saveToArchive();
+                squared.settings.outputEmptyCopyDirectory = true;
+                squared.copyToDisk('C:/Users/An/git/flexbox', {
+                    assets: [
+                        {
+                            pathname: 'res/drawable',
+                            filename: 'ic_launcher_background.xml',
+                            uri: 'C:/Users/An/git/squared/html/demos-dev/images/ic_launcher_background.xml'
+                        },
+                        {
+                            pathname: 'res/drawable-v24',
+                            filename: 'ic_launcher_foreground.xml',
+                            uri: 'C:/Users/An/git/squared/html/demos-dev/images/ic_launcher_foreground.xml'
+                        }
+                    ]
+                });
                 console.log(new Date().getTime() - time);
             });
         });
@@ -45,7 +59,21 @@ System.import('/build/src/main.js').then(result => {
                 squared.setFramework(android);
                 const time = new Date().getTime();
                 squared.parseDocument().then(function() {
-                    squared.saveToArchive();
+                    squared.settings.outputEmptyCopyDirectory = true;
+                    squared.copyToDisk('C:/Users/An/git/flexbox', {
+                        assets: [
+                            {
+                                pathname: 'res/drawable',
+                                filename: 'ic_launcher_background.xml',
+                                uri: 'C:/Users/An/git/squared/html/demos-dev/images/ic_launcher_background.xml'
+                            },
+                            {
+                                pathname: 'res/drawable-v24',
+                                filename: 'ic_launcher_foreground.xml',
+                                uri: 'C:/Users/An/git/squared/html/demos-dev/images/ic_launcher_foreground.xml'
+                            }
+                        ]
+                    });
                     console.log(new Date().getTime() - time);
                 });
             });
@@ -57,7 +85,21 @@ document.addEventListener('DOMContentLoaded', function() {
     squared.setFramework(android);
     const time = new Date().getTime();
     squared.parseDocument().then(function() {
-        squared.saveToArchive();
+        squared.settings.outputEmptyCopyDirectory = true;
+        squared.copyToDisk('C:/Users/An/git/flexbox', {
+            assets: [
+                {
+                    pathname: 'res/drawable',
+                    filename: 'ic_launcher_background.xml',
+                    uri: 'C:/Users/An/git/squared/html/demos-dev/images/ic_launcher_background.xml'
+                },
+                {
+                    pathname: 'res/drawable-v24',
+                    filename: 'ic_launcher_foreground.xml',
+                    uri: 'C:/Users/An/git/squared/html/demos-dev/images/ic_launcher_foreground.xml'
+                }
+            ]
+        });
         console.log(new Date().getTime() - time);
     });
 });

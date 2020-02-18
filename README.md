@@ -46,12 +46,14 @@ GitHub
         squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview' */, /* etc... */);
         squared.close();
 
+        // NOTE: options: { assets?: FileAsset[], callback?: () => void }
+
         // Express required
-        squared.saveToArchive(/* optional: archive name */);
+        squared.saveToArchive(/* optional: archive name */, /* options */);
         // OR
-        squared.copyToDisk(/* required: local directory */, /* optional: callback() */);
+        squared.copyToDisk(/* required: local directory */, /* options */);
         // OR
-        squared.appendToArchive(/* required: location uri */);
+        squared.appendToArchive(/* required: location uri */, /* options */);
 
         // optional: start new "parseDocument" session
         squared.reset();
@@ -96,26 +98,26 @@ These settings are available in the global variable "squared" to customize your 
 
 ```javascript
 squared.settings = {
-    builtInExtensions: [
+        builtInExtensions: [
+        'android.delegate.background',
         'android.delegate.max-width-height',
-        'android.delegate.fixed',
+        'android.delegate.percent',
         'android.delegate.negative-x',
         'android.delegate.negative-viewport',
-        'android.delegate.percent',
-        'android.delegate.scrollbar',
-        'android.delegate.background',
+        'android.delegate.fixed',
         'android.delegate.css-grid',
+        'android.delegate.scrollbar',
         'android.delegate.radiogroup',
-        'squared.sprite',
+        'squared.accessibility',
+        'squared.relative',
         'squared.css-grid',
         'squared.flexbox',
         'squared.table',
         'squared.list',
-        'squared.grid',
-        'squared.relative',
         'squared.verticalalign',
+        'squared.grid',
+        'squared.sprite',
         'squared.whitespace',
-        'squared.accessibility',
         'android.resource.svg',
         'android.resource.background',
         'android.resource.strings',
@@ -146,6 +148,7 @@ squared.settings = {
     manifestParentThemeName: 'Theme.AppCompat.Light.NoActionBar',
     outputMainFileName: 'activity_main.xml',
     outputDirectory: 'app/src/main',
+    outputEmptyCopyDirectory: false,
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip', // zip | tar
     outputArchiveTimeout: 30 // seconds
@@ -155,7 +158,7 @@ squared.settings = {
 
 ```javascript
 squared.settings = {
-    builtInExtensions: [
+        builtInExtensions: [
         'chrome.compress.brotli',
         'chrome.compress.gzip'
     ],
@@ -167,6 +170,7 @@ squared.settings = {
     excludePlainText: true,
     outputFileExclusions: ['squared.*', 'chrome.framework.*'],
     outputDirectory: '',
+    outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip', // zip | tar
     outputArchiveTimeout: 60 // seconds
@@ -188,9 +192,11 @@ ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
 
-copyToDisk(directory: string, callback?: () => void) // copy entire project to local directory (Express required)
-appendToArchive(pathname: string) // append entire project to a copy of a preexisting zip archive (Express required)
-saveToArchive(filename?: string) // save entire project as zip archive (Express required)
+// NOTE: options: { assets?: FileAsset[], callback?: () => void }
+
+copyToDisk(directory: string, options?: {}) // copy entire project to local directory (Express required)
+appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting zip archive (Express required)
+saveToArchive(filename?: string, options?: {}) // save entire project as zip archive (Express required)
 
 toString() // main layout file contents
 
@@ -270,29 +276,31 @@ You can use the "system.customize" method to change the default settings for the
 squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
 squared.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
 
-squared.system.copyLayoutAllXml(directory: string, callback?: () => void) // copy generated xml
-squared.system.copyResourceAllXml(directory: string, callback?: () => void)
-squared.system.copyResourceAnimXml(directory: string, callback?: () => void)
-squared.system.copyResourceArrayXml(directory: string, callback?: () => void)
-squared.system.copyResourceColorXml(directory: string, callback?: () => void)
-squared.system.copyResourceDimenXml(directory: string, callback?: () => void)
-squared.system.copyResourceDrawableXml(directory: string, callback?: () => void)
-squared.system.copyResourceDrawableImageXml(directory: string, callback?: () => void)
-squared.system.copyResourceFontXml(directory: string, callback?: () => void)
-squared.system.copyResourceStringXml(directory: string, callback?: () => void)
-squared.system.copyResourceStyleXml(directory: string, callback?: () => void)
+// NOTE: options: { assets?: FileAsset[], callback?: () => void }
 
-squared.system.saveLayoutAllXml(filename?: string) // save generated xml
-squared.system.saveResourceAllXml(filename?: string)
-squared.system.saveResourceAnimXml(filename?: string)
-squared.system.saveResourceArrayXml(filename?: string)
-squared.system.saveResourceColorXml(filename?: string)
-squared.system.saveResourceDimenXml(filename?: string)
-squared.system.saveResourceDrawableXml(filename?: string)
-squared.system.saveResourceDrawableImageXml(filename?: string)
-squared.system.saveResourceFontXml(filename?: string)
-squared.system.saveResourceStringXml(filename?: string)
-squared.system.saveResourceStyleXml(filename?: string)
+squared.system.copyLayoutAllXml(directory: string, options?: {}) // copy generated xml
+squared.system.copyResourceAllXml(directory: string, options?: {})
+squared.system.copyResourceAnimXml(directory: string, options?: {})
+squared.system.copyResourceArrayXml(directory: string, options?: {})
+squared.system.copyResourceColorXml(directory: string, options?: {})
+squared.system.copyResourceDimenXml(directory: string, options?: {})
+squared.system.copyResourceDrawableXml(directory: string, options?: {})
+squared.system.copyResourceDrawableImageXml(directory: string, options?: {})
+squared.system.copyResourceFontXml(directory: string, options?: {})
+squared.system.copyResourceStringXml(directory: string, options?: {})
+squared.system.copyResourceStyleXml(directory: string, options?: {})
+
+squared.system.saveLayoutAllXml(filename?: string, options?: {}) // save generated xml
+squared.system.saveResourceAllXml(filename?: string, options?: {})
+squared.system.saveResourceAnimXml(filename?: string, options?: {})
+squared.system.saveResourceArrayXml(filename?: string, options?: {})
+squared.system.saveResourceColorXml(filename?: string, options?: {})
+squared.system.saveResourceDimenXml(filename?: string, options?: {})
+squared.system.saveResourceDrawableXml(filename?: string, options?: {})
+squared.system.saveResourceDrawableImageXml(filename?: string, options?: {})
+squared.system.saveResourceFontXml(filename?: string, options?: {})
+squared.system.saveResourceStringXml(filename?: string, options?: {})
+squared.system.saveResourceStyleXml(filename?: string, options?: {})
 
 squared.system.writeLayoutAllXml() // write generated xml
 squared.system.writeResourceAllXml()
@@ -331,17 +339,19 @@ squared.system.querySelectorAll(value: string, cache?: boolean)
 squared.system.getElementMap()
 squared.system.clearElementMap()
 
-squared.system.copyHtmlPage(directory: string, callback?: () => void, name?: string) // name: e.g. "index.html"
-squared.system.copyScriptAssets(directory: string, callback?: () => void)
-squared.system.copyLinkAssets(directory: string, callback?: () => void, rel?: string) // rel: e.g. "stylesheet"
-squared.system.copyImageAssets(directory: string, callback?: () => void)
-squared.system.copyFontAssets(directory: string, callback?: () => void)
+// NOTE: options: { assets?: FileAsset[], callback?: () => void }
 
-squared.system.saveHtmlPage(filename?: string, name?: string) // name: e.g. "index.html"
-squared.system.saveScriptAssets(filename?: string)
-squared.system.saveLinkAssets(filename?: string, rel?: string) // rel: e.g. "stylesheet"
-squared.system.saveImageAssets(filename?: string)
-squared.system.saveFontAssets(filename?: string)
+squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
+squared.system.copyScriptAssets(directory: string, options?: {})
+squared.system.copyLinkAssets(directory: string, options?: {}) // option "rel": e.g. "stylesheet"
+squared.system.copyImageAssets(directory: string, options?: {})
+squared.system.copyFontAssets(directory: string, options?: {})
+
+squared.system.saveHtmlPage(filename?: string, options?: {}) // option "name": e.g. "index.html"
+squared.system.saveScriptAssets(filename?: string, options?: {})
+squared.system.saveLinkAssets(filename?: string, options?: {}) // option "rel": e.g. "stylesheet"
+squared.system.saveImageAssets(filename?: string, options?: {})
+squared.system.saveFontAssets(filename?: string, options?: {})
 
 // async methods
 await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"

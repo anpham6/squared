@@ -1,5 +1,5 @@
 import { FileAsset, UserSettings } from '../../@types/base/application';
-import { ChromeFramework } from '../../@types/chrome/application';
+import { ChromeFramework, FileCopyingOptionsChrome, FileArchivingOptionsChrome } from '../../@types/chrome/application';
 
 import Application from './application';
 import Controller from './controller';
@@ -15,13 +15,15 @@ import SETTINGS from './settings';
 
 import * as constant from './lib/constant';
 
+type FileOptions = FileArchivingOptionsChrome | FileCopyingOptionsChrome;
+
 const { flatArray, isString } = squared.lib.util;
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 let initialized = false;
 let application: Application<View>;
 let controller: Controller<View>;
-let file: File<View>;
+let file: Undef<File<View>>;
 let userSettings: UserSettings;
 let elementMap: Map<Element, View>;
 
@@ -67,6 +69,15 @@ async function findElementAllAsync(query: NodeListOf<Element>, cache: boolean) {
         flatArray<View>(result);
     }
     return result;
+}
+
+function createAssetsOptions(assets: FileAsset[], options?: FileOptions, directory?: string, filename?: string): FileOptions {
+    return {
+        ...options,
+        assets: assets.concat(options?.assets || []),
+        directory,
+        filename
+    };
 }
 
 const appBase: ChromeFramework<View> = {
@@ -130,45 +141,55 @@ const appBase: ChromeFramework<View> = {
         clearElementMap() {
             controller?.elementMap.clear();
         },
-        copyHtmlPage(directory: string, callback?: CallbackResult, name?: string) {
-            if (isString(directory)) {
-                file?.copying(directory, <FileAsset[]> file.getHtmlPage(name), callback);
+        copyHtmlPage(directory: string, options?: FileCopyingOptionsChrome) {
+            if (file && isString(directory)) {
+                file.copying(createAssetsOptions(<FileAsset[]> file.getHtmlPage(options?.name), options, directory));
             }
         },
-        copyScriptAssets(directory: string, callback?: CallbackResult) {
-            if (isString(directory)) {
-                file?.copying(directory, <FileAsset[]> file.getScriptAssets(), callback);
+        copyScriptAssets(directory: string, options?: FileCopyingOptionsChrome) {
+            if (file && isString(directory)) {
+                file.copying(createAssetsOptions(<FileAsset[]> file.getScriptAssets(), options, directory));
             }
         },
-        copyLinkAssets(directory: string, callback?: CallbackResult, rel?: string) {
-            if (isString(directory)) {
-                file?.copying(directory, <FileAsset[]> file.getLinkAssets(rel), callback);
+        copyLinkAssets(directory: string, options?: FileCopyingOptionsChrome) {
+            if (file && isString(directory)) {
+                file.copying(createAssetsOptions(<FileAsset[]> file.getLinkAssets(options?.rel), options, directory));
             }
         },
-        copyImageAssets(directory: string, callback?: CallbackResult) {
-            if (isString(directory)) {
-                file?.copying(directory, <FileAsset[]> file.getImageAssets(), callback);
+        copyImageAssets(directory: string, options?: FileCopyingOptionsChrome) {
+            if (file && isString(directory)) {
+                file.copying(createAssetsOptions(<FileAsset[]> file.getImageAssets(), options, directory));
             }
         },
-        copyFontAssets(directory: string, callback?: CallbackResult) {
-            if (isString(directory)) {
-                file?.copying(directory, <FileAsset[]> file.getFontAssets(), callback);
+        copyFontAssets(directory: string, options?: FileCopyingOptionsChrome) {
+            if (file && isString(directory)) {
+                file.copying(createAssetsOptions(<FileAsset[]> file.getFontAssets(), options, directory));
             }
         },
-        saveHtmlPage(filename?: string, name?: string) {
-            file?.archiving((filename || userSettings.outputArchiveName) + '-html', <FileAsset[]> file.getHtmlPage(name));
+        saveHtmlPage(filename?: string, options?: FileArchivingOptionsChrome) {
+            if (file) {
+                file.archiving(createAssetsOptions(<FileAsset[]> file.getHtmlPage(options?.name), options, undefined, (filename || userSettings.outputArchiveName) + '-html'));
+            }
         },
-        saveScriptAssets(filename?: string) {
-            file?.archiving((filename || userSettings.outputArchiveName) + '-script', <FileAsset[]> file.getScriptAssets());
+        saveScriptAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+            if (file) {
+                file.archiving(createAssetsOptions(<FileAsset[]> file.getScriptAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-script'));
+            }
         },
-        saveLinkAssets(filename?: string, rel?: string) {
-            file?.archiving((filename || userSettings.outputArchiveName) + '-link', <FileAsset[]> file.getLinkAssets(rel));
+        saveLinkAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+            if (file) {
+                file.archiving(createAssetsOptions(<FileAsset[]> file.getLinkAssets(options?.rel), options, undefined, (filename || userSettings.outputArchiveName) + '-link'));
+            }
         },
-        saveImageAssets(filename?: string) {
-            file?.archiving((filename || userSettings.outputArchiveName) + '-image', <FileAsset[]> file.getImageAssets());
+        saveImageAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+            if (file) {
+                file.archiving(createAssetsOptions(<FileAsset[]> file.getImageAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-image'));
+            }
         },
-        saveFontAssets(filename?: string) {
-            file?.archiving((filename || userSettings.outputArchiveName) + '-font', <FileAsset[]> file.getFontAssets());
+        saveFontAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+            if (file) {
+                file.archiving(createAssetsOptions(<FileAsset[]> file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
+            }
         }
     },
     create() {

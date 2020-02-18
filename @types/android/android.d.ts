@@ -1,6 +1,6 @@
-import { CustomizationResult, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
+import { FileActionOptions, FileAsset } from '../base/application';
+import { CustomizationResult, FileOutputOptions, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
 import { Constraint, LocalSettingsAndroidUI, SupportAndroid, SpacerAttribute, ViewAttribute, WrapperOptions } from './node';
-import { FileOutputOptions } from './resource';
 
 import LayoutUI = squared.base.LayoutUI;
 
@@ -65,7 +65,7 @@ declare namespace base {
         resourceDrawableToXml(options: FileOutputOptions): string[];
         resourceDrawableImageToXml(options: FileOutputOptions): string[];
         resourceAnimToXml(options: FileOutputOptions): string[];
-        layoutAllToXml(options: FileOutputOptions): {};
+        layoutAllToXml(layouts: FileAsset[], options: FileOutputOptions): {};
     }
 
     class File<T extends View> implements File<T> {}

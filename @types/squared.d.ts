@@ -1,4 +1,4 @@
-import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
+import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, FileActionOptions, FileCopyingOptions, FileArchivingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
 import { AutoMargin, AscendOptions, BoxType, ExcludeOptions, HideOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, SupportUI, VisibleStyle } from './base/node';
 
@@ -22,9 +22,9 @@ declare function retrieve(value: string): Null<{}>;
 declare function ready(): boolean;
 declare function close(): void;
 declare function reset(): void;
-declare function copyToDisk(value: string, callback?: CallbackResult): void;
-declare function appendToArchive(value: string): void;
-declare function saveToArchive(value?: string): void;
+declare function copyToDisk(value: string, options?: FileActionOptions): void;
+declare function appendToArchive(value: string, options?: FileActionOptions): void;
+declare function saveToArchive(value?: string, options?: FileActionOptions): void;
 declare function toString(): string;
 
 declare function apply(value: {} | string, options: {}): boolean;
@@ -55,9 +55,9 @@ declare namespace base {
         insertNode(element: Element, parent?: T, pseudoElt?: string): Undef<T>;
         afterCreateCache(element: HTMLElement): void;
         finalize(): void;
-        copyToDisk(directory: string, callback?: CallbackResult, assets?: FileAsset[]): void;
-        appendToArchive(pathname: string, assets?: FileAsset[]): void;
-        saveToArchive(filename?: string, assets?: FileAsset[]): void;
+        copyToDisk(directory: string, options?: FileActionOptions): void;
+        appendToArchive(pathname: string, options?: FileActionOptions): void;
+        saveToArchive(filename?: string, options?: FileActionOptions): void;
         toString(): string;
     }
 
@@ -266,13 +266,13 @@ declare namespace base {
         resource: Resource<T>;
         readonly userSettings: UserSettings;
         readonly assets: FileAsset[];
-        copyToDisk(directory: string, assets?: FileAsset[], callback?: CallbackResult): void;
-        appendToArchive(pathname: string, assets?: FileAsset[]): void;
-        saveToArchive(filename: string, assets?: FileAsset[]): void;
+        copyToDisk(directory: string, options?: FileActionOptions): void;
+        appendToArchive(pathname: string, options?: FileActionOptions): void;
+        saveToArchive(filename: string, options?: FileActionOptions): void;
         addAsset(data: Optional<RawAsset>): void;
         reset(): void;
-        copying(directory: string, assets: FileAsset[], callback?: CallbackResult): void;
-        archiving(filename: string, assets: FileAsset[], appendTo?: string): void;
+        copying(options: FileCopyingOptions): void;
+        archiving(options: FileArchivingOptions): void;
     }
 
     class File<T extends Node> implements File<T> {

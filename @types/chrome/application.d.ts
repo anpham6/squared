@@ -1,4 +1,4 @@
-import { AppFramework, RawAsset, UserSettings } from '../base/application';
+import { AppFramework, FileCopyingOptions, FileArchivingOptions, RawAsset, UserSettings } from '../base/application';
 
 type View = chrome.base.View;
 
@@ -24,4 +24,14 @@ interface ChromeAsset extends Omit<RawAsset, keyof Dimension | 'content'> {
 
 interface ChromeNodeOptions {
     element: Element;
+}
+
+interface FileCopyingOptionsChrome extends FileCopyingOptions {
+    name?: string;
+    rel?: string;
+}
+
+interface FileArchivingOptionsChrome extends FileArchivingOptions {
+    name?: string;
+    rel?: string;
 }

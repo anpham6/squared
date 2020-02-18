@@ -67,8 +67,9 @@ function createGzipWriteStream(level, filename, filenameOut) {
     return out;
 }
 
-const replaceSeparator = (value) => value.replace(new RegExp(separator_opposing, 'g'), separator);
-const encodeString = (value) => value.replace(/[<>:"/\\|?*]/g, '_');
+const replaceSeparator = value => value.replace(new RegExp(separator_opposing, 'g'), separator);
+const encodeString = value => value.replace(/[<>:"/\\|?*]/g, '_');
+const isLocalFile = value => !/^[A-Za-z]+:\/\//.test(value);
 
 app.post('/api/assets/copy', (req, res) => {
     const dirname = replaceSeparator(req.query.to);
@@ -147,31 +148,41 @@ app.post('/api/assets/copy', (req, res) => {
                     );
                 }
                 else if (uri) {
-                    delayed++;
-                    const stream = fs.createWriteStream(filename);
-                    stream.on('finish', () => {
-                        if (!invalid[filename]) {
-                            writeBuffer();
-                            finalize(true);
-                        }
-                    });
-                    request(uri)
-                        .on('response', err => {
-                            const statusCode = err.statusCode;
-                            if (statusCode !== 200) {
-                                invalid[filename] = true;
-                                if (statusCode === 404) {
-                                    console.log(`FAIL: ${uri} (File not found)`);
-                                }
-                                finalize(true);
-                            }
-                        })
-                        .on('error', () => {
+                    if (!isLocalFile(uri)) {
+                        delayed++;
+                        const stream = fs.createWriteStream(filename);
+                        stream.on('finish', () => {
                             if (!invalid[filename]) {
+                                writeBuffer();
                                 finalize(true);
                             }
-                        })
-                        .pipe(stream);
+                        });
+                        request(uri)
+                            .on('response', err => {
+                                const statusCode = err.statusCode;
+                                if (statusCode !== 200) {
+                                    invalid[filename] = true;
+                                    if (statusCode === 404) {
+                                        console.log(`FAIL: ${uri} (File not found)`);
+                                    }
+                                    finalize(true);
+                                }
+                            })
+                            .on('error', () => {
+                                if (!invalid[filename]) {
+                                    finalize(true);
+                                }
+                            })
+                            .pipe(stream);
+                    }
+                    else {
+                        try {
+                            fs.copyFileSync(replaceSeparator(uri), filename);
+                        }
+                        catch (err) {
+                            console.log(`FAIL: ${uri} (${err})`);
+                        }
+                    }
                 }
             }
             setTimeout(finalize, timeout);
@@ -288,31 +299,41 @@ app.post('/api/assets/archive', (req, res) => {
                     );
                 }
                 else if (uri) {
-                    delayed++;
-                    const stream = fs.createWriteStream(filename);
-                    stream.on('finish', () => {
-                        if (!invalid[filename]) {
-                            writeBuffer();
-                            finalize(true);
-                        }
-                    });
-                    request(uri)
-                        .on('response', err => {
-                            const statusCode = err.statusCode;
-                            if (statusCode !== 200) {
-                                invalid[filename] = true;
-                                if (statusCode === 404) {
-                                    console.log(`FAIL: ${uri} (File not found)`);
-                                }
-                                finalize(true);
-                            }
-                        })
-                        .on('error', () => {
+                    if (!isLocalFile(uri)) {
+                        delayed++;
+                        const stream = fs.createWriteStream(filename);
+                        stream.on('finish', () => {
                             if (!invalid[filename]) {
+                                writeBuffer();
                                 finalize(true);
                             }
-                        })
-                        .pipe(stream);
+                        });
+                        request(uri)
+                            .on('response', err => {
+                                const statusCode = err.statusCode;
+                                if (statusCode !== 200) {
+                                    invalid[filename] = true;
+                                    if (statusCode === 404) {
+                                        console.log(`FAIL: ${uri} (File not found)`);
+                                    }
+                                    finalize(true);
+                                }
+                            })
+                            .on('error', () => {
+                                if (!invalid[filename]) {
+                                    finalize(true);
+                                }
+                            })
+                            .pipe(stream);
+                    }
+                    else {
+                        try {
+                            fs.copyFileSync(uri, filename);
+                        }
+                        catch (err) {
+                            console.log(`FAIL: ${uri} (${err})`);
+                        }
+                    }
                 }
             }
             setTimeout(finalize, timeout);
@@ -333,7 +354,7 @@ app.post('/api/assets/archive', (req, res) => {
                         resume(unzip_to);
                     });
                 };
-                if (/^[A-Za-z]+:\/\//.test(append_to)) {
+                if (!isLocalFile(append_to)) {
                     const stream = fs.createWriteStream(zipname);
                     stream.on('finish', copied);
                     request(append_to)

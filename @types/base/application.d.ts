@@ -8,6 +8,7 @@ export interface UserSettings {
     showErrorMessages: boolean;
     createQuerySelectorMap: boolean;
     outputDirectory: string;
+    outputEmptyCopyDirectory: boolean;
     outputArchiveFormat: string;
     outputArchiveName: string;
     outputArchiveTimeout: number;
@@ -200,4 +201,18 @@ export interface NodeXmlTemplate<T extends NodeUI> extends NodeTemplate<T> {
 
 export interface NodeIncludeTemplate<T extends NodeUI> extends NodeTemplate<T> {
     content: string;
+}
+
+export interface FileActionOptions {
+    assets?: FileAsset[];
+    callback?: CallbackResult;
+}
+
+export interface FileCopyingOptions extends FileActionOptions {
+    directory?: string;
+}
+
+export interface FileArchivingOptions extends FileActionOptions {
+    filename?: string;
+    appendTo?: string;
 }

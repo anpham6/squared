@@ -1,4 +1,4 @@
-import { ControllerUISettings, ResourceStoredMap, UserUISettings } from '../base/application';
+import { ControllerUISettings, FileAsset, FileCopyingOptions, FileArchivingOptions, ResourceStoredMap, UserUISettings } from '../base/application';
 
 type View = android.base.View;
 
@@ -43,5 +43,7 @@ export interface StyleAttribute {
     };
     ids?: number[];
 }
+
+export interface FileOutputOptions extends FileCopyingOptions, FileArchivingOptions {}
 
 export type CustomizationResult = (result: {}, api?: number, node?: View) => boolean;
