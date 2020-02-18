@@ -9,6 +9,11 @@ type View = android.base.View;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
 
+const checkMarginLeft = (parent: View, item: View) => item.marginLeft < 0 && (parent.documentRoot || item.linear.left < Math.floor(parent.bounds.left));
+const checkMarginRight = (parent: View, item: View) => item.marginRight < 0 && (parent.documentRoot || item.linear.right > Math.ceil(parent.bounds.right));
+const checkMarginTop = (parent: View, item: View) => item.marginTop < 0 && (parent.documentRoot || item.linear.top < Math.floor(parent.bounds.top));
+const checkMarginBottom = (parent: View, item: View) => item.marginBottom < 0 && (parent.documentRoot || item.linear.bottom > Math.ceil(parent.bounds.bottom));
+
 export interface FixedData {
     children: View[];
     right: boolean;
@@ -37,7 +42,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     if (value >= 0 && value < paddingLeft) {
                         children.add(item);
                     }
-                    else if (!item.hasPX('right') && item.marginLeft < 0 && (node.documentRoot || item.linear.left < Math.floor(node.bounds.left))) {
+                    else if (!item.hasPX('right') && checkMarginLeft(node, item)) {
                         children.add(item);
                     }
                 }
@@ -47,16 +52,19 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                         children.add(item);
                         right = true;
                     }
-                    else if (item.marginRight < 0 && (node.documentRoot || item.linear.right > Math.ceil(node.bounds.right))) {
+                    else if (checkMarginRight(node, item)) {
                         children.add(item);
                     }
+                }
+                else if (checkMarginLeft(node, item) || checkMarginRight(node, item)) {
+                    children.add(item);
                 }
                 if (item.hasPX('top')) {
                     const value = item.top;
                     if (value >= 0 && value < paddingTop) {
                         children.add(item);
                     }
-                    else if (!item.hasPX('bottom') && item.marginTop < 0 && (node.documentRoot || item.linear.top < Math.floor(node.bounds.top))) {
+                    else if (!item.hasPX('bottom') && checkMarginTop(node, item)) {
                         children.add(item);
                     }
                 }
@@ -66,9 +74,12 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                         children.add(item);
                         bottom = true;
                     }
-                    else if (item.marginBottom < 0 && (node.documentRoot || item.linear.bottom > Math.ceil(node.bounds.bottom))) {
+                    else if (checkMarginBottom(node, item)) {
                         children.add(item);
                     }
+                }
+                else if (checkMarginTop(node, item) || checkMarginBottom(node, item)) {
+                    children.add(item);
                 }
             }
             if (children.size) {

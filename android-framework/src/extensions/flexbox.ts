@@ -20,6 +20,8 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 const NodeUI = $base.NodeUI;
 const FLEXBOX = $base_lib.constant.EXT_NAME.FLEXBOX;
 
+type WH = "width" | "height";
+
 type FlexBasis = {
     item: View;
     basis: number;
@@ -31,8 +33,8 @@ type FlexBasis = {
 const MAP_horizontal = {
     orientation: STRING_ANDROID.HORIZONTAL,
     orientationInverse: STRING_ANDROID.VERTICAL,
-    WH: 'Width',
-    HW: 'Height',
+    WHL: 'width',
+    HWL: 'height',
     LT: 'left',
     TL: 'top',
     RB: 'right',
@@ -43,8 +45,8 @@ const MAP_horizontal = {
 const MAP_vertical = {
     orientation: STRING_ANDROID.VERTICAL,
     orientationInverse: STRING_ANDROID.HORIZONTAL,
-    WH: 'Height',
-    HW: 'Width',
+    WHL: 'height',
+    HWL: 'width',
     LT: 'top',
     TL: 'left',
     RB: 'bottom',
@@ -57,7 +59,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") 
     const horizontal = attr === 'width';
     const hasDimension = 'has' + capitalize(attr);
     const setPercentage = (item: View) => item.flexbox.basis = (item.bounds[attr] / parent.box[attr] * 100) + '%';
-    let percent = parent[hasDimension] || parent.blockStatic && withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight')), parent.box.width);
+    let percent: boolean = parent[hasDimension] || parent.blockStatic && withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight')), parent.box.width);
     let result = 0;
     let growShrinkType = 0;
     for (const item of items) {
@@ -359,13 +361,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 if (length === 0) {
                     return;
                 }
-                const { orientation, orientationInverse, WH, HW, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_horizontal : MAP_vertical;
+                const { orientation, orientationInverse, WHL, HWL, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_horizontal : MAP_vertical;
+                const [dimension, dimensionInverse] = horizontal ? [node.hasHeight, node.hasWidth] : [node.hasWidth, node.hasHeight];
                 const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
-                const WHL = horizontal ? 'width' : 'height';
-                const HWL = HW.toLowerCase();
-                const dimension: boolean = node['has' + HW];
-                const dimensionInverse: boolean = node['has' + WH];
-                function setLayoutWeight(chain: T, value: number) {
+                const setLayoutWeight = (chain: T, value: number) => {
                     if (chain[WHL] === 0) {
                         chain.app(orientationWeight, truncate(value, chain.localSettings.floatPrecision));
                         if (horizontal) {
@@ -375,7 +374,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             chain.setLayoutHeight('0px');
                         }
                     }
-                }
+                };
                 for (let i = 0; i < length; i++) {
                     const seg = partition[i];
                     const lengthA = seg.length;
@@ -426,7 +425,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             percentHeight = View.availablePercent(seg, 'height', node.box.height);
                         }
                         growAll = horizontal || dimensionInverse;
-                        growAvailable = 1 - adjustGrowRatio(node, seg, WHL);
+                        growAvailable = 1 - adjustGrowRatio(node, seg, <WH> WHL);
                         if (lengthA > 1) {
                             let sizeCount = 0;
                             for (const chain of seg) {
@@ -633,7 +632,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 }
                             }
-                            [percentWidth, percentHeight] = View.setFlexDimension(chain, WHL, percentWidth, percentHeight);
+                            [percentWidth, percentHeight] = View.setFlexDimension(chain, <WH> WHL, percentWidth, percentHeight);
                             if (!chain.innerMostWrapped.has('flexGrow')) {
                                 growAll = false;
                             }

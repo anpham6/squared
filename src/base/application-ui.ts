@@ -1174,7 +1174,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         break traverse;
                                     }
                                 }
-                                else if (item.positionAuto) {
+                                else if (item.autoPosition) {
                                     const lengthA = vertical.length;
                                     if (lengthA) {
                                         if (vertical[lengthA - 1].blockStatic) {

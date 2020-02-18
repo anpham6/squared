@@ -549,13 +549,13 @@ export function flatArray<T>(list: any[]): T[] {
 }
 
 export function flatMultiArray<T>(list: any[]): T[] {
-    const result: T[] = [];
+    let result: T[] = [];
     const length = list.length;
     for (let i = 0; i < length; i++) {
         const item = list[i];
         if (Array.isArray(item)) {
             if (item.length) {
-                result.push(...flatMultiArray<T>(item));
+                result = result.concat(flatMultiArray<T>(item));
             }
         }
         else if (item !== undefined && item !== null) {

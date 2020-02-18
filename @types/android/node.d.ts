@@ -1,4 +1,4 @@
-import { CachedValueUI, ExcludeOptions, LocalSettingsUI, Support } from '../base/node';
+import { CachedValueUI, ExcludeOptions, LocalSettingsUI, SupportUI } from '../base/node';
 
 export interface LocalSettingsAndroidUI extends LocalSettingsUI {
     supportRTL: boolean;
@@ -40,6 +40,6 @@ export interface WrapperOptions extends ExcludeOptions {
     ignoreRoot?: boolean;
 }
 
-export interface SupportAndroid extends Support {
+export interface SupportAndroid extends SupportUI {
     maxDimension: boolean;
 }

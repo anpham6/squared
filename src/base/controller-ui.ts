@@ -447,7 +447,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 let parent: Undef<T>;
                 switch (node.css('position')) {
                     case 'fixed':
-                        if (!node.positionAuto) {
+                        if (!node.autoPosition) {
                             parent = documentRoot;
                             break;
                         }
@@ -455,38 +455,38 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         const absoluteParent = node.absoluteParent as T;
                         if (absoluteParent) {
                             parent = absoluteParent;
-                            if (node.positionAuto) {
+                            if (node.autoPosition) {
                                 if (!node.siblingsLeading.some(item => item.multiline || item.excluded && !item.blockStatic)) {
                                     node.cssApply({ display: 'inline-block', verticalAlign: 'top' }, true);
                                 }
                                 else {
-                                    node.positionAuto = false;
+                                    node.autoPosition = false;
                                 }
                                 parent = actualParent;
                             }
-                            else if (this.userSettings.supportNegativeLeftTop && parent !== documentRoot) {
+                            else if (this.userSettings.supportNegativeLeftTop) {
                                 let outside = false;
-                                do {
+                                while (parent && parent !== documentRoot && (!parent.rightAligned && !parent.centerAligned || !parent.pageFlow)) {
                                     const bounds = parent.bounds;
                                     if (!outside) {
-                                        const overflowX = parent.css('overflowX') === 'hidden';
-                                        const overflowY = parent.css('overflowY') === 'hidden';
-                                        if (overflowX && overflowY || node.hasPX('top') && node.hasPX('bottom') || node.hasPX('left') && node.hasPX('right')) {
+                                        if (node.hasPX('top') && node.hasPX('bottom') || node.hasPX('left') && node.hasPX('right')) {
                                             break;
                                         }
                                         else {
+                                            const overflowX = parent.css('overflowX') === 'hidden';
+                                            const overflowY = parent.css('overflowY') === 'hidden';
+                                            if (overflowX && overflowY) {
+                                                break;
+                                            }
                                             const outsideX = !overflowX && node.outsideX(bounds);
                                             const outsideY = !overflowY && node.outsideY(bounds);
-                                            if (!overflowY && node.linear.top < Math.floor(bounds.top) && (node.top < 0 || node.marginTop < 0) || !overflowX && node.linear.left < Math.floor(bounds.left) && (node.left < 0 || node.marginLeft < 0)) {
-                                                outside = true;
-                                            }
-                                            else if (outsideX && node.right > 0 || outsideY && node.bottom > 0) {
+                                            if (outsideX && (node.left < 0 || node.right > 0 || node.marginLeft < 0) || outsideY && (node.top < 0 || node.bottom !== 0 || node.marginTop < 0)) {
                                                 outside = true;
                                             }
                                             else if (outsideX && outsideY && (!parent.pageFlow || (parent.actualParent as T).documentBody) && (node.top > 0 || node.left > 0)) {
                                                 outside = true;
                                             }
-                                            else if (!overflowX && !overflowY && bounds.width > 0 && bounds.height > 0 && !node.intersectX(bounds) && !node.intersectY(bounds)) {
+                                            else if (!overflowX && !overflowY && !node.intersectX(bounds) && !node.intersectY(bounds)) {
                                                 outside = true;
                                             }
                                             else {
@@ -503,7 +503,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                     }
                                     parent = parent.actualParent as T;
                                 }
-                                while (parent && parent !== documentRoot);
                             }
                         }
                         break;

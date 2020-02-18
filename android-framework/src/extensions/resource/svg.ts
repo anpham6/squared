@@ -1094,9 +1094,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                             let companion: Undef<SvgShape>;
                                             if (parent && SvgBuild.isShape(parent)) {
                                                 companion = parent;
-                                                if (parent.path) {
-                                                    transforms = parent.path.transformed;
-                                                }
+                                                transforms = parent.path?.transformed;
                                             }
                                             propertyNames = ['pathData'];
                                             values = SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, companion, precision);

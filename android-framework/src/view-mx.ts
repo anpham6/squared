@@ -2258,7 +2258,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             let result = this._cached.support;
             if (result === undefined) {
                 result = <SupportAndroid> {
-                    positionRelative: this.layoutRelative || this.layoutConstraint,
+                    positionTranslation: this.layoutConstraint,
+                    positionRelative: this.layoutRelative,
                     maxDimension: this.textElement || this.imageOrSvgElement
                 };
                 if (this.containerType !== 0) {

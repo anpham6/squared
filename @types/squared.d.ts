@@ -490,7 +490,7 @@ declare namespace base {
         renderExclude: boolean;
         element: Null<Element>;
         textContent: string;
-        positionAuto: boolean;
+        autoPosition: boolean;
         multiline: boolean;
         overflow: number;
         naturalChild: boolean;

@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { BoxType, CachedValueUI, ExcludeOptions, HideOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, Support } from '../../@types/base/node';
+import { BoxType, CachedValueUI, ExcludeOptions, HideOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, SupportUI } from '../../@types/base/node';
 
 import Node from './node';
 
@@ -264,7 +264,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     nodes.push(node);
                 }
-                else if (node.positionAuto) {
+                else if (node.autoPosition) {
                     nodes.push(node);
                 }
             }
@@ -456,7 +456,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract get controlId(): string;
     public abstract get documentId(): string;
     public abstract get baselineHeight(): number;
-    public abstract get support(): Support;
+    public abstract get support(): SupportUI;
     public abstract set renderExclude(value: boolean);
     public abstract get renderExclude(): boolean;
 
@@ -620,14 +620,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                     }
-                    if (node.autoMargin.horizontal || node.autoMargin.vertical) {
-                        for (const attr of BOX_MARGIN) {
-                            if (node.cssInitial(attr) === 'auto') {
-                                styleMap[attr] = 'auto';
-                            }
-                        }
-                    }
-                    this.positionAuto = node.positionAuto;
+                    const autoMargin = this.autoMargin
+                    Object.assign(autoMargin, node.autoMargin);
+                    this.autoPosition = node.autoPosition;
                     break;
                 }
                 case 'styleMap':
@@ -834,14 +829,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (this.lineBreak) {
             return NODE_TRAVERSE.LINEBREAK;
         }
-        else if (this.positionAuto) {
-            if (isArray(siblings)) {
-                const previous = siblings[siblings.length - 1];
-                if (previous.blockStatic) {
-                    return NODE_TRAVERSE.VERTICAL;
-                }
-            }
-            return NODE_TRAVERSE.HORIZONTAL;
+        else if (this.autoPosition && isArray(siblings)) {
+            return siblings[siblings.length - 1].blockStatic ? NODE_TRAVERSE.VERTICAL : NODE_TRAVERSE.HORIZONTAL;
         }
         else if (this.pageFlow) {
             const floating = this.floating;
@@ -1190,7 +1179,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     case 'right':
                     case 'bottom':
                     case 'left':
-                        cached.positionAuto = undefined;
+                        cached.autoPosition = undefined;
                         break;
                     case 'lineHeight':
                         cached.baselineHeight = undefined;
@@ -1325,20 +1314,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return super.rightAligned || this.hasAlign(NODE_ALIGNMENT.RIGHT);
     }
 
-    set positionAuto(value) {
-        this._cached.positionAuto = value;
+    set autoPosition(value) {
+        this._cached.autoPosition = value;
     }
-    get positionAuto() {
-        let result = this._cached.positionAuto;
+    get autoPosition() {
+        let result = this._cached.autoPosition;
         if (result === undefined) {
             if (this.pageFlow) {
                 result = false;
             }
             else {
-                const { top, right, bottom, left } = this._initial?.styleMap || this._styleMap;
-                result = (!top || top === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto') && (!left || left === 'auto') && this.toFloat('opacity', 1) > 0;
+                const { top, right, bottom, left } = this._styleMap;
+                result = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto') && this.toFloat('opacity', 1) > 0;
             }
-            this._cached.positionAuto = result;
+            this._cached.autoPosition = result;
         }
         return result;
     }

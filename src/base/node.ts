@@ -874,7 +874,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public outsideX(rect: BoxRectDimension, dimension: BoxType = 'linear') {
         if (this.pageFlow || rect.width > 0) {
             const bounds = this[dimension];
-            return bounds.left < Math.floor(rect.left) || Math.floor(bounds.right) > rect.right;
+            return bounds.left < Math.floor(rect.left) || bounds.right > Math.ceil(rect.right);
         }
         return false;
     }
@@ -882,7 +882,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public outsideY(rect: BoxRectDimension, dimension: BoxType = 'linear') {
         if (this.pageFlow || rect.height > 0) {
             const bounds = this[dimension];
-            return bounds.top < Math.floor(rect.top) || Math.floor(bounds.bottom) > rect.bottom;
+            return bounds.top < Math.floor(rect.top) || bounds.bottom > Math.ceil(rect.bottom);
         }
         return false;
     }
@@ -912,11 +912,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssInitial(attr: string, modified = false, computed = false) {
-        if (this._initial === undefined && !modified) {
-            computed = true;
-        }
-        let value = (!modified && this._initial?.styleMap || this._styleMap)[attr];
-        if (computed && !value) {
+        let value = (this._initial?.styleMap || this._styleMap)[attr] || modified && this._styleMap[attr];
+        if (!value && computed) {
             value = this.style[attr];
         }
         return value || '';
@@ -1460,17 +1457,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     private convertBorderWidth(index: number) {
         if (!this.plainText) {
-            const border = BOX_BORDER[index];
-            const value = this.css(border[0]);
+            const [borderStyle, borderWidth] = BOX_BORDER[index];
+            const value = this.css(borderStyle);
             if (value !== 'none') {
-                const attr = border[1];
-                const width = this.css(attr);
+                const width = this.css(borderWidth);
                 let result: number;
                 switch (width) {
                     case 'thin':
                     case 'medium':
                     case 'thick':
-                        result = convertFloat(this.style[attr]);
+                        result = convertFloat(this.style[borderWidth]);
                         break;
                     default:
                         result = this.parseUnit(width, index === 1 || index === 3 ? 'width' : 'height');
@@ -2346,7 +2342,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.autoMargin;
         if (result === undefined) {
             if (!this.pageFlow || this.blockStatic || this.display === 'table') {
-                const styleMap = this._initial?.styleMap || this._styleMap;
+                const styleMap = this._styleMap;
                 const left = styleMap.marginLeft === 'auto' && (this.pageFlow || this.hasPX('right'));
                 const right = styleMap.marginRight === 'auto' && (this.pageFlow || this.hasPX('left'));
                 const top = styleMap.marginTop === 'auto' && (this.pageFlow || this.hasPX('bottom'));

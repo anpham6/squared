@@ -226,77 +226,6 @@ function causesLineBreak(element: Element, sessionId: string) {
     return false;
 }
 
-function setColumnHorizontal(seg: View[]) {
-    const length = seg.length;
-    for (let i = 0; i < length; i++) {
-        const item = seg[i];
-        if (i > 0) {
-            item.anchor('leftRight', seg[i - 1].documentId);
-        }
-        if (i < length - 1) {
-            item.anchor('rightLeft', seg[i + 1].documentId);
-        }
-        item.anchored = true;
-    }
-    const rowStart = seg[0];
-    const rowEnd = seg[length - 1];
-    rowStart.anchor('left', 'parent');
-    rowEnd.anchor('right', 'parent');
-    rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 0, 'spread_inside');
-}
-
-function setColumnVertical(partition: View[][], lastRow: boolean, previousRow?: View | string) {
-    const rowStart = partition[0][0];
-    const length = partition.length;
-    for (let i = 0; i < length; i++) {
-        const seg = partition[i];
-        const lengthA = seg.length;
-        for (let j = 0; j < lengthA; j++) {
-            const item = seg[j];
-            if (j === 0) {
-                if (i === 0) {
-                    if (previousRow) {
-                        previousRow.anchor('bottomTop', item.documentId);
-                        item.anchor('topBottom', typeof previousRow === 'string' ? previousRow : previousRow.documentId);
-                    }
-                    else {
-                        item.anchor('top', 'parent');
-                        item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
-                    }
-                }
-                else {
-                    item.anchor('top', rowStart.documentId);
-                    item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
-                    item.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                }
-            }
-            else {
-                const previous = seg[j - 1];
-                previous.anchor('bottomTop', item.documentId);
-                item.anchor('topBottom', previous.documentId);
-            }
-            if (j > 0) {
-                item.anchor('left', seg[0].documentId);
-            }
-            if (j === lengthA - 1) {
-                if (lastRow) {
-                    item.anchor('bottom', 'parent');
-                }
-                else if (i > 0 && !item.multiline) {
-                    const adjacent = partition[i - 1][j];
-                    if (adjacent?.multiline === false && Math.floor(item.bounds.top) === Math.floor(adjacent.bounds.top)) {
-                        item.anchor('top', adjacent.documentId);
-                        item.modifyBox(BOX_STANDARD.MARGIN_TOP, -adjacent.marginTop);
-                    }
-                }
-                item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM);
-            }
-            item.anchored = true;
-            item.positioned = true;
-        }
-    }
-}
-
 function setReadOnly(node: View) {
     const element = <HTMLInputElement> node.element;
     if (element.readOnly) {
@@ -405,14 +334,14 @@ function setVerticalAlignment(node: View) {
         bias = autoMargin.top ? 1 : 0;
     }
     if (!isNaN(bias)) {
-        node.anchorStyle(STRING_ANDROID.VERTICAL, bias);
+        node.anchorStyle(STRING_ANDROID.VERTICAL, bias, 'packed', false);
     }
 }
 
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
-const getRelativeVertical = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative || !item.pageFlow && item.positionAuto) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
+const getRelativeVertical = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 const getRelativeVerticalAligned = (layout: squared.base.LayoutUI<View>) => layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR;
 const getAnchorDirection = (reverse: boolean) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 
@@ -521,7 +450,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (node.has('columnCount') || node.hasPX('columnWidth')) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.COLUMN | NODE_ALIGNMENT.AUTO_LAYOUT);
         }
-        else if (layout.some(item => !item.pageFlow && !item.positionAuto)) {
+        else if (layout.some(item => !item.pageFlow && !item.autoPosition)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.ABSOLUTE | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (layout.length <= 1) {
@@ -645,7 +574,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]) {
         const parent = layout.parent;
-        if (layout.floated.size === 1 && layout.same((item, index) => item.floating && item.positiveAxis ? -1 : index)) {
+        if (layout.floated.size === 1 && layout.every(item => item.floating)) {
             layout.node = this.createNodeGroup(layout.node, layout.children, parent);
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
         }
@@ -812,7 +741,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     continue;
                 }
                 else {
-                    if (A && !(node.positiveAxis && (node.floating || node.autoMargin.horizontal || node.inlineDimension && (node.autoMargin.vertical || node.imageOrSvgElement) || node.positionAuto))) {
+                    if (A && !(node.floating || node.autoMargin.horizontal || node.imageOrSvgElement || node.autoPosition)) {
                         A = false;
                     }
                     if (B && node.percentWidth === 0) {
@@ -841,7 +770,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
         }
         if (valid || layout.some(node => node.blockVertical || node.percentWidth > 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight)) {
-            return layout.singleRowAligned && layout.every(node => node.positiveAxis);
+            return layout.singleRowAligned;
         }
         return false;
     }
@@ -851,7 +780,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if ((floated.size === 0 || floated.size === 1 && floated.has('left')) && layout.node.lineHeight === 0 && layout.singleRowAligned) {
             const { fontSize, lineHeight } = layout.item(0) as T;
             for (const node of layout) {
-                if (!(node.naturalChild && node.length === 0 && !node.inputElement && !node.controlElement && !node.positionRelative && node.css('verticalAlign') === 'baseline' && !node.blockVertical && !node.positionAuto && node.zIndex === 0 && (lineHeight === 0 || node.lineHeight === lineHeight && node.fontSize === fontSize))) {
+                if (!(node.naturalChild && node.length === 0 && !node.inputElement && !node.controlElement && !node.positionRelative && node.css('verticalAlign') === 'baseline' && !node.blockVertical && !node.autoPosition && node.zIndex === 0 && (lineHeight === 0 || node.lineHeight === lineHeight && node.fontSize === fontSize))) {
                     return false;
                 }
             }
@@ -875,7 +804,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let j = 0;
                 for (const item of renderChildren) {
                     if (!item.positioned) {
-                        if (item.pageFlow || item.positionAuto) {
+                        if (item.pageFlow || item.autoPosition) {
                             pageFlow[j++] = item;
                         }
                         else if (item.outerWrapper === node) {
@@ -911,9 +840,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     else {
                         const item = pageFlow[0];
-                        item.anchorParent(STRING_ANDROID.VERTICAL);
-                        setVerticalAlignment(item);
-                        item.anchorParent(STRING_ANDROID.HORIZONTAL, item.centerAligned ? 0.5 : (item.rightAligned ? 1 : 0), 'packed', false);
+                        const { horizontal, vertical } = item.constraint;
+                        if (!horizontal) {
+                            item.anchorParent(STRING_ANDROID.HORIZONTAL, item.centerAligned ? 0.5 : (item.rightAligned ? 1 : 0), 'packed', false);
+                        }
+                        if (!vertical) {
+                            item.anchorParent(STRING_ANDROID.VERTICAL);
+                            setVerticalAlignment(item);
+                        }
                         View.setConstraintDimension(item);
                     }
                     this.evaluateAnchors(pageFlow);
@@ -1089,7 +1023,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     container.inherit(node, 'base');
                     container.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
                     container.cssApply({ position: node.css('position'), zIndex: node.zIndex.toString() });
-                    container.positionAuto = false;
+                    container.autoPosition = false;
                     if (width > 0) {
                         container.setLayoutWidth(width < absoluteParent.box.width ? formatPX(width) : 'match_parent');
                     }
@@ -1516,7 +1450,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     return;
                 }
             }
-            if (node.positionAuto) {
+            if (node.autoPosition) {
                 const siblingsLeading = node.siblingsLeading;
                 if (siblingsLeading.length && node.alignedVertically() === 0) {
                     const previousSibling = siblingsLeading[0] as T;
@@ -1638,8 +1572,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     constraint_referenced_ids: objectMap(unbound, item => getDocumentId(item.anchorTarget.documentId)).join(',')
                 }
             });
-            const target = unbound[unbound.length - 1];
-            this.addAfterOutsideTemplate(target.anchorTarget.id, this.renderNodeStatic(target.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.BARRIER : CONTAINER_ANDROID_X.BARRIER, options), false);
+            const { api, anchorTarget } = unbound[unbound.length - 1];
+            const content = this.renderNodeStatic(api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.BARRIER : CONTAINER_ANDROID_X.BARRIER, options);
+            switch (barrierDirection) {
+                case 'top':
+                case 'left':
+                    this.addBeforeOutsideTemplate(anchorTarget.id, content, false);
+                    break;
+                default:
+                    this.addAfterOutsideTemplate(anchorTarget.id, content, false);
+                    break;
+            }
             const documentId = options.documentId;
             if (documentId) {
                 for (const node of unbound) {
@@ -1670,7 +1613,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const next = nodes.find(item => item.documentId === bottomTop);
                         if (next?.alignSibling('topBottom') === current.documentId) {
                             if (next.alignParent('bottom')) {
-                                node.anchorStyle(STRING_ANDROID.VERTICAL, 0, 'packed', false);
                                 break;
                             }
                             else {
@@ -2160,7 +2102,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (rowsLeft.length > 1 || rowsRight && rowsRight.length > 1) {
             alignmentMultiLine = true;
         }
-        const setVerticalAlign = (rows: T[][]) => {
+        const applyLayout = (rows: T[][]) => {
             let previousBaseline: Null<T> = null;
             const length = rows.length;
             const singleRow = length === 1 && !node.hasHeight;
@@ -2344,9 +2286,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 previousBaseline = baseline;
             }
         };
-        setVerticalAlign(rowsLeft);
+        applyLayout(rowsLeft);
         if (rowsRight) {
-            setVerticalAlign(rowsRight);
+            applyLayout(rowsRight);
         }
         if (alignmentMultiLine) {
             node.horizontalRows = rowsRight ? rowsLeft.concat(rowsRight) : rowsLeft;
@@ -2354,15 +2296,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (sortPositionAuto) {
             const renderChildren = node.renderChildren;
             const renderTemplates = <NodeTemplate<T>[]> node.renderTemplates;
-            const positionAuto: NodeTemplate<T>[] = [];
+            const autoPosition: NodeTemplate<T>[] = [];
             for (let i = 0; i < renderChildren.length; i++) {
                 if (!renderChildren[i].pageFlow) {
-                    positionAuto.push(renderTemplates[i]);
+                    autoPosition.push(renderTemplates[i]);
                     renderChildren.splice(i, 1);
                     renderTemplates.splice(i--, 1);
                 }
             }
-            for (const item of positionAuto) {
+            for (const item of autoPosition) {
                 renderChildren.push(item.node);
                 renderTemplates.push(item);
             }
@@ -2414,7 +2356,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         item.anchor(anchorEnd, 'parent');
                     }
                 }
-                else if (item.positionAuto) {
+                else if (item.autoPosition) {
                     item.anchor(chainStart, previous.documentId);
                 }
             }
@@ -2506,7 +2448,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 percentWidth = View.setConstraintDimension(item, percentWidth);
                 previous = item;
             }
-            else if (item.positionAuto) {
+            else if (item.autoPosition) {
                 if (documentId) {
                     item.anchor('top', documentId);
                 }
@@ -2622,21 +2564,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     previousRow.anchor('bottomTop', rowStart.documentId);
                     rowStart.anchor('topBottom', typeof previousRow === 'string' ? previousRow : previousRow.documentId);
                 }
-                if (rowStart.rightAligned) {
-                    rowStart.anchorParent(STRING_ANDROID.HORIZONTAL, 1);
-                }
-                else if (rowStart.centerAligned) {
-                    rowStart.anchorParent(STRING_ANDROID.HORIZONTAL, 0);
-                }
-                else {
-                    rowStart.anchorParent(STRING_ANDROID.HORIZONTAL, 0);
-                }
                 if (i === length - 1) {
                     rowStart.anchor('bottom', 'parent');
                 }
                 else {
                     previousRow = row[0];
                 }
+                rowStart.anchorParent(STRING_ANDROID.HORIZONTAL, rowStart.rightAligned ? 1 : (rowStart.centerAligned ? 0.5 : 0));
             }
             else {
                 const columns: T[][] = [];
@@ -2651,11 +2585,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     let totalGap = 0;
                     for (let j = 0, k = 0, l = 0; j < lengthA; j++, l++) {
                         const item = row[j];
-                        const rowIteration = l % perRowCount === 0;
-                        if (k < columnMin - 1 && (rowIteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < lengthA - 2 && (lengthA - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
+                        const iteration = l % perRowCount === 0;
+                        if (k < columnMin - 1 && (iteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < lengthA - 2 && (lengthA - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                             if (j > 0) {
                                 k++;
-                                if (rowIteration) {
+                                if (iteration) {
                                     excessCount--;
                                 }
                                 else {
@@ -2663,7 +2597,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                             l = 0;
-                            if (!rowIteration && excessCount > 0) {
+                            if (!iteration && excessCount > 0) {
                                 rowReduce = true;
                             }
                         }
@@ -2695,72 +2629,123 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else {
                     columns.push(row);
                 }
-                const horizontal: T[] = [];
                 const lengthB = columns.length;
+                const above: T[] = new Array(lengthB);
                 for (let j = 0; j < lengthB; j++) {
                     const data = columns[j];
                     for (const item of data) {
                         item.app('layout_constraintWidth_percent', truncate((1 / columnMin) - percentGap, node.localSettings.floatPrecision));
                         item.setLayoutWidth('0px');
                     }
-                    horizontal.push(data[0]);
+                    above[j] = data[0];
                 }
-                const columnHeight: number[] = new Array(lengthB).fill(0);
-                const barrier: T[] = [];
                 for (let j = 0; j < lengthB; j++) {
                     const item = columns[j];
                     if (j < lengthB - 1 && item.length > 1) {
                         const columnEnd = item[item.length - 1];
                         if (/^H\d/.test(columnEnd.tagName)) {
                             item.pop();
-                            horizontal[j + 1] = columnEnd;
+                            above[j + 1] = columnEnd;
                             columns[j + 1].unshift(columnEnd);
                         }
                     }
-                    const elements: Element[] = [];
-                    const lengthC = item.length;
+                }
+                for (let j = 0; j < lengthB; j++) {
+                    const item = above[j];
+                    if (j === 0) {
+                        item.anchor('left', 'parent');
+                        item.anchorStyle(STRING_ANDROID.HORIZONTAL, 0, 'spread_inside');
+                    }
+                    else {
+                        item.anchor('leftRight', above[j - 1].documentId);
+                        item.modifyBox(BOX_STANDARD.MARGIN_LEFT, columnGap);
+                    }
+                    if (j === lengthB - 1) {
+                        item.anchor('right', 'parent');
+                    }
+                    else {
+                        item.anchor('rightLeft', above[j + 1].documentId);
+                    }
+                }
+                for (let j = 0; j < lengthB; j++) {
+                    const seg = columns[j];
+                    const lengthC = seg.length;
                     for (let k = 0; k < lengthC; k++) {
-                        const column = item[k];
-                        if (column.naturalChild) {
-                            elements.push(<Element> (<Element> column.element).cloneNode(true));
+                        const item = seg[k];
+                        if (k === 0) {
+                            if (j === 0) {
+                                if (previousRow) {
+                                    previousRow.anchor('bottomTop', item.documentId);
+                                    item.anchor('topBottom', typeof previousRow === 'string' ? previousRow : previousRow.documentId);
+                                }
+                                else {
+                                    item.anchor('top', 'parent');
+                                    item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
+                                }
+                            }
+                            else {
+                                item.anchor('top', above[0].documentId);
+                                item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
+                                item.modifyBox(BOX_STANDARD.MARGIN_TOP);
+                            }
                         }
                         else {
-                            columnHeight[j] += column.linear.height;
+                            const previous = seg[k - 1];
+                            previous.anchor('bottomTop', item.documentId);
+                            item.anchor('topBottom', previous.documentId);
                         }
-                    }
-                    if (elements.length) {
-                        const container = createElement(document.body, 'div', {
-                            width: formatPX(columnWidth || node.box.width / columnMin),
-                            visibility: 'hidden'
-                        });
-                        for (const element of elements) {
-                            container.appendChild(element);
+                        if (k > 0) {
+                            item.anchor('left', seg[0].documentId);
                         }
-                        columnHeight[j] += container.getBoundingClientRect().height;
-                        document.body.removeChild(container);
+                        if (k === lengthC - 1) {
+                            if (i === length - 1) {
+                                item.anchor('bottom', 'parent');
+                            }
+                            item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM);
+                        }
+                        item.anchored = true;
+                        item.positioned = true;
                     }
                 }
-                const lengthD = horizontal.length;
-                for (let j = 1; j < lengthD; j++) {
-                    horizontal[j].modifyBox(BOX_STANDARD.MARGIN_LEFT, columnGap);
-                }
-                setColumnHorizontal(horizontal);
-                setColumnVertical(columns, i === length - 1, previousRow);
-                previousRow = undefined;
-                if (columns.every(item => item.length === 1)) {
-                    for (const item of columns) {
-                        barrier.push(item[item.length - 1]);
+                if (i < length - 1) {
+                    if (columns.every(item => item.length === 1)) {
+                        const barrier: T[] = [];
+                        for (const item of columns) {
+                            barrier.push(item[0]);
+                        }
+                        previousRow = this.addBarrier(barrier, 'bottom');
                     }
-                    previousRow = this.addBarrier(barrier, 'bottom');
-                }
-                if (!previousRow) {
-                    let maxColumnHeight = 0;
-                    const lengthE = columnHeight.length;
-                    for (let j = 0; j < lengthE; j++) {
-                        const value = columnHeight[j];
-                        if (value >= maxColumnHeight) {
-                            previousRow = columns[j].pop() as T;
-                            maxColumnHeight = value;
+                    else {
+                        const columnHeight: number[] = new Array(lengthB).fill(0);
+                        for (let j = 0; j < lengthB; j++) {
+                            const seg = columns[j];
+                            const elements: Element[] = [];
+                            const lengthC = seg.length;
+                            for (let k = 0; k < lengthC; k++) {
+                                const column = seg[k];
+                                if (column.naturalChild) {
+                                    elements.push(<Element> (<Element> column.element).cloneNode(true));
+                                }
+                                else {
+                                    columnHeight[j] += column.linear.height;
+                                }
+                            }
+                            if (elements.length) {
+                                const container = createElement(document.body, 'div', { width: formatPX(columnWidth || node.box.width / columnMin), visibility: 'hidden' });
+                                for (const element of elements) {
+                                    container.appendChild(element);
+                                }
+                                columnHeight[j] += container.getBoundingClientRect().height;
+                                document.body.removeChild(container);
+                            }
+                        }
+                        let maxHeight = 0;
+                        for (let j = 0; j < lengthB; j++) {
+                            const value = columnHeight[j];
+                            if (value >= maxHeight) {
+                                previousRow = columns[j].pop() as T;
+                                maxHeight = value;
+                            }
                         }
                     }
                 }
@@ -2836,7 +2821,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const previous = seg[j - 1];
                         const next = seg[j + 1];
                         if (previous) {
-                            if (!previous.pageFlow && previous.positionAuto) {
+                            if (!previous.pageFlow && previous.autoPosition) {
                                 let found: Undef<T>;
                                 for (let k = j - 2; k >= 0; k--) {
                                     found = seg[k];
@@ -2880,10 +2865,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         if (reverse && Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(parent.box[anchorEnd]) < chain.linear.width) {
                                             continue;
                                         }
-                                        const barrierId = this.addBarrier([previousSiblings[k + 1]], anchorStart);
-                                        chain.anchor(anchorStart, barrierId, true);
-                                        rowStart.anchorDelete(chainEnd);
+                                        chain.anchorDelete(anchorStart);
+                                        chain.anchor(chainStart, aboveBefore.documentId, true);
+                                        if (reverse) {
+                                            chain.modifyBox(BOX_STANDARD.MARGIN_RIGHT, aboveBefore.marginLeft);
+                                        }
+                                        else {
+                                            chain.modifyBox(BOX_STANDARD.MARGIN_LEFT, aboveBefore.marginRight);
+                                        }
                                         rowStart.delete('app', 'layout_constraintHorizontal_chainStyle', 'layout_constraintHorizontal_bias');
+                                        rowStart.anchorDelete(chainEnd);
                                         rowEnd.anchorDelete(anchorEnd);
                                         if (currentRowTop === undefined) {
                                             currentRowTop = chain;
@@ -2912,7 +2903,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const lengthA = partition.length;
                         for (let k = 1; k < lengthA; k++) {
                             const item = partition[k];
-                            if (item.linear.top < current.linear.bottom) {
+                            if (item.linear.top < current.linear.top) {
                                 current = item;
                             }
                         }
@@ -2925,13 +2916,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     above.anchor('bottomTop', current.documentId);
                 }
                 else {
-                    let barrierId: string;
+                    const barrierId = this.addBarrier(partition, 'top');
                     if (aboveRowEnd && currentRowTop) {
-                        barrierId = this.addBarrier([aboveRowEnd], 'bottom');
                         aboveRowEnd.anchor('bottomTop', barrierId);
                     }
                     else {
-                        barrierId = this.addBarrier(previousRow, 'bottom');
                         for (const chain of previousRow) {
                             chain.anchor('bottomTop', barrierId);
                         }

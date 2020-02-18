@@ -88,12 +88,12 @@ export interface CachedValue<T> {
 }
 
 export interface CachedValueUI<T> extends CachedValue<T> {
-    positionAuto?: boolean;
+    autoPosition?: boolean;
     positiveAxis?: boolean;
     renderExclude?: boolean;
     containerName?: string;
     baselineHeight?: number;
-    support?: Support;
+    support?: SupportUI;
     extensions?: string[];
 }
 
@@ -107,8 +107,9 @@ export interface VisibleStyle {
     backgroundRepeatY: boolean;
 }
 
-export interface Support {
+export interface SupportUI {
     positionRelative: boolean;
+    positionTranslation: boolean;
 }
 
 export type AutoMargin = {
