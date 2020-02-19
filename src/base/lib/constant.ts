@@ -13,6 +13,7 @@ export const CSS_SPACING = new Map<number, string>([
 
 export const EXT_NAME = {
     ACCESSIBILITY: 'squared.accessibility',
+    COLUMN: 'squared.column',
     CSS_GRID: 'squared.css-grid',
     FLEXBOX: 'squared.flexbox',
     GRID: 'squared.grid',

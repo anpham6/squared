@@ -103,6 +103,7 @@ declare namespace base {
         formatted(value: string, overwrite?: boolean): void;
         mergeGravity(attr: string, alignment: string, overwrite?: boolean): void;
         anchor(position: string, documentId?: string, overwrite?: boolean): boolean;
+        anchorChain(direction: BoxPosition): View[];
         anchorParent(orientation: string, bias?: number, style?: string, overwrite?: boolean): boolean;
         anchorStyle(orientation: string, bias: number, value?: string, overwrite?: boolean): void;
         anchorDelete(...position: string[]): void;
@@ -124,6 +125,7 @@ declare namespace base {
 
 declare namespace extensions {
     class Accessibility<T extends View> extends squared.base.extensions.Accessibility<T> {}
+    class Column<T extends View> extends squared.base.extensions.Column<T> {}
     class CssGrid<T extends View> extends squared.base.extensions.CssGrid<T> {}
     class External<T extends View> extends squared.base.ExtensionUI<T> {}
     class Flexbox<T extends View> extends squared.base.extensions.Flexbox<T> {}

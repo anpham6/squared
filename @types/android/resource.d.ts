@@ -18,4 +18,5 @@ export interface GradientTemplate {
     centerY?: string;
     gradientRadius?: string;
     tileMode?: string;
+    positioning: boolean;
 }

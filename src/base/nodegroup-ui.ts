@@ -64,8 +64,17 @@ export default abstract class NodeGroupUI extends NodeUI {
     get blockDimension() {
         let result = this._cached.blockDimension;
         if (result === undefined) {
-            result = this.some(node => node.blockDimension);
+            result = this.every(node => node.blockDimension);
             this._cached.blockDimension = result;
+        }
+        return result;
+    }
+
+    get blockVertical() {
+        let result = this._cached.blockVertical;
+        if (result === undefined) {
+            result = this.every(node => node.blockVertical);
+            this._cached.blockVertical = result;
         }
         return result;
     }
@@ -76,7 +85,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             result = this.every(node => node.inline);
             this._cached.inline = result;
         }
-        return result;
+        return result && !this.hasAlign(NODE_ALIGNMENT.BLOCK);
     }
 
     get inlineStatic() {
@@ -85,7 +94,7 @@ export default abstract class NodeGroupUI extends NodeUI {
             result = this.every(node => node.inlineStatic);
             this._cached.inlineStatic = result;
         }
-        return result;
+        return result && !this.hasAlign(NODE_ALIGNMENT.BLOCK);
     }
 
     get inlineVertical() {
@@ -94,16 +103,25 @@ export default abstract class NodeGroupUI extends NodeUI {
             result = this.every(node => node.inlineVertical);
             this._cached.inlineVertical = result;
         }
-        return result;
+        return result && !this.hasAlign(NODE_ALIGNMENT.BLOCK);
     }
 
     get inlineFlow() {
-        let result = this._cached.inlineStatic;
+        let result = this._cached.inlineFlow;
         if (result === undefined) {
-            result = this.inlineStatic || this.hasAlign(NODE_ALIGNMENT.SEGMENTED);
-            this._cached.inlineStatic = result;
+            result = this.every(node => node.inlineFlow);
+            this._cached.inlineFlow = result;
         }
-        return result;
+        return result && !this.hasAlign(NODE_ALIGNMENT.BLOCK);
+    }
+
+    get inlineDimension() {
+        let result = this._cached.inlineDimension;
+        if (result === undefined) {
+            result = this.every(node => node.inlineDimension);
+            this._cached.inlineDimension = result;
+        }
+        return result && !this.hasAlign(NODE_ALIGNMENT.BLOCK);
     }
 
     get pageFlow() {

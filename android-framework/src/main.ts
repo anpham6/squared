@@ -9,6 +9,7 @@ import Resource from './resource';
 import View from './view';
 
 import Accessibility from './extensions/accessibility';
+import Column from './extensions/column';
 import CssGrid from './extensions/cssgrid';
 import External from './extensions/external';
 import Flexbox from './extensions/flexbox';
@@ -90,6 +91,7 @@ const appBase: AppFramework<View> = {
     },
     extensions: {
         Accessibility,
+        Column,
         CssGrid,
         External,
         Flexbox,
@@ -331,6 +333,7 @@ const appBase: AppFramework<View> = {
             [EN.SPRITE]: new Sprite(EN.SPRITE, framework),
             [EN.CSS_GRID]: new CssGrid(EN.CSS_GRID, framework),
             [EN.FLEXBOX]: new Flexbox(EN.FLEXBOX, framework),
+            [EN.COLUMN]: new Column(EN.COLUMN, framework),
             [EN.TABLE]: new Table(EN.TABLE, framework, undefined, ['TABLE']),
             [EN.LIST]: new List(EN.LIST, framework, undefined, ['DIV', 'UL', 'OL', 'DL']),
             [EN.GRID]: new Grid(EN.GRID, framework, undefined, ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET']),

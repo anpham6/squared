@@ -517,8 +517,8 @@ function getTileMode(value: number) {
 }
 
 function createFillGradient(gradient: Gradient, path: SvgPath, precision?: number) {
-    const type = gradient.type;
-    const result: GradientTemplate = { type, item: convertColorStops(gradient.colorStops, precision) };
+    const { colorStops, type } = gradient;
+    const result: GradientTemplate = { type, item: convertColorStops(colorStops, precision), positioning: false };
     switch (type) {
         case 'radial': {
             const { cxAsString, cyAsString, rAsString, spreadMethod } = <SvgRadialGradient> gradient;

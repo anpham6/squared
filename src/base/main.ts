@@ -16,6 +16,7 @@ import NodeGroupUI from './nodegroup-ui';
 import ResourceUI from './resource-ui';
 
 import Accessibility from './extensions/accessibility';
+import Column from './extensions/column';
 import CssGrid from './extensions/cssgrid';
 import Flexbox from './extensions/flexbox';
 import Grid from './extensions/grid';
@@ -31,6 +32,7 @@ import * as enumeration from './lib/enumeration';
 
 const extensions = {
     Accessibility,
+    Column,
     CssGrid,
     Flexbox,
     Grid,

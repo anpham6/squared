@@ -86,3 +86,13 @@ export interface TableCellData {
     exceed?: boolean;
     placed?: boolean;
 }
+
+export interface ColumnData<T> {
+    boxWidth: number,
+    columnCount: number,
+    columnWidth: number,
+    columnSized: number,
+    columnGap: number,
+    rows: T[][],
+    multiline: boolean;
+}

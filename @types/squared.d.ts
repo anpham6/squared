@@ -574,6 +574,7 @@ declare namespace base {
         renderFilter(predicate: IteratorPredicate<NodeUI, boolean>): NodeUI[];
         actualRect(direction: string, dimension?: BoxType): number;
         actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
+        actualBoxWidth(value?: number): number;
         alignedVertically(siblings?: Node[], cleared?: Map<Node, string>, horizontal?: boolean): number;
         previousSiblings(options?: SiblingOptions): NodeUI[];
         nextSiblings(options?: SiblingOptions): NodeUI[];
@@ -613,6 +614,7 @@ declare namespace base {
 
     namespace extensions {
         class Accessibility<T extends NodeUI> extends ExtensionUI<T> {}
+        class Column<T extends NodeUI> extends ExtensionUI<T> {}
         class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             public static isAligned<T extends NodeUI>(node: T): boolean;
             public static isJustified<T extends NodeUI>(node: T): boolean;

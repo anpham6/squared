@@ -113,6 +113,7 @@ squared.settings = {
         'squared.css-grid',
         'squared.flexbox',
         'squared.table',
+        'squared.column',
         'squared.list',
         'squared.verticalalign',
         'squared.grid',

@@ -1150,6 +1150,37 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return 0;
     }
 
+    public actualBoxWidth(value?: number) {
+        if (!value) {
+            value = this.box.width
+        }
+        if (this.pageFlow && !this.documentRoot) {
+            let offsetLeft = 0;
+            let offsetRight = 0;
+            let current = this.actualParent;
+            while (current) {
+                if (current.hasPX('width', false) || !current.pageFlow) {
+                    return value;
+                }
+                else {
+                    offsetLeft += Math.max(current.marginLeft, 0) + current.borderLeftWidth + current.paddingLeft;
+                    offsetRight += current.paddingRight + current.borderRightWidth + current.marginRight;
+                }
+                if (current.documentRoot) {
+                    break;
+                }
+                else {
+                    current = current.actualParent;
+                }
+            }
+            const screenWidth = this.localSettings.screenDimension.width - offsetLeft - offsetRight;
+            if (screenWidth > 0) {
+                return Math.min(value, screenWidth);
+            }
+        }
+        return value;
+    }
+
     public cloneBase(node: T) {
         node.localSettings = this.localSettings;
         node.alignmentType = this.alignmentType;
@@ -1329,7 +1360,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             else {
                 const { top, right, bottom, left } = this._styleMap;
-                result = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto') && this.toFloat('opacity', 1) > 0;
+                result = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto') && this.toFloat('opacity', 1) > 0 && this.childIndex > 0;
             }
             this._cached.autoPosition = result;
         }

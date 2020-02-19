@@ -1547,7 +1547,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const node = floatgroup || layout.node;
                 const first = seg[0];
                 const target = controllerHandler.createNodeGroup(first, seg, node, true);
-                const group = new LayoutUI(node, target, 0, NODE_ALIGNMENT.SEGMENTED | (seg === inlineAbove ? NODE_ALIGNMENT.COLUMN : 0) | getFloatAlignmentType(seg), seg);
+                const group = new LayoutUI(node, target, 0, NODE_ALIGNMENT.SEGMENTED);
+                if (seg === inlineAbove) {
+                    group.add(NODE_ALIGNMENT.COLUMN);
+                }
+                else {
+                    group.add(getFloatAlignmentType(seg));
+                }
                 if (seg.length === 1) {
                     if (first.percentWidth > 0) {
                         group.type = controllerHandler.containerTypePercent;

@@ -13,11 +13,11 @@ import { createViewAttribute, getDocumentId, getRootNs } from './lib/util';
 const $lib = squared.lib;
 const $base = squared.base;
 
-const { PLATFORM, USER_AGENT, isPlatform, isUserAgent } = $lib.client;
+const { PLATFORM, isPlatform } = $lib.client;
 const { parseColor } = $lib.color;
 const { formatPX, getSrcSet, isLength, isPercent, parseUnit } = $lib.css;
-const { createElement, getElementsBetweenSiblings, getRangeClientRect } = $lib.dom;
-const { maxArray, truncate } = $lib.math;
+const { getElementsBetweenSiblings, getRangeClientRect } = $lib.dom;
+const { truncate } = $lib.math;
 const { CHAR } = $lib.regex;
 const { getElementAsNode } = $lib.session;
 const { assignEmptyValue, convertFloat, filterArray, hasBit, isString, objectMap, optionalAsObject, partitionArray, withinRange } = $lib.util;
@@ -455,10 +455,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processUnknownParent(layout: squared.base.LayoutUI<T>) {
         const node = layout.node;
-        if (node.has('columnCount') || node.hasPX('columnWidth')) {
-            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.COLUMN | NODE_ALIGNMENT.AUTO_LAYOUT);
-        }
-        else if (layout.some(item => !item.pageFlow && !item.autoPosition)) {
+        if (layout.some(item => !item.pageFlow && !item.autoPosition)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.ABSOLUTE | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (layout.length <= 1) {
@@ -501,7 +498,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.setContainerType(getRelativeVerticalAligned(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (this.checkConstraintFloat(layout)) {
-            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, layout.floated.size ? NODE_ALIGNMENT.FLOAT : NODE_ALIGNMENT.SEGMENTED);
+            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, layout.floated.size ? NODE_ALIGNMENT.FLOAT : 0);
         }
         else if (layout.linearX || layout.singleRowAligned) {
             if (this.checkFrameHorizontal(layout)) {
@@ -570,7 +567,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.hide();
             return { layout, next: true };
         }
-        else if (visibleStyle.background) {
+        else if (visibleStyle.background && node.textContent !== '') {
             layout.setContainerType(CONTAINER_NODE.TEXT);
             node.inlineText = true;
         }
@@ -668,12 +665,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (indexA === indexB) {
                         return 0;
                     }
-                    else if (indexA > indexB) {
-                        return 1;
-                    }
-                    else {
-                        return -1;
-                    }
+                    return indexA > indexB ? 1 : -1;
                 });
             }
         }
@@ -684,10 +676,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const above: NodeXmlTemplate<T>[] = [];
                 for (const item of templates) {
                     const node = item.node;
-                    if (node.pageFlow) {
+                    const z = node.zIndex;
+                    if (z > 0) {
+                        above.push(item);
+                    }
+                    else if (node.pageFlow) {
                         middle.push(item);
                     }
-                    else if (node.zIndex >= 0) {
+                    else if (z === 0) {
                         above.push(item);
                     }
                     else {
@@ -785,8 +781,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const floated = layout.floated;
         if ((floated.size === 0 || floated.size === 1 && floated.has('left')) && layout.node.lineHeight === 0 && layout.singleRowAligned) {
             const { fontSize, lineHeight } = layout.item(0) as T;
+            const boxWidth = layout.parent.actualBoxWidth();
+            let contentWidth = 0;
             for (const node of layout) {
                 if (!(node.naturalChild && node.length === 0 && !node.inputElement && !node.controlElement && !node.positionRelative && node.css('verticalAlign') === 'baseline' && !node.blockVertical && node.zIndex === 0 && (lineHeight === 0 || node.lineHeight === lineHeight && node.fontSize === fontSize))) {
+                    return false;
+                }
+                else {
+                    contentWidth += node.linear.width;
+                }
+                if (contentWidth >= boxWidth) {
                     return false;
                 }
             }
@@ -835,16 +839,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 if (j > 0) {
                     pageFlow.length = j;
-                    if (node.layoutHorizontal && !node.layoutElement) {
-                        this.processConstraintHorizontal(node, pageFlow);
-                    }
-                    else if (node.hasAlign(NODE_ALIGNMENT.COLUMN)) {
-                        this.processConstraintColumn(node, pageFlow);
-                    }
-                    else if (j > 1) {
-                        this.processConstraintChain(node, pageFlow);
-                    }
-                    else {
+                    if (j === 1 || node.layoutElement) {
                         const item = pageFlow[0];
                         const { horizontal, vertical } = item.constraint;
                         if (!horizontal) {
@@ -855,6 +850,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             setVerticalAlignment(item);
                         }
                         View.setConstraintDimension(item);
+                    }
+                    else if (node.layoutHorizontal) {
+                        this.processConstraintHorizontal(node, pageFlow);
+                    }
+                    else {
+                        this.processConstraintChain(node, pageFlow);
                     }
                     this.evaluateAnchors(pageFlow);
                 }
@@ -1120,6 +1121,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             node.css('width', formatPX(node.bounds.width));
                         }
                         break;
+                }
+                break;
+            }
+            case 'BUTTON': {
+                for (const item of node.naturalChildren as T[]) {
+                    if (!item.pageFlow || !item.textElement) {
+                        item.android('elevation', '2px');
+                    }
                 }
                 break;
             }
@@ -1753,7 +1762,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const rowsLeft: T[][] = [];
         const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
         let alignmentMultiLine = false;
-        let sortAutoPosition = false;
+        let autoPosition = false;
         let rowsRight: Undef<T[][]>;
         if (node.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             let previous: Undef<T>;
@@ -1769,12 +1778,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     previous = item;
                 }
                 else {
-                    sortAutoPosition = true;
+                    autoPosition = true;
                 }
             }
         }
         else {
-            const boxWidth = (() => {
+            const boxWidth = node.actualBoxWidth((() => {
                 const renderParent = node.renderParent as T;
                 if (renderParent.overflowY) {
                     return renderParent.box.width;
@@ -1791,28 +1800,29 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             const container = node.ascend({ condition: (item: T) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
                             if (container.length) {
                                 const { left, right, width } = node.box;
-                                let leftOffset = 0;
-                                let rightOffset = 0;
+                                let offsetLeft = 0;
+                                let offsetRight = 0;
                                 for (const item of parent.naturalElements as T[]) {
                                     const linear = item.linear;
                                     if (item.floating && !children.includes(item) && node.intersectY(linear)) {
                                         if (item.float === 'left') {
                                             if (Math.floor(linear.right) > left) {
-                                                leftOffset = Math.max(leftOffset, linear.right - left);
+                                                offsetLeft = Math.max(offsetLeft, linear.right - left);
                                             }
                                         }
                                         else if (right > Math.ceil(linear.left)) {
-                                            rightOffset = Math.max(rightOffset, right - linear.left);
+                                            offsetRight = Math.max(offsetRight, right - linear.left);
                                         }
                                     }
                                 }
-                                return width - leftOffset - rightOffset;
+                                return width - offsetLeft - offsetRight;
                             }
                         }
                     }
                 }
                 return node.box.width;
-            })();
+                })()
+            );
             const cleared = NodeUI.linearData(children, true).cleared;
             const centerAligned = node.cssInitial('textAlign') === 'center';
             let textIndent = 0;
@@ -1898,7 +1908,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             item.anchor(alignParent, 'true');
                             item.anchor('top', 'true');
                         }
-                        sortAutoPosition = true;
+                        autoPosition = true;
                         continue;
                     }
                     let bounds = item.bounds;
@@ -2078,8 +2088,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element, item.sessionId)) === false) {
                         const betweenStart = getRangeClientRect(siblings[0]);
                         if (!betweenStart.numberOfLines) {
-                            const betweenEnd = siblings.length > 1 ? getRangeClientRect(<Element> siblings.pop()) : undefined;
-                            if (betweenEnd === undefined || !betweenEnd.numberOfLines) {
+                            const betweenEnd = siblings.length > 1 && getRangeClientRect(<Element> siblings.pop());
+                            if (!betweenEnd || !betweenEnd.numberOfLines) {
                                 rowWidth += betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
                             }
                         }
@@ -2116,7 +2126,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     const baselineAlign: T[] = [];
-                    let documentId = i === 0 ? 'true' : (baseline ? baseline.documentId : '');
+                    let documentId = i === 0 ? 'true' : baseline?.documentId;
                     let maxCenterHeight = 0;
                     let textBaseline: Null<T> = null;
                     for (const item of items) {
@@ -2160,7 +2170,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.floor(item.baselineHeight * this.localSettings.deviations.superscriptTopOffset) * -1);
                                     }
                                 case 'top':
-                                    if (documentId !== '' && documentId !== item.documentId) {
+                                    if (documentId && documentId !== item.documentId) {
                                         item.anchor('top', documentId);
                                     }
                                     else if (baseline) {
@@ -2204,7 +2214,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(item.baselineHeight * this.localSettings.deviations.subscriptBottomOffset) * -1);
                                     }
                                 case 'bottom':
-                                    if (documentId !== '' && !withinRange(node.bounds.height, item.bounds.height)) {
+                                    if (documentId && !withinRange(node.bounds.height, item.bounds.height)) {
                                         if (!node.hasHeight && documentId === 'true') {
                                             if (!alignmentMultiLine) {
                                                 node.css('height', formatPX(node.bounds.height));
@@ -2253,7 +2263,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    for (let j = items.length - 1, last = true; j > 0; j--) {
+                    for (let j = items.length - 1, last = true; j >= 0; j--) {
                         const previous = items[j];
                         if (previous.textElement) {
                             previous.setSingleLine(last && !previous.rightAligned && !previous.centerAligned);
@@ -2286,18 +2296,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (alignmentMultiLine) {
             node.horizontalRows = rowsRight ? rowsLeft.concat(rowsRight) : rowsLeft;
         }
-        if (sortAutoPosition) {
+        if (autoPosition) {
             const renderChildren = node.renderChildren;
             const renderTemplates = <NodeTemplate<T>[]> node.renderTemplates;
-            const autoPosition: NodeTemplate<T>[] = [];
+            const templates: NodeTemplate<T>[] = [];
             for (let i = 0; i < renderChildren.length; i++) {
                 if (!renderChildren[i].pageFlow) {
-                    autoPosition.push(renderTemplates[i]);
+                    templates.push(renderTemplates[i]);
                     renderChildren.splice(i, 1);
                     renderTemplates.splice(i--, 1);
                 }
             }
-            for (const item of autoPosition) {
+            for (const item of templates) {
                 renderChildren.push(item.node);
                 renderTemplates.push(item);
             }
@@ -2490,260 +2500,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             baseline.anchored = true;
-        }
-    }
-
-    protected processConstraintColumn(node: T, children: T[]) {
-        let items: T[] = [];
-        const rows: T[][] = [items];
-        let maxSize = 0;
-        let multiline = false;
-        for (const item of children) {
-            if (item.css('columnSpan') === 'all') {
-                if (items.length) {
-                    rows.push([item]);
-                }
-                else {
-                    items.push(item);
-                }
-                items = [];
-                rows.push(items);
-            }
-            else {
-                if (item.multiline) {
-                    multiline = true;
-                }
-                else {
-                    const width = item.bounds.width;
-                    maxSize = maxSize > 0 ? Math.min(width, maxSize) : width;
-                }
-                item.modifyBox(BOX_STANDARD.MARGIN_RIGHT);
-                items.push(item);
-            }
-        }
-        if (items.length === 0) {
-            rows.pop();
-        }
-        const columnCount = node.toInt('columnCount');
-        const columnWidth = node.parseUnit(node.css('columnWidth'));
-        let columnGap = node.parseUnit(node.css('columnGap'));
-        let columnSized: number;
-        let boxWidth: number;
-        const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Number.POSITIVE_INFINITY;
-        if (isUserAgent(USER_AGENT.SAFARI)) {
-            boxWidth = Math.min(node.width > 0 ? node.width - (!node.contentBox ? node.contentBoxWidth : 0) : Number.POSITIVE_INFINITY, node.box.width * (columnCount || 1), node.documentParent.box.width - node.contentBoxWidth);
-        }
-        else {
-            boxWidth = node.box.width;
-        }
-        if (columnGap > 0) {
-            columnSized = Math.floor(getColumnSizing());
-        }
-        else {
-            columnGap = (columnWidth > 0 ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
-            columnSized = Math.ceil(getColumnSizing());
-        }
-        let previousRow: Undef<T | string>;
-        const length = rows.length;
-        for (let i = 0; i < length; i++) {
-            const row = rows[i];
-            if (row.length === 1) {
-                const rowStart = row[0];
-                if (i === 0) {
-                    rowStart.anchor('top', 'parent');
-                    rowStart.anchorStyle(STRING_ANDROID.VERTICAL, 0);
-                }
-                else if (previousRow) {
-                    previousRow.anchor('bottomTop', rowStart.documentId);
-                    rowStart.anchor('topBottom', typeof previousRow === 'string' ? previousRow : previousRow.documentId);
-                }
-                if (i === length - 1) {
-                    rowStart.anchor('bottom', 'parent');
-                }
-                else {
-                    previousRow = row[0];
-                }
-                rowStart.anchorParent(STRING_ANDROID.HORIZONTAL, rowStart.rightAligned ? 1 : (rowStart.centerAligned ? 0.5 : 0));
-            }
-            else {
-                const columns: T[][] = [];
-                const q = row.length;
-                let columnMin = Math.min(q, columnSized, columnCount || Number.POSITIVE_INFINITY);
-                let percentGap = 0;
-                if (columnMin > 1) {
-                    const maxHeight = Math.floor(row.reduce((a, b) => a + b.bounds.height, 0) / columnMin);
-                    let perRowCount = q >= columnMin ? Math.ceil(q / columnMin) : 1;
-                    let rowReduce = multiline || perRowCount > 1 && (q % perRowCount !== 0 || !isNaN(columnCount) && perRowCount * columnCount % q > 1);
-                    let excessCount = rowReduce && q % columnMin !== 0 ? q - columnMin : Number.POSITIVE_INFINITY;
-                    let totalGap = 0;
-                    for (let j = 0, k = 0, l = 0; j < q; j++, l++) {
-                        const item = row[j];
-                        const iteration = l % perRowCount === 0;
-                        if (k < columnMin - 1 && (iteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < q - 2 && (q - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
-                            if (j > 0) {
-                                k++;
-                                if (iteration) {
-                                    excessCount--;
-                                }
-                                else {
-                                    excessCount++;
-                                }
-                            }
-                            l = 0;
-                            if (!iteration && excessCount > 0) {
-                                rowReduce = true;
-                            }
-                        }
-                        let column = columns[k];
-                        if (column === undefined) {
-                            column = [];
-                            columns[k] = column;
-                        }
-                        column.push(item);
-                        if (item.length) {
-                            totalGap += maxArray(objectMap<T, number>(item.children as T[], child => child.marginLeft + child.marginRight));
-                        }
-                        if (j > 0 && /^H\d/.test(item.tagName)) {
-                            if (column.length === 1 && j === q - 2) {
-                                columnMin--;
-                                excessCount = 0;
-                            }
-                            else if ((l + 1) % perRowCount === 0 && q - j > columnMin && !row[j + 1].multiline && row[j + 1].bounds.height < maxHeight) {
-                                column.push(row[++j]);
-                                l = -1;
-                            }
-                        }
-                        else if (rowReduce && q - j === columnMin - k && excessCount !== Number.POSITIVE_INFINITY) {
-                            perRowCount = 1;
-                        }
-                    }
-                    percentGap = columnMin > 1 ? Math.max(((totalGap + (columnGap * (columnMin - 1))) / boxWidth) / columnMin, 0.01) : 0;
-                }
-                else {
-                    columns.push(row);
-                }
-                const r = columns.length;
-                const above: T[] = new Array(r);
-                for (let j = 0; j < r; j++) {
-                    const data = columns[j];
-                    for (const item of data) {
-                        item.app('layout_constraintWidth_percent', truncate((1 / columnMin) - percentGap, node.localSettings.floatPrecision));
-                        item.setLayoutWidth('0px');
-                    }
-                    above[j] = data[0];
-                }
-                for (let j = 0; j < r; j++) {
-                    const item = columns[j];
-                    if (j < r - 1 && item.length > 1) {
-                        const columnEnd = item[item.length - 1];
-                        if (/^H\d/.test(columnEnd.tagName)) {
-                            item.pop();
-                            above[j + 1] = columnEnd;
-                            columns[j + 1].unshift(columnEnd);
-                        }
-                    }
-                }
-                for (let j = 0; j < r; j++) {
-                    const item = above[j];
-                    if (j === 0) {
-                        item.anchor('left', 'parent');
-                        item.anchorStyle(STRING_ANDROID.HORIZONTAL, 0, 'spread_inside');
-                    }
-                    else {
-                        item.anchor('leftRight', above[j - 1].documentId);
-                        item.modifyBox(BOX_STANDARD.MARGIN_LEFT, columnGap);
-                    }
-                    if (j === r - 1) {
-                        item.anchor('right', 'parent');
-                    }
-                    else {
-                        item.anchor('rightLeft', above[j + 1].documentId);
-                    }
-                }
-                for (let j = 0; j < r; j++) {
-                    const seg = columns[j];
-                    const s = seg.length;
-                    for (let k = 0; k < s; k++) {
-                        const item = seg[k];
-                        item.anchored = true;
-                        item.positioned = true;
-                        if (k === s - 1) {
-                            if (i === length - 1) {
-                                item.anchor('bottom', 'parent');
-                            }
-                            item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM);
-                        }
-                        if (k === 0) {
-                            if (i === 0) {
-                                item.anchor('top', 'parent');
-                            }
-                            else if (typeof previousRow === 'object') {
-                                if (j === 0) {
-                                    previousRow.anchor('bottomTop', item.documentId);
-                                    item.anchor('topBottom', previousRow.documentId);
-                                    continue;
-                                }
-                                else {
-                                    item.anchor('top', above[0].documentId);
-                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                                }
-                            }
-                            else {
-                                item.anchor('top', previousRow);
-                            }
-                            item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
-                        }
-                        else {
-                            const previous = seg[k - 1];
-                            previous.anchor('bottomTop', item.documentId);
-                            item.anchor('topBottom', previous.documentId);
-                            item.anchor('left', seg[0].documentId);
-                        }
-                    }
-                }
-                if (i < length - 1) {
-                    if (columns.every(item => item.length === 1)) {
-                        const barrier: T[] = [];
-                        for (const item of columns) {
-                            barrier.push(item[0]);
-                        }
-                        previousRow = this.addBarrier(barrier, 'bottom');
-                    }
-                    else {
-                        const columnHeight: number[] = new Array(r).fill(0);
-                        for (let j = 0; j < r; j++) {
-                            const seg = columns[j];
-                            const elements: Element[] = [];
-                            const s = seg.length;
-                            for (let k = 0; k < s; k++) {
-                                const column = seg[k];
-                                if (column.naturalChild) {
-                                    elements.push(<Element> (<Element> column.element).cloneNode(true));
-                                }
-                                else {
-                                    columnHeight[j] += column.linear.height;
-                                }
-                            }
-                            if (elements.length) {
-                                const container = createElement(document.body, 'div', { width: formatPX(columnWidth || node.box.width / columnMin), visibility: 'hidden' });
-                                for (const element of elements) {
-                                    container.appendChild(element);
-                                }
-                                columnHeight[j] += container.getBoundingClientRect().height;
-                                document.body.removeChild(container);
-                            }
-                        }
-                        let maxHeight = 0;
-                        for (let j = 0; j < r; j++) {
-                            const value = columnHeight[j];
-                            if (value >= maxHeight) {
-                                previousRow = columns[j].pop() as T;
-                                maxHeight = value;
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 

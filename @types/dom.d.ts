@@ -1,3 +1,5 @@
+type BoxPosition = "top" | "right" | "bottom" | "left";
+
 interface BoxRect {
     top: number;
     right: number;

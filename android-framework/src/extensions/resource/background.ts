@@ -294,7 +294,7 @@ function checkBackgroundPosition(value: string, adjacent: string, fallback: stri
 
 function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIPOP, precision?: number) {
     const type = gradient.type;
-    const result: GradientTemplate = { type, item: false };
+    const result: GradientTemplate = { type, item: false, positioning: true };
     const hasStop = api >= BUILD_ANDROID.LOLLIPOP;
     switch (type) {
         case 'conic': {
@@ -532,9 +532,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             if (value !== '') {
                 const drawable = '@drawable/' + Resource.insertStoredAsset('drawables', node.containerName.toLowerCase() + '_' + node.controlId, value);
                 if (!themeBackground) {
-                    if (node.documentRoot) {
-                        const innerWrapped = node.innerMostWrapped as T;
-                        if (innerWrapped.documentBody && !setHtmlBackground(node) && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY) && node.css('backgroundImage') !== 'none') {
+                    const innerWrapped = node.innerMostWrapped as T;
+                    if (innerWrapped.documentBody) {
+                        if (!setHtmlBackground(node) && node.documentRoot && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY) && node.css('backgroundImage') !== 'none') {
                             setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
                             deleteBodyWrapper(node, innerWrapped);
                             return;
@@ -913,179 +913,45 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const documentBody = node.innerMostWrapped.documentBody;
             for (let i = length - 1, j = 0; i >= 0; i--) {
                 const value = images[i];
-                const position = backgroundPosition[i];
-                const size = backgroundSize[i];
-                const padded = position.orientation.length === 4;
                 const imageData: BackgroundImageData = { order: Number.POSITIVE_INFINITY };
-                let dimension = imageDimensions[i];
-                let dimenWidth = NaN;
-                let dimenHeight = NaN;
-                if (dimension) {
-                    if (!dimension.width || !dimension.height) {
-                        dimension = undefined;
-                    }
-                    else {
-                        dimenWidth = dimension.width;
-                        dimenHeight = dimension.height;
-                    }
+                if (typeof value === 'object' && !value.positioning) {
+                    imageData.gravity = 'fill';
+                    imageData.gradient = value;
                 }
-                let top = 0;
-                let right = 0;
-                let bottom = 0;
-                let left = 0;
-                let posTop = NaN;
-                let posRight = NaN;
-                let posBottom = NaN;
-                let posLeft = NaN;
-                let negativeOffset = 0;
-                let offsetX = false;
-                let offsetY = false;
-                let width = 0;
-                let height = 0;
-                let tileModeX = '';
-                let tileModeY = '';
-                let gravityX = '';
-                let gravityY = '';
-                let gravityAlign = '';
-                switch (position.horizontal) {
-                    case 'left':
-                    case '0%':
-                    case '0px':
-                        gravityX = node.localizeString('left');
-                        if (padded) {
-                            posLeft = 0;
-                            offsetX = true;
-                        }
-                        break;
-                    case 'center':
-                    case '50%':
-                        gravityX = STRING_ANDROID.CENTER_HORIZONTAL;
-                        break;
-                    case 'right':
-                    case '100%':
-                        gravityX = node.localizeString('right');
-                        posRight = 0;
-                        if (padded) {
-                            offsetX = true;
-                        }
-                        break;
-                    default: {
-                        const percent = position.leftAsPercent;
-                        if (percent === 0.5) {
-                            gravityX = STRING_ANDROID.CENTER_HORIZONTAL;
-                            if (padded) {
-                                posLeft = 0;
-                                offsetX = true;
-                            }
-                        }
-                        else if (percent < 1) {
-                            gravityX = 'left';
-                            posLeft = 0;
-                            offsetX = true;
+                else {
+                    const position = backgroundPosition[i];
+                    const size = backgroundSize[i];
+                    const padded = position.orientation.length === 4;
+                    let dimension = imageDimensions[i];
+                    let dimenWidth = NaN;
+                    let dimenHeight = NaN;
+                    if (dimension) {
+                        if (!dimension.width || !dimension.height) {
+                            dimension = undefined;
                         }
                         else {
-                            gravityX = 'right';
-                            posRight = 0;
-                            offsetX = true;
+                            dimenWidth = dimension.width;
+                            dimenHeight = dimension.height;
                         }
-                        break;
                     }
-                }
-                switch (position.vertical) {
-                    case 'top':
-                    case '0%':
-                    case '0px':
-                        gravityY = 'top';
-                        if (padded) {
-                            posTop = 0;
-                            offsetY = true;
-                        }
-                        break;
-                    case 'center':
-                    case '50%':
-                        gravityY = STRING_ANDROID.CENTER_VERTICAL;
-                        break;
-                    case 'bottom':
-                    case '100%':
-                        gravityY = 'bottom';
-                        posBottom = 0;
-                        if (padded) {
-                            offsetY = true;
-                        }
-                        break;
-                    default: {
-                        const percent = position.topAsPercent;
-                        if (percent === 0.5) {
-                            gravityY = STRING_ANDROID.CENTER_VERTICAL;
-                            if (padded) {
-                                posTop = 0;
-                                offsetY = true;
-                            }
-                        }
-                        else if (percent < 1) {
-                            gravityY = 'top';
-                            posTop = 0;
-                            offsetY = true;
-                        }
-                        else {
-                            gravityY = 'bottom';
-                            posBottom = 0;
-                            offsetY = true;
-                        }
-                        break;
-                    }
-                }
-                switch (size) {
-                    case 'auto':
-                    case 'auto auto':
-                    case 'initial':
-                        if (typeof value !== 'string') {
-                            gravityAlign = 'fill';
-                        }
-                        break;
-                    case '100%':
-                    case '100% 100%':
-                    case '100% auto':
-                    case 'auto 100%':
-                    case 'contain':
-                    case 'cover':
-                    case 'round':
-                        tileModeX = '';
-                        tileModeY = '';
-                        gravityAlign = 'fill';
-                        if (documentBody) {
-                            const visibleStyle = node.visibleStyle;
-                            visibleStyle.backgroundRepeat = true;
-                            visibleStyle.backgroundRepeatY = true;
-                        }
-                        break;
-                    default:
-                        if (size !== '') {
-                            size.split(' ').forEach((dimen, index) => {
-                                if (dimen === '100%') {
-                                    if (index === 0) {
-                                        gravityAlign = 'fill_horizontal';
-                                    }
-                                    else {
-                                        gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
-                                    }
-                                }
-                                else if (dimen !== 'auto') {
-                                    if (index === 0) {
-                                        if (tileModeX !== 'repeat') {
-                                            width = node.parseUnit(dimen, 'width', false);
-                                        }
-                                    }
-                                    else if (tileModeY !== 'repeat') {
-                                        height = node.parseUnit(dimen, 'height', false);
-                                    }
-                                }
-                            });
-                        }
-                        break;
-                }
-                if (typeof value === 'string') {
-                    const src = '@drawable/' + value;
+                    let top = 0;
+                    let right = 0;
+                    let bottom = 0;
+                    let left = 0;
+                    let posTop = NaN;
+                    let posRight = NaN;
+                    let posBottom = NaN;
+                    let posLeft = NaN;
+                    let negativeOffset = 0;
+                    let offsetX = false;
+                    let offsetY = false;
+                    let width = 0;
+                    let height = 0;
+                    let tileModeX = '';
+                    let tileModeY = '';
+                    let gravityX = '';
+                    let gravityY = '';
+                    let gravityAlign = '';
                     let repeat = backgroundRepeat[i];
                     if (repeat.includes(' ')) {
                         const [x, y] = repeat.split(' ');
@@ -1102,10 +968,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     else if (repeat === 'space' || repeat === 'round') {
                         repeat = 'repeat';
                     }
-                    const autoFit = node.is(CONTAINER_NODE.IMAGE);
-                    let resizedWidth = false;
-                    let resizedHeight = false;
-                    let recalibrate = true;
                     switch (repeat) {
                         case 'repeat':
                             tileModeX = 'repeat';
@@ -1124,506 +986,663 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             tileModeY = 'disabled';
                             break;
                     }
-                    if (dimension) {
-                        const ratioWidth = dimenWidth / boundsWidth;
-                        const ratioHeight = dimenHeight / boundsHeight;
-                        const getImageWidth = () => dimenWidth * height / dimenHeight;
-                        const getImageHeight = () => dimenHeight * width / dimenWidth;
-                        const getImageRatioWidth = () => boundsWidth * (ratioWidth / ratioHeight);
-                        const getImageRatioHeight = () => boundsHeight * (ratioHeight / ratioWidth);
-                        const resetGravityPosition = (gravity = true) => {
+                    switch (position.horizontal) {
+                        case 'left':
+                        case '0%':
+                        case '0px':
+                            gravityX = node.localizeString('left');
+                            if (padded) {
+                                posLeft = 0;
+                                offsetX = true;
+                            }
+                            break;
+                        case 'center':
+                        case '50%':
+                            gravityX = STRING_ANDROID.CENTER_HORIZONTAL;
+                            break;
+                        case 'right':
+                        case '100%':
+                            gravityX = node.localizeString('right');
+                            posRight = 0;
+                            if (padded) {
+                                offsetX = true;
+                            }
+                            break;
+                        default: {
+                            const percent = position.leftAsPercent;
+                            if (percent === 0.5) {
+                                gravityX = STRING_ANDROID.CENTER_HORIZONTAL;
+                                if (padded) {
+                                    posLeft = 0;
+                                    offsetX = true;
+                                }
+                            }
+                            else if (percent < 1) {
+                                gravityX = 'left';
+                                posLeft = 0;
+                                offsetX = true;
+                            }
+                            else {
+                                gravityX = 'right';
+                                posRight = 0;
+                                offsetX = true;
+                            }
+                            break;
+                        }
+                    }
+                    switch (position.vertical) {
+                        case 'top':
+                        case '0%':
+                        case '0px':
+                            gravityY = 'top';
+                            if (padded) {
+                                posTop = 0;
+                                offsetY = true;
+                            }
+                            break;
+                        case 'center':
+                        case '50%':
+                            gravityY = STRING_ANDROID.CENTER_VERTICAL;
+                            break;
+                        case 'bottom':
+                        case '100%':
+                            gravityY = 'bottom';
+                            posBottom = 0;
+                            if (padded) {
+                                offsetY = true;
+                            }
+                            break;
+                        default: {
+                            const percent = position.topAsPercent;
+                            if (percent === 0.5) {
+                                gravityY = STRING_ANDROID.CENTER_VERTICAL;
+                                if (padded) {
+                                    posTop = 0;
+                                    offsetY = true;
+                                }
+                            }
+                            else if (percent < 1) {
+                                gravityY = 'top';
+                                posTop = 0;
+                                offsetY = true;
+                            }
+                            else {
+                                gravityY = 'bottom';
+                                posBottom = 0;
+                                offsetY = true;
+                            }
+                            break;
+                        }
+                    }
+                    switch (size) {
+                        case 'auto':
+                        case 'auto auto':
+                        case 'initial':
+                            if (typeof value !== 'string') {
+                                gravityAlign = 'fill';
+                            }
+                            break;
+                        case '100%':
+                        case '100% 100%':
+                        case '100% auto':
+                        case 'auto 100%':
+                        case 'contain':
+                        case 'cover':
+                        case 'round':
                             tileModeX = '';
                             tileModeY = '';
-                            gravityAlign = '';
-                            if (gravity) {
-                                gravityX = '';
-                                gravityY = '';
+                            gravityAlign = 'fill';
+                            if (documentBody) {
+                                const visibleStyle = node.visibleStyle;
+                                visibleStyle.backgroundRepeat = true;
+                                visibleStyle.backgroundRepeatY = true;
                             }
-                            posTop = NaN;
-                            posRight = NaN;
-                            posBottom = NaN;
-                            posLeft = NaN;
-                            offsetX = false;
-                            offsetY = false;
-                            recalibrate = false;
-                        };
-                        switch (size) {
-                            case '100%':
-                            case '100% 100%':
-                            case '100% auto':
-                            case 'auto 100%':
-                            case 'cover':
-                                resetGravityPosition(false);
-                                if (ratioWidth < ratioHeight) {
-                                    width = boundsWidth;
-                                    height = getImageRatioHeight();
-                                    if (height > boundsHeight) {
-                                        const percent = Math.min(position.topAsPercent, 1);
-                                        if (percent > 0) {
-                                            const offset = boundsHeight - height;
-                                            top = Math.round(offset * percent);
+                            break;
+                        default:
+                            if (size !== '') {
+                                size.split(' ').forEach((dimen, index) => {
+                                    if (dimen === '100%') {
+                                        if (index === 0) {
+                                            gravityAlign = 'fill_horizontal';
                                         }
-                                        if (!node.hasPX('height')) {
-                                            node.css('height', formatPX(boundsHeight - node.contentBoxHeight));
+                                        else {
+                                            gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
                                         }
                                     }
-                                }
-                                else if (ratioWidth > ratioHeight) {
-                                    width = getImageRatioWidth();
-                                    height = boundsHeight;
-                                    if (node.hasWidth && width > boundsWidth) {
-                                        const percent = Math.min(position.leftAsPercent, 1);
-                                        if (percent > 0) {
-                                            const offset = boundsWidth - width;
-                                            left = Math.round(offset * percent);
+                                    else if (dimen !== 'auto') {
+                                        if (index === 0) {
+                                            if (tileModeX !== 'repeat') {
+                                                width = node.parseUnit(dimen, 'width', false);
+                                            }
+                                        }
+                                        else if (tileModeY !== 'repeat') {
+                                            height = node.parseUnit(dimen, 'height', false);
                                         }
                                     }
-                                }
-                                else {
-                                    gravityAlign = 'fill';
-                                }
-                                break;
-                            case 'contain':
-                                resetGravityPosition();
-                                if (ratioWidth > ratioHeight) {
-                                    height = getImageRatioHeight();
-                                    width = dimenWidth < boundsWidth ? getImageWidth() : boundsWidth;
-                                    gravityY = STRING_ANDROID.CENTER_VERTICAL;
-                                    gravityAlign = 'fill_horizontal';
-                                }
-                                else if (ratioWidth < ratioHeight) {
-                                    width = getImageRatioWidth();
-                                    height = dimenHeight < boundsHeight ? getImageHeight() : boundsHeight;
-                                    gravityX = STRING_ANDROID.CENTER_HORIZONTAL;
-                                    gravityAlign = 'fill_vertical';
-                                }
-                                else {
-                                    gravityAlign = 'fill';
-                                }
-                                break;
-                            default:
-                                if (width === 0 && height > 0) {
-                                    width = getImageWidth();
-                                }
-                                if (height === 0 && width > 0) {
-                                    height = getImageHeight();
-                                }
-                                break;
-                        }
-                    }
-                    if (data.backgroundClip) {
-                        const { top: clipTop, right: clipRight, left: clipLeft, bottom: clipBottom } = data.backgroundClip;
-                        if (width === 0) {
-                            width = boundsWidth;
-                        }
-                        else {
-                            width += node.contentBoxWidth;
-                        }
-                        if (height === 0) {
-                            height = boundsHeight;
-                        }
-                        else {
-                            height += node.contentBoxHeight;
-                        }
-                        width -= clipLeft + clipRight;
-                        height -= clipTop + clipBottom;
-                        if (!isNaN(posRight)) {
-                            right += clipRight
-                        }
-                        else {
-                            left += clipLeft;
-                        }
-                        if (!isNaN(posBottom)) {
-                            bottom += clipBottom;
-                        }
-                        else {
-                            top += clipTop;
-                        }
-                        gravityX = '';
-                        gravityY = '';
-                        recalibrate = false;
-                    }
-                    else if (recalibrate) {
-                        const backgroundOrigin = data.backgroundOrigin;
-                        if (backgroundOrigin) {
-                            if (tileModeX !== 'repeat') {
-                                if (!isNaN(posRight)) {
-                                    right += backgroundOrigin.right;
-                                }
-                                else {
-                                    left += backgroundOrigin.left;
-                                }
+                                });
                             }
-                            if (tileModeY !== 'repeat') {
-                                if (!isNaN(posBottom)) {
-                                    bottom += backgroundOrigin.bottom;
+                            break;
+                    }
+                    if (typeof value === 'string') {
+                        const src = '@drawable/' + value;
+                        let autoFit = node.is(CONTAINER_NODE.IMAGE);
+                        let resizedWidth = false;
+                        let resizedHeight = false;
+                        let unsizedWidth = false;
+                        let unsizedHeight = false;
+                        let recalibrate = true;
+                        if (dimension) {
+                            const ratioWidth = dimenWidth / boundsWidth;
+                            const ratioHeight = dimenHeight / boundsHeight;
+                            const getImageWidth = () => dimenWidth * height / dimenHeight;
+                            const getImageHeight = () => dimenHeight * width / dimenWidth;
+                            const getImageRatioWidth = () => boundsWidth * (ratioWidth / ratioHeight);
+                            const getImageRatioHeight = () => boundsHeight * (ratioHeight / ratioWidth);
+                            const resetGravityPosition = (gravity: boolean, coordinates: boolean) => {
+                                tileModeX = '';
+                                tileModeY = '';
+                                gravityAlign = '';
+                                if (gravity) {
+                                    gravityX = '';
+                                    gravityY = '';
                                 }
-                                else {
-                                    top += backgroundOrigin.top;
+                                if (coordinates) {
+                                    posTop = NaN;
+                                    posRight = NaN;
+                                    posBottom = NaN;
+                                    posLeft = NaN;
+                                    offsetX = false;
+                                    offsetY = false;
                                 }
+                                recalibrate = false;
+                            };
+                            switch (size) {
+                                case '100%':
+                                case '100% 100%':
+                                case '100% auto':
+                                case 'auto 100%':
+                                    if (dimenHeight >= boundsHeight) {
+                                        if (dimenWidth < boundsWidth) {
+                                            width = getImageRatioWidth();
+                                            height = boundsHeight;
+                                        }
+                                        else {
+                                            unsizedWidth = true;
+                                            unsizedHeight = true;
+                                            height = boundsHeight;
+                                        }
+                                        autoFit = true;
+                                        break;
+                                    }
+                                case 'cover': {
+                                    const covering = size === 'cover';
+                                    resetGravityPosition(covering, !covering);
+                                    if (ratioWidth < ratioHeight) {
+                                        width = boundsWidth;
+                                        height = getImageRatioHeight();
+                                        if (height > boundsHeight) {
+                                            const percent = position.topAsPercent;
+                                            if (percent !== 0) {
+                                                top = Math.round((boundsHeight - height) * percent);
+                                            }
+                                            if (!node.hasPX('height')) {
+                                                node.css('height', formatPX(boundsHeight - node.contentBoxHeight));
+                                            }
+                                        }
+                                    }
+                                    else if (ratioWidth > ratioHeight) {
+                                        width = getImageRatioWidth();
+                                        height = boundsHeight;
+                                        if (node.hasWidth && width > boundsWidth) {
+                                            const percent = position.leftAsPercent;
+                                            if (percent !== 0) {
+                                                left = Math.round((boundsWidth - width) * percent);
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        gravityAlign = 'fill';
+                                    }
+                                    break;
+                                }
+                                case 'contain':
+                                    resetGravityPosition(true, true);
+                                    if (ratioWidth > ratioHeight) {
+                                        height = getImageRatioHeight();
+                                        width = dimenWidth < boundsWidth ? getImageWidth() : boundsWidth;
+                                        gravityY = STRING_ANDROID.CENTER_VERTICAL;
+                                        gravityAlign = 'fill_horizontal';
+                                    }
+                                    else if (ratioWidth < ratioHeight) {
+                                        width = getImageRatioWidth();
+                                        height = dimenHeight < boundsHeight ? getImageHeight() : boundsHeight;
+                                        gravityX = STRING_ANDROID.CENTER_HORIZONTAL;
+                                        gravityAlign = 'fill_vertical';
+                                    }
+                                    else {
+                                        gravityAlign = 'fill';
+                                    }
+                                    break;
+                                default:
+                                    if (width === 0 && height > 0) {
+                                        width = getImageWidth();
+                                    }
+                                    if (height === 0 && width > 0) {
+                                        height = getImageHeight();
+                                    }
+                                    break;
                             }
+                        }
+                        if (data.backgroundClip) {
+                            const { top: clipTop, right: clipRight, left: clipLeft, bottom: clipBottom } = data.backgroundClip;
+                            if (width === 0) {
+                                width = boundsWidth;
+                            }
+                            else {
+                                width += node.contentBoxWidth;
+                            }
+                            if (height === 0) {
+                                height = boundsHeight;
+                            }
+                            else {
+                                height += node.contentBoxHeight;
+                            }
+                            width -= clipLeft + clipRight;
+                            height -= clipTop + clipBottom;
+                            if (!isNaN(posRight)) {
+                                right += clipRight
+                            }
+                            else {
+                                left += clipLeft;
+                            }
+                            if (!isNaN(posBottom)) {
+                                bottom += clipBottom;
+                            }
+                            else {
+                                top += clipTop;
+                            }
+                            gravityX = '';
+                            gravityY = '';
                             recalibrate = false;
                         }
-                        else {
-                            if (tileModeX !== 'repeat') {
-                                switch (gravityX) {
-                                    case 'start':
-                                    case 'left':
-                                        if (position.left === 0) {
-                                            const borderWidth = node.borderLeftWidth;
-                                            if (borderWidth > 0 && dimenWidth < boundsWidth) {
-                                                left += borderWidth;
-                                            }
-                                        }
-                                        break;
-                                    case 'right':
-                                        if (position.right === 0) {
-                                            const borderWidth = node.borderRightWidth;
-                                            if (borderWidth > 0 && dimenWidth < boundsWidth) {
-                                                right += borderWidth;
-                                            }
-                                        }
-                                        break;
+                        else if (recalibrate) {
+                            const backgroundOrigin = data.backgroundOrigin;
+                            if (backgroundOrigin) {
+                                if (tileModeX !== 'repeat') {
+                                    if (!isNaN(posRight)) {
+                                        right += backgroundOrigin.right;
+                                    }
+                                    else {
+                                        left += backgroundOrigin.left;
+                                    }
                                 }
-                            }
-                            if (tileModeY !== 'repeat') {
-                                switch (gravityY) {
-                                    case 'top':
-                                        if (position.top === 0) {
-                                            const borderWidth = node.borderTopWidth;
-                                            if (borderWidth > 0 && dimenHeight < boundsHeight) {
-                                                top += borderWidth;
-                                            }
-                                        }
-                                        break;
-                                    case 'bottom':
-                                        if (position.bottom === 0) {
-                                            const borderWidth = node.borderBottomWidth;
-                                            if (borderWidth > 0 && dimenHeight < boundsHeight) {
-                                                bottom += borderWidth;
-                                            }
-                                        }
-                                        break;
+                                if (tileModeY !== 'repeat') {
+                                    if (!isNaN(posBottom)) {
+                                        bottom += backgroundOrigin.bottom;
+                                    }
+                                    else {
+                                        top += backgroundOrigin.top;
+                                    }
                                 }
+                                recalibrate = false;
                             }
-                        }
-                        if (!autoFit && !documentBody) {
-                            if (dimenWidth > boundsWidth) {
-                                width = boundsWidth - (offsetX ? Math.min(position.left, 0) : 0);
-                                let fill = true;
-                                if (tileModeY === 'repeat' && gravityX !== '') {
+                            else {
+                                if (tileModeX !== 'repeat') {
                                     switch (gravityX) {
                                         case 'start':
                                         case 'left':
-                                            right += boundsWidth - dimenWidth;
-                                            if (offsetX) {
-                                                const offset = position.left;
-                                                if (offset < 0) {
-                                                    negativeOffset = offset;
+                                            if (position.left === 0) {
+                                                const borderWidth = node.borderLeftWidth;
+                                                if (borderWidth > 0 && dimenWidth < boundsWidth) {
+                                                    left += borderWidth;
                                                 }
-                                                width = 0;
-                                                right -= offset;
-                                                fill = false;
-                                                gravityX = 'right';
                                             }
-                                            else {
-                                                gravityX = '';
-                                            }
-                                            posLeft = NaN;
-                                            posRight = 0;
-                                            break;
-                                        case STRING_ANDROID.CENTER_HORIZONTAL:
-                                            gravityX += '|fill_vertical';
                                             break;
                                         case 'right':
-                                            left += boundsWidth - dimenWidth;
-                                            if (offsetX) {
-                                                const offset = position.right;
-                                                if (offset < 0) {
-                                                    negativeOffset = offset;
+                                            if (position.right === 0) {
+                                                const borderWidth = node.borderRightWidth;
+                                                if (borderWidth > 0 && dimenWidth < boundsWidth) {
+                                                    right += borderWidth;
                                                 }
-                                                width = 0;
-                                                left -= offset;
-                                                fill = false;
-                                                gravityX = node.localizeString('left');
                                             }
-                                            else {
-                                                gravityX = '';
-                                            }
-                                            posLeft = 0;
-                                            posRight = NaN;
                                             break;
                                     }
-                                    offsetX = false;
-                                    tileModeY = '';
-                                    gravityY = '';
                                 }
-                                if (fill) {
-                                    gravityAlign = delimitString({ value: gravityAlign }, 'fill_horizontal');
-                                }
-                                if (tileModeX !== 'disabled') {
-                                    tileModeX = '';
-                                }
-                                resizedWidth = true;
-                            }
-                            if (dimenHeight > boundsHeight) {
-                                height = boundsHeight;
-                                let fill = true;
-                                if (tileModeX === 'repeat' && gravityY !== '') {
+                                if (tileModeY !== 'repeat') {
                                     switch (gravityY) {
                                         case 'top':
-                                            bottom += boundsHeight - dimenHeight;
-                                            if (offsetY) {
-                                                const offset = position.top;
-                                                if (offset < 0) {
-                                                    negativeOffset = offset;
+                                            if (position.top === 0) {
+                                                const borderWidth = node.borderTopWidth;
+                                                if (borderWidth > 0 && dimenHeight < boundsHeight) {
+                                                    top += borderWidth;
                                                 }
-                                                height = 0;
-                                                bottom -= offset;
-                                                fill = false;
-                                                gravityY = 'bottom';
                                             }
-                                            else {
-                                                gravityY = '';
-                                            }
-                                            posTop = NaN;
-                                            posBottom = 0;
-                                            break;
-                                        case STRING_ANDROID.CENTER_VERTICAL:
-                                            gravityY += '|fill_horizontal';
                                             break;
                                         case 'bottom':
-                                            top += boundsHeight - dimenHeight;
-                                            if (offsetY) {
-                                                const offset = position.bottom;
-                                                if (offset < 0) {
-                                                    negativeOffset = offset;
+                                            if (position.bottom === 0) {
+                                                const borderWidth = node.borderBottomWidth;
+                                                if (borderWidth > 0 && dimenHeight < boundsHeight) {
+                                                    bottom += borderWidth;
                                                 }
-                                                height = 0;
-                                                top -= offset;
-                                                fill = false;
-                                                gravityY = 'top';
                                             }
-                                            else {
-                                                gravityY = '';
-                                            }
-                                            posTop = 0;
-                                            posBottom = NaN;
                                             break;
                                     }
-                                    offsetY = false;
-                                    tileModeX = '';
-                                    gravityX = '';
                                 }
-                                if (tileModeY !== 'disabled') {
-                                    tileModeY = '';
+                            }
+                            if (!autoFit && !documentBody) {
+                                if (dimenWidth > boundsWidth) {
+                                    width = boundsWidth - (offsetX ? Math.min(position.left, 0) : 0);
+                                    let fill = true;
+                                    if (tileModeY === 'repeat' && gravityX !== '') {
+                                        switch (gravityX) {
+                                            case 'start':
+                                            case 'left':
+                                                right += boundsWidth - dimenWidth;
+                                                if (offsetX) {
+                                                    const offset = position.left;
+                                                    if (offset < 0) {
+                                                        negativeOffset = offset;
+                                                    }
+                                                    width = 0;
+                                                    right -= offset;
+                                                    fill = false;
+                                                    gravityX = 'right';
+                                                }
+                                                else {
+                                                    gravityX = '';
+                                                }
+                                                posLeft = NaN;
+                                                posRight = 0;
+                                                break;
+                                            case STRING_ANDROID.CENTER_HORIZONTAL:
+                                                gravityX += '|fill_vertical';
+                                                break;
+                                            case 'right':
+                                                left += boundsWidth - dimenWidth;
+                                                if (offsetX) {
+                                                    const offset = position.right;
+                                                    if (offset < 0) {
+                                                        negativeOffset = offset;
+                                                    }
+                                                    width = 0;
+                                                    left -= offset;
+                                                    fill = false;
+                                                    gravityX = node.localizeString('left');
+                                                }
+                                                else {
+                                                    gravityX = '';
+                                                }
+                                                posLeft = 0;
+                                                posRight = NaN;
+                                                break;
+                                        }
+                                        offsetX = false;
+                                        tileModeY = '';
+                                        gravityY = '';
+                                    }
+                                    if (fill) {
+                                        gravityAlign = delimitString({ value: gravityAlign }, 'fill_horizontal');
+                                    }
+                                    if (tileModeX !== 'disabled') {
+                                        tileModeX = '';
+                                    }
+                                    resizedWidth = true;
                                 }
-                                if (fill) {
-                                    gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
+                                if (dimenHeight > boundsHeight) {
+                                    height = boundsHeight;
+                                    let fill = true;
+                                    if (tileModeX === 'repeat' && gravityY !== '') {
+                                        switch (gravityY) {
+                                            case 'top':
+                                                bottom += boundsHeight - dimenHeight;
+                                                if (offsetY) {
+                                                    const offset = position.top;
+                                                    if (offset < 0) {
+                                                        negativeOffset = offset;
+                                                    }
+                                                    height = 0;
+                                                    bottom -= offset;
+                                                    fill = false;
+                                                    gravityY = 'bottom';
+                                                }
+                                                else {
+                                                    gravityY = '';
+                                                }
+                                                posTop = NaN;
+                                                posBottom = 0;
+                                                break;
+                                            case STRING_ANDROID.CENTER_VERTICAL:
+                                                gravityY += '|fill_horizontal';
+                                                break;
+                                            case 'bottom':
+                                                top += boundsHeight - dimenHeight;
+                                                if (offsetY) {
+                                                    const offset = position.bottom;
+                                                    if (offset < 0) {
+                                                        negativeOffset = offset;
+                                                    }
+                                                    height = 0;
+                                                    top -= offset;
+                                                    fill = false;
+                                                    gravityY = 'top';
+                                                }
+                                                else {
+                                                    gravityY = '';
+                                                }
+                                                posTop = 0;
+                                                posBottom = NaN;
+                                                break;
+                                        }
+                                        offsetY = false;
+                                        tileModeX = '';
+                                        gravityX = '';
+                                    }
+                                    if (tileModeY !== 'disabled') {
+                                        tileModeY = '';
+                                    }
+                                    if (fill) {
+                                        gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
+                                    }
+                                    resizedHeight = true;
                                 }
-                                resizedHeight = true;
                             }
                         }
-                    }
-                    switch (node.controlName) {
-                        case SUPPORT_ANDROID.TOOLBAR:
-                        case SUPPORT_ANDROID_X.TOOLBAR:
-                            gravityY = '';
-                            gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
-                            break;
-                    }
-                    let underSizedWidth = false;
-                    let underSizedHeight = false;
-                    if (width === 0 && dimenWidth < boundsWidth && tileModeX === 'disabled') {
-                        width = dimenWidth
-                        underSizedWidth = true;
-                    }
-                    if (height === 0 && dimenHeight < boundsHeight && tileModeY === 'disabled') {
-                        height = dimenHeight;
-                        underSizedHeight = true;
-                    }
-                    const originalX = gravityX;
-                    if (tileModeX === 'repeat') {
-                        switch (gravityY) {
-                            case 'top':
-                                if (!isNaN(posTop)) {
-                                    tileModeX = '';
-                                }
+                        switch (node.controlName) {
+                            case SUPPORT_ANDROID.TOOLBAR:
+                            case SUPPORT_ANDROID_X.TOOLBAR:
                                 gravityY = '';
-                                break;
-                            case 'bottom':
-                            case STRING_ANDROID.CENTER_VERTICAL:
-                                if (width > 0 && !underSizedWidth) {
-                                    tileModeX = '';
-                                }
-                                else if (underSizedHeight) {
-                                    width = dimenWidth;
-                                    gravityAlign = delimitString({ value: gravityAlign }, 'fill_horizontal');
-                                    tileModeX = '';
-                                }
+                                gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
                                 break;
                         }
-                        gravityX = '';
-                    }
-                    if (tileModeY === 'repeat') {
-                        switch (originalX) {
-                            case 'start':
-                            case 'left':
-                                if (!isNaN(posLeft)) {
-                                    tileModeY = '';
-                                }
-                                gravityX = '';
-                                break;
-                            case 'right':
-                            case 'end':
-                            case STRING_ANDROID.CENTER_HORIZONTAL:
-                                if (height > 0 && !underSizedHeight) {
-                                    tileModeY = '';
-                                }
-                                else if (underSizedWidth) {
-                                    height = dimenHeight;
-                                    gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
-                                    tileModeY = '';
-                                }
-                                break;
-                        }
-                        gravityY = '';
-                    }
-                    if (gravityX !== '' && !resizedWidth) {
-                        gravityAlign = delimitString({ value: gravityAlign }, gravityX);
-                        gravityX = '';
-                    }
-                    if (gravityY !== '' && !resizedHeight) {
-                        gravityAlign = delimitString({ value: gravityAlign }, gravityY);
-                        gravityY = '';
-                    }
-                    const gravity = isCenterAlignment(gravityX, gravityY) ? 'center' : delimitString({ value: '' }, gravityX, gravityY);
-                    if (!autoFit && (gravityAlign !== '' && gravity !== '' || tileModeX === 'repeat' || tileModeY === 'repeat' || underSizedWidth || underSizedHeight || documentBody)) {
-                        let tileMode = '';
-                        if (tileModeX === 'disabled' && tileModeY === 'disabled') {
-                            tileMode = 'disabled';
-                            tileModeX = '';
-                            tileModeY = '';
-                        }
-                        else if (tileModeX === 'repeat' && tileModeY === 'repeat') {
-                            tileMode = 'repeat';
-                            tileModeX = '';
-                            tileModeY = '';
-                        }
-                        imageData.gravity = gravityAlign;
-                        imageData.bitmap = [{
-                            src,
-                            gravity,
-                            tileMode,
-                            tileModeX,
-                            tileModeY
-                        }];
-                    }
-                    else {
-                        imageData.gravity = gravity || gravityAlign;
-                        imageData.drawable = src;
-                    }
-                }
-                else if (value.item) {
-                    if (width === 0) {
-                        width = (dimension || NodeUI.refitScreen(node, node.actualDimension)).width;
-                    }
-                    if (height === 0) {
-                        height = (dimension || NodeUI.refitScreen(node, node.actualDimension)).height;
-                    }
-                    const src = Resource.insertStoredAsset(
-                        'drawables',
-                        `${node.controlId}_gradient_${i + 1}`,
-                        applyTemplate('vector', VECTOR_TMPL, [{
-                            'xmlns:android': XMLNS_ANDROID.android,
-                            'xmlns:aapt': XMLNS_ANDROID.aapt,
-                            'android:width': formatPX(width),
-                            'android:height': formatPX(height),
-                            'android:viewportWidth': width.toString(),
-                            'android:viewportHeight': height.toString(),
-                            'path': {
-                                pathData: drawRect(width, height),
-                                'aapt:attr': {
-                                    name: 'android:fillColor',
-                                    gradient: value
-                                }
+                        if (!autoFit) {
+                            if (width === 0 && dimenWidth < boundsWidth && tileModeX === 'disabled') {
+                                width = dimenWidth
+                                unsizedWidth = true;
                             }
-                        }])
-                    );
-                    if (src !== '') {
-                        if (gravityX === 'left') {
+                            if (height === 0 && dimenHeight < boundsHeight && tileModeY === 'disabled') {
+                                height = dimenHeight;
+                                unsizedHeight = true;
+                            }
+                        }
+                        const originalX = gravityX;
+                        if (tileModeX === 'repeat') {
+                            switch (gravityY) {
+                                case 'top':
+                                    if (!isNaN(posTop)) {
+                                        tileModeX = '';
+                                    }
+                                    gravityY = '';
+                                    break;
+                                case 'bottom':
+                                case STRING_ANDROID.CENTER_VERTICAL:
+                                    if (width > 0 && !unsizedWidth) {
+                                        tileModeX = '';
+                                    }
+                                    else if (unsizedHeight) {
+                                        width = dimenWidth;
+                                        gravityAlign = delimitString({ value: gravityAlign }, 'fill_horizontal');
+                                        tileModeX = '';
+                                    }
+                                    break;
+                            }
                             gravityX = '';
                         }
-                        if (gravityY === 'top') {
+                        if (tileModeY === 'repeat') {
+                            switch (originalX) {
+                                case 'start':
+                                case 'left':
+                                    if (!isNaN(posLeft)) {
+                                        tileModeY = '';
+                                    }
+                                    gravityX = '';
+                                    break;
+                                case 'right':
+                                case 'end':
+                                case STRING_ANDROID.CENTER_HORIZONTAL:
+                                    if (height > 0 && !unsizedHeight) {
+                                        tileModeY = '';
+                                    }
+                                    else if (unsizedWidth) {
+                                        height = dimenHeight;
+                                        gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
+                                        tileModeY = '';
+                                    }
+                                    break;
+                            }
                             gravityY = '';
                         }
-                        imageData.gravity = isCenterAlignment(gravityX, gravityY) ? delimitString({ value: gravityAlign }, 'center') : delimitString({ value: gravityAlign }, node.localizeString(gravityX), gravityY);
-                        imageData.drawable = '@drawable/' + src;
-                        imageData.order = j++;
-                    }
-                }
-                else {
-                    imageData.gravity = 'fill';
-                    imageData.gradient = value;
-                }
-                if (imageData.drawable || imageData.bitmap || imageData.gradient) {
-                    if (!isNaN(posBottom)) {
-                        if (offsetY) {
-                            bottom += position.bottom;
+                        if (gravityX !== '' && !resizedWidth) {
+                            gravityAlign = delimitString({ value: gravityAlign }, gravityX);
+                            gravityX = '';
                         }
-                        bottom += posBottom;
-                        if (bottom !== 0) {
-                            imageData.bottom = formatPX(bottom);
+                        if (gravityY !== '' && !resizedHeight) {
+                            gravityAlign = delimitString({ value: gravityAlign }, gravityY);
+                            gravityY = '';
                         }
-                        if (negativeOffset < 0) {
-                            imageData.top = formatPX(negativeOffset);
+                        const gravity = isCenterAlignment(gravityX, gravityY) ? 'center' : delimitString({ value: '' }, gravityX, gravityY);
+                        if (!autoFit && (gravityAlign !== '' && gravity !== '' || tileModeX === 'repeat' || tileModeY === 'repeat' || documentBody) || unsizedWidth || unsizedHeight) {
+                            let tileMode = '';
+                            if (tileModeX === 'disabled' && tileModeY === 'disabled') {
+                                tileMode = 'disabled';
+                                tileModeX = '';
+                                tileModeY = '';
+                            }
+                            else if (tileModeX === 'repeat' && tileModeY === 'repeat') {
+                                tileMode = 'repeat';
+                                tileModeX = '';
+                                tileModeY = '';
+                            }
+                            imageData.gravity = gravityAlign;
+                            imageData.bitmap = [{
+                                src,
+                                gravity,
+                                tileMode,
+                                tileModeX,
+                                tileModeY
+                            }];
                         }
-                    }
-                    else {
-                        if (offsetY) {
-                            top += position.top;
-                        }
-                        if (!isNaN(posTop)) {
-                            top += posTop;
-                        }
-                        if (top !== 0) {
-                            imageData.top = formatPX(top);
-                        }
-                        if (negativeOffset < 0) {
-                            imageData.bottom = formatPX(negativeOffset);
-                        }
-                    }
-                    if (!isNaN(posRight)) {
-                        if (offsetX) {
-                            right += position.right;
-                        }
-                        right += posRight;
-                        if (right !== 0) {
-                            imageData[node.localizeString('right')] = formatPX(right);
-                        }
-                        if (negativeOffset < 0) {
-                            imageData[node.localizeString('left')] = formatPX(negativeOffset);
+                        else {
+                            imageData.gravity = gravity || gravityAlign;
+                            imageData.drawable = src;
                         }
                     }
-                    else {
-                        if (offsetX) {
-                            left += position.left;
+                    else if (value.item) {
+                        if (width === 0) {
+                            width = (dimension || NodeUI.refitScreen(node, node.actualDimension)).width;
                         }
-                        if (!isNaN(posLeft)) {
-                            left += posLeft;
+                        if (height === 0) {
+                            height = (dimension || NodeUI.refitScreen(node, node.actualDimension)).height;
                         }
-                        if (left !== 0) {
-                            imageData[node.localizeString('left')] = formatPX(left);
-                        }
-                        if (negativeOffset < 0) {
-                            imageData[node.localizeString('right')] = formatPX(negativeOffset);
+                        const src = Resource.insertStoredAsset(
+                            'drawables',
+                            `${node.controlId}_gradient_${i + 1}`,
+                            applyTemplate('vector', VECTOR_TMPL, [{
+                                'xmlns:android': XMLNS_ANDROID.android,
+                                'xmlns:aapt': XMLNS_ANDROID.aapt,
+                                'android:width': formatPX(width),
+                                'android:height': formatPX(height),
+                                'android:viewportWidth': width.toString(),
+                                'android:viewportHeight': height.toString(),
+                                'path': {
+                                    pathData: drawRect(width, height),
+                                    'aapt:attr': {
+                                        name: 'android:fillColor',
+                                        gradient: value
+                                    }
+                                }
+                            }])
+                        );
+                        if (src !== '') {
+                            if (gravityX === 'left') {
+                                gravityX = '';
+                            }
+                            if (gravityY === 'top') {
+                                gravityY = '';
+                            }
+                            imageData.gravity = isCenterAlignment(gravityX, gravityY) ? delimitString({ value: gravityAlign }, 'center') : delimitString({ value: gravityAlign }, node.localizeString(gravityX), gravityY);
+                            imageData.drawable = '@drawable/' + src;
+                            imageData.order = j++;
                         }
                     }
-                    if (width > 0) {
-                        imageData.width = formatPX(width);
-                    }
-                    if (height > 0) {
-                        imageData.height = formatPX(height);
+                    if (imageData.drawable || imageData.bitmap || imageData.gradient) {
+                        if (!isNaN(posBottom)) {
+                            if (offsetY) {
+                                bottom += position.bottom;
+                            }
+                            bottom += posBottom;
+                            if (bottom !== 0) {
+                                imageData.bottom = formatPX(bottom);
+                            }
+                            if (negativeOffset < 0) {
+                                imageData.top = formatPX(negativeOffset);
+                            }
+                        }
+                        else {
+                            if (offsetY) {
+                                top += position.top;
+                            }
+                            if (!isNaN(posTop)) {
+                                top += posTop;
+                            }
+                            if (top !== 0) {
+                                imageData.top = formatPX(top);
+                            }
+                            if (negativeOffset < 0) {
+                                imageData.bottom = formatPX(negativeOffset);
+                            }
+                        }
+                        if (!isNaN(posRight)) {
+                            if (offsetX) {
+                                right += position.right;
+                            }
+                            right += posRight;
+                            if (right !== 0) {
+                                imageData[node.localizeString('right')] = formatPX(right);
+                            }
+                            if (negativeOffset < 0) {
+                                imageData[node.localizeString('left')] = formatPX(negativeOffset);
+                            }
+                        }
+                        else {
+                            if (offsetX) {
+                                left += position.left;
+                            }
+                            if (!isNaN(posLeft)) {
+                                left += posLeft;
+                            }
+                            if (left !== 0) {
+                                imageData[node.localizeString('left')] = formatPX(left);
+                            }
+                            if (negativeOffset < 0) {
+                                imageData[node.localizeString('right')] = formatPX(negativeOffset);
+                            }
+                        }
+                        if (width > 0) {
+                            imageData.width = formatPX(width);
+                        }
+                        if (height > 0) {
+                            imageData.height = formatPX(height);
+                        }
                     }
                     result.push(imageData);
                 }

@@ -63,11 +63,8 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 }
                 last = index;
             }
-            else if (!item.visible) {
-                const labelFor = <Undef<T>> item.labelFor;
-                if (labelFor && radiogroup.includes(labelFor)) {
-                    last = index;
-                }
+            else if (!item.visible && radiogroup.includes(item.labelFor as T)) {
+                last = index;
             }
             if (remove) {
                 removeable.push(remove);
@@ -79,7 +76,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             const container = this.controller.createNodeGroup(node, radiogroup, parent, true);
             const controlName = CONTAINER_ANDROID.RADIOGROUP;
             if (linearX) {
-                container.addAlign(NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.SEGMENTED);
+                container.addAlign(NODE_ALIGNMENT.HORIZONTAL | (length < parent.length ? NODE_ALIGNMENT.SEGMENTED : 0));
                 container.android('orientation', STRING_ANDROID.HORIZONTAL);
             }
             else {

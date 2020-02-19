@@ -1744,14 +1744,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const bounds = this._bounds;
             if (bounds) {
                 if (this.styleElement) {
-                    const { marginTop, marginBottom, marginLeft, marginRight } = this;
+                    const { marginBottom, marginRight } = this;
+                    const marginTop = Math.max(this.marginTop, 0);
+                    const marginLeft = Math.max(this.marginLeft, 0);
                     this._linear = {
-                        top: bounds.top - (marginTop > 0 ? marginTop : 0),
+                        top: bounds.top - marginTop,
                         right: bounds.right + marginRight,
                         bottom: bounds.bottom + marginBottom,
-                        left: bounds.left - (marginLeft > 0 ? marginLeft : 0),
-                        width: bounds.width + Math.max(marginLeft, 0) + marginRight,
-                        height: bounds.height + Math.max(marginTop, 0) + marginBottom
+                        left: bounds.left - marginLeft,
+                        width: bounds.width + marginLeft + marginRight,
+                        height: bounds.height + marginTop + marginBottom
                     };
                 }
                 else {
@@ -2224,7 +2226,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get blockStatic() {
         let result = this._cached.blockStatic;
         if (result === undefined) {
-            result = this.pageFlow && (this.block && !this.floating || this.blockDimension && this.cssInitial('width') === '100%' && !this.hasPX('maxWidth'));
+            result = this.pageFlow && (this.block && !this.floating || this.blockDimension && (this.cssInitial('width') === '100%' || this.cssInitial('minWidth') === '100%') && !this.hasPX('maxWidth'));
             this._cached.blockStatic = result;
         }
         return result;
