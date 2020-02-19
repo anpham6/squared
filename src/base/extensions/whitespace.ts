@@ -292,10 +292,10 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                         if (i > 0 && isBlockElement(current, true)) {
                             const previousSiblings = current.previousSiblings({ floating: false });
-                            const lengthA = previousSiblings.length;
-                            if (lengthA) {
+                            const q = previousSiblings.length;
+                            if (q) {
                                 let inheritedTop = false;
-                                const previous = previousSiblings[lengthA - 1];
+                                const previous = previousSiblings[q - 1];
                                 if (isBlockElement(previous, false)) {
                                     let marginBottom = previous.marginBottom;
                                     let marginTop = current.marginTop;
@@ -561,11 +561,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             if (horizontalRows) {
                                 found: {
                                     let maxBottom = Number.NEGATIVE_INFINITY;
-                                    const lengthA = horizontalRows.length;
-                                    for (let i = 0; i < lengthA; i++) {
+                                    const q = horizontalRows.length;
+                                    for (let i = 0; i < q; i++) {
                                         const row = horizontalRows[i] as T[];
-                                        const lengthB = row.length;
-                                        for (let j = 0; j < lengthB; j++) {
+                                        const r = row.length;
+                                        for (let j = 0; j < r; j++) {
                                             if (node === row[j]) {
                                                 if (i > 0) {
                                                     setSpacingOffset(node, BOX_STANDARD.MARGIN_TOP, maxBottom);

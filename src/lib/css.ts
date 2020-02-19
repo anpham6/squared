@@ -225,8 +225,8 @@ export function getKeyframeRules(): ObjectMap<CSSKeyframesData> {
             const styleSheet = <CSSStyleSheet> styleSheets[i];
             const cssRules = styleSheet.cssRules;
             if (cssRules) {
-                const lengthA = cssRules.length;
-                for (let j = 0; j < lengthA; j++) {
+                const q = cssRules.length;
+                for (let j = 0; j < q; j++) {
                     try {
                         const item = <CSSKeyframesRule> cssRules[j];
                         if (item.type === CSSRule.KEYFRAMES_RULE) {

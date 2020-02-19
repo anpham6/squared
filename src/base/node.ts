@@ -1330,8 +1330,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 break;
                                             }
                                             case '~': {
-                                                const lengthA = children.length;
-                                                for (let k = 0; k < lengthA; k++) {
+                                                const q = children.length;
+                                                for (let k = 0; k < q; k++) {
                                                     const sibling = children[k];
                                                     if (sibling === node) {
                                                         break;
@@ -2163,12 +2163,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get inlineDimension() {
         let result = this._cached.inlineDimension;
         if (result === undefined) {
-            if (this.naturalElement) {
-                result = REGEX_INLINEDASH.test(this.display) || this.floating;
-            }
-            else {
-                result = false;
-            }
+            result = this.naturalElement && (REGEX_INLINEDASH.test(this.display) || this.floating);
             this._cached.inlineDimension = result;
         }
         return result;
@@ -2271,13 +2266,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get inlineFlow() {
         let result = this._cached.inlineFlow;
         if (result === undefined) {
-            if (this.inline || this.imageElement || this.floating) {
-                result = true;
-            }
-            else {
-                const value = this.display;
-                result = REGEX_INLINE.test(value) || value === 'table-cell';
-            }
+            result = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement;
             this._cached.inlineFlow = result;
         }
         return result;
@@ -2332,7 +2321,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get horizontalAligned() {
         let result = this._cached.horizontalAligned;
         if (result === undefined) {
-            result = !this.blockStatic && !this.autoMargin.horizontal && !(this.blockDimension && this.css('width') === '100%') && (!this.multiline || this.floating);
+            result = !this.blockStatic && !this.autoMargin.horizontal && !(this.blockDimension && this.css('width') === '100%') && (!(this.plainText && this.multiline) || this.floating);
             this._cached.horizontalAligned = result;
         }
         return result;
@@ -2743,7 +2732,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get lastChild() {
         const children = this.naturalElements;
         const length = children.length;
-        return length > 0 ? children[length - 1] : null;
+        return length ? children[length - 1] : null;
     }
 
     get firstStaticChild() {

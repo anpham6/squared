@@ -403,13 +403,13 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     const keyTimes: number[] = [];
                                     const values: string[] = [];
                                     const keySplines: string[] = [];
-                                    const lengthA = animation.length;
-                                    for (let j = 0; j < lengthA; j++) {
+                                    const q = animation.length;
+                                    for (let j = 0; j < q; j++) {
                                         const item = animation[j];
                                         const { key, value } = item;
                                         keyTimes.push(key);
                                         values.push(value);
-                                        if (includeKeySplines && j < lengthA - 1) {
+                                        if (includeKeySplines && j < q - 1) {
                                             const spline = keyframeMap['animation-timing-function']?.find(timing => timing.key === key);
                                             keySplines.push(spline?.value || timingFunction);
                                         }
@@ -427,11 +427,11 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         const keyTimesData: number[] = [];
                                         const valuesData: string[] = [];
                                         const keySplinesData: string[] = [];
-                                        const lengthB = keyTimes.length;
-                                        for (let j = 0; j < lengthB; j++) {
+                                        const r = keyTimes.length;
+                                        for (let j = 0; j < r; j++) {
                                             const time = keyTimes[j];
                                             const value = values[j];
-                                            if (j < lengthB - 1) {
+                                            if (j < r - 1) {
                                                 const keySpline = keySplines[j];
                                                 if (value !== '' && /^step/.test(keySpline)) {
                                                     const steps = SvgAnimate.convertStepTimingFunction(name, keySpline, keyTimes, values, j, getFontSize(element));
@@ -439,8 +439,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                                         const [stepTime, stepValue] = steps;
                                                         const stepDuration = (keyTimes[j + 1] - time) * duration;
                                                         const offset = keyTimes[j + 1] === 1 ? 1 : 0;
-                                                        const lengthC = stepTime.length;
-                                                        for (let k = 0; k < lengthC - offset; k++) {
+                                                        const s = stepTime.length;
+                                                        for (let k = 0; k < s - offset; k++) {
                                                             let keyTime = (time + stepTime[k] * stepDuration) / duration;
                                                             if (keyTimesData.includes(keyTime)) {
                                                                 keyTime += 1 / 1000;

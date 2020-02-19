@@ -426,6 +426,8 @@ declare namespace lib {
     namespace util {
         function convertLength(value: string | number, font?: boolean, precision?: number): string;
         function getDocumentId(value: string): string;
+        function isHorizontalAlign(value: string): boolean;
+        function isVerticalAlign(value: string): boolean;
         function getHorizontalBias(node: View): number;
         function getVerticalBias(node: View): number;
         function isGridJustified(node: View): boolean;

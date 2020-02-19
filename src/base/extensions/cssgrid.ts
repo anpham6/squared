@@ -57,14 +57,14 @@ function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
             unitPX.push(sizes[i]);
         }
     }
-    const lengthA = data.length;
-    const lengthB = lengthA - unitPX.length;
-    const lengthC = unitRepeat.length;
-    const result: string[] = new Array(lengthA);
-    for (let i = 0; i < lengthA; i++) {
+    const q = data.length;
+    const r = q - unitPX.length;
+    const s = unitRepeat.length;
+    const result: string[] = new Array(q);
+    for (let i = 0; i < q; i++) {
         if (repeat[i]) {
-            for (let j = 0, k = 0; j < lengthB; i++, j++, k++) {
-                if (k === lengthC) {
+            for (let j = 0, k = 0; j < r; i++, j++, k++) {
+                if (k === s) {
                     k = 0;
                 }
                 result[i] = unitRepeat[k];
@@ -767,12 +767,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
             }
-            const lengthA = unit.length;
-            ITERATION = Math.max(length, outerCount, horizontal && !autoWidth || !horizontal && !autoHeight ? lengthA : 0);
+            const q = unit.length;
+            ITERATION = Math.max(length, outerCount, horizontal && !autoWidth || !horizontal && !autoHeight ? q : 0);
             data.length = ITERATION;
-            if (lengthA < ITERATION) {
+            if (q < ITERATION) {
                 if (data.autoFill || data.autoFit) {
-                    if (lengthA === 0) {
+                    if (q === 0) {
                         unit.push('auto');
                         data.unitMin.push('');
                         data.repeat.push(true);
@@ -783,11 +783,11 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 else {
                     const auto = data.auto;
-                    const lengthB = auto.length;
-                    if (lengthB) {
+                    const r = auto.length;
+                    if (r) {
                         let i = 0;
                         while (unit.length < ITERATION) {
-                            if (i === lengthB) {
+                            if (i === r) {
                                 i = 0;
                             }
                             unit.push(auto[i]);
@@ -815,8 +815,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             data.flexible = percent < 1 || fr > 0;
             if (percent < 1) {
                 if (fr > 0) {
-                    const lengthB = unit.length;
-                    for (let i = 0; i < lengthB; i++) {
+                    const r = unit.length;
+                    for (let i = 0; i < r; i++) {
                         const value = unit[i];
                         if (isFr(value)) {
                             unit[i] = percent * (parseFloat(value) / fr) + 'fr';
@@ -918,8 +918,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         for (let i = outside[0]; i < outside[1]; i++) {
                                             for (let j = 1; j < length; j++) {
                                                 const avail = available[j];
-                                                const lengthA = avail.length;
-                                                for (let k = 0; k < lengthA; k++) {
+                                                const q = avail.length;
+                                                for (let k = 0; k < q; k++) {
                                                     const inside = avail[k];
                                                     if (i >= inside[0] && (inside[1] === -1 || i + COLUMN_SPAN <= inside[1])) {
                                                         PLACEMENT[colA] = i + 1;
@@ -991,8 +991,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const length = rowData.length;
                 for (let i = 0; i < length; i++) {
                     const data = rowData[i];
-                    const lengthA = data.length;
-                    for (let j = 0; j < lengthA; j++) {
+                    const q = data.length;
+                    for (let j = 0; j < q; j++) {
                         let rowItem = rowMain[j];
                         if (rowItem === undefined) {
                             rowItem = [];

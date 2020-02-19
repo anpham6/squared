@@ -382,12 +382,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 };
                 for (let i = 0; i < length; i++) {
                     const seg = partition[i];
-                    const lengthA = seg.length;
+                    const q = seg.length;
                     const segStart = seg[0];
-                    const segEnd = seg[lengthA - 1];
+                    const segEnd = seg[q - 1];
                     const opposing = seg === segmented;
                     const justified = !opposing && seg.every(item => item.flexbox.grow === 0);
-                    const spreadInside = justified && (justifyContent === 'space-between' || justifyContent === 'space-around' && lengthA > 1);
+                    const spreadInside = justified && (justifyContent === 'space-between' || justifyContent === 'space-around' && q > 1);
                     const layoutWeight: T[] = [];
                     let maxSize = 0;
                     let growAvailable = 0;
@@ -431,7 +431,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                         growAll = horizontal || dimensionInverse;
                         growAvailable = 1 - adjustGrowRatio(node, seg, <WH> WHL);
-                        if (lengthA > 1) {
+                        if (q > 1) {
                             let sizeCount = 0;
                             for (const chain of seg) {
                                 const value = (<BoxRectDimension> chain.data(FLEXBOX, 'boundsData') || chain.bounds)[HWL];
@@ -447,12 +447,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     sizeCount = 1;
                                 }
                             }
-                            if (sizeCount === lengthA) {
+                            if (sizeCount === q) {
                                 maxSize = NaN;
                             }
                         }
                     }
-                    for (let j = 0; j < lengthA; j++) {
+                    for (let j = 0; j < q; j++) {
                         const chain = seg[j];
                         const previous = seg[j - 1];
                         const next = seg[j + 1];
@@ -463,7 +463,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             chain.anchor(LRTB, previous.documentId);
                         }
                         if (opposing) {
-                            if (parentEnd && lengthA > 1 && dimensionInverse) {
+                            if (parentEnd && q > 1 && dimensionInverse) {
                                 setLayoutWeight(chain, 1);
                             }
                             chain.anchor(TL, 'parent');
@@ -567,7 +567,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             }
                                             break;
                                         case 'space-between':
-                                            if (spreadInside && lengthA === 2) {
+                                            if (spreadInside && q === 2) {
                                                 chain.anchorDelete(j === 0 ? RLBT : LRTB);
                                             }
                                             if (i === 0) {
@@ -612,7 +612,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                         setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
                                                     }
                                                 }
-                                                else if (lengthA === 1) {
+                                                else if (q === 1) {
                                                     if (!horizontal) {
                                                         setLayoutWeightOpposing(chain, dimension ? '0px' : 'match_parent', horizontal);
                                                     }
@@ -692,7 +692,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     segStart.anchorStyle(orientation, directionReverse ? 1 : 0);
                                     break;
                                 case 'center':
-                                    if (lengthA > 1) {
+                                    if (q > 1) {
                                         segStart.anchorStyle(orientation, 0.5);
                                     }
                                     centered = true;
@@ -706,12 +706,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     segStart.anchorStyle(orientation, 1);
                                     break;
                                 case 'space-between':
-                                    if (lengthA === 1) {
+                                    if (q === 1) {
                                         segEnd.anchorDelete(RB);
                                     }
                                     break;
                                 case 'space-evenly':
-                                    if (lengthA > 1) {
+                                    if (q > 1) {
                                         segStart.anchorStyle(orientation, 0, 'spread');
                                     }
                                     else {
@@ -719,7 +719,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                     break;
                                 case 'space-around':
-                                    if (lengthA > 1) {
+                                    if (q > 1) {
                                         segStart.constraint[orientation] = false;
                                         segEnd.constraint[orientation] = false;
                                         controller.addGuideline(segStart, node, orientation, true, false);

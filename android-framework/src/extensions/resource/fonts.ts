@@ -417,8 +417,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
                 return c <= d ? 1 : -1;
             });
-            const lengthA = styleData.length;
-            for (let i = 0; i < lengthA; i++) {
+            const q = styleData.length;
+            for (let i = 0; i < q; i++) {
                 styleData[i].name = capitalize(tag) + (i > 0 ? '_' + i : '');
             }
             resourceMap[tag] = styleData;

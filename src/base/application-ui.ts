@@ -1180,9 +1180,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     }
                                 }
                                 else if (item.autoPosition) {
-                                    const lengthA = vertical.length;
-                                    if (lengthA) {
-                                        if (vertical[lengthA - 1].blockStatic) {
+                                    const q = vertical.length;
+                                    if (q) {
+                                        if (vertical[q - 1].blockStatic) {
                                             vertical.push(item);
                                         }
                                         break;

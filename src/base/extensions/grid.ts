@@ -106,12 +106,12 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 const columnRight: number[] = [];
                 for (let i = 0; i < length; i++) {
                     const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
-                    const lengthA = nextAxisX.length;
-                    if (i === 0 && lengthA === 0) {
+                    const q = nextAxisX.length;
+                    if (i === 0 && q === 0) {
                         return undefined;
                     }
                     columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
-                    for (let j = 0; j < lengthA; j++) {
+                    for (let j = 0; j < q; j++) {
                         const nextX = nextAxisX[j];
                         const { left, right } = nextX.linear;
                         if (i === 0 || aboveRange(left, columnRight[i - 1])) {
@@ -120,7 +120,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                 row = [];
                                 columns[i] = row;
                             }
-                            if (i === 0 || columns[0].length === lengthA) {
+                            if (i === 0 || columns[0].length === q) {
                                 row[j] = nextX;
                             }
                             else {
@@ -162,13 +162,13 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         columnRight[i] = Math.max(right, columnRight[i]);
                     }
                 }
-                const lengthB = columnRight.length;
-                for (let i = 0, j = -1; i < lengthB; i++) {
+                const r = columnRight.length;
+                for (let i = 0, j = -1; i < r; i++) {
                     if (columns[i] === undefined) {
                         if (j === -1) {
                             j = i - 1;
                         }
-                        else if (i === lengthB - 1) {
+                        else if (i === r - 1) {
                             columnRight[j] = columnRight[i];
                         }
                     }
@@ -187,8 +187,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 const maxColumn = columns.reduce((a, b) => Math.max(a, b.length), 0);
                 for (let l = 0; l < maxColumn; l++) {
-                    const lengthC = columns.length;
-                    for (let m = 0; m < lengthC; m++) {
+                    const s = columns.length;
+                    for (let m = 0; m < s; m++) {
                         const row = columns[m];
                         if (row[l] === undefined) {
                             row[l] = { spacer: 1 } as any;

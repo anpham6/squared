@@ -523,7 +523,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.add(NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (layout.linearY) {
-            layout.setContainerType(getRelativeVertical(layout), NODE_ALIGNMENT.VERTICAL | ( node.documentRoot ? NODE_ALIGNMENT.UNKNOWN : 0));
+            layout.setContainerType(getRelativeVertical(layout), NODE_ALIGNMENT.VERTICAL | (node.documentRoot || layout.some((item, index) => index > 0 && item.inlineFlow && (layout.item(index - 1) as T).inlineFlow) ? NODE_ALIGNMENT.UNKNOWN : 0));
         }
         else if (layout.every(item => item.inlineFlow)) {
             if (this.checkFrameHorizontal(layout)) {
@@ -747,7 +747,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     continue;
                 }
                 else {
-                    if (A && !(node.floating || node.autoMargin.horizontal || node.imageOrSvgElement || node.marginTop < 0)) {
+                    if (A && !(node.floating || node.autoMargin.horizontal || node.inlineDimension || node.imageOrSvgElement || node.marginTop < 0)) {
                         A = false;
                     }
                     if (B && node.percentWidth === 0) {
@@ -2228,10 +2228,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             item.anchor('top', 'true');
                         }
                     }
-                    const lengthA = baselineAlign.length;
+                    const q = baselineAlign.length;
                     if (baseline) {
                         baseline.baselineActive = true;
-                        if (lengthA) {
+                        if (q) {
                             adjustBaseline(baseline, baselineAlign, singleRow, node.box.top);
                             if (singleRow && baseline.is(CONTAINER_NODE.BUTTON)) {
                                 baseline.anchor('centerVertical', 'true');
@@ -2243,7 +2243,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             baseline = null;
                         }
                     }
-                    else if (lengthA > 0 && lengthA < items.length) {
+                    else if (q > 0 && q < items.length) {
                         textBottom = getTextBottom(items)[0] as T;
                         if (textBottom) {
                             for (const item of baselineAlign) {
@@ -2567,19 +2567,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             else {
                 const columns: T[][] = [];
-                const lengthA = row.length;
-                let columnMin = Math.min(lengthA, columnSized, columnCount || Number.POSITIVE_INFINITY);
+                const q = row.length;
+                let columnMin = Math.min(q, columnSized, columnCount || Number.POSITIVE_INFINITY);
                 let percentGap = 0;
                 if (columnMin > 1) {
                     const maxHeight = Math.floor(row.reduce((a, b) => a + b.bounds.height, 0) / columnMin);
-                    let perRowCount = lengthA >= columnMin ? Math.ceil(lengthA / columnMin) : 1;
-                    let rowReduce = multiline || perRowCount > 1 && (lengthA % perRowCount !== 0 || !isNaN(columnCount) && perRowCount * columnCount % lengthA > 1);
-                    let excessCount = rowReduce && lengthA % columnMin !== 0 ? lengthA - columnMin : Number.POSITIVE_INFINITY;
+                    let perRowCount = q >= columnMin ? Math.ceil(q / columnMin) : 1;
+                    let rowReduce = multiline || perRowCount > 1 && (q % perRowCount !== 0 || !isNaN(columnCount) && perRowCount * columnCount % q > 1);
+                    let excessCount = rowReduce && q % columnMin !== 0 ? q - columnMin : Number.POSITIVE_INFINITY;
                     let totalGap = 0;
-                    for (let j = 0, k = 0, l = 0; j < lengthA; j++, l++) {
+                    for (let j = 0, k = 0, l = 0; j < q; j++, l++) {
                         const item = row[j];
                         const iteration = l % perRowCount === 0;
-                        if (k < columnMin - 1 && (iteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < lengthA - 2 && (lengthA - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
+                        if (k < columnMin - 1 && (iteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < q - 2 && (q - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                             if (j > 0) {
                                 k++;
                                 if (iteration) {
@@ -2604,16 +2604,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             totalGap += maxArray(objectMap<T, number>(item.children as T[], child => child.marginLeft + child.marginRight));
                         }
                         if (j > 0 && /^H\d/.test(item.tagName)) {
-                            if (column.length === 1 && j === lengthA - 2) {
+                            if (column.length === 1 && j === q - 2) {
                                 columnMin--;
                                 excessCount = 0;
                             }
-                            else if ((l + 1) % perRowCount === 0 && lengthA - j > columnMin && !row[j + 1].multiline && row[j + 1].bounds.height < maxHeight) {
+                            else if ((l + 1) % perRowCount === 0 && q - j > columnMin && !row[j + 1].multiline && row[j + 1].bounds.height < maxHeight) {
                                 column.push(row[++j]);
                                 l = -1;
                             }
                         }
-                        else if (rowReduce && lengthA - j === columnMin - k && excessCount !== Number.POSITIVE_INFINITY) {
+                        else if (rowReduce && q - j === columnMin - k && excessCount !== Number.POSITIVE_INFINITY) {
                             perRowCount = 1;
                         }
                     }
@@ -2622,9 +2622,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else {
                     columns.push(row);
                 }
-                const lengthB = columns.length;
-                const above: T[] = new Array(lengthB);
-                for (let j = 0; j < lengthB; j++) {
+                const r = columns.length;
+                const above: T[] = new Array(r);
+                for (let j = 0; j < r; j++) {
                     const data = columns[j];
                     for (const item of data) {
                         item.app('layout_constraintWidth_percent', truncate((1 / columnMin) - percentGap, node.localSettings.floatPrecision));
@@ -2632,9 +2632,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     above[j] = data[0];
                 }
-                for (let j = 0; j < lengthB; j++) {
+                for (let j = 0; j < r; j++) {
                     const item = columns[j];
-                    if (j < lengthB - 1 && item.length > 1) {
+                    if (j < r - 1 && item.length > 1) {
                         const columnEnd = item[item.length - 1];
                         if (/^H\d/.test(columnEnd.tagName)) {
                             item.pop();
@@ -2643,7 +2643,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                 }
-                for (let j = 0; j < lengthB; j++) {
+                for (let j = 0; j < r; j++) {
                     const item = above[j];
                     if (j === 0) {
                         item.anchor('left', 'parent');
@@ -2653,51 +2653,52 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         item.anchor('leftRight', above[j - 1].documentId);
                         item.modifyBox(BOX_STANDARD.MARGIN_LEFT, columnGap);
                     }
-                    if (j === lengthB - 1) {
+                    if (j === r - 1) {
                         item.anchor('right', 'parent');
                     }
                     else {
                         item.anchor('rightLeft', above[j + 1].documentId);
                     }
                 }
-                for (let j = 0; j < lengthB; j++) {
+                for (let j = 0; j < r; j++) {
                     const seg = columns[j];
-                    const lengthC = seg.length;
-                    for (let k = 0; k < lengthC; k++) {
+                    const s = seg.length;
+                    for (let k = 0; k < s; k++) {
                         const item = seg[k];
-                        if (k === 0) {
-                            if (j === 0) {
-                                if (previousRow) {
-                                    previousRow.anchor('bottomTop', item.documentId);
-                                    item.anchor('topBottom', typeof previousRow === 'string' ? previousRow : previousRow.documentId);
-                                }
-                                else {
-                                    item.anchor('top', 'parent');
-                                    item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
-                                }
-                            }
-                            else {
-                                item.anchor('top', above[0].documentId);
-                                item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
-                                item.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                            }
-                        }
-                        else {
-                            const previous = seg[k - 1];
-                            previous.anchor('bottomTop', item.documentId);
-                            item.anchor('topBottom', previous.documentId);
-                        }
-                        if (k > 0) {
-                            item.anchor('left', seg[0].documentId);
-                        }
-                        if (k === lengthC - 1) {
+                        item.anchored = true;
+                        item.positioned = true;
+                        if (k === s - 1) {
                             if (i === length - 1) {
                                 item.anchor('bottom', 'parent');
                             }
                             item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM);
                         }
-                        item.anchored = true;
-                        item.positioned = true;
+                        if (k === 0) {
+                            if (i === 0) {
+                                item.anchor('top', 'parent');
+                            }
+                            else if (typeof previousRow === 'object') {
+                                if (j === 0) {
+                                    previousRow.anchor('bottomTop', item.documentId);
+                                    item.anchor('topBottom', previousRow.documentId);
+                                    continue;
+                                }
+                                else {
+                                    item.anchor('top', above[0].documentId);
+                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP);
+                                }
+                            }
+                            else {
+                                item.anchor('top', previousRow);
+                            }
+                            item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
+                        }
+                        else {
+                            const previous = seg[k - 1];
+                            previous.anchor('bottomTop', item.documentId);
+                            item.anchor('topBottom', previous.documentId);
+                            item.anchor('left', seg[0].documentId);
+                        }
                     }
                 }
                 if (i < length - 1) {
@@ -2709,12 +2710,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         previousRow = this.addBarrier(barrier, 'bottom');
                     }
                     else {
-                        const columnHeight: number[] = new Array(lengthB).fill(0);
-                        for (let j = 0; j < lengthB; j++) {
+                        const columnHeight: number[] = new Array(r).fill(0);
+                        for (let j = 0; j < r; j++) {
                             const seg = columns[j];
                             const elements: Element[] = [];
-                            const lengthC = seg.length;
-                            for (let k = 0; k < lengthC; k++) {
+                            const s = seg.length;
+                            for (let k = 0; k < s; k++) {
                                 const column = seg[k];
                                 if (column.naturalChild) {
                                     elements.push(<Element> (<Element> column.element).cloneNode(true));
@@ -2733,7 +2734,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                         let maxHeight = 0;
-                        for (let j = 0; j < lengthB; j++) {
+                        for (let j = 0; j < r; j++) {
                             const value = columnHeight[j];
                             if (value >= maxHeight) {
                                 previousRow = columns[j].pop() as T;
@@ -2765,18 +2766,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             let aboveRowEnd: Undef<T>;
             let currentRowTop: Undef<T>;
             const applyLayout = (seg: T[], reverse: boolean) => {
-                const lengthA = seg.length;
-                if (lengthA === 0) {
+                const q = seg.length;
+                if (q === 0) {
                     return;
                 }
                 const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
                 const rowStart = seg[0];
-                const rowEnd = seg[lengthA - 1];
+                const rowEnd = seg[q - 1];
                 rowStart.anchor(anchorStart, 'parent');
                 if (!floating && parent.css('textAlign') === 'center') {
                     rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 0.5);
                 }
-                else if (lengthA > 1) {
+                else if (q > 1) {
                     if (reverse) {
                         rowEnd.anchorStyle(STRING_ANDROID.HORIZONTAL, 1);
                     }
@@ -2788,11 +2789,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     rowStart.anchor(anchorEnd, 'parent');
                     rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, rowStart.centerAligned ? 0.5 : (rowStart.rightAligned ? 1 : 0));
                 }
-                if (lengthA > 1 || rowEnd.autoMargin.leftRight) {
+                if (q > 1 || rowEnd.autoMargin.leftRight) {
                     rowEnd.anchor(anchorEnd, 'parent');
                 }
                 let percentWidth = View.availablePercent(partition, 'width', node.box.width);
-                for (let j = 0; j < lengthA; j++) {
+                for (let j = 0; j < q; j++) {
                     const chain = seg[j];
                     if (i === 0) {
                         if (length === 1) {
@@ -2810,7 +2811,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (chain.autoMargin.leftRight) {
                         chain.anchorParent(STRING_ANDROID.HORIZONTAL);
                     }
-                    else if (lengthA > 1) {
+                    else if (q > 1) {
                         const previous = seg[j - 1];
                         const next = seg[j + 1];
                         if (previous) {
@@ -2893,8 +2894,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         current.anchor('topBottom', above.documentId);
                     }
                     else {
-                        const lengthA = partition.length;
-                        for (let k = 1; k < lengthA; k++) {
+                        const q = partition.length;
+                        for (let k = 1; k < q; k++) {
                             const item = partition[k];
                             if (item.linear.top < current.linear.top) {
                                 current = item;

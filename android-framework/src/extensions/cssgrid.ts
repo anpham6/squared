@@ -37,11 +37,11 @@ function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
     if (horizontal) {
         const length = mainData.column.length;
-        const lengthA = mainData.row.length;
+        const q = mainData.row.length;
         const result: Undef<View[]>[][] = new Array(length);
         for (let i = 0; i < length; i++) {
-            const data = new Array(lengthA);
-            for (let j = 0; j < lengthA; j++) {
+            const data = new Array(q);
+            for (let j = 0; j < q; j++) {
                 data[j] = rowData[j][i];
             }
             result[i] = data;
@@ -998,8 +998,8 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 for (let i = 0; i < length; i++) {
                     const emptyRow = emptyRows[i];
                     if (emptyRow) {
-                        const lengthA = emptyRow.length;
-                        for (let j = 0; j < lengthA; j++) {
+                        const q = emptyRow.length;
+                        for (let j = 0; j < q; j++) {
                             const value = emptyRow[j];
                             if (value > 0) {
                                 k = j;

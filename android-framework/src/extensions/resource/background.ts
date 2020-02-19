@@ -765,11 +765,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             let length = 0;
             if (backgroundImage) {
                 const svgInstance = this._resourceSvgInstance;
-                const lengthA = backgroundImage.length;
-                backgroundRepeat = fillBackgroundAttribute(backgroundRepeat, lengthA);
-                backgroundSize = fillBackgroundAttribute(backgroundSize, lengthA);
+                const q = backgroundImage.length;
+                backgroundRepeat = fillBackgroundAttribute(backgroundRepeat, q);
+                backgroundSize = fillBackgroundAttribute(backgroundSize, q);
                 let modified = false;
-                for (let i = 0; i < lengthA; i++) {
+                for (let i = 0; i < q; i++) {
                     let value = backgroundImage[i];
                     let valid = false;
                     if (typeof value === 'string') {

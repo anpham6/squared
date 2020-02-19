@@ -6,7 +6,7 @@ import { CachedValueAndroidUI, Constraint, LocalSettingsAndroidUI, SupportAndroi
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { localizeString } from './lib/util';
+import { localizeString, isHorizontalAlign, isVerticalAlign } from './lib/util';
 
 type T = android.base.View;
 
@@ -47,28 +47,6 @@ function checkTextAlign(value: string, ignoreStart: boolean) {
             return '';
     }
     return value;
-}
-
-function isHorizontalAlign(value: string) {
-    switch (value) {
-        case 'left':
-        case 'start':
-        case 'right':
-        case 'end':
-        case STRING_ANDROID.CENTER_HORIZONTAL:
-            return true;
-    }
-    return false;
-}
-
-function isVerticalAlign(value: string) {
-    switch (value) {
-        case 'top':
-        case 'bottom':
-        case STRING_ANDROID.CENTER_VERTICAL:
-            return true;
-    }
-    return false;
 }
 
 function getGravityValues(node: T, attr: string) {
@@ -387,7 +365,7 @@ function constraintPercentHeight(node: T, opposing: boolean, percent = 1) {
     return percent;
 }
 
-export function ascendFlexibleWidth(node: T) {
+function ascendFlexibleWidth(node: T) {
     if (node.documentRoot && (node.hasWidth || node.blockStatic || node.blockWidth)) {
         return true;
     }
@@ -410,7 +388,7 @@ export function ascendFlexibleWidth(node: T) {
     return false;
 }
 
-export function ascendFlexibleHeight(node: T) {
+function ascendFlexibleHeight(node: T) {
     if (node.documentRoot && node.hasHeight) {
         return true;
     }
@@ -624,9 +602,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (renderParent && node.documentId !== documentId) {
                 if (renderParent.layoutConstraint) {
                     if (documentId === '' || node.constraint.current[position] === undefined || overwrite) {
-                        const relativeParent = documentId === 'parent';
+                        const anchored = documentId === 'parent';
                         if (overwrite === undefined && documentId !== '') {
-                            overwrite = relativeParent;
+                            overwrite = anchored;
                         }
                         const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
                         if (attr) {
@@ -635,7 +613,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             switch (position) {
                                 case 'left':
                                 case 'right':
-                                    if (relativeParent) {
+                                    if (anchored) {
                                         node.constraint.horizontal = true;
                                     }
                                 case 'leftRight':
@@ -645,7 +623,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 case 'top':
                                 case 'bottom':
                                 case 'baseline':
-                                    if (relativeParent) {
+                                    if (anchored) {
                                         node.constraint.vertical = true;
                                     }
                                     break;
@@ -721,16 +699,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     node.delete('app', ...replaceMap<string, string>(position, value => this.localizeString(LAYOUT_CONSTRAINT[value])));
                 }
                 else if (renderParent.layoutRelative) {
+                    const layout: string[] = [];
                     for (const value of position) {
                         let attr: Undef<string> = LAYOUT_RELATIVE[value];
                         if (attr) {
-                            node.delete('android', attr, this.localizeString(attr));
+                            layout.push(this.localizeString(attr));
                         }
                         attr = LAYOUT_RELATIVE_PARENT[value];
                         if (attr) {
-                            node.delete('android', attr, this.localizeString(attr));
+                            layout.push(this.localizeString(attr));
                         }
                     }
+                    node.delete('android', ...layout);
                 }
             }
         }
@@ -756,13 +736,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (renderParent.layoutConstraint) {
                     const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
                     if (attr) {
-                        return node.app(this.localizeString(attr)) === 'parent' || node.app(attr) === 'parent';
+                        return node.app(this.localizeString(attr)) === 'parent';
                     }
                 }
                 else if (renderParent.layoutRelative) {
                     const attr: Undef<string> = LAYOUT_RELATIVE_PARENT[position];
                     if (attr) {
-                        return node.android(this.localizeString(attr)) === 'true' || node.android(attr) === 'true';
+                        return node.android(this.localizeString(attr)) === 'true';
                     }
                 }
                 else if (renderParent.layoutLinear) {
@@ -856,7 +836,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (all || objs.includes(name)) {
                     const obj: StringMap = this['__' + name];
                     if (obj) {
-                        const prefix = name + ':';
+                        let prefix = name + ':';
                         switch (name) {
                             case 'android':
                                 if (this.api < BUILD_ANDROID.LATEST) {
@@ -895,10 +875,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 requireId = true;
                                 break;
                             case '_':
-                                for (const attr in obj) {
-                                    result.push(`${attr}="${obj[attr]}"`);
-                                }
-                                break;
+                                prefix = '';
                             default:
                                 for (const attr in obj) {
                                     result.push(prefix + `${attr}="${obj[attr]}"`);

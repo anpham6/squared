@@ -176,8 +176,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     if (keyPoints.length > 1) {
                         let previous: Undef<SvgOffsetPath>;
                         const equalPoint = (time: number, point: DOMPoint, rotate: number) => previous?.key === time && previous.rotate === rotate && isEqual(previous.value, point);
-                        const lengthA = keyTimes.length;
-                        for (let i = 0; i < lengthA - 1; i++) {
+                        const q = keyTimes.length;
+                        for (let i = 0; i < q - 1; i++) {
                             const keyTime = keyTimes[i];
                             const baseTime = truncateFraction(keyTime * duration);
                             const offsetDuration = truncateFraction((keyTimes[i + 1] - keyTime) * duration);
@@ -223,20 +223,20 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                     if (from > to) {
                                         partial.reverse();
                                     }
-                                    const lengthB = partial.length;
-                                    const offsetInterval = offsetDuration / lengthB;
+                                    const r = partial.length;
+                                    const offsetInterval = offsetDuration / r;
                                     const item = partial[0];
                                     if (equalPoint(baseTime, item.value, item.rotate)) {
                                         j++;
                                         nextFrame += fps;
                                     }
-                                    for ( ; j < lengthB; j++) {
+                                    for ( ; j < r; j++) {
                                         const key = baseTime + (j * offsetInterval);
                                         if (key >= nextFrame) {
                                             const next = partial[j];
                                             next.key = key;
                                             result.push(next);
-                                            if (j < lengthB - 1) {
+                                            if (j < r - 1) {
                                                 nextFrame += fps;
                                             }
                                             else {
@@ -273,8 +273,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 }
                 if (rotateData) {
                     offsetPath = this._offsetPath;
-                    const lengthA = rotateData.length - 1;
-                    for (let i = 0, j = 0; i < lengthA; i++) {
+                    const q = rotateData.length - 1;
+                    for (let i = 0, j = 0; i < q; i++) {
                         const from = rotateData[i];
                         const to = rotateData[i + 1];
                         const toKey = to.key;

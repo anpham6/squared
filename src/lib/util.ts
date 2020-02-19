@@ -238,7 +238,7 @@ export function isEqual(source: any, other: any) {
             return true;
         }
     }
-    else if (isObject(source) && isObject(other)) {
+    else if (isPlainObject(source) && isPlainObject(other)) {
         if (Object.keys(source).length === Object.keys(other).length) {
             for (const attr in source) {
                 const a = source[attr];

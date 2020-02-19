@@ -3,7 +3,7 @@ import { ViewAttribute } from '../../../@types/android/node';
 
 type View = android.base.View;
 
-import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
+import { LOCALIZE_ANDROID, STRING_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
 const $lib = squared.lib;
@@ -32,6 +32,28 @@ export function convertLength(value: string | number, font = false, precision = 
 
 export function getDocumentId(value: string) {
     return value.replace(REGEX_ID, '');
+}
+
+export function isHorizontalAlign(value: string) {
+    switch (value) {
+        case 'left':
+        case 'start':
+        case 'right':
+        case 'end':
+        case STRING_ANDROID.CENTER_HORIZONTAL:
+            return true;
+    }
+    return false;
+}
+
+export function isVerticalAlign(value: string) {
+    switch (value) {
+        case 'top':
+        case 'bottom':
+        case STRING_ANDROID.CENTER_VERTICAL:
+            return true;
+    }
+    return false;
 }
 
 export function getHorizontalBias(node: View) {
