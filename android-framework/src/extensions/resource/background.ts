@@ -561,7 +561,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         };
         for (const node of this.cacheProcessing) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
-            if (stored && node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
+            if (stored) {
                 if (node.inputElement) {
                     const companion = node.companion;
                     if (companion?.tagName === 'LABEL' && !companion.visible) {
@@ -734,8 +734,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public getDrawableImages(node: T, data: BoxStyle) {
         const backgroundImage = data.backgroundImage;
-        const extracted = node.extracted;
-        if ((backgroundImage || extracted) && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+        if (backgroundImage || node.extracted && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
             const resource = <android.base.Resource<T>> this.resource;
             const bounds = node.bounds;
             const screenDimension = node.localSettings.screenDimension;
@@ -876,12 +875,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundSize = flatArray(backgroundSize);
                 }
             }
-            if (extracted) {
+            if (node.extracted) {
                 if (length === 0) {
                     backgroundRepeat.length = 0;
                     backgroundSize.length = 0;
                 }
-                const embedded = extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'));
+                const embedded = node.extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'));
                 for (const image of embedded) {
                     const element = <HTMLImageElement> image.element;
                     const src = resource.addImageSrc(element);

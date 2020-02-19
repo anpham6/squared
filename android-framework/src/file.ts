@@ -355,7 +355,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                         const value = images[dpi];
                         result.push(
                             value,
-                            directory + '-' + dpi,
+                            imageDirectory + '-' + dpi,
                             name + '.' + fromLastIndexOf(value, '.')
                         );
                     }

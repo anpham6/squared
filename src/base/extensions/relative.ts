@@ -61,10 +61,10 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 offsetY -= verticalAlign;
             }
             if (offsetX !== 0) {
-                node.translateX(offsetX, true);
+                node.translateX(offsetX, { accumulate: true, contain: node.pageFlow });
             }
             if (offsetY !== 0) {
-                node.translateY(offsetX, true);
+                node.translateY(offsetY, { accumulate: true, contain: node.pageFlow });
             }
         }
         else {

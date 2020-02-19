@@ -698,7 +698,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public setBoxStyle(node: T) {
-        if (node.styleElement || node.visibleStyle.background) {
+        if ((node.styleElement || node.visibleStyle.background) && node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
             const boxStyle: BoxStyle = {
                 backgroundSize: node.css('backgroundSize'),
                 backgroundRepeat: node.css('backgroundRepeat'),

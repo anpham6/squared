@@ -394,13 +394,20 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     node.lockAttr('android', 'layout_width');
                     node.data(CSS_GRID, 'barrierData', barrierData);
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
-                    return { output: this.application.renderNode(layout), complete: true };
+                    return {
+                        output: this.application.renderNode(layout),
+                        complete: true
+                    };
                 }
             }
             checkAutoDimension(column, true);
             checkAutoDimension(row, false);
             layout.setContainerType(CONTAINER_NODE.GRID);
-            return { output: this.application.renderNode(layout), include: true, complete: true };
+            return {
+                output: this.application.renderNode(layout),
+                include: true,
+                complete: true
+            };
         }
         return undefined;
     }

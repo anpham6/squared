@@ -26,7 +26,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        const absolute = node.filter((item: T) => !item.pageFlow && item.leftTopAxis && item.left >= 0 && item.right >= 0) as T[];
+        const absolute = node.filter((item: T) => !item.pageFlow && item.leftTopAxis && (item.left !== 0 || item.right !== 0)) as T[];
         if (absolute.length) {
             const paddingTop = node.paddingTop + (node.documentBody ? node.marginTop : 0);
             const paddingRight = node.paddingRight + (node.documentBody ? node.marginRight : 0);
@@ -44,6 +44,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     }
                     else if (!item.hasPX('right') && checkMarginLeft(node, item)) {
                         children.add(item);
+                        item.modifyBox(BOX_STANDARD.MARGIN_LEFT, paddingLeft);
                     }
                 }
                 else if (item.hasPX('right')) {
@@ -54,10 +55,16 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     }
                     else if (checkMarginRight(node, item)) {
                         children.add(item);
+                        item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, paddingRight);
                     }
                 }
-                else if (checkMarginLeft(node, item) || checkMarginRight(node, item)) {
+                else if (checkMarginLeft(node, item)) {
                     children.add(item);
+                    item.modifyBox(BOX_STANDARD.MARGIN_LEFT, paddingLeft);
+                }
+                else if (checkMarginRight(node, item)) {
+                    children.add(item);
+                    item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, paddingLeft);
                 }
                 if (item.hasPX('top')) {
                     const value = item.top;
@@ -66,6 +73,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     }
                     else if (!item.hasPX('bottom') && checkMarginTop(node, item)) {
                         children.add(item);
+                        item.modifyBox(BOX_STANDARD.MARGIN_TOP, paddingTop);
                     }
                 }
                 else if (item.hasPX('bottom')) {
@@ -76,10 +84,16 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                     }
                     else if (checkMarginBottom(node, item)) {
                         children.add(item);
+                        item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, paddingBottom);
                     }
                 }
-                else if (checkMarginTop(node, item) || checkMarginBottom(node, item)) {
+                else if (checkMarginTop(node, item)) {
                     children.add(item);
+                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, paddingTop);
+                }
+                else if (checkMarginBottom(node, item)) {
+                    children.add(item);
+                    item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, paddingBottom);
                 }
             }
             if (children.size) {
@@ -126,19 +140,27 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
                 const autoMargin = item.autoMargin;
                 let top = false;
                 let left = false;
-                if (item.hasPX('top')) {
-                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
-                    top = true;
-                }
-                if (item.hasPX('bottom') && (!top || autoMargin.top || autoMargin.topBottom)) {
-                    item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
-                }
                 if (item.hasPX('left')) {
                     item.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
+                    item.translateX(item.left, { preset: true });
                     left = true;
                 }
                 if (item.hasPX('right') && (!left || autoMargin.left || autoMargin.leftRight)) {
                     item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
+                    if (!left) {
+                        item.translateX(-item.right, { preset: true });
+                    }
+                }
+                if (item.hasPX('top')) {
+                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
+                    item.translateY(item.top, { preset: true });
+                    top = true;
+                }
+                if (item.hasPX('bottom') && (!top || autoMargin.top || autoMargin.topBottom)) {
+                    item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
+                    if (!top) {
+                        item.translateY(-item.bottom, { preset: true });
+                    }
                 }
             }
             this.subscribers.add(container);
@@ -163,7 +185,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
         if (node.innerWrapped) {
             const innerWrapped = node.innerMostWrapped as T;
             const maxData: MaxWidthHeightData = innerWrapped.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
-            if (maxData?.container?.outerWrapper === node) {
+            if (maxData?.container.outerWrapper === node) {
                 if (maxData.width) {
                     node.css('maxWidth', innerWrapped.css('maxWidth'));
                     node.setLayoutWidth('0px');

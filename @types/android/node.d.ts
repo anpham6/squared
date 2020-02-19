@@ -1,4 +1,4 @@
-import { CachedValueUI, ExcludeOptions, LocalSettingsUI, SupportUI } from '../base/node';
+import { CachedValueUI, ExcludeUIOptions, LocalSettingsUI, SupportUI } from '../base/node';
 
 export interface LocalSettingsAndroidUI extends LocalSettingsUI {
     supportRTL: boolean;
@@ -32,7 +32,7 @@ export interface SpacerAttribute extends ViewAttribute {
     rowSpan?: number;
 }
 
-export interface WrapperOptions extends ExcludeOptions {
+export interface WrapperOptions extends ExcludeUIOptions {
     controlName?: string;
     containerType?: number;
     alignmentType?: number;

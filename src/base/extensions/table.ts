@@ -3,7 +3,7 @@ import { TableData, TableCellData } from '../../../@types/base/extension';
 import ExtensionUI from '../extension-ui';
 
 import { EXT_NAME } from '../lib/constant';
-import { BOX_STANDARD } from '../lib/enumeration';
+import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
 
@@ -30,23 +30,28 @@ function setAutoWidth(node: NodeUI, td: NodeUI, data: ExternalData) {
     data.expand = true;
 }
 
-function setBorderStyle(td: NodeUI, attr: string, including: NodeUI) {
+function setBorderStyle(node: NodeUI, attr: string, including: NodeUI) {
     const cssStyle = attr + 'Style';
-    td.ascend({ including }).some((item: NodeUI) => {
+    node.ascend({ including }).some((item: NodeUI) => {
         if (item.has(cssStyle)) {
             const cssColor = attr + 'Color';
             const cssWidth = attr + 'Width';
-            td.css(cssStyle, item.css(cssStyle));
-            td.css(cssColor, item.css(cssColor));
-            td.css(cssWidth, item.css(cssWidth), true);
-            td.css('border', 'inherit');
+            node.css(cssStyle, item.css(cssStyle));
+            node.css(cssColor, item.css(cssColor));
+            node.css(cssWidth, item.css(cssWidth), true);
+            node.css('border', 'inherit');
             return true;
         }
         return false;
     });
 }
 
-const setBoundsWidth = (td: NodeUI) => td.css('width', formatPX(td.bounds.width), true);
+function hideCell(node: NodeUI) {
+    node.exclude({ resource: NODE_RESOURCE.ALL });
+    node.hide();
+}
+
+const setBoundsWidth = (node: NodeUI) => node.css('width', formatPX(node.bounds.width), true);
 
 export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute(node: NodeUI): TableData {
@@ -78,7 +83,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 table = table.concat(parent.children as T[]);
-                parent.hide();
+                hideCell(parent);
             }
         };
         node.each((item: T) => {
@@ -88,7 +93,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         thead = item;
                     }
                     else {
-                        item.hide();
+                        hideCell(item);
                     }
                     break;
                 case 'TBODY':
@@ -99,7 +104,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         tfoot = item;
                     }
                     else {
-                        item.hide();
+                        hideCell(item);
                     }
                     break;
             }
@@ -107,7 +112,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         inheritStyles(thead);
         for (const section of tbody) {
             table = table.concat(section.children as T[]);
-            section.hide();
+            hideCell(section);
         }
         inheritStyles(tfoot);
         const [horizontal, vertical] = mainData.borderCollapse ? [0, 0] : replaceMap<string, number>(node.css('borderSpacing').split(' '), (value, index) => node.parseUnit(value, index === 0 ? 'width' : 'height'));
@@ -259,7 +264,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 td.data(TABLE, 'cellData', { colSpan, rowSpan });
             });
-            tr.hide();
+            hideCell(tr);
             columnCount = Math.max(columnCount, row.length);
         }
         if (node.hasPX('width', false) && mapWidth.some(value => isPercent(value))) {

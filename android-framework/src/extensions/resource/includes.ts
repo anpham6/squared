@@ -62,16 +62,16 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 const templates: NodeTemplate<T>[] = [];
                                 for (let k = openData.index; k <= index; k++) {
                                     templates.push(<NodeTemplate<T>> renderTemplates[k]);
-                                    renderTemplates[k] = null;
                                 }
-                                const merge = !openData.include || templates.length > 1;
+                                const length = templates.length;
+                                const merge = !openData.include || length > 1;
                                 const depth = merge ? 1 : 0;
-                                renderTemplates[openData.index] = <NodeIncludeTemplate<T>> {
+                                renderTemplates.splice(openData.index, length, <NodeIncludeTemplate<T>> {
                                     type: NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
                                     content: controller.renderNodeStatic('include', { layout: '@layout/' + openData.name }, 'match_parent'),
                                     indent: true
-                                };
+                                });
                                 let content = controller.cascadeDocument(templates, depth);
                                 if (merge) {
                                     content = controller.getEnclosingXmlTag('merge', getRootNs(content), content);

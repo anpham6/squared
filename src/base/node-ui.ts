@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { BoxType, CachedValueUI, ExcludeOptions, HideOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, SupportUI } from '../../@types/base/node';
+import { BoxType, CachedValueUI, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions } from '../../@types/base/node';
 
 import Node from './node';
 
@@ -208,7 +208,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result[0] || null;
     }
 
-    public static linearData<T extends NodeUI>(list: T[], clearOnly = false): LinearData<T> {
+    public static linearData<T extends NodeUI>(list: T[], clearOnly = false): LinearDataUI<T> {
         const floated = new Set<string>();
         const cleared = new Map<T, string>();
         let linearX = false;
@@ -407,7 +407,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract localSettings: LocalSettingsUI;
     public abstract renderParent?: T;
     public abstract renderExtension?: squared.base.ExtensionUI<T>[];
-    public abstract renderTemplates?: Null<NodeTemplate<T>>[];
+    public abstract renderTemplates?: NodeTemplate<T>[];
     public abstract outerWrapper?: T;
     public abstract innerWrapped?: T;
     public abstract innerBefore?: T;
@@ -448,8 +448,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract alignSibling(position: string, documentId?: string): string;
     public abstract actualRect(direction: string, dimension?: BoxType): number;
     public abstract localizeString(value: string): string;
-    public abstract translateX(value: number, accumulate?: boolean): boolean;
-    public abstract translateY(value: number, accumulate?: boolean): boolean;
+    public abstract translateX(value: number, options?: TranslateUIOptions): boolean;
+    public abstract translateY(value: number, options?: TranslateUIOptions): boolean;
 
     public abstract get controlElement(): boolean;
     public abstract set containerType(value: number);
@@ -574,7 +574,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return filterArray(this.renderChildren, predicate);
     }
 
-    public hide(options?: HideOptions<T>) {
+    public hide(options?: HideUIOptions<T>) {
         let remove: Undef<boolean>;
         let replacement: Undef<T>;
         if (options) {
@@ -711,7 +711,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return !hasBit(this.excludeSection, value);
     }
 
-    public exclude(options: ExcludeOptions) {
+    public exclude(options: ExcludeUIOptions) {
         const { resource, procedure, section } = options;
         if (resource && !hasBit(this._excludeResource, resource)) {
             this._excludeResource |= resource;
@@ -807,7 +807,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                         else {
-                            renderTemplates[index] = null;
+                            renderTemplates.splice(index, 1);
+                            renderChildren.splice(index, 1);
+                            this.renderParent = undefined;
                             return true;
                         }
                     }
@@ -1332,13 +1334,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             this._cached.autoPosition = result;
         }
         return result;
-    }
-
-    set flexbox(value: Flexbox) {
-        this._cached.flexbox = value;
-    }
-    get flexbox() {
-        return super.flexbox;
     }
 
     set contentBoxWidth(value: number) {

@@ -1,6 +1,6 @@
 import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, FileActionOptions, FileCopyingOptions, FileArchivingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
-import { AutoMargin, AscendOptions, BoxType, ExcludeOptions, HideOptions, InitialData, LinearData, LocalSettingsUI, SiblingOptions, SupportUI, VisibleStyle } from './base/node';
+import { AutoMargin, AscendOptions, BoxType, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgMatrix, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
@@ -489,7 +489,6 @@ declare namespace base {
         controlName: string;
         documentParent: NodeUI;
         renderExclude: boolean;
-        element: Null<Element>;
         textContent: string;
         autoPosition: boolean;
         multiline: boolean;
@@ -503,13 +502,12 @@ declare namespace base {
         siblingsTrailing: NodeUI[];
         floatContainer: boolean;
         containerIndex: number;
-        flexbox: Flexbox;
         localSettings: LocalSettingsUI;
         fontSize: number;
         renderAs?: NodeUI;
         renderParent?: NodeUI;
         renderExtension?: Extension<NodeUI>[];
-        renderTemplates?: Null<NodeTemplate<NodeUI>>[];
+        renderTemplates?: NodeTemplate<NodeUI>[];
         outerWrapper?: NodeUI;
         innerWrapped?: NodeUI;
         innerBefore?: NodeUI;
@@ -566,8 +564,8 @@ declare namespace base {
         hasProcedure(value: number): boolean;
         hasResource(value: number): boolean;
         hasSection(value: number): boolean;
-        exclude(options: ExcludeOptions): void;
-        hide(options?: HideOptions<NodeUI>): void;
+        exclude(options: ExcludeUIOptions): void;
+        hide(options?: HideUIOptions<NodeUI>): void;
         appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
         removeTry(replacement?: NodeUI): boolean;
         sort(predicate?: (a: Node, b: Node) => number): this;
@@ -587,13 +585,13 @@ declare namespace base {
         extractAttributes(depth: number): string;
         setCacheValue(attr: string, value: any): void;
         cssSet(attr: string, value: string, cache?: boolean): string;
-        translateX(value: number, accumulate?: boolean): boolean;
-        translateY(value: number, accumulate?: boolean): boolean;
+        translateX(value: number, options?: TranslateUIOptions): boolean;
+        translateY(value: number, options?: TranslateUIOptions): boolean;
     }
 
     class NodeUI implements NodeUI, LayoutType {
         public static refitScreen<T>(node: T, value: Dimension): Dimension;
-        public static linearData<T>(list: T[], clearOnly?: boolean): LinearData<T>;
+        public static linearData<T>(list: T[], clearOnly?: boolean): LinearDataUI<T>;
         public static outerRegion<T>(node: T): BoxRectDimension;
         public static baseline<T>(list: T[], text?: boolean): Null<T>;
         public static partitionRows<T>(list: T[], parent?: T): T[][];

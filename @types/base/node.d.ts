@@ -2,10 +2,6 @@ type Node = squared.base.Node;
 
 export type BoxType = "bounds" | "box" | "linear";
 
-export interface LocalSettingsUI {
-    screenDimension: Dimension;
-}
-
 export interface InitialData<T> {
     styleMap?: StringMap;
     children?: T[];
@@ -87,16 +83,6 @@ export interface CachedValue<T> {
     visibleStyle?: VisibleStyle;
 }
 
-export interface CachedValueUI<T> extends CachedValue<T> {
-    autoPosition?: boolean;
-    positiveAxis?: boolean;
-    renderExclude?: boolean;
-    containerName?: string;
-    baselineHeight?: number;
-    support?: SupportUI;
-    extensions?: string[];
-}
-
 export interface VisibleStyle {
     borderWidth: boolean;
     background: boolean;
@@ -107,12 +93,7 @@ export interface VisibleStyle {
     backgroundRepeatY: boolean;
 }
 
-export interface SupportUI {
-    positionRelative: boolean;
-    positionTranslation: boolean;
-}
-
-export type AutoMargin = {
+export interface AutoMargin {
     horizontal?: boolean;
     left?: boolean;
     right?: boolean;
@@ -121,7 +102,7 @@ export type AutoMargin = {
     top?: boolean;
     bottom?: boolean;
     topBottom?: boolean;
-};
+}
 
 export interface SiblingOptions {
     floating?: boolean;
@@ -140,26 +121,6 @@ export interface AscendOptions {
     every?: boolean;
 }
 
-export interface ExcludeOptions {
-    resource?: number;
-    procedure?: number;
-    section?: number;
-}
-
-export interface HideOptions<T> {
-    hidden?: boolean;
-    collapse?: boolean;
-    remove?: boolean;
-    replacement?: T;
-}
-
-export interface LinearData<T> {
-    linearX: boolean;
-    linearY: boolean;
-    floated: Set<string>;
-    cleared: Map<T, string>;
-}
-
 export interface QueryData {
     all: boolean;
     tagName?: string;
@@ -174,4 +135,49 @@ export interface QueryData {
 export interface QueryAttribute extends StringValue {
     symbol?: string;
     caseInsensitive: boolean;
+}
+
+export interface LocalSettingsUI {
+    screenDimension: Dimension;
+}
+
+export interface SupportUI {
+    positionRelative: boolean;
+    positionTranslation: boolean;
+}
+
+export interface CachedValueUI<T> extends CachedValue<T> {
+    autoPosition?: boolean;
+    positiveAxis?: boolean;
+    renderExclude?: boolean;
+    containerName?: string;
+    baselineHeight?: number;
+    support?: SupportUI;
+    extensions?: string[];
+}
+
+export interface LinearDataUI<T> {
+    linearX: boolean;
+    linearY: boolean;
+    floated: Set<string>;
+    cleared: Map<T, string>;
+}
+
+export interface ExcludeUIOptions {
+    resource?: number;
+    procedure?: number;
+    section?: number;
+}
+
+export interface HideUIOptions<T> {
+    hidden?: boolean;
+    collapse?: boolean;
+    remove?: boolean;
+    replacement?: T;
+}
+
+export interface TranslateUIOptions {
+    accumulate?: boolean;
+    contain?: boolean;
+    preset?: boolean;
 }

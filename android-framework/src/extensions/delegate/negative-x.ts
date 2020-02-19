@@ -10,23 +10,17 @@ const { formatPX } = squared.lib.css;
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 type NegativeXData = {
+    outside: View[];
     offsetLeft: number;
-    nextSibling: View;
+    container: View;
     firstChild?: View;
 };
 
-function outsideX(node: View, parent: View) {
-    if (node.pageFlow) {
-        return node === parent.firstChild && node.inlineFlow && !node.centerAligned && !node.rightAligned && node.marginLeft < 0 && Math.abs(node.marginLeft) <= parent.marginLeft + parent.paddingLeft && !parent.some(item => item.multiline);
-    }
-    else {
-        return node.absoluteParent === parent && (node.left < 0 || !node.hasPX('left') && node.right < 0);
-    }
-}
+const outsideX = (node: View, parent: View) => !node.pageFlow && node.absoluteParent === parent && (node.left < 0 || !node.hasPX('left') && node.right < 0);
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.documentRoot && node.css('overflowX') !== 'hidden';
+        return !node.pageFlow && !node.documentRoot && node.css('overflowX') !== 'hidden';
     }
 
     public condition(node: T) {
@@ -111,8 +105,13 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 }
             }
         }
-        container.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData', <NegativeXData> { offsetLeft: node.marginLeft + node.paddingLeft, firstChild, nextSibling: node });
-        this.subscribers.add(container);
+        node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData', <NegativeXData> {
+            outside,
+            offsetLeft: node.marginLeft + node.paddingLeft,
+            firstChild,
+            container
+        });
+        this.subscribers.add(node);
         return {
             parent: container,
             renderAs: container,
@@ -131,7 +130,8 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     public postBaseLayout(node: T) {
         const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData');
         if (mainData) {
-            const options = { excluding: node, attr: 'outerWrapper' };
+            const container = mainData.container;
+            const options = { excluding: container, attr: 'outerWrapper' };
             let firstChild = mainData.firstChild;
             if (firstChild) {
                 firstChild = (firstChild.ascend(options).pop() || firstChild) as T;
@@ -141,11 +141,33 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 View.setConstraintDimension(firstChild);
                 firstChild.positioned = true;
             }
-            const nextSibling = (mainData.nextSibling.ascend(options).pop() || mainData.nextSibling) as T;
+            const nextSibling = (node.ascend(options).pop() || node) as T;
             nextSibling.anchorParent(STRING_ANDROID.HORIZONTAL, 0);
             nextSibling.anchorParent(STRING_ANDROID.VERTICAL, 0);
             View.setConstraintDimension(nextSibling);
             nextSibling.positioned = true;
+        }
+    }
+
+    public beforeCascade() {
+        for (const node of this.subscribers) {
+            const translateX = node.android('translationX');
+            const translateY = node.android('translationY');
+            if (translateX !== '' || translateY !== '') {
+                const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData');
+                if (mainData) {
+                    const x = parseInt(translateX);
+                    const y = parseInt(translateY);
+                    for (const child of mainData.outside) {
+                        if (!isNaN(x)) {
+                            child.translateX(x, { accumulate: true });
+                        }
+                        if (!isNaN(y)) {
+                            child.translateY(y, { accumulate: true });
+                        }
+                    }
+                }
+            }
         }
     }
 }

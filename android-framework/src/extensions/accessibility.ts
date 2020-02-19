@@ -9,7 +9,7 @@ type View = android.base.View;
 export default class <T extends View> extends squared.base.extensions.Accessibility<T> {
     public readonly eventOnly = true;
     public readonly options: AccessibilityOptions = {
-        showLabel: false
+        displayLabel: false
     };
 
     public beforeBaseLayout() {
@@ -48,7 +48,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                                 }
                                 if (valid) {
                                     sibling.labelFor = node;
-                                    if (!this.options.showLabel) {
+                                    if (!this.options.displayLabel) {
                                         sibling.hide();
                                     }
                                     return true;

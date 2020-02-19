@@ -10,7 +10,7 @@ const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 export interface MaxWidthHeightData {
     width: boolean;
     height: boolean;
-    container?: View;
+    container: View;
 }
 
 export default class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {

@@ -206,7 +206,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
             node.addAlign(directionColumn ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL);
             mainData.wrap = false;
-            return { include: true };
+            return {
+                include: true,
+                complete: true
+            };
         }
         else {
             const containerType = directionRow && node.hasHeight || directionColumn && node.hasWidth || node.some(item => !item.pageFlow) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.LINEAR;
@@ -220,6 +223,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     rowCount,
                     columnCount
                 })),
+                include: true,
                 complete: true
             };
         }
@@ -227,6 +231,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
 
     public processChild(node: T, parent: T) {
         if (node.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
+            this.subscribers.add(node);
             return {
                 output: this.application.renderNode(
                     new LayoutUI(
@@ -237,7 +242,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         node.children as T[]
                     )
                 ),
-                include: true,
                 complete: true
             };
         }
@@ -258,7 +262,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             display: 'block',
                         }, true);
                         container.saveAsInitial(true);
-                        container.flexbox = node.flexbox;
+                        container.setCacheValue('flexbox', node.flexbox);
                         mainData.children[index] = container;
                         if (autoMargin.horizontal && !node.hasWidth) {
                             node.setLayoutWidth('wrap_content');

@@ -1,7 +1,7 @@
 import { SvgTransformExclude } from '../svg/object';
 
 export interface AccessibilityOptions {
-    showLabel: boolean;
+    displayLabel: boolean;
 }
 
 export interface ConstraintGuidelineOptions {

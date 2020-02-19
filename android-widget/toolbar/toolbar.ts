@@ -300,7 +300,10 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             };
         }
         else {
-            return { output, include: true };
+            return {
+                output,
+                include: true
+            };
         }
     }
 

@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { AutoMargin, BoxType, HideOptions } from '../../@types/base/node';
+import { AutoMargin, BoxType, HideUIOptions, TranslateUIOptions } from '../../@types/base/node';
 import { CustomizationResult } from '../../@types/android/application';
 import { CachedValueAndroidUI, Constraint, LocalSettingsAndroidUI, SupportAndroid } from '../../@types/android/node';
 
@@ -32,7 +32,7 @@ const SPACING_CHECKBOX = 4;
 const REGEX_DATASETATTR = /^attr[A-Z]/;
 const REGEX_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
 const REGEX_STRINGVALID = /[^\w$\-_.]/g;
-const REGEX_CLIPNONE = /^rect(0[a-z]*, 0[a-z]*, 0[a-z]*, 0[a-z]*)$/;
+const REGEX_CLIPNONE = /^rect\(0[a-z]*, 0[a-z]*, 0[a-z]*, 0[a-z]*\)$/;
 
 function checkTextAlign(value: string, ignoreStart: boolean) {
     switch (value) {
@@ -529,7 +529,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public api = BUILD_ANDROID.LATEST;
         public renderParent?: T;
-        public renderTemplates?: Null<NodeTemplate<T>>[];
+        public renderTemplates?: NodeTemplate<T>[];
         public outerWrapper?: T;
         public companion?: T;
         public extracted?: T[];
@@ -919,7 +919,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return localizeString(value, this._localization, this.api);
         }
 
-        public hide(options?: HideOptions<T>) {
+        public hide(options?: HideUIOptions<T>) {
             if (options) {
                 if (options.hidden) {
                     this.android('visibility', 'invisible');
@@ -1757,10 +1757,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             bottom = Math.max(bottom - SPACING_SELECT, 0);
                             break;
                     }
-                    if (top < 0 && (this.pageFlow || this.alignParent('top') || this.alignParent('bottom')) && this.translateY(top, true)) {
+                    if (top < 0 && (this.pageFlow || this.alignParent('top') || this.alignParent('bottom')) && this.translateY(top, { accumulate: true, contain: this.pageFlow })) {
                         top = 0;
                     }
-                    if (left < 0 && !this.pageFlow && (this.alignParent('left') || this.alignParent('right')) && this.translateX(left, true)) {
+                    if (left < 0 && !this.pageFlow && (this.alignParent('left') || this.alignParent('right')) && this.translateX(left, { accumulate: true })) {
                         left = 0;
                     }
                 }
@@ -1923,28 +1923,60 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return value;
         }
 
-        public translateX(value: number, accumulate = false) {
-            const renderParent = this.renderParent;
-            if (renderParent && renderParent.layoutConstraint) {
-                if (accumulate) {
-                    value += convertInt(this.android('translationX'));
+        public translateX(value: number, options?: TranslateUIOptions) {
+            if (options?.preset !== true) {
+                const renderParent = this.renderParent;
+                if (renderParent && renderParent.layoutConstraint) {
+                    if (options) {
+                        if (options.accumulate) {
+                            value += convertInt(this.android('translationX'));
+                        }
+                        if (options.contain) {
+                            const { left, right } = renderParent.box;
+                            const { left: x1, right: x2 } = this.linear;
+                            if (x1 + value < left) {
+                                value = Math.max(x1 - left, 0);
+                            }
+                            else if (x2 + value > right) {
+                                value = Math.max(right - x2, 0);
+                            }
+                        }
+                    }
                 }
-                this.android('translationX', formatPX(value));
-                return true;
+                else {
+                    return false;
+                }
             }
-            return false;
+            this.android('translationX', formatPX(value));
+            return true;
         }
 
-        public translateY(value: number, accumulate = false) {
-            const renderParent = this.renderParent;
-            if (renderParent && renderParent.layoutConstraint) {
-                if (accumulate) {
-                    value += convertInt(this.android('translationY'));
+        public translateY(value: number, options?: TranslateUIOptions) {
+            if (options?.preset !== true) {
+                const renderParent = this.renderParent;
+                if (renderParent && renderParent.layoutConstraint) {
+                    if (options) {
+                        if (options.accumulate) {
+                            value += convertInt(this.android('translationY'));
+                        }
+                        if (options.contain) {
+                            const { top, bottom } = renderParent.box;
+                            const { top: y1, bottom: y2 } = this.linear;
+                            if (y1 + value < top) {
+                                value = Math.max(y1 - top, 0);
+                            }
+                            else if (y2 + value > bottom) {
+                                value = Math.max(bottom - y2, 0);
+                            }
+                        }
+                    }
                 }
-                this.android('translationY', formatPX(value));
-                return true;
+                else {
+                    return false;
+                }
             }
-            return false;
+            this.android('translationY', formatPX(value));
+            return true;
         }
 
         public setLayoutWidth(value: string, overwrite = true) {

@@ -97,8 +97,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 return {
                     parent: layout.node,
                     renderAs: layout.node,
-                    outputAs: this.application.renderNode(layout),
-                    complete: true
+                    outputAs: this.application.renderNode(layout)
                 };
             }
         }
