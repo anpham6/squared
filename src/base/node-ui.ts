@@ -632,41 +632,46 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 case 'boxStyle': {
                     const { backgroundColor, backgroundImage } = node;
+                    this.cssApply(node.cssAsObject(
+                        'backgroundRepeat',
+                        'backgroundSize',
+                        'backgroundPositionX',
+                        'backgroundPositionY',
+                        'backgroundClip',
+                        'boxSizing',
+                        'borderTopWidth',
+                        'borderRightWidth',
+                        'borderBottomWidth',
+                        'borderLeftWidth',
+                        'borderTopColor',
+                        'borderRightColor',
+                        'borderBottomColor',
+                        'borderLeftColor',
+                        'borderTopStyle',
+                        'borderRightStyle',
+                        'borderBottomStyle',
+                        'borderLeftStyle',
+                        'borderTopLeftRadius',
+                        'borderTopRightRadius',
+                        'borderBottomRightRadius',
+                        'borderBottomLeftRadius'
+                    ));
                     this.cssApply({
                         backgroundColor,
                         backgroundImage,
-                        backgroundRepeat: node.css('backgroundRepeat'),
-                        backgroundSize: node.css('backgroundSize'),
-                        backgroundPositionX: node.css('backgroundPositionX'),
-                        backgroundPositionY: node.css('backgroundPositionY'),
-                        backgroundClip: node.css('backgroundClip'),
-                        boxSizing: node.css('boxSizing'),
-                        border: 'initial',
-                        borderRadius: 'initial',
-                        borderTopWidth: node.css('borderTopWidth'),
-                        borderBottomWidth: node.css('borderBottomWidth'),
-                        borderRightWidth: node.css('borderRightWidth'),
-                        borderLeftWidth: node.css('borderLeftWidth'),
-                        borderTopColor: node.css('borderTopColor'),
-                        borderBottomColor: node.css('borderBottomColor'),
-                        borderRightColor: node.css('borderRightColor'),
-                        borderLeftColor: node.css('borderLeftColor'),
-                        borderTopStyle: node.css('borderTopStyle'),
-                        borderBottomStyle: node.css('borderBottomStyle'),
-                        borderRightStyle: node.css('borderRightStyle'),
-                        borderLeftStyle: node.css('borderLeftStyle'),
-                        borderTopLeftRadius: node.css('borderTopLeftRadius'),
-                        borderTopRightRadius: node.css('borderTopRightRadius'),
-                        borderBottomRightRadius: node.css('borderBottomRightRadius'),
-                        borderBottomLeftRadius: node.css('borderBottomLeftRadius')
-                    }, true);
+                        border: 'inherit',
+                        borderRadius: 'inherit'
+                    });
+                    this.unsetCache('borderTopWidth', 'borderBottomWidth', 'borderRightWidth', 'borderLeftWidth');
                     this.setCacheValue('backgroundColor', backgroundColor);
                     this.setCacheValue('backgroundImage', backgroundImage);
                     node.setCacheValue('backgroundColor', '');
                     node.setCacheValue('backgroundImage', '');
                     node.cssApply({
                         backgroundColor: 'rgba(0, 0, 0, 0)',
-                        backgroundImage: 'none'
+                        backgroundImage: 'none',
+                        border: 'initial',
+                        borderRadius: 'initial'
                     });
                     const visibleStyle = node.visibleStyle;
                     visibleStyle.background = false;

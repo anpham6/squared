@@ -1038,17 +1038,36 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssCopy(node: T, ...attrs: string[]) {
+        const styleMap = this._styleMap;
         for (const attr of attrs) {
-            this._styleMap[attr] = node.css(attr);
+            styleMap[attr] = node.css(attr);
         }
     }
 
     public cssCopyIfEmpty(node: T, ...attrs: string[]) {
+        const styleMap = this._styleMap;
         for (const attr of attrs) {
-            if (!hasValue(this._styleMap[attr])) {
-                this._styleMap[attr] = node.css(attr);
+            if (!hasValue(styleMap[attr])) {
+                styleMap[attr] = node.css(attr);
             }
         }
+    }
+
+    public cssAsTuple(...attrs: string[]) {
+        const length = attrs.length;
+        const result: string[] = new Array(length);
+        for (let i = 0; i < length; i++) {
+            result[i] = this.css(attrs[i]);
+        }
+        return result;
+    }
+
+    public cssAsObject(...attrs: string[]) {
+        const result: StringMap = {};
+        for (const attr of attrs) {
+            result[attr] = this.css(attr);
+        }
+        return result;
     }
 
     public toInt(attr: string, fallback = NaN, initial = false) {
@@ -1212,7 +1231,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     break;
                             }
                         }
-                        else if (/\|\*$/.test(segment)) {
+                        else if (segment.endsWith('|*')) {
                             all = segment === '*|*';
                         }
                         else if (segment.charAt(0) === '*') {
@@ -2412,8 +2431,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             result = 0;
             if (this.htmlElement && !this.inputElement && !this.imageElement && this.tagName !== 'HR' && !this.documentBody) {
                 const element = <HTMLElement> this._element;
-                const overflowX = this.css('overflowX');
-                const overflowY = this.css('overflowY');
+                const { overflowX, overflowY } = this.cssAsObject('overflowX', 'overflowY');
                 if (this.hasHeight && (this.hasPX('height') || this.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
                     result |= NODE_ALIGNMENT.VERTICAL;
                 }
@@ -2878,18 +2896,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get textStyle() {
         let result = this._textStyle;
         if (result === undefined) {
-            result = {
-                fontFamily: this.css('fontFamily'),
-                fontSize: this.css('fontSize'),
-                fontWeight: this.css('fontWeight'),
-                fontStyle: this.css('fontStyle'),
-                color: this.css('color'),
-                whiteSpace: this.css('whiteSpace'),
-                textDecoration: this.css('textDecoration'),
-                textTransform: this.css('textTransform'),
-                letterSpacing: this.css('letterSpacing'),
-                wordSpacing: this.css('wordSpacing')
-            };
+            result = this.cssAsObject('fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'color', 'whiteSpace', 'textDecoration', 'textTransform', 'letterSpacing', 'wordSpacing');
             this._textStyle = result;
         }
         return result;

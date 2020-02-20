@@ -324,7 +324,7 @@ function setInputMinMax(node: View, element: HTMLInputElement) {
     }
 }
 
-function setVerticalAlignment(node: View) {
+function setVerticalAlignment(node: View, biasOnly = false) {
     const autoMargin = node.autoMargin;
     let bias = NaN;
     if (node.imageOrSvgElement && !autoMargin.vertical) {
@@ -344,14 +344,26 @@ function setVerticalAlignment(node: View) {
         bias = autoMargin.top ? 1 : 0;
     }
     if (!isNaN(bias)) {
-        node.anchorStyle('vertical', bias, 'packed', false);
+        if (biasOnly) {
+            node.app('layout_constraintVertical_bias', bias.toString(), false);
+            node.delete('layout_constraintVertical_chainStyle');
+        }
+        else {
+            node.anchorStyle('vertical', bias, 'packed', false);
+        }
     }
+}
+
+function getAnchorDirection(reverse = false) {
+    if (reverse) {
+        return { anchorStart: 'right', anchorEnd: 'left', chainStart: 'rightLeft', chainEnd: 'leftRight' };
+    }
+    return { anchorStart: 'left', anchorEnd: 'right', chainStart: 'leftRight', chainEnd: 'rightLeft' };
 }
 
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
-const getAnchorDirection = (reverse: boolean) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const isConstraintLayout = (layout: LayoutUI) => layout.some(item => item.rightAligned || item.centerAligned || item.percentWidth > 0 || item.hasPX('maxWidth'));
 const getVerticalLayout = (layout: LayoutUI) => isConstraintLayout(layout) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
 const getVerticalAlignedLayout = (layout: LayoutUI) => isConstraintLayout(layout) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
@@ -845,53 +857,60 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public setConstraints() {
         for (const node of this.cache) {
-            const renderChildren = node.renderChildren as T[];
-            const length = renderChildren.length;
-            if (length === 0) {
+            if (node.renderChildren.length === 0 || node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                 continue;
             }
             if (node.layoutRelative) {
-                this.processRelativeHorizontal(node, renderChildren);
+                this.processRelativeHorizontal(node, node.renderChildren as T[]);
             }
             else if (node.layoutConstraint) {
-                const pageFlow: T[] = new Array(length);
+                const renderChildren = node.renderChildren as T[];
                 let j = 0;
+                const length = renderChildren.length;
+                const pageFlow: T[] = new Array(length);
                 for (const item of renderChildren) {
                     if (!item.positioned) {
                         if (item.pageFlow || item.autoPosition) {
                             pageFlow[j++] = item;
                         }
-                        else if (item.outerWrapper === node) {
-                            const { horizontal, vertical } = item.constraint;
-                            if (!horizontal) {
-                                item.anchorParent('horizontal', 0);
-                            }
-                            if (!vertical) {
-                                item.anchorParent('vertical', 0);
-                            }
-                        }
                         else {
                             const constraint = item.constraint;
-                            if (item.leftTopAxis) {
+                            if (item.outerWrapper === node) {
                                 if (!constraint.horizontal) {
-                                    setLeftTopAxis(item, node, item.hasWidth, true);
+                                    item.anchorParent('horizontal', 0);
                                 }
                                 if (!constraint.vertical) {
-                                    setLeftTopAxis(item, node, item.hasHeight, false);
+                                    item.anchorParent('vertical', 0);
                                 }
                             }
-                            if (!constraint.horizontal) {
-                                this.addGuideline(item, node, 'horizontal');
-                            }
-                            if (!constraint.vertical) {
-                                this.addGuideline(item, node, 'vertical');
+                            else {
+                                if (item.leftTopAxis) {
+                                    if (!constraint.horizontal) {
+                                        setLeftTopAxis(item, node, item.hasWidth, true);
+                                    }
+                                    if (!constraint.vertical) {
+                                        setLeftTopAxis(item, node, item.hasHeight, false);
+                                    }
+                                }
+                                if (!constraint.horizontal) {
+                                    this.addGuideline(item, node, 'horizontal');
+                                }
+                                if (!constraint.vertical) {
+                                    this.addGuideline(item, node, 'vertical');
+                                }
                             }
                         }
                     }
                 }
                 if (j > 0) {
                     pageFlow.length = j;
-                    if (j === 1 || node.layoutElement) {
+                    if (node.layoutHorizontal) {
+                        this.processConstraintHorizontal(node, pageFlow);
+                    }
+                    else if (j > 1) {
+                        this.processConstraintChain(node, pageFlow);
+                    }
+                    else {
                         const item = pageFlow[0];
                         const { horizontal, vertical } = item.constraint;
                         if (!horizontal) {
@@ -903,16 +922,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         View.setConstraintDimension(item);
                     }
-                    else if (node.layoutHorizontal) {
-                        this.processConstraintHorizontal(node, pageFlow);
-                    }
-                    else {
-                        this.processConstraintChain(node, pageFlow);
-                    }
                     this.evaluateAnchors(pageFlow);
                 }
             }
-
         }
     }
 
@@ -2371,7 +2383,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const baseline = NodeUI.baseline(children);
         const textBottom = getTextBottom(children)[0];
         const documentId = baseline?.documentId;
-        const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
+        const { anchorStart, anchorEnd, chainStart, chainEnd } = getAnchorDirection(reverse);
         let percentWidth = View.availablePercent(children, 'width', node.box.width);
         let bias = 0;
         let valid = true;
@@ -2573,12 +2585,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || item.autoMargin.left === true);
             let aboveRowEnd: Undef<T>;
             let currentRowTop: Undef<T>;
+            let tallest: Undef<T>;
             const applyLayout = (seg: T[], reverse: boolean) => {
                 const q = seg.length;
                 if (q === 0) {
                     return;
                 }
-                const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
+                const { anchorStart, anchorEnd, chainStart, chainEnd } = getAnchorDirection(reverse);
                 const rowStart = seg[0];
                 const rowEnd = seg[q - 1];
                 rowStart.anchor(anchorStart, 'parent');
@@ -2601,6 +2614,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     rowEnd.anchor(anchorEnd, 'parent');
                 }
                 let percentWidth = View.availablePercent(partition, 'width', node.box.width);
+                tallest = undefined;
                 for (let j = 0; j < q; j++) {
                     const chain = seg[j];
                     if (i === 0) {
@@ -2687,6 +2701,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
+                    if (tallest === undefined || chain.linear.height > tallest.linear.height) {
+                        tallest = chain;
+                    }
                 }
             };
             applyLayout(floatingLeft, false);
@@ -2711,7 +2728,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         const barrierId = this.addBarrier(partition, 'top');
                         for (const chain of partition) {
-                            setVerticalAlignment(chain);
+                            if (chain !== tallest) {
+                                setVerticalAlignment(chain, true);
+                            }
                             chain.anchor('topBottom', barrierId);
                         }
                     }
@@ -2728,7 +2747,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     for (const chain of partition) {
-                        setVerticalAlignment(chain);
+                        if (chain !== tallest) {
+                            setVerticalAlignment(chain, true);
+                        }
                         chain.anchor('topBottom', barrierId);
                     }
                 }

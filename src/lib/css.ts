@@ -137,10 +137,11 @@ export function getSpecificity(value: string) {
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
         while ((subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
-            if (subMatch[0].startsWith(':not(')) {
-                if (subMatch[1]) {
+            if (/^:not\(/.test(subMatch[0])) {
+                const attr = subMatch[1];
+                if (attr) {
                     const lastIndex = CSS.SELECTOR_G.lastIndex;
-                    result += getSpecificity(subMatch[1]);
+                    result += getSpecificity(attr);
                     CSS.SELECTOR_G.lastIndex = lastIndex;
                 }
             }

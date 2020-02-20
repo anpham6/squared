@@ -14,12 +14,12 @@ export default class NegativeViewport<T extends View> extends squared.base.Exten
     public condition(node: T, parent: T) {
         if (parent.documentRoot) {
             const box = parent.box;
-            const linear = node.linear;
+            const { top, right, bottom, left } = node.linear
             return (
-                Math.ceil(linear.left) < Math.floor(box.left) && (node.left < 0 || node.marginLeft < 0 || !node.hasPX('left') && node.right > 0) ||
-                Math.floor(linear.right) > Math.ceil(box.right) && (node.left > 0 || node.marginLeft > 0 || !node.hasPX('left') && node.right < 0) ||
-                Math.ceil(linear.top) < Math.floor(box.top) && (node.top < 0 || node.marginTop < 0 || !node.hasPX('top') && node.bottom > 0) ||
-                Math.floor(linear.bottom) > Math.ceil(box.bottom) && (node.top > 0 || node.marginTop > 0 || !node.hasPX('top') && node.bottom < 0) && parent.hasPX('height')
+                Math.ceil(left) < Math.floor(box.left) && (node.left < 0 || node.marginLeft < 0 || !node.hasPX('left') && node.right > 0) ||
+                Math.ceil(top) < Math.floor(box.top) && (node.top < 0 || node.marginTop < 0 || !node.hasPX('top') && node.bottom > 0) ||
+                Math.floor(right) > Math.ceil(box.right) && ((node.left > 0 || node.marginLeft > 0) && parent.hasPX('width', false) || !node.hasPX('left') && node.right < 0) ||
+                Math.floor(bottom) > Math.ceil(box.bottom) && ((node.top > 0 || node.marginTop > 0) && parent.hasPX('height', false) || !node.hasPX('top') && node.bottom < 0)
             );
         }
         return false;

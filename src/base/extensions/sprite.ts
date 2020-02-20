@@ -21,8 +21,7 @@ export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
             const image = <ImageAsset> (this.resource.getRawData(backgroundImage) || this.resource.getImage(resolveURL(backgroundImage)));
             if (image) {
                 const dimension = node.actualDimension;
-                const backgroundPositionX = node.css('backgroundPositionX');
-                const backgroundPositionY = node.css('backgroundPositionY');
+                const { backgroundPositionX, backgroundPositionY } = node.cssAsObject('backgroundPositionX', 'backgroundPositionY');
                 const position = getBackgroundPosition(
                     backgroundPositionX + ' ' + backgroundPositionY,
                     dimension,

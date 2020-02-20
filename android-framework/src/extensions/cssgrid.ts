@@ -4,7 +4,7 @@ import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@ty
 
 import Resource from '../resource';
 
-import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
+import { CONTAINER_ANDROID, EXT_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 type View = android.base.View;
@@ -346,7 +346,8 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     return 0;
 }
 
-const isPx = (value: string)  => CSS.PX.test(value);
+const isFr = (value: string) => REGEX_FR.test(value);
+const isPx = (value: string) => CSS.PX.test(value);
 
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T) {
@@ -367,7 +368,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (!node.documentRoot && !node.hasWidth && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => REGEX_FR.test(value)) && checkFlexibleParent(node)) {
                 const rowData = mainData.rowData;
                 const rowCount = rowData.length;
-                const barrierData: T[][] = new Array(rowCount);
+                const constraintData: T[][] = new Array(rowCount);
                 let valid = true;
                 invalid: {
                     for (let i = 0; i < rowCount; i++) {
@@ -384,7 +385,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 break invalid;
                             }
                         }
-                        barrierData[i] = nodes;
+                        constraintData[i] = nodes;
                     }
                 }
                 if (valid) {
@@ -392,10 +393,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     row.frTotal = row.unit.reduce((a, b) => a + (REGEX_FR.test(b) ? parseFloat(b) : 0), 0);
                     node.setLayoutWidth('match_parent');
                     node.lockAttr('android', 'layout_width');
-                    node.data(CSS_GRID, 'barrierData', barrierData);
+                    node.data(CSS_GRID, 'constraintData', constraintData);
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
                     return {
                         output: this.application.renderNode(layout),
+                        include: true,
                         complete: true
                     };
                 }
@@ -478,7 +480,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             break;
                         }
                     }
-                    else if (REGEX_FR.test(value)) {
+                    else if (isFr(value)) {
                         if (horizontal || parent.hasHeight) {
                             if (sizeWeight === -1) {
                                 sizeWeight = 0;
@@ -722,7 +724,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         if (mainData) {
             const controller = <android.base.Controller<T>> this.controller;
             const { alignContent, children, column, emptyRows, justifyContent, row, rowDirection, rowData } = mainData;
-            const wrapped = (node.renderParent as T).hasAlign(NODE_ALIGNMENT.WRAPPER);
+            const wrapped = node.data(EXT_ANDROID.DELEGATE_CSS_GRID, 'unsetContentBox') === true;
             const insertId = children[children.length - 1].id;
             if (CssGrid.isJustified(node)) {
                 setContentSpacing(node, mainData, justifyContent, true, 'width', wrapped, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, (<android.base.Controller<T>> this.controller).userSettings.resolutionScreenWidth - node.bounds.left, 0);
@@ -745,6 +747,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             node.setLayoutWidth('match_parent');
                         }
                         break;
+                }
+                if (wrapped) {
+                    if (column.unit.some(value => isFr(value))) {
+                        node.setLayoutWidth('match_parent');
+                    }
                 }
             }
             else {
@@ -832,73 +839,79 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     }
                 }
             }
-            const barrierData: T[][] = node.data(CSS_GRID, 'barrierData');
-            if (barrierData) {
-                const rowCount = barrierData.length;
-                if (length === 1) {
-                    for (const item of barrierData[0]) {
-                        item.anchorParent('vertical', 0);
-                    }
+            const constraintData: T[][] = node.data(CSS_GRID, 'constraintData');
+            if (constraintData) {
+                const { gap, length } = column;
+                const rowCount = constraintData.length;
+                const barrierIds: string[] = new Array(rowCount - 1);
+                for (let i = 1, j = 0; i < rowCount; i++) {
+                    barrierIds[j++] = controller.addBarrier(constraintData[i], 'top');
                 }
-                else {
-                    const { gap, length } = column;
-                    const barrierIds: string[] = [];
-                    for (let i = 1; i < rowCount; i++) {
-                        barrierIds.push(controller.addBarrier(barrierData[i], 'top'))
-                    }
-                    for (let i = 0; i < rowCount; i++) {
-                        const nodes = barrierData[i];
-                        const previousBarrierId = barrierIds[i - 1];
-                        const barrierId = barrierIds[i];
-                        let previousItem: Undef<T>;
-                        for (let j = 0; j < length; j++) {
-                            const item = nodes[j];
-                            if (item) {
-                                if (i === 0) {
-                                    item.anchor('top', 'parent');
-                                    item.anchor('bottomTop', barrierId);
-                                    item.anchorStyle('vertical', 0);
+                for (let i = 0; i < rowCount; i++) {
+                    const nodes = constraintData[i];
+                    const previousBarrierId = barrierIds[i - 1];
+                    const barrierId = barrierIds[i];
+                    let previousItem: Undef<T>;
+                    for (let j = 0; j < length; j++) {
+                        const item = nodes[j];
+                        if (item) {
+                            if (i === 0) {
+                                item.anchor('top', 'parent');
+                                item.anchor('bottomTop', barrierId);
+                                item.anchorStyle('vertical', 0);
+                            }
+                            else {
+                                if (i === rowCount - 1) {
+                                    item.anchor('bottom', 'parent');
                                 }
                                 else {
-                                    if (i === rowCount - 1) {
-                                        item.anchor('bottom', 'parent');
-                                    }
-                                    else {
-                                        item.anchor('bottomTop', barrierId);
-                                    }
-                                    item.anchor('topBottom', previousBarrierId);
+                                    item.anchor('bottomTop', barrierId);
                                 }
-                                if (j < length - 1) {
-                                    item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, -gap);
+                                item.anchor('topBottom', previousBarrierId);
+                            }
+                            if (j === length - 1) {
+                                item.anchor('right', 'parent');
+                            }
+                            else {
+                                item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, -gap);
+                            }
+                            if (previousItem) {
+                                previousItem.anchor('rightLeft', item.documentId);
+                                item.anchor('leftRight', previousItem.documentId);
+                            }
+                            else {
+                                item.anchor('left', 'parent');
+                                item.anchorStyle('horizontal', 0);
+                            }
+                            item.anchored = true;
+                            item.positioned = true;
+                            previousItem = item;
+                        }
+                        else if (previousItem) {
+                            const options = <SpacerAttribute> {
+                                width: '0px',
+                                height: 'wrap_content',
+                                android: {},
+                                app: {
+                                    layout_constraintTop_toTopOf: i === 0 ? 'parent' : '',
+                                    layout_constraintTop_toBottomOf: previousBarrierId,
+                                    layout_constraintBottom_toTopOf: i < length - 1 ? barrierId : '',
+                                    layout_constraintBottom_toBottomOf: i === length - 1 ? 'parent' : '',
+                                    layout_constraintStart_toEndOf: previousItem.anchorTarget.documentId,
+                                    layout_constraintEnd_toEndOf: 'parent',
+                                    layout_constraintVertical_bias: i === 0 ? '0' : '',
+                                    layout_constraintVertical_chainStyle: i === 0 ? 'packed' : '',
+                                    layout_constraintWidth_percent: (column.unit.slice(j, length).reduce((a, b) => a + parseFloat(b), 0) / column.frTotal).toString()
                                 }
-                                previousItem = item;
-                            }
-                            else if (previousItem) {
-                                const options = <SpacerAttribute> {
-                                    width: '0px',
-                                    height: 'wrap_content',
-                                    android: {},
-                                    app: {
-                                        layout_constraintTop_toTopOf: i === 0 ? 'parent' : '',
-                                        layout_constraintTop_toBottomOf: previousBarrierId,
-                                        layout_constraintBottom_toTopOf: i < length - 1 ? barrierId : '',
-                                        layout_constraintBottom_toBottomOf: i === length - 1 ? 'parent' : '',
-                                        layout_constraintStart_toEndOf: previousItem.anchorTarget.documentId,
-                                        layout_constraintEnd_toEndOf: 'parent',
-                                        layout_constraintVertical_bias: i === 0 ? '0' : '',
-                                        layout_constraintVertical_chainStyle: i === 0 ? 'packed' : '',
-                                        layout_constraintWidth_percent: (column.unit.slice(j, length).reduce((a, b) => a + parseFloat(b), 0) / column.frTotal).toString()
-                                    }
-                                };
-                                controller.addAfterInsideTemplate(node.id, controller.renderSpace(options), false);
-                                previousItem.anchor('rightLeft', options.documentId);
-                                break;
-                            }
+                            };
+                            controller.addAfterInsideTemplate(node.id, controller.renderSpace(options), false);
+                            previousItem.anchor('rightLeft', options.documentId);
+                            break;
                         }
                     }
                 }
             }
-            if (!node.layoutConstraint) {
+            else {
                 const { flexible, gap, unit } = rowDirection ? column : row;
                 const unitSpan = unit.length;
                 let k = -1;

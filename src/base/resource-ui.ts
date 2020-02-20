@@ -699,20 +699,16 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public setBoxStyle(node: T) {
         if ((node.styleElement || node.visibleStyle.background) && node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
-            const boxStyle: BoxStyle = {
-                backgroundSize: node.css('backgroundSize'),
-                backgroundRepeat: node.css('backgroundRepeat'),
-                backgroundPositionX: node.css('backgroundPositionX'),
-                backgroundPositionY: node.css('backgroundPositionY')
-            };
+            const boxStyle = <BoxStyle> (node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY') as unknown);
             if (setBackgroundOffset(node, boxStyle, 'backgroundClip') && node.has('backgroundOrigin')) {
                 setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
             }
             if (node.css('borderRadius') !== '0px') {
-                const [A, B] = node.css('borderTopLeftRadius').split(' ');
-                const [C, D] = node.css('borderTopRightRadius').split(' ');
-                const [E, F] = node.css('borderBottomRightRadius').split(' ');
-                const [G, H] = node.css('borderBottomLeftRadius').split(' ');
+                const { borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius } = node.cssAsObject('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius')
+                const [A, B] = borderTopLeftRadius.split(' ');
+                const [C, D] = borderTopRightRadius.split(' ');
+                const [E, F] = borderBottomRightRadius.split(' ');
+                const [G, H] = borderBottomLeftRadius.split(' ');
                 const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
                 const horizontal = node.actualWidth >= node.actualHeight;
                 const radius = borderRadius[0];

@@ -1,3 +1,4 @@
+import { EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import View from '../../view';
@@ -30,6 +31,7 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
         container.inherit(node, 'styleMap', 'boxStyle');
         node.resetBox(BOX_STANDARD.MARGIN, container);
         node.resetBox(BOX_STANDARD.PADDING, container);
+        node.data(EXT_ANDROID.DELEGATE_CSS_GRID, 'unsetContentBox', true);
         if (CssGrid.isJustified(node)) {
             node.setLayoutWidth(getLayoutDimension(node.css('justifyContent')));
         }

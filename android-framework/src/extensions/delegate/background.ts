@@ -105,13 +105,10 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             container.cssApply({
                 backgroundImage,
                 backgroundSize: backgroundSize || node.css('backgroundSize'),
-                backgroundRepeat: node.css('backgroundRepeat'),
-                backgroundPositionX: node.css('backgroundPositionX'),
-                backgroundPositionY: node.css('backgroundPositionY'),
-                backgroundClip: node.css('backgroundClip'),
                 border: '0px none solid',
                 borderRadius: '0px'
             });
+            container.cssApply(node.cssAsObject('backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY', 'backgroundClip'));
             container.setCacheValue('backgroundImage', backgroundImage);
             container.unsetCache('visibleStyle');
             node.css('backgroundImage', 'none');

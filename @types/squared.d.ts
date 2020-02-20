@@ -456,6 +456,8 @@ declare namespace base {
         cssTry(attr: string, value: string): boolean;
         cssFinally(attr: string): boolean;
         cssParent(attr: string, value?: string, cache?: boolean): string;
+        cssAsTuple(...attrs: string[]): string[];
+        cssAsObject(...attrs: string[]): StringMap;
         cssCopy(node: Node, ...attrs: string[]): void;
         cssCopyIfEmpty(node: Node, ...attrs: string[]): void;
         toInt(attr: string, fallback?: number, initial?: boolean): number;

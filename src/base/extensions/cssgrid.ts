@@ -15,6 +15,14 @@ const { isNumber, trimString, withinRange } = $lib.util;
 
 const CSS_GRID = EXT_NAME.CSS_GRID;
 
+type GridAlignment = {
+    alignItems: string;
+    alignContent: string;
+    justifyItems: string;
+    justifyContent: string;
+    gridAutoFlow: string;
+};
+
 type GridLayout = {
     placement: number[];
     rowSpan: number;
@@ -194,8 +202,9 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         return (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
     }
 
-    public static createDataAttribute<T extends NodeUI>(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string, autoFlow: string): CssGridData<T> {
-        return {
+    public static createDataAttribute<T extends NodeUI>(data: GridAlignment): CssGridData<T> {
+        const autoFlow = data.gridAutoFlow;
+        return Object.assign(data, {
             children: [],
             rowData: [],
             rowSpanMultiple: [],
@@ -204,12 +213,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             templateAreas: {},
             row: CssGrid.createDataRowAttribute(),
             column: CssGrid.createDataRowAttribute(),
-            emptyRows: [],
-            alignItems,
-            alignContent,
-            justifyItems,
-            justifyContent
-        };
+            emptyRows: []
+        });
     }
 
     public static createDataRowAttribute(): CssGridDirectionData {
@@ -239,13 +244,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
-        const mainData = CssGrid.createDataAttribute(
-            node.css('alignItems'),
-            node.css('alignContent'),
-            node.css('justifyItems'),
-            node.css('justifyContent'),
-            node.css('gridAutoFlow')
-        );
+        const mainData = CssGrid.createDataAttribute(<GridAlignment> node.cssAsObject('alignItems', 'alignContent', 'justifyItems', 'justifyContent', 'gridAutoFlow'));
         const { column, dense, row, rowDirection: horizontal } = mainData;
         const [rowA, colA, rowB, colB] = horizontal ? [0, 1, 2, 3] : [1, 0, 3, 2];
         const rowData: Undef<T[]>[][] = [];
@@ -438,21 +437,20 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     rowIndex++;
                     columnIndex = 1;
                 }
-                const rowEnd = item.css('gridRowEnd');
-                const columnEnd = item.css('gridColumnEnd');
+                const { gridRowEnd, gridColumnEnd } = item.cssAsObject('gridRowEnd', 'gridColumnEnd');
                 let rowSpan = 1;
                 let columnSpan = 1;
-                if (REGEX_SPAN.test(rowEnd)) {
-                    rowSpan = parseInt(rowEnd.split(' ')[1]);
+                if (REGEX_SPAN.test(gridRowEnd)) {
+                    rowSpan = parseInt(gridRowEnd.split(' ')[1]);
                 }
-                else if (isNumber(rowEnd)) {
-                    rowSpan = parseInt(rowEnd) - rowIndex;
+                else if (isNumber(gridRowEnd)) {
+                    rowSpan = parseInt(gridRowEnd) - rowIndex;
                 }
-                if (REGEX_SPAN.test(columnEnd)) {
-                    columnSpan = parseInt(columnEnd.split(' ')[1]);
+                if (REGEX_SPAN.test(gridColumnEnd)) {
+                    columnSpan = parseInt(gridColumnEnd.split(' ')[1]);
                 }
-                else if (isNumber(columnEnd)) {
-                    columnSpan = parseInt(columnEnd) - columnIndex;
+                else if (isNumber(gridColumnEnd)) {
+                    columnSpan = parseInt(gridColumnEnd) - columnIndex;
                 }
                 if (columnIndex === 1 && columnMax > 0) {
                     let valid = false;
@@ -535,12 +533,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             });
             node.each((item, index) => {
-                const positions = [
-                    item.css('gridRowStart'),
-                    item.css('gridColumnStart'),
-                    item.css('gridRowEnd'),
-                    item.css('gridColumnEnd')
-                ];
+                const positions = item.cssAsTuple('gridRowStart', 'gridColumnStart', 'gridRowEnd', 'gridColumnEnd');
                 const placement = [0, 0, 0, 0];
                 let rowSpan = -1;
                 let columnSpan = -1;

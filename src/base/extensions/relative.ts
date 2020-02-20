@@ -42,28 +42,28 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
             right = node.right;
         }
         if (renderParent.support.positionTranslation) {
-            let offsetX = 0;
-            let offsetY = 0;
+            let x = 0;
+            let y = 0;
             if (left !== 0) {
-                offsetX = left;
+                x = left;
             }
             else if (right !== 0) {
-                offsetX = -right;
+                x = -right;
             }
             if (top !== 0) {
-                offsetY = top
+                y = top
             }
             else if (bottom !== 0) {
-                offsetY = -bottom;
+                y = -bottom;
             }
             if (verticalAlign !== 0) {
-                offsetY -= verticalAlign;
+                y -= verticalAlign;
             }
-            if (offsetX !== 0) {
-                node.translateX(offsetX, { accumulate: true, contain: node.pageFlow });
+            if (x !== 0) {
+                node.translateX(x, { accumulate: true, contain: node.pageFlow });
             }
-            if (offsetY !== 0) {
-                node.translateY(offsetY, { accumulate: true, contain: node.pageFlow });
+            if (y !== 0) {
+                node.translateY(y, { accumulate: true, contain: node.pageFlow });
             }
         }
         else {

@@ -36,10 +36,9 @@ function setBorderStyle(node: NodeUI, attr: string, including: NodeUI) {
         if (item.has(cssStyle)) {
             const cssColor = attr + 'Color';
             const cssWidth = attr + 'Width';
-            node.css(cssStyle, item.css(cssStyle));
-            node.css(cssColor, item.css(cssColor));
-            node.css(cssWidth, item.css(cssWidth), true);
             node.css('border', 'inherit');
+            node.cssApply(item.cssAsObject(cssStyle, cssColor, cssWidth));
+            node.unsetCache(cssWidth);
             return true;
         }
         return false;
@@ -473,18 +472,14 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             }
         }
         if (mainData.borderCollapse) {
-            const borderTopColor = node.css('borderTopColor');
-            const borderTopStyle = node.css('borderTopStyle');
-            const borderTopWidth = node.css('borderTopWidth');
-            const borderRightColor = node.css('borderRightColor');
-            const borderRightStyle = node.css('borderRightStyle');
-            const borderRightWidth = node.css('borderRightWidth');
-            const borderBottomColor = node.css('borderBottomColor');
-            const borderBottomStyle = node.css('borderBottomStyle');
-            const borderBottomWidth = node.css('borderBottomWidth');
-            const borderLeftColor = node.css('borderLeftColor');
-            const borderLeftStyle = node.css('borderLeftStyle');
-            const borderLeftWidth = node.css('borderLeftWidth');
+            const borderTop = node.cssAsObject('borderTopColor', 'borderTopStyle', 'borderTopWidth');
+            const borderRight = node.cssAsObject('borderRightColor', 'borderRightStyle', 'borderRightWidth');
+            const borderBottom = node.cssAsObject('borderBottomColor', 'borderBottomStyle', 'borderBottomWidth');
+            const borderLeft = node.cssAsObject('borderLeftColor', 'borderLeftStyle', 'borderLeftWidth');
+            const borderTopWidth = parseInt(borderTop.borderTopWidth);
+            const borderRightWidth = parseInt(borderRight.borderRightWidth);
+            const borderBottomWidth = parseInt(borderRight.borderBottomWidth);
+            const borderLeftWidth = parseInt(borderLeft.borderLeftWidth);
             let hideTop = false;
             let hideRight = false;
             let hideBottom = false;
@@ -494,12 +489,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     const td = tableFilled[i][j];
                     if (td?.css('visibility') === 'visible') {
                         if (i === 0) {
-                            if (td.borderTopWidth < parseInt(borderTopWidth)) {
-                                td.cssApply({
-                                    borderTopColor,
-                                    borderTopStyle,
-                                    borderTopWidth
-                                }, true);
+                            if (td.borderTopWidth < borderTopWidth) {
+                                td.cssApply(borderTop, true);
                             }
                             else {
                                 hideTop = true;
@@ -517,24 +508,16 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         if (i === rowCount - 1) {
-                            if (td.borderBottomWidth < parseInt(borderBottomWidth)) {
-                                td.cssApply({
-                                    borderBottomColor,
-                                    borderBottomStyle,
-                                    borderBottomWidth
-                                }, true);
+                            if (td.borderBottomWidth < borderBottomWidth) {
+                                td.cssApply(borderBottom, true);
                             }
                             else {
                                 hideBottom = true;
                             }
                         }
                         if (j === 0) {
-                            if (td.borderLeftWidth < parseInt(borderLeftWidth)) {
-                                td.cssApply({
-                                    borderLeftColor,
-                                    borderLeftStyle,
-                                    borderLeftWidth
-                                }, true);
+                            if (td.borderLeftWidth < borderLeftWidth) {
+                                td.cssApply(borderLeft, true);
                             }
                             else {
                                 hideLeft = true;
@@ -552,12 +535,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         if (j === columnCount - 1) {
-                            if (td.borderRightWidth < parseInt(borderRightWidth)) {
-                                td.cssApply({
-                                    borderRightColor,
-                                    borderRightStyle,
-                                    borderRightWidth
-                                }, true);
+                            if (td.borderRightWidth < borderRightWidth) {
+                                td.cssApply(borderRight, true);
                             }
                             else {
                                 hideRight = true;
