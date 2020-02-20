@@ -1,4 +1,4 @@
-import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileAsset, FileActionOptions, FileCopyingOptions, FileArchivingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
+import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserUISettings, UserSettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
 import { AutoMargin, AscendOptions, BoxType, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './base/node';
 
@@ -456,6 +456,8 @@ declare namespace base {
         cssTry(attr: string, value: string): boolean;
         cssFinally(attr: string): boolean;
         cssParent(attr: string, value?: string, cache?: boolean): string;
+        cssCopy(node: Node, ...attrs: string[]): void;
+        cssCopyIfEmpty(node: Node, ...attrs: string[]): void;
         toInt(attr: string, fallback?: number, initial?: boolean): number;
         toFloat(attr: string, fallback?: number, initial?: boolean): number;
         toElementInt(attr: string, fallback?: number): number;

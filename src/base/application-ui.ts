@@ -22,6 +22,7 @@ const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
 
 const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z-]+))?\)|"([^"]+)")\s*/g;
+const STRING_PSEUDOPREFIX = '__squared_';
 
 function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
     const element = document.createElement(tagName);
@@ -430,11 +431,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (node.documentBody) {
                 parent.naturalChild = true;
                 parent.visible = false;
-                parent.exclude({
-                    resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING,
-                    procedure: NODE_PROCEDURE.ALL,
-                    section: APP_SECTION.EXTENSION
-                });
+                parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
                 cache.append(parent);
             }
             node.documentParent = parent;
@@ -490,7 +487,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     let styleElement: Undef<HTMLStyleElement>;
                     if (item.pageFlow) {
                         if (id === '') {
-                            id = '__squared_' + Math.round(Math.random() * new Date().getTime());
+                            id = STRING_PSEUDOPREFIX + Math.round(Math.random() * new Date().getTime());
                             parentElement.id = id;
                         }
                         styleElement = insertStyleSheetRule(`#${id + getPseudoElt(<Element> item.element, item.sessionId)} { display: none !important; }`);
@@ -503,9 +500,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     data.item.setBounds(false);
                 }
                 for (const data of pseudoMap) {
-                    const { item, parentElement, styleElement } = data;
-                    if (/^__squared_/.test(data.id)) {
-                        parentElement.id = '';
+                    const styleElement = data.styleElement;
+                    if (data.id.startsWith(STRING_PSEUDOPREFIX)) {
+                        data.parentElement.id = '';
                     }
                     if (styleElement) {
                         try {
@@ -514,7 +511,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         catch {
                         }
                     }
-                    item.cssFinally('display');
+                    data.item.cssFinally('display');
                 }
             }
             for (const item of this.processing.excluded) {
@@ -589,8 +586,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 this._cache.append(node);
                 const extensionManager = this.extensionManager;
                 for (const name of node.extensions) {
-                    const ext = <ExtensionUI<T>> extensionManager.retrieve(name);
-                    if (ext?.cascadeAll) {
+                    if ((<ExtensionUI<T>> extensionManager.retrieve(name))?.cascadeAll) {
                         this._cascadeAll = true;
                         break;
                     }
@@ -621,6 +617,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             child.inlineText = true;
                         }
                         inlineText = false;
+                        elements[k++] = child;
                     }
                 }
                 else if (element === afterElement) {
@@ -631,6 +628,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             child.inlineText = true;
                         }
                         inlineText = false;
+                        elements[k++] = child;
                     }
                 }
                 else if (element.nodeName.charAt(0) === '#') {
@@ -644,7 +642,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     if (!this.rootElements.has(element)) {
                         child = this.cascadeParentNode(element, depth + 1, extensions);
-                        if (child && (!child.excluded || child.tagName === 'WBR')) {
+                        if (child?.excluded === false) {
                             inlineText = false;
                         }
                     }
@@ -773,17 +771,17 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let value = styleMap.content;
             if (value) {
                 if (trimString(value, '"').trim() === '' && convertFloat(styleMap.width) === 0 && convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
-                    let valid = true;
+                    let invalid = true;
                     for (const attr in styleMap) {
                         if (/(Width|Height)$/.test(attr)) {
                             const dimension = styleMap[attr];
                             if (isLength(dimension, true) && convertFloat(dimension) !== 0) {
-                                valid = false;
+                                invalid = false;
                                 break;
                             }
                         }
                     }
-                    if (valid) {
+                    if (invalid) {
                         return undefined;
                     }
                 }
@@ -968,15 +966,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         (<HTMLImageElement> pseudoElement).src = content;
                         const image = this.resourceHandler.getImage(content);
                         if (image) {
-                            if (styleMap.width === undefined) {
-                                if (image.width > 0) {
-                                    styleMap.width = formatPX(image.width);
-                                }
+                            if (styleMap.width === undefined && image.width > 0) {
+                                styleMap.width = formatPX(image.width);
                             }
-                            if (styleMap.height === undefined) {
-                                if (image.height > 0) {
-                                    styleMap.height = formatPX(image.height);
-                                }
+                            if (styleMap.height === undefined && image.height > 0) {
+                                styleMap.height = formatPX(image.height);
                             }
                         }
                     }
@@ -1058,7 +1052,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 for (let k = 0; k < length; k++) {
                     let nodeY = axisY[k];
-                    if (nodeY.rendered || !nodeY.visible || nodeY.naturalElement && this.rootElements.has(<HTMLElement> nodeY.element) && !nodeY.documentRoot) {
+                    if (nodeY.rendered || !nodeY.visible) {
                         continue;
                     }
                     let parentY = nodeY.parent as T;
@@ -1240,6 +1234,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         this.addLayoutTemplate(result.parentAs || parentY, renderAs, outputAs);
                                     }
                                     parentY = result.parent || parentY;
+                                    if (result.subscribe) {
+                                        ext.subscribers.add(nodeY);
+                                    }
                                     next = result.next === true;
                                     if (result.complete || next) {
                                         break;
@@ -1435,7 +1432,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             top = Math.max(textBounds.top, top);
                         }
                     }
-                    if (leftAbove.some(item => top >= item.linear.bottom) || rightAbove.some(item => top >= item.linear.bottom)) {
+                    if (leftAbove.some(item => Math.ceil(top) >= item.bounds.bottom) || rightAbove.some(item => Math.ceil(top) >= item.bounds.bottom)) {
                         inlineBelow.push(node);
                     }
                     else {
@@ -1447,7 +1444,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             else if (float === 'left') {
-                if (clearedFloat === 2 || clearedFloat === 6) {
+                if (hasBit(clearedFloat, 2)) {
                     if (leftBelow === undefined) {
                         leftBelow = [];
                     }
@@ -1458,7 +1455,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             else if (float === 'right') {
-                if (clearedFloat === 4 || clearedFloat === 6) {
+                if (hasBit(clearedFloat, 4)) {
                     if (rightBelow === undefined) {
                         rightBelow = [];
                     }
@@ -1468,7 +1465,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     rightAbove.push(node);
                 }
             }
-            else if (clearedFloat === 6) {
+            else if (hasBit(clearedFloat, 6)) {
                 inlineBelow.push(node);
             }
             else {
@@ -1481,7 +1478,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (rightAbove.length) {
             rightSub = rightBelow ? [rightAbove, rightBelow] : rightAbove;
         }
-        if (rightAbove.length + (rightBelow ? rightBelow.length : 0) === layout.length) {
+        if (rightAbove.length + (rightBelow?.length || 0) === layout.length) {
             layout.add(NODE_ALIGNMENT.RIGHT);
         }
         if (inlineBelow.length) {
@@ -1523,12 +1520,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let floatgroup: Undef<T>;
             if (Array.isArray(item[0])) {
                 segments = item as T[][];
-                const node = layout.node;
                 let grouping: T[] = segments[0];
                 for (let i = 1; i < segments.length; i++) {
                     grouping = grouping.concat(segments[i]);
                 }
                 grouping.sort((a: T, b: T) => a.childIndex < b.childIndex ? -1 : 1);
+                const node = layout.node;
                 if (node.layoutVertical) {
                     floatgroup = node;
                 }
@@ -1547,8 +1544,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 segments = [item as T[]];
             }
             for (const seg of segments) {
-                const node = floatgroup || layout.node;
                 const first = seg[0];
+                const node = floatgroup || layout.node;
                 const target = controllerHandler.createNodeGroup(first, seg, node, true);
                 const group = new LayoutUI(node, target, 0, NODE_ALIGNMENT.SEGMENTED);
                 if (seg === inlineAbove) {

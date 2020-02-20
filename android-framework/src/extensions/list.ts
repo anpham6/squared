@@ -27,8 +27,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             super.processNode(node, parent);
             if (layout.linearY) {
                 layout.rowCount = node.length;
-                layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
-                layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.AUTO_LAYOUT);
+                layout.columnCount = 2;
+                layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.COLUMN);
             }
             else if (layout.linearX || layout.singleRowAligned) {
                 layout.rowCount = 1;
@@ -52,7 +52,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             const application = this.application;
             const controller = <android.base.Controller<T>> this.controller;
             const firstChild = parent.firstStaticChild === node;
-            const inside = node.css('listStylePosition') === 'inside';
             const marginTop = node.marginTop;
             let value = mainData.ordinal || '';
             let minWidth = node.marginLeft;
@@ -179,7 +178,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
                         Object.assign(options.android, {
                             src: '@drawable/' + image,
-                            scaleType: gravity === 'right' && !inside ? 'fitEnd' : 'fitStart',
+                            scaleType: gravity === 'right' ? 'fitEnd' : 'fitStart',
                             baselineAlignBottom: adjustPadding ? 'true' : ''
                         });
                     }

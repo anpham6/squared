@@ -741,7 +741,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     placement[3] = placement[1] + columnSpan;
                 }
                 layout[index] = <GridLayout> {
-                    outerCoord: horizontal ? item.linear.top : item.linear.left,
+                    outerCoord: horizontal ? item.bounds.top : item.bounds.left,
                     placement,
                     rowSpan,
                     columnSpan

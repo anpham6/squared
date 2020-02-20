@@ -52,7 +52,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                         parent,
                         node,
                         containerType: CONTAINER_NODE.GRID,
-                        alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT,
+                        alignmentType: NODE_ALIGNMENT.COLUMN,
                         children: node.children as T[],
                         columnCount
                     })

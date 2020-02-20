@@ -652,7 +652,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent) {
-                const horizontal = orientation === STRING_ANDROID.HORIZONTAL;
+                const horizontal = orientation === 'horizontal';
                 if (renderParent.layoutConstraint) {
                     if (overwrite || !node.constraint[orientation]) {
                         if (horizontal) {
@@ -729,7 +729,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public anchorStyle(orientation: string, bias: number, value = 'packed', overwrite = true) {
             const node = this.anchorTarget;
-            if (orientation === STRING_ANDROID.HORIZONTAL) {
+            if (orientation === 'horizontal') {
                 node.app('layout_constraintHorizontal_chainStyle', value, overwrite);
                 node.app('layout_constraintHorizontal_bias', bias.toString(), overwrite);
             }
@@ -1518,7 +1518,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     break;
                                 case STRING_ANDROID.CENTER_HORIZONTAL:
                                     if (this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
-                                        this.anchorParent(STRING_ANDROID.HORIZONTAL, 0.5);
+                                        this.anchorParent('horizontal', 0.5);
                                     }
                                     break;
                             }

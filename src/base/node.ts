@@ -1037,6 +1037,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.naturalChild ? (this.actualParent as T).css(attr, value, cache) : '';
     }
 
+    public cssCopy(node: T, ...attrs: string[]) {
+        for (const attr of attrs) {
+            this._styleMap[attr] = node.css(attr);
+        }
+    }
+
+    public cssCopyIfEmpty(node: T, ...attrs: string[]) {
+        for (const attr of attrs) {
+            if (!hasValue(this._styleMap[attr])) {
+                this._styleMap[attr] = node.css(attr);
+            }
+        }
+    }
+
     public toInt(attr: string, fallback = NaN, initial = false) {
         const value = parseInt((initial && this._initial?.styleMap || this._styleMap)[attr]);
         return isNaN(value) ? fallback : value;
@@ -1637,7 +1651,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get naturalElement() {
         let result = this._cached.naturalElement;
         if (result === undefined) {
-            result = this.naturalChild && this.styleElement && !this.pseudoElement;
+            result = this.naturalChild && this.styleElement;
             this._cached.naturalElement = result;
         }
         return result;

@@ -2,7 +2,6 @@ import { ColumnData } from '../../../@types/base/extension';
 
 import View from '../view';
 
-import { STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 const $lib = squared.lib;
@@ -11,7 +10,6 @@ const $base_lib = squared.base.lib;
 const { formatPX } = $lib.css;
 const { createElement } = $lib.dom;
 const { maxArray, truncate } = $lib.math;
-const { objectMap } = $lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 
@@ -42,7 +40,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     const item = row[0];
                     if (i === 0) {
                         item.anchor('top', 'parent');
-                        item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
+                        item.anchorStyle('vertical', 0);
                     }
                     else if (previousRow) {
                         previousRow.anchor('bottomTop', item.documentId);
@@ -54,8 +52,10 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     else {
                         previousRow = row[0];
                     }
-                    item.anchorParent(STRING_ANDROID.HORIZONTAL, item.rightAligned ? 1 : (item.centerAligned ? 0.5 : 0));
+                    item.anchorParent('horizontal', item.rightAligned ? 1 : (item.centerAligned ? 0.5 : 0));
                     item.exclude({ section: APP_SECTION.EXTENSION });
+                    item.anchored = true;
+                    item.positioned = true;
                 }
                 else {
                     const columns: T[][] = [];
@@ -92,7 +92,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             }
                             column.push(item);
                             if (item.length) {
-                                totalGap += maxArray(objectMap<T, number>(item.children as T[], child => child.marginLeft + child.marginRight));
+                                totalGap += maxArray(item.map(child => child.marginLeft + child.marginRight));
                             }
                             if (j > 0 && /^H\d/.test(item.tagName)) {
                                 if (column.length === 1 && j === q - 2) {
@@ -133,8 +133,9 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             const columnEnd = item[item.length - 1];
                             if (/^H\d/.test(columnEnd.tagName)) {
                                 item.pop();
-                                above[j + 1] = columnEnd;
-                                columns[j + 1].unshift(columnEnd);
+                                const k = j + 1;
+                                above[k] = columnEnd;
+                                columns[k].unshift(columnEnd);
                             }
                         }
                     }
@@ -142,7 +143,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         const item = above[j];
                         if (j === 0) {
                             item.anchor('left', 'parent');
-                            item.anchorStyle(STRING_ANDROID.HORIZONTAL, 0, 'spread_inside');
+                            item.anchorStyle('horizontal', 0, 'spread_inside');
                         }
                         else {
                             item.anchor('leftRight', above[j - 1].documentId);
@@ -177,6 +178,9 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     if (j === 0) {
                                         previousRow.anchor('bottomTop', item.documentId);
                                         item.anchor('topBottom', previousRow.documentId);
+                                        if (previousRow.marginBottom > 0) {
+                                            item.modifyBox(BOX_STANDARD.MARGIN_TOP);
+                                        }
                                         continue;
                                     }
                                     else {
@@ -187,7 +191,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 else {
                                     item.anchor('top', previousRow);
                                 }
-                                item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
+                                item.anchorStyle('vertical', 0);
                             }
                             else {
                                 const previous = seg[k - 1];
@@ -204,15 +208,16 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 barrier.push(item[0]);
                             }
                             previousRow = controller.addBarrier(barrier, 'bottom');
-                            for (const item of columns) {
-                                item[0].anchor('bottomTop', previousRow);
+                            for (const item of barrier) {
+                                item.anchor('bottomTop', previousRow);
                             }
                         }
                         else {
-                            const columnHeight: number[] = new Array(r).fill(0);
+                            const columnHeight: number[] = new Array(r);
                             for (let j = 0; j < r; j++) {
                                 const seg = columns[j];
                                 const elements: Element[] = [];
+                                let height = 0;
                                 const s = seg.length;
                                 for (let k = 0; k < s; k++) {
                                     const column = seg[k];
@@ -220,7 +225,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                         elements.push(<Element> (<Element> column.element).cloneNode(true));
                                     }
                                     else {
-                                        columnHeight[j] += column.linear.height;
+                                        height += column.linear.height;
                                     }
                                 }
                                 if (elements.length) {
@@ -228,15 +233,16 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     for (const element of elements) {
                                         container.appendChild(element);
                                     }
-                                    columnHeight[j] += container.getBoundingClientRect().height;
+                                    height += container.getBoundingClientRect().height;
                                     document.body.removeChild(container);
                                 }
+                                columnHeight[j] = height;
                             }
                             let maxHeight = 0;
                             for (let j = 0; j < r; j++) {
                                 const value = columnHeight[j];
                                 if (value >= maxHeight) {
-                                    previousRow = columns[j].pop() as T;
+                                    previousRow = columns[j].pop();
                                     maxHeight = value;
                                 }
                             }

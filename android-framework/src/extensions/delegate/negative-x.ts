@@ -1,6 +1,6 @@
 import View from '../../view';
 
-import { EXT_ANDROID, STRING_ANDROID } from '../../lib/constant';
+import { EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -132,15 +132,15 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             let firstChild = mainData.firstChild;
             if (firstChild) {
                 firstChild = (firstChild.ascend(options).pop() || firstChild) as T;
-                firstChild.anchorParent(STRING_ANDROID.HORIZONTAL, 0);
-                firstChild.anchorParent(STRING_ANDROID.VERTICAL, 0);
+                firstChild.anchorParent('horizontal', 0);
+                firstChild.anchorParent('vertical', 0);
                 firstChild.modifyBox(BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
                 View.setConstraintDimension(firstChild);
                 firstChild.positioned = true;
             }
             const nextSibling = (node.ascend(options).pop() || node) as T;
-            nextSibling.anchorParent(STRING_ANDROID.HORIZONTAL, 0);
-            nextSibling.anchorParent(STRING_ANDROID.VERTICAL, 0);
+            nextSibling.anchorParent('horizontal', 0);
+            nextSibling.anchorParent('vertical', 0);
             View.setConstraintDimension(nextSibling);
             nextSibling.positioned = true;
         }

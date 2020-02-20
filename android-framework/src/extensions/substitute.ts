@@ -27,13 +27,12 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
         const data = getDataSet(<HTMLElement> node.element, this.name);
         const controlName = data.tag;
         if (controlName) {
-            node.containerType = node.blockStatic ? CONTAINER_NODE.BLOCK : CONTAINER_NODE.INLINE;
-            node.setControlType(controlName);
+            node.setControlType(controlName, node.block ? CONTAINER_NODE.BLOCK : CONTAINER_NODE.INLINE);
             node.render(parent);
             const tagChild = data.tagChild;
             if (tagChild) {
                 const name = this.name;
-                node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
+                node.addAlign(node.block ? NODE_ALIGNMENT.BLOCK : NODE_ALIGNMENT.INLINE);
                 node.each((item: T) => {
                     if (item.styleElement) {
                         const dataset = item.dataset;

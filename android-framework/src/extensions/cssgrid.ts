@@ -545,7 +545,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                         if (cellStart === 0) {
                             item.anchor('left', 'parent');
-                            item.anchorStyle(STRING_ANDROID.HORIZONTAL, 0, 'spread');
+                            item.anchorStyle('horizontal', 0, 'spread');
                         }
                         else {
                             const previousSibling = <Null<T>> item.innerMostWrapped.previousSibling;
@@ -731,13 +731,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     case 'space-around':
                     case 'space-evenly':
                         if (wrapped) {
-                            node.anchorParent(STRING_ANDROID.HORIZONTAL, 0.5, 'packed', true);
+                            node.anchorParent('horizontal', 0.5, 'packed', true);
                         }
                         break;
                     case 'end':
                     case 'flex-end':
                         if (wrapped) {
-                            node.anchorParent(STRING_ANDROID.HORIZONTAL, 1, 'packed', true);
+                            node.anchorParent('horizontal', 1, 'packed', true);
                         }
                         break;
                     default:
@@ -773,7 +773,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (wrapped) {
                     if (node.contentBoxWidth > 0 && node.hasPX('width', false)) {
-                        node.anchorParent(STRING_ANDROID.HORIZONTAL, 0.5, 'packed', true);
+                        node.anchorParent('horizontal', 0.5, 'packed', true);
                     }
                     else if (length === 1) {
                         node.setLayoutWidth('match_parent');
@@ -790,11 +790,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         case 'center':
                         case 'space-around':
                         case 'space-evenly':
-                            node.anchorParent(STRING_ANDROID.VERTICAL, 0.5, 'packed', true);
+                            node.anchorParent('vertical', 0.5, 'packed', true);
                             break;
                         case 'end':
                         case 'flex-end':
-                            node.anchorParent(STRING_ANDROID.VERTICAL, 1, 'packed', true);
+                            node.anchorParent('vertical', 1, 'packed', true);
                             break;
                     }
                 }
@@ -825,7 +825,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (wrapped) {
                     if (node.contentBoxHeight > 0 && node.hasPX('height', false)) {
-                        node.anchorParent(STRING_ANDROID.VERTICAL, 0.5, 'packed', true);
+                        node.anchorParent('vertical', 0.5, 'packed', true);
                     }
                     else {
                         node.setLayoutHeight('wrap_content', false);
@@ -837,7 +837,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const rowCount = barrierData.length;
                 if (length === 1) {
                     for (const item of barrierData[0]) {
-                        item.anchorParent(STRING_ANDROID.VERTICAL, 0);
+                        item.anchorParent('vertical', 0);
                     }
                 }
                 else {
@@ -857,7 +857,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 if (i === 0) {
                                     item.anchor('top', 'parent');
                                     item.anchor('bottomTop', barrierId);
-                                    item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
+                                    item.anchorStyle('vertical', 0);
                                 }
                                 else {
                                     if (i === rowCount - 1) {

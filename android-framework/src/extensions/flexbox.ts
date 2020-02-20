@@ -31,8 +31,8 @@ type FlexBasis = {
 };
 
 const MAP_horizontal = {
-    orientation: STRING_ANDROID.HORIZONTAL,
-    orientationInverse: STRING_ANDROID.VERTICAL,
+    orientation: 'horizontal',
+    orientationInverse: 'vertical',
     WHL: 'width',
     HWL: 'height',
     LT: 'left',
@@ -43,8 +43,8 @@ const MAP_horizontal = {
     RLBT: 'rightLeft'
 };
 const MAP_vertical = {
-    orientation: STRING_ANDROID.VERTICAL,
-    orientationInverse: STRING_ANDROID.HORIZONTAL,
+    orientation: 'vertical',
+    orientationInverse: 'horizontal',
     WHL: 'height',
     HWL: 'width',
     LT: 'top',

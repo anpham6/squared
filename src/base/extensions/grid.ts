@@ -13,10 +13,10 @@ const { aboveRange, belowRange, withinRange } = $lib.util;
 const GRID = EXT_NAME.GRID;
 
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
-    const topA = target.linear.top;
+    const topA = target.bounds.top;
     for (const column of columns) {
         const index = column.findIndex(item => {
-            const top = item.linear.top;
+            const top = item.bounds.top;
             return withinRange(topA, top) || Math.ceil(topA) >= top && Math.floor(topA) <= item.linear.bottom;
         });
         if (index !== -1) {

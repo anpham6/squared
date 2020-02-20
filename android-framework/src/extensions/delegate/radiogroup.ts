@@ -1,6 +1,6 @@
 import { NodeXmlTemplate } from '../../../../@types/base/application';
 
-import { CONTAINER_ANDROID, STRING_ANDROID } from '../../lib/constant';
+import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 type View = android.base.View;
@@ -77,11 +77,11 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             const controlName = CONTAINER_ANDROID.RADIOGROUP;
             if (linearX) {
                 container.addAlign(NODE_ALIGNMENT.HORIZONTAL | (length < parent.length ? NODE_ALIGNMENT.SEGMENTED : 0));
-                container.android('orientation', STRING_ANDROID.HORIZONTAL);
+                container.android('orientation', 'horizontal');
             }
             else {
                 container.addAlign(NODE_ALIGNMENT.VERTICAL);
-                container.android('orientation', STRING_ANDROID.VERTICAL);
+                container.android('orientation', 'vertical');
             }
             container.setControlType(controlName, CONTAINER_NODE.LINEAR);
             container.inherit(node, 'alignment');

@@ -1,6 +1,6 @@
 import { NodeXmlTemplate } from '../../../../@types/base/application';
 
-import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, STRING_ANDROID } from '../../lib/constant';
+import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
 type View = android.base.View;
@@ -38,7 +38,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 overflowType |= NODE_ALIGNMENT.HORIZONTAL;
                 overflow.push(horizontalScroll);
             }
-            if (node.hasHeight && node.hasPX('height')) {
+            if (node.hasPX('height', false)) {
                 overflowType |= NODE_ALIGNMENT.VERTICAL;
                 overflow.push(verticalScroll);
             }
@@ -104,7 +104,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     case verticalScroll:
                         node.setLayoutHeight('wrap_content');
                         item.setLayoutHeight(formatPX(node.actualHeight));
-                        item.android('scrollbars', STRING_ANDROID.VERTICAL);
+                        item.android('scrollbars', 'vertical');
                         item.cssApply({
                             width: length === 1 && node.css('width') || 'auto',
                             overflow: 'scroll visible',
@@ -115,7 +115,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     case horizontalScroll:
                         node.setLayoutWidth('wrap_content');
                         item.setLayoutWidth(formatPX(node.actualWidth));
-                        item.android('scrollbars', STRING_ANDROID.HORIZONTAL);
+                        item.android('scrollbars', 'horizontal');
                         item.cssApply({
                             height: length === 1 && node.css('height') || 'auto',
                             overflow: 'visible scroll',

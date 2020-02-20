@@ -1,6 +1,5 @@
 import { ConstraintGuidelineOptions } from '../../../../@types/android/extension';
 
-import { STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -51,11 +50,11 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
             const linear = item.linear;
             if (withinRange(linear.left, left)) {
                 item.anchor('left', 'parent');
-                item.anchorStyle(STRING_ANDROID.HORIZONTAL, 0);
+                item.anchorStyle('horizontal', 0);
             }
             if (withinRange(linear.top, top)) {
                 item.anchor('top', 'parent');
-                item.anchorStyle(STRING_ANDROID.VERTICAL, 0);
+                item.anchorStyle('vertical', 0);
             }
             if (circlePosition) {
                 if (item.anchored) {

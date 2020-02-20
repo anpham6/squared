@@ -1,6 +1,6 @@
 import { FileActionOptions, FileAsset } from '../base/application';
 import { CustomizationResult, FileOutputOptions, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
-import { Constraint, LocalSettingsAndroidUI, SupportAndroid, SpacerAttribute, ViewAttribute, WrapperOptions } from './node';
+import { Constraint, LocalSettingsAndroidUI, SpacerAttribute, SupportAndroid, ViewAttribute, WrapperOptions } from './node';
 
 import LayoutUI = squared.base.LayoutUI;
 
@@ -366,8 +366,6 @@ declare namespace lib {
             tools: string;
         };
         const STRING_ANDROID: {
-            HORIZONTAL: string;
-            VERTICAL: string;
             MARGIN: string;
             MARGIN_VERTICAL: string;
             MARGIN_HORIZONTAL: string;

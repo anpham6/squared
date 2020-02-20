@@ -239,8 +239,8 @@ function setReadOnly(node: View) {
 }
 
 function setLeftTopAxis(node: View, parent: View, hasDimension: boolean, horizontal: boolean) {
-    const [orientation, dimension, posA, posB, marginA, marginB, paddingA, paddingB] = horizontal ? [STRING_ANDROID.HORIZONTAL, 'width', 'left', 'right', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.PADDING_LEFT, BOX_STANDARD.PADDING_RIGHT]
-                                                                                                  : [STRING_ANDROID.VERTICAL, 'height', 'top', 'bottom', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_BOTTOM];
+    const [orientation, dimension, posA, posB, marginA, marginB, paddingA, paddingB] = horizontal ? ['horizontal', 'width', 'left', 'right', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.PADDING_LEFT, BOX_STANDARD.PADDING_RIGHT]
+                                                                                                  : ['vertical', 'height', 'top', 'bottom', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_BOTTOM];
     const autoMargin = node.autoMargin;
     if (hasDimension && autoMargin[orientation]) {
         if (node.hasPX(posA) && autoMargin[posB]) {
@@ -269,7 +269,7 @@ function setLeftTopAxis(node: View, parent: View, hasDimension: boolean, horizon
         }
         else if (horizontal) {
             if (node.centerAligned) {
-                node.anchorParent(STRING_ANDROID.HORIZONTAL, 0.5);
+                node.anchorParent('horizontal', 0.5);
             }
             else {
                 node.anchor(node.rightAligned ? 'right' : 'left', 'parent');
@@ -344,7 +344,7 @@ function setVerticalAlignment(node: View) {
         bias = autoMargin.top ? 1 : 0;
     }
     if (!isNaN(bias)) {
-        node.anchorStyle(STRING_ANDROID.VERTICAL, bias, 'packed', false);
+        node.anchorStyle('vertical', bias, 'packed', false);
     }
 }
 
@@ -864,10 +864,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         else if (item.outerWrapper === node) {
                             const { horizontal, vertical } = item.constraint;
                             if (!horizontal) {
-                                item.anchorParent(STRING_ANDROID.HORIZONTAL, 0);
+                                item.anchorParent('horizontal', 0);
                             }
                             if (!vertical) {
-                                item.anchorParent(STRING_ANDROID.VERTICAL, 0);
+                                item.anchorParent('vertical', 0);
                             }
                         }
                         else {
@@ -881,10 +881,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                             if (!constraint.horizontal) {
-                                this.addGuideline(item, node, STRING_ANDROID.HORIZONTAL);
+                                this.addGuideline(item, node, 'horizontal');
                             }
                             if (!constraint.vertical) {
-                                this.addGuideline(item, node, STRING_ANDROID.VERTICAL);
+                                this.addGuideline(item, node, 'vertical');
                             }
                         }
                     }
@@ -895,10 +895,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const item = pageFlow[0];
                         const { horizontal, vertical } = item.constraint;
                         if (!horizontal) {
-                            item.anchorParent(STRING_ANDROID.HORIZONTAL, item.centerAligned ? 0.5 : (item.rightAligned ? 1 : 0), 'packed', false);
+                            item.anchorParent('horizontal', item.centerAligned ? 0.5 : (item.rightAligned ? 1 : 0), 'packed', false);
                         }
                         if (!vertical) {
-                            item.anchorParent(STRING_ANDROID.VERTICAL);
+                            item.anchorParent('vertical');
                             setVerticalAlignment(item);
                         }
                         View.setConstraintDimension(item);
@@ -923,11 +923,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         switch (containerType) {
             case CONTAINER_NODE.LINEAR:
                 if (hasBit(layout.alignmentType, NODE_ALIGNMENT.VERTICAL)) {
-                    options.android.orientation = STRING_ANDROID.VERTICAL;
+                    options.android.orientation = 'vertical';
                     valid = true;
                 }
                 else {
-                    options.android.orientation = STRING_ANDROID.HORIZONTAL;
+                    options.android.orientation = 'horizontal';
                     valid = true;
                 }
                 break;
@@ -1080,8 +1080,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const container = application.createNode({ parent, replace: node });
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
+                    container.cssCopy(node, 'position', 'zIndex');
                     container.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
-                    container.cssApply({ position: node.css('position'), zIndex: node.zIndex.toString() });
                     container.autoPosition = false;
                     if (width > 0) {
                         container.setLayoutWidth(width < absoluteParent.box.width ? formatPX(width) : 'match_parent');
@@ -1205,7 +1205,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.css('width', formatPX(cols * 8));
                 }
                 node.android('hint', placeholder);
-                node.android('scrollbars', STRING_ANDROID.VERTICAL);
+                node.android('scrollbars', 'vertical');
                 node.android('inputType', 'textMultiLine');
                 if (node.overflowX) {
                     node.android('scrollHorizontally', 'true');
@@ -1265,10 +1265,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case CONTAINER_ANDROID.TEXT: {
                 let overflow = '';
                 if (node.overflowX) {
-                    overflow += STRING_ANDROID.HORIZONTAL;
+                    overflow += 'horizontal';
                 }
                 if (node.overflowY) {
-                    overflow += (overflow !== '' ? '|' : '') + STRING_ANDROID.VERTICAL;
+                    overflow += (overflow !== '' ? '|' : '') + 'vertical';
                 }
                 if (overflow !== '') {
                     node.android('scrollbars', overflow);
@@ -1597,7 +1597,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const options = createViewAttribute(undefined, {
                     android: {
-                        orientation: horizontal ? STRING_ANDROID.VERTICAL : STRING_ANDROID.HORIZONTAL
+                        orientation: horizontal ? 'vertical' : 'horizontal'
                     },
                     app: {
                         [beginPercent]: percent ? location.toString() : '@dimen/' + Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))
@@ -1615,8 +1615,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
         };
-        applyLayout(STRING_ANDROID.HORIZONTAL, true);
-        applyLayout(STRING_ANDROID.VERTICAL, false);
+        applyLayout('horizontal', true);
+        applyLayout('vertical', false);
     }
 
     public addBarrier(nodes: T[], barrierDirection: string) {
@@ -2380,7 +2380,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let previous: Undef<T>;
         let textBaseline: Null<T> = null;
         const setAlignTop = (item: T) => {
-            item.anchorParent(STRING_ANDROID.VERTICAL, 0);
+            item.anchorParent('vertical', 0);
             item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
             item.baselineAltered = true;
             valid = false;
@@ -2417,7 +2417,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             else {
                 item.anchor(anchorStart, 'parent');
-                item.anchorStyle(STRING_ANDROID.HORIZONTAL, bias);
+                item.anchorStyle('horizontal', bias);
             }
             if (item.pageFlow) {
                 if (item !== baseline) {
@@ -2445,7 +2445,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     setAlignTop(item);
                                 }
                                 else {
-                                    item.anchorParent(STRING_ANDROID.VERTICAL, 0.5);
+                                    item.anchorParent('vertical', 0.5);
                                 }
                                 break;
                             case 'text-bottom':
@@ -2508,7 +2508,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     item.anchor('top', documentId);
                 }
                 else {
-                    item.anchorParent(STRING_ANDROID.VERTICAL, 0);
+                    item.anchorParent('vertical', 0);
                     item.anchored = true;
                     valid = false;
                 }
@@ -2518,7 +2518,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (tallest && tallest !== baseline && baseline.textElement && getMaxHeight(tallest) > getMaxHeight(baseline)) {
                 switch (tallest.verticalAlign) {
                     case 'middle':
-                        baseline.anchorParent(STRING_ANDROID.VERTICAL, 0.5, 'packed', true);
+                        baseline.anchorParent('vertical', 0.5, 'packed', true);
                         break;
                     case 'baseline':
                         baseline.anchor('baseline', tallest.documentId);
@@ -2543,11 +2543,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             else {
                 if (valid && baseline.baselineElement && !baseline.imageOrSvgElement && node.ascend({ condition: (item: T) => item.layoutHorizontal, error: (item: T) => item.layoutVertical || item.layoutGrid, attr: 'renderParent' }).length) {
-                    baseline.anchorParent(STRING_ANDROID.VERTICAL);
+                    baseline.anchorParent('vertical');
                     baseline.anchor('baseline', 'parent');
                 }
                 else {
-                    baseline.anchorParent(STRING_ANDROID.VERTICAL, 0);
+                    baseline.anchorParent('vertical', 0);
                     baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.floor(baseline.linear.top - node.box.top));
                 }
             }
@@ -2583,19 +2583,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const rowEnd = seg[q - 1];
                 rowStart.anchor(anchorStart, 'parent');
                 if (!floating && parent.css('textAlign') === 'center') {
-                    rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 0.5);
+                    rowStart.anchorStyle('horizontal', 0.5);
                 }
                 else if (q > 1) {
                     if (reverse) {
-                        rowEnd.anchorStyle(STRING_ANDROID.HORIZONTAL, 1);
+                        rowEnd.anchorStyle('horizontal', 1);
                     }
                     else {
-                        rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, 0);
+                        rowStart.anchorStyle('horizontal', 0);
                     }
                 }
                 else if (partition.length === 1) {
                     rowStart.anchor(anchorEnd, 'parent');
-                    rowStart.anchorStyle(STRING_ANDROID.HORIZONTAL, rowStart.centerAligned ? 0.5 : (rowStart.rightAligned ? 1 : 0));
+                    rowStart.anchorStyle('horizontal', rowStart.centerAligned ? 0.5 : (rowStart.rightAligned ? 1 : 0));
                 }
                 if (q > 1 || rowEnd.autoMargin.leftRight) {
                     rowEnd.anchor(anchorEnd, 'parent');
@@ -2605,19 +2605,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const chain = seg[j];
                     if (i === 0) {
                         if (length === 1) {
-                            chain.anchorParent(STRING_ANDROID.VERTICAL);
+                            chain.anchorParent('vertical');
                             setVerticalAlignment(chain);
                         }
                         else {
                             chain.anchor('top', 'parent');
-                            chain.anchorStyle(STRING_ANDROID.VERTICAL, 0);
+                            chain.anchorStyle('vertical', 0);
                         }
                     }
                     else if (currentRowTop === undefined && i === length - 1) {
                         chain.anchor('bottom', 'parent');
                     }
                     if (chain.autoMargin.leftRight) {
-                        chain.anchorParent(STRING_ANDROID.HORIZONTAL);
+                        chain.anchorParent('horizontal');
                     }
                     else if (q > 1) {
                         const previous = seg[j - 1];

@@ -15,7 +15,7 @@ const { isTextNode, newBoxModel } = $lib.dom;
 const { equal } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { assignEmptyProperty, cloneObject, convertWord, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
+const { cloneObject, convertWord, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
@@ -624,7 +624,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
                 case 'styleMap':
-                    assignEmptyProperty(this._styleMap, node.unsafe('styleMap'));
+                    this.cssCopyIfEmpty(node, ...Object.keys(node.unsafe('styleMap')));
                     break;
                 case 'textStyle':
                     this.cssApply(node.textStyle);
@@ -1603,9 +1603,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textEmpty() {
         let result = this._cached.textEmpty;
         if (result === undefined) {
-            if (this.styleElement && !this.imageElement && !this.svgElement && this.tagName !== 'HR') {
+            if (this.styleElement && !this.imageElement && !this.svgElement) {
                 const value = this.textContent;
-                result = value === '' || !this.preserveWhiteSpace && !this.pseudoElement && value.trim() === '';
+                result = value === '' || !this.preserveWhiteSpace && value.trim() === '';
             }
             else {
                 result = false;

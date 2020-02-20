@@ -154,8 +154,6 @@ export const XMLNS_ANDROID = {
 };
 
 export const STRING_ANDROID = {
-    HORIZONTAL: 'horizontal',
-    VERTICAL: 'vertical',
     MARGIN: 'layout_margin',
     MARGIN_VERTICAL: 'layout_marginVertical',
     MARGIN_HORIZONTAL: 'layout_marginHorizontal',
