@@ -543,7 +543,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
 }
 
 function hasTextAlign(node: T, value: string) {
-    if (node.cssAscend('textAlign', true) === value) {
+    if (node.cssAscend('textAlign', node.textElement && node.blockStatic && !node.hasPX('width')) === value) {
         if (node.textElement && node.blockStatic) {
             return !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true);
         }
@@ -1672,7 +1672,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get textElement() {
         let result = this._cached.textElement;
         if (result === undefined) {
-            result = this.plainText || this.inlineText;
+            result = this.plainText || this.inlineText && !this.inputElement;
             this._cached.textElement = result;
         }
         return result;

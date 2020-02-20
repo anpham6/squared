@@ -711,7 +711,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
         }
-        return { parent: renderAs, renderAs, outputAs };
+        return {
+            parent: renderAs,
+            renderAs, outputAs
+        };
     }
 
     public postBaseLayout(node: T) {

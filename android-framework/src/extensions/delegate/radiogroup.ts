@@ -30,7 +30,7 @@ function setBaselineIndex(children: View[], container: View) {
     return valid;
 }
 
-const getInputName = (element: HTMLInputElement) => element.name ? element.name.trim() : '';
+const getInputName = (element: HTMLInputElement) => element.name?.trim() || '';
 
 export default class RadioGroup<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {

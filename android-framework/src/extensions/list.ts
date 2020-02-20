@@ -261,7 +261,8 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                         CONTAINER_NODE.LINEAR,
                         NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN,
                         container.children as T[]
-                    ))
+                    )),
+                    subscribe: true
                 };
             }
         }

@@ -49,8 +49,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                 item.baselineAltered = true;
             }
         });
-        this.subscribers.add(node);
-        return undefined;
+        return { subscribe: true };
     }
 
     public postConstraints(node: T) {
@@ -84,7 +83,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                                         item.baselineAltered = true;
                                     }
                                 }
-                                else if ((item.imageElement || item.svgElement) && baseline?.documentId === item.alignSibling('baseline')) {
+                                else if (baseline && (item.imageElement || item.svgElement) && baseline.documentId === item.alignSibling('baseline')) {
                                     item.modifyBox(BOX_STANDARD.MARGIN_TOP, baseline.linear.top - item.linear.top);
                                 }
                             }

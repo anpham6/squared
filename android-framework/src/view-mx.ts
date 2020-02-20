@@ -1780,7 +1780,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             bottom = Math.max(bottom - SPACING_SELECT, 0);
                             break;
                     }
-                    if (top < 0 && (this.pageFlow && (this.block || this.floating) || this.leftTopAxis && (this.alignParent('top') || this.alignParent('bottom'))) && this.translateY(top, { accumulate: true, contain: this.pageFlow })) {
+                    if (top < 0 && (this.pageFlow && (this.block || this.floating) || this.leftTopAxis) && this.translateY(top, { accumulate: true, contain: this.pageFlow })) {
                         if (this.pageFlow) {
                             const siblings = this.anchorChain('bottom');
                             for (const item of siblings) {
@@ -1789,7 +1789,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         top = 0;
                     }
-                    if (left < 0 && (this.pageFlow && this.blockDimension || this.leftTopAxis && (this.alignParent('left') || this.alignParent('right'))) && this.translateX(left, { accumulate: true, contain: this.pageFlow })) {
+                    if (left < 0 && (this.pageFlow && this.blockDimension || this.leftTopAxis) && this.translateX(left, { accumulate: true, contain: this.pageFlow })) {
                         if (this.pageFlow) {
                             const siblings = this.anchorChain('right');
                             for (const item of siblings) {

@@ -1151,9 +1151,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     posRight = NaN;
                                     posBottom = NaN;
                                     posLeft = NaN;
-                                    offsetX = false;
-                                    offsetY = false;
                                 }
+                                offsetX = false;
+                                offsetY = false;
                                 recalibrate = false;
                             };
                             switch (size) {

@@ -18,7 +18,8 @@ export default class <T extends View> extends squared.base.extensions.VerticalAl
                     NODE_ALIGNMENT.HORIZONTAL,
                     node.children as T[]
                 )
-            )
+            ),
+            subscribe: true
         };
     }
 }

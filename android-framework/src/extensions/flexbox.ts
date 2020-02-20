@@ -231,7 +231,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
 
     public processChild(node: T, parent: T) {
         if (node.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
-            this.subscribers.add(node);
             return {
                 output: this.application.renderNode(
                     new LayoutUI(
@@ -242,7 +241,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         node.children as T[]
                     )
                 ),
-                complete: true
+                complete: true,
+                subscribe: true
             };
         }
         else {

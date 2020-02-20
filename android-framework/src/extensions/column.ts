@@ -22,8 +22,10 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
         super.processNode(node, parent);
         node.containerType = CONTAINER_NODE.CONSTRAINT;
         node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
-        this.subscribers.add(node);
-        return { complete: true };
+        return {
+            complete: true,
+            subscribe: true
+        };
     }
 
     public postBaseLayout(node: T) {

@@ -10,6 +10,8 @@ type View = android.base.View;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
+const CssGrid = squared.base.extensions.CssGrid;
+
 const RESOURCE_IGNORE = NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING;
 
 const hasVisibleWidth = (node: View) => !node.blockStatic && !node.hasPX('width') || node.has('width', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' }) && node.css('minWidth') !== '100%' || node.has('maxWidth', CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, { not: '100%' });
@@ -17,9 +19,9 @@ const hasFullHeight = (node: View) => node.css('height') === '100%' || node.css(
 const hasMargin = (node: View) => node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0;
 const isParentVisible = (node: View) => (<View> node.actualParent).visibleStyle.background && (hasVisibleWidth(node) || !hasFullHeight(node));
 const isParentTransfer = (parent: View) => parent.tagName === 'HTML' && (parent.contentBoxWidth > 0 || parent.contentBoxHeight > 0 || hasMargin(parent));
-const isFullScreen = (node: View, visibleStyle: VisibleStyle) => (node.backgroundColor || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY) && visibleStyle.borderWidth && !node.inline && !hasFullHeight(node) && !isParentVisible(node);
+const isFullScreen = (node: View, visibleStyle: VisibleStyle) => (node.backgroundColor || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY) && (visibleStyle.borderWidth && !node.inline && !hasFullHeight(node) && !isParentVisible(node) || node.percentWidth > 0 || node.hasPX('maxWidth') || node.gridElement && (CssGrid.isJustified(node) || CssGrid.isAligned(node)));
 const isHideMargin = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && hasMargin(node);
-const isBackgroundSeperate = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundColor && visibleStyle.backgroundImage && (node.has('backgroundPositionY') || hasVisibleWidth(node));
+const isBackgroundSeparate = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundColor && visibleStyle.backgroundImage && (node.has('backgroundPositionY') || hasVisibleWidth(node));
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -28,14 +30,14 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
 
     public condition(node: T, parent: T) {
         const visibleStyle = node.visibleStyle;
-        return isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle) || isBackgroundSeperate(node, visibleStyle) || isParentTransfer(parent);
+        return isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle) || isBackgroundSeparate(node, visibleStyle) || isParentTransfer(parent);
     }
 
     public processNode(node: T, parent: T) {
         const controller = <android.base.Controller<T>> this.controller;
         const { backgroundColor, backgroundImage, visibleStyle } = node;
         const backgroundRepeatY = visibleStyle.backgroundRepeatY;
-        const backgroundSeperate = isBackgroundSeperate(node, visibleStyle);
+        const backgroundSeparate = isBackgroundSeparate(node, visibleStyle);
         const hasHeight = node.hasHeight || node.actualParent?.hasHeight === true;
         let renderParent = parent;
         let container: Undef<T>;
@@ -76,7 +78,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             node.setCacheValue('backgroundColor', '');
             visibleStyle.backgroundColor = false;
         }
-        if (backgroundImage !== '' && (parentVisible || backgroundSeperate || backgroundRepeatY || parent.visibleStyle.background || hasMargin(node))) {
+        if (backgroundImage !== '' && (parentVisible || backgroundSeparate || backgroundRepeatY || parent.visibleStyle.background || hasMargin(node))) {
             if (container) {
                 createFrameWrapper(container);
                 container = controller.createNodeWrapper(node, parentAs, undefined, { resource: NODE_RESOURCE.BOX_SPACING, ignoreRoot: true });
@@ -89,7 +91,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             const minHeight = parent.cssInitial('minHeight');
             let backgroundSize: Undef<string>;
             if (height === '' && minHeight === '') {
-                container.setLayoutHeight(!parentVisible && !(backgroundSeperate && hasHeight) && (backgroundRepeatY || node.has('backgroundSize')) ? 'match_parent' : 'wrap_content');
+                container.setLayoutHeight(!parentVisible && !(backgroundSeparate && hasHeight) && (backgroundRepeatY || node.has('backgroundSize')) ? 'match_parent' : 'wrap_content');
             }
             else {
                 if (height !== '100%' && minHeight !== '100%') {

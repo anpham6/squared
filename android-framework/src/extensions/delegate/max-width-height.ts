@@ -7,10 +7,9 @@ import LayoutUI = squared.base.LayoutUI;
 
 const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
-export interface MaxWidthHeightData {
-    width: boolean;
-    height: boolean;
-    container: View;
+interface MaxWidthHeightData {
+    maxWidth: boolean;
+    maxHeight: boolean;
 }
 
 export default class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {
@@ -19,10 +18,10 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     }
 
     public condition(node: T, parent: T) {
-        const width = node.hasPX('maxWidth') && (node.blockStatic || parent.layoutVertical || node.onlyChild && (parent.blockStatic || parent.hasWidth) || parent.layoutFrame) && !parent.layoutElement && !(parent.layoutConstraint && parent.blockStatic && parent.naturalChildren.every(item => item.pageFlow && item.naturalChildren.every(child => child.pageFlow))) && !(parent.hasAlign(NODE_ALIGNMENT.COLUMN) && parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT));
-        const height = node.hasPX('maxHeight') && (parent.hasHeight || parent.gridElement || parent.tableElement);
-        if (width || height) {
-            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { width, height });
+        const maxWidth = node.hasPX('maxWidth') && (node.blockStatic || node.onlyChild && (parent.blockStatic || parent.hasWidth) || parent.layoutVertical || parent.layoutFrame) && !parent.layoutConstraint && !parent.layoutElement;
+        const maxHeight = node.hasPX('maxHeight') && (parent.hasHeight || parent.gridElement || parent.tableElement);
+        if (maxWidth || maxHeight) {
+            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { maxWidth, maxHeight });
             return true;
         }
         return false;
@@ -33,7 +32,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         if (mainData) {
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, { controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), containerType: CONTAINER_NODE.CONSTRAINT });
             container.addAlign(NODE_ALIGNMENT.BLOCK);
-            if (mainData.width) {
+            if (mainData.maxWidth) {
                 node.setLayoutWidth('0px');
                 container.setLayoutWidth('match_parent');
                 if (parent.layoutElement) {
@@ -44,7 +43,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                     autoMargin.leftRight = false;
                 }
             }
-            if (mainData.height) {
+            if (mainData.maxHeight) {
                 node.setLayoutHeight('0px');
                 container.setLayoutHeight('match_parent');
                 if (parent.layoutElement) {
@@ -53,12 +52,11 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
                     autoMargin.top = false;
                     autoMargin.bottom = false;
                     autoMargin.topBottom = false;
-                    if (!mainData.width && node.blockStatic && !node.hasWidth) {
+                    if (!mainData.maxHeight && node.blockStatic && !node.hasWidth) {
                         node.setLayoutWidth('match_parent', false);
                     }
                 }
             }
-            mainData.container = container;
             return {
                 parent: container,
                 renderAs: container,

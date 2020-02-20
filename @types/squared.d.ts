@@ -131,8 +131,8 @@ declare namespace base {
         visibleElement(element: Element, pseudoElt?: string): boolean;
         processUnknownParent(layout: LayoutUI<T>): LayoutResult<T>;
         processUnknownChild(layout: LayoutUI<T>): LayoutResult<T>;
-        processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): LayoutUI<T>;
-        processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): LayoutUI<T>;
+        processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
+        processTraverseVertical(layout: LayoutUI<T>, siblings: T[]): Undef<LayoutUI<T>>;
         processLayoutHorizontal(layout: LayoutUI<T>): LayoutUI<T>;
         setConstraints(): void;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;

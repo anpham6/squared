@@ -885,12 +885,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 if (siblings.length > 1) {
                                     const float = siblings[0].float;
                                     let maxBottom = Number.NEGATIVE_INFINITY;
+                                    let contentWidth = 0;
                                     for (const item of siblings) {
-                                        if (item.float === float) {
-                                            maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
+                                        if (item.floating) {
+                                            if (item.float === float) {
+                                                maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
+                                            }
+                                            contentWidth += item.linear.width;
                                         }
                                     }
-                                    if (this.multiline) {
+                                    if (Math.ceil(contentWidth) >= (this.actualParent as T).box.width) {
+                                        return NODE_TRAVERSE.FLOAT_BLOCK;
+                                    }
+                                    else if (this.multiline) {
                                         if (this.styleText) {
                                             const textBounds = this.textBounds;
                                             if (textBounds) {

@@ -129,6 +129,7 @@ export interface ExtensionResult<T extends NodeUI> {
     complete?: boolean;
     next?: boolean;
     include?: boolean;
+    subscribe?: boolean;
     remove?: boolean;
 }
 

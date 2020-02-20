@@ -1062,7 +1062,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    if (length > 1 && k < length - 1 && nodeY.pageFlow && !nodeY.nodeGroup && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (length > 1 && k < length - 1 && nodeY.pageFlow && !nodeY.nodeGroup && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let extended = false;
@@ -1257,7 +1257,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (ext.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(ext))) {
                                         const result = ext.processNode(nodeY, parentY);
                                         if (result) {
-                                            const { output, renderAs, outputAs, include } = result;
+                                            const { output, renderAs, outputAs } = result;
                                             if (output) {
                                                 this.addLayoutTemplate(result.outerParent || parentY, nodeY, output);
                                             }
@@ -1265,13 +1265,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 this.addLayoutTemplate(result.parentAs || parentY, renderAs, outputAs);
                                             }
                                             parentY = result.parent || parentY;
-                                            if (include) {
+                                            if (result.include) {
                                                 let renderExt = nodeY.renderExtension;
                                                 if (renderExt === undefined) {
                                                     renderExt = [];
                                                     nodeY.renderExtension = renderExt;
                                                 }
                                                 renderExt.push(ext);
+                                                ext.subscribers.add(nodeY);
+                                            }
+                                            else if (result.subscribe) {
                                                 ext.subscribers.add(nodeY);
                                             }
                                             if (result.remove) {
