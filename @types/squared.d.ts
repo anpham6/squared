@@ -571,7 +571,6 @@ declare namespace base {
         sort(predicate?: (a: Node, b: Node) => number): this;
         render(parent?: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
-        renderFilter(predicate: IteratorPredicate<NodeUI, boolean>): NodeUI[];
         actualRect(direction: string, dimension?: BoxType): number;
         actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         actualBoxWidth(value?: number): number;
@@ -655,7 +654,7 @@ declare namespace base {
                 SEGMENTED = 128,
                 COLUMN = 256,
                 FLOAT = 512,
-                BOTTOM = 1024,
+                INLINE = 1024,
                 RIGHT = 2048,
                 SINGLE = 4096,
                 EXTENDABLE = 8192,
@@ -1018,7 +1017,6 @@ declare namespace lib {
         function flatMultiArray<T>(list: any[]): T[];
         function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>): T[];
-        function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): T[];
         function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>): boolean;
         function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
         function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[];

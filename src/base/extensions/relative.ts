@@ -7,7 +7,7 @@ import { BOX_STANDARD } from '../lib/enumeration';
 const $lib = squared.lib;
 
 const { assignRect } = $lib.dom;
-const { convertFloat, filterArray, withinRange } = $lib.util;
+const { convertFloat, withinRange } = $lib.util;
 
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
@@ -94,7 +94,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 if (node.baselineActive && !node.baselineAltered) {
                     for (const children of (renderParent.horizontalRows || [renderParent.renderChildren])) {
                         if (children.includes(node)) {
-                            const unaligned = filterArray(children, item => item.positionRelative && item.length > 0 && convertFloat(node.verticalAlign) !== 0);
+                            const unaligned = children.filter(item => item.positionRelative && item.length > 0 && convertFloat(node.verticalAlign) !== 0);
                             const length = unaligned.length;
                             if (length) {
                                 unaligned.sort((a, b) => {

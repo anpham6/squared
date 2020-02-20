@@ -258,7 +258,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     public afterBaseLayout() {
         const processed = new Set<number>();
         for (const node of this.cacheProcessing) {
-            if (node.naturalElement && node.naturalElements.length && !node.layoutElement && !node.tableElement) {
+            if (node.naturalElement && node.naturalElements.length && !node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                 const children = node.naturalChildren;
                 if (children[0].documentBody) {
                     continue;

@@ -40,7 +40,7 @@ const $svg_lib = squared.svg.lib;
 const { formatPX, isPercent } = $lib.css;
 const { truncate } = $lib.math;
 const { CHAR, CSS, FILE } = $lib.regex;
-const { convertCamelCase, convertInt, convertWord, filterArray, formatString, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = $lib.util;
+const { convertCamelCase, convertInt, convertWord, formatString, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = $lib.util;
 const { applyTemplate } = $lib.xml;
 
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = $svg_lib.constant;
@@ -826,7 +826,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         }
                     }
                     else if (SvgBuild.isAnimate(item)) {
-                        const children = filterArray(companions, child => (<AnimateCompanion> child.companion).value === item);
+                        const children = companions.filter(child => (<AnimateCompanion> child.companion).value === item);
                         if (children.length) {
                             children.sort((a, b) => (<AnimateCompanion> a.companion).key >= (<AnimateCompanion> b.companion).key ? 1 : 0);
                             const sequentially: SvgAnimation[] = [];
@@ -1523,7 +1523,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         if (animateData) {
                                             this._animateData.set(strokePath.name, {
                                                 element: animateData.element,
-                                                animate: filterArray(animateData.animate, animate => animate.id === undefined || animate.id === i)
+                                                animate: animateData.animate.filter(animate => animate.id === undefined || animate.id === i)
                                             });
                                         }
                                         strokePath.trimPathStart = truncate(dash.start, floatPrecisionValue);
@@ -1931,7 +1931,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     private queueAnimations(svg: SvgView, name: string, predicate: IteratorPredicate<SvgAnimation, boolean>, pathData = '', targetName?: string) {
         if (svg.animations.length) {
-            const animate = filterArray(svg.animations, (item, index, array) => !item.paused && (item.duration >= 0 || item.setterType) && predicate(item, index, array));
+            const animate = svg.animations.filter((item, index, array) => !item.paused && (item.duration >= 0 || item.setterType) && predicate(item, index, array));
             if (animate.length) {
                 const element = svg.element;
                 this._animateData.set(name, {

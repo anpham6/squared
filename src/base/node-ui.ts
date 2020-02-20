@@ -15,7 +15,7 @@ const { isTextNode, newBoxModel } = $lib.dom;
 const { equal } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { assignEmptyProperty, cloneObject, convertWord, filterArray, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
+const { assignEmptyProperty, cloneObject, convertWord, hasBit, isArray, searchObject, spliceArray, withinRange } = $lib.util;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
@@ -568,10 +568,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         return this;
-    }
-
-    public renderFilter(predicate: IteratorPredicate<T, boolean>) {
-        return filterArray(this.renderChildren, predicate);
     }
 
     public hide(options?: HideUIOptions<T>) {

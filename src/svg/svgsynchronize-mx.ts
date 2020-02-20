@@ -17,7 +17,7 @@ const $lib = squared.lib;
 
 const { clamp, equal, multipleOf } = $lib.math;
 const { CHAR } = $lib.regex;
-const { filterArray, hasBit, hasValue, isEqual, isNumber, joinMap, objectMap, replaceMap, spliceArray, sortNumber } = $lib.util;
+const { hasBit, hasValue, isEqual, isNumber, joinMap, objectMap, replaceMap, spliceArray, sortNumber } = $lib.util;
 
 type AnimateValue = number | Point[] | string;
 type TimelineValue = Map<any, AnimateValue>;
@@ -1385,7 +1385,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                     [keyTimes, values, keySplines] = cloneKeyTimes(item);
                                                     const r = data.length;
                                                     if (evaluateStart) {
-                                                        const pending = filterArray(incomplete.concat(data.slice(j + 1, r)), previous => !!previous.animationElement && previous.delay < maxThreadTime);
+                                                        const pending = incomplete.concat(data.slice(j + 1, r)).filter(previous => !!previous.animationElement && previous.delay < maxThreadTime);
                                                         if (pending.length) {
                                                             sortEvaluateStart(pending, actualMaxTime);
                                                             [keyTimes, values, keySplines] = appendPartialKeyTimes(intervalMap, forwardMap, baseValueMap, k, item, keyTimes, values, keySplines, baseValue, pending, true);
@@ -1398,7 +1398,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                     }
                                                     if (evaluateEnd) {
                                                         if (item.getIntervalEndTime(actualMaxTime) < maxThreadTime && (incomplete.length || j < r - 1)) {
-                                                            const pending = filterArray(incomplete, previous => !!previous.animationElement);
+                                                            const pending = incomplete.filter(previous => !!previous.animationElement);
                                                             for (let l = j + 1; l < r; l++) {
                                                                 const previous = data[l];
                                                                 if (previous.animationElement) {

@@ -22,7 +22,7 @@ const { getElementsBetweenSiblings, getRangeClientRect } = $lib.dom;
 const { truncate } = $lib.math;
 const { CHAR } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { assignEmptyValue, convertFloat, filterArray, hasBit, isString, objectMap, optionalAsObject, partitionArray, withinRange } = $lib.util;
+const { assignEmptyValue, convertFloat, hasBit, isString, objectMap, optionalAsObject, partitionArray, withinRange } = $lib.util;
 const { STRING_XMLENCODING, replaceTab } = $lib.xml;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
@@ -94,7 +94,7 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
                 continue;
             }
             else {
-                const imageElements = filterArray(node.renderChildren, item => item.imageOrSvgElement && item.baseline);
+                const imageElements = node.renderChildren.filter(item => item.imageOrSvgElement && item.baseline);
                 if (node.imageOrSvgElement || imageElements.length) {
                     for (const image of imageElements) {
                         height = Math.max(image.baselineHeight, height);
@@ -207,7 +207,7 @@ function isTargeted(parentElement: Null<Element>, node: View) {
 }
 
 function getTextBottom(nodes: View[]): View[] {
-    return filterArray(nodes, node => (node.baseline || isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && node.toElementInt('size') > 1) || node.verticalAlign === 'text-bottom' && node.containerName !== 'INPUT_IMAGE').sort((a, b) => {
+    return nodes.filter(node => (node.baseline || isLength(node.verticalAlign, true)) && (node.tagName === 'TEXTAREA' || node.tagName === 'SELECT' && node.toElementInt('size') > 1) || node.verticalAlign === 'text-bottom' && node.containerName !== 'INPUT_IMAGE').sort((a, b) => {
         if (a.baselineHeight === b.baselineHeight) {
             return a.tagName === 'SELECT' ? 1 : 0;
         }

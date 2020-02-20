@@ -10,7 +10,7 @@ type SvgAnimation = squared.svg.SvgAnimation;
 type SvgAnimationIntervalValue = squared.svg.SvgAnimationIntervalValue;
 type SvgAnimationIntervalAttributeMap = squared.svg.SvgAnimationIntervalAttributeMap;
 
-const { filterArray, hasValue, sortNumber } = squared.lib.util;
+const { hasValue, sortNumber } = squared.lib.util;
 
 export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimationIntervalMap {
     public static getGroupEndTime(item: SvgAnimationAttribute) {
@@ -24,7 +24,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     public map: SvgAnimationIntervalAttributeMap;
 
     constructor(animations: SvgAnimation[], ...attrs: string[]) {
-        animations = (attrs.length ? filterArray(animations, item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => {
+        animations = (attrs.length ? animations.filter(item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => {
             if (a.delay === b.delay) {
                 return a.group.id < b.group.id ? 1 : -1;
             }

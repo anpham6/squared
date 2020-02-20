@@ -594,20 +594,6 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
     return list;
 }
 
-export function filterArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>) {
-    const length = list.length;
-    const result: T[] = new Array(length);
-    let j = 0;
-    for (let i = 0; i < length; i++) {
-        const item = list[i];
-        if (predicate(item, i, list)) {
-            result[j++] = item;
-        }
-    }
-    result.length = j;
-    return result;
-}
-
 export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
     const length = list.length;
     if (length) {

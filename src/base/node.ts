@@ -12,7 +12,7 @@ const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, hasC
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
 const { CHAR, CSS, FILE, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = $lib.session;
-const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, filterArray, hasBit, hasValue, isNumber, isObject, isString, spliceString } = $lib.util;
+const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, spliceString } = $lib.util;
 
 const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
@@ -51,7 +51,7 @@ function setNaturalChildren(node: T) {
 }
 
 function setNaturalElements(node: T) {
-    const children = filterArray(node.naturalChildren, item => item.naturalElement);
+    const children = node.naturalChildren.filter(item => item.naturalElement);
     node.naturalElements = children;
     return children;
 }
@@ -353,7 +353,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                         if (match[1]) {
                             children = children.slice(0).reverse();
                         }
-                        const i = (match[2] === 'child' ? children.indexOf(node) : filterArray(children, item => item.tagName === tagName).indexOf(node)) + 1;
+                        const i = (match[2] === 'child' ? children.indexOf(node) : children.filter(item => item.tagName === tagName).indexOf(node)) + 1;
                         if (i > 0) {
                             if (isNumber(placement)) {
                                 if (parseInt(placement) !== i) {

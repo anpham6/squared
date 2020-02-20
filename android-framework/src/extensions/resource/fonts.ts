@@ -11,7 +11,7 @@ type View = android.base.View;
 const $lib = squared.lib;
 
 const { XML } = $lib.regex;
-const { capitalize, convertInt, convertWord, filterArray, objectMap, spliceArray, trimString } = $lib.util;
+const { capitalize, convertInt, convertWord, objectMap, spliceArray, trimString } = $lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -101,7 +101,7 @@ function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number
             }
             if (index !== -1) {
                 data = sorted[index];
-                data[key] = filterArray(data[key], id => !ids.includes(id));
+                data[key] = data[key].filter(id => !ids.includes(id));
                 if (data[key].length === 0) {
                     delete data[key];
                 }
@@ -242,7 +242,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         for (const tag in groupMap) {
             const styleTag = {};
             style[tag] = styleTag;
-            const sorted = filterArray(groupMap[tag], item => !!item).sort((a, b) => {
+            const sorted = groupMap[tag].filter(item => !!item).sort((a, b) => {
                 let maxA = 0;
                 let maxB = 0;
                 let countA = 0;

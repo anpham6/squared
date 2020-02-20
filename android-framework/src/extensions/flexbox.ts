@@ -301,7 +301,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 let previous: Undef<T[]>;
                 node.each((item: T) => {
                     if (item.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
-                        const pageFlow = item.renderFilter(child => child.pageFlow) as T[];
+                        const pageFlow = item.renderChildren.filter(child => child.pageFlow) as T[];
                         if (pageFlow.length) {
                             if (directionRow) {
                                 item.setLayoutWidth('match_parent');
