@@ -14,8 +14,9 @@ type FunctionMap<T> = ObjectMap<FunctionType<T>>;
 
 type ObjectMap<T> = { [key: string]: T };
 type ObjectIndex<T> = { [key: number]: T };
-type ObjectMapNested<T> = ObjectMap<ObjectMap<T>>;
+type ObjectKeyed<T> = ObjectMap<T> | ObjectIndex<T>;
+type ObjectMapNested<T> = ObjectKeyed<ObjectKeyed<T>>;
 type StringMap = ObjectMap<string>;
 type CallbackResult = (result: {}) => void;
 
-type ExternalData = ObjectMap<any>;
+type StandardMap = ObjectMap<any>;

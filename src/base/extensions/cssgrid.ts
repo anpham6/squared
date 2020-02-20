@@ -11,7 +11,7 @@ const $lib = squared.lib;
 
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { CHAR, CSS } = $lib.regex;
-const { isNumber, trimString, withinRange } = $lib.util;
+const { isNumber, safeNestedArray, trimString, withinRange } = $lib.util;
 
 const CSS_GRID = EXT_NAME.CSS_GRID;
 
@@ -253,11 +253,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         const setDataRows = (item: T, placement: number[], length: number) => {
             if (placement.every(value => value > 0)) {
                 for (let i = placement[rowA] - 1; i < placement[rowB] - 1; i++) {
-                    let data = rowData[i];
-                    if (data === undefined) {
-                        data = [];
-                        rowData[i] = data;
-                    }
+                    const data = safeNestedArray(rowData, i);
                     let cell = openCells[i];
                     let j = placement[colA] - 1;
                     if (cell === undefined) {
@@ -270,11 +266,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         openCells[i] = cell;
                     }
                     for ( ; j < placement[colB] - 1; j++) {
-                        let rowItem = data[j];
-                        if (rowItem === undefined) {
-                            rowItem = [];
-                            data[j] = rowItem;
-                        }
+                        const rowItem = safeNestedArray(data as T[][], j);
                         cell[j] = 1;
                         rowItem.push(item);
                     }
@@ -298,11 +290,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         case 1:
                             if (command.charAt(0) === '[') {
                                 for (const attr of match[4].split(CHAR.SPACE)) {
-                                    let item = name[attr];
-                                    if (item === undefined) {
-                                        item = [];
-                                        name[attr] = item;
-                                    }
+                                    const item = safeNestedArray(name, attr);
                                     item.push(i);
                                 }
                             }
@@ -986,11 +974,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     const data = rowData[i];
                     const q = data.length;
                     for (let j = 0; j < q; j++) {
-                        let rowItem = rowMain[j];
-                        if (rowItem === undefined) {
-                            rowItem = [];
-                            rowMain[j] = rowItem;
-                        }
+                        const rowItem = safeNestedArray(rowMain, j);
                         rowItem[i] = data[j];
                     }
                 }

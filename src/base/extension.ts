@@ -1,7 +1,7 @@
 import { ExtensionDependency } from '../../@types/base/application';
 
 export default abstract class Extension<T extends squared.base.Node> implements squared.base.Extension<T> {
-    public readonly options: ExternalData = {};
+    public readonly options: StandardMap = {};
     public readonly dependencies: ExtensionDependency[] = [];
     public readonly subscribers = new Set<T>();
 
@@ -11,7 +11,7 @@ export default abstract class Extension<T extends squared.base.Node> implements 
     protected constructor(
         public readonly name: string,
         public readonly framework: number,
-        options?: ExternalData)
+        options?: StandardMap)
     {
         if (options) {
             Object.assign(this.options, options);

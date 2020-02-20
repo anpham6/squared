@@ -13,7 +13,7 @@ const $lib = squared.lib;
 
 const { getFontSize, isLength, parseUnit } = $lib.css;
 const { getNamedItem } = $lib.dom;
-const { capitalize, hasBit, isNumber, isString, optionalAsString } = $lib.util;
+const { capitalize, hasBit, isNumber, isString } = $lib.util;
 
 const REGEX_MS = /-?\d+ms$/;
 const REGEX_S = /-?\d+s$/;
@@ -84,7 +84,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     private _duration = -1;
     private _delay = 0;
     private _to = '';
-    private _dataset: ObjectMapNested<any> = {};
+    private _dataset: ObjectMap<ObjectMap<any>> = {};
     private _parent?: SvgView | SvgPath;
     private _group?: SvgAnimationGroup;
 
@@ -177,8 +177,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                         const animationElement = this.animationElement;
                         if (animationElement && getComputedStyle(element).animationPlayState === 'paused') {
                             const parentElement = animationElement.parentElement;
-                            baseValue = optionalAsString(parentElement, value + '.baseVal.valueAsString');
-                            if (isLength(baseValue)) {
+                            baseValue = parentElement?.[value]?.baseVal?.valueAsString;
+                            if (baseValue && isLength(baseValue)) {
                                 this.baseValue = parseUnit(baseValue, getFontSize(parentElement)).toString();
                             }
                         }

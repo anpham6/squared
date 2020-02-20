@@ -17,7 +17,7 @@ const $lib = squared.lib;
 
 const { clamp, equal, multipleOf } = $lib.math;
 const { CHAR } = $lib.regex;
-const { hasBit, hasValue, isEqual, isNumber, joinMap, objectMap, replaceMap, spliceArray, sortNumber } = $lib.util;
+const { hasBit, hasValue, isEqual, isNumber, joinMap, objectMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = $lib.util;
 
 type AnimateValue = number | Point[] | string;
 type TimelineValue = Map<any, AnimateValue>;
@@ -835,11 +835,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                 const groupActive = new Set<string>();
                 let setterTotal = 0;
                 function insertSetter(item: SvgAnimation) {
-                    let setter = setterAttributeMap[item.attributeName];
-                    if (setter === undefined) {
-                        setter = [];
-                        setterAttributeMap[item.attributeName] = setter;
-                    }
+                    const setter = safeNestedArray(setterAttributeMap, item.attributeName);
                     setter.push(item);
                     setterTotal++;
                 }
@@ -1083,11 +1079,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             }
                             const forwardItem = getForwardItem(forwardMap, attr);
                             if (value !== '' && (forwardItem === undefined || time >= forwardItem.time)) {
-                                let map = forwardMap[attr];
-                                if (map === undefined) {
-                                    map = [];
-                                    forwardMap[attr] = map;
-                                }
+                                const map = safeNestedArray(forwardMap, attr);
                                 map.push({ key: type, value, time });
                             }
                             if (item && SvgBuild.isAnimate(item) && !item.fillReplace) {
@@ -2001,10 +1993,8 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                 if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
                                                     const transformOrigin = transformOriginMap.get(entry[0]);
                                                     if (transformOrigin) {
-                                                        if (animate.transformOrigin === undefined) {
-                                                            animate.transformOrigin = [];
-                                                        }
-                                                        animate.transformOrigin[j] = transformOrigin;
+                                                        const item = safeNestedArray(<StandardMap> animate, 'transformOrigin');
+                                                        item[j] = transformOrigin;
                                                     }
                                                 }
                                                 entry[0] -= delay;

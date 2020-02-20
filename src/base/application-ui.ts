@@ -16,7 +16,7 @@ const $lib = squared.lib;
 const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule, isLength, resolveURL } = $lib.css;
 const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
 const { minArray } = $lib.math;
-const { convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, trimString } = $lib.util;
+const { convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, safeNestedArray, safeNestedMap, trimString } = $lib.util;
 const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -38,11 +38,7 @@ function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
 }
 
 function saveAlignment(preAlignment: ObjectIndex<StringMap>, element: HTMLElement, id: number, attr: string, value: string, restoreValue: string) {
-    let stored = preAlignment[id];
-    if (stored === undefined) {
-        stored = {};
-        preAlignment[id] = stored;
-    }
+    const stored = safeNestedMap(preAlignment, id);
     stored[attr] = restoreValue;
     element.style.setProperty(attr, value);
 }
@@ -366,11 +362,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (template) {
             if (!node.renderExclude) {
                 if (node.renderParent) {
-                    let renderTemplates = parent.renderTemplates;
-                    if (renderTemplates === undefined) {
-                        renderTemplates = [];
-                        parent.renderTemplates = renderTemplates;
-                    }
+                    const renderTemplates = safeNestedArray(<StandardMap> parent, 'renderTemplates');
                     if (index >= 0 && index < parent.renderChildren.length) {
                         parent.renderChildren.splice(index, 0, node);
                         renderTemplates.splice(index, 0, template);
@@ -1263,11 +1255,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                             parentY = result.parent || parentY;
                                             if (result.include) {
-                                                let renderExt = nodeY.renderExtension;
-                                                if (renderExt === undefined) {
-                                                    renderExt = [];
-                                                    nodeY.renderExtension = renderExt;
-                                                }
+                                                const renderExt = safeNestedArray(<StandardMap> nodeY, 'renderExtension');
                                                 renderExt.push(ext);
                                                 ext.subscribers.add(nodeY);
                                             }

@@ -10,7 +10,7 @@ type SvgAnimation = squared.svg.SvgAnimation;
 type SvgAnimationIntervalValue = squared.svg.SvgAnimationIntervalValue;
 type SvgAnimationIntervalAttributeMap = squared.svg.SvgAnimationIntervalAttributeMap;
 
-const { hasValue, sortNumber } = squared.lib.util;
+const { hasValue, safeNestedArray, sortNumber } = squared.lib.util;
 
 export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimationIntervalMap {
     public static getGroupEndTime(item: SvgAnimationAttribute) {
@@ -43,11 +43,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         function insertIntervalValue(keyName: string, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
             if (value) {
                 const mapA = intervalMap[keyName];
-                let data = mapA[time];
-                if (data === undefined) {
-                    data = [];
-                    mapA[time] = data;
-                }
+                const data = safeNestedArray(mapA, time);
                 data.push({
                     time,
                     value,

@@ -41,7 +41,7 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     constructor(
         name: string,
         framework: number,
-        options?: ExternalData,
+        options?: StandardMap,
         tagNames: string[] = [])
     {
         super(name, framework, options);

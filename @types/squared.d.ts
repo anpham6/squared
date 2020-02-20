@@ -203,7 +203,7 @@ declare namespace base {
         readonly controller: Controller<T>;
         readonly framework: number;
         readonly name: string;
-        readonly options: ExternalData;
+        readonly options: StandardMap;
         readonly dependencies: ExtensionDependency[];
         readonly subscribers: Set<T>;
         require(name: string, preload?: boolean): void;
@@ -212,7 +212,7 @@ declare namespace base {
     }
 
     class Extension<T extends Node> implements Extension<T> {
-        constructor(name: string, framework: number, options?: ExternalData);
+        constructor(name: string, framework: number, options?: StandardMap);
     }
 
     interface ExtensionUI<T extends NodeUI> extends Extension<T> {
@@ -245,7 +245,7 @@ declare namespace base {
 
     class ExtensionUI<T extends NodeUI> implements ExtensionUI<T> {
         public static findNestedElement(element: Null<Element>, name: string): Null<HTMLElement>;
-        constructor(name: string, framework: number, options?: ExternalData, tagNames?: string[]);
+        constructor(name: string, framework: number, options?: StandardMap, tagNames?: string[]);
     }
 
     interface ExtensionManager<T extends Node> {
@@ -996,11 +996,6 @@ declare namespace lib {
         function cloneInstance<T>(value: T): T;
         function cloneArray(data: any[], result?: any[], object?: boolean): any[];
         function cloneObject(data: {}, result?: {}, array?: boolean): {};
-        function optional(obj: UndefNull<object>, value: string, type?: string): any;
-        function optionalAsObject(obj: UndefNull<object>, value: string): object;
-        function optionalAsString(obj: UndefNull<object>, value: string): string;
-        function optionalAsNumber(obj: UndefNull<object>, value: string): number;
-        function optionalAsBoolean(obj: UndefNull<object>, value: string): boolean;
         function resolvePath(value: string, href?: string): string;
         function trimString(value: string, char: string): string;
         function trimStart(value: string, char: string): string;
@@ -1016,6 +1011,8 @@ declare namespace lib {
         function assignEmptyValue(dest: {}, ...attrs: string[]): void;
         function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean, Set<T>>): Undef<T>;
         function sortNumber(values: number[], ascending?: boolean): number[];
+        function safeNestedArray<T>(list: T[][] | ObjectMap<T[]>, index: number | string): T[];
+        function safeNestedMap<T>(map: ObjectMapNested<T>, index: number | string): ObjectMap<T>;
         function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
         function flatArray<T>(list: any[]): T[];
         function flatMultiArray<T>(list: any[]): T[];
@@ -1040,7 +1037,7 @@ declare namespace lib {
         function pushIndentArray(values: string[], depth: number, char?: string, separator?: string): string;
         function replaceIndent(value: string, depth: number, pattern: RegExp): string;
         function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
-        function applyTemplate(tagName: string, template: ExternalData, children: ExternalData[], depth?: number): string;
+        function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number): string;
         function formatTemplate(value: string, closeEmpty?: boolean, startIndent?: number, char?: string): string;
         function replaceCharacterData(value: string, tab?: boolean): string;
     }

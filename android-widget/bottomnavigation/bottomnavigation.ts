@@ -7,7 +7,7 @@ type View = android.base.View;
 
 const $lib = android.lib;
 
-const { assignEmptyValue, optionalAsString } = squared.lib.util;
+const { assignEmptyValue, safeNestedMap } = squared.lib.util;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -21,7 +21,7 @@ export default class BottomNavigation<T extends View> extends squared.base.Exten
     constructor(
         name: string,
         framework: number,
-        options?: ExternalData,
+        options?: StandardMap,
         tagNames?: string[])
     {
         super(name, framework, options, tagNames);
@@ -70,14 +70,10 @@ export default class BottomNavigation<T extends View> extends squared.base.Exten
             if (!renderParent.hasPX('height')) {
                 renderParent.setLayoutHeight('match_parent');
             }
-            const menu = optionalAsString(BottomNavigation.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
-            if (menu !== '') {
+            const menu = BottomNavigation.findNestedElement(node.element, WIDGET_NAME.MENU)?.dataset.layoutName;
+            if (menu) {
                 const options = createViewAttribute(this.options[node.elementId]);
-                let app = options.app;
-                if (app === undefined) {
-                    app = {};
-                    options.app = app;
-                }
+                const app = safeNestedMap<string>(options, 'app');
                 assignEmptyValue(app, 'menu', '@menu/' + menu);
                 node.app('menu', app.menu);
             }

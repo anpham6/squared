@@ -25,7 +25,7 @@ export default class Coordinator<T extends View> extends squared.base.ExtensionU
         if (element) {
             const toolbar = getElementAsNode<T>(element, node.sessionId);
             if (toolbar) {
-                const data: ExternalData = extensionManager.retrieve(WIDGET_NAME.TOOLBAR)?.options[toolbar.elementId];
+                const data: StandardMap = extensionManager.retrieve(WIDGET_NAME.TOOLBAR)?.options[toolbar.elementId];
                 if (data && 'collapsingToolbar' in data) {
                     node.android('fitsSystemWindows', 'true');
                 }

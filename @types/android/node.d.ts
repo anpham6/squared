@@ -17,7 +17,7 @@ export interface Constraint {
     guideline?: ObjectMapNested<ObjectMapNested<number>>;
 }
 
-export interface ViewAttribute {
+export interface ViewAttribute extends ObjectMap<any> {
     android: StringMap;
     app?: StringMap;
     documentId?: string;

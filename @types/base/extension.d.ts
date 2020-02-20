@@ -50,7 +50,7 @@ export interface FlexboxData<T> {
     children: T[];
 }
 
-export interface GridCellData<T> {
+export interface GridCellData<T> extends ObjectMap<any> {
     rowSpan: number;
     columnSpan: number;
     index: number;

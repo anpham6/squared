@@ -12,7 +12,7 @@ const $lib = squared.lib;
 const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength, isPercent } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { maxArray } = $lib.math;
-const { isNumber, replaceMap, withinRange } = $lib.util;
+const { isNumber, replaceMap, safeNestedArray, withinRange } = $lib.util;
 
 const enum LAYOUT_TABLE {
     NONE = 0,
@@ -25,7 +25,7 @@ const enum LAYOUT_TABLE {
 const TABLE = EXT_NAME.TABLE;
 const REGEX_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
 
-function setAutoWidth(node: NodeUI, td: NodeUI, data: ExternalData) {
+function setAutoWidth(node: NodeUI, td: NodeUI, data: StandardMap) {
     data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
     data.expand = true;
 }
@@ -140,12 +140,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 for (let k = i; k < i + rowSpan; k++) {
-                    if (tableFilled[k] === undefined) {
-                        tableFilled[k] = [];
-                    }
+                    const item = safeNestedArray(tableFilled, k);
                     for (let l = j, m = 0; l < j + colSpan; l++) {
-                        if (tableFilled[k][l] === undefined) {
-                            tableFilled[k][l] = td;
+                        if (item[l] === undefined) {
+                            item[l] = td;
                             m++;
                         }
                         else {
@@ -465,7 +463,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 j += data.colSpan;
             }
             if (length < columnCount) {
-                const data: ExternalData = tr[length - 1].data(TABLE, 'cellData');
+                const data: StandardMap = tr[length - 1].data(TABLE, 'cellData');
                 if (data) {
                     data.spaceSpan = columnCount - length;
                 }

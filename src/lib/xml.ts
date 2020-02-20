@@ -93,7 +93,7 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
     return value;
 }
 
-export function applyTemplate(tagName: string, template: ExternalData, children: ExternalData[], depth?: number) {
+export function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number) {
     const tag: ObjectMap<any> = template[tagName];
     const nested = tag['>>'] === true;
     let output = '';

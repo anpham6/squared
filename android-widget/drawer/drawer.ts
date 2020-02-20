@@ -8,7 +8,7 @@ type View = android.base.View;
 const $lib = squared.lib;
 const $libA = android.lib;
 
-const { assignEmptyValue, cloneObject, includes, optionalAsString } = $lib.util;
+const { assignEmptyValue, cloneObject, safeNestedMap, includes } = $lib.util;
 const { getElementAsNode } = $lib.session;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -25,7 +25,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
     constructor(
         name: string,
         framework: number,
-        options?: ExternalData,
+        options?: StandardMap,
         tagNames?: string[])
     {
         super(name, framework, options, tagNames);
@@ -93,20 +93,16 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         for (const node of this.subscribers) {
             const element = node.element;
             const options = createViewAttribute(this.options.navigationView);
-            const menu = optionalAsString(Drawer.findNestedElement(element, WIDGET_NAME.MENU), 'dataset.layoutName');
-            const headerLayout = optionalAsString(Drawer.findNestedElement(element, EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
-            let app = options.app;
-            if (app === undefined) {
-                app = {};
-                options.app = app;
-            }
-            if (menu !== '') {
+            const menu = Drawer.findNestedElement(element, WIDGET_NAME.MENU)?.dataset.layoutName;
+            const headerLayout = Drawer.findNestedElement(element, EXT_ANDROID.EXTERNAL)?.dataset.layoutName;
+            const app = safeNestedMap(options, 'app');
+            if (menu) {
                 assignEmptyValue(app, 'menu', '@menu/' + menu);
             }
-            if (headerLayout !== '') {
+            if (headerLayout) {
                 assignEmptyValue(app, 'headerLayout', '@layout/' + headerLayout);
             }
-            if (menu !== '' || headerLayout !== '') {
+            if (menu || headerLayout) {
                 const controller = <android.base.Controller<T>> this.controller;
                 assignEmptyValue(options, 'android', 'id', node.documentId.replace('@', '@+') + '_navigation');
                 assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');

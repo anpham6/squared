@@ -72,7 +72,7 @@ export function getVerticalBias(node: View) {
     return calculateBias(top, bottom, node.localSettings.floatPrecision);
 }
 
-export function createViewAttribute(data?: ExternalData, options?: ViewAttribute): ViewAttribute {
+export function createViewAttribute(data?: StandardMap, options?: ViewAttribute): ViewAttribute {
     if (options === undefined) {
         options = { android: {} };
     }
@@ -94,7 +94,7 @@ export function createViewAttribute(data?: ExternalData, options?: ViewAttribute
     return options;
 }
 
-export function createStyleAttribute(data?: ExternalData) {
+export function createStyleAttribute(data?: StandardMap) {
     const result: StyleAttribute = {
         output: {
             path: 'res/values',

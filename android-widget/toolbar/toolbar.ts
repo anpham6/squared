@@ -10,7 +10,7 @@ const $libA = android.lib;
 
 const { formatPX } = $lib.css;
 const { getElementAsNode } = $lib.session;
-const { assignEmptyValue, includes, isString, optionalAsString } = $lib.util;
+const { assignEmptyValue, safeNestedMap, includes, isString } = $lib.util;
 
 const { NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -31,7 +31,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
     constructor(
         name: string,
         framework: number,
-        options?: ExternalData,
+        options?: StandardMap,
         tagNames?: string[])
     {
         super(name, framework, options, tagNames);
@@ -69,7 +69,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const settings = <UserSettingsAndroid> application.userSettings;
         const element = <HTMLElement> node.element;
         const target = node.dataset.target;
-        const options: ExternalData = { ...this.options[element.id] };
+        const options: StandardMap = { ...this.options[element.id] };
         const toolbarOptions = createViewAttribute(options.self);
         const appBarOptions = createViewAttribute(options.appBar);
         const collapsingToolbarOptions = createViewAttribute(options.collapsingToolbar);
@@ -80,11 +80,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const collapsingToolbarChildren: T[] = [];
         const children = element.children;
         const length = children.length;
-        let app = toolbarOptions.app;
-        if (app === undefined) {
-            app = {};
-            toolbarOptions.app = app;
-        }
+        let app = safeNestedMap<string>(toolbarOptions, 'app');
         for (let i = 0; i < length; i++) {
             const item = <HTMLElement> children[i];
             const dataset = item.dataset;
@@ -172,11 +168,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             }
             appBarNode.setControlType(appBarName, CONTAINER_NODE.BLOCK);
             if (hasCollapsingToolbar) {
-                app = collapsingToolbarOptions.app;
-                if (app === undefined) {
-                    app = {};
-                    collapsingToolbarOptions.app = app;
-                }
+                app = safeNestedMap(collapsingToolbarOptions, 'app');
                 assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_collapsingtoolbar');
                 assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
                 if (!backgroundImage) {
@@ -248,11 +240,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                                 scaleType = 'center';
                                 break;
                         }
-                        app = backgroundImageOptions.app;
-                        if (app === undefined) {
-                            app = {};
-                            backgroundImageOptions.app = app;
-                        }
+                        app = safeNestedMap(backgroundImageOptions, 'app');
                         assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_image');
                         assignEmptyValue(backgroundImageOptions, 'android', 'src', '@drawable/' + src);
                         assignEmptyValue(backgroundImageOptions, 'android', 'scaleType', scaleType);
@@ -316,14 +304,10 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public postOptimize(node: T) {
-        const menu = optionalAsString(Toolbar.findNestedElement(node.element, WIDGET_NAME.MENU), 'dataset.layoutName');
-        if (menu !== '') {
+        const menu = Toolbar.findNestedElement(node.element, WIDGET_NAME.MENU)?.dataset.layoutName;
+        if (menu) {
             const toolbarOptions = createViewAttribute(this.options[node.elementId]?.self);
-            let app = toolbarOptions.app;
-            if (app === undefined) {
-                app = {};
-                toolbarOptions.app = app;
-            }
+            const app = safeNestedMap<string>(toolbarOptions, 'app');
             assignEmptyValue(app, 'menu', '@menu/' + menu);
             node.app('menu', app.menu);
         }

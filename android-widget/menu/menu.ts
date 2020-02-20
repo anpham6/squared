@@ -5,7 +5,7 @@ type View = android.base.View;
 
 const $lib = android.lib;
 
-const { isNumber } = squared.lib.util;
+const { isNumber, safeNestedMap } = squared.lib.util;
 
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -61,11 +61,7 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
                 const match = pattern.exec(value);
                 if (match) {
                     const name = NAMESPACE_APP.includes(attr) ? 'app' : 'android';
-                    let data = options[name];
-                    if (data === undefined) {
-                        data = {};
-                        options[name] = data;
-                    }
+                    const data = safeNestedMap(options, name);
                     data[attr] = Array.from(new Set(match)).join('|');
                 }
             }
@@ -96,7 +92,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(
         name: string,
         framework: number,
-        options?: ExternalData,
+        options?: StandardMap,
         tagNames?: string[])
     {
         super(name, framework, options, tagNames);

@@ -7,7 +7,7 @@ type View = android.base.View;
 const $lib = squared.lib;
 
 const { XML } = $lib.regex;
-const { convertUnderscore, fromLastIndexOf } = $lib.util;
+const { convertUnderscore, fromLastIndexOf, safeNestedArray, safeNestedMap } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> Resource.STORED;
 const REGEX_UNIT = /\dpx$/;
@@ -30,11 +30,7 @@ function createNamespaceData(namespace: string, node: View, group: ObjectMap<Vie
             const value = obj[attr];
             if (REGEX_UNIT.test(value)) {
                 const dimen = `${namespace},${attr},${value}`;
-                let data = group[dimen];
-                if (data === undefined) {
-                    data = [];
-                    group[dimen] = data;
-                }
+                const data = safeNestedArray(group, dimen);
                 data.push(node);
             }
         }
@@ -52,11 +48,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
         for (const node of this.cache) {
             if (node.visible) {
                 const containerName = node.containerName.toLowerCase();
-                let group = groups[containerName];
-                if (group === undefined) {
-                    group = {};
-                    groups[containerName] = group;
-                }
+                const group = safeNestedMap(groups, containerName);
                 createNamespaceData('android', node, group);
                 createNamespaceData('app', node, group);
             }

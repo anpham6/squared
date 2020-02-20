@@ -22,7 +22,7 @@ const { getElementsBetweenSiblings, getRangeClientRect } = $lib.dom;
 const { truncate } = $lib.math;
 const { CHAR } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { assignEmptyValue, convertFloat, hasBit, isString, objectMap, optionalAsObject, partitionArray, withinRange } = $lib.util;
+const { assignEmptyValue, convertFloat, hasBit, isString, objectMap, partitionArray, withinRange } = $lib.util;
 const { STRING_XMLENCODING, replaceTab } = $lib.xml;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
@@ -1383,7 +1383,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         };
     }
 
-    public renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string) {
+    public renderNodeStatic(controlName: string, options?: StandardMap, width?: string, height?: string, content?: string) {
         const node = new View(0, '0', undefined, this.afterInsertNode);
         node.setControlType(controlName);
         node.setLayoutWidth(width || 'wrap_content');
@@ -1597,7 +1597,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.anchor(RB, 'parent', true);
             }
             else {
-                const anchors = optionalAsObject(guideline, `${value}.${beginPercent}.${LT}`);
+                const anchors = guideline[value]?.[beginPercent]?.[LT];
                 if (anchors) {
                     for (const id in anchors) {
                         if (parseInt(anchors[id]) === location) {

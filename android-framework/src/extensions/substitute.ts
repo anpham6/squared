@@ -16,7 +16,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
     constructor(
         name: string,
         framework: number,
-        options?: ExternalData,
+        options?: StandardMap,
         tagNames?: string[])
     {
         super(name, framework, options, tagNames);

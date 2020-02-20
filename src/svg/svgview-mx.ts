@@ -17,7 +17,7 @@ const { calculateVar, isAngle, isCalc, isCustomProperty, getFontSize, getKeyfram
 const { isWinEdge } = $lib.client;
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;
-const { isString, replaceMap, sortNumber } = $lib.util;
+const { isString, replaceMap, safeNestedArray, sortNumber } = $lib.util;
 
 type AttributeMap = ObjectMap<AttributeData[]>;
 
@@ -216,12 +216,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                             value = parseVar(element, value);
                                         }
                                         if (value !== undefined) {
-                                            const map = ANIMATION_DEFAULT[name] ? keyframeMap : attrMap;
-                                            let section = map[name];
-                                            if (section === undefined) {
-                                                section = [];
-                                                map[name] = section;
-                                            }
+                                            const section = safeNestedArray(ANIMATION_DEFAULT[name] ? keyframeMap : attrMap, name);
                                             section.push({ key, value: value.toString() });
                                         }
                                     }
@@ -271,11 +266,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                                 default:
                                                     continue;
                                             }
-                                            let attrData = attrMap[name];
-                                            if (attrData === undefined) {
-                                                attrData = [];
-                                                attrMap[name] = attrData;
-                                            }
+                                            const attrData = safeNestedArray(attrMap, name);
                                             const index = attrData.findIndex(previous => previous.key === key);
                                             if (index !== -1) {
                                                 const indexData = attrData[index];
@@ -415,11 +406,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         }
                                         const transformOrigin = item.transformOrigin;
                                         if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
-                                            let origin = animate.transformOrigin;
-                                            if (origin === undefined) {
-                                                origin = [];
-                                                animate.transformOrigin = origin;
-                                            }
+                                            const origin = safeNestedArray(<StandardMap> animate, 'transformOrigin');
                                             origin[j] = transformOrigin;
                                         }
                                     }

@@ -8,7 +8,7 @@ const $lib = squared.lib;
 const $libA = android.lib;
 
 const { parseColor } = $lib.color;
-const { assignEmptyValue } = $lib.util;
+const { assignEmptyValue, safeNestedMap } = $lib.util;
 
 const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -57,11 +57,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
                 break;
         }
         if (src !== '') {
-            let app = options.app;
-            if (app === undefined) {
-                app = {};
-                options.app = app;
-            }
+            const app = safeNestedMap<string>(options, 'app');
             assignEmptyValue(app, 'srcCompat', '@drawable/' + src);
         }
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;

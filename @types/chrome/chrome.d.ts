@@ -52,7 +52,7 @@ declare namespace base {
     }
 
     class Extension<T extends View> implements Extension<T> {
-        constructor(name: string, framework: number, options?: ExternalData);
+        constructor(name: string, framework: number, options?: StandardMap);
     }
 
     interface ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {}

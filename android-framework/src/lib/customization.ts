@@ -3,7 +3,7 @@ import { BUILD_ANDROID } from './enumeration';
 
 type View = android.base.View;
 
-const { optionalAsString, isString } = squared.lib.util;
+const { isString } = squared.lib.util;
 
 function substitute(result: {}, value: string, api?: number, minApi = 0) {
     if (!api || api >= minApi) {
@@ -556,7 +556,7 @@ export const DEPRECATED_ANDROID: android.lib.customizations.Deprecations = {
 
 export function getValue(api: number, tagName: string, obj: string, attr: string) {
     for (const build of [API_ANDROID[api], API_ANDROID[0]]) {
-        const value = optionalAsString(build, `assign.${tagName}.${obj}.${attr}`);
+        const value = build.assign[tagName]?.[obj]?.[attr];
         if (isString(value)) {
             return value;
         }

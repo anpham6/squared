@@ -162,7 +162,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
 
 function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false) {
     if (border) {
-        let result: Undef<ExternalData>;
+        let result: Undef<StandardMap>;
         if (isAlternatingBorder(border.style)) {
             const width = parseFloat(border.width);
             result = getBorderStyle(border, direction, !isInset);
@@ -244,7 +244,7 @@ function isAlternatingBorder(value: string, width = 0) {
     }
 }
 
-function insertDoubleBorder(items: ExternalData[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, indentWidth = 0, corners?: StringMap) {
+function insertDoubleBorder(items: StandardMap[], border: BorderAttribute, top: boolean, right: boolean, bottom: boolean, left: boolean, indentWidth = 0, corners?: StringMap) {
     const width = roundFloat(border.width);
     const borderWidth = Math.max(1, Math.floor(width / 3));
     const indentOffset = indentWidth > 0 ? formatPX(indentWidth) : '';
@@ -370,8 +370,8 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
 }
 
 function createLayerList(boxStyle: BoxStyle, images?: BackgroundImageData[], borderOnly = true) {
-    const item: ExternalData[] = [];
-    const result: ExternalData[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
+    const item: StandardMap[] = [];
+    const result: StandardMap[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
     if (solid) {
         item.push({ shape: { 'android:shape': 'rectangle', solid } });
@@ -633,8 +633,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         let borderAll = true;
         let border: Undef<BorderAttribute>;
         let borderData: Undef<BorderAttribute>;
-        let shapeData: Undef<ExternalData[]>;
-        let layerListData: Undef<ExternalData[]>;
+        let shapeData: Undef<StandardMap[]>;
+        let layerListData: Undef<StandardMap[]>;
         if (outline) {
             borderData = outline;
             for (let i = 0; i < 4; i++) {

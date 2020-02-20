@@ -176,7 +176,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             const pathname = this.directory.font;
             const result: string[] = [];
             for (const [name, font] of Array.from(STORED.fonts.entries()).sort()) {
-                const item: ExternalData = {
+                const item: StandardMap = {
                     'xmlns:android': xmlns,
                     font: []
                 };

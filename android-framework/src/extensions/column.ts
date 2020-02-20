@@ -10,6 +10,7 @@ const $base_lib = squared.base.lib;
 const { formatPX } = $lib.css;
 const { createElement } = $lib.dom;
 const { maxArray, truncate } = $lib.math;
+const { safeNestedArray } = $lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 
@@ -85,11 +86,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     rowReduce = true;
                                 }
                             }
-                            let column = columns[k];
-                            if (column === undefined) {
-                                column = [];
-                                columns[k] = column;
-                            }
+                            const column = safeNestedArray(columns, k);
                             column.push(item);
                             if (item.length) {
                                 totalGap += maxArray(item.map(child => child.marginLeft + child.marginRight));

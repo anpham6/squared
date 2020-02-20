@@ -671,7 +671,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     public readonly eventOnly = true;
 
     private _svgInstance!: Svg;
-    private _vectorData = new Map<string, ExternalData>();
+    private _vectorData = new Map<string, StandardMap>();
     private _animateData = new Map<string, AnimateGroup>();
     private _animateTarget = new Map<string, AnimateGroup>();
     private _imageData: SvgImage[] = [];
@@ -1437,8 +1437,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         }
         if (imageLength) {
             const resource = <android.base.Resource<T>> this.resource;
-            const item: ExternalData[] = [];
-            const layerData: ExternalData[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
+            const item: StandardMap[] = [];
+            const layerData: StandardMap[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
             if (vectorName !== '') {
                 item.push({ drawable: getDrawableSrc(vectorName) });
             }
@@ -1455,7 +1455,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 y += offset.y;
                 w *= scaleX;
                 h *= scaleY;
-                const data: ExternalData = {
+                const data: StandardMap = {
                     width: formatPX(w),
                     height: formatPX(h),
                     left: x !== 0 ? formatPX(x) : '',

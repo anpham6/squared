@@ -302,52 +302,6 @@ export function cloneObject(data: {}, result = {}, array = false) {
     return result;
 }
 
-export function optional(obj: UndefNull<object>, value: string, type?: string) {
-    let valid = false;
-    let result: any;
-    if (isObject(obj)) {
-        result = obj;
-        const attrs = value.split('.');
-        let i = 0;
-        do {
-            result = result[attrs[i]];
-        }
-        while (
-            result !== undefined &&
-            result !== null &&
-            ++i < attrs.length &&
-            typeof result === 'object'
-        );
-        valid = i === attrs.length && result !== undefined && result !== null;
-    }
-    switch (type) {
-        case 'object':
-            return valid ? result : null;
-        case 'number':
-            return valid ? parseFloat(result) : NaN;
-        case 'boolean':
-            return result === true;
-        default:
-            return valid ? result.toString() : '';
-    }
-}
-
-export function optionalAsObject(obj: UndefNull<object>, value: string): object {
-    return optional(obj, value, 'object');
-}
-
-export function optionalAsString(obj: UndefNull<object>, value: string): string {
-    return optional(obj, value, 'string');
-}
-
-export function optionalAsNumber(obj: UndefNull<object>, value: string): number {
-    return optional(obj, value, 'number');
-}
-
-export function optionalAsBoolean(obj: UndefNull<object>, value: string): boolean {
-    return optional(obj, value, 'boolean');
-}
-
 export function resolvePath(value: string, href?: string) {
     if (!COMPONENT.PROTOCOL.test(value)) {
         const origin = location.origin;
@@ -494,6 +448,24 @@ export function findSet<T>(list: Set<T>, predicate: IteratorPredicate<T, boolean
 
 export function sortNumber(values: number[], ascending = true) {
     return ascending ? values.sort((a, b) => a < b ? -1 : 1) : values.sort((a, b) => a > b ? -1 : 1);
+}
+
+export function safeNestedArray<T>(list: T[][] | ObjectMap<T[]>, index: number | string) {
+    let result: T[] = list[index];
+    if (result === undefined) {
+        result = [];
+        list[index] = result;
+    }
+    return result;
+}
+
+export function safeNestedMap<T>(map: ObjectMapNested<T>, index: number | string) {
+    let result: ObjectMap<T> = map[index];
+    if (result === undefined) {
+        result = {};
+        map[index] = result;
+    }
+    return result;
 }
 
 export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {

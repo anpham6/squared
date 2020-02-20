@@ -18,7 +18,7 @@ type Extension = squared.base.Extension<Node>;
 type ExtensionRequest = Null<Extension | string>;
 
 const extensionsAsync = new Set<Extension>();
-const optionsAsync = new Map<string, ExternalData>();
+const optionsAsync = new Map<string, StandardMap>();
 const settings = <UserSettings> {};
 const system = <FunctionMap<any>> {};
 let main: Application;

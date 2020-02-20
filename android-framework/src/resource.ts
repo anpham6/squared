@@ -58,9 +58,9 @@ function formatObject(obj: {}, numberAlias = false) {
 }
 
 export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
-    public static formatOptions(options: ExternalData, numberAlias = false) {
+    public static formatOptions(options: StandardMap, numberAlias = false) {
         for (const namespace in options) {
-            const obj: ExternalData = options[namespace];
+            const obj: StandardMap = options[namespace];
             if (isPlainObject(obj)) {
                 formatObject(obj, numberAlias);
             }

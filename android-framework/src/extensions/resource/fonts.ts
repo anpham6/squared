@@ -11,7 +11,7 @@ type View = android.base.View;
 const $lib = squared.lib;
 
 const { XML } = $lib.regex;
-const { capitalize, convertInt, convertWord, objectMap, spliceArray, trimString } = $lib.util;
+const { capitalize, convertInt, convertWord, safeNestedArray, safeNestedMap, objectMap, spliceArray, trimString } = $lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -130,12 +130,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         let cache: T[] = [];
         for (const node of this.cache) {
             if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
-                const containerName = node.containerName;
-                let map = nameMap[containerName];
-                if (map === undefined) {
-                    map = [];
-                    nameMap[containerName] = map;
-                }
+                const map = safeNestedArray(nameMap, node.containerName);
                 map.push(node);
             }
         }
@@ -222,16 +217,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             value = convertLength(value, true);
                         }
                         const attr = FONT_STYLE[key] + value + '"';
-                        let dataIndex = sorted[i];
-                        if (dataIndex === undefined) {
-                            dataIndex = {};
-                            sorted[i] = dataIndex;
-                        }
-                        let dataAttr = dataIndex[attr];
-                        if (dataAttr === undefined) {
-                            dataAttr = [];
-                            dataIndex[attr] = dataAttr;
-                        }
+                        const dataAttr = safeNestedArray(safeNestedMap(sorted, i), attr);
                         dataAttr.push(id);
                     }
                 }
@@ -304,11 +290,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                         if (compare.length) {
                                             for (const id of ids) {
                                                 if (compare.includes(id)) {
-                                                    let dataC = found[attr];
-                                                    if (dataC === undefined) {
-                                                        dataC = [];
-                                                        found[attr] = dataC;
-                                                    }
+                                                    const dataC = safeNestedArray(found, attr);
                                                     dataC.push(id);
                                                 }
                                             }
@@ -428,11 +410,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 const ids = group.ids;
                 if (ids) {
                     for (const id of ids) {
-                        let map = nodeMap[id];
-                        if (map === undefined) {
-                            map = [];
-                            nodeMap[id] = map;
-                        }
+                        const map = safeNestedArray(nodeMap, id);
                         map.push(group.name);
                     }
                 }

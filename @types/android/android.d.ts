@@ -18,7 +18,7 @@ declare namespace base {
         readonly cache: squared.base.NodeList<T>;
         readonly userSettings: UserSettingsAndroid;
         readonly screenDimension: Dimension;
-        renderNodeStatic(controlName: string, options?: ExternalData, width?: string, height?: string, content?: string): string;
+        renderNodeStatic(controlName: string, options?: StandardMap, width?: string, height?: string, content?: string): string;
         renderSpace(options: SpacerAttribute): string;
         checkFrameHorizontal(data: LayoutUI<T>): boolean;
         checkConstraintFloat(data: LayoutUI<T>): boolean;
@@ -45,7 +45,7 @@ declare namespace base {
 
     class Resource<T extends View> implements Resource<T> {
         public static STORED: ResourceStoredMapAndroid;
-        public static formatOptions(options: ExternalData, numberAlias?: boolean): ExternalData;
+        public static formatOptions(options: StandardMap, numberAlias?: boolean): StandardMap;
         public static formatName(value: string): string;
         public static addTheme(...options: StyleAttribute[]): void;
         public static addString(value: string, name?: string, numberAlias?: boolean): string;
@@ -432,8 +432,8 @@ declare namespace lib {
         function getVerticalBias(node: View): number;
         function isGridJustified(node: View): boolean;
         function isGridAligned(node: View): boolean;
-        function createViewAttribute(data?: ExternalData, options?: ViewAttribute): ViewAttribute;
-        function createStyleAttribute(data?: ExternalData): Required<StyleAttribute>;
+        function createViewAttribute(data?: StandardMap, options?: ViewAttribute): ViewAttribute;
+        function createStyleAttribute(data?: StandardMap): Required<StyleAttribute>;
         function localizeString(value: string, rtl: boolean, api: number): string;
         function getXmlNs(value: string): string;
         function getRootNs(value: string): string;

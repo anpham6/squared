@@ -8,7 +8,7 @@ import { BOX_STANDARD } from '../lib/enumeration';
 
 const $lib = squared.lib;
 
-const { aboveRange, belowRange, withinRange } = $lib.util;
+const { aboveRange, belowRange, safeNestedArray, withinRange } = $lib.util;
 
 const GRID = EXT_NAME.GRID;
 
@@ -74,11 +74,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             for (const column of row) {
                 if ((column as T).visible) {
                     const x = Math.floor(column.linear.left);
-                    let map = nextMapX[x];
-                    if (map === undefined) {
-                        map = [];
-                        nextMapX[x] = map;
-                    }
+                    const map = safeNestedArray(nextMapX, x);
                     map.push(column as T);
                 }
             }
@@ -115,11 +111,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         const nextX = nextAxisX[j];
                         const { left, right } = nextX.linear;
                         if (i === 0 || aboveRange(left, columnRight[i - 1])) {
-                            let row = columns[i];
-                            if (row === undefined) {
-                                row = [];
-                                columns[i] = row;
-                            }
+                            const row = safeNestedArray(columns, i);
                             if (i === 0 || columns[0].length === q) {
                                 row[j] = nextX;
                             }
@@ -208,11 +200,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 for (let j = 0, start = 0; j < column.length; j++) {
                     const item = column[j];
                     const rowCount = column.length;
-                    let rowData = children[j];
-                    if (rowData === undefined) {
-                        rowData = [];
-                        children[j] = rowData;
-                    }
+                    const rowData = safeNestedArray(children, j);
                      if (!item['spacer']) {
                         const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(GRID, 'cellData'));
                         let rowSpan = 1;
@@ -245,11 +233,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                 if (!assigned.has(sibling) && sibling.visible && !sibling.rendered) {
                                     const linear = sibling.linear;
                                     if (aboveRange(linear.left, item.linear.right) && belowRange(linear.right, columnEnd[l])) {
-                                        let siblings = data.siblings;
-                                        if (siblings === undefined) {
-                                            siblings = [];
-                                            data.siblings = siblings;
-                                        }
+                                        const siblings = safeNestedArray(data, 'siblings');
                                         siblings.push(sibling);
                                     }
                                 }
