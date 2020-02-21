@@ -26,7 +26,7 @@ function formatObject(obj: {}, numberAlias = false) {
                 if (value) {
                     switch (attr) {
                         case 'text':
-                            if (/^@string\//.test(value)) {
+                            if (value.startsWith('@string/')) {
                                 continue;
                             }
                             value = Resource.addString(value, '', numberAlias);
@@ -75,57 +75,54 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return value.replace(REGEX_NONWORD, '_');
     }
 
-    public static addTheme(...values: StyleAttribute[]) {
+    public static addTheme(theme: StyleAttribute, path = 'res/values', file = 'themes.xml') {
         const themes = STORED.themes;
-        for (const theme of values) {
-            const { items, output } = theme;
-            let path = 'res/values';
-            let file = 'themes.xml';
-            if (output) {
-                if (isString(output.path)) {
-                    path = output.path.trim();
-                }
-                if (isString(output.file)) {
-                    file = output.file.trim();
-                }
+        const { items, output } = theme;
+        if (output) {
+            if (isString(output.path)) {
+                path = output.path.trim();
             }
-            const filename = trimString(path, '/') + '/' + trimString(file, '/');
-            const storedFile = themes.get(filename) || new Map<string, StyleAttribute>();
-            let name = theme.name;
-            let appTheme = '';
-            if (name === '' || name.charAt(0) === '.') {
-                found: {
-                    for (const data of themes.values()) {
-                        for (const style of data.values()) {
-                            if (style.name) {
-                                appTheme = style.name;
-                                break found;
-                            }
+            if (isString(output.file)) {
+                file = output.file.trim();
+            }
+        }
+        const filename = trimString(path, '/') + '/' + trimString(file, '/');
+        const storedFile = themes.get(filename) || new Map<string, StyleAttribute>();
+        let name = theme.name;
+        let appTheme = '';
+        if (name === '' || name.charAt(0) === '.') {
+            found: {
+                for (const data of themes.values()) {
+                    for (const style of data.values()) {
+                        if (style.name) {
+                            appTheme = style.name;
+                            break found;
                         }
                     }
                 }
-                if (appTheme === '') {
-                    continue;
-                }
             }
-            else {
-                appTheme = name;
+            if (appTheme === '') {
+                return false;
             }
-            name = appTheme + (name.charAt(0) === '.' ? name : '');
-            theme.name = name;
-            Resource.formatOptions(items);
-            const storedTheme = <StyleAttribute> storedFile.get(name);
-            if (storedTheme) {
-                const storedItems = storedTheme.items;
-                for (const attr in items) {
-                    storedItems[attr] = items[attr];
-                }
-            }
-            else {
-                storedFile.set(name, theme);
-            }
-            themes.set(filename, storedFile);
         }
+        else {
+            appTheme = name;
+        }
+        name = appTheme + (name.charAt(0) === '.' ? name : '');
+        theme.name = name;
+        Resource.formatOptions(items);
+        const storedTheme = <StyleAttribute> storedFile.get(name);
+        if (storedTheme) {
+            const storedItems = storedTheme.items;
+            for (const attr in items) {
+                storedItems[attr] = items[attr];
+            }
+        }
+        else {
+            storedFile.set(name, theme);
+        }
+        themes.set(filename, storedFile);
+        return true;
     }
 
     public static addString(value: string, name = '', numberAlias = false) {

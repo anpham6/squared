@@ -5,7 +5,7 @@ import Resource from '../../resource';
 import ResourceSvg from './svg';
 import View from '../../view';
 
-import { EXT_ANDROID, STRING_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
+import { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
 import LAYERLIST_TMPL from '../../template/layer-list';
@@ -470,7 +470,7 @@ const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColor
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 const constrictedWidth = (node: View) => !node.inline && !node.floating && node.hasPX('width', true, true) && node.cssInitial('width') !== '100%';
-const isCenterAlignment = (horizontal: string, vertical: string) => horizontal === STRING_ANDROID.CENTER_HORIZONTAL && vertical === STRING_ANDROID.CENTER_VERTICAL;
+const isCenterAlignment = (horizontal: string, vertical: string) => horizontal === 'center_horizontal' && vertical === 'center_vertical';
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     return objectMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
@@ -520,8 +520,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             });
             themeBackground = true;
         };
-        const deleteBodyWrapper = (wrapper: T, node: T) => {
-            if (node !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING)) {
+        const deleteBodyWrapper = (body: T, wrapper: T) => {
+            if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0 && !body.hasPX('maxWidth')) {
                 const children = wrapper.renderChildren;
                 if (children.length === 1) {
                     wrapper.removeTry(children[0]);
@@ -536,7 +536,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (innerWrapped.documentBody) {
                         if (!setHtmlBackground(node) && node.documentRoot && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY) && node.css('backgroundImage') !== 'none') {
                             setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
-                            deleteBodyWrapper(node, innerWrapped);
+                            deleteBodyWrapper(innerWrapped, node);
                             return;
                         }
                     }
@@ -606,7 +606,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 const innerWrapped = node.innerMostWrapped as T;
                                 if (innerWrapped.documentBody) {
                                     setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
-                                    deleteBodyWrapper(node, innerWrapped);
+                                    deleteBodyWrapper(innerWrapped, node);
                                     continue;
                                 }
                             }
@@ -998,7 +998,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             break;
                         case 'center':
                         case '50%':
-                            gravityX = STRING_ANDROID.CENTER_HORIZONTAL;
+                            gravityX = 'center_horizontal';
                             break;
                         case 'right':
                         case '100%':
@@ -1011,7 +1011,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         default: {
                             const percent = position.leftAsPercent;
                             if (percent === 0.5) {
-                                gravityX = STRING_ANDROID.CENTER_HORIZONTAL;
+                                gravityX = 'center_horizontal';
                                 if (padded) {
                                     posLeft = 0;
                                     offsetX = true;
@@ -1042,7 +1042,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             break;
                         case 'center':
                         case '50%':
-                            gravityY = STRING_ANDROID.CENTER_VERTICAL;
+                            gravityY = 'center_vertical';
                             break;
                         case 'bottom':
                         case '100%':
@@ -1055,7 +1055,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         default: {
                             const percent = position.topAsPercent;
                             if (percent === 0.5) {
-                                gravityY = STRING_ANDROID.CENTER_VERTICAL;
+                                gravityY = 'center_vertical';
                                 if (padded) {
                                     posTop = 0;
                                     offsetY = true;
@@ -1210,13 +1210,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     if (ratioWidth > ratioHeight) {
                                         height = getImageRatioHeight();
                                         width = dimenWidth < boundsWidth ? getImageWidth() : boundsWidth;
-                                        gravityY = STRING_ANDROID.CENTER_VERTICAL;
+                                        gravityY = 'center_vertical';
                                         gravityAlign = 'fill_horizontal';
                                     }
                                     else if (ratioWidth < ratioHeight) {
                                         width = getImageRatioWidth();
                                         height = dimenHeight < boundsHeight ? getImageHeight() : boundsHeight;
-                                        gravityX = STRING_ANDROID.CENTER_HORIZONTAL;
+                                        gravityX = 'center_horizontal';
                                         gravityAlign = 'fill_vertical';
                                     }
                                     else {
@@ -1354,7 +1354,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                                 posLeft = NaN;
                                                 posRight = 0;
                                                 break;
-                                            case STRING_ANDROID.CENTER_HORIZONTAL:
+                                            case 'center_horizontal':
                                                 gravityX += '|fill_vertical';
                                                 break;
                                             case 'right':
@@ -1411,7 +1411,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                                 posTop = NaN;
                                                 posBottom = 0;
                                                 break;
-                                            case STRING_ANDROID.CENTER_VERTICAL:
+                                            case 'center_vertical':
                                                 gravityY += '|fill_horizontal';
                                                 break;
                                             case 'bottom':
@@ -1473,8 +1473,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                     gravityY = '';
                                     break;
+                                case 'center_vertical':
+                                    tileModeX = '';
+                                    break;
                                 case 'bottom':
-                                case STRING_ANDROID.CENTER_VERTICAL:
                                     if (width > 0 && !unsizedWidth) {
                                         tileModeX = '';
                                     }
@@ -1496,9 +1498,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                     gravityX = '';
                                     break;
+                                case 'center_horizontal':
+                                    tileModeY = '';
+                                    break;
                                 case 'right':
                                 case 'end':
-                                case STRING_ANDROID.CENTER_HORIZONTAL:
                                     if (height > 0 && !unsizedHeight) {
                                         tileModeY = '';
                                     }

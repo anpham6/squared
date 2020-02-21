@@ -32,9 +32,8 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
     public postBaseLayout(node: T) {
         const mainData = <ColumnData<T>> node.data(COLUMN, 'mainData');
         if (mainData) {
-            const { columnCount, columnGap, columnWidth, columnRule, columnSized, boxWidth, rows, multiline } = mainData;
             const application = this.application;
-            const controller = <android.base.Controller<T>> this.controller;
+            const { columnCount, columnGap, columnWidth, columnRule, columnSized, boxWidth, rows, multiline } = mainData;
             const { borderLeftWidth, borderLeftColor, borderLeftStyle } = columnRule;
             const dividerWidth = node.parseUnit(borderLeftWidth);
             const displayBorder = borderLeftStyle !== 'none' && dividerWidth > 0;
@@ -77,7 +76,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                 );
                 return divider;
             };
-            let previousRow: Undef<T | string>;
+            let previousRow!: T;
             const length = rows.length;
             for (let i = 0; i < length; i++) {
                 const row = rows[i];
@@ -88,9 +87,9 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         item.anchor('top', 'parent');
                         item.anchorStyle('vertical', 0);
                     }
-                    else if (previousRow) {
+                    else {
                         previousRow.anchor('bottomTop', item.documentId);
-                        item.anchor('topBottom', typeof previousRow === 'string' ? previousRow : previousRow.documentId);
+                        item.anchor('topBottom', previousRow.documentId);
                     }
                     if (i === length - 1) {
                         item.anchor('bottom', 'parent');
@@ -99,7 +98,6 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         previousRow = row[0];
                     }
                     item.anchorParent('horizontal', item.rightAligned ? 1 : (item.centerAligned ? 0.5 : 0));
-                    item.exclude({ section: APP_SECTION.EXTENSION });
                     item.anchored = true;
                     item.positioned = true;
                 }
@@ -181,6 +179,43 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             }
                         }
                     }
+                    const columnHeight: number[] = new Array(r);
+                    for (let j = 0; j < r; j++) {
+                        const seg = columns[j];
+                        const elements: Element[] = [];
+                        let height = 0;
+                        const s = seg.length;
+                        for (let k = 0; k < s; k++) {
+                            const column = seg[k];
+                            if (column.naturalChild) {
+                                elements.push(<Element> (<Element> column.element).cloneNode(true));
+                            }
+                            else {
+                                height += column.linear.height;
+                            }
+                        }
+                        if (elements.length) {
+                            const container = createElement(document.body, 'div', { width: formatPX(columnWidth || node.box.width / columnMin), visibility: 'hidden' });
+                            for (const element of elements) {
+                                container.appendChild(element);
+                            }
+                            height += container.getBoundingClientRect().height;
+                            document.body.removeChild(container);
+                        }
+                        columnHeight[j] = height;
+                    }
+                    let anchorTop!: T;
+                    let anchorBottom!: T;
+                    let maxHeight = 0;
+                    for (let j = 0; j < r; j++) {
+                        const value = columnHeight[j];
+                        if (value >= maxHeight) {
+                            const column = columns[j];
+                            anchorTop = column[0];
+                            anchorBottom = column[column.length - 1];
+                            maxHeight = value;
+                        }
+                    }
                     for (let j = 0; j < r; j++) {
                         const item = above[j];
                         if (j === 0) {
@@ -199,41 +234,32 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             item.anchor('rightLeft', above[j + 1].documentId);
                         }
                     }
-                    let barrierTop: Undef<string>;
-                    if (i > 0) {
-                        barrierTop = controller.addBarrier(above, 'top');
-                        if (typeof previousRow === 'object') {
-                            previousRow.anchor('bottomTop', barrierTop);
-                        }
-                    }
                     const dividers: T[] = [];
                     for (let j = 0; j < r; j++) {
                         const seg = columns[j];
                         const s = seg.length;
-                        const anchorTop = above[1].documentId;
                         for (let k = 0; k < s; k++) {
                             const item = seg[k];
                             if (k === 0) {
                                 if (j > 0) {
                                     const divider = createColumnRule();
-                                    divider.anchor('top', anchorTop);
+                                    divider.anchor('top', anchorTop.documentId);
                                     divider.anchor('left', columns[j - 1][0].documentId);
                                     divider.anchor('right', item.documentId);
                                     dividers.push(divider);
+                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP);
                                 }
                                 if (i === 0) {
                                     item.anchor('top', 'parent');
                                 }
                                 else {
-                                    if (typeof previousRow === 'string') {
-                                        item.anchor('top', previousRow);
+                                    if (item !== anchorTop) {
+                                        item.anchor('top', anchorTop.documentId);
                                     }
-                                    else if (barrierTop) {
-                                        item.anchor('top', barrierTop);
+                                    else {
+                                        previousRow.anchor('bottomTop', item.documentId);
+                                        item.anchor('topBottom', previousRow.documentId);
                                     }
-                                }
-                                if (j > 0) {
-                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP);
                                 }
                                 item.anchorStyle('vertical', 0);
                             }
@@ -241,8 +267,8 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 const previous = seg[k - 1];
                                 previous.anchor('bottomTop', item.documentId);
                                 item.anchor('topBottom', previous.documentId);
-                                item.anchor('left', seg[0].documentId);
                                 item.app('layout_constraintVertical_bias', '0');
+                                item.anchor('left', seg[0].documentId);
                             }
                             if (k === s - 1) {
                                 if (i === length - 1) {
@@ -252,64 +278,11 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             }
                         }
                     }
-                    if (i < length - 1) {
-                        if (columns.every(item => item.length === 1)) {
-                            const barrier: T[] = [];
-                            for (const item of columns) {
-                                barrier.push(item[0]);
-                            }
-                            previousRow = controller.addBarrier(barrier, 'bottom');
-                            for (const item of barrier) {
-                                item.anchor('bottomTop', previousRow);
-                            }
-                            for (const item of dividers) {
-                                item.anchor('bottom', previousRow);
-                            }
-                        }
-                        else {
-                            const columnHeight: number[] = new Array(r);
-                            for (let j = 0; j < r; j++) {
-                                const seg = columns[j];
-                                const elements: Element[] = [];
-                                let height = 0;
-                                const s = seg.length;
-                                for (let k = 0; k < s; k++) {
-                                    const column = seg[k];
-                                    if (column.naturalChild) {
-                                        elements.push(<Element> (<Element> column.element).cloneNode(true));
-                                    }
-                                    else {
-                                        height += column.linear.height;
-                                    }
-                                }
-                                if (elements.length) {
-                                    const container = createElement(document.body, 'div', { width: formatPX(columnWidth || node.box.width / columnMin), visibility: 'hidden' });
-                                    for (const element of elements) {
-                                        container.appendChild(element);
-                                    }
-                                    height += container.getBoundingClientRect().height;
-                                    document.body.removeChild(container);
-                                }
-                                columnHeight[j] = height;
-                            }
-                            let maxHeight = 0;
-                            for (let j = 0; j < r; j++) {
-                                const value = columnHeight[j];
-                                if (value >= maxHeight) {
-                                    previousRow = columns[j].pop();
-                                    maxHeight = value;
-                                }
-                            }
-                            for (const item of dividers) {
-                                item.anchor('bottom', (previousRow as T).documentId);
-                            }
-                        }
+                    const documentId = i < length - 1 ? anchorBottom.documentId : 'parent';
+                    for (const item of dividers) {
+                        item.anchor('bottom', documentId);
                     }
-                    else {
-                        for (const item of dividers) {
-                            item.anchor('bottom', 'parent');
-                        }
-                    }
+                    previousRow = anchorBottom;
                 }
             }
         }

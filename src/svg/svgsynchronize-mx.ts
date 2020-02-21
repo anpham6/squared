@@ -835,8 +835,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                 const groupActive = new Set<string>();
                 let setterTotal = 0;
                 const insertSetter = (item: SvgAnimation) => {
-                    const setter = safeNestedArray(setterAttributeMap, item.attributeName);
-                    setter.push(item);
+                    safeNestedArray(setterAttributeMap, item.attributeName).push(item);
                     setterTotal++;
                 };
                 {
@@ -1079,8 +1078,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             }
                             const forwardItem = getForwardItem(forwardMap, attr);
                             if (value !== '' && (forwardItem === undefined || time >= forwardItem.time)) {
-                                const map = safeNestedArray(forwardMap, attr);
-                                map.push({ key: type, value, time });
+                                safeNestedArray(forwardMap, attr).push({ key: type, value, time });
                             }
                             if (item && SvgBuild.isAnimate(item) && !item.fillReplace) {
                                 if (item.fillForwards) {
@@ -1993,8 +1991,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                 if (animate.type !== SVGTransform.SVG_TRANSFORM_ROTATE) {
                                                     const transformOrigin = transformOriginMap.get(entry[0]);
                                                     if (transformOrigin) {
-                                                        const item = safeNestedArray(<StandardMap> animate, 'transformOrigin');
-                                                        item[j] = transformOrigin;
+                                                        safeNestedArray(<StandardMap> animate, 'transformOrigin')[j] = transformOrigin;
                                                     }
                                                 }
                                                 entry[0] -= delay;

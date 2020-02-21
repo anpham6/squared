@@ -73,7 +73,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected _cascadeAll = false;
     protected _cache: squared.base.NodeList<T>;
-    protected _nodeAfterInsert: BindGeneric<Node, void>;
+    protected _afterInsertNode: BindGeneric<Node, void>;
 
     private readonly _controllerHandler: Controller<T>;
     private readonly _resourceHandler: Resource<T>;
@@ -86,14 +86,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         ResourceConstructor: Constructor<T>,
         ExtensionManagerConstructor: Constructor<T>)
     {
-        this.Node = nodeConstructor;
         const cache = this.processing.cache;
         this._cache = cache;
-        const controllerHandler = <Controller<T>> (new ControllerConstructor(this, cache) as unknown);
-        this._controllerHandler = controllerHandler;
+        this._controllerHandler = <Controller<T>> (new ControllerConstructor(this, cache) as unknown);
         this._resourceHandler = <Resource<T>> (new ResourceConstructor(this, cache) as unknown);
         this._extensionManager = <ExtensionManager<T>> (new ExtensionManagerConstructor(this, cache) as unknown);
-        this._nodeAfterInsert = controllerHandler.afterInsertNode;
+        this._afterInsertNode = this._controllerHandler.afterInsertNode;
+        this.Node = nodeConstructor;
     }
 
     public abstract createNode(options: {}): T;
@@ -214,7 +213,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         for (const [uri, data] of rawData.entries()) {
             const mimeType = data.mimeType;
-            if (isString(mimeType) && /^image\//.test(mimeType) && !/svg\+xml$/.test(mimeType)) {
+            if (mimeType?.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
                 const element = document.createElement('img');
                 element.src = 'data:' + mimeType + ';' + (data.base64 ? 'base64,' + data.base64 : data.content);
                 const { naturalWidth: width, naturalHeight: height } = element;
@@ -330,7 +329,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const extensions = this.extensionsCascade;
         const node = this.cascadeParentNode(element, 0, extensions.length ? extensions : undefined);
         if (node) {
-            const parent = new this.Node(0, processing.sessionId, element.parentElement || document.body, this._nodeAfterInsert);
+            const parent = new this.Node(0, processing.sessionId, element.parentElement || document.body, this._afterInsertNode);
             node.parent = parent;
             node.actualParent = parent;
             node.childIndex = 0;

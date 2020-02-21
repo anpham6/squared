@@ -664,7 +664,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     node.mergeGravity('layout_gravity', 'right');
                 }
                 else if (justifySelf === 'center') {
-                    node.mergeGravity('layout_gravity', STRING_ANDROID.CENTER_HORIZONTAL);
+                    node.mergeGravity('layout_gravity', 'center_horizontal');
                 }
                 else {
                     inlineWidth = false;
@@ -679,7 +679,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     node.mergeGravity('layout_gravity', 'bottom');
                 }
                 else if (alignSelf === 'center') {
-                    node.mergeGravity('layout_gravity', STRING_ANDROID.CENTER_VERTICAL);
+                    node.mergeGravity('layout_gravity', 'center_vertical');
                 }
                 else if (!node.hasHeight) {
                     node.setLayoutHeight('match_parent', false);

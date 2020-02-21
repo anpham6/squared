@@ -266,9 +266,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         openCells[i] = cell;
                     }
                     for ( ; j < placement[colB] - 1; j++) {
-                        const rowItem = safeNestedArray(data as T[][], j);
+                        safeNestedArray(data as T[][], j).push(item);
                         cell[j] = 1;
-                        rowItem.push(item);
                     }
                 }
                 return true;
@@ -290,8 +289,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         case 1:
                             if (command.charAt(0) === '[') {
                                 for (const attr of match[4].split(CHAR.SPACE)) {
-                                    const item = safeNestedArray(name, attr);
-                                    item.push(i);
+                                    safeNestedArray(name, attr).push(i);
                                 }
                             }
                             else if (/^repeat/.test(command)) {
@@ -974,8 +972,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     const data = rowData[i];
                     const q = data.length;
                     for (let j = 0; j < q; j++) {
-                        const rowItem = safeNestedArray(rowMain, j);
-                        rowItem[i] = data[j];
+                        safeNestedArray(rowMain, j)[i] = data[j];
                     }
                 }
             }

@@ -6,7 +6,7 @@ import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
 
-import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, STRING_ANDROID } from './lib/constant';
+import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { createViewAttribute, getDocumentId, getRootNs } from './lib/util';
 
@@ -354,19 +354,13 @@ function setVerticalAlignment(node: View, biasOnly = false) {
     }
 }
 
-function getAnchorDirection(reverse = false) {
-    if (reverse) {
-        return { anchorStart: 'right', anchorEnd: 'left', chainStart: 'rightLeft', chainEnd: 'leftRight' };
-    }
-    return { anchorStart: 'left', anchorEnd: 'right', chainStart: 'leftRight', chainEnd: 'rightLeft' };
-}
-
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
-const isConstraintLayout = (layout: LayoutUI) => layout.some(item => item.rightAligned || item.centerAligned || item.percentWidth > 0 || item.hasPX('maxWidth'));
-const getVerticalLayout = (layout: LayoutUI) => isConstraintLayout(layout) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
-const getVerticalAlignedLayout = (layout: LayoutUI) => isConstraintLayout(layout) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
+const isConstraintLayout = (layout: LayoutUI, vertical: boolean) => layout.some(item => item.rightAligned || item.centerAligned || item.percentWidth > 0 || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
+const getVerticalLayout = (layout: LayoutUI) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
+const getVerticalAlignedLayout = (layout: LayoutUI) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
+const getAnchorDirection = (reverse = false) => reverse ? { anchorStart: 'right', anchorEnd: 'left', chainStart: 'rightLeft', chainEnd: 'leftRight' } : { anchorStart: 'left', anchorEnd: 'right', chainStart: 'leftRight', chainEnd: 'rightLeft' };
 const isUnknownParent = (parent: View, value: number, length: number) => parent.containerType === value && parent.length === length && (parent.alignmentType === 0 || parent.hasAlign(NODE_ALIGNMENT.UNKNOWN));
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
@@ -514,7 +508,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.setContainerType(getVerticalAlignedLayout(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (this.checkConstraintFloat(layout)) {
-            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, layout.floated.size ? NODE_ALIGNMENT.FLOAT : (isConstraintLayout(layout) ? NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN : 0));
+            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, layout.floated.size ? NODE_ALIGNMENT.FLOAT : NODE_ALIGNMENT.UNKNOWN);
         }
         else if (layout.linearX || layout.singleRowAligned) {
             if (this.checkFrameHorizontal(layout)) {
@@ -531,7 +525,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else {
-                layout.setContainerType(isConstraintLayout(layout) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.RELATIVE);
+                layout.setContainerType(isConstraintLayout(layout, false) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.RELATIVE);
             }
             layout.add(NODE_ALIGNMENT.HORIZONTAL);
         }
@@ -799,7 +793,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     continue;
                 }
                 else {
-                    if (A && !(node.floating || node.autoMargin.horizontal || node.inlineDimension || node.imageOrSvgElement || node.marginTop < 0)) {
+                    if (A && !(node.floating || node.autoMargin.horizontal || node.inlineDimension && !node.inputElement && !node.controlElement || node.imageOrSvgElement || node.marginTop < 0)) {
                         A = false;
                     }
                     if (B && node.percentWidth === 0) {
@@ -827,10 +821,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 valid = floated.size === 0 || floated.has('right') && floated.size === 1 && layout.cleared.size === 0;
                 break;
         }
-        if (valid || layout.some(node => node.blockVertical || node.percentWidth > 0  || node.marginTop < 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight)) {
-            return layout.singleRowAligned;
-        }
-        return false;
+        return (valid || layout.some(node => node.blockVertical || node.percentWidth > 0 && !node.inputElement && !node.controlElement || node.marginTop < 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight)) && layout.singleRowAligned;
     }
 
     public checkLinearHorizontal(layout: squared.base.LayoutUI<T>) {
@@ -1200,7 +1191,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.android('minLines', rows > 0 ? rows.toString() : '2');
                 switch (node.css('verticalAlign')) {
                     case 'middle':
-                        node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
+                        node.mergeGravity('gravity', 'center_vertical');
                         break;
                     case 'bottom':
                         node.mergeGravity('gravity', 'bottom');
@@ -1317,7 +1308,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!node.hasHeight) {
                     node.android('minHeight', formatPX(Math.ceil(node.actualHeight)));
                 }
-                node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
+                node.mergeGravity('gravity', 'center_vertical');
                 setReadOnly(node);
                 break;
             case CONTAINER_ANDROID.SELECT:
@@ -2606,12 +2597,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 else if (partition.length === 1) {
-                    rowStart.anchor(anchorEnd, 'parent');
                     rowStart.anchorStyle('horizontal', rowStart.centerAligned ? 0.5 : (rowStart.rightAligned ? 1 : 0));
                 }
-                if (q > 1 || rowEnd.autoMargin.leftRight) {
-                    rowEnd.anchor(anchorEnd, 'parent');
-                }
+                rowEnd.anchor(anchorEnd, 'parent');
                 let percentWidth = View.availablePercent(partition, 'width', node.box.width);
                 tallest = undefined;
                 for (let j = 0; j < q; j++) {
@@ -2769,7 +2757,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     get containerTypeVertical(): LayoutType {
         return {
-            containerType: CONTAINER_NODE.LINEAR,
+            containerType: CONTAINER_NODE.CONSTRAINT,
             alignmentType: NODE_ALIGNMENT.VERTICAL
         };
     }

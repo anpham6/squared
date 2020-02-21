@@ -29,9 +29,7 @@ function createNamespaceData(namespace: string, node: View, group: ObjectMap<Vie
         if (attr !== 'text') {
             const value = obj[attr];
             if (REGEX_UNIT.test(value)) {
-                const dimen = `${namespace},${attr},${value}`;
-                const data = safeNestedArray(group, dimen);
-                data.push(node);
+                safeNestedArray(group, `${namespace},${attr},${value}`).push(node);
             }
         }
     }

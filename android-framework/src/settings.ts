@@ -6,7 +6,6 @@ const settings: UserSettingsAndroid = {
         'android.delegate.max-width-height',
         'android.delegate.percent',
         'android.delegate.negative-x',
-        'android.delegate.negative-viewport',
         'android.delegate.fixed',
         'android.delegate.css-grid',
         'android.delegate.scrollbar',

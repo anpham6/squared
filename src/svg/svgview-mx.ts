@@ -216,8 +216,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                             value = parseVar(element, value);
                                         }
                                         if (value !== undefined) {
-                                            const section = safeNestedArray(ANIMATION_DEFAULT[name] ? keyframeMap : attrMap, name);
-                                            section.push({ key, value: value.toString() });
+                                            safeNestedArray(ANIMATION_DEFAULT[name] ? keyframeMap : attrMap, name).push({ key, value: value.toString() });
                                         }
                                     }
                                 }
@@ -406,8 +405,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         }
                                         const transformOrigin = item.transformOrigin;
                                         if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
-                                            const origin = safeNestedArray(<StandardMap> animate, 'transformOrigin');
-                                            origin[j] = transformOrigin;
+                                            safeNestedArray(<StandardMap> animate, 'transformOrigin')[j] = transformOrigin;
                                         }
                                     }
                                     if (includeKeySplines && !keySplines.every(value => value === 'linear')) {

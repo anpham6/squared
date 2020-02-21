@@ -325,7 +325,10 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             assignEmptyValue(optionsActionBarItems, 'windowNoTitle', 'true');
             assignEmptyValue(optionsAppBar, 'parent', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
             assignEmptyValue(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
-            Resource.addTheme(options, optionsActionBar, optionsAppBar, optionsPopup);
+            Resource.addTheme(options);
+            Resource.addTheme(optionsActionBar);
+            Resource.addTheme(optionsAppBar);
+            Resource.addTheme(optionsPopup);
         }
         const appBar = node.data(WIDGET_NAME.TOOLBAR, 'background');
         if (appBar) {

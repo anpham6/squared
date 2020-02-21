@@ -16,19 +16,26 @@ type NegativeXData = {
     firstChild?: View;
 };
 
-const outsideX = (node: View) => !node.pageFlow && node.leftTopAxis && (node.left < 0 || !node.hasPX('left') && node.right < 0);
+function outsideX(node: View, parent: View) {
+    if (node.pageFlow) {
+        return node.marginLeft < 0 && node === parent.firstChild && node.inlineFlow && !node.centerAligned && !node.rightAligned && Math.abs(node.marginLeft) <= parent.marginLeft + parent.paddingLeft && !parent.some(item => item.multiline);
+    }
+    else {
+        return node.absoluteParent === parent && (node.left < 0 || !node.hasPX('left') && node.right < 0);
+    }
+}
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.pageFlow && !node.documentRoot && node.css('overflowX') !== 'hidden';
+        return !node.documentRoot && node.css('overflowX') !== 'hidden';
     }
 
     public condition(node: T) {
-        return node.some((item: T) => outsideX(item));
+        return node.some((item: T) => outsideX(item, node));
     }
 
     public processNode(node: T, parent: T) {
-        const outside = node.filter((item: T) => outsideX(item)) as T[];
+        const outside = node.filter((item: T) => outsideX(item, node)) as T[];
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, { controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), containerType: CONTAINER_NODE.CONSTRAINT });
         node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
         let left = NaN;

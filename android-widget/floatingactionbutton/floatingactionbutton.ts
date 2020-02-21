@@ -14,7 +14,7 @@ const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.b
 
 const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
 
-const { EXT_ANDROID, STRING_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
+const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
 
 const Resource = android.base.Resource;
@@ -77,7 +77,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
                 gravity.push(node.localizeString('right'));
             }
             else {
-                gravity.push(STRING_ANDROID.CENTER_HORIZONTAL);
+                gravity.push('center_horizontal');
             }
             if (verticalBias < 0.5) {
                 gravity.push('top');
@@ -87,7 +87,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
                 gravity.push('bottom');
             }
             else {
-                gravity.push(STRING_ANDROID.CENTER_VERTICAL);
+                gravity.push('center_vertical');
             }
             for (const value of gravity) {
                 node.mergeGravity('layout_gravity', value);

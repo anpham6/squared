@@ -16,8 +16,12 @@ const { actualClientRect, getElementCache, setElementCache } = $lib.session;
 const { pushIndent, pushIndentArray } = $lib.xml;
 
 function positionAbsolute(style: CSSStyleDeclaration) {
-    const position = style.getPropertyValue('position');
-    return position === 'absolute' || position === 'fixed';
+    switch (style.getPropertyValue('position')) {
+        case 'absolute':
+        case 'fixed':
+            return true;
+    }
+    return false;
 }
 
 const withinViewport = (rect: DOMRect | ClientRect) => !(rect.top + window.scrollY + rect.height < 0 || rect.left + window.scrollX + rect.width < 0);
@@ -101,8 +105,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
                 return false;
             };
-            const setButtonStyle = (appliedBorder: boolean) => {
-                if (appliedBorder) {
+            const setButtonStyle = (applied: boolean) => {
+                if (applied) {
                     const backgroundColor = styleMap.backgroundColor;
                     if (backgroundColor === undefined || backgroundColor === 'initial') {
                         styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
@@ -546,8 +550,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             valid = item.ascend({ condition: child => nested.includes(child) }).length > 0;
                         }
                         if (valid) {
-                            const layer = safeNestedArray(layers, adjacent.containerIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0));
-                            layer.push(item);
+                            safeNestedArray(layers, adjacent.containerIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0)).push(item);
                             break;
                         }
                     }

@@ -28,7 +28,6 @@ import DelegateBackground from './extensions/delegate/background';
 import DelegateCssGrid from './extensions/delegate/cssgrid';
 import DelegateFixed from './extensions/delegate/fixed';
 import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
-import DelegateNegativeViewport from './extensions/delegate/negative-viewport';
 import DelegateNegativeX from './extensions/delegate/negative-x';
 import DelegatePercent from './extensions/delegate/percent';
 import DelegateRadioGroup from './extensions/delegate/radiogroup';
@@ -111,7 +110,6 @@ const appBase: AppFramework<View> = {
             Fixed: DelegateFixed,
             CssGrid: DelegateCssGrid,
             MaxWidthHeight: DelegateMaxWidthHeight,
-            NegativeViewport: DelegateNegativeViewport,
             NegativeX: DelegateNegativeX,
             Percent: DelegatePercent,
             RadioGroup: DelegateRadioGroup,
@@ -347,7 +345,6 @@ const appBase: AppFramework<View> = {
             [EA.DELEGATE_BACKGROUND]: new DelegateBackground(EA.DELEGATE_BACKGROUND, framework),
             [EA.DELEGATE_FIXED]: new DelegateFixed(EA.DELEGATE_FIXED, framework),
             [EA.DELEGATE_MAXWIDTHHEIGHT]: new DelegateMaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, framework),
-            [EA.DELEGATE_NEGATIVEVIEWPORT]: new DelegateNegativeViewport(EA.DELEGATE_NEGATIVEVIEWPORT, framework),
             [EA.DELEGATE_NEGATIVEX]: new DelegateNegativeX(EA.DELEGATE_NEGATIVEX, framework),
             [EA.DELEGATE_PERCENT]: new DelegatePercent(EA.DELEGATE_PERCENT, framework),
             [EA.DELEGATE_CSS_GRID]: new DelegateCssGrid(EA.DELEGATE_CSS_GRID, framework),

@@ -43,8 +43,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         const insertIntervalValue = (keyName: string, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) => {
             if (value) {
                 const mapA = intervalMap[keyName];
-                const data = safeNestedArray(mapA, time);
-                data.push({
+                safeNestedArray(mapA, time).push({
                     time,
                     value,
                     animation,

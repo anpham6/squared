@@ -47,7 +47,7 @@ declare namespace base {
         public static STORED: ResourceStoredMapAndroid;
         public static formatOptions(options: StandardMap, numberAlias?: boolean): StandardMap;
         public static formatName(value: string): string;
-        public static addTheme(...options: StyleAttribute[]): void;
+        public static addTheme(theme: StyleAttribute, path?: string, file?: string): boolean;
         public static addString(value: string, name?: string, numberAlias?: boolean): string;
         public static addImage(images: StringMap, prefix?: string, imageFormat?: string[]): string;
         public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
@@ -147,7 +147,6 @@ declare namespace extensions {
         class Fixed<T extends View> extends squared.base.ExtensionUI<T> {}
         class CssGrid<T extends View> extends squared.base.ExtensionUI<T> {}
         class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {}
-        class NegativeViewport<T extends View> extends squared.base.ExtensionUI<T> {}
         class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {}
         class Percent<T extends View> extends squared.base.ExtensionUI<T> {}
         class RadioGroup<T extends View> extends squared.base.ExtensionUI<T> {}

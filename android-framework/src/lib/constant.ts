@@ -6,7 +6,6 @@ export const EXT_ANDROID = {
     DELEGATE_BACKGROUND: 'android.delegate.background',
     DELEGATE_FIXED: 'android.delegate.fixed',
     DELEGATE_MAXWIDTHHEIGHT: 'android.delegate.max-width-height',
-    DELEGATE_NEGATIVEVIEWPORT: 'android.delegate.negative-viewport',
     DELEGATE_NEGATIVEX: 'android.delegate.negative-x',
     DELEGATE_PERCENT: 'android.delegate.percent',
     DELEGATE_CSS_GRID: 'android.delegate.css-grid',
@@ -110,7 +109,7 @@ export const ELEMENT_ANDROID = {
     INPUT_RESET: CONTAINER_NODE.BUTTON,
     INPUT_CHECKBOX: CONTAINER_NODE.CHECKBOX,
     INPUT_RADIO: CONTAINER_NODE.RADIO,
-    'INPUT_DATETIME-LOCAL': CONTAINER_NODE.EDIT
+    'INPUT_DATETIME_LOCAL': CONTAINER_NODE.EDIT
 };
 
 export const LAYOUT_ANDROID = {
@@ -167,9 +166,7 @@ export const STRING_ANDROID = {
     PADDING_TOP: 'paddingTop',
     PADDING_RIGHT: 'paddingRight',
     PADDING_BOTTOM: 'paddingBottom',
-    PADDING_LEFT: 'paddingLeft',
-    CENTER_HORIZONTAL: 'center_horizontal',
-    CENTER_VERTICAL: 'center_vertical'
+    PADDING_LEFT: 'paddingLeft'
 };
 
 export const LOCALIZE_ANDROID = {

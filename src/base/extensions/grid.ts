@@ -73,9 +73,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         for (const row of node) {
             for (const column of row) {
                 if ((column as T).visible) {
-                    const x = Math.floor(column.linear.left);
-                    const map = safeNestedArray(nextMapX, x);
-                    map.push(column as T);
+                    safeNestedArray(nextMapX, Math.floor(column.linear.left)).push(column as T);
                 }
             }
         }
@@ -233,8 +231,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                 if (!assigned.has(sibling) && sibling.visible && !sibling.rendered) {
                                     const linear = sibling.linear;
                                     if (aboveRange(linear.left, item.linear.right) && belowRange(linear.right, columnEnd[l])) {
-                                        const siblings = safeNestedArray(data, 'siblings');
-                                        siblings.push(sibling);
+                                        safeNestedArray(data, 'siblings').push(sibling);
                                     }
                                 }
                             }

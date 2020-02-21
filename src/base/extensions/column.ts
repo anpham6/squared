@@ -3,6 +3,7 @@ import { ColumnData } from '../../../@types/base/extension';
 import ExtensionUI from '../extension-ui';
 
 import { EXT_NAME } from '../lib/constant';
+import { APP_SECTION } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
 
@@ -42,6 +43,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 items.push(item);
             }
+            item.exclude({ section: APP_SECTION.EXTENSION });
         });
         if (items.length === 0) {
             rows.pop();

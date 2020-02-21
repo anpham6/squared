@@ -1250,8 +1250,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                             parentY = result.parent || parentY;
                                             if (result.include) {
-                                                const renderExt = safeNestedArray(<StandardMap> nodeY, 'renderExtension');
-                                                renderExt.push(ext);
+                                                safeNestedArray(<StandardMap> nodeY, 'renderExtension').push(ext);
                                                 ext.subscribers.add(nodeY);
                                             }
                                             else if (result.subscribe) {

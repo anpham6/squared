@@ -130,8 +130,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         let cache: T[] = [];
         for (const node of this.cache) {
             if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE.FONT_STYLE)) {
-                const map = safeNestedArray(nameMap, node.containerName);
-                map.push(node);
+                safeNestedArray(nameMap, node.containerName).push(node);
             }
         }
         for (const tag in nameMap) {
@@ -216,9 +215,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (i === 3 && convertPixels) {
                             value = convertLength(value, true);
                         }
-                        const attr = FONT_STYLE[key] + value + '"';
-                        const dataAttr = safeNestedArray(safeNestedMap(sorted, i), attr);
-                        dataAttr.push(id);
+                        safeNestedArray(safeNestedMap(sorted, i), FONT_STYLE[key] + value + '"').push(id);
                     }
                 }
             }
@@ -290,8 +287,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                         if (compare.length) {
                                             for (const id of ids) {
                                                 if (compare.includes(id)) {
-                                                    const dataC = safeNestedArray(found, attr);
-                                                    dataC.push(id);
+                                                    safeNestedArray(found, attr).push(id);
                                                 }
                                             }
                                         }
@@ -410,8 +406,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 const ids = group.ids;
                 if (ids) {
                     for (const id of ids) {
-                        const map = safeNestedArray(nodeMap, id);
-                        map.push(group.name);
+                        safeNestedArray(nodeMap, id).push(group.name);
                     }
                 }
             }

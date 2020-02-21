@@ -3,7 +3,7 @@ import { ViewAttribute } from '../../../@types/android/node';
 
 type View = android.base.View;
 
-import { LOCALIZE_ANDROID, STRING_ANDROID, XMLNS_ANDROID } from './constant';
+import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
 
 const $lib = squared.lib;
@@ -40,7 +40,7 @@ export function isHorizontalAlign(value: string) {
         case 'start':
         case 'right':
         case 'end':
-        case STRING_ANDROID.CENTER_HORIZONTAL:
+        case 'center_horizontal':
             return true;
     }
     return false;
@@ -50,7 +50,7 @@ export function isVerticalAlign(value: string) {
     switch (value) {
         case 'top':
         case 'bottom':
-        case STRING_ANDROID.CENTER_VERTICAL:
+        case 'center_vertical':
             return true;
     }
     return false;

@@ -1,12 +1,11 @@
 import { NodeXmlTemplate } from '../../../../@types/base/application';
 import { VisibleStyle } from '../../../../@types/base/node';
 
-import { CONTAINER_ANDROID } from '../../lib/constant';
+import View from '../../view';
+
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
-
-type View = android.base.View;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -43,8 +42,8 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         let container: Undef<T>;
         let parentAs!: T;
         const createFrameWrapper = (wrapper: T) => {
-            wrapper.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
-            wrapper.addAlign(NODE_ALIGNMENT.SINGLE);
+            wrapper.setControlType(View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), CONTAINER_NODE.CONSTRAINT);
+            wrapper.addAlign(NODE_ALIGNMENT.VERTICAL);
             wrapper.render(renderParent);
             this.application.addLayoutTemplate(
                 renderParent,
@@ -135,8 +134,8 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                     new LayoutUI(
                         parentAs || parent,
                         container,
-                        CONTAINER_NODE.FRAME,
-                        NODE_ALIGNMENT.SINGLE,
+                        CONTAINER_NODE.CONSTRAINT,
+                        NODE_ALIGNMENT.VERTICAL,
                         container.children as T[]
                     )
                 ),

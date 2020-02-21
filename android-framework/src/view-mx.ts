@@ -40,7 +40,7 @@ function checkTextAlign(value: string, ignoreStart: boolean) {
         case 'start':
             return !ignoreStart ? value : '';
         case 'center':
-            return STRING_ANDROID.CENTER_HORIZONTAL;
+            return 'center_horizontal';
         case 'justify':
         case 'initial':
         case 'inherit':
@@ -64,7 +64,7 @@ function setAutoMargin(node: T, autoMargin: AutoMargin) {
     if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerMostWrapped.has('width', CSS_UNIT.PERCENT, { not: '100%' }))) {
         node.mergeGravity(
             (node.blockWidth || !node.pageFlow) && node.outerWrapper === undefined ? 'gravity' : 'layout_gravity',
-            autoMargin.leftRight ? STRING_ANDROID.CENTER_HORIZONTAL : (autoMargin.left ? 'right' : 'left')
+            autoMargin.leftRight ? 'center_horizontal' : (autoMargin.left ? 'right' : 'left')
         );
         return true;
     }
@@ -120,7 +120,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                     const numberOfLines = node.bounds.numberOfLines as number;
                     if (numberOfLines > 1) {
                         node.android('minHeight', formatPX(height / numberOfLines));
-                        node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL);
+                        node.mergeGravity('gravity', 'center_vertical');
                         return;
                     }
                 }
@@ -147,7 +147,7 @@ function setMinHeight(node: T, value: number) {
     if (node.inlineText) {
         value += node.contentBoxHeight;
         if (!node.hasPX('height') || value >= Math.floor(node.height)) {
-            node.mergeGravity('gravity', STRING_ANDROID.CENTER_VERTICAL, false);
+            node.mergeGravity('gravity', 'center_vertical', false);
         }
     }
     if (value > node.height) {
@@ -1015,10 +1015,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public setControlType(controlName: string, containerType?: number) {
             this.controlName = controlName;
             if (containerType) {
-                this.containerType = containerType;
+                this._containerType = containerType;
             }
-            else if (this.containerType === 0) {
-                this.containerType = CONTAINER_NODE.UNKNOWN;
+            else if (this._containerType === 0) {
+                this._containerType = CONTAINER_NODE.UNKNOWN;
             }
         }
 
@@ -1386,7 +1386,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             node.mergeGravity(gravity, 'top');
                             break;
                         case 'middle':
-                            node.mergeGravity(gravity, STRING_ANDROID.CENTER_VERTICAL);
+                            node.mergeGravity(gravity, 'center_vertical');
                             break;
                         case 'bottom':
                             node.mergeGravity(gravity, 'bottom');
@@ -1449,7 +1449,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 gravity = 'bottom';
                                 break;
                             default:
-                                gravity = STRING_ANDROID.CENTER_VERTICAL;
+                                gravity = 'center_vertical';
                                 break;
                         }
                         this.mergeGravity('layout_gravity', gravity);
@@ -1490,7 +1490,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             if (autoMargin.vertical && (renderParent.layoutFrame || renderParent.layoutVertical && renderParent.layoutLinear)) {
-                node.mergeGravity('layout_gravity', autoMargin.topBottom ? STRING_ANDROID.CENTER_VERTICAL : (autoMargin.top ? 'bottom' : 'top'));
+                node.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : (autoMargin.top ? 'bottom' : 'top'));
             }
         }
 
@@ -1502,7 +1502,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         return;
                     }
                     else if (renderParent.layoutRelative) {
-                        if (alignment === STRING_ANDROID.CENTER_HORIZONTAL && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
+                        if (alignment === 'center_horizontal' && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
                             this.anchorDelete('left', 'right');
                             this.anchor('centerHorizontal', 'true');
                             return;
@@ -1529,7 +1529,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         this.anchor('left', 'parent', false);
                                     }
                                     break;
-                                case STRING_ANDROID.CENTER_HORIZONTAL:
+                                case 'center_horizontal':
                                     if (this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
                                         this.anchorParent('horizontal', 0.5);
                                     }

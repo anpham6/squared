@@ -114,7 +114,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             hideCell(section);
         }
         inheritStyles(tfoot);
-        const [horizontal, vertical] = mainData.borderCollapse ? [0, 0] : replaceMap<string, number>(node.css('borderSpacing').split(' '), (value, index) => node.parseUnit(value, index === 0 ? 'width' : 'height'));
+        const borderCollapse = mainData.borderCollapse;
+        const [horizontal, vertical] = borderCollapse ? [0, 0] : replaceMap<string, number>(node.css('borderSpacing').split(' '), (value, index) => node.parseUnit(value, index === 0 ? 'width' : 'height'));
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const colgroup = (<Element> node.element).querySelector('COLGROUP');
@@ -180,7 +181,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             td.css('backgroundImage', backgroundImage, true);
                         }
                         if (backgroundColor && !REGEX_BACKGROUND.test(backgroundColor)) {
-                            td.css('backgroundColor', backgroundColor, true);
+                            td.css('backgroundColor', backgroundColor);
+                            td.setCacheValue('backgroundColor', backgroundColor);
                         }
                     }
                     else {
@@ -190,7 +192,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         value = getInheritedStyle(element, 'backgroundColor', REGEX_BACKGROUND, 'TABLE');
                         if (value !== '') {
-                            td.css('backgroundColor', value, true);
+                            td.css('backgroundColor', value);
+                            td.setCacheValue('backgroundColor', value);
                         }
                     }
                 }
@@ -476,19 +479,21 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const borderLeft = node.cssAsObject('borderLeftColor', 'borderLeftStyle', 'borderLeftWidth');
             const borderTopWidth = parseInt(borderTop.borderTopWidth);
             const borderRightWidth = parseInt(borderRight.borderRightWidth);
-            const borderBottomWidth = parseInt(borderRight.borderBottomWidth);
+            const borderBottomWidth = parseInt(borderBottom.borderBottomWidth);
             const borderLeftWidth = parseInt(borderLeft.borderLeftWidth);
             let hideTop = false;
             let hideRight = false;
             let hideBottom = false;
             let hideLeft = false;
             for (let i = 0; i < rowCount; i++) {
+                const tr = tableFilled[i];
                 for (let j = 0; j < columnCount; j++) {
-                    const td = tableFilled[i][j];
+                    const td = tr[j];
                     if (td?.css('visibility') === 'visible') {
                         if (i === 0) {
                             if (td.borderTopWidth < borderTopWidth) {
-                                td.cssApply(borderTop, true);
+                                td.cssApply(borderTop);
+                                td.unsetCache('borderTopWidth');
                             }
                             else {
                                 hideTop = true;
@@ -507,7 +512,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (i === rowCount - 1) {
                             if (td.borderBottomWidth < borderBottomWidth) {
-                                td.cssApply(borderBottom, true);
+                                td.cssApply(borderBottom);
+                                td.unsetCache('borderBottomWidth');
                             }
                             else {
                                 hideBottom = true;
@@ -515,14 +521,15 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (j === 0) {
                             if (td.borderLeftWidth < borderLeftWidth) {
-                                td.cssApply(borderLeft, true);
+                                td.cssApply(borderLeft);
+                                td.unsetCache('borderLeftWidth');
                             }
                             else {
                                 hideLeft = true;
                             }
                         }
                         if (j >= 0 && j < columnCount - 1) {
-                            const next = tableFilled[i][j + 1];
+                            const next = tr[j + 1];
                             if (next?.css('visibility') === 'visible' && next !== td) {
                                 if (td.borderRightWidth >= next.borderLeftWidth) {
                                     next.css('borderLeftWidth', '0px', true);
@@ -534,7 +541,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (j === columnCount - 1) {
                             if (td.borderRightWidth < borderRightWidth) {
-                                td.cssApply(borderRight, true);
+                                td.cssApply(borderRight);
+                                td.unsetCache('borderRightWidth');
                             }
                             else {
                                 hideRight = true;

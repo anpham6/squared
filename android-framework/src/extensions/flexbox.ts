@@ -2,7 +2,6 @@ import { FlexboxData } from '../../../@types/base/extension';
 
 import View from '../view';
 
-import { STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -474,7 +473,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             if (horizontal) {
                                 if (autoMargin.horizontal) {
                                     if (innerWrapped) {
-                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.leftRight ? STRING_ANDROID.CENTER_HORIZONTAL : chain.localizeString(autoMargin.left ? 'right' : 'left'));
+                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.leftRight ? 'center_horizontal' : chain.localizeString(autoMargin.left ? 'right' : 'left'));
                                         if (growAvailable > 0) {
                                             chain.flexbox.basis = '0%';
                                             layoutWeight.push(chain);
@@ -495,7 +494,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             else {
                                 if (autoMargin.vertical) {
                                     if (innerWrapped) {
-                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.topBottom ? STRING_ANDROID.CENTER_VERTICAL : (chain.localizeString(autoMargin.top ? 'bottom' : 'top')));
+                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : (chain.localizeString(autoMargin.top ? 'bottom' : 'top')));
                                         if (growAvailable > 0) {
                                             chain.flexbox.basis = '0%';
                                             layoutWeight.push(chain);
@@ -560,7 +559,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         case 'space-evenly':
                                         case 'space-around':
                                             if (childContent) {
-                                                childContent.mergeGravity('layout_gravity', horizontal ? STRING_ANDROID.CENTER_VERTICAL : STRING_ANDROID.CENTER_HORIZONTAL);
+                                                childContent.mergeGravity('layout_gravity', horizontal ? 'center_vertical' : 'center_horizontal');
                                             }
                                             else {
                                                 chain.anchorParent(orientationInverse);
@@ -580,7 +579,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             }
                                             else if (length > 2 && i < length - 1) {
                                                 if (childContent) {
-                                                    childContent.mergeGravity('layout_gravity', horizontal ? STRING_ANDROID.CENTER_VERTICAL : STRING_ANDROID.CENTER_HORIZONTAL);
+                                                    childContent.mergeGravity('layout_gravity', horizontal ? 'center_vertical' : 'center_horizontal');
                                                 }
                                                 else {
                                                     chain.anchorParent(orientationInverse);
