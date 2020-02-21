@@ -33,7 +33,8 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
             const children = node.children;
             for (let i = 0; i < length; i++) {
                 const item = children[i] as T;
-                if (item.display === 'list-item' && (item.css('listStyleType') !== 'none' || item.innerBefore) || item.marginLeft < 0 && item.css('listStyleType') === 'none' && hasSingleImage(item.visibleStyle)) {
+                const type = item.css('listStyleType');
+                if (item.display === 'list-item' && (type !== 'none' || item.innerBefore) || item.marginLeft < 0 && type === 'none' && hasSingleImage(item.visibleStyle)) {
                     bulletVisible = true;
                 }
                 if (floating || blockAlternate) {

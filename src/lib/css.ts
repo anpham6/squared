@@ -473,7 +473,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
         vertical: 'top',
         orientation
     };
-    function setImageOffset(position: string, horizontal: boolean, direction: string, directionAsPercent: string) {
+    const setImageOffset = (position: string, horizontal: boolean, direction: string, directionAsPercent: string) => {
         if (imageDimension && !isLength(position)) {
             let offset = result[directionAsPercent];
             if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
@@ -540,7 +540,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, fontS
             }
             result[direction] -= offset;
         }
-    }
+    };
     if (orientation.length === 2) {
         for (let i = 0; i < 2; i++) {
             let position = orientation[i];

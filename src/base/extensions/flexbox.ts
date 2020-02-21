@@ -13,17 +13,16 @@ const FLEXBOX = EXT_NAME.FLEXBOX;
 
 export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute<T extends NodeUI>(node: T, children: T[]): FlexboxData<T> {
-        const wrap = node.css('flexWrap');
-        const direction = node.css('flexDirection');
-        const directionRow = /^row/.test(direction);
+        const { flexWrap, flexDirection, alignContent, justifyContent } = node.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
+        const directionRow = /^row/.test(flexDirection);
         return {
             directionRow,
             directionColumn: !directionRow,
-            directionReverse: /reverse$/.test(direction),
-            wrap: /^wrap/.test(wrap),
-            wrapReverse: wrap === 'wrap-reverse',
-            alignContent: node.css('alignContent'),
-            justifyContent: node.css('justifyContent'),
+            directionReverse: /reverse$/.test(flexDirection),
+            wrap: /^wrap/.test(flexWrap),
+            wrapReverse: flexWrap === 'wrap-reverse',
+            alignContent,
+            justifyContent,
             rowCount: 0,
             columnCount: 0,
             children
@@ -66,8 +65,12 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 if (!a[method](b.bounds, 'bounds')) {
                     return linearA[align] < linearB[align] ? -1 : 1;
                 }
-                else if (!withinRange(linearA[sort], linearB[sort])) {
-                    return linearA[sort] < linearB[sort] ? -1 : 1;
+                else {
+                    const posA = linearA[sort];
+                    const posB = linearB[sort];
+                    if (!withinRange(posA, posB)) {
+                        return posA < posB ? -1 : 1;
+                    }
                 }
                 return 0;
             });
@@ -96,10 +99,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     const seg = rows[i];
                     const group = controller.createNodeGroup(seg[0], seg, node, true);
                     group.containerIndex = i;
-                    const box: BoxRectDimension = group.unsafe('box');
-                    if (box) {
-                        box[size] = boxSize;
-                    }
+                    group.box[size] = boxSize;
                     group.addAlign(NODE_ALIGNMENT.SEGMENTED);
                     maxCount = Math.max(seg.length, maxCount);
                 }

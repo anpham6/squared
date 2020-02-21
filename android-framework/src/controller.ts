@@ -857,72 +857,71 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public setConstraints() {
         for (const node of this.cache) {
-            if (node.renderChildren.length === 0 || node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
-                continue;
-            }
-            if (node.layoutRelative) {
-                this.processRelativeHorizontal(node, node.renderChildren as T[]);
-            }
-            else if (node.layoutConstraint) {
-                const renderChildren = node.renderChildren as T[];
-                let j = 0;
-                const length = renderChildren.length;
-                const pageFlow: T[] = new Array(length);
-                for (const item of renderChildren) {
-                    if (!item.positioned) {
-                        if (item.pageFlow || item.autoPosition) {
-                            pageFlow[j++] = item;
-                        }
-                        else {
-                            const constraint = item.constraint;
-                            if (item.outerWrapper === node) {
-                                if (!constraint.horizontal) {
-                                    item.anchorParent('horizontal', 0);
-                                }
-                                if (!constraint.vertical) {
-                                    item.anchorParent('vertical', 0);
-                                }
+            if (node.renderChildren.length > 0 && !node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && node.hasProcedure(NODE_PROCEDURE.CONSTRAINT)) {
+                if (node.layoutRelative) {
+                    this.processRelativeHorizontal(node, node.renderChildren as T[]);
+                }
+                else if (node.layoutConstraint) {
+                    const renderChildren = node.renderChildren as T[];
+                    let j = 0;
+                    const length = renderChildren.length;
+                    const pageFlow: T[] = new Array(length);
+                    for (const item of renderChildren) {
+                        if (!item.positioned) {
+                            if (item.pageFlow || item.autoPosition) {
+                                pageFlow[j++] = item;
                             }
                             else {
-                                if (item.leftTopAxis) {
+                                const constraint = item.constraint;
+                                if (item.outerWrapper === node) {
                                     if (!constraint.horizontal) {
-                                        setLeftTopAxis(item, node, item.hasWidth, true);
+                                        item.anchorParent('horizontal', 0);
                                     }
                                     if (!constraint.vertical) {
-                                        setLeftTopAxis(item, node, item.hasHeight, false);
+                                        item.anchorParent('vertical', 0);
                                     }
                                 }
-                                if (!constraint.horizontal) {
-                                    this.addGuideline(item, node, 'horizontal');
-                                }
-                                if (!constraint.vertical) {
-                                    this.addGuideline(item, node, 'vertical');
+                                else {
+                                    if (item.leftTopAxis) {
+                                        if (!constraint.horizontal) {
+                                            setLeftTopAxis(item, node, item.hasWidth, true);
+                                        }
+                                        if (!constraint.vertical) {
+                                            setLeftTopAxis(item, node, item.hasHeight, false);
+                                        }
+                                    }
+                                    if (!constraint.horizontal) {
+                                        this.addGuideline(item, node, 'horizontal');
+                                    }
+                                    if (!constraint.vertical) {
+                                        this.addGuideline(item, node, 'vertical');
+                                    }
                                 }
                             }
                         }
                     }
-                }
-                if (j > 0) {
-                    pageFlow.length = j;
-                    if (node.layoutHorizontal) {
-                        this.processConstraintHorizontal(node, pageFlow);
-                    }
-                    else if (j > 1) {
-                        this.processConstraintChain(node, pageFlow);
-                    }
-                    else {
-                        const item = pageFlow[0];
-                        const { horizontal, vertical } = item.constraint;
-                        if (!horizontal) {
-                            item.anchorParent('horizontal', item.centerAligned ? 0.5 : (item.rightAligned ? 1 : 0), 'packed', false);
+                    if (j > 0) {
+                        pageFlow.length = j;
+                        if (node.layoutHorizontal) {
+                            this.processConstraintHorizontal(node, pageFlow);
                         }
-                        if (!vertical) {
-                            item.anchorParent('vertical');
-                            setVerticalAlignment(item);
+                        else if (j > 1) {
+                            this.processConstraintChain(node, pageFlow);
                         }
-                        View.setConstraintDimension(item);
+                        else {
+                            const item = pageFlow[0];
+                            const { horizontal, vertical } = item.constraint;
+                            if (!horizontal) {
+                                item.anchorParent('horizontal', item.centerAligned ? 0.5 : (item.rightAligned ? 1 : 0), 'packed', false);
+                            }
+                            if (!vertical) {
+                                item.anchorParent('vertical');
+                                setVerticalAlignment(item);
+                            }
+                            View.setConstraintDimension(item);
+                        }
+                        this.evaluateAnchors(pageFlow);
                     }
-                    this.evaluateAnchors(pageFlow);
                 }
             }
         }

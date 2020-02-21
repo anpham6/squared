@@ -1,4 +1,4 @@
-import { AppNodeUIOptions, AppSessionUI, ControllerUISettings, FileAsset, FileActionOptions, LayoutResult, NodeTemplate, UserUISettings } from '../../@types/base/application';
+import { AppNodeUIOptions, AppSessionUI, ControllerUISettings, FileActionOptions, FileAsset, LayoutResult, NodeTemplate, UserUISettings } from '../../@types/base/application';
 
 import Application from './application';
 import ControllerUI from './controller-ui';
@@ -991,7 +991,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const mapY = new Map<number, Map<number, T>>();
         let extensions = this.extensions.filter(item => !item.eventOnly);
         let maxDepth = 0;
-        function setMapY(depth: number, id: number, node: T) {
+        const setMapY = (depth: number, id: number, node: T) => {
             const index = mapY.get(depth);
             if (index) {
                 index.set(id, node);
@@ -999,13 +999,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             else {
                 mapY.set(depth, new Map<number, T>([[id, node]]));
             }
-        }
-        function removeMapY(node: T) {
-            const index = mapY.get(node.depth);
-            if (index) {
-                index.delete(node.id);
-            }
-        }
+        };
+        const removeMapY = (node: T) => mapY.get(node.depth)?.delete(node.id);
         setMapY(-1, 0, documentRoot.parent as T);
         for (const node of cache) {
             if (node.length) {
@@ -1330,8 +1325,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return a.depth < b.depth ? -1 : 1;
         });
-        session.cache.join(cache);
-        session.excluded.join(processing.excluded);
         for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
                 if (cache.contains(node)) {
@@ -1340,6 +1333,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             ext.afterBaseLayout();
         }
+        session.cache.join(cache);
+        session.excluded.join(processing.excluded);
     }
 
     protected setConstraints() {

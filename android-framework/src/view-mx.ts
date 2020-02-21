@@ -72,28 +72,27 @@ function setAutoMargin(node: T, autoMargin: AutoMargin) {
 }
 
 function setMultiline(node: T, lineHeight: number, overwrite: boolean, autoPadding: boolean) {
+    let offset = NaN;
     if (node.api >= BUILD_ANDROID.PIE) {
         node.android('lineHeight', formatPX(lineHeight), overwrite);
     }
     else {
-        const offset = getLineSpacingExtra(node, lineHeight);
+        offset = getLineSpacingExtra(node, lineHeight);
         if (offset > 0) {
             node.android('lineSpacingExtra', formatPX(offset), overwrite);
         }
     }
-    if (autoPadding && node.styleText && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
-        if (node.cssTry('white-space', 'nowrap')) {
-            const offset = getLineSpacingExtra(node, lineHeight);
-            const upper = Math.round(offset);
-            if (upper > 0) {
-                node.modifyBox(BOX_STANDARD.PADDING_TOP, upper);
-                if (!node.blockStatic) {
-                    node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, Math.floor(offset));
-                }
-            }
-            node.cssFinally('white-space');
+    if (autoPadding) {
+        if (isNaN(offset)) {
+            offset = getLineSpacingExtra(node, lineHeight);
         }
-        node.cssFinally('line-height');
+        const upper = Math.round(offset);
+        if (upper > 0) {
+            node.modifyBox(BOX_STANDARD.PADDING_TOP, upper);
+            if (!node.blockStatic) {
+                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, Math.floor(offset));
+            }
+        }
     }
 }
 
@@ -111,13 +110,9 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
         else {
             let offset = 0;
             let usePadding = true;
-            if (!inlineStyle && node.inlineText && node.styleElement && !node.hasPX('height') && node.cssTry('line-height', 'normal')) {
-                if (node.cssTry('white-space', 'nowrap')) {
-                    offset = getLineSpacingExtra(node, lineHeight);
-                    usePadding = false;
-                    node.cssFinally('white-space');
-                }
-                node.cssFinally('line-height');
+            if (!inlineStyle && node.inlineText && node.styleElement) {
+                offset = getLineSpacingExtra(node, lineHeight);
+                usePadding = false;
             }
             else {
                 const height = node.bounds.height;
@@ -179,11 +174,29 @@ function checkMergableGravity(value: string, direction: Set<string>) {
 }
 
 function getLineSpacingExtra(node: T, lineHeight: number) {
-    let height = Number.POSITIVE_INFINITY;
-    if (node.naturalChild) {
-        height = actualTextRangeRect(<Element> node.element, node.sessionId, false).height;
+    if (node.styleText) {
+        let height = NaN;
+        if (node.cssTry('height', 'auto')) {
+            if (node.cssTry('minHeight', 'auto')) {
+                if (node.cssTry('line-height', 'normal')) {
+                    if (node.cssTry('white-space', 'nowrap')) {
+                        height = actualTextRangeRect(<Element> node.element, node.sessionId, false).height;
+                        node.cssFinally('white-space');
+                    }
+                    node.cssFinally('line-height');
+                }
+                node.cssFinally('minHeight');
+            }
+            node.cssFinally('height');
+        }
+        if (!isNaN(height)) {
+            return (lineHeight - height) / 2;
+        }
     }
-    return (lineHeight - Math.min(height, node.boundingClientRect.height)) / 2;
+    else if (node.plainText) {
+        return (lineHeight - (node.bounds.height / (node.bounds.numberOfLines || 1))) / 2;
+    }
+    return (lineHeight - node.boundingClientRect.height) / 2;
 }
 
 function constraintMinMax(node: T, horizontal: boolean) {

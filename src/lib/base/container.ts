@@ -143,7 +143,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     public find(predicate: IteratorPredicate<T, boolean>, options: ContainerFindOptions<T> = {}) {
         const { cascade, error } = options;
         let invalid = false;
-        function recurse(container: Container<T>): Undef<T> {
+        const recurse = (container: Container<T>): Undef<T> => {
             const children = container.children;
             const length = children.length;
             for (let i = 0; i < length; i++) {
@@ -166,7 +166,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                 }
             }
             return undefined;
-        }
+        };
         return recurse(this);
     }
 
@@ -177,7 +177,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     public cascade(predicate?: (item: T) => boolean, options: ContainerCascadeOptions<T> = {}) {
         const { error } = options;
         let invalid = false;
-        function recurse(container: Container<T>) {
+        const recurse = (container: Container<T>) => {
             let result: T[] = [];
             const children = container.children;
             const length = children.length;
@@ -198,7 +198,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                 }
             }
             return result;
-        }
+        };
         return recurse(this);
     }
 

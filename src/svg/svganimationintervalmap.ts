@@ -40,7 +40,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         const map: SvgAnimationIntervalAttributeMap = {};
         const intervalMap: ObjectMap<ObjectIndex<SvgAnimationIntervalValue[]>> = {};
         const intervalTimes: ObjectMap<Set<number>> = {};
-        function insertIntervalValue(keyName: string, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) {
+        const insertIntervalValue = (keyName: string, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) => {
             if (value) {
                 const mapA = intervalMap[keyName];
                 const data = safeNestedArray(mapA, time);
@@ -57,7 +57,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 });
                 intervalTimes[keyName].add(time);
             }
-        }
+        };
         for (const keyName of attrs) {
             map[keyName] = new Map<number, SvgAnimationIntervalValue[]>();
             intervalMap[keyName] = {};

@@ -48,8 +48,8 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
         }
         const columnCount = node.toInt('columnCount');
         const columnWidth = node.parseUnit(node.css('columnWidth'));
+        const [borderLeftStyle, borderLeftWidth, borderLeftColor] = node.cssAsTuple('columnRuleStyle', 'columnRuleWidth', 'columnRuleColor');
         let columnGap = node.parseUnit(node.css('columnGap'));
-        let columnSized: number;
         let boxWidth: number;
         const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Number.POSITIVE_INFINITY;
         if (isUserAgent(USER_AGENT.SAFARI)) {
@@ -58,6 +58,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
         else {
             boxWidth = node.box.width;
         }
+        let columnSized: number;
         if (columnGap > 0) {
             columnSized = Math.floor(getColumnSizing());
         }
@@ -66,12 +67,17 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
             columnSized = Math.ceil(getColumnSizing());
         }
         node.data(EXT_NAME.COLUMN, 'mainData', <ColumnData<T>> {
-            boxWidth: parent.actualBoxWidth(boxWidth),
+            rows,
             columnCount,
             columnWidth,
             columnGap,
             columnSized,
-            rows,
+            columnRule: {
+                borderLeftStyle,
+                borderLeftWidth,
+                borderLeftColor
+            },
+            boxWidth: parent.actualBoxWidth(boxWidth),
             multiline
         });
         return undefined;

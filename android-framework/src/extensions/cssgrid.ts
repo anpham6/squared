@@ -420,9 +420,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         let renderAs: Undef<T>;
         let outputAs: Undef<NodeXmlTemplate<T>>;
         if (mainData && cellData) {
-            const layoutConstraint = parent.layoutConstraint;
             const { alignContent, column, row } = mainData;
             const { alignSelf, justifySelf } = node.flexbox;
+            const layoutConstraint = parent.layoutConstraint;
             const applyLayout = (item: T, horizontal: boolean, dimension: string) => {
                 const [data, cellStart, cellSpan, minDimension] = horizontal ? [column, cellData.columnStart, cellData.columnSpan, 'minWidth'] : [row, cellData.rowStart, cellData.rowSpan, 'minHeight'];
                 const { unit, unitMin } = data;

@@ -834,11 +834,11 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                 const setterAttributeMap: ObjectMap<SvgAnimation[]> = {};
                 const groupActive = new Set<string>();
                 let setterTotal = 0;
-                function insertSetter(item: SvgAnimation) {
+                const insertSetter = (item: SvgAnimation) => {
                     const setter = safeNestedArray(setterAttributeMap, item.attributeName);
                     setter.push(item);
                     setterTotal++;
-                }
+                };
                 {
                     const excluded: SvgAnimate[] = [];
                     const length = mergeable.length;

@@ -1135,11 +1135,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
                 if (node.naturalChild) {
-                    let reset = false;
-                    if (canCascadeChildren(node)) {
-                        reset = cascadeActualPadding(node.naturalElements as T[], attr, value);
-                    }
-                    return reset ? 0 : value;
+                    return canCascadeChildren(node) && cascadeActualPadding(node.naturalElements as T[], attr, value) ? 0 : value;
                 }
             }
             else if (this.gridElement) {

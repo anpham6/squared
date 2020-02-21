@@ -88,11 +88,16 @@ export interface TableCellData {
 }
 
 export interface ColumnData<T> {
-    boxWidth: number,
-    columnCount: number,
-    columnWidth: number,
-    columnSized: number,
-    columnGap: number,
-    rows: T[][],
+    rows: T[][];
+    columnCount: number;
+    columnWidth: number;
+    columnSized: number;
+    columnGap: number;
+    columnRule: {
+        borderLeftStyle: string;
+        borderLeftWidth: string;
+        borderLeftColor: string;
+    };
+    boxWidth: number;
     multiline: boolean;
 }

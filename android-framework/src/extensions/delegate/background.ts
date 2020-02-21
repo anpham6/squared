@@ -89,9 +89,9 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             container.setLayoutWidth('match_parent');
             const height = parent.cssInitial('height');
             const minHeight = parent.cssInitial('minHeight');
-            let backgroundSize: Undef<string>;
+            let backgroundSize = node.css('backgroundSize');
             if (height === '' && minHeight === '') {
-                container.setLayoutHeight(!parentVisible && !(backgroundSeparate && hasHeight) && (backgroundRepeatY || node.has('backgroundSize')) ? 'match_parent' : 'wrap_content');
+                container.setLayoutHeight(!parentVisible && !(backgroundSeparate && hasHeight) && (backgroundRepeatY || backgroundSize !== 'auto') ? 'match_parent' : 'wrap_content');
             }
             else {
                 if (height !== '100%' && minHeight !== '100%') {
@@ -104,7 +104,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             }
             container.cssApply({
                 backgroundImage,
-                backgroundSize: backgroundSize || node.css('backgroundSize'),
+                backgroundSize,
                 border: '0px none solid',
                 borderRadius: '0px'
             });
