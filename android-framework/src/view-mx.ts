@@ -200,6 +200,9 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
 }
 
 function constraintMinMax(node: T, horizontal: boolean) {
+    if (node.support.maxDimension && (horizontal && node.floating || !horizontal)) {
+        return;
+    }
     const minWH = node.cssInitial(horizontal ? 'minWidth' : 'minHeight', true);
     if (isLength(minWH, true) && parseFloat(minWH) > 0) {
         if (horizontal) {
@@ -385,7 +388,7 @@ function ascendFlexibleWidth(node: T) {
     let parent = <Undef<T>> node.renderParent;
     let i = 0;
     while (parent) {
-        if (parent.hasWidth || parseInt(parent.layoutWidth) > 0 || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic)) {
+        if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) > 0 || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
             return true;
         }
         else if (parent.flexibleWidth) {
@@ -782,6 +785,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
                     node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT));
+                    node.delete('app', 'layout_constraintHorizontal_bias', 'layout_constraintHorizontal_chainStyle', 'layout_constraintVertical_bias', 'layout_constraintVertical_chainStyle');
                 }
                 else if (renderParent.layoutRelative) {
                     node.anchorDelete(...Object.keys(LAYOUT_RELATIVE_PARENT));
@@ -866,6 +870,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             return '';
+        }
+
+        public removeTry(replacement?: T, beforeReplace?: () => void) {
+            if (beforeReplace === undefined && replacement) {
+                beforeReplace = () => replacement.anchorClear();
+            }
+            if (super.removeTry(replacement, beforeReplace)) {
+                return true;
+            }
+            return false;
         }
 
         public supported(attr: string, result = {}): boolean {
@@ -1174,6 +1188,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (this.onlyChild && renderParent.inlineWidth && !renderParent.hasPX('minWidth')) {
                                 layoutWidth = 'wrap_content';
                             }
+                            else if (this.alignParent('left') && this.alignParent('right') && !this.rightAligned) {
+                                layoutWidth = 'match_parent';
+                            }
                             else if (this.styleText) {
                                 if (this.multiline) {
                                     layoutWidth = 'wrap_content';
@@ -1203,11 +1220,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 layoutWidth = renderParent.inlineWidth ? 'wrap_content' : 'match_parent';
                             }
                         }
-                        else if (this.css('minWidth') === '100%') {
+                        else if (this.css('minWidth') === '100%' || this.floating && this.block && this.alignParent('left') && this.alignParent('right') && !this.rightAligned) {
                             layoutWidth = 'match_parent';
                         }
                         if (layoutWidth === '') {
-                            if (this.naturalElement && this.inlineStatic && !this.blockDimension && !actualParent.layoutElement && this.some(item => item.naturalElement && item.blockStatic)) {
+                            if (this.naturalElement && this.inlineStatic && !this.blockDimension && !actualParent.layoutElement && renderParent.layoutVertical && this.some(item => item.naturalElement && item.blockStatic)) {
                                 checkParentWidth();
                             }
                             else if (this.layoutGrid && !this.hasWidth && this.some((node: T) => node.flexibleWidth)) {
@@ -1601,8 +1618,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (renderParent) {
                 this.alignLayout(renderParent);
                 this.setLineHeight(renderParent);
-                this.finalizeGravity(renderParent, 'layout_gravity');
-                this.finalizeGravity(renderParent, 'gravity');
+                this.finalizeGravity('layout_gravity');
+                this.finalizeGravity('gravity');
                 if (this.imageElement) {
                     const layoutWidth = this.layoutWidth;
                     const layoutHeight = this.layoutHeight;
@@ -1742,7 +1759,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                     }
-                    else if (top > 0 && (this.actualParent as T)?.floatContainer && this.getBox(BOX_STANDARD.MARGIN_TOP)[1] !== 1) {
+                    else if (top > 0 && (this.actualParent as T)?.floatContainer && this.getBox(BOX_STANDARD.MARGIN_TOP)[1] !== 1 && !this.alignParent('top')) {
                         const renderParent = this.renderParent as T;
                         if (renderParent.layoutVertical && renderParent.ascend({ condition: (item: T) => item.hasAlign(NODE_ALIGNMENT.FLOAT) || item.hasAlign(NODE_ALIGNMENT.COLUMN), error: (item: T) => item.naturalChild, attr: 'renderParent' }).length === 0) {
                             const boundsTop = Math.floor(this.bounds.top);
@@ -1793,7 +1810,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             bottom = Math.max(bottom - SPACING_SELECT, 0);
                             break;
                     }
-                    if (top < 0 && (this.pageFlow && (this.block || this.floating) || this.leftTopAxis) && this.translateY(top, { accumulate: true, contain: this.pageFlow })) {
+                    if (top < 0 && bottom >= 0 && (this.pageFlow && (this.block || this.floating) || this.leftTopAxis) && this.translateY(top, { accumulate: true })) {
                         if (this.pageFlow) {
                             const siblings = this.anchorChain('bottom');
                             for (const item of siblings) {
@@ -1802,14 +1819,31 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         top = 0;
                     }
-                    if (left < 0 && (this.pageFlow && this.blockDimension || this.leftTopAxis) && this.translateX(left, { accumulate: true, contain: this.pageFlow })) {
-                        if (this.pageFlow) {
-                            const siblings = this.anchorChain('right');
+                    if (left < 0) {
+                        if (this.float === 'right') {
+                            const siblings = this.anchorChain('left');
+                            left = Math.min(-left, -this.bounds.width);
                             for (const item of siblings) {
-                                item.translateX(left, { accumulate: true });
+                                item.translateX(-left, { accumulate: true });
                             }
+                            left = 0;
                         }
-                        left = 0;
+                        else if ((this.pageFlow && this.blockDimension || this.leftTopAxis) && this.translateX(left, { accumulate: true })) {
+                            if (this.pageFlow) {
+                                const siblings = this.anchorChain('right');
+                                for (const item of siblings) {
+                                    item.translateX(left, { accumulate: true });
+                                }
+                            }
+                            left = 0;
+                        }
+                    }
+                    if (right < 0 && this.pageFlow && this.blockDimension) {
+                        const siblings = this.anchorChain('right');
+                        for (const item of siblings) {
+                            item.translateX(right, { accumulate: true });
+                        }
+                        right = 0;
                     }
                 }
                 else if (this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE)) {
@@ -2123,7 +2157,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        private finalizeGravity(renderParent: T, attr: string) {
+        private finalizeGravity(attr: string) {
             const direction = getGravityValues(this, attr);
             if (direction.size > 1) {
                 checkMergableGravity('center', direction);
@@ -2349,7 +2383,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             if (absoluteParent === documentParent) {
                                 result = true;
                             }
-                            else if (absoluteParent.box.right === documentParent.linear.right && this.hasPX('right') && !this.hasPX('left')) {
+                            else if (absoluteParent.box.right === documentParent.linear.right && this.hasPX('right') && !this.hasPX('left') && this.right >= 0) {
                                 this.css('top', formatPX(this.linear.top - documentParent.box.top), true);
                                 result = true;
                             }

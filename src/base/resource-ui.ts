@@ -879,7 +879,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                     else if (node.inlineText) {
                         key = textContent.trim();
-                        [value, inlined, trimming] = replaceWhiteSpace(node, this.removeExcludedFromText(element, node.sessionId));
+                        [value, inlined, trimming] = replaceWhiteSpace(node, this.removeExcludedFromText(node, element));
                     }
                     else if (node.naturalElements.length === 0 && textContent?.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                         value = textContent;
@@ -888,7 +888,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
             }
             if (value !== '') {
-                if (trimming) {
+                if (trimming && node.pageFlow) {
                     const previousSibling = node.siblingsLeading[0];
                     let previousSpaceEnd = false;
                     if (value.length > 1) {
@@ -947,10 +947,15 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         }
     }
 
-    private removeExcludedFromText(element: Element, sessionId: string) {
-        const styled = element.children.length || element.tagName === 'CODE';
+    private removeExcludedFromText(node: T, element: Element) {
+        const styled = element.children.length > 0 || element.tagName === 'CODE';
+        const preserveWhitespace = node.preserveWhiteSpace;
         const attr = styled ? 'innerHTML' : 'textContent';
         let value: string = element[attr] || '';
+        if (value.trim() === '') {
+            return preserveWhitespace ? value : STRING_SPACE;
+        }
+        const sessionId = node.sessionId;
         const children = element.childNodes;
         const length = children.length;
         for (let i = 0; i < length; i++) {
@@ -958,7 +963,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             const item = getElementAsNode<NodeUI>(child, sessionId);
             if (item === null || !item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
                 if (item) {
-                    const preserveWhitespace = (item.actualParent as T).preserveWhiteSpace;
                     if (styled && item.htmlElement) {
                         const outerHTML = item.toElementString('outerHTML');
                         if (item.lineBreak) {

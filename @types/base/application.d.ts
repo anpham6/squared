@@ -96,6 +96,7 @@ export interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
     cache: squared.base.NodeList<T>;
     excluded: squared.base.NodeList<T>;
     extensionMap: Map<number, squared.base.Extension<T>[]>;
+    clearMap: Map<T, string>;
     targetQueue: Map<T, NodeTemplate<T>>;
 }
 
@@ -105,6 +106,8 @@ export interface AppProcessing<T extends Node> {
     sessionId: string;
     node?: T;
 }
+
+export interface AppProcessingUI<T extends Node> extends AppProcessing<T> {}
 
 export interface AppNodeUIOptions<T extends NodeUI> {
     parent?: T;

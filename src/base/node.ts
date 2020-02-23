@@ -1477,7 +1477,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     private convertPosition(attr: string) {
         if (!this.positionStatic) {
-            const unit = this.cssInitial(attr, true);
+            const unit = this.css(attr);
             if (isLength(unit)) {
                 return this.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
             }
@@ -2458,7 +2458,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.baseline;
         if (result === undefined) {
             if (this.pageFlow && !this.floating) {
-                const value = this.cssInitial('verticalAlign', false, true);
+                const value = this.css('verticalAlign');
                 result = value === 'baseline' || value === 'initial' || this.naturalElements.length === 0 && isLength(value, true);
             }
             else {

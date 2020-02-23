@@ -69,6 +69,10 @@ export function newBoxModel(): BoxModel {
     };
 }
 
+export function withinViewport(rect: DOMRect | ClientRect) {
+    return !(rect.top + window.scrollY + rect.height < 0 || rect.left + window.scrollX + rect.width < 0);
+}
+
 export function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition = true): BoxRectDimension {
     const result = {
         top: rect.top,

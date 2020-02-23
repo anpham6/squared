@@ -132,6 +132,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         cache: new NodeList<T>(),
         excluded: new NodeList<T>(),
         extensionMap: new Map<number, ExtensionUI<T>[]>(),
+        clearMap: new Map<T, string>(),
         active: [],
         targetQueue: new Map<T, NodeTemplate<T>>()
     };
@@ -585,7 +586,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             const controllerHandler = this.controllerHandler;
-            if (controllerHandler.preventNodeCascade(parentElement)) {
+            if (node.excluded || controllerHandler.preventNodeCascade(parentElement)) {
                 return node;
             }
             const sessionId = this.processing.sessionId;
@@ -987,7 +988,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { processing, session } = this;
         const cache = processing.cache;
         const documentRoot = processing.node as T;
-        const extensionMap = session.extensionMap;
+        const { extensionMap, clearMap } = session;
         const mapY = new Map<number, Map<number, T>>();
         let extensions = this.extensions.filter(item => !item.eventOnly);
         let maxDepth = 0;
@@ -1000,13 +1001,65 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 mapY.set(depth, new Map<number, T>([[id, node]]));
             }
         };
-        const removeMapY = (node: T) => mapY.get(node.depth)?.delete(node.id);
         setMapY(-1, 0, documentRoot.parent as T);
         for (const node of cache) {
             if (node.length) {
                 const depth = node.depth;
                 setMapY(depth, node.id, node);
                 maxDepth = Math.max(depth, maxDepth);
+                if (node.floatContainer) {
+                    const floated = new Set<string>();
+                    const clearable: ObjectMap<Undef<T>> = {};
+                    node.each((item: T) => {
+                        if (item.pageFlow) {
+                            const floating = item.floating;
+                            if (floated.size) {
+                                const clear = item.css('clear');
+                                if (clear !== 'none') {
+                                    if (!floating) {
+                                        let previousFloat: Undef<T>[] | undefined;
+                                        switch (clear) {
+                                            case 'left':
+                                                previousFloat = [clearable.left];
+                                                break;
+                                            case 'right':
+                                                previousFloat = [clearable.right];
+                                                break;
+                                            case 'both':
+                                                previousFloat = [clearable.left, clearable.right];
+                                                break;
+                                        }
+                                        if (previousFloat) {
+                                            for (const previous of previousFloat) {
+                                                if (previous) {
+                                                    const float = previous.float;
+                                                    if (floated.has(float) && Math.ceil(item.bounds.top) >= previous.bounds.bottom) {
+                                                        floated.delete(float);
+                                                        clearable[float] = undefined;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (floated.has(clear) || clear === 'both') {
+                                        clearMap.set(item, floated.size === 2 ? 'both' : clear);
+                                        if (!floating) {
+                                            item.modifyBox(BOX_STANDARD.MARGIN_TOP);
+                                        }
+                                        floated.clear();
+                                        clearable.left = undefined;
+                                        clearable.right = undefined;
+                                    }
+                                }
+                            }
+                            if (floating) {
+                                const float = item.float;
+                                floated.add(float);
+                                clearable[float] = item;
+                            }
+                        }
+                    });
+                }
             }
         }
         for (let i = 0; i < maxDepth; i++) {
@@ -1016,8 +1069,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             setMapY((node.depth * -1) - 2, node.id, node);
             for (const item of node.cascade() as T[]) {
                 if (item.length) {
-                    removeMapY(item);
-                    setMapY((item.depth * -1) - 2, item.id, item);
+                    const depth = item.depth;
+                    mapY.get(depth)?.delete(item.id);
+                    setMapY((depth * -1) - 2, item.id, item);
                 }
             }
         };
@@ -1033,10 +1087,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const renderExtension = <Undef<ExtensionUI<T>[]>> parent.renderExtension;
                 const axisY = parent.duplicate() as T[];
                 const length = axisY.length;
-                let cleared!: Map<T, string>;
-                if (floatContainer) {
-                    cleared = NodeUI.linearData(parent.naturalElements as T[], true).cleared;
-                }
                 for (let k = 0; k < length; k++) {
                     let nodeY = axisY[k];
                     if (nodeY.rendered || !nodeY.visible) {
@@ -1055,10 +1105,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             m++;
                         }
                         traverse: {
-                            let floatActive!: Set<string>;
+                            let floatActive!: boolean;
                             let floatCleared!: Map<T, string>;
                             if (floatContainer) {
-                                floatActive = new Set<string>();
+                                floatActive = false;
                                 floatCleared = new Map<T, string>();
                             }
                             for ( ; l < length; l++, m++) {
@@ -1069,20 +1119,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         continue;
                                     }
                                     if (floatContainer) {
-                                        if (floatActive.size) {
-                                            const float = cleared.get(item);
+                                        if (floatActive) {
+                                            const float = clearMap.get(item);
                                             if (float) {
-                                                if (float === 'both') {
-                                                    floatActive.clear();
-                                                }
-                                                else {
-                                                    floatActive.delete(float);
-                                                }
-                                                floatCleared.set(item, float);
+                                                floatActive = false;
                                             }
                                         }
                                         if (item.floating) {
-                                            floatActive.add(item.float);
+                                            floatActive = true;
                                         }
                                     }
                                     if (m === 0) {
@@ -1100,10 +1144,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     const previous = item.siblingsLeading[0];
                                     if (previous) {
                                         if (floatContainer) {
-                                            const status = item.alignedVertically(horizontal.length ? horizontal : vertical, cleared, horizontal.length > 0);
+                                            const status = item.alignedVertically(horizontal.length ? horizontal : vertical, clearMap, horizontal.length > 0);
                                             if (status > 0) {
                                                 if (horizontal.length) {
-                                                    if (status < NODE_TRAVERSE.FLOAT_BLOCK && floatActive.size && floatCleared.get(item) !== 'both' && !item.siblingsLeading.some((node: T) => node.lineBreak && !cleared.has(node))) {
+                                                    if (status < NODE_TRAVERSE.FLOAT_BLOCK && floatActive && !floatCleared.has(item) && !item.siblingsLeading.some((node: T) => node.lineBreak && !clearMap.has(node))) {
                                                          if (!item.floating || previous.floating && item.bounds.top < Math.floor(previous.bounds.bottom)) {
                                                             if (floatCleared.has(item)) {
                                                                 if (!item.floating) {
@@ -1123,7 +1167,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                                         }
                                                                     }
                                                                 }
-                                                                if (!item.floating && item.bounds.top < Math.floor(floatBottom) || floatActive.has(item.float)) {
+                                                                if (!item.floating && item.bounds.top < Math.floor(floatBottom) || floatActive) {
                                                                     horizontal.push(item);
                                                                     if (!item.floating && Math.ceil(item.bounds.bottom) > floatBottom) {
                                                                         break traverse;
@@ -1366,7 +1410,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected processFloatHorizontal(layout: LayoutUI<T>) {
         const controllerHandler = this.controllerHandler;
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
-        const cleared = layout.cleared;
+        const clearMap = this.session.clearMap;
         const layerIndex: Array<T[] | T[][]> = [];
         const inlineAbove: T[] = [];
         const inlineBelow: T[] = [];
@@ -1376,30 +1420,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let rightBelow: Undef<T[]>;
         let leftSub: Undef<T[] | T[][]>;
         let rightSub: Undef<T[] | T[][]>;
-        let clearedFloat = 0;
+        let clearedFloat = false;
         layout.each((node, index) => {
             if (index > 0) {
-                const value = cleared.get(node);
+                const value = clearMap.get(node);
                 if (value) {
-                    switch (value) {
-                        case 'left':
-                            if (!hasBit(clearedFloat, 2)) {
-                                clearedFloat |= 2;
-                            }
-                            break;
-                        case 'right':
-                            if (!hasBit(clearedFloat, 4)) {
-                                clearedFloat |= 4;
-                            }
-                            break;
-                        default:
-                            clearedFloat = 6;
-                            break;
-                    }
+                    clearedFloat = true;
                 }
             }
             const float = node.float;
-            if (clearedFloat === 0) {
+            if (!clearedFloat) {
                 if (float === 'left') {
                     leftAbove.push(node);
                 }
@@ -1414,7 +1444,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             top = Math.max(textBounds.top, top);
                         }
                     }
-                    if (leftAbove.some(item => Math.ceil(top) >= item.bounds.bottom) || rightAbove.some(item => Math.ceil(top) >= item.bounds.bottom)) {
+                    top = Math.ceil(top);
+                    if (leftAbove.some(item => top >= item.bounds.bottom) || rightAbove.some(item => top >= item.bounds.bottom)) {
                         inlineBelow.push(node);
                     }
                     else {
@@ -1426,32 +1457,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             else if (float === 'left') {
-                if (hasBit(clearedFloat, 2)) {
-                    if (leftBelow === undefined) {
-                        leftBelow = [];
-                    }
-                    leftBelow.push(node);
+                if (leftBelow === undefined) {
+                    leftBelow = [];
                 }
-                else {
-                    leftAbove.push(node);
-                }
+                leftBelow.push(node);
             }
             else if (float === 'right') {
-                if (hasBit(clearedFloat, 4)) {
-                    if (rightBelow === undefined) {
-                        rightBelow = [];
-                    }
-                    rightBelow.push(node);
+                if (rightBelow === undefined) {
+                    rightBelow = [];
                 }
-                else {
-                    rightAbove.push(node);
-                }
-            }
-            else if (hasBit(clearedFloat, 6)) {
-                inlineBelow.push(node);
+                rightBelow.push(node);
             }
             else {
-                inlineAbove.push(node);
+                inlineBelow.push(node);
             }
         });
         if (leftAbove.length) {
@@ -1473,9 +1491,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             wrapper.childIndex = node.childIndex;
             wrapper.containerName = node.containerName;
             wrapper.inherit(node, 'boxStyle');
+            wrapper.innerWrapped = node;
             node.resetBox(BOX_STANDARD.MARGIN, wrapper);
             node.resetBox(BOX_STANDARD.PADDING, wrapper);
-            wrapper.innerWrapped = node;
             this.addLayout(new LayoutUI(
                 parent,
                 wrapper,
@@ -1563,7 +1581,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected processFloatVertical(layout: LayoutUI<T>) {
         const controllerHandler = this.controllerHandler;
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
-        const cleared = layout.cleared;
+        const clearMap = this.session.clearMap;
         if (layout.containerType !== 0) {
             const node = layout.node;
             const parent = controllerHandler.createNodeGroup(node, [node], layout.parent);
@@ -1592,7 +1610,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 blockArea = true;
             }
             else {
-                if (cleared.has(node)) {
+                if (clearMap.has(node)) {
                     if (!node.floating) {
                         node.modifyBox(BOX_STANDARD.MARGIN_TOP);
                         staticRows.push(current.slice(0));
@@ -1615,7 +1633,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     floated.push(node);
                 }
                 else {
-                    if (clearReset && !cleared.has(node)) {
+                    if (clearReset && !clearMap.has(node)) {
                         layoutVertical = false;
                     }
                     current.push(node);
@@ -1808,6 +1826,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return 0;
         });
+    }
+
+    get clearMap() {
+        return this.session.clearMap;
     }
 
     get extensionsCascade() {

@@ -54,7 +54,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             if (valueString) {
                                 const name = valueString.key || valueString.value;
                                 let value = valueString.value;
-                                if (node.naturalChild && node.alignParent('left') && !(!node.plainText && node.preserveWhiteSpace || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
+                                if (node.naturalChild && node.alignParent('left') && node.pageFlow && !(!node.plainText && node.preserveWhiteSpace || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
                                     let leadingSpace = 0;
                                     const textContent = node.textContent;
                                     const length = textContent.length;

@@ -10,7 +10,7 @@ const $lib = squared.lib;
 
 const { USER_AGENT, isUserAgent, isWinEdge } = $lib.client;
 const { BOX_BORDER, BOX_PADDING, formatPX, getStyle, isLength, isPercent } = $lib.css;
-const { isTextNode } = $lib.dom;
+const { isTextNode, withinViewport } = $lib.dom;
 const { capitalize, convertFloat, flatArray, safeNestedArray } = $lib.util;
 const { actualClientRect, getElementCache, setElementCache } = $lib.session;
 const { pushIndent, pushIndentArray } = $lib.xml;
@@ -24,7 +24,6 @@ function positionAbsolute(style: CSSStyleDeclaration) {
     return false;
 }
 
-const withinViewport = (rect: DOMRect | ClientRect) => !(rect.top + window.scrollY + rect.height < 0 || rect.left + window.scrollX + rect.width < 0);
 const getBorderWidth = (style: CSSStyleDeclaration, attr: string) => style.getPropertyValue(attr + '-style') !== 'none' ? getNumberValue(style, attr + '-width') : 0;
 const getNumberValue = (style: CSSStyleDeclaration, attr: string) => parseInt(style.getPropertyValue(attr));
 

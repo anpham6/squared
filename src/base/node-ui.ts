@@ -208,59 +208,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result[0] || null;
     }
 
-    public static linearData<T extends NodeUI>(list: T[], clearOnly = false): LinearDataUI<T> {
+    public static linearData<T extends NodeUI>(list: T[], cleared?: Map<T, string>): LinearDataUI<T> {
         const floated = new Set<string>();
-        const cleared = new Map<T, string>();
         let linearX = false;
         let linearY = false;
         if (list.length > 1) {
             const nodes: T[] = [];
-            const floating = new Set<string>();
-            const clearable: ObjectMap<Undef<T>> = {};
             for (const node of list) {
                 if (node.pageFlow) {
-                    if (floating.size) {
-                        const previousFloat = [];
-                        const clear = node.css('clear');
-                        switch (clear) {
-                            case 'left':
-                                previousFloat.push(clearable.left);
-                                break;
-                            case 'right':
-                                previousFloat.push(clearable.right);
-                                break;
-                            case 'both':
-                                previousFloat.push(clearable.left, clearable.right);
-                                break;
-                        }
-                        if (!node.floating) {
-                            for (const item of previousFloat) {
-                                if (item) {
-                                    const float = item.float;
-                                    if (floating.has(float) && Math.ceil(node.bounds.top) >= item.bounds.bottom) {
-                                        floating.delete(float);
-                                        clearable[float] = undefined;
-                                    }
-                                }
-                            }
-                        }
-                        if (clear === 'both') {
-                            cleared.set(node, floating.size === 2 ? 'both' : floating.values().next().value);
-                            floating.clear();
-                            clearable.left = undefined;
-                            clearable.right = undefined;
-                        }
-                        else if (floating.has(clear)) {
-                            cleared.set(node, clear);
-                            floating.delete(clear);
-                            clearable[clear] = undefined;
-                        }
-                    }
                     if (node.floating) {
-                        const float = node.float;
-                        floating.add(float);
-                        floated.add(float);
-                        clearable[float] = node;
+                        floated.add(node.float);
                     }
                     nodes.push(node);
                 }
@@ -270,70 +227,68 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             const length = nodes.length;
             if (length) {
-                if (!clearOnly) {
-                    const siblings = [nodes[0]];
-                    let x = 1;
-                    let y = 1;
-                    for (let i = 1; i < length; i++) {
+                const siblings = [nodes[0]];
+                let x = 1;
+                let y = 1;
+                for (let i = 1; i < length; i++) {
+                    const node = nodes[i];
+                    if (node.alignedVertically(siblings, cleared) > 0) {
+                        y++;
+                    }
+                    else {
+                        x++;
+                    }
+                    if (x > 1 && y > 1) {
+                        break;
+                    }
+                    siblings.push(node);
+                }
+                linearX = x === length;
+                linearY = y === length;
+                if (linearX && floated.size) {
+                    let boxLeft = Number.POSITIVE_INFINITY;
+                    let boxRight = Number.NEGATIVE_INFINITY;
+                    let floatLeft = Number.NEGATIVE_INFINITY;
+                    let floatRight = Number.POSITIVE_INFINITY;
+                    for (const node of nodes) {
+                        const { left, right } = node.linear;
+                        boxLeft = Math.min(boxLeft, left);
+                        boxRight = Math.max(boxRight, right);
+                        if (node.float === 'left') {
+                            floatLeft = Math.max(floatLeft, right);
+                        }
+                        else if (node.float === 'right') {
+                            floatRight = Math.min(floatRight, left);
+                        }
+                    }
+                    for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < length; i++) {
                         const node = nodes[i];
-                        if (node.alignedVertically(siblings, cleared) > 0) {
-                            y++;
+                        const { left, right } = node.linear;
+                        if (Math.floor(left) <= boxLeft) {
+                            j++;
                         }
-                        else {
-                            x++;
+                        if (Math.ceil(right) >= boxRight) {
+                            k++;
                         }
-                        if (x > 1 && y > 1) {
+                        if (!node.floating) {
+                            if (left === floatLeft) {
+                                l++;
+                            }
+                            if (right === floatRight) {
+                                m++;
+                            }
+                        }
+                        if (i === 0) {
+                            continue;
+                        }
+                        if (j === 2 || k === 2 || l === 2 || m === 2) {
+                            linearX = false;
                             break;
                         }
-                        siblings.push(node);
-                    }
-                    linearX = x === length;
-                    linearY = y === length;
-                    if (linearX && floated.size) {
-                        let boxLeft = Number.POSITIVE_INFINITY;
-                        let boxRight = Number.NEGATIVE_INFINITY;
-                        let floatLeft = Number.NEGATIVE_INFINITY;
-                        let floatRight = Number.POSITIVE_INFINITY;
-                        for (const node of nodes) {
-                            const { left, right } = node.linear;
-                            boxLeft = Math.min(boxLeft, left);
-                            boxRight = Math.max(boxRight, right);
-                            if (node.float === 'left') {
-                                floatLeft = Math.max(floatLeft, right);
-                            }
-                            else if (node.float === 'right') {
-                                floatRight = Math.min(floatRight, left);
-                            }
-                        }
-                        for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < length; i++) {
-                            const node = nodes[i];
-                            const { left, right } = node.linear;
-                            if (Math.floor(left) <= boxLeft) {
-                                j++;
-                            }
-                            if (Math.ceil(right) >= boxRight) {
-                                k++;
-                            }
-                            if (!node.floating) {
-                                if (left === floatLeft) {
-                                    l++;
-                                }
-                                if (right === floatRight) {
-                                    m++;
-                                }
-                            }
-                            if (i === 0) {
-                                continue;
-                            }
-                            if (j === 2 || k === 2 || l === 2 || m === 2) {
-                                linearX = false;
-                                break;
-                            }
-                            const previous = nodes[i - 1];
-                            if (withinRange(left, previous.linear.left) || previous.floating && Math.ceil(node.bounds.top) >= previous.bounds.bottom) {
-                                linearX = false;
-                                break;
-                            }
+                        const previous = nodes[i - 1];
+                        if (withinRange(left, previous.linear.left) || previous.floating && Math.ceil(node.bounds.top) >= previous.bounds.bottom) {
+                            linearX = false;
+                            break;
                         }
                     }
                 }
@@ -343,12 +298,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             linearY = list[0].blockStatic;
             linearX = !linearY;
         }
-        return { linearX, linearY, cleared, floated };
+        return { linearX, linearY, floated, cleared };
     }
 
-    public static partitionRows(list: T[]) {
-        const parent = list[0].actualParent;
-        const cleared = parent?.floatContainer ? NodeUI.linearData(parent.naturalChildren as T[], true).cleared : undefined;
+    public static partitionRows(list: T[], cleared?: Map<T, string>) {
         const result: T[][] = [];
         let row: T[] = [];
         let siblings: T[] = [];
@@ -771,7 +724,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return false;
     }
 
-    public removeTry(replacement?: T) {
+    public removeTry(replacement?: T, beforeReplace?: () => void) {
         const renderParent = this.renderParent;
         if (renderParent) {
             const { renderTemplates, renderChildren } = renderParent;
@@ -790,6 +743,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         parent.renderChildren.splice(replaceIndex, 1);
                                     }
                                     if (renderParent.appendTry(this, replacement, false)) {
+                                        if (beforeReplace) {
+                                            beforeReplace.bind(this, replacement)();
+                                        }
                                         renderTemplates[index] = templates[replaceIndex];
                                         replacement.renderParent = renderParent;
                                         renderChildren[index] = replacement;
@@ -804,6 +760,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                         else {
+                            if (beforeReplace) {
+                                beforeReplace.bind(this, replacement)();
+                            }
                             renderTemplates.splice(index, 1);
                             renderChildren.splice(index, 1);
                             this.renderParent = undefined;
@@ -954,7 +913,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                 }
-                if (cleared?.get(previous) === 'both' && !(siblings?.[0] === previous)) {
+                if (cleared?.get(previous) && !(siblings?.[0] === previous)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else if (checkBlockDimension(this, previous)) {

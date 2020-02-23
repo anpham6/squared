@@ -1,4 +1,4 @@
-import { AppHandler, AppNodeUIOptions, AppProcessing, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserUISettings, UserSettings } from './base/application';
+import { AppHandler, AppNodeUIOptions, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserUISettings, UserSettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
 import { AutoMargin, AscendOptions, BoxType, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './base/node';
 
@@ -74,6 +74,7 @@ declare namespace base {
     interface ApplicationUI<T extends NodeUI> extends Application<T> {
         userSettings: UserUISettings;
         readonly session: AppSessionUI<T>;
+        readonly processing: AppProcessingUI<T>;
         readonly builtInExtensions: ObjectMap<ExtensionUI<T>>;
         readonly controllerHandler: ControllerUI<T>;
         readonly resourceHandler: ResourceUI<T>;
@@ -81,6 +82,7 @@ declare namespace base {
         readonly extensions: ExtensionUI<T>[];
         readonly rootElements: Set<Element>;
         readonly layouts: FileAsset[];
+        readonly clearMap: Map<T, string>;
         conditionElement(element: HTMLElement, pseudoElt?: string): boolean;
         createNode(options: AppNodeUIOptions<T>): T;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
@@ -300,7 +302,6 @@ declare namespace base {
         readonly linearX: boolean;
         readonly linearY: boolean;
         readonly floated: Set<string>;
-        readonly cleared: Map<T, string>;
         readonly singleRowAligned: boolean;
         readonly unknownAligned: boolean;
         init(): void;
@@ -571,7 +572,7 @@ declare namespace base {
         exclude(options: ExcludeUIOptions): void;
         hide(options?: HideUIOptions<NodeUI>): void;
         appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
-        removeTry(replacement?: NodeUI): boolean;
+        removeTry(replacement?: NodeUI, beforeReplace?: () => void): boolean;
         sort(predicate?: (a: Node, b: Node) => number): this;
         render(parent?: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
@@ -595,10 +596,10 @@ declare namespace base {
 
     class NodeUI implements NodeUI, LayoutType {
         public static refitScreen<T>(node: T, value: Dimension): Dimension;
-        public static linearData<T>(list: T[], clearOnly?: boolean): LinearDataUI<T>;
+        public static linearData<T>(list: T[], cleared?: Map<T, string>): LinearDataUI<T>;
         public static outerRegion<T>(node: T): BoxRectDimension;
         public static baseline<T>(list: T[], text?: boolean): Null<T>;
-        public static partitionRows<T>(list: T[], parent?: T): T[][];
+        public static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
         constructor(id: number, sessionId?: string, element?: Element);
     }
 
@@ -848,6 +849,7 @@ declare namespace lib {
         function newBoxRect(): BoxRect;
         function newBoxRectDimension(): BoxRectDimension;
         function newBoxModel(): BoxModel;
+        function withinViewport(rect: DOMRect | ClientRect): boolean;
         function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
         function getRangeClientRect(element: Element): BoxRectDimension;
         function removeElementsByClassName(className: string): void;

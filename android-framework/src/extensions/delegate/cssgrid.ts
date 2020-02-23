@@ -54,7 +54,6 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
                 container.setLayoutHeight('wrap_content');
             }
         }
-        container.unsetCache('contentBoxWidth', 'contentBoxHeight');
         return {
             parent: container,
             renderAs: container,

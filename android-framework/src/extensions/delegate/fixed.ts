@@ -112,8 +112,8 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid });
             if (node.documentBody) {
                 if (node.outerWrapper === container) {
-                    const visibleStyle = node.visibleStyle;
-                    if (visibleStyle.backgroundColor || visibleStyle.backgroundImage) {
+                    const { backgroundColor, backgroundImage } = node.visibleStyle;
+                    if (backgroundColor || backgroundImage) {
                         container.inherit(node, 'boxStyle');
                     }
                     else {
@@ -160,37 +160,47 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
         const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData');
         if (mainData) {
             for (const item of mainData.children) {
-                if (item.css('position') === 'fixed' || item.absoluteParent !== item.actualParent) {
-                    continue;
-                }
+                const fixed = item.css('position') === 'fixed' || item.absoluteParent !== item.actualParent;
                 const constraint = item.constraint;
                 const documentId = node.documentId;
                 if (item.hasPX('left')) {
-                    item.translateX(item.left, { accumulate: true });
-                    item.alignSibling('left', documentId);
-                    constraint.horizontal = true;
+                    if (!fixed) {
+                        item.translateX(item.left, { accumulate: true });
+                        item.alignSibling('left', documentId);
+                        constraint.horizontal = true;
+                    }
+                    item.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
                 }
-                else if (item.hasPX('right')) {
-                    item.translateX(-item.right, { accumulate: true });
-                    item.alignSibling('right', documentId);
-                    constraint.horizontal = true;
+                if (item.hasPX('right')) {
+                    if (!fixed) {
+                        item.translateX(-item.right, { accumulate: true });
+                        item.alignSibling('right', documentId);
+                        constraint.horizontal = true;
+                    }
+                    item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
                 }
-                else if (item.marginLeft < 0) {
+                else if (item.marginLeft < 0 && !fixed) {
                     const wrapper = item.outerMostWrapper as T;
                     wrapper.alignSibling('left', documentId);
                     wrapper.constraint.horizontal = true;
                 }
                 if (item.hasPX('top')) {
-                    item.translateY(item.top, { accumulate: true });
-                    item.alignSibling('top', documentId);
-                    constraint.vertical = true;
+                    if (!fixed) {
+                        item.translateY(item.top, { accumulate: true });
+                        item.alignSibling('top', documentId);
+                        constraint.vertical = true;
+                    }
+                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                 }
-                else if (item.hasPX('bottom')) {
-                    item.translateY(-item.bottom, { accumulate: true });
-                    item.alignSibling('bottom', documentId);
-                    constraint.vertical = true;
+                if (item.hasPX('bottom')) {
+                    if (!fixed) {
+                        item.translateY(-item.bottom, { accumulate: true });
+                        item.alignSibling('bottom', documentId);
+                        constraint.vertical = true;
+                    }
+                    item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
                 }
-                else if (item.marginTop < 0 && node.firstChild === item) {
+                else if (item.marginTop < 0 && node.firstChild === item && !fixed) {
                     const wrapper = item.outerMostWrapper as T;
                     wrapper.alignSibling('top', documentId);
                     wrapper.constraint.vertical = true;

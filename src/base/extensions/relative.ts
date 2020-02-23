@@ -11,7 +11,7 @@ const { convertFloat, withinRange } = $lib.util;
 
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return node.positionRelative && !node.autoPosition || node.toFloat('verticalAlign', 0, true) !== 0;
+        return node.positionRelative && !node.autoPosition || convertFloat(node.verticalAlign) !== 0;
     }
 
     public condition() {
@@ -60,10 +60,10 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 y -= verticalAlign;
             }
             if (x !== 0) {
-                node.translateX(x, { accumulate: true, contain: node.pageFlow });
+                node.translateX(x, { accumulate: true });
             }
             if (y !== 0) {
-                node.translateY(y, { accumulate: true, contain: node.pageFlow });
+                node.translateY(y, { accumulate: true });
             }
         }
         else {
@@ -113,7 +113,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                     else {
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - unaligned[0].linear.top);
                                     }
-                                    item.css('verticalAlign', '0px', true);
+                                    item.setCacheValue('verticalAlign', '0px');
                                 }
                             }
                             break;

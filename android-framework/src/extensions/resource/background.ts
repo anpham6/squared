@@ -521,10 +521,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             themeBackground = true;
         };
         const deleteBodyWrapper = (body: T, wrapper: T) => {
-            if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0 && !body.hasPX('maxWidth')) {
-                const children = wrapper.renderChildren;
-                if (children.length === 1) {
-                    wrapper.removeTry(children[0]);
+            if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
+                const maxWidth = body.cssInitial('maxWidth');
+                if (maxWidth === '' || maxWidth === 'auto' || maxWidth === '100%') {
+                    const children = wrapper.renderChildren;
+                    if (children.length === 1) {
+                        wrapper.removeTry(children[0]);
+                    }
                 }
             }
         };
@@ -1334,6 +1337,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     width = boundsWidth - (offsetX ? Math.min(position.left, 0) : 0);
                                     let fill = true;
                                     if (tileModeY === 'repeat' && gravityX !== '') {
+                                        let clearTile = true;
                                         switch (gravityX) {
                                             case 'start':
                                             case 'left':
@@ -1350,6 +1354,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                                 }
                                                 else {
                                                     gravityX = '';
+                                                    clearTile = dimenWidth >= dimenHeight;
                                                 }
                                                 posLeft = NaN;
                                                 posRight = 0;
@@ -1371,13 +1376,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                                 }
                                                 else {
                                                     gravityX = '';
+                                                    clearTile = dimenWidth >= dimenHeight;
                                                 }
                                                 posLeft = 0;
                                                 posRight = NaN;
                                                 break;
                                         }
                                         offsetX = false;
-                                        tileModeY = '';
+                                        if (clearTile) {
+                                            tileModeY = '';
+                                        }
                                         gravityY = '';
                                     }
                                     if (fill) {
@@ -1392,6 +1400,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     height = boundsHeight;
                                     let fill = true;
                                     if (tileModeX === 'repeat' && gravityY !== '') {
+                                        let clearTile = true;
                                         switch (gravityY) {
                                             case 'top':
                                                 bottom += boundsHeight - dimenHeight;
@@ -1407,6 +1416,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                                 }
                                                 else {
                                                     gravityY = '';
+                                                    clearTile = dimenHeight >= dimenWidth;
                                                 }
                                                 posTop = NaN;
                                                 posBottom = 0;
@@ -1428,14 +1438,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                                 }
                                                 else {
                                                     gravityY = '';
+                                                    clearTile = dimenHeight >= dimenWidth;
                                                 }
                                                 posTop = 0;
                                                 posBottom = NaN;
                                                 break;
                                         }
-                                        offsetY = false;
-                                        tileModeX = '';
+                                        if (clearTile) {
+                                            tileModeX = '';
+                                        }
                                         gravityX = '';
+                                        offsetY = false;
                                     }
                                     if (tileModeY !== 'disabled') {
                                         tileModeY = '';
@@ -1473,9 +1486,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     }
                                     gravityY = '';
                                     break;
-                                case 'center_vertical':
-                                    tileModeX = '';
-                                    break;
                                 case 'bottom':
                                     if (width > 0 && !unsizedWidth) {
                                         tileModeX = '';
@@ -1483,7 +1493,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     else if (unsizedHeight) {
                                         width = dimenWidth;
                                         gravityAlign = delimitString({ value: gravityAlign }, 'fill_horizontal');
-                                        tileModeX = '';
+                                        if (dimenHeight >= dimenWidth) {
+                                            tileModeX = '';
+                                        }
                                     }
                                     break;
                             }
@@ -1509,7 +1521,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     else if (unsizedWidth) {
                                         height = dimenHeight;
                                         gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
-                                        tileModeY = '';
+                                        if (dimenWidth >= dimenHeight) {
+                                            tileModeY = '';
+                                        }
                                     }
                                     break;
                             }

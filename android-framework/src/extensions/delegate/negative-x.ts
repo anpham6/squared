@@ -36,7 +36,10 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public processNode(node: T, parent: T) {
         const outside = node.filter((item: T) => outsideX(item, node)) as T[];
-        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, { controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), containerType: CONTAINER_NODE.CONSTRAINT });
+        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, {
+            controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
+            containerType: CONTAINER_NODE.CONSTRAINT
+        });
         node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
         let left = NaN;
         let right = NaN;
@@ -85,8 +88,8 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             }
         }
         if (!isNaN(right)) {
-            const rightA = node.linear.right;
             const marginRight = node.marginRight;
+            const rightA = node.linear.right;
             let offset = right - rightA;
             if (offset > marginRight) {
                 offset -= marginRight;
@@ -99,10 +102,8 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             if (marginRight > 0) {
                 offset += marginRight;
             }
-            if (offset > 0) {
-                if (node.hasPX('width', false) || !node.blockStatic && !node.hasPX('width')) {
-                    container.css(container.hasPX('width') ? 'width' : 'minWidth', formatPX(node.actualWidth + offset), true);
-                }
+            if (offset > 0 && (node.hasPX('width', false) || !node.blockStatic && !node.hasPX('width'))) {
+                container.css(container.hasPX('width') ? 'width' : 'minWidth', formatPX(node.actualWidth + offset), true);
             }
             for (const item of outside) {
                 if (item.right < 0) {

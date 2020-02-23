@@ -11,7 +11,7 @@ const { USER_AGENT, isUserAgent } = squared.lib.client;
 
 export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return (node.blockDimension && node.display !== 'table') && !node.layoutElement;
+        return (node.blockDimension && node.display !== 'table') && !node.layoutElement && node.length > 1;
     }
 
     public condition(node: T) {

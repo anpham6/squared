@@ -160,7 +160,7 @@ export interface LinearDataUI<T> {
     linearX: boolean;
     linearY: boolean;
     floated: Set<string>;
-    cleared: Map<T, string>;
+    cleared?: Map<T, string>;
 }
 
 export interface ExcludeUIOptions {

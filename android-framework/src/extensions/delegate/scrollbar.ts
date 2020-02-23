@@ -38,7 +38,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 overflowType |= NODE_ALIGNMENT.HORIZONTAL;
                 overflow.push(horizontalScroll);
             }
-            if (node.hasPX('height', false)) {
+            if (node.hasPX('height', false) || node.hasHeight && node.hasPX('height')) {
                 overflowType |= NODE_ALIGNMENT.VERTICAL;
                 overflow.push(verticalScroll);
             }
@@ -74,21 +74,21 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             }
             if (overflow.length) {
                 for (const child of children) {
-                    child.css('maxWidth', formatPX(boxWidth), true);
+                    if (child.textElement) {
+                        child.css('maxWidth', formatPX(boxWidth));
+                    }
                 }
             }
         }
         const length = overflow.length;
         if (length) {
             for (let i = 0; i < length; i++) {
-                let container: T;
+                const container = this.application.createNode({ parent });
                 if (i === 0) {
-                    container = this.application.createNode({ element: node.element, parent });
                     container.inherit(node, 'base', 'initial', 'styleMap');
                     parent.appendTry(node, container);
                 }
                 else {
-                    container = this.application.createNode({ parent });
                     container.inherit(node, 'base');
                     container.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
                 }

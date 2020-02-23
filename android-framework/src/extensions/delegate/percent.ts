@@ -6,6 +6,16 @@ type View = android.base.View;
 
 const { CSS_UNIT, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
+function hasPercentWidth(node: View) {
+    const value = node.percentWidth;
+    return value > 0 && value < 1;
+}
+
+function hasPercentHeight(node: View) {
+    const value = node.percentHeight;
+    return value > 0 && value < 1;
+}
+
 const isFlexible = (node: View) => !node.documentParent.layoutElement && !/^table/.test(node.display);
 
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
@@ -14,18 +24,20 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public condition(node: T, parent: T) {
-        if (node.percentWidth > 0 && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', CSS_UNIT.PERCENT, { not: '100%' })) && (node.documentRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width')))) {
-            return isFlexible(node);
-        }
-        else if (node.percentHeight > 0 && (node.cssInitial('height') !== '100%' || node.has('maxHeight', CSS_UNIT.PERCENT, { not: '100%' })) && (node.documentRoot || parent.hasHeight)) {
-            return isFlexible(node);
+        if (isFlexible(node)) {
+            if (hasPercentWidth(node) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', CSS_UNIT.PERCENT, { not: '100%' })) && (node.documentRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width')))) {
+                return true;
+            }
+            if (hasPercentHeight(node) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', CSS_UNIT.PERCENT, { not: '100%' })) && (node.documentRoot || parent.hasHeight)) {
+                return true;
+            }
         }
         return false;
     }
 
     public processNode(node: T, parent: T) {
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, { resetMargin: true });
-        if (node.percentWidth > 0) {
+        if (hasPercentWidth(node)) {
             container.setCacheValue('hasWidth', true);
             container.css('display', 'block');
             container.setLayoutWidth('match_parent');
@@ -34,7 +46,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         else {
             container.setLayoutWidth('wrap_content');
         }
-        if (node.percentHeight > 0) {
+        if (hasPercentHeight(node)) {
             container.setCacheValue('hasHeight', true);
             container.setLayoutHeight('match_parent');
             node.setLayoutHeight(node.cssInitial('height') === '100%' && !node.hasPX('maxHeight') ? 'match_parent' : '0px');

@@ -40,6 +40,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             }
             return {
                 output: this.application.renderNode(layout),
+                complete: true,
                 include: true
             };
         }

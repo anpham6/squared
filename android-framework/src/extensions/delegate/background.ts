@@ -7,9 +7,12 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
 
-const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const $base = squared.base;
 
-const CssGrid = squared.base.extensions.CssGrid;
+const { isLength } = squared.lib.css;
+const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
+
+const CssGrid = $base.extensions.CssGrid;
 
 const RESOURCE_IGNORE = NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING;
 
@@ -80,7 +83,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         if (backgroundImage !== '' && (parentVisible || backgroundSeparate || backgroundRepeatY || parent.visibleStyle.background || hasMargin(node))) {
             if (container) {
                 createFrameWrapper(container);
-                container = controller.createNodeWrapper(node, parentAs, undefined, { resource: NODE_RESOURCE.BOX_SPACING, ignoreRoot: true });
+                container = controller.createNodeWrapper(node, parentAs, undefined, { resource: NODE_RESOURCE.BOX_SPACING });
             }
             else {
                 container = controller.createNodeWrapper(node, renderParent, undefined, { resource: RESOURCE_IGNORE });
@@ -90,7 +93,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             const minHeight = parent.cssInitial('minHeight');
             let backgroundSize = node.css('backgroundSize');
             if (height === '' && minHeight === '') {
-                container.setLayoutHeight(!parentVisible && !(backgroundSeparate && hasHeight) && (backgroundRepeatY || backgroundSize !== 'auto') ? 'match_parent' : 'wrap_content');
+                container.setLayoutHeight(!parentVisible && !(backgroundSeparate && hasHeight) && (backgroundRepeatY || node.has('backgroundSize') || node.css('backgroundPosition').split(' ').some(value => isLength(value, true) && parseFloat(value) !== 0)) ? 'match_parent' : 'wrap_content');
             }
             else {
                 if (height !== '100%' && minHeight !== '100%') {

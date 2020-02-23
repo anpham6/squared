@@ -30,7 +30,6 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     private _linearX?: boolean;
     private _linearY?: boolean;
     private _floated?: Set<string>;
-    private _cleared?: Map<T, string>;
     private _singleRow?: boolean;
 
     constructor(
@@ -48,7 +47,6 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         if (length > 1) {
             const linearData = NodeUI.linearData(this.children);
             this._floated = linearData.floated;
-            this._cleared = linearData.cleared;
             this._linearX = linearData.linearX;
             this._linearY = linearData.linearY;
         }
@@ -123,13 +121,6 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
             this.init();
         }
         return this._floated || new Set<string>();
-    }
-
-    get cleared() {
-        if (!this._initialized) {
-            this.init();
-        }
-        return this._cleared || new Map<T, string>();
     }
 
     set type(value: LayoutType) {

@@ -88,7 +88,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             if (item.baselineAltered) {
-                                item.css('verticalAlign', '0px', true);
+                                item.setCacheValue('verticalAlign', '0px');
                             }
                         }
                     }

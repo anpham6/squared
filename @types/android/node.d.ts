@@ -37,7 +37,8 @@ export interface WrapperOptions extends ExcludeUIOptions {
     containerType?: number;
     alignmentType?: number;
     resetMargin?: boolean;
-    ignoreRoot?: boolean;
+    transferRoot?: boolean;
+    inheritContentBox?: boolean;
 }
 
 export interface SupportAndroid extends SupportUI {
