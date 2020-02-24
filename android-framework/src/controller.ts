@@ -579,12 +579,21 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.hide();
             return { layout, next: true };
         }
-        else if (visibleStyle.background && node.textContent !== '') {
-            layout.setContainerType(CONTAINER_NODE.TEXT);
-            node.inlineText = true;
-        }
         else {
-            layout.setContainerType(CONTAINER_NODE.FRAME);
+            switch (node.tagName)  {
+                case 'OUTPUT':
+                    layout.setContainerType(CONTAINER_NODE.TEXT);
+                    break;
+                default: {
+                    if (node.textContent !== '' && (visibleStyle.background || node.pseudoElement)) {
+                        layout.setContainerType(CONTAINER_NODE.TEXT);
+                        node.inlineText = true;
+                    }
+                    else {
+                        layout.setContainerType(CONTAINER_NODE.FRAME);
+                    }
+                }
+            }
         }
         return { layout };
     }
@@ -613,6 +622,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             parent.addAlign(NODE_ALIGNMENT.HORIZONTAL);
+            parent.removeAlign(NODE_ALIGNMENT.UNKNOWN);
         }
         return layout;
     }
@@ -1797,7 +1807,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             container.setCacheValue('contentBoxWidth', node.contentBoxWidth);
             container.setCacheValue('contentBoxHeight', node.contentBoxHeight);
         }
-        if (node.rendered && node.removeTry()) {
+        if (node.renderParent && node.removeTry()) {
             node.rendered = false;
         }
         if (node.documentParent.layoutElement) {
@@ -1881,7 +1891,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 })()
             );
             const clearMap = this.application.clearMap;
-            const centerAligned = node.cssInitial('textAlign') === 'center';
             let textIndent = 0;
             if (node.naturalElement) {
                 if (node.blockDimension) {
@@ -1981,7 +1990,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         multiline = false;
                         item.multiline = false;
                     }
-                    let anchored = item.autoMargin.horizontal;
+                    let anchored = item.autoMargin.horizontal === true;
                     if (anchored) {
                         const autoMargin = item.autoMargin;
                         if (autoMargin.leftRight) {
@@ -2096,10 +2105,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     previousRowLeft = undefined;
                                 }
                                 previous.anchor(alignParent, 'true');
-                            }
-                            if (items.length === 1 && (previous.centerAligned || centerAligned && !previous.blockStatic)) {
-                                previous.anchorDelete(alignParent);
-                                previous.anchor('centerHorizontal', 'true');
                             }
                             rowWidth = Math.min(0, textNewRow && !previous.multiline && multiline && !clearMap.has(item) ? item.linear.right - node.box.right : 0);
                             items = [item];
@@ -2386,9 +2391,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let textBaseline: Null<T> = null;
         const setAlignTop = (item: T) => {
             item.anchorParent('vertical', 0);
-            item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
-            item.baselineAltered = true;
-            valid = false;
+            const offset = item.linear.top - node.box.top;
+            if (Math.round(offset) !== 0) {
+                item.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                item.baselineAltered = true;
+                valid = false;
+            }
         };
         switch (node.cssAscend('textAlign', true)) {
             case 'center':
@@ -2599,7 +2607,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 else {
-                    rowStart.anchorStyle('horizontal', reverse ? 1 : (rowStart.centerAligned ? 0.5 : 0));
+                    rowStart.anchorStyle('horizontal', reverse ? 1 : rowStart.centerAligned ? 0.5 : (rowStart.rightAligned ? 1 : 0));
                 }
                 rowEnd.anchor(anchorEnd, 'parent');
                 let percentWidth = View.availablePercent(partition, 'width', node.box.width);

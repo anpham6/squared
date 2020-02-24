@@ -328,20 +328,19 @@ const appBase: AppFramework<View> = {
         application.resourceHandler.setFileHandler(file);
         userSettings = { ...SETTINGS };
         Object.assign(application.builtInExtensions, {
-            [EN.SPRITE]: new Sprite(EN.SPRITE, framework),
-            [EN.CSS_GRID]: new CssGrid(EN.CSS_GRID, framework),
-            [EN.FLEXBOX]: new Flexbox(EN.FLEXBOX, framework),
-            [EN.COLUMN]: new Column(EN.COLUMN, framework),
             [EN.TABLE]: new Table(EN.TABLE, framework, undefined, ['TABLE']),
             [EN.LIST]: new List(EN.LIST, framework, undefined, ['DIV', 'UL', 'OL', 'DL']),
             [EN.GRID]: new Grid(EN.GRID, framework, undefined, ['DIV', 'FORM', 'UL', 'OL', 'DL', 'NAV', 'SECTION', 'ASIDE', 'MAIN', 'HEADER', 'FOOTER', 'P', 'ARTICLE', 'FIELDSET']),
+            [EN.CSS_GRID]: new CssGrid(EN.CSS_GRID, framework),
+            [EN.FLEXBOX]: new Flexbox(EN.FLEXBOX, framework),
+            [EN.COLUMN]: new Column(EN.COLUMN, framework),
+            [EN.SPRITE]: new Sprite(EN.SPRITE, framework),
+            [EN.ACCESSIBILITY]: new Accessibility(EN.ACCESSIBILITY, framework),
             [EN.RELATIVE]: new Relative(EN.RELATIVE, framework),
             [EN.VERTICAL_ALIGN]: new VerticalAlign(EN.VERTICAL_ALIGN, framework),
             [EN.WHITESPACE]: new WhiteSpace(EN.WHITESPACE, framework),
-            [EN.ACCESSIBILITY]: new Accessibility(EN.ACCESSIBILITY, framework),
             [EA.EXTERNAL]: new External(EA.EXTERNAL, framework),
             [EA.SUBSTITUTE]: new Substitute(EA.SUBSTITUTE, framework),
-            [EA.CONSTRAINT_GUIDELINE]: new ConstraintGuideline(EA.CONSTRAINT_GUIDELINE, framework),
             [EA.DELEGATE_BACKGROUND]: new DelegateBackground(EA.DELEGATE_BACKGROUND, framework),
             [EA.DELEGATE_FIXED]: new DelegateFixed(EA.DELEGATE_FIXED, framework),
             [EA.DELEGATE_MAXWIDTHHEIGHT]: new DelegateMaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, framework),
@@ -356,7 +355,8 @@ const appBase: AppFramework<View> = {
             [EA.RESOURCE_STRINGS]: new ResourceStrings(EA.RESOURCE_STRINGS, framework),
             [EA.RESOURCE_FONTS]: new ResourceFonts(EA.RESOURCE_FONTS, framework),
             [EA.RESOURCE_DIMENS]: new ResourceDimens(EA.RESOURCE_DIMENS, framework),
-            [EA.RESOURCE_STYLES]: new ResourceStyles(EA.RESOURCE_STYLES, framework)
+            [EA.RESOURCE_STYLES]: new ResourceStyles(EA.RESOURCE_STYLES, framework),
+            [EA.CONSTRAINT_GUIDELINE]: new ConstraintGuideline(EA.CONSTRAINT_GUIDELINE, framework)
         });
         initialized = true;
         return {

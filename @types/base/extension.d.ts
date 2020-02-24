@@ -85,6 +85,7 @@ export interface TableCellData {
     downsized?: boolean;
     exceed?: boolean;
     placed?: boolean;
+    flexible?: boolean;
 }
 
 export interface ColumnData<T> {

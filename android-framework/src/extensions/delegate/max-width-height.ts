@@ -32,7 +32,8 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         if (mainData) {
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, {
                 controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
-                containerType: CONTAINER_NODE.CONSTRAINT
+                containerType: CONTAINER_NODE.CONSTRAINT,
+                resetMargin: true
             });
             container.addAlign(NODE_ALIGNMENT.BLOCK);
             if (mainData.maxWidth) {

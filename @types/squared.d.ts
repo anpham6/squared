@@ -356,7 +356,6 @@ declare namespace base {
         readonly centerAligned: boolean;
         readonly rightAligned: boolean;
         readonly bottomAligned: boolean;
-        readonly horizontalAligned: boolean;
         readonly width: number;
         readonly height: number;
         readonly hasWidth: boolean;
@@ -954,8 +953,8 @@ declare namespace lib {
     }
 
     namespace session {
-        function actualClientRect(element: Element, sessionId: string, cache?: boolean): ClientRect;
-        function actualTextRangeRect(element: Element, sessionId: string, cache?: boolean): BoxRectDimension;
+        function actualClientRect(element: Element, sessionId?: string): ClientRect;
+        function actualTextRangeRect(element: Element, sessionId?: string): BoxRectDimension;
         function getPseudoElt(element: Element, sessionId?: string): string;
         function getStyleValue(element: Element, attr: string, sessionId?: string): string;
         function getElementAsNode<T>(element: Element, sessionId?: string): Null<T>;

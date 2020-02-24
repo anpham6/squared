@@ -247,7 +247,6 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     divider.anchor('left', columns[j - 1][0].documentId);
                                     divider.anchor('right', item.documentId);
                                     dividers.push(divider);
-                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP);
                                 }
                                 if (i === 0) {
                                     item.anchor('top', 'parent');
@@ -262,6 +261,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     }
                                 }
                                 item.anchorStyle('vertical', 0);
+                                item.modifyBox(BOX_STANDARD.MARGIN_TOP);
                             }
                             else {
                                 const previous = seg[k - 1];

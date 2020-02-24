@@ -12,8 +12,6 @@ const $base_lib = squared.base.lib;
 const { formatPX } = $lib.css;
 const { aboveRange, convertFloat, convertInt, trimEnd } = $lib.util;
 
-const { UNITZERO } = $lib.regex.CHAR;
-
 const { CSS_UNIT, NODE_ALIGNMENT } = $base_lib.enumeration;
 
 const TABLE = $base_lib.constant.EXT_NAME.TABLE;
@@ -34,7 +32,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 requireWidth = mainData.expand;
                 node.each((item: T) => {
                     const data: TableCellData = item.data(TABLE, 'cellData');
-                    if (UNITZERO.test(item.css('width'))) {
+                    if (data.flexible) {
                         item.android('layout_columnWeight', item.toElementString('colSpan', '1'));
                         item.setLayoutWidth('0px');
                     }

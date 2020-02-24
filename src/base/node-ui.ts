@@ -178,10 +178,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     return heightA > heightB ? -1 : 1;
                 }
                 else if (a.textElement && b.textElement) {
-                    if (!a.plainText && b.plainText) {
+                    if (!a.plainText && b.plainText || !a.pseudoElement && b.pseudoElement) {
                         return -1;
                     }
-                    else if (a.plainText && !b.plainText) {
+                    else if (a.plainText && !b.plainText || a.pseudoElement && !b.pseudoElement) {
                         return 1;
                     }
                 }
@@ -212,25 +212,28 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const floated = new Set<string>();
         let linearX = false;
         let linearY = false;
-        if (list.length > 1) {
-            const nodes: T[] = [];
-            for (const node of list) {
-                if (node.pageFlow) {
-                    if (node.floating) {
-                        floated.add(node.float);
+        const length = list.length;
+        if (length > 1) {
+            const nodes: T[] = new Array(length);
+            let q = 0;
+            for (let i = 0; i < length; i++) {
+                const item = list[i];
+                if (item.pageFlow) {
+                    if (item.floating) {
+                        floated.add(item.float);
                     }
-                    nodes.push(node);
+                    nodes[q++] = item;
                 }
-                else if (node.autoPosition) {
-                    nodes.push(node);
+                else if (item.autoPosition) {
+                    nodes[q++] = item;
                 }
             }
-            const length = nodes.length;
-            if (length) {
+            if (q) {
+                nodes.length = q;
                 const siblings = [nodes[0]];
                 let x = 1;
                 let y = 1;
-                for (let i = 1; i < length; i++) {
+                for (let i = 1; i < q; i++) {
                     const node = nodes[i];
                     if (node.alignedVertically(siblings, cleared) > 0) {
                         y++;
@@ -243,8 +246,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     siblings.push(node);
                 }
-                linearX = x === length;
-                linearY = y === length;
+                linearX = x === q;
+                linearY = y === q;
                 if (linearX && floated.size) {
                     let boxLeft = Number.POSITIVE_INFINITY;
                     let boxRight = Number.NEGATIVE_INFINITY;
@@ -254,14 +257,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         const { left, right } = node.linear;
                         boxLeft = Math.min(boxLeft, left);
                         boxRight = Math.max(boxRight, right);
-                        if (node.float === 'left') {
-                            floatLeft = Math.max(floatLeft, right);
-                        }
-                        else if (node.float === 'right') {
-                            floatRight = Math.min(floatRight, left);
+                        switch (node.float) {
+                            case 'left':
+                                floatLeft = Math.max(floatLeft, right);
+                                break;
+                            case 'right':
+                                floatRight = Math.min(floatRight, left);
+                                break;
                         }
                     }
-                    for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < length; i++) {
+                    for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < q; i++) {
                         const node = nodes[i];
                         const { left, right } = node.linear;
                         if (Math.floor(left) <= boxLeft) {
@@ -294,7 +299,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
         }
-        else if (list.length) {
+        else if (length) {
             linearY = list[0].blockStatic;
             linearX = !linearY;
         }
@@ -625,6 +630,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     const visibleStyle = node.visibleStyle;
                     visibleStyle.background = false;
                     visibleStyle.backgroundImage = false;
+                    visibleStyle.backgroundRepeatX = false;
+                    visibleStyle.backgroundRepeatY = false;
                     visibleStyle.backgroundColor = false;
                     visibleStyle.borderWidth = false;
                     break;
@@ -795,98 +802,102 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         else if (this.pageFlow) {
             const floating = this.floating;
             if (isArray(siblings)) {
-                if (cleared?.has(this)) {
-                    return NODE_TRAVERSE.FLOAT_CLEAR;
-                }
-                else {
-                    const previous = siblings[siblings.length - 1];
-                    if (floating && previous.floating) {
-                        const float = this.float;
-                        if (horizontal && (float === previous.float || cleared?.size && !siblings.some((item, index) => index > 0 && cleared.get(item) === float))) {
-                            return NODE_TRAVERSE.HORIZONTAL;
-                        }
-                        else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
-                            if (siblings.every(item => item.inlineDimension)) {
-                                const actualParent = this.actualParent;
-                                if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: item => item.layoutElement, startSelf: true })) {
-                                    const naturalElements = actualParent.naturalElements;
-                                    if (naturalElements.length === siblings.length + 1) {
-                                        const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
-                                        let width = actualParent.box.width - getLayoutWidth(this);
-                                        for (const item of siblings) {
-                                            width -= getLayoutWidth(item);
-                                        }
-                                        if (width >= 0) {
-                                            return NODE_TRAVERSE.HORIZONTAL;
-                                        }
-                                    }
-                                }
-                            }
-                            return NODE_TRAVERSE.FLOAT_WRAP;
-                        }
-                    }
-                    else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
-                        return NODE_TRAVERSE.FLOAT_BLOCK;
-                    }
-                    else if (horizontal !== undefined) {
-                        if (floating && !horizontal && previous.blockStatic) {
-                            return NODE_TRAVERSE.HORIZONTAL;
-                        }
-                        else if (!REGEX_INLINEDASH.test(this.display)) {
-                            let { top, bottom } = this.bounds;
-                            if (this.textElement && cleared?.size && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
-                                return NODE_TRAVERSE.FLOAT_INTERSECT;
-                            }
-                            else if (siblings[0].floating) {
-                                if (siblings.length > 1) {
-                                    const float = siblings[0].float;
-                                    let maxBottom = Number.NEGATIVE_INFINITY;
-                                    let contentWidth = 0;
-                                    for (const item of siblings) {
-                                        if (item.floating) {
-                                            if (item.float === float) {
-                                                maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
-                                            }
-                                            contentWidth += item.linear.width;
-                                        }
-                                    }
-                                    if (Math.ceil(contentWidth) >= (this.actualParent as T).box.width) {
-                                        return NODE_TRAVERSE.FLOAT_BLOCK;
-                                    }
-                                    else if (this.multiline) {
-                                        if (this.styleText) {
-                                            const textBounds = this.textBounds;
-                                            if (textBounds) {
-                                                bottom = textBounds.bottom;
-                                            }
-                                        }
-                                        const offset = bottom - maxBottom;
-                                        top = offset <= 0 || offset / (bottom - top) < 0.5 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
-                                    }
-                                    else {
-                                        top = Math.ceil(top);
-                                    }
-                                    if (top < maxBottom) {
-                                        return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
-                                    }
-                                    else {
-                                        return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
-                                    }
-                                }
-                                else if (!horizontal) {
-                                    return NODE_TRAVERSE.FLOAT_BLOCK;
-                                }
-                            }
-                        }
-                    }
-                    if (checkBlockDimension(this, previous)) {
-                        return NODE_TRAVERSE.INLINE_WRAP;
+                const previous = siblings[siblings.length - 1];
+                if (cleared) {
+                    if (cleared.has(this)) {
+                        return NODE_TRAVERSE.FLOAT_CLEAR;
                     }
                     else {
-                        const percentWidth = getPercentWidth(this);
-                        if (percentWidth > 0 && siblings.reduce((a, b) => a + getPercentWidth(b), percentWidth) > 1) {
-                            return NODE_TRAVERSE.PERCENT_WRAP;
+                        if (floating && previous.floating) {
+                            if (horizontal || Math.floor(this.bounds.top) === Math.floor(previous.bounds.top)) {
+                                return NODE_TRAVERSE.HORIZONTAL;
+                            }
+                            else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
+                                if (siblings.every(item => item.inlineDimension)) {
+                                    const actualParent = this.actualParent;
+                                    if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: item => item.layoutElement, startSelf: true })) {
+                                        const naturalElements = actualParent.naturalElements.filter((item: T) => item.visible);
+                                        if (naturalElements.length === siblings.length + 1) {
+                                            const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
+                                            let width = actualParent.box.width - getLayoutWidth(this);
+                                            for (const item of siblings) {
+                                                width -= getLayoutWidth(item);
+                                            }
+                                            if (width >= 0) {
+                                                return NODE_TRAVERSE.HORIZONTAL;
+                                            }
+                                        }
+                                    }
+                                }
+                                return NODE_TRAVERSE.FLOAT_WRAP;
+                            }
                         }
+                        else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : Number.NEGATIVE_INFINITY), 0) / (this.actualParent as T).box.width >= 0.8) {
+                            return NODE_TRAVERSE.FLOAT_BLOCK
+                        }
+                        else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
+                            return NODE_TRAVERSE.FLOAT_BLOCK;
+                        }
+                        else if (horizontal !== undefined) {
+                            if (floating && !horizontal && previous.blockStatic) {
+                                return NODE_TRAVERSE.HORIZONTAL;
+                            }
+                            else if (!REGEX_INLINEDASH.test(this.display)) {
+                                let { top, bottom } = this.bounds;
+                                if (this.textElement && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
+                                    return NODE_TRAVERSE.FLOAT_INTERSECT;
+                                }
+                                else if (siblings[0].floating) {
+                                    if (siblings.length > 1) {
+                                        const float = siblings[0].float;
+                                        let maxBottom = Number.NEGATIVE_INFINITY;
+                                        let contentWidth = 0;
+                                        for (const item of siblings) {
+                                            if (item.floating) {
+                                                if (item.float === float) {
+                                                    maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
+                                                }
+                                                contentWidth += item.linear.width;
+                                            }
+                                        }
+                                        if (Math.ceil(contentWidth) >= (this.actualParent as T).box.width) {
+                                            return NODE_TRAVERSE.FLOAT_BLOCK;
+                                        }
+                                        else if (this.multiline) {
+                                            if (this.styleText) {
+                                                const textBounds = this.textBounds;
+                                                if (textBounds) {
+                                                    bottom = textBounds.bottom;
+                                                }
+                                            }
+                                            const offset = bottom - maxBottom;
+                                            top = offset <= 0 || offset / (bottom - top) < 0.5 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+                                        }
+                                        else {
+                                            top = Math.ceil(top);
+                                        }
+                                        if (top < maxBottom) {
+                                            return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
+                                        }
+                                        else {
+                                            return horizontal ? NODE_TRAVERSE.FLOAT_BLOCK : NODE_TRAVERSE.HORIZONTAL;
+                                        }
+                                    }
+                                    else if (!horizontal) {
+                                        return NODE_TRAVERSE.FLOAT_BLOCK;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (checkBlockDimension(this, previous)) {
+                    return NODE_TRAVERSE.INLINE_WRAP;
+                }
+                else {
+                    const percentWidth = getPercentWidth(this);
+                    if (percentWidth > 0 && siblings.reduce((a, b) => a + getPercentWidth(b), percentWidth) > 1) {
+                        return NODE_TRAVERSE.PERCENT_WRAP;
                     }
                 }
             }

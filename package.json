@@ -57,7 +57,7 @@
     "fs-extra": "^8.1.0",
     "request": "^2.88.2",
     "rimraf": "^3.0.2",
-    "uuid": "^3.4.0"
+    "uuid": "^7.0.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.20.0",
@@ -69,7 +69,7 @@
     "rollup-plugin-terser": "^5.2.0",
     "systemjs": "^0.21.6",
     "systemjs-plugin-babel": "0.0.25",
-    "terser": "^4.6.3",
-    "typescript": "^3.7.5"
+    "terser": "^4.6.4",
+    "typescript": "^3.8.2"
   }
 }

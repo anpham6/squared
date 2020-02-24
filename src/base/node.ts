@@ -542,8 +542,9 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
     return true;
 }
 
-function hasTextAlign(node: T, value: string) {
-    if (node.cssAscend('textAlign', node.textElement && node.blockStatic && !node.hasPX('width')) === value) {
+function hasTextAlign(node: T, value: string, localizedValue?: string) {
+    const textAlign = node.cssAscend('textAlign', node.textElement && node.blockStatic && !node.hasPX('width'));
+    if (textAlign === value || textAlign === localizedValue) {
         if (node.textElement && node.blockStatic) {
             return !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true);
         }
@@ -566,7 +567,7 @@ function hasTextAlign(node: T, value: string) {
     return false;
 }
 
-const canTextAlign = (node: T) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && !node.autoMargin.horizontal;
+const canTextAlign = (node: T) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
@@ -774,7 +775,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             cached.autoMargin = undefined;
                             cached.rightAligned = undefined;
                             cached.centerAligned = undefined;
-                            cached.horizontalAligned = undefined;
                         }
                         else if (REGEX_PADDING.test(attr)) {
                             cached.contentBoxWidth = undefined;
@@ -1168,7 +1168,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public setBounds(cache = true) {
         if (this.styleElement) {
-            this._bounds = assignRect(actualClientRect(<Element> this._element, this.sessionId, cache));
+            this._bounds = assignRect(actualClientRect(<Element> this._element, cache ? this.sessionId : undefined));
             if (this.documentBody && this.marginTop === 0) {
                 this._bounds.top = 0;
             }
@@ -1477,7 +1477,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     private convertPosition(attr: string) {
         if (!this.positionStatic) {
-            const unit = this.css(attr);
+            const unit = this.cssInitial(attr, true);
             if (isLength(unit)) {
                 return this.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
             }
@@ -2324,15 +2324,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get rightAligned() {
         let result = this._cached.rightAligned;
         if (result === undefined) {
-            const parent = this.actualParent;
-            if (parent?.flexElement) {
-                result = /(right|end)$/.test(parent.css('justifyContent'));
-            }
-            else if (!this.pageFlow) {
+            if (!this.pageFlow) {
                 result = this.hasPX('right') && !this.hasPX('left');
             }
             else {
-                result = this.float === 'right' || this.autoMargin.left || canTextAlign(this) && (hasTextAlign(this, 'right') || hasTextAlign(this, 'end'));
+                result = this.float === 'right' || this.autoMargin.left || canTextAlign(this) && hasTextAlign(this, 'right', 'end');
             }
             this._cached.rightAligned = result;
         }
@@ -2349,15 +2345,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 result = this.actualParent?.hasHeight === true && this.autoMargin.top === true;
             }
             this._cached.bottomAligned = result;
-        }
-        return result;
-    }
-
-    get horizontalAligned() {
-        let result = this._cached.horizontalAligned;
-        if (result === undefined) {
-            result = !this.blockStatic && !this.autoMargin.horizontal && !(this.blockDimension && this.css('width') === '100%') && (!(this.plainText && this.multiline) || this.floating);
-            this._cached.horizontalAligned = result;
         }
         return result;
     }

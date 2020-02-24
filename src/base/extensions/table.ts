@@ -438,11 +438,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             }
                             break;
                         case LAYOUT_TABLE.FIXED:
-                            td.css('width', '0px');
+                            data.flexible = true;
                             break;
                         case LAYOUT_TABLE.STRETCH:
                             if (columnWidth === 'auto') {
-                                td.css('width', '0px');
+                                data.flexible = true;
                             }
                             else {
                                 if (mainData.layoutFixed) {

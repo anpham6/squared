@@ -92,8 +92,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (columnLength !== -1) {
-                for (let i = 0; i < length; i++) {
-                    columns.push(nextMapX[nextCoordsX[i]]);
+                for (const value of nextCoordsX) {
+                    columns.push(nextMapX[value]);
                 }
             }
             else {

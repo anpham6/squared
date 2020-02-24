@@ -2,22 +2,22 @@ import { getStyle } from './css';
 import { getRangeClientRect } from './dom';
 import { convertCamelCase } from './util';
 
-export function actualClientRect(element: Element, sessionId: string, cache = true) {
-    if (cache) {
+export function actualClientRect(element: Element, sessionId?: string) {
+    if (sessionId) {
         const rect: ClientRect = getElementCache(element, 'clientRect', sessionId);
         if (rect) {
             return rect;
         }
     }
     const bounds = element.getBoundingClientRect();
-    if (cache) {
+    if (sessionId) {
         setElementCache(element, 'clientRect', sessionId, bounds);
     }
     return bounds;
 }
 
-export function actualTextRangeRect(element: Element, sessionId: string, cache = true) {
-    if (cache) {
+export function actualTextRangeRect(element: Element, sessionId?: string) {
+    if (sessionId) {
         const rect: ClientRect = getElementCache(element, 'textRangeRect', sessionId);
         if (rect) {
             return rect;
@@ -50,7 +50,7 @@ export function actualTextRangeRect(element: Element, sessionId: string, cache =
             item[0].style.display = item[1];
         }
     }
-    if (cache) {
+    if (sessionId) {
         setElementCache(element, 'textRangeRect', sessionId, bounds);
     }
     return bounds;

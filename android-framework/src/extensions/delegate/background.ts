@@ -9,7 +9,6 @@ import LayoutUI = squared.base.LayoutUI;
 
 const $base = squared.base;
 
-const { isLength } = squared.lib.css;
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
 
 const CssGrid = $base.extensions.CssGrid;
@@ -21,9 +20,9 @@ const hasFullHeight = (node: View) => node.css('height') === '100%' || node.css(
 const hasMargin = (node: View) => node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0;
 const isParentVisible = (node: View) => (<View> node.actualParent).visibleStyle.background && (hasVisibleWidth(node) || !hasFullHeight(node));
 const isParentTransfer = (parent: View) => parent.tagName === 'HTML' && (parent.contentBoxWidth > 0 || parent.contentBoxHeight > 0 || hasMargin(parent));
-const isFullScreen = (node: View, visibleStyle: VisibleStyle) => (node.backgroundColor || visibleStyle.backgroundImage && visibleStyle.backgroundRepeatY) && (visibleStyle.borderWidth && !node.inline && !hasFullHeight(node) && !isParentVisible(node) || node.percentWidth > 0 || node.hasPX('maxWidth') || node.gridElement && (CssGrid.isJustified(node) || CssGrid.isAligned(node)));
-const isHideMargin = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && hasMargin(node);
-const isBackgroundSeparate = (node: View, visibleStyle: VisibleStyle) => visibleStyle.backgroundColor && visibleStyle.backgroundImage && (node.has('backgroundPositionY') || hasVisibleWidth(node));
+const isFullScreen = (node: View, backgroundColor: boolean, backgroundImage: boolean, visibleStyle: VisibleStyle) => (backgroundColor || backgroundImage && visibleStyle.backgroundRepeatY) && !isParentVisible(node) && (visibleStyle.borderWidth && !node.inline || hasVisibleWidth(node) || node.gridElement && (CssGrid.isJustified(node) || CssGrid.isAligned(node)));
+const isHideMargin = (node: View, backgroundImage: boolean) => backgroundImage && hasMargin(node);
+const isBackgroundSeparate = (node: View, backgroundColor: boolean, backgroundImage: boolean) => backgroundColor && backgroundImage && (node.has('backgroundPositionY') || hasVisibleWidth(node));
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -32,14 +31,15 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
 
     public condition(node: T, parent: T) {
         const visibleStyle = node.visibleStyle;
-        return isFullScreen(node, visibleStyle) || isHideMargin(node, visibleStyle) || isBackgroundSeparate(node, visibleStyle) || isParentTransfer(parent);
+        const { backgroundColor, backgroundImage } = visibleStyle;
+        return isFullScreen(node, backgroundColor, backgroundImage, visibleStyle) || isHideMargin(node, backgroundImage) || isBackgroundSeparate(node, backgroundColor, backgroundImage) || isParentTransfer(parent);
     }
 
     public processNode(node: T, parent: T) {
         const controller = <android.base.Controller<T>> this.controller;
         const { backgroundColor, backgroundImage, visibleStyle } = node;
-        const backgroundRepeatY = visibleStyle.backgroundRepeatY;
-        const backgroundSeparate = isBackgroundSeparate(node, visibleStyle);
+        const { backgroundColor: backgroundColorA, backgroundImage: backgroundImageA, backgroundRepeatX, backgroundRepeatY } = visibleStyle;
+        const backgroundSeparate = isBackgroundSeparate(node, backgroundColorA, backgroundImageA);
         const hasHeight = node.hasHeight || node.actualParent?.hasHeight === true;
         let renderParent = parent;
         let container: Undef<T>;
@@ -62,7 +62,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         };
         const parentVisible = isParentVisible(node);
         if (backgroundColor !== '') {
-            if (!(visibleStyle.backgroundImage && visibleStyle.backgroundRepeatX && backgroundRepeatY)) {
+            if (!(backgroundImageA && backgroundRepeatX && backgroundRepeatY)) {
                 container = controller.createNodeWrapper(node, renderParent, undefined, { resource: RESOURCE_IGNORE });
                 container.css('backgroundColor', backgroundColor);
                 container.setCacheValue('backgroundColor', backgroundColor);
@@ -70,9 +70,8 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                     container.setLayoutWidth('match_parent');
                     container.setLayoutHeight('match_parent');
                 }
-                else {
-                    container.setLayoutWidth(hasVisibleWidth(node) ? 'wrap_content' : 'match_parent');
-                    container.setLayoutHeight('wrap_content');
+                else if (!hasVisibleWidth(node)) {
+                    container.setLayoutWidth('match_parent');
                 }
                 container.unsetCache('visibleStyle');
             }
@@ -93,7 +92,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             const minHeight = parent.cssInitial('minHeight');
             let backgroundSize = node.css('backgroundSize');
             if (height === '' && minHeight === '') {
-                container.setLayoutHeight(!parentVisible && !(backgroundSeparate && hasHeight) && (backgroundRepeatY || node.has('backgroundSize') || node.css('backgroundPosition').split(' ').some(value => isLength(value, true) && parseFloat(value) !== 0)) ? 'match_parent' : 'wrap_content');
+                container.setLayoutHeight(!parentVisible && !(backgroundSeparate && hasHeight) && (backgroundRepeatY || node.has('backgroundSize') || node.css('backgroundPosition').split(' ').some(value => parseFloat(value) !== 0)) ? 'match_parent' : 'wrap_content');
             }
             else {
                 if (height !== '100%' && minHeight !== '100%') {
@@ -116,6 +115,8 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             node.css('backgroundImage', 'none');
             node.setCacheValue('backgroundImage', '');
             visibleStyle.backgroundImage = false;
+            visibleStyle.backgroundRepeatX = false;
+            visibleStyle.backgroundRepeatY = false;
         }
         if (isParentTransfer(parent)) {
             if (container === undefined) {

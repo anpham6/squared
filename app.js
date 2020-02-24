@@ -126,7 +126,13 @@ app.post('/api/assets/copy', (req, res) => {
                 fileerror = filename;
                 if (!emptied[pathname]) {
                     if (empty === '1') {
-                        fs.emptyDirSync(pathname);
+                        try {
+                            fs.emptyDirSync(pathname);
+                        }
+                        catch (err) {
+                            console.log(`FAIL: ${pathname} (${err})`);
+                            fs.mkdirpSync(pathname);
+                        }
                     }
                     else {
                         fs.mkdirpSync(pathname);

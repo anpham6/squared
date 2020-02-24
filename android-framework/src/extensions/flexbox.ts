@@ -621,7 +621,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 }
                                                 else if ((chain.naturalElement ? (<BoxRectDimension> chain.data(FLEXBOX, 'boundsData') || chain.bounds)[HWL] : Number.POSITIVE_INFINITY) < maxSize) {
                                                     setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px', horizontal);
-                                                    if (innerWrapped?.autoMargin[orientation] === false) {
+                                                    if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
                                                         setLayoutWeightOpposing(innerWrapped as T, 'match_parent', horizontal);
                                                     }
                                                 }

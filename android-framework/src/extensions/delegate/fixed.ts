@@ -5,7 +5,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE } = squared.base.lib.enumeration;
+const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 interface FixedData {
     children: View[];
@@ -111,15 +111,6 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
         if (mainData) {
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid });
             if (node.documentBody) {
-                if (node.outerWrapper === container) {
-                    const { backgroundColor, backgroundImage } = node.visibleStyle;
-                    if (backgroundColor || backgroundImage) {
-                        container.inherit(node, 'boxStyle');
-                    }
-                    else {
-                        container.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
-                    }
-                }
                 if (mainData.right) {
                     container.setLayoutWidth('match_parent');
                     container.css('width', 'auto');
