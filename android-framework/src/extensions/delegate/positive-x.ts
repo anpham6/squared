@@ -7,7 +7,7 @@ type View = android.base.View;
 
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
-interface FixedData {
+interface PositiveXData {
     children: View[];
     right: boolean;
     bottom: boolean;
@@ -44,7 +44,9 @@ function setFixedNodes(node: View) {
                 const value = item.right;
                 if (value >= 0 && (fixed || value < paddingRight || node.documentBody && node.hasPX('width') && node.positionStatic)) {
                     children.add(item);
-                    right = true;
+                    if (fixed) {
+                        right = true;
+                    }
                 }
                 else if (checkMarginRight(node, item)) {
                     children.add(item);
@@ -73,7 +75,9 @@ function setFixedNodes(node: View) {
                 const value = item.bottom;
                 if (value >= 0 && (fixed || value < paddingBottom || node.documentBody && node.hasPX('height') && node.positionStatic)) {
                     children.add(item);
-                    bottom = true;
+                    if (fixed) {
+                        bottom = true;
+                    }
                 }
                 else if (checkMarginBottom(node, item)) {
                     children.add(item);
@@ -90,14 +94,14 @@ function setFixedNodes(node: View) {
             }
         }
         if (children.size) {
-            node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData', <FixedData> { children: Array.from(children), right, bottom });
+            node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData', <PositiveXData> { children: Array.from(children), right, bottom });
             return true;
         }
     }
     return false;
 }
 
-export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
+export default class PositiveX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
         return node.naturalElement && (node.contentBoxWidth > 0 || node.contentBoxHeight > 0 || node.documentBody);
     }
@@ -107,19 +111,17 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public processNode(node: T, parent: T) {
-        const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData');
+        const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
         if (mainData) {
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid });
-            if (node.documentBody) {
-                if (mainData.right) {
-                    container.setLayoutWidth('match_parent');
-                    container.css('width', 'auto');
-                    container.addAlign(NODE_ALIGNMENT.BLOCK);
-                }
-                if (mainData.bottom) {
-                    container.setLayoutHeight('match_parent');
-                    container.css('height', 'auto');
-                }
+            if (mainData.right) {
+                container.setLayoutWidth('match_parent');
+                container.css('width', 'auto');
+                container.addAlign(NODE_ALIGNMENT.BLOCK);
+            }
+            if (mainData.bottom) {
+                container.setLayoutHeight('match_parent');
+                container.css('height', 'auto');
             }
             if (!node.pageFlow) {
                 if (!node.hasPX('width') && node.hasPX('left') && node.hasPX('right')) {
@@ -148,7 +150,7 @@ export default class Fixed<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public postBaseLayout(node: T) {
-        const mainData: FixedData = node.data(EXT_ANDROID.DELEGATE_FIXED, 'mainData');
+        const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
         if (mainData) {
             for (const item of mainData.children) {
                 const fixed = item.css('position') === 'fixed' || item.absoluteParent !== item.actualParent;

@@ -144,11 +144,11 @@ declare namespace extensions {
 
     namespace delegate {
         class Background<T extends View> extends squared.base.ExtensionUI<T> {}
-        class Fixed<T extends View> extends squared.base.ExtensionUI<T> {}
         class CssGrid<T extends View> extends squared.base.ExtensionUI<T> {}
         class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {}
         class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {}
         class Percent<T extends View> extends squared.base.ExtensionUI<T> {}
+        class PositiveX<T extends View> extends squared.base.ExtensionUI<T> {}
         class RadioGroup<T extends View> extends squared.base.ExtensionUI<T> {}
         class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {}
     }

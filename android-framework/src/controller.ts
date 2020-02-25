@@ -1439,7 +1439,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public addGuideline(node: T, parent: T, orientation?: string, percent = false, opposing = false) {
-        const documentParent = parent.nodeGroup && !node.documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) ? parent : node.documentParent as T;
+        let documentParent = node.documentParent as T;
+        if (parent.nodeGroup && !documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
+            documentParent = parent
+        }
         const box = documentParent.box;
         const linear = node.linear;
         const bounds = node.positionStatic ? node.bounds : linear;
@@ -1483,9 +1486,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.anchor(LT, 'parent', true);
                 return;
             }
-            let beginPercent = 'layout_constraintGuide_';
-            let location: number;
             if (!percent && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
+                const boundsA = node.bounds;
                 const found = parent.renderChildren.some(item => {
                     if (item !== node && item.constraint[value]) {
                         let attr: Undef<string>;
@@ -1498,8 +1500,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                         if (attr === undefined) {
-                            if (withinRange(node.bounds[LT], item.bounds[LT])) {
-                                if (!horizontal && node.textElement && node.baseline && item.textElement && item.baseline) {
+                            const boundsB = item.bounds;
+                            if (withinRange(boundsA[LT], boundsB[LT])) {
+                                if (!horizontal && node.baselineElement && item.baselineElement) {
                                     attr = 'baseline';
                                 }
                                 else {
@@ -1512,11 +1515,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     }
                                 }
                             }
-                            else if (withinRange(node.bounds[RB], item.bounds[RB])) {
+                            else if (withinRange(boundsA[RB], boundsB[RB])) {
                                 attr = RB;
                                 node.modifyBox(horizontal ? BOX_STANDARD.MARGIN_RIGHT : BOX_STANDARD.MARGIN_BOTTOM);
                             }
-                            else if (!node.pageFlow && item.pageFlow && withinRange(node.bounds[LT] + node[LT], item.bounds[LT])) {
+                            else if (!node.pageFlow && item.pageFlow && withinRange(boundsA[LT] + node[LT], boundsB[LT])) {
                                 attr = LT;
                                 node.modifyBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, node[LT]);
                             }
@@ -1535,7 +1538,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             if (node.autoPosition) {
                 const siblingsLeading = node.siblingsLeading;
-                if (siblingsLeading.length && node.alignedVertically() === 0) {
+                if (siblingsLeading.length && !node.alignedVertically()) {
                     const previousSibling = siblingsLeading[0] as T;
                     if (previousSibling.renderParent === node.renderParent) {
                         node.anchor(horizontal ? 'rightLeft' : 'top', previousSibling.documentId, true);
@@ -1545,10 +1548,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             const absoluteParent = node.absoluteParent as T;
+            let attr = 'layout_constraintGuide_';
+            let location: number;
             if (percent) {
                 const position = Math.abs(bounds[LT] - box[LT]) / box[horizontal ? 'width' : 'height'];
                 location = parseFloat(truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision));
-                beginPercent += 'percent';
+                attr += 'percent';
             }
             else {
                 location = bounds[LT] - box[!opposing ? LT : RB];
@@ -1560,7 +1565,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                 }
-                beginPercent += 'begin';
+                attr += 'begin';
             }
             const guideline = parent.constraint.guideline || {};
             if (!node.pageFlow) {
@@ -1596,7 +1601,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.anchor(RB, 'parent', true);
             }
             else {
-                const anchors = guideline[value]?.[beginPercent]?.[LT];
+                const anchors = guideline[value]?.[attr]?.[LT];
                 if (anchors) {
                     for (const id in anchors) {
                         if (parseInt(anchors[id]) === location) {
@@ -1611,7 +1616,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         orientation: horizontal ? 'vertical' : 'horizontal'
                     },
                     app: {
-                        [beginPercent]: percent ? location.toString() : '@dimen/' + Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))
+                        [attr]: percent ? location.toString() : '@dimen/' + Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))
                     }
                 });
                 this.addAfterOutsideTemplate(node.id, this.renderNodeStatic(node.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.GUIDELINE : CONTAINER_ANDROID_X.GUIDELINE, options), false);
@@ -1620,7 +1625,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.anchor(LT, documentId, true);
                     node.anchorDelete(RB);
                     if (location > 0) {
-                        assignEmptyValue(guideline, value, beginPercent, LT, documentId, location.toString());
+                        assignEmptyValue(guideline, value, attr, LT, documentId, location.toString());
                         parent.constraint.guideline = guideline;
                     }
                 }

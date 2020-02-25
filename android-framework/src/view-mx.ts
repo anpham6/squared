@@ -1049,17 +1049,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = this.renderParent as T;
             const maxDimension = this.support.maxDimension;
             const onlyChild = this.onlyChild;
-            if (this.documentBody) {
-                const fixed = renderParent.id === 0 && this.renderChildren.some(node => node.css('position') === 'fixed');
-                if (fixed || this.css('width') === '100%' || this.css('minWidth') === '100%' || this.blockStatic && !this.hasPX('width') && !this.hasPX('maxWidth')) {
-                    this.setLayoutWidth('match_parent', false);
-                }
-                if (fixed || this.css('height') === '100%' || this.css('minHeight') === '100%') {
-                    this.setLayoutHeight('match_parent', false);
-                }
-            }
-            if (this.layoutWidth === '') {
-                let layoutWidth = '';
+            let layoutWidth = this.layoutWidth;
+            let layoutHeight = this.layoutHeight;
+            if (layoutWidth === '') {
                 if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {
                     const width = this.css('width');
                     let value = -1;
@@ -1233,7 +1225,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 this.setLayoutWidth(layoutWidth || 'wrap_content');
             }
-            let layoutHeight = this.layoutHeight;
             if (this.layoutHeight === '') {
                 if (this.hasPX('height') && (!this.inlineStatic || this.cssInitial('height') === '')) {
                     const height = this.css('height');

@@ -26,9 +26,9 @@ import ConstraintGuideline from './extensions/constraint/guideline';
 
 import DelegateBackground from './extensions/delegate/background';
 import DelegateCssGrid from './extensions/delegate/cssgrid';
-import DelegateFixed from './extensions/delegate/fixed';
 import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
 import DelegateNegativeX from './extensions/delegate/negative-x';
+import DelegatePositiveX from './extensions/delegate/positive-x';
 import DelegatePercent from './extensions/delegate/percent';
 import DelegateRadioGroup from './extensions/delegate/radiogroup';
 import DelegateScrollBar from './extensions/delegate/scrollbar';
@@ -107,10 +107,10 @@ const appBase: AppFramework<View> = {
         },
         delegate: {
             Background: DelegateBackground,
-            Fixed: DelegateFixed,
             CssGrid: DelegateCssGrid,
             MaxWidthHeight: DelegateMaxWidthHeight,
             NegativeX: DelegateNegativeX,
+            PositiveX: DelegatePositiveX,
             Percent: DelegatePercent,
             RadioGroup: DelegateRadioGroup,
             ScrollBar: DelegateScrollBar
@@ -342,20 +342,20 @@ const appBase: AppFramework<View> = {
             [EA.EXTERNAL]: new External(EA.EXTERNAL, framework),
             [EA.SUBSTITUTE]: new Substitute(EA.SUBSTITUTE, framework),
             [EA.DELEGATE_BACKGROUND]: new DelegateBackground(EA.DELEGATE_BACKGROUND, framework),
-            [EA.DELEGATE_FIXED]: new DelegateFixed(EA.DELEGATE_FIXED, framework),
+            [EA.DELEGATE_CSS_GRID]: new DelegateCssGrid(EA.DELEGATE_CSS_GRID, framework),
             [EA.DELEGATE_MAXWIDTHHEIGHT]: new DelegateMaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, framework),
             [EA.DELEGATE_NEGATIVEX]: new DelegateNegativeX(EA.DELEGATE_NEGATIVEX, framework),
             [EA.DELEGATE_PERCENT]: new DelegatePercent(EA.DELEGATE_PERCENT, framework),
-            [EA.DELEGATE_CSS_GRID]: new DelegateCssGrid(EA.DELEGATE_CSS_GRID, framework),
+            [EA.DELEGATE_POSITIVEX]: new DelegatePositiveX(EA.DELEGATE_POSITIVEX, framework),
             [EA.DELEGATE_RADIOGROUP]: new DelegateRadioGroup(EA.DELEGATE_RADIOGROUP, framework),
             [EA.DELEGATE_SCROLLBAR]: new DelegateScrollBar(EA.DELEGATE_SCROLLBAR, framework),
-            [EA.RESOURCE_INCLUDES]: new ResourceIncludes(EA.RESOURCE_INCLUDES, framework),
             [EA.RESOURCE_BACKGROUND]: new ResourceBackground(EA.RESOURCE_BACKGROUND, framework),
-            [EA.RESOURCE_SVG]: new ResourceSvg(EA.RESOURCE_SVG, framework),
-            [EA.RESOURCE_STRINGS]: new ResourceStrings(EA.RESOURCE_STRINGS, framework),
-            [EA.RESOURCE_FONTS]: new ResourceFonts(EA.RESOURCE_FONTS, framework),
             [EA.RESOURCE_DIMENS]: new ResourceDimens(EA.RESOURCE_DIMENS, framework),
+            [EA.RESOURCE_FONTS]: new ResourceFonts(EA.RESOURCE_FONTS, framework),
+            [EA.RESOURCE_INCLUDES]: new ResourceIncludes(EA.RESOURCE_INCLUDES, framework),
+            [EA.RESOURCE_STRINGS]: new ResourceStrings(EA.RESOURCE_STRINGS, framework),
             [EA.RESOURCE_STYLES]: new ResourceStyles(EA.RESOURCE_STYLES, framework),
+            [EA.RESOURCE_SVG]: new ResourceSvg(EA.RESOURCE_SVG, framework),
             [EA.CONSTRAINT_GUIDELINE]: new ConstraintGuideline(EA.CONSTRAINT_GUIDELINE, framework)
         });
         initialized = true;

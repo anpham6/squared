@@ -21,7 +21,7 @@ function outsideX(node: View, parent: View) {
         return node.marginLeft < 0 && node === parent.firstChild && node.inlineFlow && !node.centerAligned && !node.rightAligned && Math.abs(node.marginLeft) <= parent.marginLeft + parent.paddingLeft && !parent.some(item => item.multiline);
     }
     else {
-        return node.absoluteParent === parent && (node.left < 0 || !node.hasPX('left') && node.right < 0);
+        return node.leftTopAxis && (node.left < 0 || !node.hasPX('left') && node.right < 0);
     }
 }
 
