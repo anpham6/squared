@@ -1,4 +1,4 @@
-import { AscendOptions, BoxType, CachedValue, InitialData, QueryAttribute, QueryData } from '../../@types/base/node';
+import { AscendOptions, BoxType, CachedValue, InitialData, HasOptions, QueryAttribute, QueryData } from '../../@types/base/node';
 
 import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
 import { EXT_NAME } from './lib/constant';
@@ -1119,8 +1119,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return 0;
     }
 
-    public has(attr: string, checkType = 0, options?: ObjectMap<string | string[] | boolean>) {
-        const value = (options?.map === 'initial' && this._initial?.styleMap || this._styleMap)[attr];
+    public has(attr: string, options?: HasOptions) {
+        let map: Undef<string>;
+        let not: Undef<string | string[]>
+        let type: Undef<number>;
+        if (options) {
+            ({ map, not, type } = options);
+        }
+        const value = (map === 'initial' && this._initial?.styleMap || this._styleMap)[attr];
         if (value) {
             switch (value) {
                 case 'auto':
@@ -1132,31 +1138,27 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'baseline':
                 case 'left':
                 case 'start':
-                    return this.flexElement || this.actualParent?.flexElement ? /^(align|justify|place)-/.test(attr) : false;
+                    return this.flexElement || this.actualParent?.flexElement ? /^(align|justify|place)/.test(attr) : false;
                 default:
-                    if (options) {
-                        if (options.not) {
-                            if (value === options.not) {
-                                return false;
-                            }
-                            else if (Array.isArray(options.not)) {
-                                for (const exclude of options.not) {
-                                    if (value === exclude) {
-                                        return false;
-                                    }
+                    if (not) {
+                        if (Array.isArray(not)) {
+                            for (const exclude of not) {
+                                if (value === exclude) {
+                                    return false;
                                 }
                             }
                         }
-                    }
-                    if (checkType > 0) {
-                        if (hasBit(checkType, CSS_UNIT.LENGTH) && isLength(value)) {
-                            return true;
-                        }
-                        if (hasBit(checkType, CSS_UNIT.PERCENT) && isPercent(value)) {
-                            return true;
+                        else if (value === not) {
+                            return false;
                         }
                     }
-                    return checkType === 0;
+                    if (type) {
+                        if (hasBit(type, CSS_UNIT.LENGTH) && isLength(value) || hasBit(type, CSS_UNIT.PERCENT) && isPercent(value)) {
+                            return true;
+                        }
+                        return false;
+                    }
+                    return true;
             }
         }
         return false;
@@ -2591,13 +2593,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get percentHeight() {
         let result = this._cached.percentHeight;
         if (result === undefined) {
-            if (this.actualParent?.hasHeight) {
-                const value = this.cssInitial('height');
-                result = isPercent(value) ? parseFloat(value) / 100 : 0;
-            }
-            else {
-                result = 0;
-            }
+            const value = this.cssInitial('height');
+            result = isPercent(value) && (this.actualParent?.hasHeight || this.css('position') === 'fixed') ? parseFloat(value) / 100 : 0;
             this._cached.percentHeight = result;
         }
         return result;
@@ -2687,7 +2684,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const { left, right } = this.bounds;
                 result = right - left;
             }
-            else if (this.display === 'table-cell' || Node.isFlexDirection(this, 'row')) {
+            else if (this.inlineStatic || this.display === 'table-cell' || Node.isFlexDirection(this, 'row')) {
                 result = this.bounds.width;
             }
             else {
@@ -2709,7 +2706,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get actualHeight() {
         let result = this._cached.actualHeight;
         if (result === undefined) {
-            if (!this.plainText && this.display !== 'table-cell' && !Node.isFlexDirection(this, 'column')) {
+            if (!this.inlineStatic && this.display !== 'table-cell' && !Node.isFlexDirection(this, 'column')) {
                 result = this.height;
                 if (result > 0) {
                     if (this.contentBox && !this.tableElement) {

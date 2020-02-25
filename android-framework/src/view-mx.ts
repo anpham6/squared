@@ -61,7 +61,7 @@ function getGravityValues(node: T, attr: string) {
 }
 
 function setAutoMargin(node: T, autoMargin: AutoMargin) {
-    if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerMostWrapped.has('width', CSS_UNIT.PERCENT, { not: '100%' }))) {
+    if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerMostWrapped.has('width', { type: CSS_UNIT.PERCENT, not: '100%' }))) {
         node.mergeGravity(
             (node.blockWidth || !node.pageFlow) && node.outerWrapper === undefined ? 'gravity' : 'layout_gravity',
             autoMargin.leftRight ? 'center_horizontal' : (autoMargin.left ? 'right' : 'left')
@@ -135,8 +135,20 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
             }
         }
     }
-    else if (inlineStyle && (!node.hasHeight || lineHeight > node.height) && (node.layoutHorizontal && node.horizontalRows === undefined || node.hasAlign(NODE_ALIGNMENT.SINGLE))) {
-        setMinHeight(node, lineHeight);
+    else if (inlineStyle) {
+        const height = node.height;
+        if (lineHeight === height) {
+            node.mergeGravity('gravity', 'center_vertical', false);
+        }
+        else if (height > 0) {
+            const offset = (lineHeight / 2) - node.paddingTop;
+            if (offset > 0) {
+                node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+            }
+        }
+        else if (node.layoutHorizontal && node.horizontalRows === undefined || node.onlyChild || node.hasAlign(NODE_ALIGNMENT.SINGLE)) {
+            setMinHeight(node, lineHeight);
+        }
     }
 }
 
@@ -221,7 +233,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
     if (isLength(maxWH, true) && maxWH !== '100%') {
         if (horizontal) {
             if (ascendFlexibleWidth(node)) {
-                node.setLayoutWidth((node.renderParent as T).flexibleWidth ? 'match_parent' : '0px', node.innerWrapped?.naturalChild === true);
+                node.setLayoutWidth('0px', node.innerWrapped?.naturalChild === true);
                 if (node.flexibleWidth) {
                     const value = node.parseUnit(maxWH);
                     node.app('layout_constraintWidth_max', formatPX(value + node.contentBoxWidth));
@@ -237,7 +249,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
             }
         }
         else if (ascendFlexibleHeight(node)) {
-            node.setLayoutHeight((node.renderParent as T).flexibleHeight ? 'match_parent' : '0px', node.innerWrapped?.naturalChild === true);
+            node.setLayoutHeight('0px', node.innerWrapped?.naturalChild === true);
             if (node.flexibleHeight) {
                 node.app('layout_constraintHeight_max', formatPX(node.parseUnit(maxWH, 'height') + node.contentBoxHeight));
                 node.css('maxHeight', 'auto');
@@ -276,7 +288,7 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
         }
         value = Math.min(value + boxPercent, 1);
     }
-    if (value === 1 && !node.hasPX('maxWidth')) {
+    if (value === 1 && !node.hasPX(horizontal ? 'maxWidth' : 'maxHeight')) {
         setLayoutDimension(node, 'match_parent', horizontal, false);
     }
     else {
@@ -295,36 +307,15 @@ function setLayoutDimension(node: T, value: string, horizontal: boolean, overwri
     }
 }
 
-function constraintPercentValue(node: T, dimension: string, horizontal: boolean, opposing: boolean, percent: number) {
+function constraintPercentValue(node: T, horizontal: boolean, percent: number) {
     const value = horizontal ? node.percentWidth : node.percentHeight;
-    if (opposing) {
-        if (value > 0) {
-            const size = node.bounds[dimension];
-            setLayoutDimension(node, formatPX(size), horizontal, true);
-            if (node.imageElement) {
-                const { naturalWidth, naturalHeight } = <HTMLImageElement> node.element;
-                if (naturalWidth > 0 && naturalHeight > 0) {
-                    const opposingUnit = formatPX((size / (horizontal ? naturalWidth : naturalHeight)) * (horizontal ? naturalHeight : naturalWidth));
-                    if (horizontal) {
-                        node.setLayoutHeight(opposingUnit, false);
-                    }
-                    else {
-                        node.setLayoutWidth(opposingUnit, false);
-                    }
-                }
-            }
-        }
-    }
-    else if (value > 0) {
-        return setConstraintPercent(node, value, horizontal, percent);
-    }
-    return percent;
+    return value > 0 ? setConstraintPercent(node, value, horizontal, percent) : percent;
 }
 
-function constraintPercentWidth(node: T, opposing: boolean, percent = 1) {
-    if (!opposing && (node.renderParent as T).hasPX('width', false) && !(node.actualParent || node.documentParent).layoutElement) {
-        const value = node.percentWidth;
-        if (value > 0) {
+function constraintPercentWidth(node: T, percent = 1) {
+    const value = node.percentWidth;
+    if (value > 0) {
+        if ((node.renderParent as T).hasPX('width', false) && !(node.actualParent || node.documentParent).layoutElement) {
             if (value < 1) {
                 node.setLayoutWidth(formatPX(node.actualWidth));
             }
@@ -332,45 +323,26 @@ function constraintPercentWidth(node: T, opposing: boolean, percent = 1) {
                 node.setLayoutWidth('match_parent', false);
             }
         }
-    }
-    else if (!node.inputElement) {
-        return constraintPercentValue(node, 'width', true, opposing, percent);
+        else if (!node.inputElement) {
+            return constraintPercentValue(node, true, percent);
+        }
     }
     return percent;
 }
 
-function constraintPercentHeight(node: T, opposing: boolean, percent = 1) {
-    const parent = node.renderParent as T;
-    if (parent.hasHeight) {
-        if (!opposing && parent.hasPX('height', false) && !(node.actualParent || node.documentParent).layoutElement) {
-            const value = node.percentHeight;
-            if (value > 0) {
-                if (value < 1) {
-                    node.setLayoutHeight(formatPX(node.actualHeight));
-                }
-                else {
-                    node.setLayoutHeight('match_parent', false);
-                }
+function constraintPercentHeight(node: T, percent = 1) {
+    let value = node.percentHeight;
+    if (value > 0) {
+        if ((node.renderParent as T).hasPX('height', false) && !(node.actualParent || node.documentParent).layoutElement) {
+            if (value < 1) {
+                node.setLayoutHeight(formatPX(node.actualHeight));
+            }
+            else {
+                node.setLayoutHeight('match_parent', false);
             }
         }
         else if (!node.inputElement) {
-            return constraintPercentValue(node, 'height', false, opposing, percent);
-        }
-    }
-    else {
-        const value = node.percentHeight;
-        if (value > 0) {
-            if (value === 1) {
-                if (node.alignParent('top') && node.alignParent('bottom')) {
-                    node.setLayoutHeight('0px', false);
-                    return percent;
-                }
-                else if (parent.flexibleHeight) {
-                    node.setLayoutHeight('match_parent', false);
-                    return percent;
-                }
-            }
-            node.setLayoutHeight('wrap_content', false);
+            return constraintPercentValue(node, false, percent);
         }
     }
     return percent;
@@ -413,8 +385,8 @@ const excludeVertical = (node: T) => (node.bounds.height === 0 || node.pseudoEle
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
         public static setConstraintDimension<T extends View>(node: T, percentWidth = 1): number {
-            percentWidth = constraintPercentWidth(node, false, percentWidth);
-            constraintPercentHeight(node, false, 1);
+            percentWidth = constraintPercentWidth(node, percentWidth);
+            constraintPercentHeight(node, 1);
             if (!node.inputElement) {
                 constraintMinMax(node, true);
                 constraintMinMax(node, false);
@@ -465,10 +437,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (!flexible) {
                     if (horizontal) {
-                        percentWidth = constraintPercentWidth(node, false, percentWidth);
+                        percentWidth = constraintPercentWidth(node, percentWidth);
                     }
                     else {
-                        percentHeight = constraintPercentHeight(node, false, percentHeight);
+                        percentHeight = constraintPercentHeight(node, percentHeight);
                     }
                 }
             }
@@ -476,10 +448,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 node.app(horizontal ? 'layout_constrainedWidth' : 'layout_constrainedHeight', 'true');
             }
             if (horizontal) {
-                constraintPercentHeight(node, true);
+                constraintPercentHeight(node);
             }
             else {
-                constraintPercentWidth(node, true);
+                constraintPercentWidth(node);
             }
             if (!node.inputElement && !node.imageOrSvgElement) {
                 constraintMinMax(node, true);
@@ -1922,6 +1894,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (opacity !== '1' && isNumber(opacity)) {
                         this.android('alpha', opacity);
                     }
+                }
+                const zIndex = this.zIndex;
+                if (zIndex !== 0) {
+                    this.android('elevation', zIndex + 'px', false);
                 }
             }
             const indent = '\n' + '\t'.repeat(depth);

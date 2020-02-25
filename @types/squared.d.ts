@@ -1,6 +1,6 @@
 import { AppHandler, AppNodeUIOptions, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserUISettings, UserSettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
-import { AutoMargin, AscendOptions, BoxType, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './base/node';
+import { AutoMargin, AscendOptions, BoxType, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgMatrix, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
@@ -467,7 +467,7 @@ declare namespace base {
         toElementBoolean(attr: string, fallback?: boolean): boolean;
         toElementString(attr: string, fallback?: string): string;
         parseUnit(value: string, dimension?: "width" | "height", parent?: boolean, screenDimension?: Dimension): number;
-        has(attr: string, checkType?: number, options?: {}): boolean;
+        has(attr: string, options?: HasOptions): boolean;
         hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
         setBounds(cache?: boolean): void;
         querySelector(value: string): Null<Node>;

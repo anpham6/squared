@@ -120,6 +120,12 @@ export interface AscendOptions {
     every?: boolean;
 }
 
+export interface HasOptions {
+    map?: string;
+    not?: string | string[];
+    type?: number;
+}
+
 export interface QueryData {
     all: boolean;
     tagName?: string;

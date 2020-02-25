@@ -74,7 +74,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
             }
             else {
                 node.each((item: T) => {
-                    if (item.has('width', CSS_UNIT.PERCENT)) {
+                    if (item.has('width', { type: CSS_UNIT.PERCENT })) {
                         item.setLayoutWidth('wrap_content');
                         requireWidth = true;
                     }
