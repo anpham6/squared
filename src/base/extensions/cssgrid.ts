@@ -213,7 +213,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             templateAreas: {},
             row: CssGrid.createDataRowAttribute(),
             column: CssGrid.createDataRowAttribute(),
-            emptyRows: []
+            emptyRows: [],
+            minCellHeight: 0
         });
     }
 
@@ -1006,6 +1007,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const modified = new Set<T>();
                 row.length = rowCount;
                 column.length = columnCount;
+                let minCellHeight = 0;
                 for (let i = 0; i < rowCount; i++) {
                     const rowItem = rowMain[i];
                     const unitHeight = rowUnit[i];
@@ -1040,6 +1042,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                             else if (boundsHeight > Math.abs(columnHeight)) {
                                                 rowMax[i] = -boundsHeight;
                                             }
+                                            minCellHeight = Math.max(boundsHeight, minCellHeight);
                                         }
                                         if (columnSpan === 1) {
                                             const boundsWidth = item.bounds.width;
@@ -1074,6 +1077,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
+                mainData.minCellHeight = minCellHeight;
                 if (horizontal) {
                     if (node.hasPX('width', false)) {
                         column.fixedWidth = true;

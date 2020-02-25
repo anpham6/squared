@@ -1295,7 +1295,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this.hasAlign(NODE_ALIGNMENT.HORIZONTAL);
     }
     get layoutVertical() {
-        return this.hasAlign(NODE_ALIGNMENT.VERTICAL);
+        if (this.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
+            return true;
+        }
+        else if (this.naturalChild) {
+            const children = this.naturalChildren;
+            return children.length === 1 && children[0].blockStatic;
+        }
+        return false;
     }
 
     get nodeGroup() {

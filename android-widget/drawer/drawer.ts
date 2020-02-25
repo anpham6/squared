@@ -110,10 +110,12 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
                 controller.addAfterInsideTemplate(
                     node.id,
                     controller.renderNodeStatic(
-                        node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW,
-                        Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')),
-                        'wrap_content',
-                        'match_parent'
+                        {
+                            controlName: node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW,
+                            width: 'wrap_content',
+                            height: 'match_parent'
+                        },
+                        Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'))
                     )
                 );
             }

@@ -99,17 +99,20 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                                     node.modifyBox(region);
                                     node.modifyBox(region, offsetChild);
                                 }
+                                else {
+                                    node.registerBox(region)?.modifyBox(region, offsetChild);
+                                }
                                 resetChild = true;
                             }
                         }
                         else {
-                            const outerWrapper = target.registerBox(region);
-                            if (outerWrapper) {
-                                const value = outerWrapper.getBox(region)[1];
+                            const registered = target.registerBox(region);
+                            if (registered) {
+                                const value = registered.getBox(region)[1];
                                 if (value > 0) {
                                     node.modifyBox(region);
                                     node.modifyBox(region, value);
-                                    outerWrapper.modifyBox(region, -value);
+                                    registered.modifyBox(region, -value);
                                 }
                             }
                         }

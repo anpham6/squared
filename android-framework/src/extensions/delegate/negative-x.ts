@@ -20,9 +20,7 @@ function outsideX(node: View, parent: View) {
     if (node.pageFlow) {
         return node.marginLeft < 0 && node === parent.firstChild && node.inlineFlow && !node.centerAligned && !node.rightAligned && Math.abs(node.marginLeft) <= parent.marginLeft + parent.paddingLeft && !parent.some(item => item.multiline);
     }
-    else {
-        return node.leftTopAxis && (node.left < 0 || !node.hasPX('left') && node.right < 0);
-    }
+    return node.leftTopAxis && (node.left < 0 || !node.hasPX('left') && node.right < 0);
 }
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
@@ -36,10 +34,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public processNode(node: T, parent: T) {
         const outside = node.filter((item: T) => outsideX(item, node)) as T[];
-        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, {
-            controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
-            containerType: CONTAINER_NODE.CONSTRAINT
-        });
+        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, { controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), containerType: CONTAINER_NODE.CONSTRAINT });
         node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
         let left = NaN;
         let right = NaN;

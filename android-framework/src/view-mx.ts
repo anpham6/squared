@@ -101,53 +101,61 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
     if (node.multiline) {
         setMultiline(node, lineHeight, false);
     }
-    else if ((node.inline || node.renderChildren.length) && (node.pageFlow || node.textContent.length)) {
-        if (inlineStyle && node.inlineText && !node.inline) {
-            setMinHeight(node, lineHeight);
-        }
-        else {
-            let offset = 0;
-            let usePadding = true;
-            if (!inlineStyle && node.inlineText && node.styleElement) {
-                offset = getLineSpacingExtra(node, lineHeight);
-                usePadding = false;
+    else {
+        const length = node.renderChildren.length;
+        if ((node.inline || length) && (node.pageFlow || node.textContent.length)) {
+            if (inlineStyle && node.inlineText && !node.inline) {
+                setMinHeight(node, lineHeight);
             }
             else {
-                const height = node.bounds.height;
-                if (node.plainText) {
-                    const numberOfLines = node.bounds.numberOfLines as number;
-                    if (numberOfLines > 1) {
-                        setMultiline(node, lineHeight, false);
-                        return;
+                let offset = 0;
+                let usePadding = true;
+                if (!inlineStyle && node.inlineText && node.styleElement) {
+                    offset = getLineSpacingExtra(node, lineHeight);
+                    usePadding = false;
+                }
+                else {
+                    const height = node.bounds.height;
+                    if (node.plainText) {
+                        const numberOfLines = node.bounds.numberOfLines as number;
+                        if (numberOfLines > 1) {
+                            setMultiline(node, lineHeight, false);
+                            return;
+                        }
+                    }
+                    offset = (lineHeight - height) / 2;
+                }
+                const upper = Math.round(offset);
+                if (upper > 0) {
+                    const boxPadding = usePadding && node.textElement && !node.plainText && !inlineStyle;
+                    if (top) {
+                        node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.MARGIN_TOP, upper);
+                    }
+                    if (bottom) {
+                        node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_BOTTOM : BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
                     }
                 }
-                offset = (lineHeight - height) / 2;
             }
-            const upper = Math.round(offset);
-            if (upper > 0) {
-                const boxPadding = usePadding && node.textElement && !node.plainText && !inlineStyle;
-                if (top) {
-                    node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.MARGIN_TOP, upper);
+        }
+        else if (inlineStyle) {
+            if (length === 0) {
+                const height = node.height;
+                if (lineHeight === height) {
+                    node.mergeGravity('gravity', 'center_vertical', false);
                 }
-                if (bottom) {
-                    node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_BOTTOM : BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
+                else if (height > 0) {
+                    const offset = (lineHeight / 2) - node.paddingTop;
+                    if (offset > 0) {
+                        node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+                    }
+                }
+                else {
+                    setMinHeight(node, lineHeight);
                 }
             }
-        }
-    }
-    else if (inlineStyle) {
-        const height = node.height;
-        if (lineHeight === height) {
-            node.mergeGravity('gravity', 'center_vertical', false);
-        }
-        else if (height > 0) {
-            const offset = (lineHeight / 2) - node.paddingTop;
-            if (offset > 0) {
-                node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+            else if (node.layoutHorizontal && node.horizontalRows === undefined || node.onlyChild || node.hasAlign(NODE_ALIGNMENT.SINGLE)) {
+                setMinHeight(node, lineHeight);
             }
-        }
-        else if (node.layoutHorizontal && node.horizontalRows === undefined || node.onlyChild || node.hasAlign(NODE_ALIGNMENT.SINGLE)) {
-            setMinHeight(node, lineHeight);
         }
     }
 }
@@ -210,50 +218,68 @@ function constraintMinMax(node: T, horizontal: boolean) {
     if (node.support.maxDimension && (horizontal && node.floating || !horizontal)) {
         return;
     }
-    const minWH = node.cssInitial(horizontal ? 'minWidth' : 'minHeight', true);
-    if (isLength(minWH, true) && parseFloat(minWH) > 0) {
-        if (horizontal) {
-            if (ascendFlexibleWidth(node)) {
-                node.setLayoutWidth('0px', false);
-                if (node.flexibleWidth) {
-                    node.app('layout_constraintWidth_min', formatPX(node.parseUnit(minWH) + node.contentBoxWidth));
-                    node.css('minWidth', 'auto');
+    const hasDimension = node.hasPX(horizontal ? 'width' : 'height', false);
+    if (!hasDimension) {
+        const minWH = node.cssInitial(horizontal ? 'minWidth' : 'minHeight', true);
+        if (isLength(minWH, true) && parseFloat(minWH) > 0) {
+            if (horizontal) {
+                if (ascendFlexibleWidth(node)) {
+                    node.setLayoutWidth('0px', false);
+                    if (node.flexibleWidth) {
+                        node.app('layout_constraintWidth_min', formatPX(node.parseUnit(minWH) + node.contentBoxWidth));
+                        node.css('minWidth', 'auto');
+                    }
                 }
             }
-        }
-        else if (ascendFlexibleHeight(node)) {
-            node.setLayoutHeight('0px', false);
-            if (node.flexibleHeight) {
-                node.app('layout_constraintHeight_min', formatPX(node.parseUnit(minWH, 'height') + node.contentBoxHeight));
-                node.css(horizontal ? 'minWidth' : 'minHeight', 'auto');
+            else if (ascendFlexibleHeight(node)) {
+                node.setLayoutHeight('0px', false);
+                if (node.flexibleHeight) {
+                    node.app('layout_constraintHeight_min', formatPX(node.parseUnit(minWH, 'height') + node.contentBoxHeight));
+                    node.css(horizontal ? 'minWidth' : 'minHeight', 'auto');
+                }
             }
         }
     }
     const maxWH = node.cssInitial(horizontal ? 'maxWidth' : 'maxHeight', true);
     if (isLength(maxWH, true) && maxWH !== '100%') {
         if (horizontal) {
-            if (ascendFlexibleWidth(node)) {
-                node.setLayoutWidth('0px', node.innerWrapped?.naturalChild === true);
-                if (node.flexibleWidth) {
-                    const value = node.parseUnit(maxWH);
-                    node.app('layout_constraintWidth_max', formatPX(value + node.contentBoxWidth));
-                    node.css('maxWidth', 'auto');
-                    if (node.layoutVertical) {
-                        node.each(item => {
-                            if (item.textElement && !item.hasPX('maxWidth')) {
-                                item.css('maxWidth', formatPX(value));
-                            }
-                        });
+            if (ascendFlexibleWidth(node) && (node.blockStatic || !node.alignParent('left') && !node.alignParent('right'))) {
+                const value = node.parseUnit(maxWH);
+                if (hasDimension) {
+                    const width = node.width;
+                    if (width < value) {
+                        node.app('layout_constraintWidth_min', formatPX(Math.min(width + (node.contentBox && !node.actualParent?.gridElement ? node.contentBoxWidth : 0), value)));
                     }
+                    else if (width >= value) {
+                        return;
+                    }
+                }
+                node.setLayoutWidth('0px');
+                node.app('layout_constraintWidth_max', formatPX(value));
+                node.css('maxWidth', 'auto');
+                if (node.layoutVertical) {
+                    node.each(item => {
+                        if (item.textElement && !item.hasPX('maxWidth')) {
+                            item.css('maxWidth', formatPX(value));
+                        }
+                    });
                 }
             }
         }
         else if (ascendFlexibleHeight(node)) {
-            node.setLayoutHeight('0px', node.innerWrapped?.naturalChild === true);
-            if (node.flexibleHeight) {
-                node.app('layout_constraintHeight_max', formatPX(node.parseUnit(maxWH, 'height') + node.contentBoxHeight));
-                node.css('maxHeight', 'auto');
+            const value = node.parseUnit(maxWH, 'height');
+            if (hasDimension) {
+                const height = node.height;
+                if (height < value) {
+                    node.app('layout_constraintHeight_min', formatPX(Math.min(height + (node.contentBox && !node.actualParent?.gridElement ? node.contentBoxWidth : 0), value)));
+                }
+                else if (height >= value) {
+                    return;
+                }
             }
+            node.setLayoutHeight('0px');
+            node.app('layout_constraintHeight_max', formatPX(value));
+            node.css('maxHeight', 'auto');
         }
     }
 }
@@ -331,7 +357,7 @@ function constraintPercentWidth(node: T, percent = 1) {
 }
 
 function constraintPercentHeight(node: T, percent = 1) {
-    let value = node.percentHeight;
+    const value = node.percentHeight;
     if (value > 0) {
         if ((node.renderParent as T).hasPX('height', false) && !(node.actualParent || node.documentParent).layoutElement) {
             if (value < 1) {
@@ -449,9 +475,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (horizontal) {
                 constraintPercentHeight(node);
-            }
-            else {
-                constraintPercentWidth(node);
             }
             if (!node.inputElement && !node.imageOrSvgElement) {
                 constraintMinMax(node, true);
@@ -1037,13 +1060,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 value = this.actualWidth;
                             }
                         }
-                        else if (renderParent.layoutConstraint && !renderParent.inlineWidth) {
-                            if (expandable()) {
-                                layoutWidth = 'match_parent';
+                        else if (renderParent.layoutConstraint) {
+                            if (!renderParent.inlineWidth) {
+                                if (expandable()) {
+                                    layoutWidth = 'match_parent';
+                                }
+                                else {
+                                    View.setConstraintDimension(this);
+                                    layoutWidth = this.layoutWidth;
+                                }
                             }
                             else {
-                                View.setConstraintDimension(this);
-                                layoutWidth = this.layoutWidth;
+                                value = this.actualWidth;
                             }
                         }
                         else if (renderParent.layoutGrid) {
@@ -1141,8 +1169,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         layoutWidth = 'wrap_content';
                     }
                     else if (!(this.imageElement || this.inputElement || this.controlElement) && !(onlyChild && renderParent.inlineWidth && !renderParent.hasPX('minWidth'))) {
-                        const checkParentWidth = () => {
-                            if (this.alignParent('left') && this.alignParent('right') && !this.rightAligned) {
+                        const checkParentWidth = (block: boolean) => {
+                            if (block && this.alignParent('left') && this.alignParent('right')) {
                                 layoutWidth = 'match_parent';
                             }
                             else if (this.styleText) {
@@ -1167,7 +1195,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     layoutWidth = 'match_parent';
                                 }
                                 else {
-                                    checkParentWidth();
+                                    checkParentWidth(true);
                                 }
                             }
                             else {
@@ -1180,16 +1208,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         if (layoutWidth === '') {
-                            if (this.css('minWidth') === '100%' || this.floating && this.block && this.alignParent('left') && this.alignParent('right') && !this.rightAligned) {
-                                layoutWidth = 'match_parent';
-                            }
-                            else if (this.layoutGrid && !this.hasWidth && this.some((node: T) => node.flexibleWidth)) {
+                            if (this.layoutGrid && !this.hasWidth && this.some((node: T) => node.flexibleWidth) || this.floating && this.block && this.alignParent('left') && this.alignParent('right') && !this.centerAligned && !this.rightAligned) {
                                 layoutWidth = 'match_parent';
                             }
                             else if (this.naturalElement && this.inlineStatic && !this.blockDimension && !actualParent.layoutElement && (renderParent.layoutVertical || !renderParent.inlineWidth && this.alignSibling('left') === '' && this.alignSibling('right') === '') && this.some(item => item.naturalElement && item.blockStatic)) {
-                                checkParentWidth();
+                                checkParentWidth(false);
                             }
-                            else if (renderParent.layoutFrame && !renderParent.inlineWidth && !this.naturalChild && this.layoutVertical && this.rightAligned) {
+                            else if (this.css('minWidth') === '100%' || renderParent.layoutFrame && !renderParent.inlineWidth && this.layoutVertical && !this.naturalChild && this.rightAligned) {
                                 layoutWidth = 'match_parent';
                             }
                         }
@@ -1326,7 +1351,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length || !this.textContent.includes('\n'))) {
-                    width = this.bounds.width + this.contentBoxWidth;
+                    width = this.actualWidth;
                 }
                 if (width >= 0) {
                     this.android('maxWidth', formatPX(width), false);
@@ -1894,10 +1919,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (opacity !== '1' && isNumber(opacity)) {
                         this.android('alpha', opacity);
                     }
-                }
-                const zIndex = this.zIndex;
-                if (zIndex !== 0) {
-                    this.android('elevation', zIndex + 'px', false);
                 }
             }
             const indent = '\n' + '\t'.repeat(depth);

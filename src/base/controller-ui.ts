@@ -619,36 +619,34 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         const indent = depth > 0 ? '\t'.repeat(depth) : '';
         let output = '';
         for (const item of templates) {
-            if (item) {
-                const node = item.node;
-                switch (item.type) {
-                    case NODE_TEMPLATE.XML: {
-                        const { controlName, attributes } = <NodeXmlTemplate<T>> item;
-                        const { id, renderTemplates } = node;
-                        const renderDepth = depth + 1;
-                        const beforeInside = this.getBeforeInsideTemplate(id, renderDepth);
-                        const afterInside = this.getAfterInsideTemplate(id, renderDepth);
-                        let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
-                        if (renderTemplates || beforeInside !== '' || afterInside !== '') {
-                            template += '>\n' +
-                                        beforeInside +
-                                        (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> renderTemplates), renderDepth) : '') +
-                                        afterInside +
-                                        indent + `</${controlName}>\n`;
-                        }
-                        else {
-                            template += ' />\n';
-                        }
-                        output += this.getBeforeOutsideTemplate(id, depth) + template + this.getAfterOutsideTemplate(id, depth);
-                        break;
+            const node = item.node;
+            switch (item.type) {
+                case NODE_TEMPLATE.XML: {
+                    const { controlName, attributes } = <NodeXmlTemplate<T>> item;
+                    const { id, renderTemplates } = node;
+                    const renderDepth = depth + 1;
+                    const beforeInside = this.getBeforeInsideTemplate(id, renderDepth);
+                    const afterInside = this.getAfterInsideTemplate(id, renderDepth);
+                    let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
+                    if (renderTemplates || beforeInside !== '' || afterInside !== '') {
+                        template += '>\n' +
+                                    beforeInside +
+                                    (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> renderTemplates), renderDepth) : '') +
+                                    afterInside +
+                                    indent + `</${controlName}>\n`;
                     }
-                    case NODE_TEMPLATE.INCLUDE: {
-                        const content = (<NodeIncludeTemplate<T>> item).content;
-                        if (content) {
-                            output += pushIndent(content, depth);
-                        }
-                        break;
+                    else {
+                        template += ' />\n';
                     }
+                    output += this.getBeforeOutsideTemplate(id, depth) + template + this.getAfterOutsideTemplate(id, depth);
+                    break;
+                }
+                case NODE_TEMPLATE.INCLUDE: {
+                    const content = (<NodeIncludeTemplate<T>> item).content;
+                    if (content) {
+                        output += pushIndent(content, depth);
+                    }
+                    break;
                 }
             }
         }

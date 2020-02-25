@@ -1,5 +1,5 @@
 import { NodeXmlTemplate } from '../../../@types/base/application';
-import { SpacerAttribute } from '../../../@types/android/node';
+import { RenderSpaceAttribute } from '../../../@types/android/node';
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@types/base/extension';
 
 import Resource from '../resource';
@@ -436,16 +436,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     const k = cellStart + i;
                     const min = unitMin[k];
                     if (min !== '') {
-                        minUnitSize += parent.parseUnit(min);
+                        minUnitSize += parent.parseUnit(min, horizontal ? 'width' : 'height');
                     }
                     let value = unit[k];
                     if (!hasValue(value)) {
                         const auto = data.auto;
                         if (auto[j]) {
                             value = auto[j];
-                            if (REGEX_FR.test(value) && unit.length === 0 && !horizontal && !parent.hasHeight && auto.every(px => px === value)) {
-                                continue;
-                            }
                             if (auto[j + 1]) {
                                 j++;
                             }
@@ -490,7 +487,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         }
                         else {
                             sizeWeight = 0;
-                            minSize = node.bounds[dimension];
+                            minSize += mainData.minCellHeight * parseFloat(value);
                         }
                         size = 0;
                     }
@@ -888,7 +885,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             previousItem = item;
                         }
                         else if (previousItem) {
-                            const options = <SpacerAttribute> {
+                            const options = <RenderSpaceAttribute> {
                                 width: '0px',
                                 height: 'wrap_content',
                                 android: {},

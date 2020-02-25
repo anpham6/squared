@@ -249,10 +249,12 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                         controller.addBeforeOutsideTemplate(
                             node.id,
                             controller.renderNodeStatic(
-                                CONTAINER_ANDROID.IMAGE,
-                                Resource.formatOptions(backgroundImageOptions, numberResourceValue),
-                                'match_parent',
-                                'match_parent'
+                                {
+                                    controlName: CONTAINER_ANDROID.IMAGE,
+                                    width: 'match_parent',
+                                    height: 'match_parent'
+                                },
+                                Resource.formatOptions(backgroundImageOptions, numberResourceValue)
                             )
                         );
                         node.setCacheValue('backgroundImage', '');

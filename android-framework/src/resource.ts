@@ -1,4 +1,5 @@
 import { ResourceStoredMapAndroid, StyleAttribute } from '../../@types/android/application';
+import { ViewAttribute } from '../../@types/android/node';
 
 import { RESERVED_JAVA } from './lib/constant';
 
@@ -58,7 +59,7 @@ function formatObject(obj: {}, numberAlias = false) {
 }
 
 export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
-    public static formatOptions(options: StandardMap, numberAlias = false) {
+    public static formatOptions(options: ViewAttribute, numberAlias = false) {
         for (const namespace in options) {
             const obj: StandardMap = options[namespace];
             if (isPlainObject(obj)) {
@@ -110,7 +111,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         }
         name = appTheme + (name.charAt(0) === '.' ? name : '');
         theme.name = name;
-        Resource.formatOptions(items);
+        Resource.formatOptions(<ViewAttribute> items);
         const storedTheme = <StyleAttribute> storedFile.get(name);
         if (storedTheme) {
             const storedItems = storedTheme.items;

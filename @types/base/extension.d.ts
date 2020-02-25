@@ -12,6 +12,7 @@ export interface CssGridData<T> {
     alignContent: string;
     justifyItems: string;
     justifyContent: string;
+    minCellHeight: number;
 }
 
 export interface CssGridDirectionData {

@@ -58,7 +58,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") 
     const horizontal = attr === 'width';
     const hasDimension = 'has' + capitalize(attr);
     const setPercentage = (item: View) => item.flexbox.basis = (item.bounds[attr] / parent.box[attr] * 100) + '%';
-    let percent: boolean = parent[hasDimension] || parent.blockStatic && withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight')), parent.box.width);
+    let percent: boolean = parent[hasDimension] || parent.blockStatic && withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight'), attr), parent.box.width);
     let result = 0;
     let growShrinkType = 0;
     for (const item of items) {
@@ -121,7 +121,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") 
                     });
                     continue;
                 }
-                else if (grow > 0 && dimension > item[attr]) {
+                else if (grow > 0) {
                     growPercent = true;
                 }
             }
@@ -140,7 +140,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") 
                 percentage.push(item);
             }
         }
-        if (growShrinkType !== 0) {
+        if (growShrinkType) {
             if (groupBasis.length > 1) {
                 for (const data of groupBasis) {
                     const { basis, item } = data;
@@ -291,10 +291,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         if (mainData) {
             const controller = <android.base.Controller<T>> this.controller;
             const { alignContent, children, directionColumn, directionReverse, directionRow, justifyContent, wrap, wrapReverse } = mainData;
+            const parentBottom = node.hasPX('height', false) || node.percentHeight > 0 ? node.linear.bottom : 0;
+            const renderParent = node.renderParent as T;
             const chainHorizontal: T[][] = [];
             const chainVertical: T[][] = [];
             const segmented: T[] = [];
-            const parentBottom = node.hasPX('height', false) || node.percentHeight > 0 ? node.linear.bottom : 0;
             let marginBottom = 0;
             if (wrap) {
                 let previous: Undef<T[]>;
@@ -366,7 +367,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     return;
                 }
                 const { orientation, orientationInverse, WHL, HWL, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_horizontal : MAP_vertical;
-                const [dimension, dimensionInverse] = horizontal ? [node.hasHeight, node.hasWidth] : [node.hasWidth, node.hasHeight];
+                const [dimension, dimensionInverse, dimensionParent] = horizontal ? [node.hasHeight, node.hasWidth, renderParent.hasWidth] : [node.hasWidth, node.hasHeight, renderParent.hasHeight];
                 const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
                 const setLayoutWeight = (chain: T, value: number) => {
                     if (chain[WHL] === 0) {
@@ -625,6 +626,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                         setLayoutWeightOpposing(innerWrapped as T, 'match_parent', horizontal);
                                                     }
                                                 }
+                                                else if (dimension) {
+                                                    setLayoutWeightOpposing(chain, '0px', horizontal);
+                                                }
                                                 else {
                                                     setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
                                                     chain.lockAttr('android', 'layout_' + HWL);
@@ -721,8 +725,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     if (q > 1) {
                                         segStart.constraint[orientation] = false;
                                         segEnd.constraint[orientation] = false;
-                                        controller.addGuideline(segStart, node, orientation, true, false);
-                                        controller.addGuideline(segEnd, node, orientation, true, true);
+                                        controller.addGuideline(segStart, node, orientation, { percent: true });
+                                        controller.addGuideline(segEnd, node, orientation, { percent: true, opposing: true });
                                     }
                                     else {
                                         centered = true;
@@ -734,7 +738,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             segStart.anchorStyle(orientation, 0, 'spread_inside', false);
                         }
                         else if (!centered) {
-                            segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed', false);
+                            segStart.anchorStyle(orientation, directionReverse ? 1 : 0, dimensionParent ? 'spread_inside' : 'packed', false);
                         }
                     }
                     if (marginBottom > 0) {

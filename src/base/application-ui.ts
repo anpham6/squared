@@ -1759,7 +1759,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (invalid) {
-                    const offset = floatPosition - parent.box.left - marginLeft - maxArray(target.map(child => child.marginLeft));
+                    const offset = floatPosition - parent.box.left - marginLeft - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0));
                     if (offset > 0 && offset < boxWidth) {
                         target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
                     }
@@ -1791,7 +1791,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 if (invalid) {
-                    const offset = parent.box.right - floatPosition - marginRight - maxArray(target.map(child => child.marginRight));
+                    const offset = parent.box.right - floatPosition - marginRight - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0));
                     if (offset > 0 && offset < boxWidth) {
                         target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
                     }

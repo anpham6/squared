@@ -1,6 +1,6 @@
 import { FileActionOptions, FileAsset } from '../base/application';
-import { CustomizationResult, FileOutputOptions, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
-import { Constraint, LocalSettingsAndroidUI, SpacerAttribute, SupportAndroid, ViewAttribute, WrapperOptions } from './node';
+import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
+import { Constraint, LocalSettingsAndroidUI, RenderSpaceAttribute, SupportAndroid, ViewAttribute, WrapperOptions } from './node';
 
 import LayoutUI = squared.base.LayoutUI;
 
@@ -18,13 +18,13 @@ declare namespace base {
         readonly cache: squared.base.NodeList<T>;
         readonly userSettings: UserSettingsAndroid;
         readonly screenDimension: Dimension;
-        renderNodeStatic(controlName: string, options?: StandardMap, width?: string, height?: string, content?: string): string;
-        renderSpace(options: SpacerAttribute): string;
+        renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute): string;
+        renderSpace(options: RenderSpaceAttribute): string;
         checkFrameHorizontal(data: LayoutUI<T>): boolean;
         checkConstraintFloat(data: LayoutUI<T>): boolean;
         checkConstraintHorizontal(data: LayoutUI<T>): boolean;
         checkLinearHorizontal(data: LayoutUI<T>): boolean;
-        addGuideline(node: T, parent: T, orientation?: string, percent?: boolean, opposing?: boolean): void;
+        addGuideline(node: T, parent: T, orientation?: string, options?: GuidelineOptions): void;
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
         createNodeWrapper(node: T, parent: T, children?: T[], options?: WrapperOptions): T;
@@ -45,7 +45,7 @@ declare namespace base {
 
     class Resource<T extends View> implements Resource<T> {
         public static STORED: ResourceStoredMapAndroid;
-        public static formatOptions(options: StandardMap, numberAlias?: boolean): StandardMap;
+        public static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         public static formatName(value: string): string;
         public static addTheme(theme: StyleAttribute, path?: string, file?: string): boolean;
         public static addString(value: string, name?: string, numberAlias?: boolean): string;

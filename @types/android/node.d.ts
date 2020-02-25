@@ -23,7 +23,7 @@ export interface ViewAttribute extends ObjectMap<any> {
     documentId?: string;
 }
 
-export interface SpacerAttribute extends ViewAttribute {
+export interface RenderSpaceAttribute extends ViewAttribute {
     width?: string;
     height?: string;
     column?: number;

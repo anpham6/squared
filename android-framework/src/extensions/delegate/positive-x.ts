@@ -92,6 +92,9 @@ function setFixedNodes(node: View) {
                 children.add(item);
                 item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, paddingBottom);
             }
+            if (fixed && item.percentHeight > 0) {
+                bottom = true;
+            }
         }
         if (children.size) {
             node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData', <PositiveXData> { children: Array.from(children), right, bottom });
@@ -116,12 +119,10 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid });
             if (mainData.right) {
                 container.setLayoutWidth('match_parent');
-                container.css('width', 'auto');
                 container.addAlign(NODE_ALIGNMENT.BLOCK);
             }
             if (mainData.bottom) {
                 container.setLayoutHeight('match_parent');
-                container.css('height', 'auto');
             }
             if (!node.pageFlow) {
                 if (!node.hasPX('width') && node.hasPX('left') && node.hasPX('right')) {

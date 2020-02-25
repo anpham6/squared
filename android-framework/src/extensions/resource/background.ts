@@ -537,7 +537,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 if (!themeBackground) {
                     const innerWrapped = node.innerMostWrapped as T;
                     if (innerWrapped.documentBody) {
-                        if (!setHtmlBackground(node) && node.documentRoot && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY)) {
+                        if (!setHtmlBackground(node) && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY)) {
                             setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
                             deleteBodyWrapper(innerWrapped, node);
                             return;
@@ -605,7 +605,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (backgroundColor) {
                         const color = getColorValue(backgroundColor, false);
                         if (color !== '') {
-                            if (!themeBackground && node.documentRoot) {
+                            if (!themeBackground) {
                                 const innerWrapped = node.innerMostWrapped as T;
                                 if (innerWrapped.documentBody) {
                                     setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);

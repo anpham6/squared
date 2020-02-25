@@ -44,6 +44,18 @@ export interface StyleAttribute {
     ids?: number[];
 }
 
+export interface GuidelineOptions {
+    percent?: boolean;
+    opposing?: boolean;
+}
+
+export interface RenderNodeStaticAttribute {
+    controlName: string;
+    width?: string;
+    height?: string;
+    content?: string;
+}
+
 export interface FileOutputOptions extends FileCopyingOptions, FileArchivingOptions {}
 
 export type CustomizationResult = (result: {}, api?: number, node?: View) => boolean;
