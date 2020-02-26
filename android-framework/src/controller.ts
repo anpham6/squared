@@ -1914,7 +1914,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 const { left, right, width } = node.box;
                                 let offsetLeft = 0;
                                 let offsetRight = 0;
-                                for (const item of parent.naturalElements as T[]) {
+                                for (const item of parent.naturalChildren as T[]) {
                                     const linear = item.linear;
                                     if (item.floating && !children.includes(item) && node.intersectY(linear)) {
                                         if (item.float === 'left') {

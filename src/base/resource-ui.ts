@@ -881,7 +881,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         key = textContent.trim();
                         [value, inlined, trimming] = replaceWhiteSpace(node, this.removeExcludedFromText(node, element));
                     }
-                    else if (node.naturalElements.length === 0 && textContent?.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
+                    else if (node.naturalChildren.length === 0 && textContent?.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                         value = textContent;
                     }
                     break;

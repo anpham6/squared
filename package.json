@@ -57,7 +57,7 @@
     "fs-extra": "^8.1.0",
     "request": "^2.88.2",
     "rimraf": "^3.0.2",
-    "uuid": "^7.0.0"
+    "uuid": "^7.0.1"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.21.0",

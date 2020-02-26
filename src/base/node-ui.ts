@@ -35,7 +35,7 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
                 valid = true;
             }
             else if (canCascadeChildren(item)) {
-                if (!cascadeActualPadding(item.naturalElements as T[], attr, value)) {
+                if (!cascadeActualPadding(item.naturalChildren as T[], attr, value)) {
                     return false;
                 }
                 else {
@@ -816,8 +816,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 if (siblings.every(item => item.inlineDimension)) {
                                     const actualParent = this.actualParent;
                                     if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: item => item.layoutElement, startSelf: true })) {
-                                        const naturalElements = actualParent.naturalElements.filter((item: T) => item.visible);
-                                        if (naturalElements.length === siblings.length + 1) {
+                                        const children = actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow);
+                                        if (children.length === siblings.length + 1) {
                                             const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
                                             let width = actualParent.box.width - getLayoutWidth(this);
                                             for (const item of siblings) {
@@ -1105,7 +1105,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
                 if (node.naturalChild) {
-                    return canCascadeChildren(node) && cascadeActualPadding(node.naturalElements as T[], attr, value) ? 0 : value;
+                    return canCascadeChildren(node) && cascadeActualPadding(node.naturalChildren as T[], attr, value) ? 0 : value;
                 }
             }
             else if (this.gridElement) {
@@ -1399,7 +1399,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         let result = this._cached.baselineElement;
         if (result === undefined) {
             if (this.baseline) {
-                const children = this.naturalElements;
+                const children = this.naturalChildren;
                 if (children.length) {
                     result = children.every((node: T) => node.baselineElement && node.length === 0);
                 }

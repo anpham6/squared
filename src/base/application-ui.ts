@@ -611,7 +611,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             child.inlineText = true;
                         }
                         inlineText = false;
-                        elements[k++] = child;
                     }
                 }
                 else if (element === afterElement) {
@@ -622,7 +621,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             child.inlineText = true;
                         }
                         inlineText = false;
-                        elements[k++] = child;
                     }
                 }
                 else if (element.nodeName.charAt(0) === '#') {

@@ -76,7 +76,7 @@ function getTitle(node: View, element: HTMLElement) {
     }
     else {
         for (const child of node.naturalChildren) {
-            if (child?.textElement) {
+            if (child.textElement) {
                 return child.textContent.trim();
             }
         }

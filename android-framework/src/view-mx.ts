@@ -1701,7 +1701,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                                 else if (this.floatContainer) {
                                     let maxBottom = Number.NEGATIVE_INFINITY;
-                                    for (const item of this.naturalElements) {
+                                    for (const item of this.naturalChildren) {
                                         if (item.floating) {
                                             maxBottom = Math.max(item.bounds.bottom, maxBottom);
                                         }

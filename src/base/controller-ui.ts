@@ -542,7 +542,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             let maxIndex = -1;
             node.each((item: T) => {
                 if (item.containerIndex === Number.POSITIVE_INFINITY) {
-                    for (const adjacent of node.children as T[]) {
+                    node.some((adjacent: T) => {
                         let valid = adjacent.naturalElements.includes(item);
                         if (!valid) {
                             const nested = adjacent.cascade();
@@ -550,9 +550,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         }
                         if (valid) {
                             safeNestedArray(layers, adjacent.containerIndex + (item.zIndex >= 0 || adjacent !== item.actualParent ? 1 : 0)).push(item);
-                            break;
                         }
-                    }
+                        return valid;
+                    });
                 }
                 else if (item.containerIndex > maxIndex) {
                     maxIndex = item.containerIndex;

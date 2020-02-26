@@ -1191,7 +1191,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public querySelector(value: string) {
-        return this.querySelectorAll(value, 1)[0] || null;
+        return this.naturalElement && this.querySelectorAll(value, 1)[0] || null;
     }
 
     public querySelectorAll(value: string, resultCount = -1) {
@@ -1672,7 +1672,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get naturalElement() {
         let result = this._cached.naturalElement;
         if (result === undefined) {
-            result = this.naturalChild && this.styleElement;
+            result = this.naturalChild && this.styleElement && !this.pseudoElement;
             this._cached.naturalElement = result;
         }
         return result;

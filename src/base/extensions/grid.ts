@@ -229,8 +229,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
                             for (const sibling of (item.actualParent as T).naturalChildren as T[]) {
                                 if (!assigned.has(sibling) && sibling.visible && !sibling.rendered) {
-                                    const linear = sibling.linear;
-                                    if (aboveRange(linear.left, item.linear.right) && belowRange(linear.right, columnEnd[l])) {
+                                    const { left, right } = sibling.linear;
+                                    if (aboveRange(left, item.linear.right) && belowRange(right, columnEnd[l])) {
                                         safeNestedArray(data, 'siblings').push(sibling);
                                     }
                                 }

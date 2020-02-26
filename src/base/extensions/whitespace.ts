@@ -121,7 +121,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                         resetMargin(target, region);
                         if (!direction && child.floating) {
                             const bounds = target.bounds;
-                            for (const item of node.naturalElements as NodeUI[]) {
+                            for (const item of node.naturalChildren as NodeUI[]) {
                                 if (item.floating && item !== target && item.intersectY(bounds, 'bounds')) {
                                     resetMargin(item, region);
                                 }
@@ -270,14 +270,17 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
     public afterBaseLayout() {
         const processed = new Set<number>();
         for (const node of this.cacheProcessing) {
-            if (node.naturalElement && node.naturalElements.length && !node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && node.id !== 0) {
+            if (node.naturalElement && !node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                 const children = node.naturalChildren;
+                const length = children.length;
+                if (length === 0 || node.id === 0) {
+                    continue;
+                }
                 const actualParent = node.actualParent as T;
                 const blockParent = isBlockElement(node, true) && !actualParent.layoutElement;
                 const pageFlow = node.pageFlow;
                 let firstChild: Undef<T>;
                 let lastChild: Undef<T>;
-                const length = children.length;
                 for (let i = 0; i < length; i++) {
                     const current = children[i] as T;
                     if (current.pageFlow) {
@@ -655,7 +658,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
             }
             if (node.floatContainer && node.layoutVertical) {
                 const floating: T[] = [];
-                for (const item of node.naturalElements as T[]) {
+                for (const item of node.naturalChildren as T[]) {
                     if (!item.floating) {
                         if (floating.length) {
                             let renderParent = item.outerMostWrapper.renderParent;
