@@ -1,6 +1,6 @@
 import { ControllerSettings, ResourceAssetMap, UserSettings } from '../../@types/base/application';
 
-type CSSFontFaceData = squared.lib.css.CSSFontFaceData;
+type FontFaceData = squared.lib.css.FontFaceData;
 
 const $lib = squared.lib;
 
@@ -52,7 +52,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         return Resource.ASSETS.images.get(src);
     }
 
-    public addFont(data: CSSFontFaceData) {
+    public addFont(data: FontFaceData) {
         const fonts = Resource.ASSETS.fonts;
         const fontFamily = data.fontFamily.trim().toLowerCase();
         data.fontFamily = fontFamily;

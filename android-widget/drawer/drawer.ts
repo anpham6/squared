@@ -8,7 +8,7 @@ type View = android.base.View;
 const $lib = squared.lib;
 const $libA = android.lib;
 
-const { assignEmptyValue, cloneObject, safeNestedMap, includes } = $lib.util;
+const { assignEmptyValue, cloneObject, safeNestedMap, includes, iterateArray } = $lib.util;
 const { getElementAsNode } = $lib.session;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -36,18 +36,15 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
 
     public init(element: HTMLElement) {
         if (this.included(element)) {
-            const children = element.children;
-            const length = children.length;
-            if (length) {
-                for (let i = 0; i < length; i++) {
-                    const item = <HTMLElement> children[i];
-                    if (item.tagName === 'NAV') {
-                        const use = item.dataset.use;
-                        if (!includes(use, EXT_ANDROID.EXTERNAL)) {
-                            item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
-                        }
+            const result = iterateArray(element.children, (item: HTMLElement) => {
+                if (item.tagName === 'NAV') {
+                    const use = item.dataset.use;
+                    if (!includes(use, EXT_ANDROID.EXTERNAL)) {
+                        item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
                     }
                 }
+            });
+            if (result) {
                 this.application.rootElements.add(element);
                 return true;
             }

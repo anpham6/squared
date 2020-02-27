@@ -1,4 +1,4 @@
-import { flatMap, objectMap, partitionArray, sameArray, spliceArray } from '../util';
+import { flatMap, iterateArray, objectMap, partitionArray, sameArray, spliceArray } from '../util';
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[];
@@ -81,6 +81,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
             predicate(children[i], i, children);
         }
         return this;
+    }
+
+    public iterate(predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number) {
+        return iterateArray(this._children, predicate, start, end);
     }
 
     public sort(predicate: (a: T, b: T) => number) {

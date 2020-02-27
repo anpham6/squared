@@ -130,14 +130,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 if (mainData.imageSrc !== '') {
                     const resource = <android.base.Resource<T>> this.resource;
                     if (mainData.imagePosition) {
-                        ({ top, left } = getBackgroundPosition(
-                            mainData.imagePosition,
-                            node.actualDimension,
-                            node.fontSize,
-                            resource.getImage(mainData.imageSrc)),
-                            '',
-                            node.localSettings.screenDimension
-                        );
+                        ({ top, left } = getBackgroundPosition(mainData.imagePosition, node.actualDimension, {
+                            fontSize: node.fontSize,
+                            imageDimension: resource.getImage(mainData.imageSrc),
+                            screenDimension: node.localSettings.screenDimension
+                        }));
                         if (node.marginLeft < 0) {
                             resetPadding = node.marginLeft + (parent.paddingLeft > 0 ? parent.paddingLeft : parent.marginLeft);
                         }

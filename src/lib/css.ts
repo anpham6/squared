@@ -2,9 +2,10 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { CSS, STRING, UNIT, XML } from './regex';
 
-import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertRoman, isString, replaceMap, resolvePath, spliceString } from './util';
+import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertRoman, isString, iterateArray, replaceMap, resolvePath, spliceString } from './util';
 
-type CSSKeyframesData = squared.lib.css.CSSKeyframesData;
+type KeyframesData = squared.lib.css.KeyframesData;
+type BackgroundPositionOptions = squared.lib.css.BackgroundPositionOptions;
 
 const { LENGTH, PERCENT } = UNIT;
 
@@ -217,8 +218,8 @@ export function getDataSet(element: HTMLElement | SVGElement, prefix: string) {
     return result;
 }
 
-export function getKeyframeRules(): ObjectMap<CSSKeyframesData> {
-    const result: ObjectMap<CSSKeyframesData> = {};
+export function getKeyframeRules(): ObjectMap<KeyframesData> {
+    const result: ObjectMap<KeyframesData> = {};
     violation: {
         const styleSheets = document.styleSheets;
         const length = styleSheets.length;
@@ -254,7 +255,7 @@ export function getKeyframeRules(): ObjectMap<CSSKeyframesData> {
 }
 
 export function parseKeyframeRule(rules: CSSRuleList) {
-    const result: CSSKeyframesData = {};
+    const result: KeyframesData = {};
     const length = rules.length;
     for (let i = 0; i < length; i++) {
         const item = rules[i];
@@ -456,7 +457,14 @@ export function calculateVar(element: HTMLElement | SVGElement, value: string, a
     return undefined;
 }
 
-export function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, imageDimension?: Dimension, imageSize?: string, screenDimension?: Dimension) {
+export function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
+    let fontSize: Undef<number>;
+    let imageDimension: Undef<Dimension>;
+    let imageSize: Undef<string>;
+    let screenDimension: Undef<Dimension>;
+    if (options) {
+        ({ fontSize, imageDimension, imageSize, screenDimension } = options);
+    }
     const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
     const { width, height } = dimension;
     const result: BoxRectPosition = {
@@ -696,20 +704,19 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     const result: ImageSrcSet[] = [];
     let { srcset, sizes } = element;
     if (parentElement?.tagName === 'PICTURE') {
-        const children = parentElement.children;
-        const length = children.length;
-        for (let i = 0; i < length; i++) {
-            const source = <HTMLSourceElement> children[i];
-            if (source.tagName === 'SOURCE') {
-                const type = source.type.trim();
-                const value = source.srcset.trim();
-                if (value !== '' && (isString(source.media) && validMediaRule(source.media) || type !== '' && mimeType?.includes((type.split('/').pop() as string).toLowerCase()))) {
+        iterateArray(parentElement.children, (item: HTMLSourceElement) => {
+            if (item.tagName === 'SOURCE') {
+                const type = item.type.trim();
+                const media = item.media.trim();
+                const value = item.srcset.trim();
+                if (value !== '' && (media !== '' && validMediaRule(media) || type !== '' && mimeType?.includes((type.split('/').pop() as string).toLowerCase()))) {
                     srcset = value;
-                    sizes = source.sizes;
-                    break;
+                    sizes = item.sizes;
+                    return true;
                 }
             }
-        }
+            return;
+        });
     }
     if (srcset !== '') {
         for (const value of srcset.split(XML.SEPARATOR)) {

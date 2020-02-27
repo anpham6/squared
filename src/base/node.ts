@@ -12,7 +12,7 @@ const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, hasC
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
 const { CHAR, CSS, FILE, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = $lib.session;
-const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, spliceString } = $lib.util;
+const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, iterateArray, spliceString } = $lib.util;
 
 const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
@@ -211,22 +211,22 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                             if (form) {
                                 let valid = false;
                                 const element = <HTMLElement> node.element;
-                                const children = (<Element> form.element).querySelectorAll('*');
-                                const length = children.length;
-                                for (let j = 0; j < length; j++) {
-                                    const item = <HTMLInputElement> children[index];
-                                    if (item.tagName === 'BUTTON') {
-                                        valid = element === item;
-                                        break;
-                                    }
-                                    else if (item.tagName === 'INPUT') {
-                                        const type = item.type;
-                                        if (type === 'submit' || type === 'image') {
+                                iterateArray((<Element> form.element).querySelectorAll('*'), (item: HTMLInputElement) => {
+                                    switch (item.tagName) {
+                                        case 'BUTTON':
                                             valid = element === item;
+                                            return true;
+                                        case 'INPUT':
+                                            switch (item.type) {
+                                                case 'submit':
+                                                case 'image':
+                                                    valid = element === item;
+                                                    return true;
+                                            }
                                             break;
-                                        }
                                     }
-                                }
+                                    return;
+                                });
                                 if (!valid) {
                                     return false;
                                 }
@@ -278,12 +278,8 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                                     return false;
                                 }
                                 else if (element.name) {
-                                    const children = (node.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`);
-                                    const length = children.length;
-                                    for (let j = 0; j < length; j++) {
-                                        if ((<HTMLInputElement> children[j]).checked) {
-                                            return false;
-                                        }
+                                    if (iterateArray((node.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item: HTMLInputElement) => item.checked) === Number.POSITIVE_INFINITY) {
+                                        return false;
                                     }
                                 }
                                 break;
@@ -330,17 +326,8 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                 case ':focus-within':
                 case ':valid':
                 case ':invalid': {
-                    let valid = false;
                     const element = node.element;
-                    const children = (<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo);
-                    const length = children.length;
-                    for (let j = 0; j < length; j++) {
-                        if (children.item(index) === element) {
-                            valid = true;
-                            break;
-                        }
-                    }
-                    if (!valid) {
+                    if (iterateArray((<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo), item => item === element) !== Number.POSITIVE_INFINITY) {
                         return false;
                     }
                     break;
@@ -2270,7 +2257,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get blockDimension() {
         let result = this._cached.blockDimension;
         if (result === undefined) {
-            if (this.block || this.imageElement || this.svgElement) {
+            if (this.block || this.floating || this.imageElement || this.svgElement) {
                 result = true;
             }
             else {

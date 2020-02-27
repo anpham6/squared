@@ -7,7 +7,7 @@ type View = android.base.View;
 
 const $lib = android.lib;
 
-const { assignEmptyValue, safeNestedMap } = squared.lib.util;
+const { assignEmptyValue, iterateArray, safeNestedMap } = squared.lib.util;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -31,15 +31,12 @@ export default class BottomNavigation<T extends View> extends squared.base.Exten
     public processNode(node: T, parent: T) {
         const options = createViewAttribute(this.options[node.elementId]);
         assignEmptyValue(options, 'android', 'background', '?android:attr/windowBackground');
-        const children = node.children;
-        const length = children.length;
-        for (let i = 5; i < length; i++) {
-            const item = children[i] as T;
+        iterateArray(node.children, (item: T) => {
             item.hide();
             for (const child of item.cascade() as T[]) {
                 child.hide();
             }
-        }
+        }, 5);
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
         node.exclude({ resource: NODE_RESOURCE.ASSET });

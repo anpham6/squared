@@ -1,4 +1,4 @@
-import { withinRange } from './util';
+import { iterateArray, withinRange } from './util';
 
 export const ELEMENT_BLOCK = [
     'ADDRESS',
@@ -156,33 +156,28 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
         if (parent) {
             let startIndex = elementStart ? -1 : 0;
             let endIndex = -1;
-            const childNodes = parent.childNodes;
-            const length = childNodes.length;
-            for (let i = 0; i < length; i++) {
-                const element = childNodes[i];
+            iterateArray(parent.childNodes, (element: Element, index: number) => {
                 if (element === elementEnd) {
-                    endIndex = i;
+                    endIndex = index;
                     if (startIndex !== -1) {
-                        break;
+                        return true;
                     }
                 }
                 else if (element === elementStart) {
-                    startIndex = i;
+                    startIndex = index;
                     if (endIndex !== -1) {
-                        break;
+                        return true;
                     }
                 }
-            }
+                return;
+            });
             if (startIndex !== -1 && endIndex !== -1) {
-                const minIndex = Math.min(startIndex, endIndex);
-                const maxIndex = Math.max(startIndex, endIndex);
-                for (let i = minIndex; i <= maxIndex; i++) {
-                    const element = childNodes[i];
+                iterateArray(parent.childNodes, (element: Element) => {
                     const nodeName = element.nodeName;
                     if (nodeName.charAt(0) !== '#' || nodeName === '#text') {
-                        result.push(<Element> element);
+                        result.push(element);
                     }
-                }
+                }, Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1);
             }
         }
     }

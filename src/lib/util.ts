@@ -533,7 +533,20 @@ export function flatMultiArray<T>(list: any[]): T[] {
     return result;
 }
 
-export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
+export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>) {
+    for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (predicate(item, i, list)) {
+            if (callback) {
+                callback(item, i, list);
+            }
+            list.splice(i--, 1);
+        }
+    }
+    return list;
+}
+
+export function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
     const length = list.length;
     const valid: T[] = new Array(length);
     const invalid: T[] = new Array(length);
@@ -553,20 +566,7 @@ export function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boo
     return [valid, invalid];
 }
 
-export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>) {
-    for (let i = 0; i < list.length; i++) {
-        const item = list[i];
-        if (predicate(item, i, list)) {
-            if (callback) {
-                callback(item, i, list);
-            }
-            list.splice(i--, 1);
-        }
-    }
-    return list;
-}
-
-export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
+export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>) {
     const length = list.length;
     if (length) {
         let baseValue!: any;
@@ -584,7 +584,19 @@ export function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>) {
     return false;
 }
 
-export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
+export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Number.POSITIVE_INFINITY) {
+    const length = Math.min(list.length, end);
+    for (let i = start; i < length; i++) {
+        const item = list[i];
+        const result = predicate(item, i, list);
+        if (result === true) {
+            return Number.POSITIVE_INFINITY;
+        }
+    }
+    return length;
+}
+
+export function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = new Array(length);
     let j = 0;
@@ -598,7 +610,7 @@ export function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[
     return result;
 }
 
-export function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[] {
+export function filterMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = new Array(length);
     let j = 0;
@@ -620,7 +632,7 @@ export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>
     return list;
 }
 
-export function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
+export function objectMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = new Array(length);
     for (let i = 0; i < length; i++) {
@@ -629,7 +641,7 @@ export function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): 
     return result;
 }
 
-export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char = '\n', trailing = true): string {
+export function joinMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char = '\n', trailing = true): string {
     let result = '';
     const length = list.length;
     for (let i = 0; i < length; i++) {
@@ -641,7 +653,7 @@ export function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, c
     return trailing ? result : result.substring(0, result.length - char.length);
 }
 
-export function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
+export function captureMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
     const length = list.length;
     for (let i = 0; i < length; i++) {
         const item = list[i];

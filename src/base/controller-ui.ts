@@ -11,7 +11,7 @@ const $lib = squared.lib;
 const { USER_AGENT, isUserAgent, isWinEdge } = $lib.client;
 const { BOX_BORDER, BOX_PADDING, formatPX, getStyle, isLength, isPercent } = $lib.css;
 const { isTextNode, withinViewport } = $lib.dom;
-const { capitalize, convertFloat, flatArray, safeNestedArray } = $lib.util;
+const { capitalize, convertFloat, flatArray, iterateArray, safeNestedArray } = $lib.util;
 const { actualClientRect, getElementCache, setElementCache } = $lib.session;
 const { pushIndent, pushIndentArray } = $lib.xml;
 
@@ -404,12 +404,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 return !positionAbsolute(style);
             }
             else if (!pseudoElt) {
-                const children = element.children;
-                const length = children.length;
-                for (let i = 0; i < length; i++) {
-                    if (this.visibleElement(children[i])) {
-                        return true;
-                    }
+                if (iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item)) === Number.POSITIVE_INFINITY) {
+                    return true;
                 }
                 if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none') {
                     return true;
@@ -454,7 +450,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             else if (this.userSettings.supportNegativeLeftTop) {
                                 let outside = false;
                                 while (parent && parent !== documentRoot && (!parent.rightAligned && !parent.centerAligned || !parent.pageFlow)) {
-                                    const bounds = parent.bounds;
+                                    const linear = parent.linear;
                                     if (!outside) {
                                         if (node.hasPX('top') && node.hasPX('bottom') || node.hasPX('left') && node.hasPX('right')) {
                                             break;
@@ -465,15 +461,18 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             if (overflowX && overflowY) {
                                                 break;
                                             }
-                                            const outsideX = !overflowX && node.outsideX(bounds);
-                                            const outsideY = !overflowY && node.outsideY(bounds);
+                                            const outsideX = !overflowX && node.outsideX(linear);
+                                            const outsideY = !overflowY && node.outsideY(linear);
                                             if (outsideX && (node.left < 0 || node.right > 0) || outsideY && (node.top < 0 || node.bottom !== 0)) {
+                                                outside = true;
+                                            }
+                                            else if (!overflowX && (node.left < 0 || node.right > 0) && Math.floor(node.bounds.right) < parent.bounds.left || !overflowY && (node.top < 0 || node.bottom > 0) && Math.floor(node.bounds.bottom) < parent.bounds.top) {
                                                 outside = true;
                                             }
                                             else if (outsideX && outsideY && (!parent.pageFlow || (parent.actualParent as T).documentBody) && (node.top > 0 || node.left > 0)) {
                                                 outside = true;
                                             }
-                                            else if (!overflowX && !overflowY && !node.intersectX(bounds) && !node.intersectY(bounds)) {
+                                            else if (!overflowX && !overflowY && !node.intersectX(linear) && !node.intersectY(linear)) {
                                                 outside = true;
                                             }
                                             else {
@@ -485,7 +484,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                         parent = absoluteParent;
                                         break;
                                     }
-                                    else if (node.withinX(bounds) && node.withinY(bounds)) {
+                                    else if (node.withinX(linear) && node.withinY(linear)) {
                                         break;
                                     }
                                     parent = parent.actualParent as T;
@@ -561,28 +560,30 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const length = layers.length;
             if (length) {
                 const children = node.children as T[];
-                for (let j = 0, k = 0, l = 1; j < length; j++, k++) {
-                    const order = layers[j];
+                for (let i = 0, j = 0, k = 1; i < length; i++, j++) {
+                    const order = layers[i];
                     if (order) {
                         order.sort((a, b) => {
                             if (a.parent === b.parent) {
-                                if (a.zIndex === b.zIndex) {
+                                const zA = a.zIndex;
+                                const zB = b.zIndex;
+                                if (zA === zB) {
                                     return a.id < b.id ? -1 : 1;
                                 }
-                                return a.zIndex < b.zIndex ? -1 : 1;
+                                return zA < zB ? -1 : 1;
                             }
                             return 0;
                         });
                         for (const item of order) {
-                            item.containerIndex = maxIndex + l++;
+                            item.containerIndex = maxIndex + k++;
                         }
-                        for (let m = 0; m < children.length; m++) {
-                            if (order.includes(children[m])) {
-                                children[m] = undefined as any;
+                        for (let l = 0; l < children.length; l++) {
+                            if (order.includes(children[l])) {
+                                children[l] = undefined as any;
                             }
                         }
-                        children.splice(k, 0, ...order);
-                        k += order.length;
+                        children.splice(j, 0, ...order);
+                        j += order.length;
                     }
                 }
                 node.retain(flatArray(children));

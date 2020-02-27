@@ -857,14 +857,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (valid) {
                         const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
                         const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                        backgroundPosition[length] = getBackgroundPosition(
-                            checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'),
-                            node.actualDimension,
-                            node.fontSize,
-                            imageDimensions[length],
-                            backgroundSize[i],
+                        backgroundPosition[length] = getBackgroundPosition(checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'), node.actualDimension, {
+                            fontSize: node.fontSize,
+                            imageDimension: imageDimensions[length],
+                            imageSize: backgroundSize[i],
                             screenDimension
-                        );
+                        });
                         length++;
                     }
                     else {
@@ -888,17 +886,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     const element = <HTMLImageElement> image.element;
                     const src = resource.addImageSrc(element);
                     if (src !== '') {
-                        const imageBounds = image.bounds;
+                        const imageDimension = image.bounds;
                         images[length] = src;
                         backgroundRepeat[length] = 'no-repeat';
                         backgroundSize[length] = getPixelUnit(image.actualWidth, image.actualHeight);
                         const position = getBackgroundPosition(
-                            image.containerName === 'INPUT_IMAGE' ? getPixelUnit(0, 0) : getPixelUnit(imageBounds.left - bounds.left + node.borderLeftWidth, imageBounds.top - bounds.top + node.borderTopWidth),
+                            image.containerName === 'INPUT_IMAGE' ? getPixelUnit(0, 0) : getPixelUnit(imageDimension.left - bounds.left + node.borderLeftWidth, imageDimension.top - bounds.top + node.borderTopWidth),
                             node.actualDimension,
-                            node.fontSize,
-                            imageBounds,
-                            '',
-                            screenDimension
+                            {
+                                fontSize: node.fontSize,
+                                imageDimension,
+                                screenDimension
+                            }
                         );
                         const stored = resource.getImage(element.src);
                         if (!node.hasPX('width')) {

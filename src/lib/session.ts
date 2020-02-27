@@ -1,6 +1,6 @@
 import { getStyle } from './css';
 import { getRangeClientRect } from './dom';
-import { convertCamelCase } from './util';
+import { convertCamelCase, iterateArray } from './util';
 
 export function actualClientRect(element: Element, sessionId?: string) {
     if (sessionId) {
@@ -26,23 +26,22 @@ export function actualTextRangeRect(element: Element, sessionId?: string) {
     const length = element.childElementCount;
     let hidden: Undef<[HTMLElement, string][]>;
     if (length) {
-        for (let i = 0; i < length; i++) {
-            const style = getStyle(element.children[i]);
+        iterateArray(element.children, (item: HTMLElement) => {
+            const style = getStyle(item);
             if (style.getPropertyValue('visibility') !== 'visible') {
                 const position = style.getPropertyValue('position');
                 if (position === 'absolute' || position === 'fixed') {
                     const display = style.getPropertyValue('display');
                     if (display !== 'none') {
-                        const child = <HTMLElement> element.children[i];
-                        child.style.display = 'none';
+                        item.style.display = 'none';
                         if (hidden === undefined) {
                             hidden = [];
                         }
-                        hidden.push([child, display]);
+                        hidden.push([item, display]);
                     }
                 }
             }
-        }
+        });
     }
     const bounds = getRangeClientRect(element);
     if (hidden) {

@@ -10,7 +10,7 @@ type SvgGroup = squared.svg.SvgGroup;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
-const { cloneObject } = squared.lib.util;
+const { cloneObject, iterateArray } = squared.lib.util;
 
 function getNearestViewBox(instance: Undef<SvgContainer>) {
     while (instance) {
@@ -82,10 +82,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         this.clear();
         let requireClip = false;
         const viewport = this.getViewport();
-        const children = element.children;
-        const length = children.length;
-        for (let i = 0; i < length; i++) {
-            const item = children[i];
+        iterateArray(element.children, (item: SVGElement) => {
             let svg: Undef<SvgView>;
             if (SVG.svg(item)) {
                 svg = new squared.svg.Svg(item, false);
@@ -136,7 +133,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 this.append(svg, viewport);
                 svg.build(options);
             }
-        }
+        });
         const aspectRatio = this.aspectRatio;
         if (SvgBuild.asSvg(this) && this.documentRoot) {
             if (aspectRatio.x < 0 || aspectRatio.y < 0) {

@@ -13,7 +13,7 @@ const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, ge
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = $lib.math;
 const { CHAR, ESCAPE, STRING, XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, trimEnd, trimStart } = $lib.util;
+const { convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, trimEnd, trimStart } = $lib.util;
 const { STRING_SPACE, STRING_TABSPACE } = $lib.xml;
 
 const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+, \\d+%?, \\d+%?(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
@@ -347,12 +347,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled = false) {
         let result: string[] = [];
         let numberArray = true;
-        const children = element.children;
-        const length = children.length;
-        for (let i = 0; i < length; i++) {
-            const item = <HTMLOptionElement> children[i];
+        iterateArray(element.children, (item: HTMLOptionElement) => {
             if (item.disabled && !showDisabled) {
-                continue;
+                return;
             }
             switch (item.tagName) {
                 case 'OPTION': {
@@ -377,7 +374,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     break;
                 }
             }
-        }
+        });
         return numberArray ? [undefined, result] : [result];
     }
 
@@ -410,7 +407,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 type,
                                 dimension,
                                 angle: getAngle(direction),
-                                center: getBackgroundPosition(position?.[2] || 'center', dimension, node.fontSize, imageDimension, '', screenDimension)
+                                center: getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension })
                             };
                             conic.colorStops = parseColorStops(node, conic, match[4]);
                             gradient = conic;
@@ -418,7 +415,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                         case 'radial': {
                             const position = getGradientPosition(direction);
-                            const center = getBackgroundPosition(position?.[2] || 'center', dimension, node.fontSize, imageDimension, '', screenDimension);
+                            const center = getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension });
                             const { left, top } = center;
                             const { width, height } = dimension;
                             let shape = 'ellipse';
@@ -956,48 +953,45 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             return preserveWhitespace ? value : STRING_SPACE;
         }
         const sessionId = node.sessionId;
-        const children = element.childNodes;
-        const length = children.length;
-        for (let i = 0; i < length; i++) {
-            const child = <Element> children[i];
-            const item = getElementAsNode<NodeUI>(child, sessionId);
-            if (item === null || !item.textElement || !item.pageFlow || item.positioned || item.pseudoElement || item.excluded || item.dataset.target) {
-                if (item) {
-                    if (styled && item.htmlElement) {
-                        const outerHTML = item.toElementString('outerHTML');
-                        if (item.lineBreak) {
+        element.childNodes.forEach((item: Element, index: number) => {
+            const child = getElementAsNode<NodeUI>(item, sessionId);
+            if (child === null || !child.textElement || !child.pageFlow || child.positioned || child.pseudoElement || child.excluded || child.dataset.target) {
+                if (child) {
+                    if (styled && child.htmlElement) {
+                        const outerHTML = child.toElementString('outerHTML');
+                        if (child.lineBreak) {
                             value = value.replace(!preserveWhitespace ? new RegExp(`\\s*${outerHTML}\\s*`) : outerHTML, '\\n');
                         }
-                        else if (item.positioned) {
+                        else if (child.positioned) {
                             value = value.replace(outerHTML, '');
                         }
                         else if (!preserveWhitespace) {
-                            value = value.replace(outerHTML, item.pageFlow && item.textContent.trim() !== '' ? STRING_SPACE : '');
+                            value = value.replace(outerHTML, child.pageFlow && child.textContent.trim() !== '' ? STRING_SPACE : '');
                         }
-                        continue;
+                        return;
                     }
                     else {
-                        const textContent = item[attr];
+                        const textContent = child[attr];
                         if (isString(textContent)) {
                             if (!preserveWhitespace) {
                                 value = value.replace(textContent, '');
                             }
-                            continue;
+                            return;
                         }
                     }
                 }
-                else if (child instanceof HTMLElement) {
-                    const position = getComputedStyle(child).getPropertyValue('position');
-                    value = value.replace(child.outerHTML, position !== 'absolute' && position !== 'fixed' && (child.textContent as string).trim() !== '' ? STRING_SPACE : '');
+                else if (item instanceof HTMLElement) {
+                    const position = getComputedStyle(item).getPropertyValue('position');
+                    value = value.replace(item.outerHTML, position !== 'absolute' && position !== 'fixed' && (item.textContent as string).trim() !== '' ? STRING_SPACE : '');
                 }
-                if (i === 0) {
+                if (index === 0) {
                     value = trimStart(value, ' ');
                 }
-                else if (i === length - 1) {
+                else if (index === length - 1) {
                     value = trimEnd(value, ' ');
                 }
             }
-        }
+        });
         return styled ? value.replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture))) : value;
     }
 }

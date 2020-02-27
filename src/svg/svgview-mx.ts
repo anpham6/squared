@@ -17,7 +17,7 @@ const { calculateVar, isAngle, isCalc, isCustomProperty, getFontSize, getKeyfram
 const { isWinEdge } = $lib.client;
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;
-const { isString, replaceMap, safeNestedArray, sortNumber } = $lib.util;
+const { isString, iterateArray, replaceMap, safeNestedArray, sortNumber } = $lib.util;
 
 type AttributeMap = ObjectMap<AttributeData[]>;
 
@@ -118,14 +118,11 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     item.parent = this;
                     result.push(item);
                 };
-                const children = element.children;
-                let length = children.length;
-                for (let i = 0; i < length; i++) {
-                    const item = children[i];
+                iterateArray(element.children, (item: SVGElement) => {
                     if (item instanceof SVGAnimationElement) {
                         const begin = getNamedItem(item, 'begin');
                         if (/^[a-zA-Z]+$/.test(begin)) {
-                            continue;
+                            return;
                         }
                         const times = begin ? sortNumber(replaceMap<string, number>(begin.split(';'), value => SvgAnimation.convertClockTime(value))) : [0];
                         if (times.length) {
@@ -144,7 +141,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     for (const time of times) {
                                         const animate = new SvgAnimateTransform(element, <SVGAnimateTransformElement> item);
                                         if (SvgBuild.isShape(this) && this.path) {
-                                            animate.transformFrom = SvgBuild.drawRefit(element, this.parent, this.viewport?.precision);
+                                            animate.transformFrom = SvgBuild.drawRefit(<SVGGraphicsElement> element, this.parent, this.viewport?.precision);
                                         }
                                         addAnimation(animate, time);
                                     }
@@ -162,9 +159,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             }
                         }
                     }
-                }
+                });
                 const animationName = parseAttribute(element, 'animation-name');
-                length = animationName.length;
+                const length = animationName.length;
                 if (length) {
                     const cssData: ObjectMap<string[]> = {};
                     const groupName: SvgAnimate[] = [];

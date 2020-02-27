@@ -162,7 +162,7 @@ export interface LayoutResult<T extends NodeUI> {
 export interface ResourceAssetMap {
     ids: Map<string, string[]>;
     images: Map<string, ImageAsset>;
-    fonts: Map<string, squared.lib.css.CSSFontFaceData[]>;
+    fonts: Map<string, squared.lib.css.FontFaceData[]>;
     rawData: Map<string, RawAsset>;
 }
 

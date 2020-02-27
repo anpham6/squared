@@ -165,8 +165,8 @@ declare namespace base {
         reset(): void;
         addImage(element: Undef<HTMLImageElement>): void;
         getImage(src: string): Undef<ImageAsset>;
-        addFont(data: squared.lib.css.CSSFontFaceData): void;
-        getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<squared.lib.css.CSSFontFaceData>;
+        addFont(data: squared.lib.css.FontFaceData): void;
+        getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<squared.lib.css.FontFaceData>;
         addRawData(uri: string, mimeType: string, encoding: string, content: string): string;
         getRawData(uri: string): Undef<RawAsset>;
         setFileHandler(instance: File<T>): void;
@@ -740,6 +740,7 @@ declare namespace lib {
             duplicate(): T[];
             clear(): this;
             each(predicate: IteratorPredicate<T, void>): this;
+            iterate(predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
             sort(predicate: (a: T, b: T) => number): this;
             concat(list: T[]): this;
             join(...other: Container<T>[]): this;
@@ -793,15 +794,21 @@ declare namespace lib {
     }
 
     namespace css {
-        type CSSKeyframesData = ObjectMap<StringMap>;
-
-        interface CSSFontFaceData {
+        type KeyframesData = ObjectMap<StringMap>;
+        
+        interface FontFaceData {
             fontFamily: string;
             fontWeight: number;
             fontStyle: string;
             srcFormat: string;
             srcUrl?: string;
             srcLocal?: string;
+        }
+        interface BackgroundPositionOptions {
+            fontSize?: number;
+            imageDimension?: Dimension;
+            imageSize?: string;
+            screenDimension?: Dimension;
         }
 
         const BOX_POSITION: string[];
@@ -815,15 +822,15 @@ declare namespace lib {
         function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
         function parseSelectorText(value: string): string;
         function getSpecificity(value: string): number;
-        function getKeyframeRules(): ObjectMap<CSSKeyframesData>;
-        function parseKeyframeRule(rules: CSSRuleList): CSSKeyframesData;
+        function getKeyframeRules(): ObjectMap<KeyframesData>;
+        function parseKeyframeRule(rules: CSSRuleList): KeyframesData;
         function validMediaRule(value: string, fontSize?: number): boolean;
         function getDataSet(element: HTMLElement | SVGElement, prefix: string): StringMap;
         function isParentStyle(element: Element, attr: string, ...styles: string[]): boolean;
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
         function parseVar(element: HTMLElement | SVGElement, value: string): Undef<string>;
         function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): Undef<number>;
-        function getBackgroundPosition(value: string, dimension: Dimension, fontSize?: number, imageDimension?: Dimension, imageSize?: string, screenDimension?: Dimension): BoxRectPosition;
+        function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function resolveURL(value: string): string;
@@ -1017,15 +1024,16 @@ declare namespace lib {
         function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
         function flatArray<T>(list: any[]): T[];
         function flatMultiArray<T>(list: any[]): T[];
-        function partitionArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>): T[];
-        function sameArray<T>(list: T[], predicate: IteratorPredicate<T, any>): boolean;
-        function flatMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
-        function filterMap<T, U>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[];
-        function objectMap<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[];
         function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
-        function joinMap<T>(list: T[], predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;
-        function captureMap<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
+        function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
+        function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
+        function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
+        function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
+        function filterMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[];
+        function objectMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
+        function joinMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;
+        function captureMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
     }
 
     namespace xml {

@@ -11,7 +11,7 @@ const $lib = squared.lib;
 const { isPercent, parseAngle } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { truncateFraction } = $lib.math;
-const { isEqual, isNumber, isString, objectMap } = $lib.util;
+const { isEqual, isNumber, isString, iterateArray, objectMap } = $lib.util;
 
 export default class SvgAnimateMotion extends SvgAnimateTransform implements squared.svg.SvgAnimateMotion {
     public path = '';
@@ -43,23 +43,21 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     }
                     break;
             }
-            const children = animationElement.children;
-            const length = children.length;
-            for (let i = 0; i < length; i++) {
-                const item = children[i];
+            iterateArray(animationElement.children, (item: SVGElement) => {
                 if (item.tagName === 'mpath') {
-                    let target = getTargetElement(<SVGElement> item);
+                    let target = getTargetElement(item);
                     if (target) {
                         if (SVG.use(target)) {
                             target = getTargetElement(target);
                         }
                         if (target && SVG.shape(target)) {
                             this.motionPathElement = target;
-                            break;
+                            return true;
                         }
                     }
                 }
-            }
+                return;
+            });
             this.setCalcMode();
         }
         else if (element) {

@@ -10,7 +10,7 @@ const $libA = android.lib;
 
 const { formatPX } = $lib.css;
 const { getElementAsNode } = $lib.session;
-const { assignEmptyValue, safeNestedMap, includes, isString } = $lib.util;
+const { assignEmptyValue, safeNestedMap, includes, isString, iterateArray } = $lib.util;
 
 const { NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -40,18 +40,16 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
 
     public init(element: HTMLElement) {
         if (this.included(element)) {
-            const children = element.children;
-            const length = children.length;
-            for (let i = 0; i < length; i++) {
-                const item = <HTMLElement> children[i];
+            iterateArray(element.children, (item: HTMLElement) => {
                 if (item.tagName === 'NAV') {
                     const use = item.dataset.use;
                     if (!includes(use, EXT_ANDROID.EXTERNAL)) {
                         item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
-                        break;
+                        return true;
                     }
                 }
-            }
+                return;
+            });
             const target = element.dataset.target;
             if (target) {
                 const targetElement = document.getElementById(target);
@@ -78,11 +76,8 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const backgroundImage = node.has('backgroundImage');
         const appBarChildren: T[] = [];
         const collapsingToolbarChildren: T[] = [];
-        const children = element.children;
-        const length = children.length;
         let app = safeNestedMap<string>(toolbarOptions, 'app');
-        for (let i = 0; i < length; i++) {
-            const item = <HTMLElement> children[i];
+        iterateArray(element.children, (item: HTMLElement) => {
             const dataset = item.dataset;
             if (item.tagName === 'IMG') {
                 if (dataset.navigationIcon) {
@@ -111,7 +106,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                     }
                 }
             }
-        }
+        });
         const [controlName, appBarName, collapsingToolbarName] = node.api < BUILD_ANDROID.Q ? [SUPPORT_ANDROID.TOOLBAR, SUPPORT_ANDROID.APPBAR, SUPPORT_ANDROID.COLLAPSING_TOOLBAR] : [SUPPORT_ANDROID_X.TOOLBAR, SUPPORT_ANDROID_X.APPBAR, SUPPORT_ANDROID_X.COLLAPSING_TOOLBAR];
         const hasCollapsingToolbar = 'collapsingToolbar' in options || collapsingToolbarChildren.length > 0;
         const hasAppBar = 'appBar' in options || appBarChildren.length > 0 || hasCollapsingToolbar;

@@ -16,7 +16,7 @@ const $lib = squared.lib;
 const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule, isLength, resolveURL } = $lib.css;
 const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
 const { maxArray } = $lib.math;
-const { convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, partitionArray, safeNestedArray, safeNestedMap, trimString } = $lib.util;
+const { convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimString } = $lib.util;
 const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -281,12 +281,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     current = current.parentElement;
                 }
                 const controllerHandler = this.controllerHandler;
-                const children = element.children;
-                const length = children.length;
-                for (let i = 0; i < length; i++) {
-                    if (controllerHandler.visibleElement(children[i])) {
-                        return true;
-                    }
+                if (iterateArray(element.children, (item: HTMLElement) => controllerHandler.visibleElement(item)) === Number.POSITIVE_INFINITY) {
+                    return true;
                 }
                 return this.isUseElement(element);
             }
@@ -587,7 +583,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             const controllerHandler = this.controllerHandler;
-            if (node.excluded || controllerHandler.preventNodeCascade(parentElement)) {
+            if (node.excluded && node.outerExtensionElement === null || controllerHandler.preventNodeCascade(parentElement)) {
                 return node;
             }
             const sessionId = this.processing.sessionId;
@@ -864,27 +860,25 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     };
                                     const cascadeCounterSibling = (sibling: Element) => {
                                         if (getCounterValue(getStyle(sibling).getPropertyValue('counter-reset'), counterName) === undefined) {
-                                            const children = sibling.children;
-                                            const length = children.length;
-                                            for (let i = 0; i < length; i++) {
-                                                const child = children[i];
-                                                if (child.className !== '__squared.pseudo') {
-                                                    let increment = getCounterIncrementValue(child, counterName, pseudoElt, sessionId);
+                                            iterateArray(sibling.children, item => {
+                                                if (item.className !== '__squared.pseudo') {
+                                                    let increment = getCounterIncrementValue(item, counterName, pseudoElt, sessionId);
                                                     if (increment) {
                                                         incrementCounter(increment, true);
                                                     }
-                                                    const childStyle = getStyle(child);
+                                                    const childStyle = getStyle(item);
                                                     increment = getCounterValue(childStyle.getPropertyValue('counter-increment'), counterName);
                                                     if (increment) {
                                                         incrementCounter(increment, false);
                                                     }
                                                     increment = getCounterValue(childStyle.getPropertyValue('counter-reset'), counterName);
                                                     if (increment !== undefined) {
-                                                        return;
+                                                        return true;
                                                     }
-                                                    cascadeCounterSibling(child);
+                                                    cascadeCounterSibling(item);
                                                 }
-                                            }
+                                                return;
+                                            });
                                         }
                                     };
                                     do {
@@ -1009,7 +1003,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (node.floatContainer) {
                     const floated = new Set<string>();
                     const clearable: ObjectMap<Undef<T>> = {};
-                    node.each((item: T) => {
+                    for (const item of node.naturalChildren as T[]) {
                         if (item.pageFlow) {
                             const floating = item.floating;
                             if (floated.size) {
@@ -1057,7 +1051,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 clearable[float] = item;
                             }
                         }
-                    });
+                    }
                 }
             }
         }
@@ -1234,11 +1228,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                             }
                         }
-                        if (layout && this.addLayout(layout)) {
-                            if (segEnd === axisY[length - 1]) {
-                                parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
+                        let complete = false;
+                        if (layout) {
+                            if (this.addLayout(layout)) {
+                                complete = true;
+                                parentY = nodeY.parent as T;
                             }
-                            parentY = nodeY.parent as T;
+                        }
+                        else {
+                            complete = true;
+                        }
+                        if (complete && segEnd === axisY[length - 1]) {
+                            parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                         }
                     }
                     nodeY.removeAlign(NODE_ALIGNMENT.EXTENDABLE);
@@ -1557,13 +1558,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 else {
                     group.add(getFloatAlignmentType(seg));
                 }
-                if (seg.length === 1) {
-                    if (first.percentWidth > 0) {
-                        group.type = controllerHandler.containerTypePercent;
+                if (seg.some(child => child.percentWidth > 0)) {
+                    group.type = controllerHandler.containerTypePercent;
+                    if (seg.length === 1) {
+                        group.node.innerWrapped = first;
                     }
-                    else {
-                        group.setContainerType(containerType, alignmentType);
-                    }
+                }
+                else if (seg.length === 1) {
+                    group.setContainerType(containerType, alignmentType);
                     group.node.innerWrapped = first;
                 }
                 else if (group.linearY || group.unknownAligned) {

@@ -15,7 +15,7 @@ const { isTextNode, newBoxModel } = $lib.dom;
 const { equal } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { cloneObject, convertWord, hasBit, isArray, safeNestedMap, searchObject, spliceArray, withinRange } = $lib.util;
+const { cloneObject, convertWord, hasBit, isArray, iterateArray, safeNestedMap, searchObject, spliceArray, withinRange } = $lib.util;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
@@ -154,7 +154,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const result: T[] = [];
         for (const item of list) {
             if (item.baseline && (!text || item.textElement) && !item.baselineAltered) {
-                if (item.naturalChildren.length) {
+                if (item.naturalElements.length) {
                     if (item.baselineElement) {
                         result.push(item);
                     }
@@ -804,7 +804,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (isArray(siblings)) {
                 const previous = siblings[siblings.length - 1];
                 if (cleared) {
-                    if (cleared.has(this)) {
+                    if (cleared.size && (cleared.has(this) || this.siblingsLeading.some(item => item.excluded && cleared.has(item)))) {
                         return NODE_TRAVERSE.FLOAT_CLEAR;
                     }
                     else {
@@ -876,7 +876,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         else {
                                             top = Math.ceil(top);
                                         }
-                                        if (top < maxBottom) {
+                                        if (top < Math.floor(maxBottom)) {
                                             return horizontal ? NODE_TRAVERSE.HORIZONTAL : NODE_TRAVERSE.FLOAT_BLOCK;
                                         }
                                         else {
@@ -1319,7 +1319,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get blockStatic() {
-        return super.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK) && !this.floating;
+        return super.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK) && !this.floating && this.pageFlow;
     }
 
     get rightAligned() {
@@ -1337,7 +1337,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             else {
                 const { top, right, bottom, left } = this._styleMap;
-                result = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto') && this.toFloat('opacity', 1) > 0 && this.childIndex > 0;
+                result = (!top || top === 'auto') && (!left || left === 'auto') && (!right || right === 'auto') && (!bottom || bottom === 'auto');
             }
             this._cached.autoPosition = result;
         }
@@ -1539,14 +1539,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (element) {
                     const parentElement = element.parentElement;
                     if (parentElement) {
-                        const childNodes = parentElement.childNodes;
-                        const length = childNodes.length;
-                        for (let i = 0; i < length; i++) {
-                            if (childNodes[i] === element) {
-                                result = i;
-                                this._childIndex = i;
+                        iterateArray(parentElement.childNodes, (item: Element, index: number) => {
+                            if (item === element) {
+                                result = index;
+                                this._childIndex = index;
+                                return true;
                             }
-                        }
+                            return;
+                        });
                     }
                 }
             }

@@ -5,7 +5,7 @@ type View = android.base.View;
 
 const $lib = android.lib;
 
-const { isNumber, safeNestedMap } = squared.lib.util;
+const { isNumber, sameArray, safeNestedMap } = squared.lib.util;
 
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -101,14 +101,9 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
 
     public init(element: HTMLElement) {
         if (this.included(element)) {
-            const children = element.children;
-            const length = children.length;
-            if (length) {
-                const tagName = children[0].tagName;
-                for (let i = 1; i < length; i++) {
-                    if (children[i].tagName !== tagName) {
-                        return false;
-                    }
+            if (element.childElementCount) {
+                if (!sameArray(element.children, (item: Element) => item.tagName)) {
+                    return false;
                 }
                 const application = this.application;
                 let current = element.parentElement;
