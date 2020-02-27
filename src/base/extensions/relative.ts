@@ -9,6 +9,8 @@ const $lib = squared.lib;
 const { assignRect } = $lib.dom;
 const { convertFloat, withinRange } = $lib.util;
 
+const TRANSLATE_OPTIONS = { relative: true };
+
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
         return node.positionRelative && !node.autoPosition || convertFloat(node.verticalAlign) !== 0;
@@ -60,10 +62,10 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 y -= verticalAlign;
             }
             if (x !== 0) {
-                node.translateX(x, { accumulate: true });
+                node.translateX(x, TRANSLATE_OPTIONS);
             }
             if (y !== 0) {
-                node.translateY(y, { accumulate: true });
+                node.translateY(y, TRANSLATE_OPTIONS);
             }
         }
         else {

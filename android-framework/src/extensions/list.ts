@@ -33,7 +33,12 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             else if (layout.linearX || layout.singleRowAligned) {
                 layout.rowCount = 1;
                 layout.columnCount = layout.length;
-                layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
+                if ((<android.base.Controller<T>> this.controller).checkLinearHorizontal(layout)) {
+                    layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
+                }
+                else {
+                    layout.setContainerType(CONTAINER_NODE.RELATIVE, NODE_ALIGNMENT.HORIZONTAL);
+                }
             }
             else {
                 return undefined;

@@ -184,5 +184,6 @@ export interface HideUIOptions<T> {
 export interface TranslateUIOptions {
     accumulate?: boolean;
     contain?: boolean;
-    preset?: boolean;
+    oppose?: boolean;
+    relative?: boolean;
 }

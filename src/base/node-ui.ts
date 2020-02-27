@@ -1417,6 +1417,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     set multiline(value: boolean) {
         this._cached.multiline = value;
+        this._cached.baselineElement = undefined;
     }
     get multiline() {
         return super.multiline;

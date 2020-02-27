@@ -243,7 +243,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
     const maxWH = node.cssInitial(horizontal ? 'maxWidth' : 'maxHeight', true);
     if (isLength(maxWH, true) && maxWH !== '100%') {
         if (horizontal) {
-            if (ascendFlexibleWidth(node) && (node.blockStatic || !node.alignParent('left') && !node.alignParent('right'))) {
+            if (ascendFlexibleWidth(node)) {
                 const value = node.parseUnit(maxWH);
                 if (hasDimension) {
                     const width = node.width;
@@ -271,7 +271,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
             if (hasDimension) {
                 const height = node.height;
                 if (height < value) {
-                    node.app('layout_constraintHeight_min', formatPX(Math.min(height + (node.contentBox && !node.actualParent?.gridElement ? node.contentBoxWidth : 0), value)));
+                    node.app('layout_constraintHeight_min', formatPX(Math.min(height + (node.contentBox && !node.actualParent?.gridElement ? node.contentBoxHeight : 0), value)));
                 }
                 else if (height >= value) {
                     return;
@@ -1208,7 +1208,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         if (layoutWidth === '') {
-                            if (this.layoutGrid && !this.hasWidth && this.some((node: T) => node.flexibleWidth) || this.floating && this.block && this.alignParent('left') && this.alignParent('right') && !this.centerAligned && !this.rightAligned) {
+                            if (this.layoutGrid && !this.hasWidth && this.some((node: T) => node.flexibleWidth) || this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
                                 layoutWidth = 'match_parent';
                             }
                             else if (this.naturalElement && this.inlineStatic && !this.blockDimension && !actualParent.layoutElement && (renderParent.layoutVertical || !renderParent.inlineWidth && this.alignSibling('left') === '' && this.alignSibling('right') === '') && this.some(item => item.naturalElement && item.blockStatic)) {
@@ -1788,40 +1788,65 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             bottom = Math.max(bottom - SPACING_SELECT, 0);
                             break;
                     }
-                    if (top < 0 && bottom >= 0 && (this.pageFlow && (this.block || this.floating) || this.leftTopAxis) && this.translateY(top, { accumulate: true })) {
-                        if (this.pageFlow) {
-                            const siblings = this.anchorChain('bottom');
-                            for (const item of siblings) {
-                                item.translateY(top, { accumulate: true });
+                    if (top < 0) {
+                        if (!this.pageFlow) {
+                            if (this.leftTopAxis && (this.hasPX('top') || !this.hasPX('bottom')) && this.translateY(top)) {
+                                top = 0;
                             }
                         }
-                        top = 0;
+                        else if (this.blockDimension && this.translateY(top)) {
+                            for (const item of this.anchorChain('bottom')) {
+                                item.translateY(top);
+                            }
+                            top = 0;
+                        }
                     }
-                    if (left < 0 && right >= 0) {
-                        if (this.float === 'right') {
+                    if (bottom < 0) {
+                        if (!this.pageFlow) {
+                            if (this.leftTopAxis && this.hasPX('bottom') && this.translateX(-bottom, { oppose: false })) {
+                                bottom = 0;
+                            }
+                        }
+                        else if (this.blockDimension && this.renderParent?.layoutConstraint) {
+                            for (const item of this.anchorChain('bottom')) {
+                                item.translateY(bottom);
+                            }
+                            bottom = 0;
+                        }
+                    }
+                    if (left < 0) {
+                        if (!this.pageFlow) {
+                            if (this.leftTopAxis && (this.hasPX('left') || !this.hasPX('right')) && this.translateX(left)) {
+                                left = 0;
+                            }
+                        }
+                        else if (this.float === 'right') {
                             const siblings = this.anchorChain('left');
                             left = Math.min(-left, -this.bounds.width);
                             for (const item of siblings) {
-                                item.translateX(-left, { accumulate: true });
+                                item.translateX(-left);
                             }
                             left = 0;
                         }
-                        else if ((this.pageFlow && this.blockDimension || this.leftTopAxis) && this.translateX(left, { accumulate: true })) {
-                            if (this.pageFlow) {
-                                const siblings = this.anchorChain('right');
-                                for (const item of siblings) {
-                                    item.translateX(left, { accumulate: true });
-                                }
+                        else if (this.blockDimension && this.translateX(left)) {
+                            for (const item of this.anchorChain('right')) {
+                                item.translateX(left);
                             }
                             left = 0;
                         }
                     }
-                    if (right < 0 && this.pageFlow && this.blockDimension) {
-                        const siblings = this.anchorChain('right');
-                        for (const item of siblings) {
-                            item.translateX(right, { accumulate: true });
+                    if (right < 0) {
+                        if (!this.pageFlow) {
+                            if (this.leftTopAxis && this.hasPX('right') && this.translateX(-right, { oppose: false })) {
+                                right = 0;
+                            }
                         }
-                        right = 0;
+                        else if (this.blockDimension && this.renderParent?.layoutConstraint) {
+                            for (const item of this.anchorChain('right')) {
+                                item.translateX(right);
+                            }
+                            right = 0;
+                        }
                     }
                 }
                 else if (this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE)) {
@@ -1984,59 +2009,77 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public translateX(value: number, options?: TranslateUIOptions) {
-            if (options?.preset !== true) {
-                const renderParent = this.renderParent;
-                if (renderParent && renderParent.layoutConstraint) {
-                    if (options) {
-                        if (options.accumulate) {
-                            value += convertInt(this.android('translationX'));
+            const renderParent = this.renderParent;
+            if (renderParent?.layoutConstraint) {
+                let x: number;
+                if (options) {
+                    x = convertInt(this.android('translationX'));
+                    if (options.oppose === false && (x > 0 && value < 0 || x < 0 && value > 0)) {
+                        return false;
+                    }
+                    if (options.accumulate !== false) {
+                        x += value;
+                    }
+                    if (options.relative && value !== 0) {
+                        if (this.outerMostWrapper.alignSibling('rightLeft') === '') {
+                            this.modifyBox(BOX_STANDARD.MARGIN_RIGHT, value);
                         }
-                        if (options.contain) {
-                            const { left, right } = renderParent.box;
-                            const { left: x1, right: x2 } = this.linear;
-                            if (x1 + value < left) {
-                                value = Math.max(x1 - left, 0);
-                            }
-                            else if (x2 + value > right) {
-                                value = Math.max(right - x2, 0);
-                            }
+                    }
+                    else if (options.contain) {
+                        const { left, right } = renderParent.box;
+                        const { left: x1, right: x2 } = this.linear;
+                        if (x1 + x < left) {
+                            x = Math.max(x1 - left, 0);
+                        }
+                        else if (x2 + x > right) {
+                            x = Math.max(right - x2, 0);
                         }
                     }
                 }
                 else {
-                    return false;
+                    x = value;
                 }
+                this.android('translationX', formatPX(x));
+                return true;
             }
-            this.android('translationX', formatPX(value));
-            return true;
+            return false;
         }
 
         public translateY(value: number, options?: TranslateUIOptions) {
-            if (options?.preset !== true) {
-                const renderParent = this.renderParent;
-                if (renderParent && renderParent.layoutConstraint) {
-                    if (options) {
-                        if (options.accumulate) {
-                            value += convertInt(this.android('translationY'));
+            const renderParent = this.renderParent;
+            if (renderParent?.layoutConstraint) {
+                let y: number;
+                if (options) {
+                    y = convertInt(this.android('translationY'));
+                    if (options.oppose === false && (y > 0 && value < 0 || y < 0 && value > 0)) {
+                        return false;
+                    }
+                    if (options.accumulate !== false) {
+                        y += value;
+                    }
+                    if (options.relative && value !== 0) {
+                        if (this.outerMostWrapper.alignSibling('bottomTop') === '') {
+                            this.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, value);
                         }
-                        if (options.contain) {
-                            const { top, bottom } = renderParent.box;
-                            const { top: y1, bottom: y2 } = this.linear;
-                            if (y1 + value < top) {
-                                value = Math.max(y1 - top, 0);
-                            }
-                            else if (y2 + value > bottom) {
-                                value = Math.max(bottom - y2, 0);
-                            }
+                    }
+                    else if (options.contain) {
+                        const { top, bottom } = renderParent.box;
+                        const { top: y1, bottom: y2 } = this.linear;
+                        if (y1 + y < top) {
+                            y = Math.max(y1 - top, 0);
+                        }
+                        else if (y2 + y > bottom) {
+                            y = Math.max(bottom - y2, 0);
                         }
                     }
                 }
                 else {
-                    return false;
+                    y = value;
                 }
+                this.android('translationY', formatPX(y));
+                return true;
             }
-            this.android('translationY', formatPX(value));
-            return true;
+            return false;
         }
 
         public setLayoutWidth(value: string, overwrite = true) {

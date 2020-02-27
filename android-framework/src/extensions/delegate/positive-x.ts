@@ -9,8 +9,6 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 interface PositiveXData {
     children: View[];
-    right: boolean;
-    bottom: boolean;
 }
 
 const checkMarginLeft = (parent: View, item: View) => item.marginLeft < 0 && (parent.documentRoot || item.linear.left < Math.floor(parent.bounds.left));
@@ -19,17 +17,15 @@ const checkMarginTop = (parent: View, item: View) => item.marginTop < 0 && (pare
 const checkMarginBottom = (parent: View, item: View) => item.marginBottom < 0 && (parent.documentRoot || item.linear.bottom > Math.ceil(parent.bounds.bottom));
 
 function setFixedNodes(node: View) {
-    const absolute = node.filter((item: View) => !item.pageFlow && item.leftTopAxis && item.left >= 0 && item.right >= 0) as View[];
+    const absolute = node.filter((item: View) => !item.pageFlow && (item.leftTopAxis && item.left >= 0 && item.right >= 0 || item.css('position') === 'fixed')) as View[];
     if (absolute.length) {
-        const paddingTop = node.paddingTop + (node.documentBody ? node.marginTop : 0);
-        const paddingRight = node.paddingRight + (node.documentBody ? node.marginRight : 0);
-        const paddingBottom = node.paddingBottom + (node.documentBody ? node.marginBottom : 0);
-        const paddingLeft = node.paddingLeft + (node.documentBody ? node.marginLeft : 0);
+        const documentBody = node.documentBody;
+        const paddingTop = node.paddingTop + (documentBody ? node.marginTop : 0);
+        const paddingRight = node.paddingRight + (documentBody ? node.marginRight : 0);
+        const paddingBottom = node.paddingBottom + (documentBody ? node.marginBottom : 0);
+        const paddingLeft = node.paddingLeft + (documentBody ? node.marginLeft : 0);
         const children = new Set<View>();
-        let right = false;
-        let bottom = false;
         for (const item of absolute) {
-            const fixed = item.css('position') === 'fixed';
             if (item.hasPX('left')) {
                 const value = item.left;
                 if (value >= 0 && value < paddingLeft) {
@@ -42,11 +38,8 @@ function setFixedNodes(node: View) {
             }
             else if (item.hasPX('right')) {
                 const value = item.right;
-                if (value >= 0 && (fixed || value < paddingRight || node.documentBody && node.hasPX('width') && node.positionStatic)) {
+                if (value >= 0 && (value < paddingRight || documentBody && node.positionStatic && node.hasPX('width'))) {
                     children.add(item);
-                    if (fixed) {
-                        right = true;
-                    }
                 }
                 else if (checkMarginRight(node, item)) {
                     children.add(item);
@@ -73,11 +66,8 @@ function setFixedNodes(node: View) {
             }
             else if (item.hasPX('bottom')) {
                 const value = item.bottom;
-                if (value >= 0 && (fixed || value < paddingBottom || node.documentBody && node.hasPX('height') && node.positionStatic)) {
+                if (value >= 0 && (value < paddingBottom || documentBody && node.positionStatic && node.hasPX('height'))) {
                     children.add(item);
-                    if (fixed) {
-                        bottom = true;
-                    }
                 }
                 else if (checkMarginBottom(node, item)) {
                     children.add(item);
@@ -92,12 +82,9 @@ function setFixedNodes(node: View) {
                 children.add(item);
                 item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, paddingBottom);
             }
-            if (fixed && item.percentHeight > 0) {
-                bottom = true;
-            }
         }
-        if (children.size) {
-            node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData', <PositiveXData> { children: Array.from(children), right, bottom });
+        if (documentBody || children.size) {
+            node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData', <PositiveXData> { children: documentBody ? absolute : Array.from(children) });
             return true;
         }
     }
@@ -117,14 +104,11 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
         if (mainData) {
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid });
-            if (mainData.right) {
+            if (node.documentBody) {
                 container.setLayoutWidth('match_parent');
-                container.addAlign(NODE_ALIGNMENT.BLOCK);
-            }
-            if (mainData.bottom) {
                 container.setLayoutHeight('match_parent');
             }
-            if (!node.pageFlow) {
+            else if (!node.pageFlow) {
                 if (!node.hasPX('width') && node.hasPX('left') && node.hasPX('right')) {
                     node.setLayoutWidth('match_parent');
                 }
@@ -159,7 +143,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 const documentId = node.documentId;
                 if (item.hasPX('left')) {
                     if (!fixed) {
-                        item.translateX(item.left, { accumulate: true });
+                        item.translateX(item.left);
                         item.alignSibling('left', documentId);
                         constraint.horizontal = true;
                     }
@@ -167,7 +151,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 }
                 if (item.hasPX('right')) {
                     if (!fixed) {
-                        item.translateX(-item.right, { accumulate: true });
+                        item.translateX(-item.right);
                         item.alignSibling('right', documentId);
                         constraint.horizontal = true;
                     }
@@ -180,7 +164,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 }
                 if (item.hasPX('top')) {
                     if (!fixed) {
-                        item.translateY(item.top, { accumulate: true });
+                        item.translateY(item.top);
                         item.alignSibling('top', documentId);
                         constraint.vertical = true;
                     }
@@ -188,7 +172,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 }
                 if (item.hasPX('bottom')) {
                     if (!fixed) {
-                        item.translateY(-item.bottom, { accumulate: true });
+                        item.translateY(-item.bottom);
                         item.alignSibling('bottom', documentId);
                         constraint.vertical = true;
                     }

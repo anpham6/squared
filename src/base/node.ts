@@ -546,7 +546,7 @@ function hasTextAlign(node: T, value: string, localizedValue?: string) {
                     const index = node.childIndex;
                     const previousSibling = children[index - 1];
                     const nextSibling = children[index + 1];
-                    return (previousSibling === undefined || !previousSibling.pageFlow || previousSibling.blockStatic) && (nextSibling === undefined || !nextSibling.pageFlow || nextSibling.blockStatic);
+                    return (previousSibling === undefined || !previousSibling.pageFlow || previousSibling.blockStatic || previousSibling.lineBreak) && (nextSibling === undefined || !nextSibling.pageFlow || nextSibling.blockStatic || nextSibling.lineBreak);
                 }
             }
         }

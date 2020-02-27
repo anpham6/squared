@@ -160,10 +160,10 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                     const y = parseInt(translateY);
                     for (const child of mainData.outside) {
                         if (!isNaN(x)) {
-                            child.translateX(x, { accumulate: true });
+                            child.translateX(x);
                         }
                         if (!isNaN(y)) {
-                            child.translateY(y, { accumulate: true });
+                            child.translateY(y);
                         }
                     }
                 }
