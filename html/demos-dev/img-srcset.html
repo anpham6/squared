@@ -14,7 +14,9 @@
         }
     </style>
     <script src="/node_modules/systemjs/dist/system.js"></script>
-    <script src="common/dev.js"></script>
+    <script src="/demos-dev/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/demos-dev/common/dev.js"></script>
     <script>
         System.import('/build/src/main.js').then(result => {
             squared = result;
