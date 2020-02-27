@@ -58,12 +58,12 @@ function getCounterValue(name: string, counterName: string, fallback = 1) {
 }
 
 function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) {
-    const counterIncrement = getElementCache(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement;
+    const counterIncrement: string | undefined = getElementCache(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement;
     return counterIncrement ? getCounterValue(counterIncrement, counterName, fallback) : undefined;
 }
 
-function checkTraverseHorizontal(node: NodeUI, horizontal: NodeUI[], vertical: NodeUI[], extended: boolean) {
-    if (vertical.length || extended) {
+function checkTraverseHorizontal(node: NodeUI, horizontal: NodeUI[], vertical: NodeUI[]) {
+    if (vertical.length) {
         return false;
     }
     horizontal.push(node);
@@ -1089,7 +1089,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (length > 1 && k < length - 1 && nodeY.pageFlow && !nodeY.nodeGroup && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
-                        let extended = false;
                         let l = k;
                         let m = 0;
                         if (parentY.layoutVertical && nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
@@ -1098,12 +1097,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             m++;
                         }
                         traverse: {
-                            let floatActive!: boolean;
-                            let floatCleared!: Map<T, string>;
-                            if (floatContainer) {
-                                floatActive = false;
-                                floatCleared = new Map<T, string>();
-                            }
+                            let floatActive = false;
                             for ( ; l < length; l++, m++) {
                                 const item = axisY[l];
                                 if (item.pageFlow) {
@@ -1140,35 +1134,35 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             const status = item.alignedVertically(horizontal.length ? horizontal : vertical, clearMap, horizontal.length > 0);
                                             if (status > 0) {
                                                 if (horizontal.length) {
-                                                    if (status < NODE_TRAVERSE.FLOAT_BLOCK && floatActive && !floatCleared.has(item) && !item.siblingsLeading.some((node: T) => node.lineBreak && !clearMap.has(node))) {
+                                                    if (status < NODE_TRAVERSE.FLOAT_CLEAR && floatActive && !item.siblingsLeading.some((node: T) => node.lineBreak && !clearMap.has(node))) {
                                                          if (!item.floating || previous.floating && item.bounds.top < Math.floor(previous.bounds.bottom)) {
-                                                            if (floatCleared.has(item)) {
-                                                                if (!item.floating) {
-                                                                    item.addAlign(NODE_ALIGNMENT.EXTENDABLE);
-                                                                    horizontal.push(item);
-                                                                    extended = true;
+                                                            let floatBottom = Number.NEGATIVE_INFINITY;
+                                                            if (!item.floating) {
+                                                                for (const node of horizontal) {
+                                                                    if (node.floating) {
+                                                                        floatBottom = Math.max(floatBottom, node.bounds.bottom);
+                                                                    }
+                                                                }
+                                                            }
+                                                            if (!item.floating && item.bounds.top < Math.floor(floatBottom) || floatActive) {
+                                                                horizontal.push(item);
+                                                                if (!item.floating && Math.ceil(item.bounds.bottom) > floatBottom) {
+                                                                    break traverse;
+                                                                }
+                                                                else {
                                                                     continue;
                                                                 }
-                                                                break traverse;
                                                             }
-                                                            else {
-                                                                let floatBottom = Number.NEGATIVE_INFINITY;
-                                                                if (!item.floating) {
-                                                                    for (const node of horizontal) {
-                                                                        if (node.floating) {
-                                                                            floatBottom = Math.max(floatBottom, node.bounds.bottom);
-                                                                        }
-                                                                    }
+                                                        }
+                                                    }
+                                                    else {
+                                                        switch (status) {
+                                                            case NODE_TRAVERSE.FLOAT_WRAP:
+                                                            case NODE_TRAVERSE.FLOAT_INTERSECT: {
+                                                                if (!clearMap.has(item)) {
+                                                                    clearMap.set(item, 'both');
                                                                 }
-                                                                if (!item.floating && item.bounds.top < Math.floor(floatBottom) || floatActive) {
-                                                                    horizontal.push(item);
-                                                                    if (!item.floating && Math.ceil(item.bounds.bottom) > floatBottom) {
-                                                                        break traverse;
-                                                                    }
-                                                                    else {
-                                                                        continue;
-                                                                    }
-                                                                }
+                                                                break;
                                                             }
                                                         }
                                                     }
@@ -1178,7 +1172,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                     break traverse;
                                                 }
                                             }
-                                            else if (!checkTraverseHorizontal(item, horizontal, vertical, extended)) {
+                                            else if (!checkTraverseHorizontal(item, horizontal, vertical)) {
                                                 break traverse;
                                             }
                                         }
@@ -1188,7 +1182,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                     break traverse;
                                                 }
                                             }
-                                            else if (!checkTraverseHorizontal(item, horizontal, vertical, extended)) {
+                                            else if (!checkTraverseHorizontal(item, horizontal, vertical)) {
                                                 break traverse;
                                             }
                                         }

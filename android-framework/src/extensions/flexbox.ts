@@ -292,7 +292,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             const controller = <android.base.Controller<T>> this.controller;
             const { alignContent, children, directionColumn, directionReverse, directionRow, justifyContent, wrap, wrapReverse } = mainData;
             const parentBottom = node.hasPX('height', false) || node.percentHeight > 0 ? node.linear.bottom : 0;
-            const renderParent = node.renderParent as T;
             const chainHorizontal: T[][] = [];
             const chainVertical: T[][] = [];
             const segmented: T[] = [];
@@ -367,7 +366,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     return;
                 }
                 const { orientation, orientationInverse, WHL, HWL, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_horizontal : MAP_vertical;
-                const [dimension, dimensionInverse, dimensionParent] = horizontal ? [node.hasHeight, node.hasWidth, renderParent.hasWidth] : [node.hasWidth, node.hasHeight, renderParent.hasHeight];
+                const [dimension, dimensionInverse] = horizontal ? [node.hasHeight, node.hasWidth] : [node.hasWidth, node.hasHeight];
                 const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
                 const setLayoutWeight = (chain: T, value: number) => {
                     if (chain[WHL] === 0) {
@@ -738,7 +737,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             segStart.anchorStyle(orientation, 0, 'spread_inside', false);
                         }
                         else if (!centered) {
-                            segStart.anchorStyle(orientation, directionReverse ? 1 : 0, dimensionParent ? 'spread_inside' : 'packed', false);
+                            segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed', false);
                         }
                     }
                     if (marginBottom > 0) {

@@ -565,22 +565,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const grandParent = parent.actualParent;
                 if (grandParent) {
                     if (grandParent.flexElement && !grandParent.css('flexDirection').includes('column')) {
-                        let maxHeight = 0;
-                        let parentHeight = 0;
-                        for (const item of grandParent) {
-                            const height = (item.data(EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
-                            if (height > maxHeight) {
-                                maxHeight = height;
-                            }
-                            if (item === parent) {
-                                parentHeight = height;
-                                if (parentHeight < maxHeight) {
-                                    break;
+                        if (!grandParent.hasHeight) {
+                            let maxHeight = 0;
+                            let parentHeight = 0;
+                            for (const item of grandParent) {
+                                const height = (item.data(EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
+                                if (height > maxHeight) {
+                                    maxHeight = height;
+                                }
+                                if (item === parent) {
+                                    parentHeight = height;
+                                    if (parentHeight < maxHeight) {
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        if (parentHeight >= maxHeight) {
-                            return false;
+                            if (parentHeight >= maxHeight) {
+                                return false;
+                            }
                         }
                     }
                     else if (!grandParent.gridElement) {

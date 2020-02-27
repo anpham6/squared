@@ -178,10 +178,10 @@ export default abstract class NodeGroupUI extends NodeUI {
     get floating() {
         let result = this._cached.floating;
         if (result === undefined) {
-            result = this.every(node => node.floating);
+            result = this.every((node: NodeUI) => node.floating || node.hasAlign(NODE_ALIGNMENT.FLOAT));
             this._cached.floating = result;
         }
-        return result || this.hasAlign(NODE_ALIGNMENT.FLOAT);
+        return result;
     }
 
     get display() {

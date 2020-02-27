@@ -833,7 +833,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                         else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : Number.NEGATIVE_INFINITY), 0) / (this.actualParent as T).box.width >= 0.8) {
-                            return NODE_TRAVERSE.FLOAT_BLOCK
+                            return NODE_TRAVERSE.FLOAT_INTERSECT
                         }
                         else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
                             return NODE_TRAVERSE.FLOAT_BLOCK;
@@ -924,7 +924,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                 }
-                if (cleared?.get(previous) && !(siblings?.[0] === previous)) {
+                if (cleared?.has(previous) && !(siblings?.[0] === previous)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
                 else if (checkBlockDimension(this, previous)) {

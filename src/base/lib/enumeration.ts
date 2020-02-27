@@ -31,9 +31,9 @@ export const enum NODE_TRAVERSE {
     VERTICAL = 1,
     LINEBREAK = 2,
     INLINE_WRAP = 3,
-    FLOAT_WRAP = 4,
-    FLOAT_CLEAR = 5,
-    FLOAT_BLOCK = 6,
+    FLOAT_CLEAR = 4,
+    FLOAT_BLOCK = 5,
+    FLOAT_WRAP = 6,
     FLOAT_INTERSECT = 7,
     PERCENT_WRAP = 8
 }
