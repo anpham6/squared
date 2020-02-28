@@ -31,7 +31,7 @@ function setSpacingOffset(node: NodeUI, region: number, value: number, adjustmen
     }
     offset -= adjustment;
     if (offset > 0) {
-        (node.renderAs || node.outerMostWrapper).modifyBox(region, offset);
+        (node.renderAs || node).modifyBox(region, offset);
     }
 }
 
@@ -391,7 +391,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         while (validBelowChild(inherit, true)) {
                                             let topChild = inherit.firstStaticChild as T;
                                             if (isBlockElement(topChild, true) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0) {
-                                                let childTop = topChild.marginBottom;
+                                                let childTop = topChild.marginTop;
                                                 let currentChild = topChild;
                                                 while (currentChild.bounds.height === 0) {
                                                     childTop = Math.max(currentChild.marginTop, currentChild.marginBottom, childTop);
@@ -611,24 +611,25 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
 
     public afterConstraints() {
         for (const node of this.cacheProcessing) {
-            if (node.naturalChild && node.pageFlow && node.styleElement && node.inlineVertical && !node.positioned && !(node.actualParent as T).layoutElement) {
-                const renderParent = node.outerMostWrapper.renderParent;
+            if (node.naturalChild && node.styleElement && node.inlineVertical && node.pageFlow && !node.positioned && !(node.actualParent as T).layoutElement) {
+                const outerWrapper = node.outerMostWrapper;
+                const renderParent = outerWrapper.renderParent;
                 if (renderParent?.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) === false) {
                     if (node.blockDimension && !node.floating) {
                         if (renderParent.layoutVertical) {
                             const children = renderParent.renderChildren;
-                            const index = children.findIndex(item => item === node);
+                            const index = children.findIndex(item => item === outerWrapper);
                             if (index !== -1) {
                                 if (!node.lineBreakLeading) {
                                     const previous = children[index - 1];
                                     if (previous?.pageFlow) {
-                                        setSpacingOffset(node, BOX_STANDARD.MARGIN_TOP, previous.actualRect('bottom'), previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]);
+                                        setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, previous.actualRect('bottom'), previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]);
                                     }
                                 }
                                 if (!node.lineBreakTrailing) {
                                     const next = children[index + 1];
                                     if (next?.pageFlow && next.styleElement && !next.inlineVertical) {
-                                        setSpacingOffset(node, BOX_STANDARD.MARGIN_BOTTOM, next.actualRect('top'), next.getBox(BOX_STANDARD.MARGIN_TOP)[1]);
+                                        setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_BOTTOM, next.actualRect('top'), next.getBox(BOX_STANDARD.MARGIN_TOP)[1]);
                                     }
                                 }
                             }
@@ -637,7 +638,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             const horizontalRows = renderParent.horizontalRows;
                             const validSibling = (item: T) => item.pageFlow && item.blockDimension && !item.floating;
                             let horizontal: Undef<T[]>;
-                            if (horizontalRows) {
+                            if (horizontalRows && horizontalRows.length > 1) {
                                 found: {
                                     let maxBottom = Number.NEGATIVE_INFINITY;
                                     const q = horizontalRows.length;
@@ -645,9 +646,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         const row = horizontalRows[i] as T[];
                                         const r = row.length;
                                         for (let j = 0; j < r; j++) {
-                                            if (node === row[j]) {
+                                            if (outerWrapper === row[j]) {
                                                 if (i > 0) {
-                                                    setSpacingOffset(node, BOX_STANDARD.MARGIN_TOP, maxBottom);
+                                                    setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, maxBottom);
                                                 }
                                                 else {
                                                     horizontal = row;
@@ -656,8 +657,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             }
                                         }
                                         for (const item of row) {
-                                            if (validSibling(item)) {
-                                                maxBottom = Math.max(item.actualRect('bottom'), maxBottom);
+                                            const innerWrapped = item.innerMostWrapped as T;
+                                            if (validSibling(innerWrapped)) {
+                                                maxBottom = Math.max(innerWrapped.actualRect('bottom'), maxBottom);
                                             }
                                         }
                                         if (maxBottom === Number.NEGATIVE_INFINITY) {
@@ -670,37 +672,47 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 horizontal = renderParent.renderChildren as T[];
                             }
                             if (horizontal) {
-                                const parent = node.actualParent;
-                                if (parent) {
-                                    const top = node.actualRect('top');
-                                    let maxBottom = Number.NEGATIVE_INFINITY;
-                                    for (const item of parent.naturalChildren as T[]) {
-                                        if (horizontal.includes(item)) {
-                                            break;
-                                        }
-                                        else if (item.lineBreak) {
-                                            maxBottom = Number.NEGATIVE_INFINITY;
-                                        }
-                                        else if (item.excluded) {
-                                            continue;
-                                        }
-                                        else if (validSibling(item)) {
-                                            maxBottom = Math.max(item.actualRect('bottom'), maxBottom);
-                                        }
+                                let actualChildren: T[] = [];
+                                for (const item of horizontal) {
+                                    if (item.nodeGroup) {
+                                        actualChildren = actualChildren.concat(item.cascade(child => child.naturalChild) as T[]);
                                     }
-                                    if (maxBottom !== Number.NEGATIVE_INFINITY && top > maxBottom) {
-                                        setSpacingOffset(node, BOX_STANDARD.MARGIN_TOP, maxBottom);
+                                    else if (item.innerWrapped) {
+                                        actualChildren.push(item.innerMostWrapped as T);
                                     }
+                                    else {
+                                        actualChildren.push(item);
+                                    }
+                                }
+                                const parent = node.actualParent as T;
+                                const top = node.actualRect('top');
+                                let maxBottom = Number.NEGATIVE_INFINITY;
+                                for (const item of parent.naturalChildren as T[]) {
+                                    if (actualChildren.includes(item)) {
+                                        break;
+                                    }
+                                    else if (item.lineBreak) {
+                                        maxBottom = Number.NEGATIVE_INFINITY;
+                                    }
+                                    else if (item.excluded) {
+                                        continue;
+                                    }
+                                    else if (validSibling(item)) {
+                                        maxBottom = Math.max(item.actualRect('bottom'), maxBottom);
+                                    }
+                                }
+                                if (maxBottom !== Number.NEGATIVE_INFINITY && top > maxBottom) {
+                                    setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, maxBottom);
                                 }
                             }
                         }
                     }
-                    if (!renderParent.layoutVertical && !node.alignParent('left')) {
-                        const documentId = node.alignSibling('leftRight');
+                    if (!renderParent.layoutVertical && !outerWrapper.alignParent('left')) {
+                        const documentId = outerWrapper.alignSibling('leftRight');
                         if (documentId !== '') {
                             const previousSibling = renderParent.renderChildren.find(item => item.documentId === documentId);
                             if (previousSibling?.inlineVertical) {
-                                setSpacingOffset(node, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
+                                setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
                             }
                         }
                         else {
@@ -710,7 +722,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (siblingsLeading.length && !siblingsLeading.some(item => item.lineBreak || item.excluded && item.blockStatic)) {
                                     const previousSibling = siblingsLeading[0] as T;
                                     if (previousSibling.inlineVertical) {
-                                        setSpacingOffset(node, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
+                                        setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
                                     }
                                     else if (previousSibling.floating) {
                                         current = previousSibling;
@@ -728,7 +740,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 for (const item of node.naturalChildren as T[]) {
                     if (!item.floating) {
                         if (floating.length) {
-                            let renderParent = item.outerMostWrapper.renderParent;
+                            const outerWrapper = item.outerMostWrapper;
+                            let renderParent = outerWrapper.renderParent;
                             if (renderParent) {
                                 const [reset, adjustment] = item.getBox(BOX_STANDARD.MARGIN_TOP);
                                 const marginTop = (!reset ? item.marginTop : 0) + adjustment;
@@ -741,7 +754,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 renderParent = renderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() as NodeUI || renderParent;
                                                 floatingRenderParent = floatingRenderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() as NodeUI || floatingRenderParent;
                                                 if (renderParent !== floatingRenderParent) {
-                                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, (floatingRenderParent !== node ? floatingRenderParent : previous).linear.height * -1, false);
+                                                    outerWrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, (floatingRenderParent !== node ? floatingRenderParent : previous).linear.height * -1, false);
                                                 }
                                                 break;
                                             }

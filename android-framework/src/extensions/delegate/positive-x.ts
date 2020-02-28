@@ -9,24 +9,35 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 interface PositiveXData {
     children: View[];
+    right: boolean;
+    bottom: boolean;
 }
-
 const checkMarginLeft = (parent: View, item: View) => item.marginLeft < 0 && (parent.documentRoot || item.linear.left < Math.floor(parent.bounds.left));
 const checkMarginRight = (parent: View, item: View) => item.marginRight < 0 && (parent.documentRoot || item.linear.right > Math.ceil(parent.bounds.right));
 const checkMarginTop = (parent: View, item: View) => item.marginTop < 0 && (parent.documentRoot || item.linear.top < Math.floor(parent.bounds.top));
 const checkMarginBottom = (parent: View, item: View) => item.marginBottom < 0 && (parent.documentRoot || item.linear.bottom > Math.ceil(parent.bounds.bottom));
 
 function setFixedNodes(node: View) {
-    const absolute = node.filter((item: View) => !item.pageFlow && (item.leftTopAxis && item.left >= 0 && item.right >= 0 || item.css('position') === 'fixed')) as View[];
-    if (absolute.length) {
-        const documentBody = node.documentBody;
-        const paddingTop = node.paddingTop + (documentBody ? node.marginTop : 0);
-        const paddingRight = node.paddingRight + (documentBody ? node.marginRight : 0);
-        const paddingBottom = node.paddingBottom + (documentBody ? node.marginBottom : 0);
-        const paddingLeft = node.paddingLeft + (documentBody ? node.marginLeft : 0);
-        const children = new Set<View>();
-        for (const item of absolute) {
-            if (item.hasPX('left')) {
+    const documentBody = node.documentBody;
+    const originalRoot = node.originalRoot;
+    const children = new Set<View>();
+    const paddingTop = node.paddingTop + (documentBody ? node.marginTop : 0);
+    const paddingRight = node.paddingRight + (documentBody ? node.marginRight : 0);
+    const paddingBottom = node.paddingBottom + (documentBody ? node.marginBottom : 0);
+    const paddingLeft = node.paddingLeft + (documentBody ? node.marginLeft : 0);
+    let right = false;
+    let bottom = false;
+    node.each((item: View) => {
+        if (item.pageFlow) {
+            return;
+        }
+        const fixedPosition = item.autoPosition && item.css('position') === 'fixed';
+        if (item.hasPX('left') || fixedPosition) {
+            if (originalRoot && (item.css('width') === '100%' || item.css('minWidth') === '100%')) {
+                children.add(item);
+                right = true;
+            }
+            else {
                 const value = item.left;
                 if (value >= 0 && value < paddingLeft) {
                     children.add(item);
@@ -36,9 +47,15 @@ function setFixedNodes(node: View) {
                     item.modifyBox(BOX_STANDARD.MARGIN_LEFT, paddingLeft);
                 }
             }
-            else if (item.hasPX('right')) {
+        }
+        else if (item.hasPX('right')) {
+            if (originalRoot) {
+                children.add(item);
+                right = true;
+            }
+            else {
                 const value = item.right;
-                if (value >= 0 && (value < paddingRight || documentBody && node.positionStatic && node.hasPX('width'))) {
+                if (value >= 0 && (value < paddingRight || documentBody && node.positionStatic && node.hasPX('width') && node.percentWidth < 1)) {
                     children.add(item);
                 }
                 else if (checkMarginRight(node, item)) {
@@ -46,15 +63,21 @@ function setFixedNodes(node: View) {
                     item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, paddingRight);
                 }
             }
-            else if (checkMarginLeft(node, item)) {
+        }
+        else if (checkMarginLeft(node, item)) {
+            children.add(item);
+            item.modifyBox(BOX_STANDARD.MARGIN_LEFT, paddingLeft);
+        }
+        else if (checkMarginRight(node, item)) {
+            children.add(item);
+            item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, paddingLeft);
+        }
+        if (item.hasPX('top') || item.autoPosition && item.css('position') === 'fixed') {
+            if (originalRoot && (item.css('height') === '100%' || item.css('minHeight') === '100%')) {
                 children.add(item);
-                item.modifyBox(BOX_STANDARD.MARGIN_LEFT, paddingLeft);
+                bottom = true;
             }
-            else if (checkMarginRight(node, item)) {
-                children.add(item);
-                item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, paddingLeft);
-            }
-            if (item.hasPX('top')) {
+            else {
                 const value = item.top;
                 if (value >= 0 && value < paddingTop) {
                     children.add(item);
@@ -64,9 +87,15 @@ function setFixedNodes(node: View) {
                     item.modifyBox(BOX_STANDARD.MARGIN_TOP, paddingTop);
                 }
             }
-            else if (item.hasPX('bottom')) {
+        }
+        else if (item.hasPX('bottom')) {
+            if (originalRoot) {
+                children.add(item);
+                bottom = true;
+            }
+            else {
                 const value = item.bottom;
-                if (value >= 0 && (value < paddingBottom || documentBody && node.positionStatic && node.hasPX('height'))) {
+                if (value >= 0 && (value < paddingBottom || documentBody && node.positionStatic && (node.hasPX('height', false) || node.percentHeight > 0 && node.percentHeight < 1))) {
                     children.add(item);
                 }
                 else if (checkMarginBottom(node, item)) {
@@ -74,19 +103,19 @@ function setFixedNodes(node: View) {
                     item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, paddingBottom);
                 }
             }
-            else if (checkMarginTop(node, item)) {
-                children.add(item);
-                item.modifyBox(BOX_STANDARD.MARGIN_TOP, paddingTop);
-            }
-            else if (checkMarginBottom(node, item)) {
-                children.add(item);
-                item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, paddingBottom);
-            }
         }
-        if (documentBody || children.size) {
-            node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData', <PositiveXData> { children: documentBody ? absolute : Array.from(children) });
-            return true;
+        else if (checkMarginTop(node, item)) {
+            children.add(item);
+            item.modifyBox(BOX_STANDARD.MARGIN_TOP, paddingTop);
         }
+        else if (checkMarginBottom(node, item)) {
+            children.add(item);
+            item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, paddingBottom);
+        }
+    });
+    if (children.size) {
+        node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData', { children: Array.from(children), right, bottom });
+        return true;
     }
     return false;
 }
@@ -105,8 +134,12 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         if (mainData) {
             const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid });
             if (node.documentBody) {
-                container.setLayoutWidth('match_parent');
-                container.setLayoutHeight('match_parent');
+                if (mainData.right) {
+                    container.setLayoutWidth('match_parent');
+                }
+                if (mainData.bottom) {
+                    container.setLayoutHeight('match_parent');
+                }
             }
             else if (!node.pageFlow) {
                 if (!node.hasPX('width') && node.hasPX('left') && node.hasPX('right')) {

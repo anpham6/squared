@@ -100,10 +100,10 @@ These settings are available in the global variable "squared" to customize your 
 squared.settings = {
         builtInExtensions: [
         'android.delegate.background',
-        'android.delegate.max-width-height',
-        'android.delegate.percent',
         'android.delegate.negative-x',
         'android.delegate.positive-x',
+        'android.delegate.max-width-height',
+        'android.delegate.percent',
         'android.delegate.css-grid',
         'android.delegate.scrollbar',
         'android.delegate.radiogroup',

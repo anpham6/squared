@@ -79,11 +79,13 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                             if (item.inlineVertical) {
                                 if (!aboveBaseline.includes(item)) {
                                     if (isLength(item.verticalAlign) || baseline === undefined) {
+                                        item.modifyBox(BOX_STANDARD.MARGIN_TOP);
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - top);
                                         item.baselineAltered = true;
                                     }
                                 }
                                 else if (baseline && (item.imageElement || item.svgElement) && baseline.documentId === item.alignSibling('baseline')) {
+                                    item.modifyBox(BOX_STANDARD.MARGIN_TOP);
                                     item.modifyBox(BOX_STANDARD.MARGIN_TOP, baseline.linear.top - item.linear.top);
                                 }
                             }
@@ -93,6 +95,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     if (baseline) {
+                        baseline.modifyBox(BOX_STANDARD.MARGIN_TOP);
                         baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, baseline.linear.top - top + Math.min(0, above.parseUnit(above.cssInitial('verticalAlign'), 'height')));
                         baseline.baselineAltered = true;
                     }

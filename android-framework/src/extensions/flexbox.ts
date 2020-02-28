@@ -393,8 +393,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     let parentEnd = true;
                     let baseline: Null<T> = null;
                     let growAll: boolean;
-                    let percentWidth: Undef<number>;
-                    let percentHeight: Undef<number>;
                     if (opposing) {
                         growAll = false;
                         if (dimensionInverse) {
@@ -416,18 +414,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             segStart.anchorStyle(orientation, bias, chainStyle);
                         }
                         else {
-                            segStart.anchorStyle(orientation, 0);
+                            segStart.anchorStyle(orientation, 0, 'packed');
                         }
                     }
                     else {
-                        if (horizontal) {
-                            percentWidth = View.availablePercent(seg, 'width', node.box.width);
-                            percentHeight = 1;
-                        }
-                        else {
-                            percentWidth = 1;
-                            percentHeight = View.availablePercent(seg, 'height', node.box.height);
-                        }
                         growAll = horizontal || dimensionInverse;
                         growAvailable = 1 - adjustGrowRatio(node, seg, <WH> WHL);
                         if (q > 1) {
@@ -639,7 +629,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 }
                             }
-                            [percentWidth, percentHeight] = View.setFlexDimension(chain, <WH> WHL, percentWidth, percentHeight);
+                            View.setFlexDimension(chain, <WH> WHL);
                             if (!chain.innerMostWrapped.has('flexGrow')) {
                                 growAll = false;
                             }
@@ -682,7 +672,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             switch (justifyContent) {
                                 case 'normal':
                                     if (directionColumn) {
-                                        segStart.anchorStyle(orientation, directionReverse ? 1 : 0);
+                                        segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed');
                                     }
                                     break;
                                 case 'left':
@@ -691,11 +681,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                 case 'start':
                                 case 'flex-start':
-                                    segStart.anchorStyle(orientation, directionReverse ? 1 : 0);
+                                    segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed');
                                     break;
                                 case 'center':
                                     if (q > 1) {
-                                        segStart.anchorStyle(orientation, 0.5);
+                                        segStart.anchorStyle(orientation, 0.5, 'packed');
                                     }
                                     centered = true;
                                     break;
@@ -705,7 +695,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                 case 'end':
                                 case 'flex-end':
-                                    segStart.anchorStyle(orientation, 1);
+                                    segStart.anchorStyle(orientation, 1, 'packed');
                                     break;
                                 case 'space-between':
                                     if (q === 1) {

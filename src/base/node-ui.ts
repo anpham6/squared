@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { BoxType, CachedValueUI, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions } from '../../@types/base/node';
+import { BoxOptions, BoxType, CachedValueUI, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions } from '../../@types/base/node';
 
 import Node from './node';
 
@@ -11,7 +11,7 @@ type T = NodeUI;
 const $lib = squared.lib;
 
 const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = $lib.css;
-const { isTextNode, newBoxModel } = $lib.dom;
+const { isTextNode } = $lib.dom;
 const { equal } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
@@ -354,14 +354,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public alignmentType = 0;
-    public baselineActive = false;
-    public baselineAltered = false;
-    public positioned = false;
     public rendered = false;
     public excluded = false;
+    public originalRoot = false;
     public floatContainer = false;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
+    public baselineActive = false;
+    public baselineAltered = false;
+    public positioned = false;
     public abstract localSettings: LocalSettingsUI;
     public abstract renderParent?: T;
     public abstract renderExtension?: squared.base.ExtensionUI<T>[];
@@ -381,8 +382,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _controlName?: string;
     protected abstract _cached: CachedValueUI<T>;
     protected abstract _namespaces: string[];
-    protected abstract _boxAdjustment?: BoxModel;
-    protected abstract _boxReset?: BoxModel;
+    protected abstract _boxAdjustment: BoxModel;
+    protected abstract _boxReset: BoxModel;
 
     private _excludeSection = 0;
     private _excludeProcedure = 0;
@@ -545,8 +546,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this._bounds =  { ...node.bounds };
                     this._linear = { ...node.linear };
                     this._box = { ...node.box };
-                    this._boxReset = newBoxModel();
-                    this._boxAdjustment = newBoxModel();
                     if (this.depth === -1) {
                         this.depth = node.depth;
                     }
@@ -809,7 +808,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     else {
                         if (floating && previous.floating) {
-                            if (horizontal || Math.floor(this.bounds.top) === Math.floor(previous.bounds.top)) {
+                            if (horizontal && this.float === previous.float || Math.floor(this.bounds.top) === Math.floor(previous.bounds.top)) {
                                 return NODE_TRAVERSE.HORIZONTAL;
                             }
                             else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
@@ -932,6 +931,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
         }
+        else {
+            return NODE_TRAVERSE.VERTICAL;
+        }
         return NODE_TRAVERSE.HORIZONTAL;
     }
 
@@ -947,14 +949,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (offset !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
-                const setBoxReset = () => {
-                    let boxReset = this._boxReset;
-                    if (boxReset === undefined) {
-                        boxReset = newBoxModel();
-                        this._boxReset = boxReset;
-                    }
-                    boxReset[attr] = 1;
-                };
                 const node = this._boxRegister[region];
                 if (offset === undefined) {
                     if (node) {
@@ -964,7 +958,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                     }
                     else {
-                        setBoxReset();
+                        this._boxReset[attr] = 1;
                     }
                 }
                 else {
@@ -972,21 +966,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         node.modifyBox(region, offset, negative);
                     }
                     else {
-                        let boxAdjustment = this._boxAdjustment;
-                        if (boxAdjustment === undefined) {
-                            boxAdjustment = newBoxModel();
-                            this._boxAdjustment = boxAdjustment;
-                        }
                         if (!negative) {
+                            const boxAdjustment = this._boxAdjustment;
                             if (this[attr] + boxAdjustment[attr] + offset <= 0) {
-                                if (this.naturalChild) {
-                                    setBoxReset();
-                                }
                                 boxAdjustment[attr] = 0;
                                 return;
                             }
                         }
-                        boxAdjustment[attr] += offset;
+                        this._boxAdjustment[attr] += offset;
                     }
                 }
             }
@@ -995,15 +982,24 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public getBox(region: number): [number, number] {
         const attr = CSS_SPACING.get(region);
-        return attr ? [this._boxReset?.[attr] || 0, this._boxAdjustment?.[attr] || 0] : [0, 0];
+        return attr ? [this._boxReset[attr] || 0, this._boxAdjustment[attr] || 0] : [0, 0];
+    }
+
+    public setBox(region: number, options: BoxOptions) {
+        const { reset, adjustment } = options;
+        const attr = CSS_SPACING.get(region);
+        if (attr) {
+            if (reset !== undefined) {
+                this._boxReset[attr] = reset;
+            }
+            if (adjustment !== undefined) {
+                this._boxAdjustment[attr] = adjustment;
+            }
+        }
     }
 
     public resetBox(region: number, node?: T) {
-        let boxReset = <BoxModel> this._boxReset;
-        if (boxReset === undefined) {
-            boxReset = newBoxModel();
-            this._boxReset = boxReset;
-        }
+        const boxReset = this._boxReset;
         const applyReset = (attrs: string[], start: number) => {
             for (let i = 0; i < 4; i++) {
                 const key = CSS_SPACING_KEYS[i + start];
@@ -1037,11 +1033,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public transferBox(region: number, node: T) {
-        let boxAdjustment = <BoxModel> this._boxAdjustment;
-        if (boxAdjustment === undefined) {
-            boxAdjustment = newBoxModel();
-            this._boxAdjustment = boxAdjustment;
-        }
+        const boxAdjustment = this._boxAdjustment;
         const applyReset = (attrs: string[], start: number) => {
             for (let i = 0; i < 4; i++) {
                 const key = CSS_SPACING_KEYS[i + start];

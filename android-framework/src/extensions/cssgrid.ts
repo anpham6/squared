@@ -730,13 +730,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     case 'space-around':
                     case 'space-evenly':
                         if (wrapped) {
-                            node.anchorParent('horizontal', 0.5, 'packed', true);
+                            node.anchorParent('horizontal', 0.5, '', true);
                         }
                         break;
                     case 'end':
                     case 'flex-end':
                         if (wrapped) {
-                            node.anchorParent('horizontal', 1, 'packed', true);
+                            node.anchorParent('horizontal', 1, '', true);
                         }
                         break;
                     default:
@@ -777,7 +777,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (wrapped) {
                     if (node.contentBoxWidth > 0 && node.hasPX('width', false)) {
-                        node.anchorParent('horizontal', 0.5, 'packed', true);
+                        node.anchorParent('horizontal', 0.5, '', true);
                     }
                     else if (length === 1) {
                         node.setLayoutWidth('match_parent');
@@ -794,11 +794,11 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         case 'center':
                         case 'space-around':
                         case 'space-evenly':
-                            node.anchorParent('vertical', 0.5, 'packed', true);
+                            node.anchorParent('vertical', 0.5, '', true);
                             break;
                         case 'end':
                         case 'flex-end':
-                            node.anchorParent('vertical', 1, 'packed', true);
+                            node.anchorParent('vertical', 1, '', true);
                             break;
                     }
                 }
@@ -829,7 +829,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (wrapped) {
                     if (node.contentBoxHeight > 0 && node.hasPX('height', false)) {
-                        node.anchorParent('vertical', 0.5, 'packed', true);
+                        node.anchorParent('vertical', 0.5, '', true);
                     }
                     else {
                         node.setLayoutHeight('wrap_content', false);
@@ -855,7 +855,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             if (i === 0) {
                                 item.anchor('top', 'parent');
                                 item.anchor('bottomTop', barrierId);
-                                item.anchorStyle('vertical', 0);
+                                item.anchorStyle('vertical', 0, 'packed');
                             }
                             else {
                                 if (i === rowCount - 1) {
@@ -878,7 +878,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             }
                             else {
                                 item.anchor('left', 'parent');
-                                item.anchorStyle('horizontal', 0);
+                                item.anchorStyle('horizontal', 0, 'packed');
                             }
                             item.anchored = true;
                             item.positioned = true;

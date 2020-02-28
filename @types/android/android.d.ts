@@ -32,7 +32,7 @@ declare namespace base {
 
     class Controller<T extends View> implements Controller<T> {
         public static setConstraintDimension<T extends View>(node: T, percentWidth?: number): number;
-        public static setFlexDimension<T extends View>(node: T, horizontal: boolean, percentWidth?: number, percentHeight?: number): [number, number];
+        public static setFlexDimension<T extends View>(node: T, horizontal: boolean): void;
     }
 
     interface Resource<T extends View> extends squared.base.ResourceUI<T> {
@@ -92,8 +92,6 @@ declare namespace base {
         readonly blockHeight: boolean;
         readonly flexibleWidth: boolean;
         readonly flexibleHeight: boolean;
-        readonly contentBoxWidthPercent: number;
-        readonly contentBoxHeightPercent: number;
         readonly leftTopAxis: boolean;
         readonly support: SupportAndroid;
         android(attr: string, value?: string, overwrite?: boolean): string;

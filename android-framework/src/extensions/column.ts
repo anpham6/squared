@@ -85,7 +85,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     const item = row[0];
                     if (i === 0) {
                         item.anchor('top', 'parent');
-                        item.anchorStyle('vertical', 0);
+                        item.anchorStyle('vertical', 0, 'packed');
                     }
                     else {
                         previousRow.anchor('bottomTop', item.documentId);
@@ -260,7 +260,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                         item.anchor('topBottom', previousRow.documentId);
                                     }
                                 }
-                                item.anchorStyle('vertical', 0);
+                                item.anchorStyle('vertical', 0, 'packed');
                                 item.modifyBox(BOX_STANDARD.MARGIN_TOP);
                             }
                             else {

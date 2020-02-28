@@ -1,6 +1,6 @@
 import { AppHandler, AppNodeUIOptions, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserUISettings, UserSettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
-import { AutoMargin, AscendOptions, BoxType, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './base/node';
+import { AutoMargin, AscendOptions, BoxOptions, BoxType, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './base/node';
 
 import { SvgAnimationAttribute, SvgAnimationGroup, SvgAspectRatio, SvgBuildOptions, SvgMatrix, SvgOffsetPath, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgRect, SvgSynchronizeOptions, SvgStrokeDash, SvgTransform } from './svg/object';
 
@@ -491,6 +491,7 @@ declare namespace base {
         excluded: boolean;
         controlId: string;
         controlName: string;
+        originalRoot: boolean;
         documentParent: NodeUI;
         renderExclude: boolean;
         textContent: string;
@@ -582,6 +583,7 @@ declare namespace base {
         previousSiblings(options?: SiblingOptions): NodeUI[];
         nextSiblings(options?: SiblingOptions): NodeUI[];
         modifyBox(region: number, offset?: number, negative?: boolean): void;
+        setBox(region: number, options: BoxOptions): void;
         getBox(region: number): [number, number];
         resetBox(region: number, node?: NodeUI): void;
         transferBox(region: number, node: NodeUI): void;
@@ -662,7 +664,8 @@ declare namespace base {
                 RIGHT = 2048,
                 SINGLE = 4096,
                 EXTENDABLE = 8192,
-                WRAPPER = 16384
+                WRAPPER = 16384,
+                PERCENT = 32768
             }
             const enum NODE_TEMPLATE {
                 XML = 1,

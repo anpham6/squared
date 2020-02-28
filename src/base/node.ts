@@ -2511,7 +2511,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.multiline;
         if (result === undefined) {
             if (this.plainText) {
-                result = <number> getRangeClientRect(<Element> this._element).numberOfLines > 1;
+                result = Math.floor(getRangeClientRect(<Element> this._element).width) > (this.actualParent as T).box.width;
             }
             else if (this.styleText && (this.inlineFlow || this.naturalElements.length === 0)) {
                 result = <number> this.textBounds?.numberOfLines > 1;
@@ -2670,8 +2670,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.actualWidth;
         if (result === undefined) {
             if (this.plainText) {
-                const { left, right } = this.bounds;
-                result = right - left;
+                const bounds = this.bounds;
+                switch (bounds.numberOfLines || 1) {
+                    case 1:
+                        result = bounds.width;
+                        break;
+                    case 2:
+                        result = Math.min(bounds.width, (this.actualParent as T).box.width);
+                        break;
+                    default:
+                        result = Math.min(bounds.right - bounds.left, (this.actualParent as T).box.width);
+                        break;
+                }
             }
             else if (this.inlineStatic || this.display === 'table-cell' || Node.isFlexDirection(this, 'row')) {
                 result = this.bounds.width;

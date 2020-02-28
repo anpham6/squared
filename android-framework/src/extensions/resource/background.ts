@@ -535,32 +535,21 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             if (value !== '') {
                 const drawable = '@drawable/' + Resource.insertStoredAsset('drawables', node.containerName.toLowerCase() + '_' + node.controlId, value);
                 if (!themeBackground) {
-                    const innerWrapped = node.innerMostWrapped as T;
-                    if (innerWrapped.documentBody) {
-                        if (!setHtmlBackground(node) && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY)) {
+                    if (node.tagName === 'HTML') {
+                        setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
+                        return;
+                    }
+                    else {
+                        const innerWrapped = node.innerMostWrapped as T;
+                        if (innerWrapped.documentBody && (node.backgroundColor !== '' || node.visibleStyle.backgroundRepeatY)) {
                             setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
                             deleteBodyWrapper(innerWrapped, node);
                             return;
                         }
                     }
-                    else if (node.tagName === 'HTML') {
-                        setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
-                        return;
-                    }
                 }
                 node.android('background', drawable, false);
             }
-        };
-        const setHtmlBackground = (node: T) => {
-            const parent = <Null<T>> node.actualParent;
-            if (parent?.visible === false) {
-                const background = parent.android('background');
-                if (background !== '') {
-                    setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, background);
-                    return true;
-                }
-            }
-            return false;
         };
         for (const node of this.cacheProcessing) {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
@@ -606,11 +595,17 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         const color = getColorValue(backgroundColor, false);
                         if (color !== '') {
                             if (!themeBackground) {
-                                const innerWrapped = node.innerMostWrapped as T;
-                                if (innerWrapped.documentBody) {
+                                if (node.tagName === 'HTML') {
                                     setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
-                                    deleteBodyWrapper(innerWrapped, node);
                                     continue;
+                                }
+                                else {
+                                    const innerWrapped = node.innerMostWrapped as T;
+                                    if (innerWrapped.documentBody) {
+                                        setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
+                                        deleteBodyWrapper(innerWrapped, node);
+                                        continue;
+                                    }
                                 }
                             }
                             const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
@@ -1184,6 +1179,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     const percent = position.topAsPercent;
                                     if (percent !== 0) {
                                         top = Math.round((boundsHeight - height) * percent);
+                                        offsetY = false;
                                     }
                                     if (!node.hasPX('height')) {
                                         node.css('height', formatPX(boundsHeight - node.contentBoxHeight));
@@ -1197,6 +1193,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     const percent = position.leftAsPercent;
                                     if (percent !== 0) {
                                         left = Math.round((boundsWidth - width) * percent);
+                                        offsetX = false;
                                     }
                                 }
                             }

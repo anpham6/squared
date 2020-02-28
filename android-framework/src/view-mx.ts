@@ -13,9 +13,8 @@ type T = android.base.View;
 const $lib = squared.lib;
 
 const { Node, ResourceUI } = squared.base;
-
 const { BOX_MARGIN, BOX_PADDING, formatPX, getDataSet, isLength, isPercent } = $lib.css;
-const { getNamedItem } = $lib.dom;
+const { getNamedItem, newBoxModel } = $lib.dom;
 const { clamp, truncate } = $lib.math;
 const { actualTextRangeRect } = $lib.session;
 const { aboveRange, capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
@@ -153,8 +152,11 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                     setMinHeight(node, lineHeight);
                 }
             }
-            else if (node.layoutHorizontal && node.horizontalRows === undefined || node.onlyChild || node.hasAlign(NODE_ALIGNMENT.SINGLE)) {
-                setMinHeight(node, lineHeight);
+            else {
+                const horizontalRows = node.horizontalRows;
+                if (horizontalRows === undefined || horizontalRows.length === 1 || node.onlyChild || node.hasAlign(NODE_ALIGNMENT.SINGLE)) {
+                    setMinHeight(node, lineHeight);
+                }
             }
         }
     }
@@ -245,17 +247,18 @@ function constraintMinMax(node: T, horizontal: boolean) {
         if (horizontal) {
             if (ascendFlexibleWidth(node)) {
                 const value = node.parseUnit(maxWH);
+                const contentBox = (node.contentBox && !node.actualParent?.gridElement ? node.contentBoxWidth : 0);
                 if (hasDimension) {
                     const width = node.width;
                     if (width < value) {
-                        node.app('layout_constraintWidth_min', formatPX(Math.min(width + (node.contentBox && !node.actualParent?.gridElement ? node.contentBoxWidth : 0), value)));
+                        node.app('layout_constraintWidth_min', formatPX(Math.min(width + contentBox, value)));
                     }
                     else if (width >= value) {
                         return;
                     }
                 }
                 node.setLayoutWidth('0px');
-                node.app('layout_constraintWidth_max', formatPX(value));
+                node.app('layout_constraintWidth_max', formatPX(value + contentBox));
                 node.css('maxWidth', 'auto');
                 if (node.layoutVertical) {
                     node.each(item => {
@@ -267,52 +270,60 @@ function constraintMinMax(node: T, horizontal: boolean) {
             }
         }
         else if (ascendFlexibleHeight(node)) {
+            const contentBox = (node.contentBox && !node.actualParent?.gridElement ? node.contentBoxHeight : 0);
             const value = node.parseUnit(maxWH, 'height');
             if (hasDimension) {
                 const height = node.height;
                 if (height < value) {
-                    node.app('layout_constraintHeight_min', formatPX(Math.min(height + (node.contentBox && !node.actualParent?.gridElement ? node.contentBoxHeight : 0), value)));
+                    node.app('layout_constraintHeight_min', formatPX(Math.min(height + contentBox, value)));
                 }
                 else if (height >= value) {
                     return;
                 }
             }
             node.setLayoutHeight('0px');
-            node.app('layout_constraintHeight_max', formatPX(value));
+            node.app('layout_constraintHeight_max', formatPX(value + contentBox));
             node.css('maxHeight', 'auto');
         }
     }
 }
 
 function setConstraintPercent(node: T, value: number, horizontal: boolean, percent: number) {
-    const parent = node.actualParent || node.documentParent;
-    if (value < 1 && node.pageFlow && !(parent.flexElement && isPercent(node.flexbox.basis)) && (percent < 1 || node.blockStatic && !parent.gridElement)) {
+    if (value < 1 && !isNaN(percent) && node.pageFlow) {
+        const parent = node.actualParent || node.documentParent;
         let boxPercent: number;
         let marginPercent: number;
         if (horizontal) {
-            boxPercent = node.contentBoxWidthPercent;
-            marginPercent = (node.marginLeft + node.marginRight) / parent.box.width;
+            const width = parent.box.width;
+            boxPercent = !parent.gridElement ? node.contentBoxWidth / width : 0;
+            marginPercent = (Math.max(node.marginLeft, 0) + node.marginRight) / width;
         }
         else {
-            boxPercent = node.contentBoxHeightPercent;
-            marginPercent = (node.marginTop + node.marginBottom) / parent.box.height;
+            const height = parent.box.height;
+            boxPercent = !parent.gridElement ? node.contentBoxHeight / height : 0;
+            marginPercent = (Math.max(node.marginTop, 0) + node.marginBottom) / height;
         }
-        if (boxPercent > 0) {
-            if (percent < boxPercent) {
-                boxPercent = Math.max(percent, 0);
-                percent = 0;
+        if (percent === 1 && value + marginPercent >= percent) {
+            value = percent - marginPercent;
+        }
+        else {
+            if (boxPercent > 0) {
+                if (percent < boxPercent) {
+                    boxPercent = Math.max(percent, 0);
+                    percent = 0;
+                }
+                else {
+                    percent -= boxPercent;
+                }
+            }
+            if (percent === 0) {
+                boxPercent -= marginPercent;
             }
             else {
-                percent -= boxPercent;
+                percent = Math.max(percent - marginPercent, 0);
             }
+            value = Math.min(value + boxPercent, 1);
         }
-        if (percent === 0) {
-            boxPercent -= marginPercent;
-        }
-        else {
-            percent = Math.max(percent - marginPercent, 0);
-        }
-        value = Math.min(value + boxPercent, 1);
     }
     if (value === 1 && !node.hasPX(horizontal ? 'maxWidth' : 'maxHeight')) {
         setLayoutDimension(node, 'match_parent', horizontal, false);
@@ -405,12 +416,12 @@ function ascendFlexibleHeight(node: T) {
     return !!parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight === true;
 }
 
-const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && node.marginLeft <= 0 && node.marginRight <= 0 && !node.visibleStyle.background;
-const excludeVertical = (node: T) => (node.bounds.height === 0 || node.pseudoElement && node.textEmpty) && node.contentBoxHeight === 0 && (node.marginTop <= 0 && node.marginBottom <= 0 || node.css('overflow') === 'hidden' && parseFloat(node.css('height')) === 0);
+const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && !node.visibleStyle.background && node.marginLeft === 0 && node.marginRight === 0;
+const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
-        public static setConstraintDimension<T extends View>(node: T, percentWidth = 1): number {
+        public static setConstraintDimension<T extends View>(node: T, percentWidth = NaN) {
             percentWidth = constraintPercentWidth(node, percentWidth);
             constraintPercentHeight(node, 1);
             if (!node.inputElement) {
@@ -420,7 +431,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return percentWidth;
         }
 
-        public static setFlexDimension<T extends View>(node: T, dimension: "width" | "height", percentWidth = 1, percentHeight = 1): [number, number] {
+        public static setFlexDimension<T extends View>(node: T, dimension: "width" | "height") {
             const { grow, basis, shrink } = node.flexbox;
             const horizontal = dimension === 'width';
             const setFlexGrow = (value: number) => {
@@ -447,10 +458,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 setFlexGrow(0);
                 const percent = parseFloat(basis) / 100;
                 if (horizontal) {
-                    percentWidth = setConstraintPercent(node, percent, true, percentWidth);
+                    setConstraintPercent(node, percent, true, 0);
                 }
                 else {
-                    percentHeight = setConstraintPercent(node, percent, false, percentHeight);
+                    setConstraintPercent(node, percent, false, 0);
                 }
             }
             else {
@@ -463,10 +474,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (!flexible) {
                     if (horizontal) {
-                        percentWidth = constraintPercentWidth(node, percentWidth);
+                        constraintPercentWidth(node, 0);
                     }
                     else {
-                        percentHeight = constraintPercentHeight(node, percentHeight);
+                        constraintPercentHeight(node, 0);
                     }
                 }
             }
@@ -480,17 +491,22 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 constraintMinMax(node, true);
                 constraintMinMax(node, false);
             }
-            return [percentWidth, percentHeight];
         }
 
         public static availablePercent(nodes: T[], dimension: "width" | "height", boxSize: number) {
+            const horizontal = dimension === 'width';
             let percent = 1;
             let i = 0;
-            for (const sibling of nodes) {
+            for (let sibling of nodes) {
+                sibling = sibling.innerMostWrapped as T;
                 if (sibling.pageFlow) {
                     i++;
-                    if (sibling[dimension] > 0) {
+                    percent -= (Math.max(sibling.marginLeft, 0) + sibling.marginRight) / boxSize;
+                    if (sibling.hasPX(dimension, true, true)) {
                         const value = sibling.cssInitial(dimension);
+                        if (sibling.contentBox) {
+                            percent -= (horizontal ? sibling.contentBoxWidth : sibling.contentBoxHeight) / boxSize;
+                        }
                         if (isPercent(value)) {
                             percent -= parseFloat(value) / 100;
                             continue;
@@ -533,8 +549,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _controlName = '';
         protected _localSettings!: LocalSettingsAndroidUI;
         protected _documentParent?: T;
-        protected _boxAdjustment?: BoxModel;
-        protected _boxReset?: BoxModel;
+        protected _boxAdjustment = newBoxModel();
+        protected _boxReset = newBoxModel();
         protected _innerWrapped?: T;
 
         private _containerType = 0;
@@ -654,7 +670,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public anchorParent(orientation: string, bias?: number, style?: string, overwrite?: boolean) {
+        public anchorParent(orientation: string, bias?: number, style = '', overwrite?: boolean) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent) {
@@ -683,6 +699,22 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
             }
             return false;
+        }
+
+        public anchorStyle(orientation: string, bias: number, value?: string, overwrite = true) {
+            const node = this.anchorTarget;
+            if (orientation === 'horizontal') {
+                node.app('layout_constraintHorizontal_bias', bias.toString(), overwrite);
+                if (value) {
+                    node.app('layout_constraintHorizontal_chainStyle', value, overwrite);
+                }
+            }
+            else {
+                node.app('layout_constraintVertical_bias', bias.toString(), overwrite);
+                if (value) {
+                    node.app('layout_constraintVertical_chainStyle', value, overwrite);
+                }
+            }
         }
 
         public anchorChain(direction: BoxPosition) {
@@ -731,18 +763,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 while (true);
             }
             return result;
-        }
-
-        public anchorStyle(orientation: string, bias: number, value = 'packed', overwrite = true) {
-            const node = this.anchorTarget;
-            if (orientation === 'horizontal') {
-                node.app('layout_constraintHorizontal_chainStyle', value, overwrite);
-                node.app('layout_constraintHorizontal_bias', bias.toString(), overwrite);
-            }
-            else {
-                node.app('layout_constraintVertical_chainStyle', value, overwrite);
-                node.app('layout_constraintVertical_bias', bias.toString(), overwrite);
-            }
         }
 
         public anchorDelete(...position: string[]) {
@@ -1042,31 +1062,32 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             const actualParent = this.actualParent || this.documentParent;
             const renderParent = this.renderParent as T;
+            const flexibleWidth = !renderParent.inlineWidth;
+            const flexibleHeight = !renderParent.inlineHeight;
             const maxDimension = this.support.maxDimension;
-            const onlyChild = this.onlyChild;
-            let layoutWidth = this.layoutWidth;
-            let layoutHeight = this.layoutHeight;
+            const matchParent = renderParent.layoutConstraint && !this.onlyChild && !this.textElement && !this.inputElement && !this.controlElement && this.alignParent('left') && this.alignParent('right') ? '0px' : 'match_parent';
+            let { layoutWidth, layoutHeight } = this;
             if (layoutWidth === '') {
                 if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {
                     const width = this.css('width');
                     let value = -1;
                     if (isPercent(width)) {
-                        const expandable = () => width === '100%' && !renderParent.inlineWidth && (maxDimension || !this.hasPX('maxWidth'));
+                        const expandable = () => width === '100%' && flexibleWidth && (maxDimension || !this.hasPX('maxWidth'));
                         if (this.inputElement) {
                             if (expandable()) {
-                                layoutWidth = 'match_parent';
+                                layoutWidth = matchParent;
                             }
                             else {
                                 value = this.actualWidth;
                             }
                         }
                         else if (renderParent.layoutConstraint) {
-                            if (!renderParent.inlineWidth) {
+                            if (flexibleWidth) {
                                 if (expandable()) {
-                                    layoutWidth = 'match_parent';
+                                    layoutWidth = matchParent;
                                 }
                                 else {
-                                    View.setConstraintDimension(this);
+                                    View.setConstraintDimension(this, 1);
                                     layoutWidth = this.layoutWidth;
                                 }
                             }
@@ -1080,7 +1101,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         else if (this.imageElement) {
                             if (expandable()) {
-                                layoutWidth = 'match_parent';
+                                layoutWidth = matchParent;
                             }
                             else {
                                 value = this.bounds.width;
@@ -1092,8 +1113,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 const maxValue = this.parseUnit(maxWidth);
                                 const absoluteParent = this.absoluteParent || actualParent;
                                 if (maxWidth === '100%') {
-                                    if (!renderParent.inlineWidth && aboveRange(maxValue, absoluteParent.box.width)) {
-                                        layoutWidth = 'match_parent';
+                                    if (flexibleWidth && aboveRange(maxValue, absoluteParent.box.width)) {
+                                        layoutWidth = matchParent;
                                     }
                                     else {
                                         value = Math.min(this.actualWidth, maxValue);
@@ -1104,12 +1125,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         value = Math.min(this.actualWidth, maxValue);
                                     }
                                     else {
-                                        layoutWidth = Math.ceil(maxValue) < Math.floor(absoluteParent.width) ? 'wrap_content' : 'match_parent';
+                                        layoutWidth = Math.ceil(maxValue) < Math.floor(absoluteParent.width) ? 'wrap_content' : matchParent;
                                     }
                                 }
                             }
-                            if (layoutWidth === '' && (this.documentRoot || !renderParent.inlineWidth)) {
-                                layoutWidth = 'match_parent';
+                            if (layoutWidth === '' && (this.documentRoot || flexibleWidth)) {
+                                layoutWidth = matchParent;
                             }
                         }
                         else {
@@ -1128,7 +1149,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         case 'max-content':
                         case 'fit-content':
                             this.renderEach((node: T) => {
-                                if (!node.hasPX('width')) {
+                                if (!node.hasPX('width') && !node.hasPX('maxWidth')) {
                                     node.setLayoutWidth('wrap_content');
                                 }
                             });
@@ -1168,14 +1189,22 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else if (this.imageElement && this.hasPX('height')) {
                         layoutWidth = 'wrap_content';
                     }
-                    else if (!(this.imageElement || this.inputElement || this.controlElement) && !(onlyChild && renderParent.inlineWidth && !renderParent.hasPX('minWidth'))) {
+                    else if (
+                        flexibleWidth && (
+                            this.nodeGroup && (renderParent.layoutFrame && (this.hasAlign(NODE_ALIGNMENT.FLOAT) || this.hasAlign(NODE_ALIGNMENT.RIGHT)) || this.hasAlign(NODE_ALIGNMENT.PERCENT)) ||
+                            this.layoutGrid && this.some((node: T) => node.flexibleWidth)
+                        ))
+                    {
+                        layoutWidth = 'match_parent';
+                    }
+                    else if (!this.imageElement && !this.inputElement && !this.controlElement) {
                         const checkParentWidth = (block: boolean) => {
                             if (block && this.alignParent('left') && this.alignParent('right')) {
-                                layoutWidth = 'match_parent';
+                                layoutWidth = this.textElement ? 'match_parent' : matchParent;
                             }
                             else if (this.styleText) {
                                 if (this.multiline) {
-                                    layoutWidth = 'wrap_content';
+                                    return;
                                 }
                                 else if (this.cssTry('display', 'inline-block')) {
                                     layoutWidth = Math.ceil(actualTextRangeRect(<Element> this.element).width) >= this.bounds.width ? 'wrap_content' : 'match_parent';
@@ -1185,38 +1214,31 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     layoutWidth = 'match_parent';
                                 }
                             }
-                            else if (!renderParent.inlineWidth) {
-                                layoutWidth = 'match_parent';
+                            else if (flexibleWidth) {
+                                layoutWidth = matchParent;
                             }
                         };
                         if (this.blockStatic && !renderParent.layoutGrid) {
                             if (!actualParent.layoutElement) {
                                 if (this.nodeGroup || renderParent.hasWidth || this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
-                                    layoutWidth = 'match_parent';
+                                    layoutWidth = matchParent;
                                 }
                                 else {
                                     checkParentWidth(true);
                                 }
                             }
-                            else {
-                                if (!renderParent.inlineWidth && !renderParent.layoutElement) {
-                                    layoutWidth = renderParent.layoutConstraint ? '0px' : 'match_parent';
-                                }
-                                else {
-                                    layoutWidth = 'wrap_content';
-                                }
+                            else if (flexibleWidth && !renderParent.layoutElement) {
+                                layoutWidth = matchParent;
                             }
                         }
-                        if (layoutWidth === '') {
-                            if (this.layoutGrid && !this.hasWidth && this.some((node: T) => node.flexibleWidth) || this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
-                                layoutWidth = 'match_parent';
-                            }
-                            else if (this.naturalElement && this.inlineStatic && !this.blockDimension && !actualParent.layoutElement && (renderParent.layoutVertical || !renderParent.inlineWidth && this.alignSibling('left') === '' && this.alignSibling('right') === '') && this.some(item => item.naturalElement && item.blockStatic)) {
-                                checkParentWidth(false);
-                            }
-                            else if (this.css('minWidth') === '100%' || renderParent.layoutFrame && !renderParent.inlineWidth && this.layoutVertical && !this.naturalChild && this.rightAligned) {
-                                layoutWidth = 'match_parent';
-                            }
+                        else if (this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
+                            layoutWidth = matchParent;
+                        }
+                        else if (
+                            this.inlineStatic && !this.blockDimension && this.naturalElement && !actualParent.layoutElement && (renderParent.layoutVertical ||
+                            this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') && this.some(item => item.naturalElement && item.blockStatic))
+                        {
+                            checkParentWidth(false);
                         }
                     }
                 }
@@ -1231,7 +1253,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             value = this.bounds.height;
                         }
                         else if (this.imageElement) {
-                            if (height === '100%' && !renderParent.inlineHeight) {
+                            if (height === '100%' && flexibleHeight) {
                                 layoutHeight = 'match_parent';
                             }
                             else {
@@ -1244,7 +1266,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 const maxValue = this.parseUnit(maxHeight);
                                 const absoluteParent = this.absoluteParent || actualParent;
                                 if (maxHeight === '100%') {
-                                    if (!renderParent.inlineHeight && aboveRange(maxValue, absoluteParent.box.height)) {
+                                    if (flexibleHeight && aboveRange(maxValue, absoluteParent.box.height)) {
                                         layoutHeight = 'match_parent';
                                     }
                                     else {
@@ -1260,7 +1282,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                 }
                             }
-                            if (layoutHeight === '' && (this.documentRoot || onlyChild && !renderParent.inlineHeight || this.css('position') === 'fixed')) {
+                            if (layoutHeight === '' && (this.documentRoot || flexibleHeight && this.onlyChild || this.css('position') === 'fixed')) {
                                 layoutHeight = 'match_parent';
                             }
                         }
@@ -1290,14 +1312,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             layoutHeight = '0px';
                             this.anchor('bottom', 'parent');
                         }
-                        else if (this.naturalChild) {
+                        else if (this.naturalChild && !this.pseudoElement) {
                             layoutHeight = formatPX(this.actualHeight);
                         }
                     }
                     else if (this.imageElement && this.hasPX('width')) {
                         layoutHeight = 'wrap_content';
                     }
-                    else if (this.display === 'table-cell') {
+                    else if (this.display === 'table-cell' && actualParent.hasHeight) {
                         layoutHeight = 'match_parent';
                     }
                 }
@@ -1308,8 +1330,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (this.hasPX('minWidth') && (!Node.isFlexDirection(this, 'row') || actualParent.flexElement && !this.flexibleWidth)) {
                 const minWidth = this.css('minWidth');
-                if (minWidth === '100%' && !onlyChild && this.inlineWidth && !renderParent.inlineWidth) {
-                    this.setLayoutWidth('match_parent');
+                if (minWidth === '100%' && this.inlineWidth) {
+                    this.setLayoutWidth(matchParent);
                 }
                 else {
                     this.android('minWidth', formatPX(this.parseUnit(minWidth) + (this.contentBox && !actualParent.gridElement ? this.contentBoxWidth : 0)), false);
@@ -1317,7 +1339,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (this.hasPX('minHeight') && this.display !== 'table-cell' && (!Node.isFlexDirection(this, 'column') || actualParent.flexElement && !this.flexibleHeight)) {
                 const minHeight = this.css('minHeight');
-                if (minHeight === '100%' && !onlyChild && this.inlineHeight && !renderParent.inlineHeight) {
+                if (minHeight === '100%' && flexibleHeight && this.inlineHeight) {
                     this.setLayoutHeight('match_parent');
                 }
                 else {
@@ -1342,7 +1364,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 maxHeight = '';
                             }
                         }
-                        else if (!renderParent.inlineWidth) {
+                        else if (flexibleWidth) {
                             this.setLayoutWidth('match_parent');
                         }
                     }
@@ -1359,7 +1381,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (isLength(maxHeight, true)) {
                     let height = -1;
                     if (maxHeight === '100%' && !this.svgElement) {
-                        if (!renderParent.inlineHeight) {
+                        if (flexibleHeight) {
                             this.setLayoutHeight('match_parent');
                         }
                         else {
@@ -1391,7 +1413,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (this.pageFlow) {
                 let floating = '';
-                if (this.inlineVertical && (outerRenderParent.layoutHorizontal && !outerRenderParent.support.positionRelative || outerRenderParent.layoutGrid || this.display === 'table-cell')) {
+                if (this.inlineVertical && (outerRenderParent.layoutFrame || outerRenderParent.layoutGrid) || this.display === 'table-cell') {
                     const gravity = this.display === 'table-cell' ? 'gravity' : 'layout_gravity';
                     switch (this.cssInitial('verticalAlign', true)) {
                         case 'top':
@@ -2008,36 +2030,30 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return value;
         }
 
-        public translateX(value: number, options?: TranslateUIOptions) {
+        public translateX(value: number, options: TranslateUIOptions = {}) {
             const renderParent = this.renderParent;
             if (renderParent?.layoutConstraint) {
-                let x: number;
-                if (options) {
-                    x = convertInt(this.android('translationX'));
-                    if (options.oppose === false && (x > 0 && value < 0 || x < 0 && value > 0)) {
-                        return false;
-                    }
-                    if (options.accumulate !== false) {
-                        x += value;
-                    }
-                    if (options.relative && value !== 0) {
-                        if (this.outerMostWrapper.alignSibling('rightLeft') === '') {
-                            this.modifyBox(BOX_STANDARD.MARGIN_RIGHT, value);
-                        }
-                    }
-                    else if (options.contain) {
-                        const { left, right } = renderParent.box;
-                        const { left: x1, right: x2 } = this.linear;
-                        if (x1 + x < left) {
-                            x = Math.max(x1 - left, 0);
-                        }
-                        else if (x2 + x > right) {
-                            x = Math.max(right - x2, 0);
-                        }
+                let x = convertInt(this.android('translationX'));
+                if (options.oppose === false && (x > 0 && value < 0 || x < 0 && value > 0)) {
+                    return false;
+                }
+                else if (options.accumulate !== false) {
+                    x += value;
+                }
+                if (options.relative && value !== 0) {
+                    if (this.outerMostWrapper.alignSibling('rightLeft') === '') {
+                        this.modifyBox(BOX_STANDARD.MARGIN_RIGHT, value);
                     }
                 }
-                else {
-                    x = value;
+                else if (options.contain) {
+                    const { left, right } = renderParent.box;
+                    const { left: x1, right: x2 } = this.linear;
+                    if (x1 + x < left) {
+                        x = Math.max(x1 - left, 0);
+                    }
+                    else if (x2 + x > right) {
+                        x = Math.max(right - x2, 0);
+                    }
                 }
                 this.android('translationX', formatPX(x));
                 return true;
@@ -2045,36 +2061,30 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public translateY(value: number, options?: TranslateUIOptions) {
+        public translateY(value: number, options: TranslateUIOptions = {}) {
             const renderParent = this.renderParent;
             if (renderParent?.layoutConstraint) {
-                let y: number;
-                if (options) {
-                    y = convertInt(this.android('translationY'));
-                    if (options.oppose === false && (y > 0 && value < 0 || y < 0 && value > 0)) {
-                        return false;
-                    }
-                    if (options.accumulate !== false) {
-                        y += value;
-                    }
-                    if (options.relative && value !== 0) {
-                        if (this.outerMostWrapper.alignSibling('bottomTop') === '') {
-                            this.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, value);
-                        }
-                    }
-                    else if (options.contain) {
-                        const { top, bottom } = renderParent.box;
-                        const { top: y1, bottom: y2 } = this.linear;
-                        if (y1 + y < top) {
-                            y = Math.max(y1 - top, 0);
-                        }
-                        else if (y2 + y > bottom) {
-                            y = Math.max(bottom - y2, 0);
-                        }
+                let y = convertInt(this.android('translationY'));
+                if (options.oppose === false && (y > 0 && value < 0 || y < 0 && value > 0)) {
+                    return false;
+                }
+                else if (options.accumulate !== false) {
+                    y += value;
+                }
+                if (options.relative && value !== 0) {
+                    if (this.outerMostWrapper.alignSibling('bottomTop') === '') {
+                        this.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, value);
                     }
                 }
-                else {
-                    y = value;
+                else if (options.contain) {
+                    const { top, bottom } = renderParent.box;
+                    const { top: y1, bottom: y2 } = this.linear;
+                    if (y1 + y < top) {
+                        y = Math.max(y1 - top, 0);
+                    }
+                    else if (y2 + y > bottom) {
+                        y = Math.max(bottom - y2, 0);
+                    }
                 }
                 this.android('translationY', formatPX(y));
                 return true;
@@ -2155,7 +2165,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
                                     if (baseline) {
                                         if (!baseline.has('lineHeight')) {
-                                            setMarginOffset(baseline, lineHeight, false, top, bottom);
+                                            setMarginOffset(baseline, lineHeight, hasOwnStyle, top, bottom);
                                         }
                                         else {
                                             previousMultiline = true;
@@ -2165,7 +2175,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     else {
                                         for (const node of row) {
                                             if (node.length === 0 && !node.has('lineHeight') && !node.multiline) {
-                                                setMarginOffset(node, lineHeight, false, top, bottom);
+                                                setMarginOffset(node, lineHeight, hasOwnStyle, top, bottom);
                                             }
                                         }
                                     }
@@ -2326,21 +2336,26 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             let result = this._cached.renderExclude;
             if (result === undefined) {
                 const renderParent = this.renderParent;
-                if (renderParent && this.length === 0 && this.styleElement && !this.imageElement) {
-                    if (this.pageFlow) {
-                        if (renderParent.layoutVertical) {
-                            result = excludeVertical(this) && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
+                if (renderParent) {
+                    if (!this.onlyChild && this.styleElement && this.length === 0 && !this.imageElement && !this.pseudoElement) {
+                        if (this.pageFlow) {
+                            if (renderParent.layoutVertical) {
+                                result = excludeVertical(this) && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
+                            }
+                            else {
+                                result = excludeHorizontal(this) && (renderParent.layoutHorizontal || excludeVertical(this)) && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '' && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
+                            }
                         }
                         else {
-                            result = excludeHorizontal(this) && (renderParent.layoutHorizontal || excludeVertical(this)) && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '' && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
+                            result = excludeHorizontal(this) || excludeVertical(this);
                         }
                     }
                     else {
-                        result = excludeHorizontal(this) || excludeVertical(this);
+                        result = false;
                     }
                 }
                 else {
-                    result = false;
+                    return false;
                 }
                 this._cached.renderExclude = result;
             }
@@ -2462,23 +2477,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get flexibleHeight(): boolean {
             return isFlexibleDimension(this, this.layoutHeight);
-        }
-
-        get contentBoxWidthPercent() {
-            const parent = this.actualParent;
-            if (parent?.gridElement === false) {
-                const boxWidth = parent.box.width;
-                return boxWidth > 0 ? this.contentBoxWidth / boxWidth : 0;
-            }
-            return 0;
-        }
-        get contentBoxHeightPercent() {
-            const parent = this.actualParent;
-            if (parent?.gridElement === false) {
-                const boxHeight = parent.box.height;
-                return boxHeight > 0 ? this.contentBoxHeight / boxHeight : 0;
-            }
-            return 0;
         }
 
         get labelFor() {

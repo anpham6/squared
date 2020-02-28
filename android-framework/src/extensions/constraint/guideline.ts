@@ -49,12 +49,10 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
         node.each((item: T) => {
             const linear = item.linear;
             if (withinRange(linear.left, left)) {
-                item.anchor('left', 'parent');
-                item.anchorStyle('horizontal', 0);
+                item.anchorParent('horizontal', 0);
             }
             if (withinRange(linear.top, top)) {
-                item.anchor('top', 'parent');
-                item.anchorStyle('vertical', 0);
+                item.anchorParent('vertical', 0);
             }
             if (circlePosition) {
                 if (item.anchored) {

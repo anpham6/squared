@@ -11,43 +11,29 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 type NegativeXData = {
     outside: View[];
-    offsetLeft: number;
     container: View;
-    firstChild?: View;
 };
 
-function outsideX(node: View, parent: View) {
-    if (node.pageFlow) {
-        return node.marginLeft < 0 && node === parent.firstChild && node.inlineFlow && !node.centerAligned && !node.rightAligned && Math.abs(node.marginLeft) <= parent.marginLeft + parent.paddingLeft && !parent.some(item => item.multiline);
-    }
-    return node.leftTopAxis && (node.left < 0 || !node.hasPX('left') && node.right < 0);
-}
+const outsideX = (node: View) => node.leftTopAxis && (node.left < 0 || !node.hasPX('left') && node.right < 0);
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.documentRoot && node.css('overflowX') !== 'hidden';
+        return !node.pageFlow && !node.documentRoot && node.css('overflowX') !== 'hidden';
     }
 
     public condition(node: T) {
-        return node.some((item: T) => outsideX(item, node));
+        return node.some((item: T) => outsideX(item));
     }
 
     public processNode(node: T, parent: T) {
-        const outside = node.filter((item: T) => outsideX(item, node)) as T[];
+        const outside = node.filter((item: T) => outsideX(item)) as T[];
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, { controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), containerType: CONTAINER_NODE.CONSTRAINT });
         node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
         let left = NaN;
         let right = NaN;
-        let firstChild: Undef<T>;
         for (const item of outside) {
             const linear = item.linear;
-            if (item.pageFlow) {
-                if (isNaN(left) || linear.left < left) {
-                    left = linear.left;
-                }
-                firstChild = item;
-            }
-            else if (item.hasPX('left')) {
+            if (item.hasPX('left')) {
                 if (item.left < 0 && (isNaN(left) || linear.left < left)) {
                     left = linear.left;
                 }
@@ -75,11 +61,12 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 }
                 offset = Math.abs(offset);
             }
+            offset += Math.max(node.marginLeft, 0);
             if (node.hasPX('width', false)) {
-                container.cssPX('width', Math.max(node.marginLeft, 0) + offset, false);
+                container.cssPX('width', offset, true);
             }
-            else if (node.percentWidth > 0) {
-                container.css('width', 'auto');
+            else {
+                container.css('minWidth', formatPX(node.bounds.width + offset), true);
             }
         }
         if (!isNaN(right)) {
@@ -97,8 +84,13 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             if (marginRight > 0) {
                 offset += marginRight;
             }
-            if (offset > 0 && (node.hasPX('width', false) || !node.blockStatic && !node.hasPX('width'))) {
-                container.css(container.hasPX('width') ? 'width' : 'minWidth', formatPX(node.actualWidth + offset), true);
+            if (offset > 0) {
+                if (container.hasPX('width', false)) {
+                    container.cssPX('width', offset, true);
+                }
+                else {
+                    container.css('minWidth', formatPX(node.bounds.width + offset), true);
+                }
             }
             for (const item of outside) {
                 if (item.right < 0) {
@@ -106,12 +98,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 }
             }
         }
-        node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData', <NegativeXData> {
-            outside,
-            offsetLeft: node.marginLeft + node.paddingLeft,
-            firstChild,
-            container
-        });
+        node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData', <NegativeXData> { outside, container });
         return {
             parent: container,
             renderAs: container,
@@ -131,17 +118,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     public postBaseLayout(node: T) {
         const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData');
         if (mainData) {
-            const options = { excluding: mainData.container, attr: 'outerWrapper' };
-            let firstChild = mainData.firstChild;
-            if (firstChild) {
-                firstChild = (firstChild.ascend(options).pop() || firstChild) as T;
-                firstChild.anchorParent('horizontal', 0);
-                firstChild.anchorParent('vertical', 0);
-                firstChild.modifyBox(BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
-                View.setConstraintDimension(firstChild);
-                firstChild.positioned = true;
-            }
-            const nextSibling = (node.ascend(options).pop() || node) as T;
+            const nextSibling = (node.ascend({ excluding: mainData.container, attr: 'outerWrapper' }).pop() || node) as T;
             nextSibling.anchorParent('horizontal', 0);
             nextSibling.anchorParent('vertical', 0);
             View.setConstraintDimension(nextSibling);

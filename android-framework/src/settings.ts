@@ -3,10 +3,10 @@ import { UserSettingsAndroid } from '../../@types/android/application';
 const settings: UserSettingsAndroid = {
     builtInExtensions: [
         'android.delegate.background',
-        'android.delegate.max-width-height',
-        'android.delegate.percent',
         'android.delegate.negative-x',
         'android.delegate.positive-x',
+        'android.delegate.max-width-height',
+        'android.delegate.percent',
         'android.delegate.css-grid',
         'android.delegate.scrollbar',
         'android.delegate.radiogroup',

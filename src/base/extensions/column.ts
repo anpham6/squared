@@ -65,7 +65,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
             columnSized = Math.floor(getColumnSizing());
         }
         else {
-            columnGap = (columnWidth > 0 ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
+            columnGap = (columnWidth > 0 && maxSize !== Number.POSITIVE_INFINITY ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
             columnSized = Math.ceil(getColumnSizing());
         }
         node.data(EXT_NAME.COLUMN, 'mainData', <ColumnData<T>> {

@@ -424,6 +424,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
                 cache.append(parent);
             }
+            node.originalRoot = true;
             node.documentParent = parent;
             for (const item of cache) {
                 if (item.styleElement) {

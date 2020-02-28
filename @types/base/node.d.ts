@@ -126,6 +126,11 @@ export interface HasOptions {
     type?: number;
 }
 
+export interface BoxOptions {
+    reset?: 0 | 1;
+    adjustment?: number;
+}
+
 export interface QueryData {
     all: boolean;
     tagName?: string;
