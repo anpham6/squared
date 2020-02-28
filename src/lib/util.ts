@@ -36,7 +36,8 @@ export function lowerCaseString(value: string) {
         if (index !== undefined) {
             const word = match[1];
             if (!XML.ENTITY.test(word)) {
-                result = (index > 0 ? result.substring(0, match.index) : '') + value.substring(index, index + word.length).toLowerCase() + result.substring(index + word.length);
+                const start = index + word.length;
+                result = (index > 0 ? result.substring(0, match.index) : '') + value.substring(index, start).toLowerCase() + result.substring(start);
             }
         }
     }

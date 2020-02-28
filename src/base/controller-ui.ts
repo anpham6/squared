@@ -24,7 +24,6 @@ function positionAbsolute(style: CSSStyleDeclaration) {
     return false;
 }
 
-const getBorderWidth = (style: CSSStyleDeclaration, attr: string) => style.getPropertyValue(attr + '-style') !== 'none' ? getNumberValue(style, attr + '-width') : 0;
 const getNumberValue = (style: CSSStyleDeclaration, attr: string) => parseInt(style.getPropertyValue(attr));
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
@@ -370,24 +369,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         if (pseudoElt) {
             const parentElement = element.parentElement;
             style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);
-            if (getNumberValue(style, 'width') === 0) {
-                width = getBorderWidth(style, 'border-left') > 0 ||
-                        getNumberValue(style, 'padding-left') > 0 ||
-                        getNumberValue(style, 'padding-right') > 0 ||
-                        getBorderWidth(style, 'border-right') > 0 ? 1 : 0;
-            }
-            else {
-                width = 1;
-            }
-            if (getNumberValue(style, 'height') === 0) {
-                height = getBorderWidth(style, 'border-top') > 0 ||
-                         getNumberValue(style, 'padding-top') > 0 ||
-                         getNumberValue(style, 'padding-bottom') > 0 ||
-                         getBorderWidth(style, 'border-bottom') > 0 ? 1 : 0;
-            }
-            else {
-                height = 1;
-            }
+            width = 1;
+            height = 1;
             valid = true;
         }
         else {
@@ -398,10 +381,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
         if (valid) {
             if (width > 0 && height > 0) {
-                if (style.getPropertyValue('visibility') === 'visible') {
-                    return true;
-                }
-                return !positionAbsolute(style);
+                return style.getPropertyValue('visibility') === 'visible' || !positionAbsolute(style);
             }
             else if (!pseudoElt) {
                 if (iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item)) === Number.POSITIVE_INFINITY) {

@@ -13,7 +13,7 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 
 const $lib = squared.lib;
 
-const { BOX_POSITION, convertListStyle, formatPX, getStyle, insertStyleSheetRule, isLength, resolveURL } = $lib.css;
+const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = $lib.css;
 const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
 const { maxArray } = $lib.math;
 const { convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimString } = $lib.util;
@@ -759,22 +759,54 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (styleMap) {
             let value = styleMap.content;
             if (value) {
-                if (trimString(value, '"').trim() === '' && convertFloat(styleMap.width) === 0 && convertFloat(styleMap.height) === 0 && (styleMap.position === 'absolute' || styleMap.position === 'fixed' || styleMap.clear && styleMap.clear !== 'none')) {
-                    let invalid = true;
-                    for (const attr in styleMap) {
-                        if (/(Width|Height)$/.test(attr)) {
-                            const dimension = styleMap[attr];
-                            if (isLength(dimension, true) && convertFloat(dimension) !== 0) {
-                                invalid = false;
-                                break;
-                            }
+                const textContent = trimString(value, '"');
+                let absolute = false;
+                switch (styleMap.position) {
+                    case 'absolute':
+                    case 'fixed':
+                        if (parseFloat(styleMap.width) === 0 || parseFloat(styleMap.height) === 0) {
+                            return undefined;
+                        }
+                        absolute = true;
+                        break;
+                }
+                const checkPseudoAfter = () => {
+                    if (!absolute && pseudoElt === '::after' && textContent !== '') {
+                        const previousSibling = <Element> element.childNodes[element.childNodes.length - 1];
+                        if (isTextNode(previousSibling)) {
+                            return !/\s+$/.test(previousSibling.textContent as string);
                         }
                     }
-                    if (invalid) {
-                        return undefined;
+                    return false;
+                };
+                if (textContent.trim() === '' && !checkPseudoAfter()) {
+                    switch (styleMap.display) {
+                        case undefined:
+                        case 'block':
+                        case 'inline':
+                        case 'inherit':
+                        case 'initial': {
+                            if (convertFloat(styleMap.width) === 0 && convertFloat(styleMap.height) === 0) {
+                                let valid = false;
+                                for (const attr in styleMap) {
+                                    if (/(padding|Width|Height)/.test(attr) && convertFloat(styleMap[attr]) > 0) {
+                                        valid = true;
+                                        break;
+                                    }
+                                    else if (!absolute && /^margin/.test(attr) && convertFloat(styleMap[attr]) !== 0) {
+                                        valid = true;
+                                        break;
+                                    }
+                                }
+                                if (!valid) {
+                                    return undefined;
+                                }
+                            }
+                            break;
+                        }
                     }
                 }
-                if (value === 'inherit') {
+                else if (value === 'inherit') {
                     let current: Null<HTMLElement> = element;
                     do {
                         value = getStyle(current).getPropertyValue('content');
@@ -786,28 +818,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     while (current);
                 }
                 const style = getStyle(element);
-                if (styleMap.fontFamily === undefined) {
-                    styleMap.fontFamily = style.getPropertyValue('font-family');
+                for (const attr of TEXT_STYLE) {
+                    if (styleMap[attr] === undefined) {
+                        styleMap[attr] = style[attr];
+                    }
                 }
-                if (styleMap.fontSize === undefined) {
-                    styleMap.fontSize = style.getPropertyValue('font-size');
-                }
-                if (styleMap.fontWeight === undefined) {
-                    styleMap.fontWeight = style.getPropertyValue('font-weight');
-                }
-                if (styleMap.color === undefined) {
-                    styleMap.color = style.getPropertyValue('color');
-                }
-                if (styleMap.display === undefined) {
-                    styleMap.display = 'inline';
-                }
-                let tagName = /^inline/.test(styleMap.display) ? 'span' : 'div';
+                let tagName = '';
                 let content = '';
                 switch (value) {
                     case 'normal':
                     case 'none':
                     case 'initial':
                     case 'inherit':
+                    case 'unset':
                     case 'no-open-quote':
                     case 'no-close-quote':
                     case '""':
@@ -947,7 +970,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         break;
                 }
+                if (styleMap.display === undefined) {
+                    styleMap.display = 'inline';
+                }
                 if (content || value === '""') {
+                    if (tagName === '') {
+                        tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
+                    }
                     const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
                     if (tagName === 'img') {
                         (<HTMLImageElement> pseudoElement).src = content;
@@ -1159,12 +1188,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                     else {
                                                         switch (status) {
                                                             case NODE_TRAVERSE.FLOAT_WRAP:
-                                                            case NODE_TRAVERSE.FLOAT_INTERSECT: {
+                                                            case NODE_TRAVERSE.FLOAT_INTERSECT:
                                                                 if (!clearMap.has(item)) {
                                                                     clearMap.set(item, 'both');
                                                                 }
                                                                 break;
-                                                            }
                                                         }
                                                     }
                                                     break traverse;

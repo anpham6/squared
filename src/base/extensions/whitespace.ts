@@ -303,7 +303,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     if (current.pageFlow) {
                         if (collapseMargin) {
                             if (!current.floating) {
-                                if (firstChild === undefined && (current.bounds.height > 0 || length === 1 || isBlockElement(current, true))) {
+                                if (firstChild === undefined) {
                                     firstChild = current;
                                 }
                                 lastChild = current;
@@ -352,7 +352,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             if (bottomChild?.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
                                                 let childBottom = bottomChild.marginBottom;
                                                 let currentChild = bottomChild;
-                                                while (currentChild.bounds.height === 0) {
+                                                while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
                                                     childBottom = Math.max(currentChild.marginTop, currentChild.marginBottom, childBottom);
                                                     resetMargin(currentChild, BOX_STANDARD.MARGIN_TOP);
                                                     const sibling = currentChild.previousSibling as T;
@@ -393,7 +393,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             if (isBlockElement(topChild, true) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0) {
                                                 let childTop = topChild.marginTop;
                                                 let currentChild = topChild;
-                                                while (currentChild.bounds.height === 0) {
+                                                while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
                                                     childTop = Math.max(currentChild.marginTop, currentChild.marginBottom, childTop);
                                                     resetMargin(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
                                                     const sibling = currentChild.nextSibling as T;

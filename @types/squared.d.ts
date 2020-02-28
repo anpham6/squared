@@ -818,6 +818,7 @@ declare namespace lib {
         const BOX_MARGIN: string[];
         const BOX_BORDER: string[][];
         const BOX_PADDING: string[];
+        const TEXT_STYLE: string[];
 
         function getStyle(element: Null<Element>, pseudoElt?: string): CSSStyleDeclaration;
         function getFontSize(element: Null<Element>): number;

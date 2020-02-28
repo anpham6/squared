@@ -1816,7 +1816,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 top = 0;
                             }
                         }
-                        else if (this.blockDimension && this.translateY(top)) {
+                        else if (this.blockDimension && !this.inputElement && this.translateY(top)) {
                             for (const item of this.anchorChain('bottom')) {
                                 item.translateY(top);
                             }
@@ -1829,7 +1829,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 bottom = 0;
                             }
                         }
-                        else if (this.blockDimension && this.renderParent?.layoutConstraint) {
+                        else if (this.blockDimension && !this.inputElement && this.renderParent?.layoutConstraint) {
                             for (const item of this.anchorChain('bottom')) {
                                 item.translateY(bottom);
                             }

@@ -8,7 +8,7 @@ type T = Node;
 const $lib = squared.lib;
 
 const { USER_AGENT, isUserAgent } = $lib.client;
-const { BOX_BORDER, checkStyleValue, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
+const { BOX_BORDER, TEXT_STYLE, checkStyleValue, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
 const { CHAR, CSS, FILE, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = $lib.session;
@@ -2213,6 +2213,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 break;
             default:
                 this._inlineText = value;
+                this._cached.textElement = undefined;
                 break;
         }
     }
@@ -2250,7 +2251,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get blockStatic() {
         let result = this._cached.blockStatic;
         if (result === undefined) {
-            result = this.pageFlow && (this.block && !this.floating || this.blockDimension && (this.cssInitial('width') === '100%' || this.cssInitial('minWidth') === '100%') && !this.hasPX('maxWidth'));
+            result = this.pageFlow && (this.block && !this.floating || this.lineBreak || this.blockDimension && (this.cssInitial('width') === '100%' || this.cssInitial('minWidth') === '100%') && !this.hasPX('maxWidth'));
             this._cached.blockStatic = result;
         }
         return result;
@@ -2879,7 +2880,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get textStyle() {
         let result = this._textStyle;
         if (result === undefined) {
-            result = this.cssAsObject('fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'color', 'whiteSpace', 'textDecoration', 'textTransform', 'letterSpacing', 'wordSpacing');
+            result = this.cssAsObject(...TEXT_STYLE);
             this._textStyle = result;
         }
         return result;
