@@ -2275,7 +2275,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get blockVertical() {
         let result = this._cached.blockVertical;
         if (result === undefined) {
-            result = this.blockDimension && this.hasPX('height');
+            result = this.blockDimension && this.hasHeight;
             this._cached.blockVertical = result;
         }
         return result;

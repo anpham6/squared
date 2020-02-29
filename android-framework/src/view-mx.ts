@@ -2092,7 +2092,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         private alignLayout(renderParent: T) {
             if (this.layoutLinear) {
                 if (this.layoutVertical) {
-                    if (this.baselineElement && !renderParent.layoutFrame && !this.documentRoot) {
+                    if (!renderParent.layoutFrame && !this.documentRoot && (this.baselineElement || this.renderChildren.every(node => node.textElement))) {
                         this.android('baselineAlignedChildIndex', '0');
                     }
                 }

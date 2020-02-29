@@ -25,24 +25,13 @@ const REGEX_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     const { width, height } = <Dimension> gradient.dimension;
+    const result: ColorStop[] = [];
     let repeat = false;
     let horizontal = true;
     let extent = 1;
     let size: number;
     switch (gradient.type) {
-        case 'conic': {
-            size = Math.min(width, height);
-            break;
-        }
-        case 'radial': {
-            const { repeating, radiusExtent, radius } = <RadialGradient> gradient;
-            horizontal = node.actualWidth >= node.actualHeight;
-            repeat = repeating;
-            extent = radiusExtent / radius;
-            size = radius;
-            break;
-        }
-        default: {
+       case 'linear': {
             const { repeating, angle } = <LinearGradient> gradient;
             repeat = repeating;
             switch (angle) {
@@ -64,8 +53,20 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
             }
             break;
         }
+        case 'radial': {
+            const { repeating, radiusExtent, radius } = <RadialGradient> gradient;
+            horizontal = node.actualWidth >= node.actualHeight;
+            repeat = repeating;
+            extent = radiusExtent / radius;
+            size = radius;
+            break;
+        }
+        case 'conic':
+            size = Math.min(width, height);
+            break;
+        default:
+            return result;
     }
-    const result: ColorStop[] = [];
     let previousOffset = 0;
     let match: Null<RegExpExecArray>;
     while ((match = REGEX_COLORSTOP.exec(value)) !== null) {
@@ -184,9 +185,9 @@ function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boole
         case 'pre':
         case 'pre-wrap': {
             if (node.renderParent?.layoutVertical === false) {
-                value = value.replace(/^\s*?\n/, '');
+                value = value.replace(/^\s*\n/, '');
             }
-            const preIndent = ResourceUI.checkPreIndent(node)
+            const preIndent = ResourceUI.checkPreIndent(node);
             if (preIndent) {
                 const [indent, adjacent] = preIndent;
                 if (indent !== '') {
@@ -212,11 +213,10 @@ function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boole
             .replace(CHAR.TRAILINGSPACE, '');
     }
     else {
-        const { previousSibling, nextSibling } = node;
-        if (previousSibling && (previousSibling.lineBreak || previousSibling.blockStatic)) {
+        if (node.previousSibling?.blockStatic) {
             value = value.replace(CHAR.LEADINGSPACE, '');
         }
-        if (nextSibling && (nextSibling.lineBreak || nextSibling.blockStatic)) {
+        if (node.nextSibling?.blockStatic) {
             value = value.replace(CHAR.TRAILINGSPACE, '');
         }
     }
@@ -382,8 +382,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
     }
 
-    public static parseBackgroundImage(node: NodeUI, screenDimension?: Dimension) {
-        const backgroundImage = node.backgroundImage;
+    public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Dimension) {
         if (backgroundImage !== '') {
             const images: (string | Gradient)[] = [];
             let match: Null<RegExpExecArray>;
@@ -401,16 +400,78 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const dimension = NodeUI.refitScreen(node, imageDimension || node.actualDimension);
                     let gradient: Undef<Gradient>;
                     switch (type) {
-                        case 'conic': {
-                            const position = getGradientPosition(direction);
-                            const conic = <ConicGradient> {
+                        case 'linear': {
+                            const { width, height } = dimension;
+                            let angle = 180;
+                            switch (direction) {
+                                case 'to top':
+                                    angle = 360;
+                                    break;
+                                case 'to right top':
+                                    angle = 45;
+                                    break;
+                                case 'to right':
+                                    angle = 90;
+                                    break;
+                                case 'to right bottom':
+                                    angle = 135;
+                                    break;
+                                case 'to bottom':
+                                    break;
+                                case 'to left bottom':
+                                    angle = 225;
+                                    break;
+                                case 'to left':
+                                    angle = 270;
+                                    break;
+                                case 'to left top':
+                                    angle = 315;
+                                    break;
+                                default:
+                                    if (direction) {
+                                        angle = getAngle(direction, 180) || 360;
+                                    }
+                                    break;
+                            }
+                            let x = truncateFraction(offsetAngleX(angle, width));
+                            let y = truncateFraction(offsetAngleY(angle, height));
+                            if (x !== width && y !== height && !equal(Math.abs(x), Math.abs(y))) {
+                                let opposite: number;
+                                if (angle <= 90) {
+                                    opposite = relativeAngle({ x: 0, y: height }, { x: width, y: 0 });
+                                }
+                                else if (angle <= 180) {
+                                    opposite = relativeAngle({ x: 0, y: 0 }, { x: width, y: height });
+                                }
+                                else if (angle <= 270) {
+                                    opposite = relativeAngle({ x: 0, y: 0 }, { x: -width, y: height });
+                                }
+                                else {
+                                    opposite = relativeAngle({ x: 0, y: height }, { x: -width, y: 0 });
+                                }
+                                const a = Math.abs(opposite - angle);
+                                x = truncateFraction(
+                                        offsetAngleX(
+                                            angle,
+                                            triangulate(a, 90 - a, hypotenuse(width, height))[1]
+                                        )
+                                    );
+                                y = truncateFraction(
+                                        offsetAngleY(
+                                            angle,
+                                            triangulate(90, 90 - angle, x)[0]
+                                        )
+                                    );
+                            }
+                            const linear = <LinearGradient> {
                                 type,
+                                repeating,
                                 dimension,
-                                angle: getAngle(direction),
-                                center: getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension })
+                                angle,
+                                angleExtent: { x, y }
                             };
-                            conic.colorStops = parseColorStops(node, conic, match[4]);
-                            gradient = conic;
+                            linear.colorStops = parseColorStops(node, linear, match[4]);
+                            gradient = linear;
                             break;
                         }
                         case 'radial': {
@@ -493,78 +554,16 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             gradient = radial;
                             break;
                         }
-                        case 'linear': {
-                            const { width, height } = dimension;
-                            let angle = 180;
-                            switch (direction) {
-                                case 'to top':
-                                    angle = 360;
-                                    break;
-                                case 'to right top':
-                                    angle = 45;
-                                    break;
-                                case 'to right':
-                                    angle = 90;
-                                    break;
-                                case 'to right bottom':
-                                    angle = 135;
-                                    break;
-                                case 'to bottom':
-                                    break;
-                                case 'to left bottom':
-                                    angle = 225;
-                                    break;
-                                case 'to left':
-                                    angle = 270;
-                                    break;
-                                case 'to left top':
-                                    angle = 315;
-                                    break;
-                                default:
-                                    if (direction) {
-                                        angle = getAngle(direction, 180) || 360;
-                                    }
-                                    break;
-                            }
-                            let x = truncateFraction(offsetAngleX(angle, width));
-                            let y = truncateFraction(offsetAngleY(angle, height));
-                            if (x !== width && y !== height && !equal(Math.abs(x), Math.abs(y))) {
-                                let opposite: number;
-                                if (angle <= 90) {
-                                    opposite = relativeAngle({ x: 0, y: height }, { x: width, y: 0 });
-                                }
-                                else if (angle <= 180) {
-                                    opposite = relativeAngle({ x: 0, y: 0 }, { x: width, y: height });
-                                }
-                                else if (angle <= 270) {
-                                    opposite = relativeAngle({ x: 0, y: 0 }, { x: -width, y: height });
-                                }
-                                else {
-                                    opposite = relativeAngle({ x: 0, y: height }, { x: -width, y: 0 });
-                                }
-                                const a = Math.abs(opposite - angle);
-                                x = truncateFraction(
-                                        offsetAngleX(
-                                            angle,
-                                            triangulate(a, 90 - a, hypotenuse(width, height))[1]
-                                        )
-                                    );
-                                y = truncateFraction(
-                                        offsetAngleY(
-                                            angle,
-                                            triangulate(90, 90 - angle, x)[0]
-                                        )
-                                    );
-                            }
-                            const linear = <LinearGradient> {
+                        case 'conic': {
+                            const position = getGradientPosition(direction);
+                            const conic = <ConicGradient> {
                                 type,
-                                repeating,
                                 dimension,
-                                angle,
-                                angleExtent: { x, y }
+                                angle: getAngle(direction),
+                                center: getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension })
                             };
-                            linear.colorStops = parseColorStops(node, linear, match[4]);
-                            gradient = linear;
+                            conic.colorStops = parseColorStops(node, conic, match[4]);
+                            gradient = conic;
                             break;
                         }
                     }
@@ -687,11 +686,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public writeRawImage(filename: string, base64: string) {
-        this.fileHandler?.addAsset({
-            pathname: this.controllerSettings.directory.image,
-            filename,
-            base64
-        });
+        this.fileHandler?.addAsset({ pathname: this.controllerSettings.directory.image, filename, base64 });
     }
 
     public setBoxStyle(node: T) {
@@ -701,7 +696,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
             }
             if (node.css('borderRadius') !== '0px') {
-                const { borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius } = node.cssAsObject('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius')
+                const { borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius } = node.cssAsObject('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
                 const [A, B] = borderTopLeftRadius.split(' ');
                 const [C, D] = borderTopRightRadius.split(' ');
                 const [E, F] = borderBottomRightRadius.split(' ');
@@ -737,7 +732,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             }
             setBorderStyle(node, boxStyle, 'outline', BOX_BORDER[4]);
             if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node, node.localSettings.screenDimension);
+                boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node, node.backgroundImage, node.localSettings.screenDimension);
             }
             let backgroundColor = node.backgroundColor;
             if (backgroundColor === '' && node.has('backgroundColor') && !node.documentParent.visible) {
@@ -855,6 +850,40 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         case 'file':
                             value = isUserAgent(USER_AGENT.FIREFOX) ? 'Browse...' : 'Choose File';
                             break;
+                        case 'color': {
+                            const borderColor = this.controllerSettings.style.inputColorBorderColor;
+                            const backgroundColor = (<ColorData> parseColor(value) || parseColor('rgb(0, 0, 0)')).valueAsRGBA;
+                            const { width, height } = node.actualDimension;
+                            const backgroundSize = `${width - 10}px ${height - 10}px, ${width - 8}px ${height - 8}px`;
+                            const backgroundRepeat = 'no-repeat, no-repeat';
+                            const backgroundPositionX = 'center, center';
+                            const backgroundPositionY = 'center, center';
+                            const backgroundImage = <Gradient[]> ResourceUI.parseBackgroundImage(node, `linear-gradient(${backgroundColor}, ${backgroundColor}), linear-gradient(${borderColor}, ${borderColor})`);
+                            value = '';
+                            let boxStyle: BoxStyle = node.data(ResourceUI.KEY_NAME, 'boxStyle');
+                            if (boxStyle) {
+                                const backgroundImageA = boxStyle.backgroundImage;
+                                if (backgroundImageA) {
+                                    boxStyle.backgroundSize = backgroundSize + ', ' + boxStyle.backgroundSize;
+                                    boxStyle.backgroundRepeat = backgroundRepeat + ', ' + boxStyle.backgroundRepeat;
+                                    boxStyle.backgroundPositionX = backgroundPositionX + ', ' + boxStyle.backgroundPositionX;
+                                    boxStyle.backgroundPositionY = backgroundPositionY + ', ' + boxStyle.backgroundPositionY;
+                                    backgroundImageA.unshift(...backgroundImage);
+                                    break;
+                                }
+                            }
+                            else {
+                                boxStyle = <BoxStyle> {};
+                            }
+                            node.data(ResourceUI.KEY_NAME, 'boxStyle', Object.assign(boxStyle, {
+                                backgroundSize,
+                                backgroundRepeat,
+                                backgroundPositionX,
+                                backgroundPositionY,
+                                backgroundImage
+                            }));
+                            break;
+                        }
                         case 'range':
                             hint = value;
                             value = '';

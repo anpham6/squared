@@ -157,7 +157,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
         if (mainData) {
             for (const item of mainData.children) {
-                const nested = item.absoluteParent !== item.documentParent;
+                const nested = item.absoluteParent !== item.documentParent || item.css('position') === 'fixed';
                 const documentId = node.documentId;
                 const wrapper = item.outerMostWrapper as T;
                 if (item.hasPX('left')) {

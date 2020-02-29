@@ -393,6 +393,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     let parentEnd = true;
                     let baseline: Null<T> = null;
                     let growAll: boolean;
+                    segStart.anchor(LT, 'parent');
+                    segEnd.anchor(RB, 'parent');
                     if (opposing) {
                         growAll = false;
                         if (dimensionInverse) {
@@ -644,6 +646,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         chain.anchored = true;
                         chain.positioned = true;
                     }
+                    if (opposing) {
+                        continue;
+                    }
                     if (growAll) {
                         for (const item of seg) {
                             setLayoutWeight(item, item.flexbox.grow);
@@ -664,15 +669,17 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             setLayoutWeight(item, Math.max(item.flexbox.grow, (growAvailable * ratio) / layoutWeight.length));
                         }
                     }
-                    segStart.anchor(LT, 'parent');
-                    segEnd.anchor(RB, 'parent');
-                    if (!opposing && (horizontal || directionColumn)) {
+                    if (marginBottom > 0) {
+                        node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, marginBottom);
+                    }
+                    if (horizontal || directionColumn) {
                         let centered = false;
                         if (justified) {
                             switch (justifyContent) {
                                 case 'normal':
                                     if (directionColumn) {
                                         segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed');
+                                        continue;
                                     }
                                     break;
                                 case 'left':
@@ -682,10 +689,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'start':
                                 case 'flex-start':
                                     segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed');
-                                    break;
+                                    continue;
                                 case 'center':
                                     if (q > 1) {
                                         segStart.anchorStyle(orientation, 0.5, 'packed');
+                                        continue;
                                     }
                                     centered = true;
                                     break;
@@ -696,19 +704,20 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'end':
                                 case 'flex-end':
                                     segStart.anchorStyle(orientation, 1, 'packed');
-                                    break;
+                                    continue;
                                 case 'space-between':
                                     if (q === 1) {
                                         segEnd.anchorDelete(RB);
+                                        continue;
                                     }
                                     break;
                                 case 'space-evenly':
                                     if (q > 1) {
                                         segStart.anchorStyle(orientation, 0, 'spread');
+                                        continue;
+
                                     }
-                                    else {
-                                        centered = true;
-                                    }
+                                    centered = true;
                                     break;
                                 case 'space-around':
                                     if (q > 1) {
@@ -716,10 +725,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                         segEnd.constraint[orientation] = false;
                                         controller.addGuideline(segStart, node, orientation, { percent: true });
                                         controller.addGuideline(segEnd, node, orientation, { percent: true, opposing: true });
+                                        segStart.anchorStyle(orientation, 0, 'spread_inside');
+                                        continue;
                                     }
-                                    else {
-                                        centered = true;
-                                    }
+                                    centered = true;
                                     break;
                             }
                         }
@@ -729,9 +738,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         else if (!centered) {
                             segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed', false);
                         }
-                    }
-                    if (marginBottom > 0) {
-                        node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, marginBottom);
                     }
                 }
             };

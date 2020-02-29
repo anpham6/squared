@@ -193,7 +193,7 @@ declare namespace base {
         public static insertStoredAsset(asset: string, name: string, value: any): string;
         public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
         public static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
-        public static parseBackgroundImage(node: NodeUI, screenDimension?: Dimension): Undef<string | Gradient>[];
+        public static parseBackgroundImage(node: NodeUI, value: string, screenDimension?: Dimension): Undef<string | Gradient>[];
         public static getBackgroundSize<T extends NodeUI>(node: T, value: string, screenDimension?: Dimension): Undef<Dimension>;
         public static isInheritedStyle<T extends NodeUI>(node: T, attr: string): boolean;
         public static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;

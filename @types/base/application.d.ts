@@ -46,6 +46,7 @@ export interface ControllerUISettings extends ControllerSettings {
     style: {
         inputBorderColor: string;
         inputBackgroundColor: string;
+        inputColorBorderColor: string;
         meterForegroundColor?: string;
         meterBackgroundColor?: string;
         progressForegroundColor?: string;

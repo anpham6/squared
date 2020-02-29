@@ -365,39 +365,42 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         let style: CSSStyleDeclaration;
         let width: number;
         let height: number;
-        let valid: boolean;
         if (pseudoElt) {
             const parentElement = element.parentElement;
             style = parentElement ? getStyle(parentElement, pseudoElt) : getStyle(element);
             width = 1;
             height = 1;
-            valid = true;
         }
         else {
             style = getStyle(element);
-            const rect = actualClientRect(element, this.sessionId);
-            ({ width, height } = rect);
-            valid = withinViewport(rect);
+            if (style.getPropertyValue('display') !== 'none') {
+                const rect = actualClientRect(element, this.sessionId);
+                if (!withinViewport(rect)) {
+                    return false;
+                }
+                ({ width, height } = rect);
+            }
+            else {
+                return false;
+            }
         }
-        if (valid) {
-            if (width > 0 && height > 0) {
-                return style.getPropertyValue('visibility') === 'visible' || !positionAbsolute(style);
+        if (width > 0 && height > 0) {
+            return style.getPropertyValue('visibility') === 'visible' || !positionAbsolute(style);
+        }
+        else if (!pseudoElt) {
+            if (iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item)) === Number.POSITIVE_INFINITY) {
+                return true;
             }
-            else if (!pseudoElt) {
-                if (iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item)) === Number.POSITIVE_INFINITY) {
-                    return true;
-                }
-                if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none') {
-                    return true;
-                }
+            if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none') {
+                return true;
             }
-            if (!positionAbsolute(style)) {
-                return (
-                    width > 0 && style.getPropertyValue('float') !== 'none' ||
-                    style.getPropertyValue('clear') !== 'none' && !pseudoElt ||
-                    style.getPropertyValue('display') === 'block' && (getNumberValue(style, 'margin-top') !== 0 || getNumberValue(style, 'margin-bottom') !== 0)
-                );
-            }
+        }
+        if (!positionAbsolute(style)) {
+            return (
+                width > 0 && style.getPropertyValue('float') !== 'none' ||
+                !!pseudoElt && style.getPropertyValue('clear') !== 'none' ||
+                style.getPropertyValue('display') === 'block' && (getNumberValue(style, 'margin-top') !== 0 || getNumberValue(style, 'margin-bottom') !== 0)
+            );
         }
         return false;
     }
