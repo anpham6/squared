@@ -656,15 +656,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public hasResource(value: number) {
-        return !hasBit(this.excludeResource, value);
+        return !hasBit(this._excludeResource, value);
     }
 
     public hasProcedure(value: number) {
-        return !hasBit(this.excludeProcedure, value);
+        return !hasBit(this._excludeProcedure, value);
     }
 
     public hasSection(value: number) {
-        return !hasBit(this.excludeSection, value);
+        return !hasBit(this._excludeSection, value);
     }
 
     public exclude(options: ExcludeUIOptions) {
@@ -681,8 +681,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public setExclusions() {
-        if (this.styleElement) {
-            const dataset = (this._element as HTMLElement).dataset;
+        if (this.naturalElement) {
+            const dataset = (<HTMLElement> this._element).dataset;
             const parentDataset = this.actualParent?.dataset || {};
             if (Object.keys(dataset).length || Object.keys(parentDataset).length) {
                 const parseExclusions = (attr: string, enumeration: {}) => {
@@ -815,8 +815,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 if (siblings.every(item => item.inlineDimension)) {
                                     const actualParent = this.actualParent;
                                     if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: item => item.layoutElement, startSelf: true })) {
-                                        const children = actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow);
-                                        if (children.length === siblings.length + 1) {
+                                        const length = actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length;
+                                        if (length === siblings.length + 1) {
                                             const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
                                             let width = actualParent.box.width - getLayoutWidth(this);
                                             for (const item of siblings) {
@@ -901,11 +901,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 }
             }
             for (const previous of this.siblingsLeading) {
-                if (previous.blockStatic || previous.autoMargin.leftRight || floating && previous.childIndex === 0 && previous.plainText && previous.multiline) {
-                    return NODE_TRAVERSE.VERTICAL;
-                }
-                else if (previous.lineBreak) {
+                if (previous.lineBreak) {
                     return NODE_TRAVERSE.LINEBREAK;
+                }
+                else if (previous.blockStatic || previous.autoMargin.leftRight || floating && previous.childIndex === 0 && previous.plainText && previous.multiline) {
+                    return NODE_TRAVERSE.VERTICAL;
                 }
                 else if ((this.blockStatic || this.display === 'table') && (!previous.floating || cleared?.has(previous))) {
                     return NODE_TRAVERSE.VERTICAL;
@@ -1269,18 +1269,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             this._cached.containerName = result;
         }
         return result;
-    }
-
-    get excludeSection() {
-        return this._excludeSection;
-    }
-
-    get excludeProcedure() {
-        return this._excludeProcedure;
-    }
-
-    get excludeResource() {
-        return this._excludeResource;
     }
 
     get layoutHorizontal() {

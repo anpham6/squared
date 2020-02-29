@@ -12,10 +12,10 @@ interface PositiveXData {
     right: boolean;
     bottom: boolean;
 }
-const checkMarginLeft = (parent: View, item: View) => item.marginLeft < 0 && (parent.documentRoot || item.linear.left < Math.floor(parent.bounds.left));
-const checkMarginRight = (parent: View, item: View) => item.marginRight < 0 && (parent.documentRoot || item.linear.right > Math.ceil(parent.bounds.right));
-const checkMarginTop = (parent: View, item: View) => item.marginTop < 0 && (parent.documentRoot || item.linear.top < Math.floor(parent.bounds.top));
-const checkMarginBottom = (parent: View, item: View) => item.marginBottom < 0 && (parent.documentRoot || item.linear.bottom > Math.ceil(parent.bounds.bottom));
+const checkMarginLeft = (parent: View, item: View) => item.marginLeft < 0 && (parent.documentRoot || item.linear.left < Math.floor(parent.box.left));
+const checkMarginRight = (parent: View, item: View) => item.marginRight < 0 && (parent.documentRoot || item.linear.right > Math.ceil(parent.box.right));
+const checkMarginTop = (parent: View, item: View) => item.marginTop < 0 && (parent.documentRoot || item.linear.top < Math.floor(parent.box.top));
+const checkMarginBottom = (parent: View, item: View) => item.marginBottom < 0 && (parent.documentRoot || item.linear.bottom > Math.ceil(parent.box.bottom));
 
 function setFixedNodes(node: View) {
     const documentBody = node.documentBody;
@@ -44,7 +44,6 @@ function setFixedNodes(node: View) {
                 }
                 else if (!item.hasPX('right') && checkMarginLeft(node, item)) {
                     children.add(item);
-                    item.modifyBox(BOX_STANDARD.MARGIN_LEFT, paddingLeft);
                 }
             }
         }
@@ -60,19 +59,13 @@ function setFixedNodes(node: View) {
                 }
                 else if (checkMarginRight(node, item)) {
                     children.add(item);
-                    item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, paddingRight);
                 }
             }
         }
         else if (checkMarginLeft(node, item)) {
             children.add(item);
-            item.modifyBox(BOX_STANDARD.MARGIN_LEFT, paddingLeft);
         }
-        else if (checkMarginRight(node, item)) {
-            children.add(item);
-            item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, paddingLeft);
-        }
-        if (item.hasPX('top') || item.autoPosition && item.css('position') === 'fixed') {
+        if (item.hasPX('top') || fixedPosition) {
             if (originalRoot && (item.css('height') === '100%' || item.css('minHeight') === '100%')) {
                 children.add(item);
                 bottom = true;
@@ -84,7 +77,6 @@ function setFixedNodes(node: View) {
                 }
                 else if (!item.hasPX('bottom') && checkMarginTop(node, item)) {
                     children.add(item);
-                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, paddingTop);
                 }
             }
         }
@@ -100,17 +92,11 @@ function setFixedNodes(node: View) {
                 }
                 else if (checkMarginBottom(node, item)) {
                     children.add(item);
-                    item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, paddingBottom);
                 }
             }
         }
         else if (checkMarginTop(node, item)) {
             children.add(item);
-            item.modifyBox(BOX_STANDARD.MARGIN_TOP, paddingTop);
-        }
-        else if (checkMarginBottom(node, item)) {
-            children.add(item);
-            item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, paddingBottom);
         }
     });
     if (children.size) {
@@ -171,50 +157,54 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
         if (mainData) {
             for (const item of mainData.children) {
-                const fixed = item.css('position') === 'fixed' || item.absoluteParent !== item.actualParent;
-                const constraint = item.constraint;
+                const nested = item.absoluteParent !== item.documentParent;
                 const documentId = node.documentId;
+                const wrapper = item.outerMostWrapper as T;
                 if (item.hasPX('left')) {
-                    if (!fixed) {
+                    if (!nested) {
                         item.translateX(item.left);
                         item.alignSibling('left', documentId);
-                        constraint.horizontal = true;
+                        item.constraint.horizontal = true;
                     }
-                    item.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
+                    wrapper.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
                 }
-                if (item.hasPX('right')) {
-                    if (!fixed) {
+                else if (item.hasPX('right')) {
+                    if (!nested) {
                         item.translateX(-item.right);
                         item.alignSibling('right', documentId);
-                        constraint.horizontal = true;
+                        item.constraint.horizontal = true;
                     }
-                    item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
+                    wrapper.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
                 }
-                else if (item.marginLeft < 0 && !fixed) {
-                    const wrapper = item.outerMostWrapper as T;
+                else if (item.marginLeft < 0 && !nested) {
                     wrapper.alignSibling('left', documentId);
+                    wrapper.translateX(item.linear.left - node.bounds.left);
+                    wrapper.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
                     wrapper.constraint.horizontal = true;
+                    item.modifyBox(BOX_STANDARD.MARGIN_LEFT);
                 }
                 if (item.hasPX('top')) {
-                    if (!fixed) {
+                    if (!nested) {
                         item.translateY(item.top);
                         item.alignSibling('top', documentId);
-                        constraint.vertical = true;
+                        item.constraint.vertical = true;
                     }
-                    item.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
+                    wrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                 }
-                if (item.hasPX('bottom')) {
-                    if (!fixed) {
+                else if (item.hasPX('bottom')) {
+                    if (!nested) {
                         item.translateY(-item.bottom);
                         item.alignSibling('bottom', documentId);
-                        constraint.vertical = true;
+                        item.constraint.vertical = true;
                     }
-                    item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
+                    wrapper.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
                 }
-                else if (item.marginTop < 0 && node.firstChild === item && !fixed) {
-                    const wrapper = item.outerMostWrapper as T;
+                else if (item.marginTop < 0 && !nested) {
                     wrapper.alignSibling('top', documentId);
+                    wrapper.translateY(item.linear.top - node.bounds.top);
+                    wrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                     wrapper.constraint.vertical = true;
+                    item.modifyBox(BOX_STANDARD.MARGIN_TOP);
                 }
             }
         }

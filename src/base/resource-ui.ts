@@ -3,7 +3,7 @@ import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } fr
 import NodeUI from './node-ui';
 import Resource from './resource';
 
-import { NODE_RESOURCE } from './lib/enumeration';
+import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
 
 const $lib = squared.lib;
 
@@ -876,7 +876,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                     else if (node.inlineText) {
                         key = textContent.trim();
-                        [value, inlined, trimming] = replaceWhiteSpace(node, this.removeExcludedFromText(node, element));
+                        [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(NODE_ALIGNMENT.INLINE) ? textContent : this.removeExcludedFromText(node, element));
                     }
                     else if (node.naturalChildren.length === 0 && textContent?.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                         value = textContent;

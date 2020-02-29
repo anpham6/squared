@@ -28,6 +28,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     public processNode(node: T, parent: T) {
         const outside = node.filter((item: T) => outsideX(item)) as T[];
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, outside, { controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), containerType: CONTAINER_NODE.CONSTRAINT });
+        container.inherit(node, 'styleMap');
         node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
         let left = NaN;
         let right = NaN;
@@ -42,21 +43,20 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 right = linear.right;
             }
         }
-        container.inherit(node, 'styleMap');
         if (!isNaN(left)) {
             let offset = node.linear.left - left;
             if (offset > 0) {
                 node.modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
                 for (const item of outside) {
                     if (!item.pageFlow && item.left < 0) {
-                        item.css('left', formatPX(item.left + offset), true);
+                        item.setCacheValue('left', item.left + offset);
                     }
                 }
             }
             else {
                 for (const item of outside) {
                     if (!item.pageFlow && item.left < 0) {
-                        item.css('left', formatPX(node.marginLeft + item.left), true);
+                        item.setCacheValue('left', node.marginLeft + item.left);
                     }
                 }
                 offset = Math.abs(offset);
@@ -94,7 +94,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             }
             for (const item of outside) {
                 if (item.right < 0) {
-                    item.css('right', formatPX(outerRight - item.linear.right), true);
+                    item.setCacheValue('right', outerRight - item.linear.right);
                 }
             }
         }
@@ -113,17 +113,6 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             ),
             subscribe: true
         };
-    }
-
-    public postBaseLayout(node: T) {
-        const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData');
-        if (mainData) {
-            const nextSibling = (node.ascend({ excluding: mainData.container, attr: 'outerWrapper' }).pop() || node) as T;
-            nextSibling.anchorParent('horizontal', 0);
-            nextSibling.anchorParent('vertical', 0);
-            View.setConstraintDimension(nextSibling);
-            nextSibling.positioned = true;
-        }
     }
 
     public beforeCascade() {

@@ -1679,6 +1679,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public setBoxSpacing() {
             const boxReset = this._boxReset;
             const boxAdjustment = this._boxAdjustment;
+            const renderParent = this.renderParent as T;
             const setBoxModel = (attrs: string[], margin: boolean, unmergeable: boolean) => {
                 let top = 0;
                 let right = 0;
@@ -1690,12 +1691,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (value !== 0) {
                         switch (attr) {
                             case 'marginRight':
-                                if (value < 0) {
-                                    if (this.float === 'right' && aboveRange(this.linear.right, this.documentParent.box.right)) {
-                                        value = 0;
-                                    }
-                                }
-                                else if (this.inline) {
+                                if (this.inline) {
                                     const outer = this.documentParent.box.right;
                                     const inner = this.bounds.right;
                                     if (Math.floor(inner) > outer) {
@@ -1756,7 +1752,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (margin) {
                     if (this.floating) {
-                        let node = <Undef<T>> (this.renderParent as T).renderChildren.find(item => !item.floating);
+                        let node = <Undef<T>> renderParent.renderChildren.find(item => !item.floating);
                         if (node) {
                             const boundsTop = Math.floor(this.bounds.top);
                             let actualNode: Undef<T>;
@@ -1825,13 +1821,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (bottom < 0) {
                         if (!this.pageFlow) {
-                            if (this.leftTopAxis && this.hasPX('bottom') && this.translateX(-bottom, { oppose: false })) {
+                            if (this.leftTopAxis && this.hasPX('bottom') && !this.hasPX('top') && this.translateY(-bottom)) {
                                 bottom = 0;
                             }
                         }
-                        else if (this.blockDimension && !this.inputElement && this.renderParent?.layoutConstraint) {
+                        else if (this.blockDimension && !this.inputElement && renderParent.layoutConstraint) {
                             for (const item of this.anchorChain('bottom')) {
-                                item.translateY(bottom);
+                                item.translateY(-bottom);
                             }
                             bottom = 0;
                         }
@@ -1859,13 +1855,21 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (right < 0) {
                         if (!this.pageFlow) {
-                            if (this.leftTopAxis && this.hasPX('right') && this.translateX(-right, { oppose: false })) {
+                            if (this.leftTopAxis && this.hasPX('right') && !this.hasPX('left') && this.translateX(-right)) {
                                 right = 0;
                             }
                         }
-                        else if (this.blockDimension && this.renderParent?.layoutConstraint) {
+                        else if (this.float === 'right') {
+                            if (this.translateX(-right)) {
+                                for (const item of this.anchorChain('right')) {
+                                    item.translateX(-right);
+                                }
+                                right = 0;
+                            }
+                        }
+                        else if (this.blockDimension && renderParent.layoutConstraint) {
                             for (const item of this.anchorChain('right')) {
-                                item.translateX(right);
+                                item.translateX(-right);
                             }
                             right = 0;
                         }
@@ -1923,7 +1927,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             };
-            setBoxModel(BOX_MARGIN, true, (this.renderParent as T).layoutGrid);
+            setBoxModel(BOX_MARGIN, true, renderParent.layoutGrid);
             setBoxModel(BOX_PADDING, false, false);
         }
 
@@ -2031,21 +2035,17 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public translateX(value: number, options: TranslateUIOptions = {}) {
-            const renderParent = this.renderParent;
+            const node = this.anchorTarget;
+            const renderParent = node.renderParent as T;
             if (renderParent?.layoutConstraint) {
-                let x = convertInt(this.android('translationX'));
+                let x = convertInt(node.android('translationX'));
                 if (options.oppose === false && (x > 0 && value < 0 || x < 0 && value > 0)) {
                     return false;
                 }
                 else if (options.accumulate !== false) {
                     x += value;
                 }
-                if (options.relative && value !== 0) {
-                    if (this.outerMostWrapper.alignSibling('rightLeft') === '') {
-                        this.modifyBox(BOX_STANDARD.MARGIN_RIGHT, value);
-                    }
-                }
-                else if (options.contain) {
+                if (options.contain) {
                     const { left, right } = renderParent.box;
                     const { left: x1, right: x2 } = this.linear;
                     if (x1 + x < left) {
@@ -2055,28 +2055,24 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         x = Math.max(right - x2, 0);
                     }
                 }
-                this.android('translationX', formatPX(x));
+                node.android('translationX', formatPX(x));
                 return true;
             }
             return false;
         }
 
         public translateY(value: number, options: TranslateUIOptions = {}) {
-            const renderParent = this.renderParent;
+            const node = this.anchorTarget;
+            const renderParent = node.renderParent as T;
             if (renderParent?.layoutConstraint) {
-                let y = convertInt(this.android('translationY'));
+                let y = convertInt(node.android('translationY'));
                 if (options.oppose === false && (y > 0 && value < 0 || y < 0 && value > 0)) {
                     return false;
                 }
                 else if (options.accumulate !== false) {
                     y += value;
                 }
-                if (options.relative && value !== 0) {
-                    if (this.outerMostWrapper.alignSibling('bottomTop') === '') {
-                        this.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, value);
-                    }
-                }
-                else if (options.contain) {
+                if (options.contain) {
                     const { top, bottom } = renderParent.box;
                     const { top: y1, bottom: y2 } = this.linear;
                     if (y1 + y < top) {
@@ -2086,7 +2082,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         y = Math.max(bottom - y2, 0);
                     }
                 }
-                this.android('translationY', formatPX(y));
+                node.android('translationY', formatPX(y));
                 return true;
             }
             return false;
@@ -2411,23 +2407,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         get leftTopAxis() {
             let result = this._cached.leftTopAxis;
             if (result === undefined) {
-                result = false;
                 switch (this.cssInitial('position')) {
-                    case 'absolute': {
-                        const { absoluteParent, documentParent } = this;
-                        if (absoluteParent) {
-                            if (absoluteParent === documentParent) {
-                                result = true;
-                            }
-                            else if (absoluteParent.box.right === documentParent.linear.right && this.hasPX('right') && !this.hasPX('left') && this.right >= 0) {
-                                this.css('top', formatPX(this.linear.top - documentParent.box.top), true);
-                                result = true;
-                            }
-                        }
+                    case 'absolute':
+                        result = this.absoluteParent === this.documentParent;
                         break;
-                    }
                     case 'fixed':
                         result = true;
+                        break;
+                    default:
+                        result = false;
                         break;
                 }
                 this._cached.leftTopAxis = result;

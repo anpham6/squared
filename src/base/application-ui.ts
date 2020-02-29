@@ -127,6 +127,7 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
 
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI): boolean => node.textElement && (node.blockStatic || node.multiline);
+const getRelativeOffset = (item: NodeUI, fromRight: boolean) => item.positionRelative ? (item.hasPX('left') ? item.left * (fromRight ? 1 : -1) : item.right * (fromRight ? -1 : 1)) : 0;
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public readonly session: AppSessionUI<T> = {
@@ -764,9 +765,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 switch (styleMap.position) {
                     case 'absolute':
                     case 'fixed':
-                        if (parseFloat(styleMap.width) === 0 || parseFloat(styleMap.height) === 0) {
-                            return undefined;
-                        }
                         absolute = true;
                         break;
                 }
@@ -1589,7 +1587,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else if (seg.length === 1) {
                     group.setContainerType(containerType, alignmentType);
-                    group.node.innerWrapped = first;
                 }
                 else if (group.linearY || group.unknownAligned) {
                     group.setContainerType(containerType, alignmentType | (group.unknownAligned ? NODE_ALIGNMENT.UNKNOWN : 0));
@@ -1764,7 +1761,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let spacing = false;
             for (const child of leftAbove) {
                 if (child.bounds.top < bottom) {
-                    const right = child.linear.right + Math.min(child.marginLeft, 0);
+                    const right = child.linear.right + getRelativeOffset(child, false);
                     if (right > floatPosition) {
                         floatPosition = right;
                         spacing = child.marginRight > 0;
@@ -1796,7 +1793,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let spacing = false;
             for (const child of rightAbove) {
                 if (child.bounds.top < bottom) {
-                    const left = child.linear.left + Math.min(child.marginRight, 0);
+                    const left = child.linear.left + getRelativeOffset(child, true);
                     if (left < floatPosition) {
                         floatPosition = left;
                         spacing = child.marginLeft > 0;

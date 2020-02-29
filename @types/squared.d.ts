@@ -521,9 +521,6 @@ declare namespace base {
         labelFor?: NodeUI;
         extracted?: NodeUI[];
         horizontalRows?: NodeUI[][];
-        readonly excludeSection: number;
-        readonly excludeProcedure: number;
-        readonly excludeResource: number;
         readonly renderChildren: NodeUI[];
         readonly nodeGroup: boolean;
         readonly textEmpty: boolean;

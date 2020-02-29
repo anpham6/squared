@@ -564,11 +564,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     return { layout, next: true };
                 }
                 else if (node.naturalElement && child.plainText) {
+                    child.hide();
                     node.clear();
                     node.inlineText = true;
                     node.textContent = child.textContent;
-                    child.hide();
                     layout.setContainerType(CONTAINER_NODE.TEXT);
+                    layout.add(NODE_ALIGNMENT.INLINE);
                 }
                 else if (layout.parent.flexElement && child.baselineElement && node.flexbox.alignSelf === 'baseline') {
                     layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
@@ -595,7 +596,22 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.setContainerType(getVerticalAlignedLayout(layout), NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (this.checkConstraintFloat(layout)) {
-            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, layout.every(item => item.floating) ? NODE_ALIGNMENT.FLOAT : NODE_ALIGNMENT.UNKNOWN);
+            layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
+            if (layout.every(item => item.floating)) {
+                layout.add(NODE_ALIGNMENT.FLOAT);
+            }
+            else if (layout.linearY) {
+                layout.add(NODE_ALIGNMENT.VERTICAL);
+            }
+            else if (layout.some(item => item.rightAligned)) {
+                layout.add(NODE_ALIGNMENT.COLUMN);
+            }
+            else {
+                if (layout.some(item => item.blockStatic)) {
+                    layout.add(NODE_ALIGNMENT.VERTICAL);
+                }
+                layout.add(NODE_ALIGNMENT.UNKNOWN);
+            }
         }
         else if (layout.linearX || layout.singleRowAligned) {
             if (this.checkFrameHorizontal(layout)) {
@@ -930,6 +946,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const clearMap = this.application.clearMap;
             let A = true;
             let B = true;
+            let C = 0;
             for (const node of layout) {
                 if (clearMap.has(node)) {
                     continue;
@@ -941,7 +958,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (B && node.percentWidth === 0) {
                         B = false;
                     }
-                    if (!A && !B) {
+                    if (node.baselineElement) {
+                        C++;
+                    }
+                    if (!A && !B && C > 1) {
                         return false;
                     }
                 }
@@ -954,6 +974,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public checkConstraintHorizontal(layout: squared.base.LayoutUI<T>) {
         if (layout.length > 1) {
             const floated = layout.floated;
+            if (floated.has('right') && !layout.same(item => item.float)) {
+                return false;
+            }
             let valid = false;
             switch (layout.node.cssInitial('textAlign')) {
                 case 'center':
@@ -1651,15 +1674,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                 }
-                if (!node.pageFlow && node.actualParent === documentParent && (node.css('position') !== 'fixed' || node.autoPosition) && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
+                if (!node.pageFlow && (node.css('position') !== 'fixed' || node.autoPosition) && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                     const bounds = node.innerMostWrapped.bounds;
                     for (const item of parent.renderChildren as T[]) {
-                        if (item === node) {
+                        if (item === node || item.plainText || item.pseudoElement || item.originalRoot) {
                             continue;
                         }
                         const itemA = item.innerMostWrapped as T;
-                        const pageFlow = itemA.pageFlow;
-                        if (pageFlow && itemA.naturalElement && !itemA.multiline && !itemA.some(child => child.multiline) || !pageFlow && item.constraint[value]) {
+                        if (itemA.pageFlow || item.constraint[value]) {
                             const linearA = itemA.linear;
                             const xy = linear[LT];
                             let position: Undef<string>;
@@ -1672,7 +1694,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     node.modifyBox(BOX_STANDARD.MARGIN_TOP, -itemA.marginTop, false);
                                 }
                             }
-                            else if (withinRange(xy, linearA[RB])) {
+                            else if (withinRange(xy, linearA[RB]) && !itemA.multiline && !itemA.some(child => child.multiline)) {
                                 if (horizontal) {
                                     position = 'leftRight';
                                     node.modifyBox(BOX_STANDARD.MARGIN_LEFT);
@@ -1703,7 +1725,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         node.constraint[value] = true;
                     };
                     for (const item of parent.renderChildren as T[]) {
-                        if (item === node || item.pageFlow || !item.anchored) {
+                        if (item === node || item.pageFlow || item.originalRoot || !item.constraint[value]) {
                             continue;
                         }
                         const itemA = item.innerMostWrapped as T;
@@ -1739,22 +1761,35 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const absoluteParent = node.absoluteParent as T;
             const bounds = node.positionStatic ? node.bounds : linear;
             let attr = 'layout_constraintGuide_';
-            let location: number;
-            if (percent) {
-                const position = Math.abs(bounds[LT] - box[LT]) / box[horizontal ? 'width' : 'height'];
-                location = parseFloat(truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision));
-                attr += 'percent';
-            }
-            else {
-                location = bounds[LT] - box[!opposing ? LT : RB];
-                if (!horizontal && !documentParent.nodeGroup) {
-                    if (documentParent !== absoluteParent && !node.hasPX('top')) {
-                        const previousSibling = node.previousSibling;
-                        if (previousSibling?.blockStatic) {
-                            location += previousSibling.marginBottom;
+            let location = 0;
+            if (!node.leftTopAxis && documentParent.originalRoot) {
+                const renderParent = node.renderParent;
+                if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length) {
+                    if (horizontal) {
+                        if (!opposing) {
+                            location += documentParent.marginLeft;
+                        }
+                        else {
+                            location += documentParent.marginRight;
+                        }
+                    }
+                    else {
+                        if (!opposing) {
+                            location += documentParent.marginTop;
+                        }
+                        else {
+                            location += documentParent.marginBottom;
                         }
                     }
                 }
+            }
+            if (percent) {
+                const position = Math.abs(bounds[LT] - box[LT]) / box[horizontal ? 'width' : 'height'];
+                location += parseFloat(truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision));
+                attr += 'percent';
+            }
+            else {
+                location += bounds[LT] - box[!opposing ? LT : RB];
                 attr += 'begin';
             }
             const guideline = parent.constraint.guideline || {};
@@ -2287,7 +2322,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.lineBreak || sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element, node.sessionId))) ||
                             previous.autoMargin.horizontal ||
                             clearMap.has(item) ||
-                            Resource.checkPreIndent(previous) !== undefined)
+                            Resource.checkPreIndent(previous))
                         {
                             if (leftForward) {
                                 if (previousRowLeft && (item.bounds.bottom <= previousRowLeft.bounds.bottom || textIndentSpacing)) {
