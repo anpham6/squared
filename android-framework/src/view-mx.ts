@@ -494,19 +494,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public static availablePercent(nodes: T[], dimension: "width" | "height", boxSize: number) {
-            const horizontal = dimension === 'width';
             let percent = 1;
             let i = 0;
             for (let sibling of nodes) {
                 sibling = sibling.innerMostWrapped as T;
                 if (sibling.pageFlow) {
                     i++;
-                    percent -= (Math.max(sibling.marginLeft, 0) + sibling.marginRight) / boxSize;
                     if (sibling.hasPX(dimension, true, true)) {
                         const value = sibling.cssInitial(dimension);
-                        if (sibling.contentBox) {
-                            percent -= (horizontal ? sibling.contentBoxWidth : sibling.contentBoxHeight) / boxSize;
-                        }
                         if (isPercent(value)) {
                             percent -= parseFloat(value) / 100;
                             continue;
@@ -1021,12 +1016,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 node.anchorClear();
                 const documentId = this.documentId;
                 if (node.anchor('left', documentId)) {
-                    node.modifyBox(BOX_STANDARD.MARGIN_LEFT);
-                    Object.assign(node.unsafe('boxAdjustment'), { marginLeft: 0 });
+                    node.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1, adjustment: 0 });
                 }
                 if (node.anchor('top', documentId)) {
-                    node.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                    Object.assign(node.unsafe('boxAdjustment'), { marginTop: 0 });
+                    node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: 0 });
                 }
             }
             node.saveAsInitial(true);
@@ -1767,8 +1760,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                             }
                             if (actualNode) {
-                                const boxData = actualNode.getBox(BOX_STANDARD.MARGIN_TOP);
-                                top += (boxData[0] !== 1 ? actualNode.marginTop : 0) + boxData[1];
+                                const [reset, adjustment] = actualNode.getBox(BOX_STANDARD.MARGIN_TOP);
+                                top += (reset === 0 ? actualNode.marginTop : 0) + adjustment;
                             }
                         }
                     }

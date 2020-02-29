@@ -129,6 +129,8 @@ export interface HasOptions {
 export interface BoxOptions {
     reset?: 0 | 1;
     adjustment?: number;
+    accumulate?: boolean;
+    negative?: boolean;
 }
 
 export interface QueryData {

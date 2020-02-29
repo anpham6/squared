@@ -638,7 +638,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 if (offset > 0) {
                                     marginBottom = Math.max(chain.linear.bottom - parentBottom, marginBottom);
                                 }
-                                chain.modifyBox(BOX_STANDARD.MARGIN_BOTTOM);
+                                chain.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1 });
                             }
                         }
                         chain.anchored = true;

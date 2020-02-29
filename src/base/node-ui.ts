@@ -966,14 +966,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         node.modifyBox(region, offset, negative);
                     }
                     else {
-                        if (!negative) {
-                            const boxAdjustment = this._boxAdjustment;
-                            if (this[attr] + boxAdjustment[attr] + offset <= 0) {
-                                boxAdjustment[attr] = 0;
-                                return;
-                            }
+                        const boxAdjustment = this._boxAdjustment;
+                        if (!negative && (this._boxReset[attr] === 0 ? this[attr] : 0) + boxAdjustment[attr] + offset <= 0) {
+                            boxAdjustment[attr] = 0;
                         }
-                        this._boxAdjustment[attr] += offset;
+                        else {
+                            boxAdjustment[attr] += offset;
+                        }
                     }
                 }
             }
@@ -986,14 +985,25 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public setBox(region: number, options: BoxOptions) {
-        const { reset, adjustment } = options;
         const attr = CSS_SPACING.get(region);
         if (attr) {
+            const { reset, adjustment } = options;
             if (reset !== undefined) {
                 this._boxReset[attr] = reset;
             }
             if (adjustment !== undefined) {
-                this._boxAdjustment[attr] = adjustment;
+                const boxAdjustment = this._boxAdjustment;
+                let value = boxAdjustment[attr];
+                if (options.accumulate) {
+                    value += adjustment;
+                }
+                else {
+                    value = adjustment;
+                }
+                if (options.negative === false && (this._boxReset[attr] === 0 ? this[attr] : 0) + value <= 0) {
+                    value = 0;
+                }
+                boxAdjustment[attr] = value;
             }
         }
     }

@@ -160,10 +160,10 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         for (const item of data) {
                             item.app('layout_constraintWidth_percent', truncate((1 / columnMin) - percentGap, node.localSettings.floatPrecision));
                             item.setLayoutWidth('0px');
+                            item.setBox(BOX_STANDARD.MARGIN_RIGHT, { reset: 1});
+                            item.exclude({ section: APP_SECTION.EXTENSION });
                             item.anchored = true;
                             item.positioned = true;
-                            item.modifyBox(BOX_STANDARD.MARGIN_RIGHT);
-                            item.exclude({ section: APP_SECTION.EXTENSION });
                         }
                         above[j] = data[0];
                     }
@@ -261,7 +261,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     }
                                 }
                                 item.anchorStyle('vertical', 0, 'packed');
-                                item.modifyBox(BOX_STANDARD.MARGIN_TOP);
+                                item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1});
                             }
                             else {
                                 const previous = seg[k - 1];
@@ -274,7 +274,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 if (i === length - 1) {
                                     item.anchor('bottom', 'parent');
                                 }
-                                item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM);
+                                item.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1});
                             }
                         }
                     }

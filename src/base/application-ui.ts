@@ -1065,7 +1065,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (floated.has(clear) || clear === 'both') {
                                         clearMap.set(item, floated.size === 2 ? 'both' : clear);
                                         if (!floating) {
-                                            item.modifyBox(BOX_STANDARD.MARGIN_TOP);
+                                            item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                                         }
                                         floated.clear();
                                         clearable.left = undefined;
@@ -1637,7 +1637,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             else {
                 if (clearMap.has(node)) {
                     if (!node.floating) {
-                        node.modifyBox(BOX_STANDARD.MARGIN_TOP);
+                        node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                         staticRows.push(current.slice(0));
                         floatedRows.push(floated.slice(0));
                         current.length = 0;

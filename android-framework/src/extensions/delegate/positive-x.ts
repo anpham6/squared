@@ -181,7 +181,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     wrapper.translateX(item.linear.left - node.bounds.left);
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
                     wrapper.constraint.horizontal = true;
-                    item.modifyBox(BOX_STANDARD.MARGIN_LEFT);
+                    item.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
                 }
                 if (item.hasPX('top')) {
                     if (!nested) {
@@ -204,7 +204,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     wrapper.translateY(item.linear.top - node.bounds.top);
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                     wrapper.constraint.vertical = true;
-                    item.modifyBox(BOX_STANDARD.MARGIN_TOP);
+                    item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                 }
             }
         }

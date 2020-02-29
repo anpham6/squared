@@ -76,6 +76,8 @@ function getSortOrderStandard(above: View, below: View) {
 
 function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTop: number) {
     const baselineHeight = baseline.baselineHeight;
+    const isBaselineImage = (item: View) => item.imageOrSvgElement && item.baseline;
+    const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
     let imageHeight = 0;
     let imageBaseline: Undef<View>;
     for (const node of nodes) {
@@ -89,7 +91,7 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
                 continue;
             }
             else {
-                const imageElements = node.renderChildren.filter(item => item.imageOrSvgElement && item.baseline);
+                const imageElements = node.renderChildren.filter((item: View) => isBaselineImage(item));
                 if (node.imageOrSvgElement || imageElements.length) {
                     for (const image of imageElements) {
                         height = Math.max(image.baselineHeight, height);
@@ -118,10 +120,10 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
                 node.anchor('baseline', baseline.documentId);
             }
             else if (node.baselineElement) {
-                node.anchor(node.naturalElements.findIndex((item: View) => item.imageOrSvgElement && item.baseline) !== -1 ? 'bottom' : 'baseline', baseline.documentId);
+                node.anchor(node.naturalElements.find((item: View) => isBaselineImage(item)) ? 'bottom' : 'baseline', baseline.documentId);
             }
         }
-        else if (node.imageOrSvgElement && node.baseline) {
+        else if (isBaselineImage(node)) {
             imageBaseline = node;
         }
     }
@@ -192,7 +194,7 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
             const right = Math.abs(previous.marginRight);
             node.modifyBox(BOX_STANDARD.MARGIN_LEFT, previous.actualWidth + (previous.hasWidth ? previous.paddingLeft + previous.borderLeftWidth : 0) - right);
             node.anchor('left', previous.documentId);
-            previous.modifyBox(BOX_STANDARD.MARGIN_RIGHT);
+            previous.setBox(BOX_STANDARD.MARGIN_RIGHT, { reset: 1 });
             return true;
         }
     }
@@ -203,7 +205,7 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
             node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, width - left);
         }
         node.anchor('right', previous.documentId);
-        previous.modifyBox(BOX_STANDARD.MARGIN_LEFT);
+        previous.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
         return true;
     }
     return false;
@@ -444,7 +446,6 @@ const hasCleared = (nodes: View[], clearMap: Map<View, string>) => clearMap.size
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
 const requireSorting = (node: View) => node.zIndex !== 0 || !node.pageFlow && node.documentParent !== node.actualParent;
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
-const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
 const getVerticalLayout = (layout: LayoutUI) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
 const getVerticalAlignedLayout = (layout: LayoutUI) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
 const getAnchorDirection = (reverse = false) => reverse ? { anchorStart: 'right', anchorEnd: 'left', chainStart: 'rightLeft', chainEnd: 'leftRight' } : { anchorStart: 'left', anchorEnd: 'right', chainStart: 'leftRight', chainEnd: 'rightLeft' };
@@ -912,7 +913,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (layout.node.cssAscend('textAlign', true) === 'center' && layout.some(node => node.pageFlow)) {
                     return true;
                 }
-                if (layout.floated.has('right')) {
+                else if (layout.floated.has('right')) {
                     let pageFlow = 0;
                     let multiline = false;
                     for (const node of layout) {
@@ -946,22 +947,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const clearMap = this.application.clearMap;
             let A = true;
             let B = true;
-            let C = 0;
             for (const node of layout) {
                 if (clearMap.has(node)) {
                     continue;
                 }
                 else {
-                    if (A && !(node.floating || node.autoMargin.horizontal || node.inlineDimension && !node.inputElement && !node.controlElement || node.imageOrSvgElement || node.marginTop < 0)) {
+                    const inputElement = node.inputElement || node.controlElement;
+                    if (A && !(node.floating || node.autoMargin.horizontal || node.inlineDimension && !inputElement || node.imageOrSvgElement || node.marginTop < 0)) {
                         A = false;
                     }
                     if (B && node.percentWidth === 0) {
                         B = false;
                     }
-                    if (node.baselineElement) {
-                        C++;
-                    }
-                    if (!A && !B && C > 1) {
+                    if (!A && !B) {
                         return false;
                     }
                 }
@@ -1697,13 +1695,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             else if (withinRange(xy, linearA[RB]) && !itemA.multiline && !itemA.some(child => child.multiline)) {
                                 if (horizontal) {
                                     position = 'leftRight';
-                                    node.modifyBox(BOX_STANDARD.MARGIN_LEFT);
-                                    node.modifyBox(BOX_STANDARD.MARGIN_LEFT, bounds.left - itemA.bounds.right, false);
+                                    node.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1, adjustment: bounds.left - itemA.bounds.right, negative: false });
                                 }
                                 else {
                                     position = 'topBottom';
-                                    node.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                                    node.modifyBox(BOX_STANDARD.MARGIN_TOP, bounds.top - itemA.bounds.bottom, false);
+                                    node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: bounds.top - itemA.bounds.bottom, negative: false });
                                 }
                             }
                             else {
@@ -1717,11 +1713,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const TL = horizontal ? 'top' : 'left';
                     let nearest: Undef<T>;
                     let adjacent: Undef<T>;
-                    const setMarginOffset = (documentId: string, position: string, offset: number) => {
+                    const setMarginOffset = (documentId: string, position: string, adjustment: number) => {
                         const margin = horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP;
                         node.anchor(position, documentId, true);
-                        node.modifyBox(margin);
-                        node.modifyBox(margin, offset);
+                        node.setBox(margin, { reset: 1, adjustment });
                         node.constraint[value] = true;
                     };
                     for (const item of parent.renderChildren as T[]) {
@@ -1816,7 +1811,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             if (!horizontal && node.marginTop < 0) {
                 location -= node.marginTop;
-                node.modifyBox(BOX_STANDARD.MARGIN_TOP);
+                node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
             }
             node.constraint[value] = true;
             if (location <= 0) {
@@ -2488,8 +2483,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         const heightParent = Math.max(baseline.actualHeight, baseline.lineHeight);
                                         if (height < heightParent) {
                                             item.anchor('top', baseline.documentId);
-                                            item.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                                            item.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.round((heightParent - height) / 2));
+                                            item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: Math.round((heightParent - height) / 2) });
+                                            item.baselineAltered = true;
                                         }
                                         else if (height > maxCenterHeight) {
                                             maxCenterHeight = height;
@@ -2629,10 +2624,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let baselineCount = 0;
         const setAlignTop = (item: T) => {
             item.anchorParent('vertical', 0);
-            const offset = item.linear.top - node.box.top;
-            if (Math.round(offset) !== 0) {
-                item.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                item.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+            const adjustment = item.linear.top - node.box.top;
+            if (Math.round(adjustment) !== 0) {
+                item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
                 item.baselineAltered = true;
                 valid = false;
             }
@@ -2799,8 +2793,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 else {
                     baseline.anchorParent('vertical', 0);
-                    baseline.modifyBox(BOX_STANDARD.MARGIN_TOP);
-                    baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.floor(baseline.linear.top - node.box.top));
+                    baseline.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: Math.floor(baseline.linear.top - node.box.top) });
                 }
             }
             baseline.baselineActive = baselineCount > 0;

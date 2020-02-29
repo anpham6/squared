@@ -65,7 +65,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             let columnCount = 0;
             let adjustPadding = false;
             let resetPadding = NaN;
-            node.modifyBox(BOX_STANDARD.MARGIN_LEFT);
+            node.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
             if (parent.layoutGrid) {
                 columnCount = convertInt(parent.android('columnCount')) || 1;
                 adjustPadding = true;
@@ -109,7 +109,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
                 ordinal.parent = parent;
                 ordinal.setControlType(CONTAINER_ANDROID.TEXT, CONTAINER_NODE.INLINE);
-                ordinal.modifyBox(BOX_STANDARD.MARGIN_LEFT);
+                ordinal.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
                 ordinal.render(parent);
                 const layout = new LayoutUI(parent, ordinal);
                 if (ordinal.inlineText || ordinal.length === 0) {
@@ -148,7 +148,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                             marginLeft = node.marginLeft;
                         }
                         minWidth = node.paddingLeft - left;
-                        node.modifyBox(BOX_STANDARD.PADDING_LEFT);
+                        node.setBox(BOX_STANDARD.PADDING_LEFT, { reset: 1 });
                         gravity = '';
                     }
                     image = resource.addImageSrc(mainData.imageSrc);
@@ -197,7 +197,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     else {
                         ordinal.setControlType(CONTAINER_ANDROID.SPACE, CONTAINER_NODE.SPACE);
                         ordinal.renderExclude = false;
-                        node.modifyBox(BOX_STANDARD.PADDING_LEFT);
+                        node.setBox(BOX_STANDARD.PADDING_LEFT, { reset: 1 });
                     }
                     const { paddingTop, lineHeight } = node;
                     ordinal.cssApply({
@@ -243,7 +243,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             ordinal.positioned = true;
             if (adjustPadding) {
                 if (isNaN(resetPadding) || resetPadding <= 0) {
-                    parent.modifyBox(parent.paddingLeft > 0 ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.MARGIN_LEFT);
+                    parent.setBox(parent.paddingLeft > 0 ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
                 }
                 if (resetPadding < 0) {
                     parent.modifyBox(BOX_STANDARD.MARGIN_LEFT, resetPadding);

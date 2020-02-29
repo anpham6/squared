@@ -74,7 +74,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                         if (height === 0 && outside && target.textEmpty && target.extensions.length === 0) {
                             target.hide({ collapse: true });
                         }
-                        else if (target.getBox(region)[0] !== 1) {
+                        else if (target.getBox(region)[0] === 0) {
                             if (outside) {
                                 resetChild = true;
                             }
@@ -95,7 +95,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                                 }
                             }
                             else {
-                                if (node.getBox(region)[0] !== 1) {
+                                if (node.getBox(region)[0] === 0) {
                                     node.modifyBox(region);
                                     node.modifyBox(region, offsetChild);
                                 }
@@ -141,7 +141,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                         const value = endChild[paddingName];
                         if (value > 0) {
                             if (value >= node[paddingName]) {
-                                node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM);
+                                node.setBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, { reset: 1 });
                             }
                             else if (blockAll) {
                                 node.modifyBox(direction ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM, -value);
@@ -331,7 +331,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     if (previous.excluded && !current.excluded) {
                                         const offset = Math.min(marginBottom, previous.marginTop);
                                         if (offset < 0) {
-                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.abs(offset) < marginTop ? offset : undefined);
+                                            if (Math.abs(offset) < marginTop) {
+                                                current.modifyBox(BOX_STANDARD.MARGIN_TOP, offset);
+                                            }
+                                            else {
+                                                current.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
+                                            }
                                             processed.add(previous.id);
                                             continue;
                                         }
@@ -339,7 +344,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     else if (!previous.excluded && current.excluded) {
                                         const offset = Math.min(marginTop, current.marginBottom);
                                         if (offset < 0) {
-                                            previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.abs(offset) < marginBottom ? offset : undefined);
+                                            if (Math.abs(offset) < marginBottom) {
+                                                previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                                            }
+                                            else {
+                                                previous.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1 });
+                                            }
                                             processed.add(current.id);
                                             continue;
                                         }

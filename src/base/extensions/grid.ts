@@ -261,10 +261,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {
-                node.modifyBox(BOX_STANDARD.PADDING_TOP);
-                node.modifyBox(BOX_STANDARD.PADDING_RIGHT);
-                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM);
-                node.modifyBox(BOX_STANDARD.PADDING_LEFT);
+                node.resetBox(BOX_STANDARD.PADDING);
             }
             node.data(GRID, 'columnCount', columnCount);
         }
