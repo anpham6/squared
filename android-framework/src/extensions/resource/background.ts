@@ -1247,7 +1247,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     width -= clipLeft + clipRight;
                     height -= clipTop + clipBottom;
                     if (!isNaN(posRight)) {
-                        right += clipRight
+                        right += clipRight;
                     }
                     else {
                         left += clipLeft;
@@ -1469,7 +1469,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 if (!autoFit) {
                     if (width === 0 && dimenWidth < boundsWidth && tileModeX === 'disabled') {
-                        width = dimenWidth
+                        width = dimenWidth;
                         unsizedWidth = true;
                     }
                     if (height === 0 && dimenHeight < boundsHeight && tileModeY === 'disabled') {
@@ -1537,7 +1537,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         gravityY = '';
                     }
                 }
-                let src: Undef<string>
+                let src: Undef<string>;
                 if (typeof value === 'string') {
                     src = '@drawable/' + value;
                 }

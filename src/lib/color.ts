@@ -1156,7 +1156,7 @@ export function convertRGBA(value: HSLA): RGBA {
     let b;
     if (s === 0) {
         r = l;
-        g = l
+        g = l;
         b = l;
     }
     else {

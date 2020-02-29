@@ -669,7 +669,7 @@ function sortIncomplete(incomplete: SvgAnimation[], maxTime = Number.POSITIVE_IN
                 return 1;
             }
             else if (delayA > maxTime && delayB < maxTime) {
-                return 1
+                return 1;
             }
             else if (delayA < maxTime && delayB > maxTime) {
                 return -1;

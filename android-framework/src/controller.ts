@@ -71,7 +71,7 @@ function getSortOrderStandard(above: View, below: View) {
     else if (zA === zB) {
         return above.childIndex < below.childIndex ? -1 : 1;
     }
-    return zA < zB ? -1 : 1
+    return zA < zB ? -1 : 1;
 }
 
 function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTop: number) {
@@ -1133,7 +1133,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if (valid) {
             const dataset = node.dataset;
-            const target = !dataset.use && dataset.target
+            const target = !dataset.use && dataset.target;
             node.setControlType(View.getControlName(containerType, node.api), containerType);
             node.addAlign(layout.alignmentType);
             node.render(target ? (<squared.base.ApplicationUI<T>> this.application).resolveTarget(target) : layout.parent);
@@ -1612,7 +1612,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         let documentParent = node.documentParent as T;
         if (parent.nodeGroup && !documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
-            documentParent = parent
+            documentParent = parent;
         }
         const box = documentParent.box;
         const linear = node.linear;
@@ -1941,7 +1941,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             else {
                                 const barrier = current.constraint.barrier;
-                                const documentId = barrier === undefined || !isString(barrier.bottom) ? this.addBarrier([current], 'bottom') : barrier.bottom
+                                const documentId = barrier === undefined || !isString(barrier.bottom) ? this.addBarrier([current], 'bottom') : barrier.bottom;
                                 if (documentId) {
                                     current.anchor('bottomTop', documentId);
                                 }

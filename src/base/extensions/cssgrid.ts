@@ -370,7 +370,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         case 2:
                         case 3:
                             (index === 2 ? row : column).auto.push(isLength(command) ? formatPX(node.parseUnit(command, index === 2 ? 'height' : 'width')) : command);
-                            break
+                            break;
                     }
                 }
                 REGEX_NAMED.lastIndex = 0;

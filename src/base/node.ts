@@ -1110,7 +1110,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public has(attr: string, options?: HasOptions) {
         let map: Undef<string>;
-        let not: Undef<string | string[]>
+        let not: Undef<string | string[]>;
         let type: Undef<number>;
         if (options) {
             ({ map, not, type } = options);

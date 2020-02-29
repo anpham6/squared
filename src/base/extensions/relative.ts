@@ -53,7 +53,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 x = -right;
             }
             if (top !== 0) {
-                y = top
+                y = top;
             }
             else if (bottom !== 0) {
                 y = -bottom;

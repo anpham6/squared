@@ -148,7 +148,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             m++;
                         }
                         else {
-                            colSpan = m
+                            colSpan = m;
                             break;
                         }
                     }

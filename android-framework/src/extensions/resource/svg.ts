@@ -312,7 +312,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
         const restart = () => {
             host.push(current.slice(0));
             current.length = 0;
-        }
+        };
         for (let i = 1; i < items.length; i++) {
             const itemA = items[i];
             const itemB = items[i - 1];

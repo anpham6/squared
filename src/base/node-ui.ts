@@ -571,7 +571,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                     }
-                    const autoMargin = this.autoMargin
+                    const autoMargin = this.autoMargin;
                     Object.assign(autoMargin, node.autoMargin);
                     this.autoPosition = node.autoPosition;
                     break;
@@ -832,7 +832,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                         else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : Number.NEGATIVE_INFINITY), 0) / (this.actualParent as T).box.width >= 0.8) {
-                            return NODE_TRAVERSE.FLOAT_INTERSECT
+                            return NODE_TRAVERSE.FLOAT_INTERSECT;
                         }
                         else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
                             return NODE_TRAVERSE.FLOAT_BLOCK;
@@ -1124,7 +1124,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public actualBoxWidth(value?: number) {
         if (!value) {
-            value = this.box.width
+            value = this.box.width;
         }
         if (this.pageFlow && !this.documentRoot) {
             let offsetLeft = 0;
