@@ -17,7 +17,7 @@ const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertSt
 const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
 const { maxArray } = $lib.math;
 const { convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimString } = $lib.util;
-const { XML } = $lib.regex;
+const { CSS, XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
 
@@ -201,13 +201,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         const documentRoot: { node: T; layoutName: string }[] = [];
-        const root = this.processing.node;
         for (const node of rendered) {
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
             if (node.documentRoot) {
-                documentRoot.push({ node, layoutName: node.innerMostWrapped === root && root.dataset.layoutName || '' });
+                const layoutName = node.innerMostWrapped.dataset.layoutName;
+                if (layoutName) {
+                    documentRoot.push({ node, layoutName });
+                }
             }
         }
         for (const ext of extensions) {
@@ -844,7 +846,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         break;
                     default:
-                        if (/^url\(/.test(value)) {
+                        if (CSS.URL.test(value)) {
                             content = resolveURL(value);
                             const format = fromLastIndexOf(content, '.').toLowerCase();
                             const imageFormat = this._localSettings.supported.imageFormat;

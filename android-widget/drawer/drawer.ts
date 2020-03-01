@@ -94,14 +94,14 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
             const headerLayout = Drawer.findNestedElement(element, EXT_ANDROID.EXTERNAL)?.dataset.layoutName;
             const app = safeNestedMap(options, 'app');
             if (menu) {
-                assignEmptyValue(app, 'menu', '@menu/' + menu);
+                assignEmptyValue(app, 'menu', `@menu/${menu}`);
             }
             if (headerLayout) {
-                assignEmptyValue(app, 'headerLayout', '@layout/' + headerLayout);
+                assignEmptyValue(app, 'headerLayout', `@layout/${headerLayout}`);
             }
             if (menu || headerLayout) {
                 const controller = <android.base.Controller<T>> this.controller;
-                assignEmptyValue(options, 'android', 'id', node.documentId.replace('@', '@+') + '_navigation');
+                assignEmptyValue(options, 'android', 'id', `@+id/${node.controlId}_navigation`);
                 assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                 assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
                 controller.addAfterInsideTemplate(

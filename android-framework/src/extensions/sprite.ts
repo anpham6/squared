@@ -60,7 +60,7 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                     backgroundColor: 'transparent'
                 });
                 node.unsetCache();
-                node.android('src', '@drawable/' + drawable);
+                node.android('src', `@drawable/${drawable}`);
                 return {
                     renderAs: container,
                     outputAs: this.application.renderNode(

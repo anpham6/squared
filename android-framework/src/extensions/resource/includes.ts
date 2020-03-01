@@ -69,7 +69,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 renderTemplates.splice(openData.index, length, <NodeIncludeTemplate<T>> {
                                     type: NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
-                                    content: controller.renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: '@layout/' + openData.name, android: {} }),
+                                    content: controller.renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${openData.name}`, android: {} }),
                                     indent: true
                                 });
                                 let content = controller.cascadeDocument(templates, depth);

@@ -217,7 +217,7 @@ function createPathInterpolator(value: string) {
         if (!STORED.animators.has(name)) {
             STORED.animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(CHAR.SPACE)));
         }
-        return '@anim/' + name;
+        return `@anim/${name}`;
     }
 }
 
@@ -639,7 +639,7 @@ function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, tar
             )
         };
         if (targetData.animation !== '') {
-            targetData.animation = '@anim/' + targetData.animation;
+            targetData.animation = `@anim/${targetData.animation}`;
             data[0].target.push(targetData);
         }
     }
@@ -649,7 +649,7 @@ const getTemplateFilename = (templateName: string, length: number, prefix?: stri
 const isColorType = (attr: string) => attr === 'fill' || attr === 'stroke';
 const getVectorName = (target: SvgView, section: string, index = -1) => target.name + '_' + section + (index !== -1 ? '_' + (index + 1) : '');
 const getRadiusPercent = (value: string) => isPercent(value) ? parseFloat(value) / 100 : 0.5;
-const getDrawableSrc = (name: string) => '@drawable/' + name;
+const getDrawableSrc = (name: string) => `@drawable/${name}`;
 const getFillData = (ordering = ''): FillData => ({ ordering, objectAnimator: [] });
 
 export default class ResourceSvg<T extends View> extends squared.base.ExtensionUI<T> {
@@ -1667,7 +1667,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         if (value !== 'none' && result['aapt:attr'] === undefined) {
                             const colorName = Resource.addColor(value);
                             if (colorName !== '') {
-                                value = '@color/' + colorName;
+                                value = `@color/${colorName}`;
                             }
                         }
                         else {
@@ -1679,7 +1679,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         if (value !== 'none') {
                             const colorName = Resource.addColor(value);
                             if (colorName !== '') {
-                                value = '@color/' + colorName;
+                                value = `@color/${colorName}`;
                             }
                         }
                         else {

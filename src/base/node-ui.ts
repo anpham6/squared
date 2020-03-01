@@ -543,9 +543,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             switch (name) {
                 case 'base': {
                     this._documentParent = node.documentParent;
-                    this._bounds =  { ...node.bounds };
-                    this._linear = { ...node.linear };
-                    this._box = { ...node.box };
+                    this._bounds =  node.bounds;
+                    this._linear = node.linear;
+                    this._box = node.box;
                     if (this.depth === -1) {
                         this.depth = node.depth;
                     }
@@ -571,8 +571,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                     }
-                    const autoMargin = this.autoMargin;
-                    Object.assign(autoMargin, node.autoMargin);
+                    Object.assign(this.autoMargin, node.autoMargin);
                     this.autoPosition = node.autoPosition;
                     break;
                 }
@@ -969,6 +968,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         const boxAdjustment = this._boxAdjustment;
                         if (!negative && (this._boxReset[attr] === 0 ? this[attr] : 0) + boxAdjustment[attr] + offset <= 0) {
                             boxAdjustment[attr] = 0;
+                            if (this[attr] >= 0 && offset < 0) {
+                                this._boxReset[attr] = 1;
+                            }
                         }
                         else {
                             boxAdjustment[attr] += offset;
@@ -988,8 +990,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const attr = CSS_SPACING.get(region);
         if (attr) {
             const { reset, adjustment } = options;
+            const boxReset = this._boxReset;
             if (reset !== undefined) {
-                this._boxReset[attr] = reset;
+                boxReset[attr] = reset;
             }
             if (adjustment !== undefined) {
                 const boxAdjustment = this._boxAdjustment;
@@ -1000,8 +1003,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else {
                     value = adjustment;
                 }
-                if (options.negative === false && (this._boxReset[attr] === 0 ? this[attr] : 0) + value <= 0) {
+                if (options.negative === false && (boxReset[attr] === 0 ? this[attr] : 0) + value <= 0) {
                     value = 0;
+                    if (this[attr] >= 0 && value < 0) {
+                        boxReset[attr] = 1;
+                    }
                 }
                 boxAdjustment[attr] = value;
             }
@@ -1497,7 +1503,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this.naturalChildren[0] || null;
     }
 
-    get lastChild() {
+    get lastChild(): Null<Node> {
         const children = this.naturalChildren;
         return children[children.length - 1] || null;
     }

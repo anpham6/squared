@@ -407,7 +407,7 @@ function getIndentOffset(border: BorderAttribute) {
 
 function getColorValue(value: Undef<ColorData | string>, transparency = true) {
     const color = Resource.addColor(value, transparency);
-    return color !== '' ? '@color/' + color : '';
+    return color !== '' ? `@color/${color}` : '';
 }
 
 function fillBackgroundAttribute(attribute: string[], length: number) {
@@ -533,7 +533,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         };
         const setDrawableBackground = (node: T, value: string) => {
             if (value !== '') {
-                const drawable = '@drawable/' + Resource.insertStoredAsset('drawables', node.containerName.toLowerCase() + '_' + node.controlId, value);
+                const drawable = '@drawable/' + Resource.insertStoredAsset('drawables', `${node.containerName.toLowerCase()}_${node.controlId}`, value);
                 if (!themeBackground) {
                     if (node.tagName === 'HTML') {
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
@@ -1539,7 +1539,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 let src: Undef<string>;
                 if (typeof value === 'string') {
-                    src = '@drawable/' + value;
+                    src = `@drawable/${value}`;
                 }
                 else if (value.item) {
                     if (width === 0) {
@@ -1568,7 +1568,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }])
                     );
                     if (gradient !== '') {
-                        src = '@drawable/' + gradient;
+                        src = `@drawable/${gradient}`;
                         imageData.order = j++;
                     }
                     if (gravityX === 'left' || gravityX === 'start') {

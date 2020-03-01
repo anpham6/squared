@@ -32,7 +32,7 @@ function formatObject(obj: {}, numberAlias = false) {
                             }
                             value = Resource.addString(value, '', numberAlias);
                             if (value !== '') {
-                                obj[attr] = '@string/' + value;
+                                obj[attr] = `@string/${value}`;
                             }
                             break;
                         case 'src':
@@ -40,7 +40,7 @@ function formatObject(obj: {}, numberAlias = false) {
                             if (COMPONENT.PROTOCOL.test(value)) {
                                 value = Resource.addImage({ mdpi: value });
                                 if (value !== '') {
-                                    obj[attr] = '@drawable/' + value;
+                                    obj[attr] = `@drawable/${value}`;
                                 }
                             }
                             continue;
@@ -49,7 +49,7 @@ function formatObject(obj: {}, numberAlias = false) {
                     if (color) {
                         const colorName = Resource.addColor(color);
                         if (colorName !== '') {
-                            obj[attr] = '@color/' + colorName;
+                            obj[attr] = `@color/${colorName}`;
                         }
                     }
                 }

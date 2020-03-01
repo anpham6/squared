@@ -194,7 +194,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                         }
                     }
                     itemArray.push({
-                        font: '@font/' + fontName,
+                        font: `@font/${fontName}`,
                         fontStyle,
                         fontWeight
                     });
@@ -211,7 +211,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 if (targetAPI < BUILD_ANDROID.OREO) {
                     output = output.replace(/\s+android:/g, ' app:');
                 }
-                result.push(output, pathname, name + '.xml');
+                result.push(output, pathname, `${name}.xml`);
             }
             return this.checkFileAssets(result, options);
         }
@@ -336,7 +336,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                         insertSpaces
                     ),
                     directory,
-                    name + '.xml'
+                    `${name}.xml`
                 );
             }
             return this.checkFileAssets(result, options);
@@ -393,7 +393,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 result.push(
                     replaceTab(value, insertSpaces),
                     'res/anim',
-                    name + '.xml'
+                    `${name}.xml`
                 );
             }
             return this.checkFileAssets(result, options);
@@ -408,10 +408,10 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         const assets: FileAsset[] = [];
         const length = layouts.length;
         for (let i = 0; i < length; i++) {
-            const { content, filename: filenameAsset, pathname } = layouts[i];
-            result[filenameAsset] = [content];
+            const { content, filename: filenameA, pathname } = layouts[i];
+            result[filenameA] = [content];
             if (actionable) {
-                assets.push(createFileAsset(pathname, i === 0 ? this.userSettings.outputMainFileName : filenameAsset + '.xml', content));
+                assets.push(createFileAsset(pathname, i === 0 ? this.userSettings.outputMainFileName : `${filenameA}.xml`, content));
             }
         }
         if (actionable) {
@@ -439,8 +439,8 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     }
                     else {
                         const filename = item.filename;
-                        if (/\.xml$/.test(filename)) {
-                            item.filename =  filename + '.xml';
+                        if (!filename.endsWith('.xml')) {
+                            item.filename =  `${filename}.xml`;
                         }
                     }
                 }

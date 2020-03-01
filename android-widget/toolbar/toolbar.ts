@@ -83,13 +83,13 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                 if (dataset.navigationIcon) {
                     const src = resource.addImageSrc(<HTMLImageElement> item, PREFIX_MENU);
                     if (src !== '') {
-                        assignEmptyValue(app, 'navigationIcon', '@drawable/' + src);
+                        assignEmptyValue(app, 'navigationIcon', `@drawable/${src}`);
                     }
                 }
                 if (dataset.collapseIcon) {
                     const src = resource.addImageSrc(<HTMLImageElement> item, PREFIX_MENU);
                     if (src !== '') {
-                        assignEmptyValue(app, 'collapseIcon', '@drawable/' + src);
+                        assignEmptyValue(app, 'collapseIcon', `@drawable/${src}`);
                     }
                 }
             }
@@ -141,14 +141,14 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         let collapsingToolbarNode: Undef<T>;
         if (hasAppBar) {
             let android = appBarOptions.android;
-            assignEmptyValue(appBarOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_appbar');
+            assignEmptyValue(appBarOptions, 'android', 'id', `@+id/${node.controlId}_appbar`);
             assignEmptyValue(appBarOptions, 'android', 'layout_height', node.hasHeight ? formatPX(node.actualHeight) : 'wrap_content');
             assignEmptyValue(appBarOptions, 'android', 'fitsSystemWindows', 'true');
             if (hasMenu) {
                 if (android.theme) {
                     appBarOverlay = android.theme;
                 }
-                android.theme = '@style/' + settings.manifestThemeName + '.AppBarOverlay';
+                android.theme = `@style/${settings.manifestThemeName}.AppBarOverlay`;
                 node.data(WIDGET_NAME.TOOLBAR, 'themeData', <ToolbarThemeData> { appBarOverlay, popupOverlay });
             }
             else {
@@ -164,7 +164,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             appBarNode.setControlType(appBarName, CONTAINER_NODE.BLOCK);
             if (hasCollapsingToolbar) {
                 app = safeNestedMap(collapsingToolbarOptions, 'app');
-                assignEmptyValue(collapsingToolbarOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_collapsingtoolbar');
+                assignEmptyValue(collapsingToolbarOptions, 'android', 'id', `@+id/${node.controlId}_collapsingtoolbar`);
                 assignEmptyValue(collapsingToolbarOptions, 'android', 'fitsSystemWindows', 'true');
                 if (!backgroundImage) {
                     assignEmptyValue(app, 'contentScrim', '?attr/colorPrimary');
@@ -236,8 +236,8 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                                 break;
                         }
                         app = safeNestedMap(backgroundImageOptions, 'app');
-                        assignEmptyValue(backgroundImageOptions, 'android', 'id', node.documentId.replace('@', '@+') + '_image');
-                        assignEmptyValue(backgroundImageOptions, 'android', 'src', '@drawable/' + src);
+                        assignEmptyValue(backgroundImageOptions, 'android', 'id', `@+id/${node.controlId}_image`);
+                        assignEmptyValue(backgroundImageOptions, 'android', 'src', `@drawable/${src}`);
                         assignEmptyValue(backgroundImageOptions, 'android', 'scaleType', scaleType);
                         assignEmptyValue(backgroundImageOptions, 'android', 'fitsSystemWindows', 'true');
                         assignEmptyValue(app, 'layout_collapseMode', 'parallax');
@@ -305,7 +305,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         if (menu) {
             const toolbarOptions = createViewAttribute(this.options[node.elementId]?.self);
             const app = safeNestedMap<string>(toolbarOptions, 'app');
-            assignEmptyValue(app, 'menu', '@menu/' + menu);
+            assignEmptyValue(app, 'menu', `@menu/${menu}`);
             node.app('menu', app.menu);
         }
         const themeData: ToolbarThemeData = node.data(WIDGET_NAME.TOOLBAR, 'themeData');

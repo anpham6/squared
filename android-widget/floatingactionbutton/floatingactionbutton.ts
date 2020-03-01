@@ -38,7 +38,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         const target = node.dataset.target;
         const options = createViewAttribute(this.options[element.id]);
         const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1)));
-        assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? '@color/' + colorName : '?attr/colorAccent');
+        assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
         if (!node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
             assignEmptyValue(options, 'android', 'focusable', 'false');
         }
@@ -58,7 +58,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         }
         if (src !== '') {
             const app = safeNestedMap<string>(options, 'app');
-            assignEmptyValue(app, 'srcCompat', '@drawable/' + src);
+            assignEmptyValue(app, 'srcCompat', `@drawable/${src}`);
         }
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);

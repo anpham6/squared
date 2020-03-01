@@ -216,7 +216,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                     const maxTime = Math.floor(Math.max(from, to) * length);
                                     const partial: SvgOffsetPath[] = [];
                                     for (let k = minTime; k <= maxTime; k++) {
-                                        partial.push({ ...offsetPath[k] });
+                                        partial.push(offsetPath[k]);
                                     }
                                     if (from > to) {
                                         partial.reverse();
@@ -248,7 +248,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         }
                     }
                     else {
-                        result.push({ ...offsetPath[Math.floor(keyPoints[0] * length)] });
+                        result.push(offsetPath[Math.floor(keyPoints[0] * length)]);
                         if (keyTimes[0] === 0) {
                             result[0].rotate = 0;
                         }

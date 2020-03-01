@@ -71,7 +71,7 @@ export default class BottomNavigation<T extends View> extends squared.base.Exten
             if (menu) {
                 const options = createViewAttribute(this.options[node.elementId]);
                 const app = safeNestedMap<string>(options, 'app');
-                assignEmptyValue(app, 'menu', '@menu/' + menu);
+                assignEmptyValue(app, 'menu', `@menu/${menu}`);
                 node.app('menu', app.menu);
             }
         }

@@ -1,4 +1,4 @@
-var squared = null;
+/*var squared = null;
 
 System.import('/build/src/main.js').then(result => {
     squared = result;
@@ -28,7 +28,7 @@ System.import('/build/src/main.js').then(result => {
             });
         });
     });
-});
+});*/
 
 /*System.import('/build/src/main.js').then(result => {
     squared = result;
@@ -61,7 +61,7 @@ System.import('/build/src/main.js').then(result => {
             });
         });
     });
-});
+});*/
 
 document.addEventListener('DOMContentLoaded', function() {
     squared.setFramework(android);
@@ -84,4 +84,4 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         console.log(new Date().getTime() - time);
     });
-});*/
+});

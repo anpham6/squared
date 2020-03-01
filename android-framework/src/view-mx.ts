@@ -964,7 +964,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             result.sort((a, b) => a > b ? 1 : -1);
             if (requireId) {
-                result.unshift(`android:id="${id !== '' ? id : '@+id/' + this.controlId}"`);
+                result.unshift('android:id="' + (id || `@+id/${this.controlId}`) + '"');
             }
             return result;
         }
@@ -1058,7 +1058,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const flexibleWidth = !renderParent.inlineWidth;
             const flexibleHeight = !renderParent.inlineHeight;
             const maxDimension = this.support.maxDimension;
-            const matchParent = renderParent.layoutConstraint && !this.onlyChild && !this.textElement && !this.inputElement && !this.controlElement && this.alignParent('left') && this.alignParent('right') ? '0px' : 'match_parent';
+            const matchParent = renderParent.layoutConstraint && !this.onlyChild && (!this.textElement && !this.inputElement && !this.controlElement && this.alignParent('left') && this.alignParent('right') || this.alignSibling('leftRight') !== '' || this.alignSibling('rightLeft') !== '') ? '0px' : 'match_parent';
             let { layoutWidth, layoutHeight } = this;
             if (layoutWidth === '') {
                 if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {
@@ -1191,25 +1191,19 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         layoutWidth = 'match_parent';
                     }
                     else if (!this.imageElement && !this.inputElement && !this.controlElement) {
-                        const checkParentWidth = (block: boolean) => {
-                            if (block && this.alignParent('left') && this.alignParent('right')) {
-                                layoutWidth = this.textElement ? 'match_parent' : matchParent;
-                            }
-                            else if (this.styleText) {
+                        const checkParentWidth = () => {
+                            if (this.styleText) {
                                 if (this.multiline) {
                                     return;
                                 }
                                 else if (this.cssTry('display', 'inline-block')) {
-                                    layoutWidth = Math.ceil(actualTextRangeRect(<Element> this.element).width) >= this.bounds.width ? 'wrap_content' : 'match_parent';
+                                    const width = Math.ceil(actualTextRangeRect(<Element> this.element).width);
+                                    layoutWidth = width >= actualParent.box.width ? 'wrap_content' : 'match_parent';
                                     this.cssFinally('display');
-                                }
-                                else {
-                                    layoutWidth = 'match_parent';
+                                    return;
                                 }
                             }
-                            else if (flexibleWidth) {
-                                layoutWidth = matchParent;
-                            }
+                            layoutWidth = matchParent;
                         };
                         if (this.blockStatic && !renderParent.layoutGrid) {
                             if (!actualParent.layoutElement) {
@@ -1217,10 +1211,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     layoutWidth = matchParent;
                                 }
                                 else {
-                                    checkParentWidth(true);
+                                    checkParentWidth();
                                 }
                             }
-                            else if (flexibleWidth && !renderParent.layoutElement) {
+                            else if (flexibleWidth && actualParent.gridElement && !renderParent.layoutElement) {
                                 layoutWidth = matchParent;
                             }
                         }
@@ -1228,10 +1222,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             layoutWidth = matchParent;
                         }
                         else if (
-                            this.inlineStatic && !this.blockDimension && this.naturalElement && !actualParent.layoutElement && (renderParent.layoutVertical ||
-                            this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') && this.some(item => item.naturalElement && item.blockStatic))
+                            this.inlineStatic && !this.blockDimension && this.naturalElement && this.some(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (
+                                renderParent.layoutVertical ||
+                                this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === ''
+                            ))
                         {
-                            checkParentWidth(false);
+                            checkParentWidth();
                         }
                     }
                 }
@@ -2223,7 +2219,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         get documentId() {
             const controlId = this.controlId;
-            return controlId !== '' ? '@id/' + controlId : '';
+            return controlId !== '' ? `@id/${controlId}` : '';
         }
 
         set controlId(value) {

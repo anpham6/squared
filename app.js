@@ -2,12 +2,12 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs-extra');
-const uuid = require('uuid/v1');
 const archiver = require('archiver');
 const decompress = require('decompress');
 const zlib = require('zlib');
 const brotli = require('brotli');
 const request = require('request');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -105,14 +105,14 @@ app.post('/api/assets/copy', (req, res) => {
                 const writeBuffer = () => {
                     if (level > 0) {
                         delayed++;
-                        const filename_gz = filename + '.gz';
+                        const filename_gz = `${filename}.gz`;
                         createGzipWriteStream(level, filename, filename_gz).on('finish', () => {
                             finalize(true);
                         });
                     }
                     if (quality > 0) {
                         delayed++;
-                        const filename_br = filename + '.br';
+                        const filename_br = `${filename}.br`;
                         fs.writeFile(
                             filename_br,
                             brotli.compress(
@@ -200,7 +200,7 @@ app.post('/api/assets/copy', (req, res) => {
 });
 
 app.post('/api/assets/archive', (req, res) => {
-    const dirname = __dirname + separator + 'temp' + separator + uuid();
+    const dirname = __dirname + separator + 'temp' + separator + uuidv4();
     try {
         fs.mkdirpSync(dirname);
     }
@@ -260,17 +260,17 @@ app.post('/api/assets/archive', (req, res) => {
                     if (delayed !== Number.POSITIVE_INFINITY) {
                         if (level > 0) {
                             delayed++;
-                            const filename_gz = filename + '.gz';
+                            const filename_gz = `${filename}.gz`;
                             createGzipWriteStream(level, filename, filename_gz).on('finish', () => {
                                 if (delayed !== Number.POSITIVE_INFINITY) {
-                                    archive.file(filename_gz, { name: data.name + '.gz' });
+                                    archive.file(filename_gz, { name: `${data.name}.gz` });
                                     finalize(true);
                                 }
                             });
                         }
                         if (quality > 0) {
                             delayed++;
-                            const filename_br = filename + '.br';
+                            const filename_br = `${filename}.br`;
                             fs.writeFile(
                                 filename_br,
                                 brotli.compress(
@@ -279,7 +279,7 @@ app.post('/api/assets/archive', (req, res) => {
                                 ),
                                 () => {
                                     if (delayed !== Number.POSITIVE_INFINITY) {
-                                        archive.file(filename_br, { name: data.name + '.br' });
+                                        archive.file(filename_br, { name: `${data.name}.br` });
                                         finalize(true);
                                     }
                                 }

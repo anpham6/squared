@@ -58,7 +58,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 const key = getResourceName(dimens, getDisplayName(containerName) + '_' + convertUnderscore(attr), value);
                 const data = group[name];
                 for (const node of data) {
-                    node[namespace](attr, '@dimen/' + key);
+                    node[namespace](attr, `@dimen/${key}`);
                 }
                 dimens.set(key, value);
             }
@@ -75,7 +75,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                     const [original, name, value] = match;
                     if (name !== 'text') {
                         const key = getResourceName(dimens, 'custom_' + convertUnderscore(name), value);
-                        content = content.replace(original, original.replace(value, '@dimen/' + key));
+                        content = content.replace(original, original.replace(value, `@dimen/${key}`));
                         dimens.set(key, value);
                     }
                 }

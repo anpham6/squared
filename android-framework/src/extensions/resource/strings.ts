@@ -28,7 +28,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
         const setTextValue = (node: T, attr: string, name: string, value: string) => {
             name = Resource.addString(value, name, numberResourceValue);
             if (name !== '') {
-                node.android(attr, numberResourceValue || !isNumber(name) ? '@string/' + name : name, false);
+                node.android(attr, numberResourceValue || !isNumber(name) ? `@string/${name}` : name, false);
             }
         };
         for (const node of this.cacheProcessing) {
@@ -37,7 +37,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     case 'SELECT': {
                         const name = this.createOptionArray(<HTMLSelectElement> node.element, node.controlId);
                         if (name !== '') {
-                            node.android('entries', '@array/' + name);
+                            node.android('entries', `@array/${name}`);
                         }
                         break;
                     }
@@ -157,7 +157,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 if (node.styleElement) {
                     const title: string =  node.data(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
                     if (title !== '') {
-                        setTextValue(node, 'tooltipText', node.controlId.toLowerCase() + '_title', title);
+                        setTextValue(node, 'tooltipText', `${node.controlId.toLowerCase()}_title`, title);
                     }
                 }
             }
@@ -178,11 +178,11 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 for (let value of resourceArray) {
                     value = Resource.addString(replaceCharacterData(value), '', numberResourceValue);
                     if (value !== '') {
-                        result.push('@string/' + value);
+                        result.push(`@string/${value}`);
                     }
                 }
             }
         }
-        return result?.length ? Resource.insertStoredAsset('arrays', controlId + '_array', result) : '';
+        return result?.length ? Resource.insertStoredAsset('arrays', `${controlId}_array`, result) : '';
     }
 }

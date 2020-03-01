@@ -86,7 +86,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 styleCache[name] = commonString;
                             }
                             for (const item of renderChildren) {
-                                item.attr('_', 'style', '@style/' + name);
+                                item.attr('_', 'style', `@style/${name}`);
                             }
                         }
                     }

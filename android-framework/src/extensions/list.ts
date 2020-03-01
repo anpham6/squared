@@ -158,7 +158,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 ordinal.childIndex = node.childIndex;
                 ordinal.containerName = node.containerName + '_ORDINAL';
                 ordinal.inherit(node, 'textStyle');
-                if (value !== '' && !/\.$/.test(value)) {
+                if (value !== '' && !value.endsWith('.')) {
                     ordinal.fontSize *= 0.75;
                 }
                 if (gravity === 'right') {
@@ -180,7 +180,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     if (image) {
                         ordinal.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
                         Object.assign(options.android, {
-                            src: '@drawable/' + image,
+                            src: `@drawable/${image}`,
                             scaleType: gravity === 'right' ? 'fitEnd' : 'fitStart',
                             baselineAlignBottom: adjustPadding ? 'true' : ''
                         });

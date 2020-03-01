@@ -1251,7 +1251,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                     const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(element, '', imageSet);
                     if (src !== '') {
-                        node.android('src', '@drawable/' + src);
+                        node.android('src', `@drawable/${src}`);
                     }
                 }
                 if (!node.pageFlow && parent === absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
@@ -1467,7 +1467,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             const precision = node.localSettings.floatPrecision;
                             const fontSize = node.fontSize;
                             const shadowRadius = match[4];
-                            node.android('shadowColor', '@color/' + color);
+                            node.android('shadowColor', `@color/${color}`);
                             node.android('shadowDx', truncate(parseUnit(match[2], fontSize) * 2, precision));
                             node.android('shadowDy', truncate(parseUnit(match[3], fontSize) * 2, precision));
                             node.android('shadowRadius', truncate(isString(shadowRadius) ? parseUnit(shadowRadius, fontSize) : 0.01, precision));

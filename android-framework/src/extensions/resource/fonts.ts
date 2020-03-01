@@ -181,7 +181,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             font[value + '|' + fontStyle + '|' + fontWeight] = FONTWEIGHT_ANDROID[fontWeight] || fontWeight;
                             fonts.set(fontName, font);
                         }
-                        fontFamily = '@font/' + fontName;
+                        fontFamily = `@font/${fontName}`;
                     }
                     else {
                         return false;
@@ -421,7 +421,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 else {
                     parentStyle.add(styleData[0]);
                 }
-                node.attr('_', 'style', '@style/' + styleData.join('.'));
+                node.attr('_', 'style', `@style/${styleData.join('.')}`);
             }
         }
         for (const value of parentStyle) {

@@ -7,6 +7,7 @@ import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 const $lib = squared.lib;
 
 const { formatPX } = $lib.css;
+const { maxArray } = $lib.math;
 const { hasBit } = $lib.util;
 
 const DOCTYPE_HTML = document.doctype?.name === 'html';
@@ -119,11 +120,11 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                     }
                     if (resetChild) {
                         resetMargin(target, region);
-                        if (!direction && child.floating) {
+                        if (!direction && target.floating) {
                             const bounds = target.bounds;
-                            for (const item of node.naturalChildren as NodeUI[]) {
+                            for (const item of (target.actualParent as NodeUI).naturalChildren) {
                                 if (item.floating && item !== target && item.intersectY(bounds, 'bounds')) {
-                                    resetMargin(item, region);
+                                    resetMargin(<NodeUI> item, region);
                                 }
                             }
                         }
@@ -462,6 +463,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 }
                                             }
                                         }
+                                    }
+                                    else if (previous.floatContainer && marginTop > 0 && (previous.bounds.height === 0 || previous.lastChild?.floating)) {
+                                        current.modifyBox(BOX_STANDARD.MARGIN_TOP, previous.box.top - maxArray(previous.map(item => item.linear.bottom)), false);
                                     }
                                     if (inheritedTop) {
                                         const previousSibling = previous.previousSibling;
