@@ -983,7 +983,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public getBox(region: number): [number, number] {
         const attr = CSS_SPACING.get(region);
-        return attr ? [this._boxReset[attr] || 0, this._boxAdjustment[attr] || 0] : [0, 0];
+        return attr ? [this._boxReset[attr], this._boxAdjustment[attr]] : [NaN, 0];
     }
 
     public setBox(region: number, options: BoxOptions) {

@@ -1,5 +1,5 @@
 export default class NodeList<T extends squared.base.Node> extends squared.lib.base.Container<T> implements squared.base.NodeList<T> {
-    public afterAppend?: (node: T) => void;
+    public afterAppend?: (node: T, cascade?: boolean) => void;
 
     private _currentId = 0;
 
@@ -7,10 +7,10 @@ export default class NodeList<T extends squared.base.Node> extends squared.lib.b
         super(children);
     }
 
-    public append(node: T, delegate = true) {
+    public append(node: T, delegate = false, cascade = false) {
         super.append(node);
         if (delegate) {
-            this.afterAppend?.call(this, node);
+            this.afterAppend?.call(this, node, cascade);
         }
         return this;
     }

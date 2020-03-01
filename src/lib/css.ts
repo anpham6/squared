@@ -2,7 +2,7 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { CSS, STRING, UNIT, XML } from './regex';
 
-import { capitalize, convertAlpha, convertCamelCase, convertFloat, convertRoman, isString, iterateArray, replaceMap, resolvePath, spliceString } from './util';
+import { convertAlpha, convertFloat, convertRoman, isString, iterateArray, replaceMap, resolvePath, spliceString } from './util';
 
 type KeyframesData = squared.lib.css.KeyframesData;
 type BackgroundPositionOptions = squared.lib.css.BackgroundPositionOptions;
@@ -206,17 +206,6 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
         }
     }
     return value || '';
-}
-
-export function getDataSet(element: HTMLElement | SVGElement, prefix: string) {
-    const result: StringMap = {};
-    prefix = convertCamelCase(prefix, '.');
-    for (const attr in element.dataset) {
-        if (attr.startsWith(prefix)) {
-            result[capitalize(attr.substring(prefix.length), false)] = element.dataset[attr] as string;
-        }
-    }
-    return result;
 }
 
 export function getKeyframeRules(): ObjectMap<KeyframesData> {

@@ -4,11 +4,9 @@ import Resource from '../resource';
 
 import { EXT_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
-import { createViewAttribute } from '../lib/util';
+import { createViewAttribute, getDataSet } from '../lib/util';
 
 type View = android.base.View;
-
-const { getDataSet } = squared.lib.css;
 
 const { NODE_ALIGNMENT, NODE_TEMPLATE } =  squared.base.lib.enumeration;
 
@@ -24,15 +22,15 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
     }
 
     public processNode(node: T, parent: T) {
-        const data = getDataSet(<HTMLElement> node.element, this.name);
+        const data = getDataSet(node.dataset, this.name);
         const controlName = data.tag;
         if (controlName) {
             node.setControlType(controlName, node.blockStatic ? CONTAINER_NODE.BLOCK : CONTAINER_NODE.INLINE);
-            node.addAlign(node.blockStatic ? NODE_ALIGNMENT.BLOCK : NODE_ALIGNMENT.INLINE);
             node.render(parent);
             const tagChild = data.tagChild;
             if (tagChild) {
                 const name = this.name;
+                node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                 node.each((item: T) => {
                     if (item.styleElement) {
                         const dataset = item.dataset;
@@ -46,7 +44,8 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
                     type: NODE_TEMPLATE.XML,
                     node,
                     controlName
-                }
+                },
+                include: true
             };
         }
         return undefined;

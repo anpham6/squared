@@ -605,8 +605,8 @@ declare namespace base {
 
     interface NodeList<T extends Node> extends squared.lib.base.Container<T> {
         readonly nextId: number;
-        afterAppend?: (node: T) => void;
-        append(node: T, delegate?: boolean): this;
+        afterAppend?: (node: T, cascade?: boolean) => void;
+        append(node: T, delegate?: boolean, cascade?: boolean): this;
         reset(): void;
     }
 
@@ -826,7 +826,6 @@ declare namespace lib {
         function getKeyframeRules(): ObjectMap<KeyframesData>;
         function parseKeyframeRule(rules: CSSRuleList): KeyframesData;
         function validMediaRule(value: string, fontSize?: number): boolean;
-        function getDataSet(element: HTMLElement | SVGElement, prefix: string): StringMap;
         function isParentStyle(element: Element, attr: string, ...styles: string[]): boolean;
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
         function parseVar(element: HTMLElement | SVGElement, value: string): Undef<string>;
@@ -977,6 +976,7 @@ declare namespace lib {
             delimiter?: string;
             remove?: boolean;
             sort?: boolean;
+            not?: string[];
         }
 
         function capitalize(value: string, upper?: boolean): string;

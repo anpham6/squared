@@ -118,7 +118,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     public processNode(node: T, parent: T) {
         const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
         if (mainData) {
-            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid });
+            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid, inheritDataset: true });
             if (node.documentBody) {
                 if (mainData.right) {
                     container.setLayoutWidth('match_parent');

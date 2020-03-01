@@ -388,13 +388,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public createNode(options: AppNodeUIOptions<T>) {
         const processing = this.processing;
-        const { element, parent, children, replace } = options;
+        const { element, parent, children } = options;
         const node = new this.Node(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode);
         if (parent) {
             node.depth = parent.depth + 1;
             if (parent.naturalElement && (!element || element.parentElement === null)) {
                 node.actualParent = parent;
             }
+            const replace = options.replace;
             if (replace && parent.appendTry(replace, node, false)) {
                 replace.parent = node;
                 node.innerWrapped = replace;
@@ -406,7 +407,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (options.append !== false) {
-            processing.cache.append(node, children !== undefined);
+            processing.cache.append(node, options.delegate === true, options.cascade === true);
         }
         return node;
     }
@@ -771,7 +772,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                 }
                 const checkPseudoAfter = () => {
-                    if (!absolute && pseudoElt === '::after' && textContent !== '') {
+                    if (!absolute && textContent !== '') {
                         const previousSibling = <Element> element.childNodes[element.childNodes.length - 1];
                         if (isTextNode(previousSibling)) {
                             return !/\s+$/.test(previousSibling.textContent as string);
@@ -779,30 +780,38 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     return false;
                 };
-                if (textContent.trim() === '' && !checkPseudoAfter()) {
-                    switch (styleMap.display) {
-                        case undefined:
-                        case 'block':
-                        case 'inline':
-                        case 'inherit':
-                        case 'initial': {
-                            if (convertFloat(styleMap.width) === 0 && convertFloat(styleMap.height) === 0) {
-                                let valid = false;
-                                for (const attr in styleMap) {
-                                    if (/(padding|Width|Height)/.test(attr) && convertFloat(styleMap[attr]) > 0) {
-                                        valid = true;
-                                        break;
-                                    }
-                                    else if (!absolute && /^margin/.test(attr) && convertFloat(styleMap[attr]) !== 0) {
-                                        valid = true;
-                                        break;
-                                    }
+                if (textContent.trim() === '') {
+                    const checkDimension = (after: boolean) => {
+                        if ((after || convertFloat(styleMap.width) === 0) && convertFloat(styleMap.height) === 0) {
+                            for (const attr in styleMap) {
+                                if (/(padding|Width|Height)/.test(attr) && convertFloat(styleMap[attr]) > 0) {
+                                    return true;
                                 }
-                                if (!valid) {
-                                    return undefined;
+                                else if (!absolute && /^margin/.test(attr) && convertFloat(styleMap[attr]) !== 0) {
+                                    return true;
                                 }
                             }
-                            break;
+                            return false;
+                        }
+                        return true;
+                    };
+                    if (pseudoElt === '::after') {
+                        if (!checkPseudoAfter() && !checkDimension(true)) {
+                            return undefined;
+                        }
+                    }
+                    else {
+                        switch (styleMap.display) {
+                            case undefined:
+                            case 'block':
+                            case 'inline':
+                            case 'inherit':
+                            case 'initial': {
+                                if (!checkDimension(false)) {
+                                    return undefined;
+                                }
+                                break;
+                            }
                         }
                     }
                 }
@@ -875,11 +884,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     let ascending = false;
                                     let lastResetElement: Undef<Element>;
                                     const incrementCounter = (increment: number, pseudo: boolean) => {
-                                        if (subcounter.length === 0) {
+                                        const length = subcounter.length;
+                                        if (length === 0) {
                                             counter += increment;
                                         }
                                         else if (ascending || pseudo) {
-                                            subcounter[subcounter.length - 1] += increment;
+                                            subcounter[length - 1] += increment;
                                         }
                                     };
                                     const cascadeCounterSibling = (sibling: Element) => {
@@ -1009,95 +1019,90 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected setBaseLayout() {
         const { controllerHandler, processing, session } = this;
+        const { extensionMap, clearMap } = session;
         const cache = processing.cache;
         const documentRoot = processing.node as T;
-        const { extensionMap, clearMap } = session;
         const mapY = new Map<number, Map<number, T>>();
         let extensions = this.extensions.filter(item => !item.eventOnly);
-        let maxDepth = 0;
-        const setMapY = (depth: number, id: number, node: T) => {
-            const index = mapY.get(depth);
-            if (index) {
-                index.set(id, node);
-            }
-            else {
-                mapY.set(depth, new Map<number, T>([[id, node]]));
-            }
-        };
-        setMapY(-1, 0, documentRoot.parent as T);
-        for (const node of cache) {
-            if (node.length) {
-                const depth = node.depth;
-                setMapY(depth, node.id, node);
-                maxDepth = Math.max(depth, maxDepth);
-                if (node.floatContainer) {
-                    const floated = new Set<string>();
-                    const clearable: ObjectMap<Undef<T>> = {};
-                    for (const item of node.naturalChildren as T[]) {
-                        if (item.pageFlow) {
-                            const floating = item.floating;
-                            if (floated.size) {
-                                const clear = item.css('clear');
-                                if (clear !== 'none') {
-                                    if (!floating) {
-                                        let previousFloat: Undef<T>[] | undefined;
-                                        switch (clear) {
-                                            case 'left':
-                                                previousFloat = [clearable.left];
-                                                break;
-                                            case 'right':
-                                                previousFloat = [clearable.right];
-                                                break;
-                                            case 'both':
-                                                previousFloat = [clearable.left, clearable.right];
-                                                break;
-                                        }
-                                        if (previousFloat) {
-                                            for (const previous of previousFloat) {
-                                                if (previous) {
-                                                    const float = previous.float;
-                                                    if (floated.has(float) && Math.ceil(item.bounds.top) >= previous.bounds.bottom) {
-                                                        floated.delete(float);
-                                                        clearable[float] = undefined;
+        {
+            let maxDepth = 0;
+            const setMap = (depth: number, id: number, node: T) => mapY.get(depth)?.set(id, node) || mapY.set(depth, new Map<number, T>([[id, node]]));
+            const getIndex = (value: number) => (value * -1) - 2;
+            setMap(-1, 0, documentRoot.parent as T);
+            for (const node of cache) {
+                if (node.length) {
+                    const depth = node.depth;
+                    setMap(depth, node.id, node);
+                    maxDepth = Math.max(depth, maxDepth);
+                    if (node.floatContainer) {
+                        const floated = new Set<string>();
+                        const clearable: ObjectMap<Undef<T>> = {};
+                        for (const item of node.naturalChildren as T[]) {
+                            if (item.pageFlow) {
+                                const floating = item.floating;
+                                if (floated.size) {
+                                    const clear = item.css('clear');
+                                    if (clear !== 'none') {
+                                        if (!floating) {
+                                            let previousFloat: Undef<T>[] | undefined;
+                                            switch (clear) {
+                                                case 'left':
+                                                    previousFloat = [clearable.left];
+                                                    break;
+                                                case 'right':
+                                                    previousFloat = [clearable.right];
+                                                    break;
+                                                case 'both':
+                                                    previousFloat = [clearable.left, clearable.right];
+                                                    break;
+                                            }
+                                            if (previousFloat) {
+                                                for (const previous of previousFloat) {
+                                                    if (previous) {
+                                                        const float = previous.float;
+                                                        if (floated.has(float) && Math.ceil(item.bounds.top) >= previous.bounds.bottom) {
+                                                            floated.delete(float);
+                                                            clearable[float] = undefined;
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
-                                    }
-                                    if (floated.has(clear) || clear === 'both') {
-                                        clearMap.set(item, floated.size === 2 ? 'both' : clear);
-                                        if (!floating) {
-                                            item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
+                                        if (floated.has(clear) || clear === 'both') {
+                                            clearMap.set(item, floated.size === 2 ? 'both' : clear);
+                                            if (!floating) {
+                                                item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
+                                            }
+                                            floated.clear();
+                                            clearable.left = undefined;
+                                            clearable.right = undefined;
                                         }
-                                        floated.clear();
-                                        clearable.left = undefined;
-                                        clearable.right = undefined;
                                     }
                                 }
-                            }
-                            if (floating) {
-                                const float = item.float;
-                                floated.add(float);
-                                clearable[float] = item;
+                                if (floating) {
+                                    const float = item.float;
+                                    floated.add(float);
+                                    clearable[float] = item;
+                                }
                             }
                         }
                     }
                 }
             }
-        }
-        for (let i = 0; i < maxDepth; i++) {
-            mapY.set((i * -1) - 2, new Map<number, T>());
-        }
-        cache.afterAppend = (node: T) => {
-            setMapY((node.depth * -1) - 2, node.id, node);
-            for (const item of node.cascade() as T[]) {
-                if (item.length) {
-                    const depth = item.depth;
-                    mapY.get(depth)?.delete(item.id);
-                    setMapY((depth * -1) - 2, item.id, item);
-                }
+            for (let i = 0; i < maxDepth; i++) {
+                mapY.set(getIndex(i), new Map<number, T>());
             }
-        };
+            cache.afterAppend = (node: T, cascade = false) => {
+                setMap(getIndex(node.depth), node.id, node);
+                if (cascade) {
+                    node.each((item: T) => {
+                        const depth = item.depth;
+                        mapY.get(depth)?.delete(item.id);
+                        setMap(getIndex(depth), item.id, item);
+                    });
+                }
+            };
+        }
         for (const ext of this.extensions) {
             ext.beforeBaseLayout();
         }
@@ -1116,7 +1121,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    if (length > 1 && k < length - 1 && nodeY.pageFlow && !nodeY.nodeGroup && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (length > 1 && k < length - 1 && nodeY.pageFlow && !nodeY.nodeGroup && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let l = k;

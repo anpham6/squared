@@ -9,6 +9,9 @@ type View = base.View;
 declare namespace base {
     interface Application<T extends View> extends squared.base.ApplicationUI<T> {
         readonly userSettings: UserSettingsAndroid;
+        readonly controllerHandler: Controller<T>;
+        readonly resourceHandler: Resource<T>;
+        readonly fileHandler: File<T>;
     }
 
     class Application<T extends View> implements Application<T> {}
@@ -431,6 +434,7 @@ declare namespace lib {
         function isGridAligned(node: View): boolean;
         function createViewAttribute(data?: StandardMap, options?: ViewAttribute): ViewAttribute;
         function createStyleAttribute(data?: StandardMap): Required<StyleAttribute>;
+        function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): StringMap;
         function localizeString(value: string, rtl: boolean, api: number): string;
         function getXmlNs(value: string): string;
         function getRootNs(value: string): string;

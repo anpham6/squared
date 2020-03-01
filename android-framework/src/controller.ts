@@ -617,9 +617,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 layout.add(NODE_ALIGNMENT.HORIZONTAL);
             }
             else {
-                if (layout.some(item => item.blockStatic)) {
-                    layout.add(NODE_ALIGNMENT.VERTICAL);
-                }
+                layout.add(layout.some(item => item.blockStatic) ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.INLINE);
                 layout.add(NODE_ALIGNMENT.UNKNOWN);
             }
         }
@@ -825,7 +823,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processLayoutHorizontal(layout: squared.base.LayoutUI<T>) {
         if (this.checkConstraintFloat(layout)) {
-            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, layout.every(item => item.floating) ? NODE_ALIGNMENT.FLOAT : NODE_ALIGNMENT.SEGMENTED);
+            layout.setContainerType(CONTAINER_NODE.CONSTRAINT, layout.every(item => item.floating) ? NODE_ALIGNMENT.FLOAT : NODE_ALIGNMENT.INLINE);
         }
         else if (this.checkConstraintHorizontal(layout)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.HORIZONTAL);
@@ -1157,6 +1155,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let target = !dataset.use && dataset.target;
         switch (node.tagName) {
             case 'IMG': {
+                const application = this.application;
                 const element = <HTMLImageElement> node.element;
                 const absoluteParent = node.absoluteParent || node.documentParent;
                 let width = node.toFloat('width', 0);
@@ -1172,7 +1171,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const actualWidth = image.actualWidth;
                         if (actualWidth) {
                             if (percentWidth === -1) {
-                                [width, height] = setImageDimension(node, actualWidth, width, height, this.application.resourceHandler.getImage(element.src));
+                                [width, height] = setImageDimension(node, actualWidth, width, height, application.resourceHandler.getImage(element.src));
                             }
                             else {
                                 width = node.bounds.width;
@@ -1180,7 +1179,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                         else {
-                            const stored = this.application.resourceHandler.getImage(image.src);
+                            const stored = application.resourceHandler.getImage(image.src);
                             if (stored) {
                                 if (percentWidth === -1) {
                                     [width, height] = setImageDimension(node, stored.width, width, height, stored);
@@ -1249,13 +1248,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                    const src = (<android.base.Resource<T>> this.application.resourceHandler).addImageSrc(element, '', imageSet);
+                    const src = application.resourceHandler.addImageSrc(element, '', imageSet);
                     if (src !== '') {
                         node.android('src', `@drawable/${src}`);
                     }
                 }
                 if (!node.pageFlow && parent === absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
-                    const application = <squared.base.ApplicationUI<T>> this.application;
                     const container = application.createNode({ parent, replace: node });
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
@@ -1999,7 +1997,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public createNodeWrapper(node: T, parent: T, children?: T[], options: WrapperOptions = {}) {
         const { controlName, containerType, alignmentType } = options;
         let { resource, procedure, section } = options;
-        const container = this.application.createNode({ parent, children, append: true, replace: node });
+        const container = this.application.createNode({ parent, children, append: true, replace: node, delegate: true, cascade: !node.documentRoot && !node.originalRoot });
         container.inherit(node, 'base', 'alignment');
         if (node.documentRoot && options.transferRoot !== false) {
             container.documentRoot = true;
@@ -2051,7 +2049,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (node.documentParent.layoutElement) {
             const android = node.namespace('android');
             for (const attr in android) {
-                if (/^layout_/.test(attr)) {
+                if (/^layout_(constraint|align|to|below|above|center)/.test(attr)) {
                     container.android(attr, android[attr]);
                     delete android[attr];
                 }
@@ -2059,6 +2057,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if (options.resetMargin) {
             node.resetBox(BOX_STANDARD.MARGIN, container);
+        }
+        if (options.inheritDataset && node.naturalElement) {
+            const dataset = container.dataset;
+            Object.assign(dataset, node.dataset);
+            delete dataset.use;
         }
         return container;
     }
@@ -2833,13 +2836,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else {
-                if (valid && baseline.baselineElement && !baseline.imageOrSvgElement && node.ascend({ condition: (item: T) => item.layoutHorizontal, error: (item: T) => item.layoutVertical || item.layoutGrid, attr: 'renderParent' }).length) {
+                if (valid && baseline.baselineElement && !baseline.imageOrSvgElement && node.ascend({ condition: (item: T) => item.layoutHorizontal, error: (item: T) => item.naturalChild && item.layoutVertical || item.layoutGrid, attr: 'renderParent' }).length) {
                     baseline.anchorParent('vertical');
                     baseline.anchor('baseline', 'parent');
                 }
                 else {
                     baseline.anchorParent('vertical', 0);
-                    baseline.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: Math.floor(baseline.linear.top - node.box.top) });
+                    const adjustment = Math.floor(baseline.linear.top - node.box.top);
+                    if (adjustment > 0) {
+                        baseline.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
+                    }
                 }
             }
             baseline.baselineActive = baselineCount > 0;

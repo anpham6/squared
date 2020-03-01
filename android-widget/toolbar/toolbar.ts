@@ -338,9 +338,10 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     private createPlaceholder(node: T, children: T[], target?: string) {
-        const placeholder = this.application.createNode({ parent: node, children });
+        const delegate = children.length > 0;
+        const placeholder = this.application.createNode({ parent: node, children, delegate, cascade: true });
         placeholder.inherit(node, 'base');
-        if (children.length) {
+        if (delegate) {
             let containerIndex = Number.POSITIVE_INFINITY;
             for (const item of children) {
                 containerIndex = Math.min(containerIndex, item.containerIndex);

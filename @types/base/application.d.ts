@@ -115,6 +115,8 @@ export interface AppNodeUIOptions<T extends NodeUI> {
     element?: Null<Element>;
     children?: T[];
     append?: boolean;
+    delegate?: boolean;
+    cascade?: boolean;
     replace?: T;
 }
 

@@ -470,7 +470,6 @@ const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColor
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 const constrictedWidth = (node: View) => !node.inline && !node.floating && node.hasPX('width', true, true) && node.cssInitial('width') !== '100%';
-const isCenterAlignment = (horizontal: string, vertical: string) => horizontal === 'center_horizontal' && vertical === 'center_vertical';
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     return objectMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
@@ -499,9 +498,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     private _resourceSvgInstance?: ResourceSvg<T>;
 
     public beforeParseDocument() {
-        const application = <android.base.Application<T>> this.application;
-        const controller = <android.base.Controller<T>> this.controller;
-        this._resourceSvgInstance = controller.localSettings.svg.enabled ? <ResourceSvg<T>> application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
+        this._resourceSvgInstance = this.controller.localSettings.svg.enabled ? <ResourceSvg<T>> this.application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
     }
 
     public afterResources() {
@@ -754,6 +751,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
             const result: BackgroundImageData[] = [];
             const images: (string | GradientTemplate)[] = [];
+            const svg: boolean[] = [];
             const imageDimensions: Undef<Dimension>[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
             const backgroundPositionX = data.backgroundPositionX.split(XML.SEPARATOR);
@@ -777,7 +775,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 if (parentElement && element) {
                                     const drawable = svgInstance.createSvgDrawable(node, element);
                                     if (drawable !== '') {
-                                        images[length] = drawable;
                                         const dimension = <DOMRect> node.data(Resource.KEY_NAME, 'svgViewBox') || { width: element.width.baseVal.value, height: element.height.baseVal.value };
                                         if (!node.svgElement) {
                                             let { width, height } = dimension;
@@ -806,7 +803,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             dimension.width = width;
                                             dimension.height = height;
                                         }
+                                        images[length] = drawable;
                                         imageDimensions[length] = dimension;
+                                        svg[length] = true;
                                         valid = true;
                                     }
                                     parentElement.removeChild(element);
@@ -1120,6 +1119,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         break;
                 }
+                const bitmap = svg[i] !== true;
                 let autoFit = node.is(CONTAINER_NODE.IMAGE) || typeof value !== 'string';
                 let resizedWidth = false;
                 let resizedHeight = false;
@@ -1386,7 +1386,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 gravityY = '';
                             }
                             if (fill) {
-                                gravityAlign = delimitString({ value: gravityAlign }, 'fill_horizontal');
+                                gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_horizontal');
                             }
                             if (tileModeX !== 'disabled') {
                                 tileModeX = '';
@@ -1454,7 +1454,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 tileModeY = '';
                             }
                             if (fill) {
-                                gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
+                                gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_vertical');
                             }
                             resizedHeight = true;
                         }
@@ -1463,8 +1463,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 switch (node.controlName) {
                     case SUPPORT_ANDROID.TOOLBAR:
                     case SUPPORT_ANDROID_X.TOOLBAR:
+                        gravityX = '';
                         gravityY = '';
-                        gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
+                        gravityAlign = 'fill';
                         break;
                 }
                 if (!autoFit) {
@@ -1491,7 +1492,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                                 else if (unsizedHeight) {
                                     width = dimenWidth;
-                                    gravityAlign = delimitString({ value: gravityAlign }, 'fill_horizontal');
+                                    gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_horizontal');
                                     if (dimenHeight >= dimenWidth) {
                                         tileModeX = '';
                                     }
@@ -1519,7 +1520,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                                 else if (unsizedWidth) {
                                     height = dimenHeight;
-                                    gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
+                                    gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_vertical');
                                     if (dimenWidth >= dimenHeight) {
                                         tileModeY = '';
                                     }
@@ -1599,9 +1600,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                 }
-                const gravity = isCenterAlignment(gravityX, gravityY) ? 'center' : delimitString({ value: '' }, gravityX, gravityY);
+                const gravity = gravityX === 'center_horizontal' && gravityY === 'center_vertical' ? 'center' : delimitString({ value: gravityX }, gravityY);
                 if (src) {
-                    if (!autoFit && (gravityAlign !== '' && gravity !== '' || tileModeX === 'repeat' || tileModeY === 'repeat' || documentBody) || unsizedWidth || unsizedHeight) {
+                    if (bitmap && (!autoFit && (gravityAlign !== '' && gravity !== '' || tileModeX === 'repeat' || tileModeY === 'repeat' || documentBody) || gravityAlign !== 'fill' && (unsizedWidth || unsizedHeight))) {
                         let tileMode = '';
                         if (tileModeX === 'disabled' && tileModeY === 'disabled') {
                             tileMode = 'disabled';

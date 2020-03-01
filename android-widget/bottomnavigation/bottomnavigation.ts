@@ -54,18 +54,21 @@ export default class BottomNavigation<T extends View> extends squared.base.Exten
                 node,
                 controlName
             },
-            complete: true
+            complete: true,
+            include: true
         };
     }
 
     public afterParseDocument() {
         for (const node of this.subscribers) {
             const renderParent = node.renderParent as T;
-            if (!renderParent.hasPX('width')) {
-                renderParent.setLayoutWidth('match_parent');
-            }
-            if (!renderParent.hasPX('height')) {
-                renderParent.setLayoutHeight('match_parent');
+            if (renderParent.documentRoot) {
+                if (renderParent.inlineWidth) {
+                    renderParent.setLayoutWidth('match_parent');
+                }
+                if (renderParent.inlineHeight) {
+                    renderParent.setLayoutHeight('match_parent');
+                }
             }
             const menu = BottomNavigation.findNestedElement(node.element, WIDGET_NAME.MENU)?.dataset.layoutName;
             if (menu) {

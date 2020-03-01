@@ -82,6 +82,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
                 controlName
             },
             complete: true,
+            include: true,
             remove: true
         };
     }

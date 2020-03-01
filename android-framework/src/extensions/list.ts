@@ -275,8 +275,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         const companion = !node.naturalChild && node.companion;
         if (companion) {
             const [reset, adjustment] = companion.getBox(BOX_STANDARD.MARGIN_TOP);
-            const value = node.getBox(BOX_STANDARD.MARGIN_TOP)[1];
-            node.modifyBox(BOX_STANDARD.MARGIN_TOP, (reset === 1 ? 0 : adjustment) - value);
+            node.modifyBox(BOX_STANDARD.MARGIN_TOP, (reset === 0 ? adjustment : 0) - node.getBox(BOX_STANDARD.MARGIN_TOP)[1], false);
         }
     }
 }

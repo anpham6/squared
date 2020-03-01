@@ -724,7 +724,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const wrapped = node.data(EXT_ANDROID.DELEGATE_CSS_GRID, 'unsetContentBox') === true;
             const insertId = children[children.length - 1].id;
             if (CssGrid.isJustified(node)) {
-                setContentSpacing(node, mainData, justifyContent, true, 'width', wrapped, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, (<android.base.Controller<T>> this.controller).userSettings.resolutionScreenWidth - node.bounds.left, 0);
+                setContentSpacing(node, mainData, justifyContent, true, 'width', wrapped, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);
                 switch (justifyContent) {
                     case 'center':
                     case 'space-around':

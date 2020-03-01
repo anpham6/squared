@@ -6,14 +6,14 @@ import { CachedValueAndroidUI, Constraint, LocalSettingsAndroidUI, SupportAndroi
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
-import { localizeString, isHorizontalAlign, isVerticalAlign } from './lib/util';
+import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from './lib/util';
 
 type T = android.base.View;
 
 const $lib = squared.lib;
 
 const { Node, ResourceUI } = squared.base;
-const { BOX_MARGIN, BOX_PADDING, formatPX, getDataSet, isLength, isPercent } = $lib.css;
+const { BOX_MARGIN, BOX_PADDING, formatPX, isLength, isPercent } = $lib.css;
 const { getNamedItem, newBoxModel } = $lib.dom;
 const { clamp, truncate } = $lib.math;
 const { actualTextRangeRect } = $lib.session;
@@ -165,7 +165,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
 function setMinHeight(node: T, value: number) {
     if (node.inlineText) {
         value += node.contentBoxHeight;
-        if (!node.hasPX('height') || value >= Math.floor(node.height)) {
+        if (!node.hasHeight) {
             node.mergeGravity('gravity', 'center_vertical', false);
         }
     }
@@ -416,7 +416,7 @@ function ascendFlexibleHeight(node: T) {
     return !!parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight === true;
 }
 
-const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && !node.visibleStyle.background && node.marginLeft === 0 && node.marginRight === 0;
+const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
 const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
@@ -494,6 +494,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public static availablePercent(nodes: T[], dimension: "width" | "height", boxSize: number) {
+            const horizontal = dimension === 'width';
             let percent = 1;
             let i = 0;
             for (let sibling of nodes) {
@@ -507,11 +508,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             continue;
                         }
                         else if (isLength(value)) {
-                            percent -= sibling.parseUnit(value, dimension) / boxSize;
+                            if (horizontal) {
+                                percent -= (Math.max(sibling.actualWidth + sibling.marginLeft + sibling.marginRight, 0)) / boxSize;
+                            }
+                            else {
+                                percent -= (Math.max(sibling.actualHeight + sibling.marginTop + sibling.marginBottom, 0)) / boxSize;
+                            }
                             continue;
                         }
                     }
-                    percent -= sibling.bounds[dimension] / boxSize;
+                    percent -= sibling.linear[dimension] / boxSize;
                 }
             }
             return i > 0 ? Math.max(0, percent) : 1;
@@ -1941,8 +1947,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.android('layoutDirection', 'rtl');
                 }
             }
-            if (this.styleElement) {
-                const dataset = getDataSet(<HTMLElement> this.element, 'android');
+            if (this.styleElement || this.hasAlign(NODE_ALIGNMENT.WRAPPER)) {
+                const dataset = getDataSet(this.dataset, 'android');
                 for (const namespace in dataset) {
                     const name = namespace === 'attr' ? 'android' : (REGEX_DATASETATTR.test(namespace) ? capitalize(namespace.substring(4), false) : '');
                     if (name !== '') {
@@ -2322,7 +2328,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (result === undefined) {
                 const renderParent = this.renderParent;
                 if (renderParent) {
-                    if (!this.onlyChild && this.styleElement && this.length === 0 && !this.imageElement && !this.pseudoElement) {
+                    if (!this.onlyChild && this.length === 0 && this.styleElement && !this.imageElement && !this.pseudoElement) {
                         if (this.pageFlow) {
                             if (renderParent.layoutVertical) {
                                 result = excludeVertical(this) && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';

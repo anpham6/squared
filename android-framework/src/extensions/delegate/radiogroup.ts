@@ -73,7 +73,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         let length = radiogroup.length;
         if (length > 1) {
             const linearX = NodeUI.linearData(parent.children.slice(first, last + 1)).linearX;
-            const container = this.controller.createNodeGroup(node, radiogroup, parent, true);
+            const container = this.controller.createNodeGroup(node, radiogroup, parent);
             const controlName = CONTAINER_ANDROID.RADIOGROUP;
             if (linearX) {
                 container.addAlign(NODE_ALIGNMENT.HORIZONTAL | (length < parent.length ? NODE_ALIGNMENT.SEGMENTED : 0));

@@ -758,7 +758,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             let renderParent = outerWrapper.renderParent;
                             if (renderParent) {
                                 const [reset, adjustment] = item.getBox(BOX_STANDARD.MARGIN_TOP);
-                                const marginTop = (!reset ? item.marginTop : 0) + adjustment;
+                                const marginTop = (reset === 0 ? item.marginTop : 0) + adjustment;
                                 if (marginTop > 0) {
                                     const top = Math.floor(node.bounds.top);
                                     for (const previous of floating) {

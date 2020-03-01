@@ -9,7 +9,7 @@ import { BUILD_ANDROID } from './enumeration';
 const $lib = squared.lib;
 
 const { truncate } = $lib.math;
-const { isPlainObject } = $lib.util;
+const { capitalize, convertCamelCase, isPlainObject } = $lib.util;
 
 const REGEX_ID = /^@\+?id\//;
 
@@ -54,6 +54,17 @@ export function isVerticalAlign(value: string) {
             return true;
     }
     return false;
+}
+
+export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
+    const result: StringMap = {};
+    prefix = convertCamelCase(prefix, '.');
+    for (const attr in dataset) {
+        if (attr.startsWith(prefix)) {
+            result[capitalize(attr.substring(prefix.length), false)] = dataset[attr] as string;
+        }
+    }
+    return result;
 }
 
 export function getHorizontalBias(node: View) {

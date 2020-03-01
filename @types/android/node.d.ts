@@ -36,8 +36,10 @@ export interface WrapperOptions extends ExcludeUIOptions {
     controlName?: string;
     containerType?: number;
     alignmentType?: number;
-    resetMargin?: boolean;
+    cascade?: boolean;
     transferRoot?: boolean;
+    resetMargin?: boolean;
+    inheritDataset?: boolean;
     inheritContentBox?: boolean;
 }
 

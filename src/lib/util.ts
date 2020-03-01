@@ -181,10 +181,16 @@ export function delimitString(options: DelimitStringOptions, ...appending: strin
         return appending[0];
     }
     const delimiter = options.delimiter || '|';
+    const not = options.not || [];
     const remove = options.remove || false;
     const values = value !== '' ? value.split(delimiter) : [];
-    for (const append of appending) {
+    const length = appending.length;
+    for (let i = 0; i < length; i++) {
+        const append = appending[i];
         if (append !== '') {
+            if (values.includes(not[i])) {
+                continue;
+            }
             const index = values.findIndex(a => a === append);
             if (index === -1) {
                 values.push(append);
