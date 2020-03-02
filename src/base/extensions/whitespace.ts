@@ -548,13 +548,15 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                             let aboveParent = above.renderParent;
                             let belowParent = below.renderParent;
-                            while (aboveParent && aboveParent !== actualParent) {
-                                above = aboveParent as T;
-                                aboveParent = above.renderParent;
-                            }
-                            while (belowParent && belowParent !== actualParent) {
-                                below = belowParent as T;
-                                belowParent = below.renderParent;
+                            if (aboveParent !== belowParent) {
+                                while (aboveParent && aboveParent !== actualParent) {
+                                    above = aboveParent as T;
+                                    aboveParent = above.renderParent;
+                                }
+                                while (belowParent && belowParent !== actualParent) {
+                                    below = belowParent as T;
+                                    belowParent = below.renderParent;
+                                }
                             }
                             [offset, below] = getMarginOffset(below, above, lineHeight, aboveLineBreak);
                             if (offset >= 1) {

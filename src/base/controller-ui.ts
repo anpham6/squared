@@ -449,7 +449,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             if (outsideX && (node.left < 0 || node.right > 0) || outsideY && (node.top < 0 || node.bottom !== 0)) {
                                                 outside = true;
                                             }
-                                            else if (!overflowX && (node.left < 0 || node.right > 0) && Math.floor(node.bounds.right) < parent.bounds.left || !overflowY && (node.top < 0 || node.bottom > 0) && Math.floor(node.bounds.bottom) < parent.bounds.top) {
+                                            else if (!overflowX && (node.left < 0 || node.right > 0) && Math.floor(node.bounds.right) < linear.left || !overflowY && (node.top < 0 || node.bottom > 0) && Math.floor(node.bounds.bottom) < linear.top) {
                                                 outside = true;
                                             }
                                             else if (outsideX && outsideY && (!parent.pageFlow || (parent.actualParent as T).documentBody) && (node.top > 0 || node.left > 0)) {

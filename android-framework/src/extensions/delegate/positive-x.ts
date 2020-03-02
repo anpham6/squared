@@ -43,6 +43,9 @@ function setFixedNodes(node: View) {
                 if ((value >= 0 || documentRoot) && value < paddingLeft) {
                     children.add(item);
                 }
+                else if (value < 0 && node.marginLeft > 0) {
+                    children.add(item);
+                }
                 else if (!item.hasPX('right') && checkMarginLeft(node, item)) {
                     children.add(item);
                 }
@@ -56,6 +59,9 @@ function setFixedNodes(node: View) {
             else {
                 const value = item.right;
                 if ((value >= 0 || documentRoot) && value < paddingRight) {
+                    children.add(item);
+                }
+                else if (value < 0 && node.marginRight > 0) {
                     children.add(item);
                 }
                 else if (checkMarginRight(node, item)) {
@@ -76,6 +82,9 @@ function setFixedNodes(node: View) {
                 if ((value >= 0 || documentRoot) && value < paddingTop) {
                     children.add(item);
                 }
+                else if (value < 0 && node.marginTop > 0) {
+                    children.add(item);
+                }
                 else if (!item.hasPX('bottom') && checkMarginTop(node, item)) {
                     children.add(item);
                 }
@@ -89,6 +98,9 @@ function setFixedNodes(node: View) {
             else {
                 const value = item.bottom;
                 if ((value >= 0 || documentRoot) && value < paddingBottom) {
+                    children.add(item);
+                }
+                else if (value < 0 && node.marginBottom > 0) {
                     children.add(item);
                 }
                 else if (checkMarginBottom(node, item)) {
@@ -109,7 +121,7 @@ function setFixedNodes(node: View) {
 
 export default class PositiveX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return node.naturalElement && (node.contentBoxWidth > 0 || node.contentBoxHeight > 0 || node.documentBody);
+        return node.absoluteContainer && (node.contentBoxWidth > 0 || node.contentBoxHeight > 0 || node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0 || node.documentBody);
     }
 
     public condition(node: T) {
@@ -177,7 +189,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
                 }
-                else if (item.marginLeft < 0 && !nested) {
+                else if (item.marginLeft < 0 && !nested && checkMarginLeft(node, item)) {
                     wrapper.alignSibling('left', documentId);
                     wrapper.translateX(item.linear.left - node.bounds.left);
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
@@ -200,7 +212,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
                 }
-                else if (item.marginTop < 0 && !nested) {
+                else if (item.marginTop < 0 && !nested && checkMarginTop(node, item)) {
                     wrapper.alignSibling('top', documentId);
                     wrapper.translateY(item.linear.top - node.bounds.top);
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);

@@ -506,6 +506,7 @@ declare namespace base {
         siblingsLeading: NodeUI[];
         siblingsTrailing: NodeUI[];
         floatContainer: boolean;
+        absoluteContainer: boolean;
         containerIndex: number;
         localSettings: LocalSettingsUI;
         fontSize: number;

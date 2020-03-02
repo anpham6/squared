@@ -358,6 +358,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public excluded = false;
     public originalRoot = false;
     public floatContainer = false;
+    public absoluteContainer = false;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
     public baselineActive = false;
@@ -903,7 +904,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (previous.lineBreak) {
                     return NODE_TRAVERSE.LINEBREAK;
                 }
-                else if (previous.blockStatic || previous.autoMargin.leftRight || floating && previous.childIndex === 0 && previous.plainText && previous.multiline) {
+                else if (previous.blockStatic || previous.autoMargin.leftRight || (floating && previous.childIndex === 0 || horizontal === false) && previous.plainText && previous.multiline) {
                     return NODE_TRAVERSE.VERTICAL;
                 }
                 else if ((this.blockStatic || this.display === 'table') && (!previous.floating || cleared?.has(previous))) {

@@ -679,6 +679,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (length > 1) {
                 let trailing = children[0];
                 let floating = false;
+                let absolute = false;
                 for (let i = 0, j = 0; i < length; i++) {
                     const child = children[i];
                     if (child.excluded) {
@@ -713,10 +714,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                     }
+                    else {
+                        absolute = true;
+                    }
                     child.actualParent = node;
                 }
                 trailing.siblingsTrailing = siblingsTrailing;
                 node.floatContainer = floating;
+                node.absoluteContainer = absolute;
             }
             else {
                 const child = children[0];
@@ -1187,10 +1192,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     }
                                     const previous = item.siblingsLeading[0];
                                     if (previous) {
+                                        const orientation = horizontal.length > 0;
                                         if (floatContainer) {
-                                            const status = item.alignedVertically(horizontal.length ? horizontal : vertical, clearMap, horizontal.length > 0);
+                                            const status = item.alignedVertically(orientation ? horizontal : vertical, clearMap, orientation);
                                             if (status > 0) {
-                                                if (horizontal.length) {
+                                                if (orientation) {
                                                     if (status < NODE_TRAVERSE.FLOAT_CLEAR && floatActive && !item.siblingsLeading.some((node: T) => node.lineBreak && !clearMap.has(node))) {
                                                          if (!item.floating || previous.floating && item.bounds.top < Math.floor(previous.bounds.bottom)) {
                                                             let floatBottom = Number.NEGATIVE_INFINITY;
@@ -1233,7 +1239,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                         }
                                         else {
-                                            if (item.alignedVertically(horizontal.length ? horizontal : vertical) > 0) {
+                                            if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
                                                 if (!checkTraverseVertical(item, horizontal, vertical)) {
                                                     break traverse;
                                                 }
