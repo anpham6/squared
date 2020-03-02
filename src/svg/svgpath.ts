@@ -107,7 +107,8 @@ function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
 
 export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) implements squared.svg.SvgPath {
     public static extrapolate(attr: string, pathData: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number) {
-        const transformRefit = !!(transforms || companion?.parent?.requireRefit);
+        const parent = companion?.parent;
+        const transformRefit = !!(transforms || parent?.requireRefit);
         const result: string[] = [];
         let commands: Undef<SvgPathCommand[]>;
         const length = values.length;
@@ -193,7 +194,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
             if (result[i]) {
                 if (transformRefit) {
-                    result[i] = SvgBuild.transformRefit(result[i], transforms, companion, companion?.parent, precision);
+                    result[i] = SvgBuild.transformRefit(result[i], transforms, companion, parent, precision);
                 }
             }
             else {

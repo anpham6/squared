@@ -1049,6 +1049,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 return;
             }
             switch (this.css('visibility')) {
+                case 'visible':
+                    break;
                 case 'hidden':
                     this.hide({ hidden: true });
                     break;
@@ -1064,7 +1066,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const flexibleWidth = !renderParent.inlineWidth;
             const flexibleHeight = !renderParent.inlineHeight;
             const maxDimension = this.support.maxDimension;
-            const matchParent = renderParent.layoutConstraint && !this.onlyChild && (!this.textElement && !this.inputElement && !this.controlElement && this.alignParent('left') && this.alignParent('right') || this.alignSibling('leftRight') !== '' || this.alignSibling('rightLeft') !== '') ? '0px' : 'match_parent';
+            const matchParent = renderParent.layoutConstraint && !renderParent.flexibleWidth && !this.onlyChild && (!this.textElement && !this.inputElement && !this.controlElement && this.alignParent('left') && this.alignParent('right') || this.alignSibling('leftRight') !== '' || this.alignSibling('rightLeft') !== '') ? '0px' : 'match_parent';
             let { layoutWidth, layoutHeight } = this;
             if (layoutWidth === '') {
                 if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {

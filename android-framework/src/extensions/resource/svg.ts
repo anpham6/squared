@@ -826,7 +826,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         }
                     }
                     else if (SvgBuild.isAnimate(item)) {
-                        const children = companions.filter(child => (<AnimateCompanion> child.companion).value === item);
+                        const children = companions.filter((child: SvgAnimation) => (<AnimateCompanion> child.companion).value === item);
                         if (children.length) {
                             children.sort((a, b) => (<AnimateCompanion> a.companion).key >= (<AnimateCompanion> b.companion).key ? 1 : 0);
                             const sequentially: SvgAnimation[] = [];

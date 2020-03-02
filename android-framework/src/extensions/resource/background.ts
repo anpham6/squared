@@ -469,7 +469,6 @@ const roundFloat = (value: string) => Math.round(parseFloat(value));
 const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
-const constrictedWidth = (node: View) => !node.inline && !node.floating && node.hasPX('width', true, true) && node.cssInitial('width') !== '100%';
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
     return objectMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
@@ -733,22 +732,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const resource = <android.base.Resource<T>> this.resource;
             const bounds = node.bounds;
             const screenDimension = node.localSettings.screenDimension;
-            let { width: boundsWidth, height: boundsHeight } = bounds;
-            if (node.documentBody) {
-                boundsWidth = screenDimension.width;
-                boundsHeight = screenDimension.height;
-            }
-            else if (node.documentRoot) {
-                if (!constrictedWidth(node)) {
-                    boundsWidth = screenDimension.width;
-                }
-                if (node.cssInitial('height') === '100%' || node.cssInitial('minHeight') === '100%') {
-                    boundsHeight = screenDimension.height;
-                }
-            }
-            else if (node.ascend({ condition: (item: T) => constrictedWidth(item) && (!item.layoutElement || item === node), startSelf: true }).length === 0) {
-                boundsWidth = Math.min(boundsWidth, screenDimension.width);
-            }
+            const { width: boundsWidth, height: boundsHeight } = bounds;
             const result: BackgroundImageData[] = [];
             const images: (string | GradientTemplate)[] = [];
             const svg: boolean[] = [];
@@ -1127,12 +1111,34 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let unsizedHeight = false;
                 let recalibrate = true;
                 if (dimension) {
-                    const ratioWidth = dimenWidth / boundsWidth;
-                    const ratioHeight = dimenHeight / boundsHeight;
+                    let fittedWidth = boundsWidth;
+                    let fittedHeight = boundsHeight;
+                    if (size !== 'contain') {
+                        if (!node.hasWidth) {
+                            const innerWidth = window.innerWidth;
+                            const screenWidth = screenDimension.width;
+                            const getFittedWidth = () => boundsHeight * (fittedWidth / boundsWidth);
+                            if (boundsWidth === innerWidth) {
+                                if (innerWidth >= screenWidth) {
+                                    fittedWidth = screenWidth;
+                                    fittedHeight = getFittedWidth();
+                                }
+                                else {
+                                    ({ width: fittedWidth, height: fittedHeight } = NodeUI.refitScreen(node, bounds));
+                                }
+                            }
+                            else if (innerWidth >= screenWidth) {
+                                fittedWidth = node.actualBoxWidth(boundsWidth);
+                                fittedHeight = getFittedWidth();
+                            }
+                        }
+                    }
+                    const ratioWidth = dimenWidth / fittedWidth;
+                    const ratioHeight = dimenHeight / fittedHeight;
                     const getImageWidth = () => dimenWidth * height / dimenHeight;
                     const getImageHeight = () => dimenHeight * width / dimenWidth;
-                    const getImageRatioWidth = () => boundsWidth * (ratioWidth / ratioHeight);
-                    const getImageRatioHeight = () => boundsHeight * (ratioHeight / ratioWidth);
+                    const getImageRatioWidth = () => fittedWidth * (ratioWidth / ratioHeight);
+                    const getImageRatioHeight = () => fittedHeight * (ratioHeight / ratioWidth);
                     const resetGravityPosition = (gravity: boolean, coordinates: boolean) => {
                         tileModeX = '';
                         tileModeY = '';
@@ -1173,33 +1179,51 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             const covering = size === 'cover';
                             resetGravityPosition(covering, !covering);
                             if (ratioWidth < ratioHeight) {
-                                width = boundsWidth;
+                                width = fittedWidth;
                                 height = getImageRatioHeight();
                                 if (height > boundsHeight) {
                                     const percent = position.topAsPercent;
                                     if (percent !== 0) {
                                         top = Math.round((boundsHeight - height) * percent);
-                                        offsetY = false;
                                     }
                                     if (!node.hasPX('height')) {
                                         node.css('height', formatPX(boundsHeight - node.contentBoxHeight));
                                     }
+                                    gravityAlign = 'center_horizontal|fill_horizontal';
+                                }
+                                else {
+                                    if (height < boundsHeight) {
+                                        width = fittedWidth * boundsHeight / height;
+                                        height = boundsHeight;
+                                    }
+                                    gravityAlign = 'center_horizontal|fill';
                                 }
                             }
                             else if (ratioWidth > ratioHeight) {
                                 width = getImageRatioWidth();
-                                height = boundsHeight;
-                                if (node.hasWidth && width > boundsWidth) {
-                                    const percent = position.leftAsPercent;
-                                    if (percent !== 0) {
-                                        left = Math.round((boundsWidth - width) * percent);
-                                        offsetX = false;
+                                height = fittedHeight;
+                                if (width > boundsWidth) {
+                                    if (node.hasWidth) {
+                                        const percent = position.leftAsPercent;
+                                        if (percent !== 0) {
+                                            left = Math.round((boundsWidth - width) * percent);
+                                        }
                                     }
+                                    gravityAlign = 'center_vertical|fill_vertical';
                                 }
+                                else {
+                                    if (width < boundsWidth) {
+                                        width = boundsWidth;
+                                        height = fittedHeight * boundsWidth / width;
+                                    }
+                                    gravityAlign = 'center_vertical|fill';
+                                }
+                                offsetX = false;
                             }
                             else {
                                 gravityAlign = 'fill';
                             }
+                            offsetY = false;
                             break;
                         }
                         case 'contain':

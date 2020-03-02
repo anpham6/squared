@@ -19,7 +19,8 @@ const checkMarginBottom = (parent: View, item: View) => item.marginBottom < 0 &&
 
 function setFixedNodes(node: View) {
     const documentBody = node.documentBody;
-    const originalRoot = node.originalRoot;
+    const documentRoot = node.originalRoot;
+    const expandBody = documentBody && node.positionStatic;
     const children = new Set<View>();
     const paddingTop = node.paddingTop + (documentBody ? node.marginTop : 0);
     const paddingRight = node.paddingRight + (documentBody ? node.marginRight : 0);
@@ -33,13 +34,13 @@ function setFixedNodes(node: View) {
         }
         const fixedPosition = item.autoPosition && item.css('position') === 'fixed';
         if (item.hasPX('left') || fixedPosition) {
-            if (originalRoot && (item.css('width') === '100%' || item.css('minWidth') === '100%')) {
+            if (documentBody && (item.css('width') === '100%' || item.css('minWidth') === '100%')) {
                 children.add(item);
                 right = true;
             }
             else {
                 const value = item.left;
-                if (value >= 0 && value < paddingLeft) {
+                if ((value >= 0 || documentRoot) && value < paddingLeft) {
                     children.add(item);
                 }
                 else if (!item.hasPX('right') && checkMarginLeft(node, item)) {
@@ -48,13 +49,13 @@ function setFixedNodes(node: View) {
             }
         }
         else if (item.hasPX('right')) {
-            if (originalRoot) {
+            if (expandBody) {
                 children.add(item);
                 right = true;
             }
             else {
                 const value = item.right;
-                if (value >= 0 && (value < paddingRight || documentBody && node.positionStatic && node.hasPX('width') && node.percentWidth < 1)) {
+                if ((value >= 0 || documentRoot) && value < paddingRight) {
                     children.add(item);
                 }
                 else if (checkMarginRight(node, item)) {
@@ -66,13 +67,13 @@ function setFixedNodes(node: View) {
             children.add(item);
         }
         if (item.hasPX('top') || fixedPosition) {
-            if (originalRoot && (item.css('height') === '100%' || item.css('minHeight') === '100%')) {
+            if (documentBody && (item.css('height') === '100%' || item.css('minHeight') === '100%')) {
                 children.add(item);
                 bottom = true;
             }
             else {
                 const value = item.top;
-                if (value >= 0 && value < paddingTop) {
+                if ((value >= 0 || documentRoot) && value < paddingTop) {
                     children.add(item);
                 }
                 else if (!item.hasPX('bottom') && checkMarginTop(node, item)) {
@@ -81,13 +82,13 @@ function setFixedNodes(node: View) {
             }
         }
         else if (item.hasPX('bottom')) {
-            if (originalRoot) {
+            if (expandBody) {
                 children.add(item);
                 bottom = true;
             }
             else {
                 const value = item.bottom;
-                if (value >= 0 && (value < paddingBottom || documentBody && node.positionStatic && (node.hasPX('height', false) || node.percentHeight > 0 && node.percentHeight < 1))) {
+                if ((value >= 0 || documentRoot) && value < paddingBottom) {
                     children.add(item);
                 }
                 else if (checkMarginBottom(node, item)) {

@@ -682,7 +682,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     }
                                 }
                             }
-                            else if (renderParent.layoutHorizontal) {
+                            else if (renderParent.layoutHorizontal || renderParent.hasAlign(NODE_ALIGNMENT.INLINE)) {
                                 horizontal = renderParent.renderChildren as T[];
                             }
                             if (horizontal) {

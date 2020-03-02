@@ -501,7 +501,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockedAttr(name: string, attr: string) {
-        return this._locked[name]?.[attr] || false;
+        return this._locked[name]?.[attr] === true;
     }
 
     public render(parent?: T) {
