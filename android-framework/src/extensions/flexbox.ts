@@ -56,7 +56,7 @@ const MAP_vertical = {
 
 function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") {
     const horizontal = attr === 'width';
-    const hasDimension = 'has' + capitalize(attr);
+    const hasDimension = `has${capitalize(attr)}`;
     const setPercentage = (item: View) => item.flexbox.basis = (item.bounds[attr] / parent.box[attr] * 100) + '%';
     let percent: boolean = parent[hasDimension] || parent.blockStatic && withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight'), attr), parent.box.width);
     let result = 0;
@@ -622,7 +622,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                 }
                                                 else {
                                                     setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
-                                                    chain.lockAttr('android', 'layout_' + HWL);
+                                                    chain.lockAttr('android', `layout_${HWL}`);
                                                 }
                                             }
                                             break;

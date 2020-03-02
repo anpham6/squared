@@ -171,7 +171,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     data = { pathname: 'generated/base64', filename, base64 };
                 }
                 else if (content && mimeType) {
-                    data = { pathname: 'generated/' + mimeType, filename, content };
+                    data = { pathname: `generated/${mimeType}`, filename, content };
                 }
                 else {
                     continue;
@@ -236,7 +236,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     private validFile(data: Undef<ChromeAsset>): data is ChromeAsset {
         if (data) {
-            const fullpath = data.pathname + '/' + data.filename;
+            const fullpath = `${data.pathname}/${data.filename}`;
             return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
         }
         return false;

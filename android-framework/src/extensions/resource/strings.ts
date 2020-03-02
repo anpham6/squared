@@ -102,16 +102,16 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     for (const style of textDecorationLine.split(' ')) {
                                         switch (style) {
                                             case 'underline':
-                                                value = '<u>' + value + '</u>';
+                                                value = `<u>${value}</u>`;
                                                 break;
                                             case 'line-through':
-                                                value = '<strike>' + value + '</strike>';
+                                                value = `<strike>${value}</strike>`;
                                                 break;
                                         }
                                     }
                                 }
                                 if (tagName === 'INS' && !textDecorationLine.includes('line-through')) {
-                                    value = '<strike>' + value + '</strike>';
+                                    value = `<strike>${value}</strike>`;
                                 }
                                 let indent = 0;
                                 if (node.blockDimension || node.display === 'table-cell') {

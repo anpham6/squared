@@ -92,7 +92,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const setBorderStyle = () => {
                 if (styleMap.border === undefined && checkBorderAttribute()) {
                     const inputBorderColor = this.localSettings.style.inputBorderColor;
-                    styleMap.border = 'outset 1px ' + inputBorderColor;
+                    styleMap.border = `outset 1px ${inputBorderColor}`;
                     for (let i = 0; i < 4; i++) {
                         const border = BOX_BORDER[i];
                         styleMap[border[0]] = 'outset';
@@ -638,7 +638,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public getEnclosingXmlTag(controlName: string, attributes?: string, content?: string) {
-        return '<' + controlName + (attributes || '') + (content ? '>\n' + content + '</' + controlName + '>\n' : ' />\n');
+        return '<' + controlName + (attributes || '') + (content ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
     get generateSessionId() {

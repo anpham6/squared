@@ -302,7 +302,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                     }
                     else {
                         const element = <HTMLAnchorElement> node.element;
-                        if (!(location.hash === '#' + element.id || tagName === 'A' && location.hash === '#' + element.name)) {
+                        if (!(location.hash === `#${element.id}` || tagName === 'A' && location.hash === `#${element.name}`)) {
                             return false;
                         }
                     }

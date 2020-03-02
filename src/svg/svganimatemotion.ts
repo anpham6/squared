@@ -391,7 +391,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         if (path) {
             return objectMap<SvgOffsetPath, string>(path, item => {
                 const { x, y } = item.value;
-                return x + ' ' + y;
+                return `${x} ${y}`;
             });
         }
         return super.values;

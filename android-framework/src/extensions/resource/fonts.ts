@@ -11,7 +11,7 @@ type View = android.base.View;
 const $lib = squared.lib;
 
 const { XML } = $lib.regex;
-const { capitalize, convertInt, convertWord, safeNestedArray, safeNestedMap, objectMap, spliceArray, trimString } = $lib.util;
+const { capitalize, convertInt, convertWord, safeNestedArray, safeNestedMap, objectMap, spliceArray, trimBoth } = $lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -146,7 +146,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     node = companion as T;
                 }
                 fontFamily.replace(REGEX_DOUBLEQUOTE, '').split(XML.SEPARATOR).some((value, index, array) => {
-                    value = trimString(value, "'").toLowerCase();
+                    value = trimBoth(value, "'").toLowerCase();
                     let fontName = value;
                     let actualFontWeight = '';
                     if (!disableFontAlias && FONTREPLACE_ANDROID[fontName]) {
@@ -171,7 +171,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 return false;
                             }
                             else {
-                                value = trimString(array[0], "'").toLowerCase();
+                                value = trimBoth(array[0], "'").toLowerCase();
                                 fontName = value;
                             }
                         }

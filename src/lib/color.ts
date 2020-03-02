@@ -1004,17 +1004,17 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
             if (a > 0 || transparency) {
                 const hexAsString = getHexCode(r, g, b);
                 const alphaAsString = getHexCode(a);
-                const valueAsRGBA = '#' + hexAsString + alphaAsString;
+                const valueAsRGBA = `#${hexAsString + alphaAsString}`;
                 if (CACHE_COLORDATA[valueAsRGBA]) {
                     return CACHE_COLORDATA[valueAsRGBA];
                 }
                 opacity = a / 255;
-                value = '#' + hexAsString;
+                value = `#${hexAsString}`;
                 colorData = <ColorData> {
                     key,
                     value,
                     valueAsRGBA,
-                    valueAsARGB: '#' + alphaAsString + hexAsString,
+                    valueAsARGB: `#${alphaAsString + hexAsString}`,
                     rgba,
                     hsl: convertHSLA(rgba),
                     opacity,
@@ -1033,7 +1033,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
 
 export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
     if (cacheName) {
-        cacheName = cacheName + '_' + percent;
+        cacheName += '_' + percent;
         const colorData = CACHE_COLORDATA[cacheName];
         if (colorData) {
             return colorData;

@@ -1006,6 +1006,7 @@ declare namespace lib {
         function cloneArray(data: any[], result?: any[], object?: boolean): any[];
         function cloneObject(data: {}, result?: {}, array?: boolean): {};
         function resolvePath(value: string, href?: string): string;
+        function trimBoth(value: string, char: string): string;
         function trimString(value: string, char: string): string;
         function trimStart(value: string, char: string): string;
         function trimEnd(value: string, char: string): string;

@@ -769,7 +769,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         imageData.length = 0;
         this._namespaceAapt = false;
         this._synchronizeMode = keyTimeMode;
-        const templateName = (node.tagName + '_' + convertWord(node.controlId, true) + '_viewbox').toLowerCase();
+        const templateName = `${node.tagName}_${convertWord(node.controlId, true)}_viewbox`.toLowerCase();
         svg.build({ exclude, residual: partitionTransforms, precision });
         svg.synchronize({ keyTimeMode, framesPerSecond: this.controller.userSettings.framesPerSecond, precision });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
@@ -846,7 +846,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 }
                             }
                             sequentially.push(item);
-                            sequentialMap.set('sequentially_companion_' + i, <SvgAnimate[]> sequentially.concat(after));
+                            sequentialMap.set(`sequentially_companion_${i}`, <SvgAnimate[]> sequentially.concat(after));
                         }
                         else {
                             const synchronized = item.synchronized;
@@ -1519,7 +1519,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     for (let i = 0; i < q; i++) {
                                         const strokePath = i === 0 ? path : { ...path };
                                         const dash = strokeDash[i];
-                                        strokePath.name = name + '_' + i;
+                                        strokePath.name = `${name}_${i}`;
                                         if (animateData) {
                                             this._animateData.set(strokePath.name, {
                                                 element: animateData.element,

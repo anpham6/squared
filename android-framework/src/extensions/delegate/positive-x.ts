@@ -12,10 +12,10 @@ interface PositiveXData {
     right: boolean;
     bottom: boolean;
 }
-const checkMarginLeft = (parent: View, item: View) => item.marginLeft < 0 && (parent.documentRoot || item.linear.left < Math.floor(parent.box.left));
-const checkMarginRight = (parent: View, item: View) => item.marginRight < 0 && (parent.documentRoot || item.linear.right > Math.ceil(parent.box.right));
-const checkMarginTop = (parent: View, item: View) => item.marginTop < 0 && (parent.documentRoot || item.linear.top < Math.floor(parent.box.top));
-const checkMarginBottom = (parent: View, item: View) => item.marginBottom < 0 && (parent.documentRoot || item.linear.bottom > Math.ceil(parent.box.bottom));
+const checkMarginLeft = (node: View, item: View) => item.marginLeft < 0 && (node.originalRoot || item.linear.left < Math.floor(node.box.left));
+const checkMarginRight = (node: View, item: View) => item.marginRight < 0 && (node.originalRoot || item.linear.right > Math.ceil(node.box.right));
+const checkMarginTop = (node: View, item: View) => item.marginTop < 0 && (node.originalRoot || item.linear.top < Math.floor(node.box.top));
+const checkMarginBottom = (node: View, item: View) => item.marginBottom < 0 && (node.originalRoot || item.linear.bottom > Math.ceil(node.box.bottom));
 
 function setFixedNodes(node: View) {
     const documentBody = node.documentBody;
@@ -119,7 +119,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     public processNode(node: T, parent: T) {
         const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
         if (mainData) {
-            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.documentRoot && !node.pageFlow || parent.layoutGrid, inheritDataset: true });
+            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, mainData.children as T[], { resetMargin: !node.originalRoot && !node.pageFlow || parent.layoutGrid, inheritDataset: true });
             if (node.documentBody) {
                 if (mainData.right) {
                     container.setLayoutWidth('match_parent');

@@ -122,7 +122,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             else {
                 NAME_GRAPHICS.set(tagName, ++index);
-                return tagName + '_' + index;
+                return `${tagName}_${index}`;
             }
         }
         else {

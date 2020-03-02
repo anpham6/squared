@@ -16,7 +16,7 @@ const $lib = squared.lib;
 const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = $lib.css;
 const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
 const { maxArray } = $lib.math;
-const { convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimString } = $lib.util;
+const { convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = $lib.util;
 const { CSS, XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -543,9 +543,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public afterCreateCache(element: HTMLElement) {
         const dataset = element.dataset;
         const { filename, iteration } = dataset;
-        const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._localSettings.layout.fileExtension}$`), '') || element.id || 'document_' + this.length;
+        const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
         const suffix = (iteration ? parseInt(iteration) : -1) + 1;
-        const layoutName = convertWord(suffix > 1 ? prefix + '_' + suffix : prefix, true);
+        const layoutName = convertWord(suffix > 1 ? `${prefix}_${suffix}` : prefix, true);
         dataset.iteration = suffix.toString();
         dataset.layoutName = layoutName;
         this.setBaseLayout();
@@ -763,7 +763,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (styleMap) {
             let value = styleMap.content;
             if (value) {
-                const textContent = trimString(value, '"');
+                const textContent = trimBoth(value, '"');
                 let absolute = false;
                 switch (styleMap.position) {
                     case 'absolute':
@@ -801,6 +801,28 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     else {
+                        const childNodes = element.childNodes;
+                        const length = childNodes.length;
+                        for (let i = 0; i < length; i++) {
+                            const child = <Element> childNodes[i];
+                            if (isTextNode(child)) {
+                                if ((child.textContent as string).trim() !== '') {
+                                    break;
+                                }
+                            }
+                            else if (child instanceof HTMLElement) {
+                                const style = getStyle(child);
+                                switch (style.getPropertyValue('position')) {
+                                    case 'fixed':
+                                    case 'absolute':
+                                        continue;
+                                }
+                                if (style.getPropertyValue('float') !== 'none') {
+                                    return undefined;
+                                }
+                                break;
+                            }
+                        }
                         switch (styleMap.display) {
                             case undefined:
                             case 'block':

@@ -114,7 +114,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                                     SvgAnimate.getSplitValue(rgbaA.b, rgbaB.b, percent)
                                 );
                                 const a = getHexCode(SvgAnimate.getSplitValue(rgbaA.a, rgbaB.a, percent));
-                                result.push('#' + (rgb + (a !== 'FF' ? a : '')));
+                                result.push(`#${rgb + (a !== 'FF' ? a : '')}`);
                                 break;
                             }
                             case 'points': {

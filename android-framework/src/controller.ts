@@ -569,7 +569,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else if (layout.length <= 1) {
             const child = <Undef<T>> node.item(0);
             if (child) {
-                if (node.documentRoot && isTargeted(node.element, child)) {
+                if (node.originalRoot && isTargeted(node.element, child)) {
                     node.hide();
                     return { layout, next: true };
                 }
@@ -641,7 +641,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.add(NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (layout.linearY) {
-            layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | (node.documentRoot || layout.some((item, index) => index > 0 && item.inlineFlow && (layout.item(index - 1) as T).inlineFlow) ? NODE_ALIGNMENT.UNKNOWN : 0));
+            layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | (node.originalRoot || layout.some((item, index) => index > 0 && item.inlineFlow && (layout.item(index - 1) as T).inlineFlow) ? NODE_ALIGNMENT.UNKNOWN : 0));
         }
         else if (layout.every(item => item.inlineFlow)) {
             if (this.checkFrameHorizontal(layout)) {
@@ -683,7 +683,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.marginRight === 0 &&
             node.marginBottom === 0 &&
             node.marginLeft === 0 &&
-            !node.documentRoot &&
+            !node.originalRoot &&
             !background &&
             !node.dataset.use)
         {
@@ -1841,7 +1841,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         orientation: horizontal ? 'vertical' : 'horizontal'
                     },
                     app: {
-                        [attr]: percent ? location.toString() : '@dimen/' + Resource.insertStoredAsset('dimens', 'constraint_guideline_' + (!opposing ? LT : RB), formatPX(location))
+                        [attr]: percent ? location.toString() : '@dimen/' + Resource.insertStoredAsset('dimens', `constraint_guideline_${!opposing ? LT : RB}`, formatPX(location))
                     }
                 });
                 this.addAfterOutsideTemplate(node.id, this.renderNodeStatic({ controlName: node.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.GUIDELINE : CONTAINER_ANDROID_X.GUIDELINE }, templateOptions), false);

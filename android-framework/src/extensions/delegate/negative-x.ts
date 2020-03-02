@@ -18,7 +18,7 @@ const outsideX = (node: View) => node.leftTopAxis && (node.left < 0 || !node.has
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.pageFlow && !node.documentRoot && node.css('overflowX') !== 'hidden';
+        return !node.pageFlow && !node.originalRoot && node.css('overflowX') !== 'hidden';
     }
 
     public condition(node: T) {
