@@ -403,7 +403,8 @@ declare namespace base {
         readonly multiline: boolean;
         readonly contentBoxWidth: number;
         readonly contentBoxHeight: number;
-        readonly flexbox: Flexbox;
+        readonly flexdata: FlexData;
+        readonly flexbox: FlexBox;
         readonly zIndex: number;
         readonly backgroundColor: string;
         readonly backgroundImage: string;
@@ -469,13 +470,13 @@ declare namespace base {
         parseUnit(value: string, dimension?: "width" | "height", parent?: boolean, screenDimension?: Dimension): number;
         has(attr: string, options?: HasOptions): boolean;
         hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
+        hasFlex(direction: "row" | "column"): boolean;
         setBounds(cache?: boolean): void;
         querySelector(value: string): Null<Node>;
         querySelectorAll(value: string, resultCount?: number): Node[];
     }
 
     class Node implements Node {
-        public static isFlexDirection(node: Node, direction: string): boolean;
         constructor(id: number, sessionId?: string, element?: Element);
     }
 

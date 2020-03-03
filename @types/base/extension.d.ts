@@ -38,14 +38,7 @@ export interface CssGridCellData {
     columnSpan: number;
 }
 
-export interface FlexboxData<T> {
-    directionReverse: boolean;
-    directionRow: boolean;
-    directionColumn: boolean;
-    wrap: boolean;
-    wrapReverse: boolean;
-    alignContent: string;
-    justifyContent: string;
+export interface FlexboxData<T> extends Required<FlexData> {
     rowCount: number;
     columnCount: number;
     children: T[];

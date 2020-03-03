@@ -43,7 +43,17 @@ interface BoxModel extends BoxMargin, BoxPadding {
     borderLeftWidth?: number;
 }
 
-interface Flexbox {
+interface FlexData {
+    row?: boolean;
+    column?: boolean;
+    reverse?: boolean;
+    wrap?: boolean;
+    wrapReverse?: boolean;
+    alignContent?: string;
+    justifyContent?: string;
+}
+
+interface FlexBox {
     alignSelf: string;
     justifySelf: string;
     basis: string;

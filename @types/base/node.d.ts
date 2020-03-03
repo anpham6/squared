@@ -75,7 +75,8 @@ export interface CachedValue<T> {
     percentWidth?: number;
     percentHeight?: number;
     attributes?: StringMap;
-    flexbox?: Flexbox;
+    flexdata?: FlexData;
+    flexbox?: FlexBox;
     autoMargin?: AutoMargin;
     backgroundColor?: string;
     backgroundImage?: string;

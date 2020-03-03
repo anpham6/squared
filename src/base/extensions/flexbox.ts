@@ -13,16 +13,8 @@ const FLEXBOX = EXT_NAME.FLEXBOX;
 
 export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute<T extends NodeUI>(node: T, children: T[]): FlexboxData<T> {
-        const { flexWrap, flexDirection, alignContent, justifyContent } = node.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
-        const directionRow = /^row/.test(flexDirection);
         return {
-            directionRow,
-            directionColumn: !directionRow,
-            directionReverse: /reverse$/.test(flexDirection),
-            wrap: /^wrap/.test(flexWrap),
-            wrapReverse: flexWrap === 'wrap-reverse',
-            alignContent,
-            justifyContent,
+            ...(<Required<FlexData>> node.flexdata),
             rowCount: 0,
             columnCount: 0,
             children
@@ -58,7 +50,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             node.cssFinally('align-items');
         }
         if (mainData.wrap) {
-            const [align, sort, size, method] = mainData.directionRow ? ['top', 'left', 'right', 'intersectY'] : ['left', 'top', 'bottom', 'intersectX'];
+            const [align, sort, size, method] = mainData.row ? ['top', 'left', 'right', 'intersectY'] : ['left', 'top', 'bottom', 'intersectX'];
             children.sort((a, b) => {
                 const linearA = a.linear;
                 const linearB = b.linear;
@@ -119,7 +111,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             }
             node.concat(absolute);
             node.sort();
-            if (mainData.directionRow) {
+            if (mainData.row) {
                 mainData.rowCount = length;
                 mainData.columnCount = maxCount;
             }
@@ -130,7 +122,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         }
         else {
             if (children.some(item => item.flexbox.order !== 0)) {
-                const [c, d] = mainData.directionReverse ? [-1, 1] : [1, -1];
+                const [c, d] = mainData.reverse ? [-1, 1] : [1, -1];
                 children.sort((a, b) => {
                     const orderA = a.flexbox.order;
                     const orderB = b.flexbox.order;
@@ -140,7 +132,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     return orderA > orderB ? c : d;
                 });
             }
-            if (mainData.directionRow) {
+            if (mainData.row) {
                 mainData.rowCount = 1;
                 mainData.columnCount = node.length;
             }

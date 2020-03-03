@@ -11,7 +11,6 @@ type T = android.base.View;
 
 const $lib = squared.lib;
 
-const { Node, ResourceUI } = squared.base;
 const { BOX_MARGIN, BOX_PADDING, formatPX, isLength, isPercent } = $lib.css;
 const { getNamedItem, newBoxModel } = $lib.dom;
 const { clamp, truncate } = $lib.math;
@@ -19,6 +18,8 @@ const { actualTextRangeRect } = $lib.session;
 const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
+
+const ResourceUI = squared.base.ResourceUI;
 
 const DEPRECATED = DEPRECATED_ANDROID.android;
 const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_ANDROID;
@@ -472,7 +473,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             else {
                 let flexible = false;
-                if (Node.isFlexDirection(node, horizontal ? 'row' : 'column')) {
+                if (node.hasFlex(horizontal ? 'row' : 'column')) {
                     flexible = setFlexGrow(node.hasPX(dimension, false) ? horizontal ? node.actualWidth : node.actualHeight : 0);
                     if (flexible) {
                         setLayoutDimension(node, '0px', horizontal, true);
@@ -678,7 +679,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         value = Math.min(this.actualWidth, maxValue);
                                     }
                                     else {
-                                        layoutWidth = Math.floor(maxValue) < absoluteParent.width ? 'wrap_content' : matchParent;
+                                        layoutWidth = Math.floor(maxValue) < absoluteParent.box.width ? 'wrap_content' : matchParent;
                                     }
                                 }
                             }
@@ -739,7 +740,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
                         layoutWidth = formatPX(this.actualWidth);
                     }
-                    else if (this.imageElement && this.hasPX('height')) {
+                    else if (this.imageElement && this.hasHeight) {
                         layoutWidth = 'wrap_content';
                     }
                     else if (
@@ -846,7 +847,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (this.is(CONTAINER_NODE.LINE) && this.tagName !== 'HR' && this.hasPX('height', true, true)) {
                             value += this.borderTopWidth + this.borderBottomWidth;
                         }
-                        if (this.multiline && this.styleText && !this.hasPX('minHeight') && !actualParent.layoutElement) {
+                        if (this.styleText && this.multiline && !actualParent.layoutElement && !this.hasPX('minHeight')) {
                             this.android('minHeight', formatPX(value));
                             layoutHeight = 'wrap_content';
                         }
@@ -865,7 +866,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             layoutHeight = formatPX(this.actualHeight);
                         }
                     }
-                    else if (this.imageElement && this.hasPX('width')) {
+                    else if (this.imageElement && this.hasWidth) {
                         layoutHeight = 'wrap_content';
                     }
                     else if (this.display === 'table-cell' && actualParent.hasHeight) {
@@ -877,7 +878,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             else if (layoutHeight === '0px' && renderParent.inlineHeight && renderParent.android('minHeight') === '' && !actualParent.layoutElement && actualParent === this.absoluteParent) {
                 this.setLayoutHeight('wrap_content');
             }
-            if (this.hasPX('minWidth') && (!Node.isFlexDirection(this, 'row') || actualParent.flexElement && !this.flexibleWidth)) {
+            if (this.hasPX('minWidth') && (!this.hasFlex('row') || actualParent.flexElement && !this.flexibleWidth)) {
                 const minWidth = this.css('minWidth');
                 if (minWidth === '100%' && this.inlineWidth) {
                     this.setLayoutWidth(matchParent);
@@ -886,7 +887,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.android('minWidth', formatPX(this.parseWidth(minWidth) + (this.contentBox && !actualParent.gridElement ? this.contentBoxWidth : 0)), false);
                 }
             }
-            if (this.hasPX('minHeight') && this.display !== 'table-cell' && (!Node.isFlexDirection(this, 'column') || actualParent.flexElement && !this.flexibleHeight)) {
+            if (this.hasPX('minHeight') && this.display !== 'table-cell' && (!this.hasFlex('column') || actualParent.flexElement && !this.flexibleHeight)) {
                 const minHeight = this.css('minHeight');
                 if (minHeight === '100%' && flexibleHeight && this.inlineHeight) {
                     this.setLayoutHeight('match_parent');

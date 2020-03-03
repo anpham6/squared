@@ -199,11 +199,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: FlexboxData<T> = node.data(FLEXBOX, 'mainData');
-        const { directionColumn, directionRow, rowCount, columnCount } = mainData;
-        if (directionRow && rowCount === 1 || directionColumn && columnCount === 1) {
+        const { column, row, rowCount, columnCount } = mainData;
+        if (row && rowCount === 1 || column && columnCount === 1) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;
             node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
-            node.addAlign(directionColumn ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL);
+            node.addAlign(column ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL);
             mainData.wrap = false;
             return {
                 include: true,
@@ -211,13 +211,13 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             };
         }
         else {
-            const containerType = directionRow && node.hasHeight || directionColumn && node.hasWidth || node.some(item => !item.pageFlow) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.LINEAR;
+            const containerType = row && node.hasHeight || column && node.hasWidth || node.some(item => !item.pageFlow) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.LINEAR;
             return {
                 output: this.application.renderNode(LayoutUI.create({
                     parent,
                     node,
                     containerType,
-                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (directionColumn ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
+                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (column ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
                     itemCount: node.length,
                     rowCount,
                     columnCount
@@ -290,7 +290,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         const mainData: FlexboxData<T> = node.data(FLEXBOX, 'mainData');
         if (mainData) {
             const controller = <android.base.Controller<T>> this.controller;
-            const { alignContent, children, directionColumn, directionReverse, directionRow, justifyContent, wrap, wrapReverse } = mainData;
+            const { row, column, reverse, wrap, wrapReverse, alignContent, justifyContent, children } = mainData;
             const parentBottom = node.hasPX('height', false) || node.percentHeight > 0 ? node.linear.bottom : 0;
             const chainHorizontal: T[][] = [];
             const chainVertical: T[][] = [];
@@ -302,7 +302,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     if (item.hasAlign(NODE_ALIGNMENT.SEGMENTED)) {
                         const pageFlow = item.renderChildren.filter(child => child.pageFlow) as T[];
                         if (pageFlow.length) {
-                            if (directionRow) {
+                            if (row) {
                                 item.setLayoutWidth('match_parent');
                                 chainHorizontal.push(pageFlow);
                             }
@@ -333,12 +333,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                 });
                 if (node.layoutLinear) {
-                    if (wrapReverse && directionColumn) {
+                    if (wrapReverse && column) {
                         node.mergeGravity('gravity', 'right');
                     }
                 }
                 else if (segmented.length) {
-                    if (directionRow) {
+                    if (row) {
                         chainVertical.push(segmented);
                     }
                     else {
@@ -347,14 +347,14 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 }
             }
             else {
-                if (directionRow) {
-                    if (directionReverse) {
+                if (row) {
+                    if (reverse) {
                         children.reverse();
                     }
                     chainHorizontal[0] = children;
                 }
                 else {
-                    if (directionReverse) {
+                    if (reverse) {
                         children.reverse();
                     }
                     chainVertical[0] = children;
@@ -672,13 +672,13 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     if (marginBottom > 0) {
                         node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, marginBottom);
                     }
-                    if (horizontal || directionColumn) {
+                    if (horizontal || column) {
                         let centered = false;
                         if (justified) {
                             switch (justifyContent) {
                                 case 'normal':
-                                    if (directionColumn) {
-                                        segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed');
+                                    if (column) {
+                                        segStart.anchorStyle(orientation, reverse ? 1 : 0, 'packed');
                                         continue;
                                     }
                                     break;
@@ -688,7 +688,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                 case 'start':
                                 case 'flex-start':
-                                    segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed');
+                                    segStart.anchorStyle(orientation, reverse ? 1 : 0, 'packed');
                                     continue;
                                 case 'center':
                                     if (q > 1) {
@@ -736,7 +736,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             segStart.anchorStyle(orientation, 0, 'spread_inside', false);
                         }
                         else if (!centered) {
-                            segStart.anchorStyle(orientation, directionReverse ? 1 : 0, 'packed', false);
+                            segStart.anchorStyle(orientation, reverse ? 1 : 0, 'packed', false);
                         }
                     }
                 }

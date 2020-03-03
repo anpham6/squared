@@ -20,7 +20,7 @@ const { captureMap, flatMultiArray, hasValue, isArray } = $lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 
-const { LayoutUI, Node } = $base;
+const LayoutUI = $base.LayoutUI;
 const CSS_GRID = $base_lib.constant.EXT_NAME.CSS_GRID;
 
 const CssGrid = $base.extensions.CssGrid;
@@ -313,7 +313,7 @@ function checkFlexibleParent(node: View) {
                 return valid;
             }
         }
-        else if (Node.isFlexDirection(item, 'row') && item.flexbox.grow > 0) {
+        else if (item.hasFlex('row') && item.flexbox.grow > 0) {
             return true;
         }
         return false;
