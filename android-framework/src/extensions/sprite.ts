@@ -10,7 +10,7 @@ type View = android.base.View;
 const { formatPX } = squared.lib.css;
 
 const $base_lib = squared.base.lib;
-const { APP_SECTION, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
+const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 
 const SPRITE = $base_lib.constant.EXT_NAME.SPRITE;
 
@@ -32,7 +32,13 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 container.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.CUSTOMIZATION, section: APP_SECTION.ALL });
                 node.setControlType(CONTAINER_ANDROID.IMAGE, CONTAINER_NODE.IMAGE);
-                node.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.BOX_STYLE });
+                node.resetBox(BOX_STANDARD.MARGIN);
+                node.resetBox(BOX_STANDARD.PADDING);
+                node.registerBox(BOX_STANDARD.MARGIN_TOP, container);
+                node.registerBox(BOX_STANDARD.MARGIN_RIGHT, container);
+                node.registerBox(BOX_STANDARD.MARGIN_BOTTOM, container);
+                node.registerBox(BOX_STANDARD.MARGIN_LEFT, container);
+                node.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.BOX_SPACING });
                 node.cssApply({
                     position: 'static',
                     top: 'auto',
@@ -42,14 +48,6 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                     display: 'inline-block',
                     width: width > 0 ? formatPX(width) : 'auto',
                     height: height > 0 ? formatPX(height) : 'auto',
-                    marginTop: formatPX(top),
-                    marginRight: '0px',
-                    marginBottom: '0px',
-                    marginLeft: formatPX(left),
-                    paddingTop: '0px',
-                    paddingRight: '0px',
-                    paddingBottom: '0px',
-                    paddingLeft: '0px',
                     borderTopStyle: 'none',
                     borderRightStyle: 'none',
                     borderBottomStyle: 'none',
@@ -61,6 +59,8 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 });
                 node.unsetCache();
                 node.android('src', `@drawable/${drawable}`);
+                node.android('layout_marginTop', formatPX(top));
+                node.android(node.localizeString('layout_marginLeft'), formatPX(left));
                 return {
                     renderAs: container,
                     outputAs: this.application.renderNode(

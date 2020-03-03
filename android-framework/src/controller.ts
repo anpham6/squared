@@ -17,7 +17,7 @@ const $base = squared.base;
 
 const { PLATFORM, isPlatform } = $lib.client;
 const { parseColor } = $lib.color;
-const { formatPX, getSrcSet, isLength, isPercent, parseUnit } = $lib.css;
+const { formatPX, getSrcSet, isLength, isPercent } = $lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = $lib.dom;
 const { truncate } = $lib.math;
 const { CHAR } = $lib.regex;
@@ -1238,14 +1238,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 node.android('scaleType', scaleType);
                 if (width > 0 && parent.hasPX('maxWidth', false) && (percentWidth === -1 || percentWidth === 100)) {
-                    const parentWidth = parent.parseUnit(parent.css('maxWidth'));
+                    const parentWidth = parent.parseWidth(parent.css('maxWidth'));
                     if (parentWidth <= width) {
                         width = parentWidth;
                         node.css('width', formatPX(width));
                     }
                 }
                 else if (height > 0 && parent.hasPX('maxHeight', false) && (percentHeight === -1 || percentHeight === 100)) {
-                    const parentHeight = parent.parseUnit(parent.css('maxHeight'), 'height');
+                    const parentHeight = parent.parseHeight(parent.css('maxHeight'));
                     if (parentHeight <= height) {
                         height = parentHeight;
                         node.css('maxHeight', formatPX(height));
@@ -1474,12 +1474,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const color = Resource.addColor(parseColor(match[1] || node.css('color')));
                         if (color !== '') {
                             const precision = node.localSettings.floatPrecision;
-                            const fontSize = node.fontSize;
                             const shadowRadius = match[4];
                             node.android('shadowColor', `@color/${color}`);
-                            node.android('shadowDx', truncate(parseUnit(match[2], fontSize) * 2, precision));
-                            node.android('shadowDy', truncate(parseUnit(match[3], fontSize) * 2, precision));
-                            node.android('shadowRadius', truncate(isString(shadowRadius) ? parseUnit(shadowRadius, fontSize) : 0.01, precision));
+                            node.android('shadowDx', truncate(node.parseWidth(match[2], false) * 2, precision));
+                            node.android('shadowDy', truncate(node.parseHeight(match[3], false) * 2, precision));
+                            node.android('shadowRadius', truncate(isString(shadowRadius) ? node.parseWidth(shadowRadius, false) : 0.01, precision));
                         }
                     }
                 }
@@ -2041,7 +2040,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public createNodeWrapper(node: T, parent: T, children?: T[], options: WrapperOptions = {}) {
         const { controlName, containerType, alignmentType, resource, procedure, section } = options;
-        const container = this.application.createNode({ parent, children, append: true, replace: node, delegate: true, cascade: !!children && children.length > 0 && !node.originalRoot });
+        const container = this.application.createNode({ parent, children, append: true, replace: node, delegate: true, cascade: options.cascade === true || !!children && children.length > 0 && !node.originalRoot });
         container.inherit(node, 'base', 'alignment');
         if (node.documentRoot) {
             container.documentRoot = true;
@@ -2058,9 +2057,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         container.addAlign(NODE_ALIGNMENT.WRAPPER);
         container.exclude({
-            resource: resource === undefined ? resource : NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET,
-            procedure: procedure === undefined ? procedure : NODE_PROCEDURE.CUSTOMIZATION,
-            section: section === undefined ? section : APP_SECTION.ALL
+            resource: resource === undefined ? NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET : resource,
+            procedure: procedure === undefined ? NODE_PROCEDURE.CUSTOMIZATION : procedure,
+            section: section === undefined ? APP_SECTION.ALL : section
         });
         container.saveAsInitial();
         container.cssApply({
@@ -2293,9 +2292,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 return true;
                             }
                             else if (node.floating && i === length - 1 && item.textElement && !/\s|-/.test(item.textContent.trim())) {
-                                if (node.hasPX('width')) {
+                                if (node.hasPX('width', false)) {
                                     const width = node.css('width');
-                                    if (node.parseUnit(width) > node.parseUnit(node.css('minWidth'))) {
+                                    if (node.parseWidth(width) > node.parseWidth(node.css('minWidth'))) {
                                         node.cssApply({ width: 'auto', minWidth: width });
                                     }
                                 }
@@ -2477,15 +2476,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             continue;
                         }
                         else if (item.controlElement) {
+                            let adjustment = item.bounds.top;
                             if (previousBaseline) {
-                                item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - previousBaseline.box.top);
-                                item.baselineAltered = true;
+                                adjustment -= previousBaseline.linear.bottom;
                             }
                             else {
                                 item.anchor('top', 'true');
-                                item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - node.box.top);
-                                item.baselineAltered = true;
+                                adjustment -= node.box.top;
                             }
+                            item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
+                            item.baselineAltered = true;
                             continue;
                         }
                         let alignTop = false;
@@ -2668,12 +2668,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let baselineCount = 0;
         const setAlignTop = (item: T) => {
             item.anchorParent('vertical', 0);
-            const adjustment = item.linear.top - node.box.top;
-            if (Math.round(adjustment) !== 0) {
-                item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
-                item.baselineAltered = true;
-                valid = false;
-            }
+            item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: item.bounds.top - node.box.top });
+            item.baselineAltered = true;
+            valid = false;
         };
         if (!reverse) {
             switch (node.cssAscend('textAlign', true)) {
@@ -2880,11 +2877,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     baseline.anchor('baseline', 'parent');
                 }
                 else {
-                    baseline.anchorParent('vertical', 0);
-                    const adjustment = Math.floor(baseline.linear.top - node.box.top);
-                    if (adjustment > 0) {
-                        baseline.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
-                    }
+                    setAlignTop(baseline);
                 }
             }
             baseline.baselineActive = baselineCount > 0;

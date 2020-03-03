@@ -530,6 +530,7 @@ declare namespace base {
         readonly baselineHeight: number;
         readonly baselineElement: boolean;
         readonly positiveAxis: boolean;
+        readonly leftTopAxis: boolean;
         readonly layoutHorizontal: boolean;
         readonly layoutVertical: boolean;
         readonly onlyChild: boolean;
@@ -574,6 +575,8 @@ declare namespace base {
         sort(predicate?: (a: Node, b: Node) => number): this;
         render(parent?: NodeUI): void;
         renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
+        parseWidth(value: string, parent?: boolean): number;
+        parseHeight(value: string, parent?: boolean): number;
         actualRect(direction: string, dimension?: BoxType): number;
         actualPadding(attr: "paddingTop" | "paddingBottom", value: number): number;
         actualBoxWidth(value?: number): number;

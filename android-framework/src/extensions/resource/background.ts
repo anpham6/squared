@@ -1092,11 +1092,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 else if (dimen !== 'auto') {
                                     if (index === 0) {
                                         if (tileModeX !== 'repeat') {
-                                            width = node.parseUnit(dimen, 'width', false);
+                                            width = node.parseWidth(dimen, false);
                                         }
                                     }
                                     else if (tileModeY !== 'repeat') {
-                                        height = node.parseUnit(dimen, 'height', false);
+                                        height = node.parseHeight(dimen, false);
                                     }
                                 }
                             });

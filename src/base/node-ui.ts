@@ -407,9 +407,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract alignParent(position: string): boolean;
     public abstract alignSibling(position: string, documentId?: string): string;
     public abstract actualRect(direction: string, dimension?: BoxType): number;
-    public abstract localizeString(value: string): string;
     public abstract translateX(value: number, options?: TranslateUIOptions): boolean;
     public abstract translateY(value: number, options?: TranslateUIOptions): boolean;
+    public abstract localizeString(value: string): string;
 
     public abstract get controlElement(): boolean;
     public abstract set containerType(value: number);
@@ -512,6 +512,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public parseUnit(value: string, dimension: "width" | "height" = 'width', parent = true, screenDimension?: Dimension) {
         return super.parseUnit(value, dimension, parent, screenDimension || this.localSettings.screenDimension);
+    }
+
+    public parseWidth(value: string, parent = true) {
+        return super.parseUnit(value, 'width', parent, this.localSettings.screenDimension);
+    }
+
+    public parseHeight(value: string, parent = true) {
+        return super.parseUnit(value, 'height', parent, this.localSettings.screenDimension);
     }
 
     public renderEach(predicate: IteratorPredicate<T, void>) {
@@ -938,11 +946,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public previousSiblings(options: SiblingOptions = {}) {
-        return traverseElementSibling(options, <Element> (!this.nodeGroup && this.innerMostWrapped.element?.previousSibling || this.firstChild?.element?.previousSibling), 'previousSibling', this.sessionId);
+        return traverseElementSibling(options, <Element> (this.nodeGroup ? this.firstChild?.element?.previousSibling : this.innerMostWrapped.element?.previousSibling), 'previousSibling', this.sessionId);
     }
 
     public nextSiblings(options: SiblingOptions = {}) {
-        return traverseElementSibling(options, <Element> (!this.nodeGroup && this.innerMostWrapped.element?.nextSibling || this.firstChild?.element?.nextSibling), 'nextSibling', this.sessionId);
+        return traverseElementSibling(options, <Element> (this.nodeGroup ? this.firstChild?.element?.nextSibling : this.innerMostWrapped.element?.nextSibling), 'nextSibling', this.sessionId);
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {
@@ -1372,6 +1380,25 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             result = (!this.positionRelative || this.positionRelative && this.top >= 0 && this.left >= 0 && (this.right <= 0 || this.hasPX('left')) && (this.bottom <= 0 || this.hasPX('top'))) && this.marginTop >= 0 && this.marginLeft >= 0 && this.marginRight >= 0;
             this._cached.positiveAxis = result;
+        }
+        return result;
+    }
+
+    get leftTopAxis() {
+        let result = this._cached.leftTopAxis;
+        if (result === undefined) {
+            switch (this.cssInitial('position')) {
+                case 'absolute':
+                    result = this.absoluteParent === this.documentParent;
+                    break;
+                case 'fixed':
+                    result = true;
+                    break;
+                default:
+                    result = false;
+                    break;
+            }
+            this._cached.leftTopAxis = result;
         }
         return result;
     }

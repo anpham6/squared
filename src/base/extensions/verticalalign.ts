@@ -93,8 +93,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     if (baseline) {
-                        const adjustment = baseline.linear.top - top + Math.min(0, above.parseUnit(above.cssInitial('verticalAlign'), 'height'));
-                        baseline.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
+                        baseline.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: baseline.linear.top - top + Math.min(0, above.parseHeight(above.cssInitial('verticalAlign'))) });
                         baseline.baselineAltered = true;
                     }
                 }

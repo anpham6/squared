@@ -191,7 +191,7 @@ function getOpenRowIndex(cells: number[][]) {
 }
 
 const isFr = (value: string) => /fr$/.test(value);
-const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, index === 0 ? 'height' : 'width')) : value;
+const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, index !== 0 ? 'width' : 'height')) : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static isAligned<T extends NodeUI>(node: T) {
@@ -275,8 +275,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
             return false;
         };
-        row.gap = node.parseUnit(node.css('rowGap'), 'height', false);
-        column.gap = node.parseUnit(node.css('columnGap'), 'width', false);
+        column.gap = node.parseWidth(node.css('columnGap'), false);
+        row.gap = node.parseHeight(node.css('rowGap'), false);
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
             if (value !== '' && value !== 'none' && value !== 'auto') {
                 const data = index === 0 ? row : column;
@@ -369,7 +369,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             break;
                         case 2:
                         case 3:
-                            (index === 2 ? row : column).auto.push(isLength(command) ? formatPX(node.parseUnit(command, index === 2 ? 'height' : 'width')) : command);
+                            (index === 2 ? row : column).auto.push(isLength(command) ? formatPX(node.parseUnit(command, index !== 2 ? 'width' : 'height')) : command);
                             break;
                     }
                 }

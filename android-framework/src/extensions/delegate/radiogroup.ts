@@ -72,22 +72,22 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         });
         let length = radiogroup.length;
         if (length > 1) {
+            const { target, use } = node.dataset;
             const linearX = NodeUI.linearData(parent.children.slice(first, last + 1)).linearX;
-            const container = this.controller.createNodeGroup(node, radiogroup, parent);
+            const container = this.controller.createNodeGroup(node, radiogroup, parent, true);
             const controlName = CONTAINER_ANDROID.RADIOGROUP;
+            container.setControlType(controlName, CONTAINER_NODE.LINEAR);
             if (linearX) {
-                container.addAlign(NODE_ALIGNMENT.HORIZONTAL | (length < parent.length ? NODE_ALIGNMENT.SEGMENTED : 0));
+                container.addAlign(NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.SEGMENTED);
                 container.android('orientation', 'horizontal');
             }
             else {
                 container.addAlign(NODE_ALIGNMENT.VERTICAL);
                 container.android('orientation', 'vertical');
             }
-            container.setControlType(controlName, CONTAINER_NODE.LINEAR);
             container.inherit(node, 'alignment');
             container.exclude({ resource: NODE_RESOURCE.ASSET });
-            const dataset = node.dataset;
-            container.render(dataset.target && !dataset.use ? this.application.resolveTarget(dataset.target) : parent);
+            container.render(target && !use ? this.application.resolveTarget(target) : parent);
             if (!setBaselineIndex(radiogroup, container)) {
                 container.css('verticalAlign', 'middle');
                 container.setCacheValue('baseline', false);

@@ -48,10 +48,10 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
         if (items.length === 0) {
             rows.pop();
         }
-        const columnCount = node.toInt('columnCount');
-        const columnWidth = node.parseUnit(node.css('columnWidth'));
         const [borderLeftStyle, borderLeftWidth, borderLeftColor] = node.cssAsTuple('columnRuleStyle', 'columnRuleWidth', 'columnRuleColor');
-        let columnGap = node.parseUnit(node.css('columnGap'));
+        const columnCount = node.toInt('columnCount');
+        const columnWidth = node.parseWidth(node.css('columnWidth'));
+        let columnGap = node.parseWidth(node.css('columnGap'));
         let boxWidth: number;
         const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Number.POSITIVE_INFINITY;
         if (isUserAgent(USER_AGENT.SAFARI)) {

@@ -555,7 +555,7 @@ function hasTextAlign(node: T, value: string, localizedValue?: string) {
 }
 
 const canTextAlign = (node: T) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
-const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
+const validateCssSet = (value: string, actualValue: string) => value === actualValue || value === 'auto' && actualValue === '' || isLength(value, true) && PX.test(actualValue);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public static isFlexDirection(node: T, direction: string) {
@@ -1091,14 +1091,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public parseUnit(value: string, dimension: "width" | "height" = 'width', parent = true, screenDimension?: Dimension) {
         if (value) {
             if (isPercent(value)) {
-                const node = parent && this.absoluteParent || this;
+                const bounds = parent && this.absoluteParent?.box || this.bounds;
                 let result = parseFloat(value) / 100;
                 switch (dimension) {
                     case 'width':
-                        result *= node.bounds.width;
+                        result *= bounds.width;
                         break;
                     case 'height':
-                        result *= node.bounds.height;
+                        result *= bounds.height;
                         break;
                 }
                 return result;

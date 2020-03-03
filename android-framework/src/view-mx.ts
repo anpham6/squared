@@ -1,6 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
 import { AutoMargin, BoxType, HideUIOptions, TranslateUIOptions } from '../../@types/base/node';
-import { CustomizationResult } from '../../@types/android/application';
 import { CachedValueAndroidUI, Constraint, LocalSettingsAndroidUI, SupportAndroid } from '../../@types/android/node';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
@@ -17,14 +16,12 @@ const { BOX_MARGIN, BOX_PADDING, formatPX, isLength, isPercent } = $lib.css;
 const { getNamedItem, newBoxModel } = $lib.dom;
 const { clamp, truncate } = $lib.math;
 const { actualTextRangeRect } = $lib.session;
-const { aboveRange, capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
+const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
 
 const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
 
-const LAYOUT_RELATIVE_PARENT = LAYOUT_ANDROID.relativeParent;
-const LAYOUT_RELATIVE = LAYOUT_ANDROID.relative;
-const LAYOUT_CONSTRAINT = LAYOUT_ANDROID.constraint;
-const DEPRECATED: ObjectMap<CustomizationResult> = DEPRECATED_ANDROID.android;
+const DEPRECATED = DEPRECATED_ANDROID.android;
+const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_ANDROID;
 
 const SPACING_SELECT = 2;
 const SPACING_CHECKBOX = 4;
@@ -94,7 +91,7 @@ function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
 }
 
 function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top: boolean, bottom: boolean) {
-    if (node.imageOrSvgElement || node.baselineAltered && !node.multiline || node.actualHeight === 0 || node.cssInitial('lineHeight') === 'initial') {
+    if (node.imageOrSvgElement || node.baselineAltered && !inlineStyle || node.actualHeight === 0 || node.cssInitial('lineHeight') === 'initial') {
         return;
     }
     if (node.multiline) {
@@ -102,16 +99,26 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
     }
     else {
         const length = node.renderChildren.length;
+        const setBoxPadding = (offset: number) => {
+            const upper = Math.round(offset);
+            if (upper > 0) {
+                const boxPadding = node.styleText && !inlineStyle;
+                if (top) {
+                    node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.MARGIN_TOP, upper);
+                }
+                if (bottom) {
+                    node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_BOTTOM : BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
+                }
+            }
+        };
         if ((node.inline || length) && (node.pageFlow || node.textContent.length)) {
             if (inlineStyle && node.inlineText && !node.inline) {
                 setMinHeight(node, lineHeight);
             }
             else {
                 let offset = 0;
-                let usePadding = true;
-                if (!inlineStyle && node.inlineText && node.styleElement) {
+                if (!inlineStyle && node.styleText) {
                     offset = getLineSpacingExtra(node, lineHeight);
-                    usePadding = false;
                 }
                 else {
                     const height = node.bounds.height;
@@ -124,16 +131,7 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                     }
                     offset = (lineHeight - height) / 2;
                 }
-                const upper = Math.round(offset);
-                if (upper > 0) {
-                    const boxPadding = usePadding && node.textElement && !node.plainText && !inlineStyle;
-                    if (top) {
-                        node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.MARGIN_TOP, upper);
-                    }
-                    if (bottom) {
-                        node.modifyBox(boxPadding ? BOX_STANDARD.PADDING_BOTTOM : BOX_STANDARD.MARGIN_BOTTOM, Math.floor(offset));
-                    }
-                }
+                setBoxPadding(offset);
             }
         }
         else if (inlineStyle) {
@@ -143,9 +141,14 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                     node.mergeGravity('gravity', 'center_vertical', false);
                 }
                 else if (height > 0) {
-                    const offset = (lineHeight / 2) - node.paddingTop;
-                    if (offset > 0) {
-                        node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+                    if (node.styleText) {
+                        setBoxPadding(getLineSpacingExtra(node, lineHeight));
+                    }
+                    else {
+                        const offset = (lineHeight / 2) - node.paddingTop;
+                        if (offset > 0) {
+                            node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+                        }
                     }
                 }
                 else {
@@ -195,18 +198,21 @@ function checkMergableGravity(value: string, direction: Set<string>) {
 function getLineSpacingExtra(node: T, lineHeight: number) {
     let height = NaN;
     if (node.styleText) {
-        if (node.cssTry('height', 'auto')) {
-            if (node.cssTry('minHeight', 'auto')) {
-                if (node.cssTry('line-height', 'normal')) {
-                    if (node.cssTry('white-space', 'nowrap')) {
-                        height = actualTextRangeRect(<Element> node.element).height;
-                        node.cssFinally('white-space');
+        if (node.cssTry('display', 'inline-block')) {
+            if (node.cssTry('height', 'auto')) {
+                if (node.cssTry('minHeight', 'auto')) {
+                    if (node.cssTry('line-height', 'normal')) {
+                        if (node.cssTry('white-space', 'nowrap')) {
+                            height = actualTextRangeRect(<Element> node.element).height;
+                            node.cssFinally('white-space');
+                        }
+                        node.cssFinally('line-height');
                     }
-                    node.cssFinally('line-height');
+                    node.cssFinally('minHeight');
                 }
-                node.cssFinally('minHeight');
+                node.cssFinally('height');
             }
-            node.cssFinally('height');
+            node.cssFinally('display');
         }
     }
     else if (node.plainText) {
@@ -228,7 +234,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
                 if (ascendFlexibleWidth(node)) {
                     node.setLayoutWidth('0px', false);
                     if (node.flexibleWidth) {
-                        node.app('layout_constraintWidth_min', formatPX(node.parseUnit(minWH) + node.contentBoxWidth));
+                        node.app('layout_constraintWidth_min', formatPX(node.parseWidth(minWH) + node.contentBoxWidth));
                         node.css('minWidth', 'auto');
                     }
                 }
@@ -236,7 +242,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
             else if (ascendFlexibleHeight(node)) {
                 node.setLayoutHeight('0px', false);
                 if (node.flexibleHeight) {
-                    node.app('layout_constraintHeight_min', formatPX(node.parseUnit(minWH, 'height') + node.contentBoxHeight));
+                    node.app('layout_constraintHeight_min', formatPX(node.parseHeight(minWH) + node.contentBoxHeight));
                     node.css(horizontal ? 'minWidth' : 'minHeight', 'auto');
                 }
             }
@@ -246,7 +252,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
     if (isLength(maxWH, true) && maxWH !== '100%') {
         if (horizontal) {
             if (ascendFlexibleWidth(node)) {
-                const value = node.parseUnit(maxWH);
+                const value = node.parseWidth(maxWH);
                 const contentBox = (node.contentBox && !node.actualParent?.gridElement ? node.contentBoxWidth : 0);
                 if (hasDimension) {
                     const width = node.width;
@@ -271,7 +277,7 @@ function constraintMinMax(node: T, horizontal: boolean) {
         }
         else if (ascendFlexibleHeight(node)) {
             const contentBox = (node.contentBox && !node.actualParent?.gridElement ? node.contentBoxHeight : 0);
-            const value = node.parseUnit(maxWH, 'height');
+            const value = node.parseHeight(maxWH);
             if (hasDimension) {
                 const height = node.height;
                 if (height < value) {
@@ -578,460 +584,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public android(attr: string, value?: string, overwrite = true) {
-            if (value) {
-                value = this.attr('android', attr, value, overwrite);
-                if (value !== '') {
-                    return value;
-                }
-            }
-            return this.__android[attr] || '';
-        }
-
-        public app(attr: string, value?: string, overwrite = true) {
-            if (value) {
-                value = this.attr('app', attr, value, overwrite);
-                if (value !== '') {
-                    return value;
-                }
-            }
-            return this.__app[attr] || '';
-        }
-
-        public apply(options: {}) {
-            for (const name in options) {
-                const data = options[name];
-                if (isPlainObject(data)) {
-                    for (const attr in data) {
-                        this.attr(name, attr, data[attr]);
-                    }
-                }
-                else if (data) {
-                    this.attr('_', name, data.toString());
-                }
-            }
-        }
-
-        public formatted(value: string, overwrite = true) {
-            const match = REGEX_FORMATTED.exec(value);
-            if (match) {
-                this.attr(match[1] || '_', match[2], match[3], overwrite);
-            }
-        }
-
-        public anchor(position: string, documentId = '', overwrite?: boolean) {
-            const node = this.anchorTarget;
-            const renderParent = node.renderParent as T;
-            if (renderParent && node.documentId !== documentId) {
-                if (renderParent.layoutConstraint) {
-                    if (documentId === '' || node.constraint.current[position] === undefined || overwrite) {
-                        const anchored = documentId === 'parent';
-                        if (overwrite === undefined && documentId !== '') {
-                            overwrite = anchored;
-                        }
-                        const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
-                        if (attr) {
-                            let horizontal = false;
-                            node.app(this.localizeString(attr), documentId, overwrite);
-                            switch (position) {
-                                case 'left':
-                                case 'right':
-                                    if (anchored) {
-                                        node.constraint.horizontal = true;
-                                    }
-                                case 'leftRight':
-                                case 'rightLeft':
-                                    horizontal = true;
-                                    break;
-                                case 'top':
-                                case 'bottom':
-                                case 'baseline':
-                                    if (anchored) {
-                                        node.constraint.vertical = true;
-                                    }
-                                    break;
-                            }
-                            node.constraint.current[position] = { documentId, horizontal };
-                            return true;
-                        }
-                    }
-                }
-                else if (renderParent.layoutRelative) {
-                    const relativeParent = documentId === 'true';
-                    if (overwrite === undefined && documentId !== '') {
-                        overwrite = relativeParent;
-                    }
-                    const attr: Undef<string> = (relativeParent ? LAYOUT_RELATIVE_PARENT : LAYOUT_RELATIVE)[position];
-                    if (attr) {
-                        node.android(this.localizeString(attr), documentId, overwrite);
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        public anchorParent(orientation: string, bias?: number, style = '', overwrite?: boolean) {
-            const node = this.anchorTarget;
-            const renderParent = node.renderParent as T;
-            if (renderParent) {
-                const horizontal = orientation === 'horizontal';
-                if (renderParent.layoutConstraint) {
-                    if (overwrite || !node.constraint[orientation]) {
-                        if (horizontal) {
-                            node.anchor('left', 'parent', overwrite);
-                            node.anchor('right', 'parent', overwrite);
-                            node.constraint.horizontal = true;
-                        }
-                        else {
-                            node.anchor('top', 'parent', overwrite);
-                            node.anchor('bottom', 'parent', overwrite);
-                            node.constraint.vertical = true;
-                        }
-                        if (bias !== undefined) {
-                            node.anchorStyle(orientation, bias, style, overwrite);
-                        }
-                        return true;
-                    }
-                }
-                else if (renderParent.layoutRelative) {
-                    node.anchor(horizontal ? 'centerHorizontal' : 'centerVertical', 'true', overwrite);
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public anchorStyle(orientation: string, bias: number, value?: string, overwrite = true) {
-            const node = this.anchorTarget;
-            if (orientation === 'horizontal') {
-                node.app('layout_constraintHorizontal_bias', bias.toString(), overwrite);
-                if (value) {
-                    node.app('layout_constraintHorizontal_chainStyle', value, overwrite);
-                }
-            }
-            else {
-                node.app('layout_constraintVertical_bias', bias.toString(), overwrite);
-                if (value) {
-                    node.app('layout_constraintVertical_chainStyle', value, overwrite);
-                }
-            }
-        }
-
-        public anchorChain(direction: BoxPosition) {
-            const result: T[] = [];
-            const node = this.anchorTarget;
-            const renderParent = node.renderParent as T;
-            if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
-                let anchorA: string;
-                let anchorB: string;
-                switch (direction) {
-                    case 'top':
-                        anchorA = 'topBottom';
-                        anchorB = 'bottomTop';
-                        break;
-                    case 'right':
-                        anchorA = 'rightLeft';
-                        anchorB = 'leftRight';
-                        break;
-                    case 'bottom':
-                        anchorA = 'bottomTop';
-                        anchorB = 'topBottom';
-                        break;
-                    case 'left':
-                        anchorA = 'leftRight';
-                        anchorB = 'rightLeft';
-                        break;
-                }
-                const siblings = renderParent.renderChildren;
-                let current = node;
-                do {
-                    const adjacent = current.alignSibling(anchorA);
-                    if (adjacent !== '') {
-                        const sibling = siblings.find(item => item.documentId === adjacent) as T | undefined;
-                        if (sibling?.alignSibling(anchorB) === current.documentId) {
-                            result.push(sibling);
-                            current = sibling;
-                        }
-                        else {
-                            break;
-                        }
-                    }
-                    else {
-                        break;
-                    }
-                }
-                while (true);
-            }
-            return result;
-        }
-
-        public anchorDelete(...position: string[]) {
-            const node = this.anchorTarget;
-            const renderParent = node.renderParent as T;
-            if (renderParent) {
-                if (renderParent.layoutConstraint) {
-                    node.delete('app', ...replaceMap<string, string>(position, value => this.localizeString(LAYOUT_CONSTRAINT[value])));
-                }
-                else if (renderParent.layoutRelative) {
-                    const layout: string[] = [];
-                    for (const value of position) {
-                        let attr: Undef<string> = LAYOUT_RELATIVE[value];
-                        if (attr) {
-                            layout.push(this.localizeString(attr));
-                        }
-                        attr = LAYOUT_RELATIVE_PARENT[value];
-                        if (attr) {
-                            layout.push(this.localizeString(attr));
-                        }
-                    }
-                    node.delete('android', ...layout);
-                }
-            }
-        }
-
-        public anchorClear() {
-            const node = this.anchorTarget;
-            const renderParent = node.renderParent as T;
-            if (renderParent) {
-                if (renderParent.layoutConstraint) {
-                    node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT));
-                    node.delete('app', 'layout_constraintHorizontal_bias', 'layout_constraintHorizontal_chainStyle', 'layout_constraintVertical_bias', 'layout_constraintVertical_chainStyle');
-                }
-                else if (renderParent.layoutRelative) {
-                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE_PARENT));
-                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE));
-                }
-            }
-        }
-
-        public alignParent(position: string) {
-            const node = this.anchorTarget;
-            const renderParent = node.renderParent as T;
-            if (renderParent) {
-                if (renderParent.layoutConstraint) {
-                    const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
-                    if (attr) {
-                        return node.app(this.localizeString(attr)) === 'parent';
-                    }
-                }
-                else if (renderParent.layoutRelative) {
-                    const attr: Undef<string> = LAYOUT_RELATIVE_PARENT[position];
-                    if (attr) {
-                        return node.android(this.localizeString(attr)) === 'true';
-                    }
-                }
-                else if (renderParent.layoutLinear) {
-                    const children = renderParent.renderChildren;
-                    if (renderParent.layoutVertical) {
-                        switch (position) {
-                            case 'top':
-                                return node === children[0];
-                            case 'bottom':
-                                return node === children[children.length - 1];
-                        }
-                    }
-                    else {
-                        switch (position) {
-                            case 'left':
-                            case 'start':
-                                return node === children[0];
-                            case 'right':
-                            case 'end':
-                                return node === children[children.length - 1];
-                        }
-                    }
-                }
-            }
-            return false;
-        }
-
-        public alignSibling(position: string, documentId?: string) {
-            const node = this.anchorTarget;
-            const renderParent = node.renderParent as T;
-            if (renderParent) {
-                if (documentId) {
-                    if (renderParent.layoutConstraint) {
-                        const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
-                        if (attr) {
-                            node.app(this.localizeString(attr), documentId);
-                        }
-                    }
-                    else if (renderParent.layoutRelative) {
-                        const attr: Undef<string> = LAYOUT_RELATIVE[position];
-                        if (attr) {
-                            node.android(this.localizeString(attr), documentId);
-                        }
-                    }
-                }
-                else {
-                    if (renderParent.layoutConstraint) {
-                        const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
-                        if (attr) {
-                            const value = node.app(this.localizeString(attr));
-                            return value !== 'parent' && value !== renderParent.documentId ? value : '';
-                        }
-                    }
-                    else if (renderParent.layoutRelative) {
-                        const attr: Undef<string> = LAYOUT_RELATIVE[position];
-                        if (attr) {
-                            return node.android(this.localizeString(attr));
-                        }
-                    }
-                }
-            }
-            return '';
-        }
-
-        public removeTry(replacement?: T, beforeReplace?: () => void) {
-            if (beforeReplace === undefined && replacement) {
-                beforeReplace = () => replacement.anchorClear();
-            }
-            return super.removeTry(replacement, beforeReplace);
-        }
-
-        public supported(attr: string, result = {}): boolean {
-            if (typeof DEPRECATED[attr] === 'function') {
-                const valid = DEPRECATED[attr](result, this.api, this);
-                if (!valid || Object.keys(result).length) {
-                    return valid;
-                }
-            }
-            for (let i = this.api; i <= BUILD_ANDROID.LATEST; i++) {
-                const callback = API_ANDROID[i]?.android[attr];
-                switch (typeof callback) {
-                    case 'boolean':
-                        return callback;
-                    case 'function':
-                        return callback(result, this.api, this);
-                }
-            }
-            return true;
-        }
-
-        public combine(...objs: string[]) {
-            const namespaces = this._namespaces;
-            const all = objs.length === 0;
-            const result: string[] = [];
-            let requireId = false;
-            let id = '';
-            for (const name of namespaces) {
-                if (all || objs.includes(name)) {
-                    const obj: StringMap = this['__' + name];
-                    if (obj) {
-                        let prefix = name + ':';
-                        switch (name) {
-                            case 'android':
-                                if (this.api < BUILD_ANDROID.LATEST) {
-                                    for (let attr in obj) {
-                                        if (attr === 'id') {
-                                            id = obj[attr];
-                                        }
-                                        else {
-                                            const data: ObjectMap<string | boolean> = {};
-                                            let value = obj[attr];
-                                            if (!this.supported(attr, data)) {
-                                                continue;
-                                            }
-                                            if (Object.keys(data).length) {
-                                                if (isString(data.attr)) {
-                                                    attr = data.attr;
-                                                }
-                                                if (isString(data.value)) {
-                                                    value = data.value;
-                                                }
-                                            }
-                                            result.push(prefix + `${attr}="${value}"`);
-                                        }
-                                    }
-                                }
-                                else {
-                                    for (const attr in obj) {
-                                        if (attr === 'id') {
-                                            id = obj[attr];
-                                        }
-                                        else {
-                                            result.push(prefix + `${attr}="${obj[attr]}"`);
-                                        }
-                                    }
-                                }
-                                requireId = true;
-                                break;
-                            case '_':
-                                prefix = '';
-                            default:
-                                for (const attr in obj) {
-                                    result.push(prefix + `${attr}="${obj[attr]}"`);
-                                }
-                                break;
-                        }
-                    }
-                }
-            }
-            result.sort((a, b) => a > b ? 1 : -1);
-            if (requireId) {
-                result.unshift('android:id="' + (id || `@+id/${this.controlId}`) + '"');
-            }
-            return result;
-        }
-
-        public localizeString(value: string) {
-            return localizeString(value, this._localization, this.api);
-        }
-
-        public hide(options?: HideUIOptions<T>) {
-            if (options) {
-                if (options.hidden) {
-                    this.android('visibility', 'invisible');
-                    return;
-                }
-                else if (options.collapse) {
-                    this.android('visibility', 'gone');
-                    return;
-                }
-            }
-            super.hide(options);
-        }
-
-        public clone(id?: number, attributes = true, position = false): T {
-            const node = new View(id || this.id, this.sessionId, this.element || undefined);
-            node.unsafe('localization', this._localization);
-            node.localSettings = { ...this.localSettings };
-            if (id !== undefined) {
-                node.setControlType(this.controlName, this.containerType);
-            }
-            else {
-                node.controlId = this.controlId;
-                node.controlName = this.controlName;
-                node.containerType = this.containerType;
-            }
-            this.cloneBase(node);
-            if (attributes) {
-                Object.assign(node.unsafe('boxReset'), this._boxReset);
-                Object.assign(node.unsafe('boxAdjustment'), this._boxAdjustment);
-                for (const name of this._namespaces) {
-                    const obj: StringMap = this['__' + name];
-                    if (obj) {
-                        for (const attr in obj) {
-                            node.attr(name, attr, attr === 'id' && name === 'android' ? node.documentId : obj[attr]);
-                        }
-                    }
-                }
-            }
-            if (position) {
-                node.anchorClear();
-                const documentId = this.documentId;
-                if (node.anchor('left', documentId)) {
-                    node.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1, adjustment: 0 });
-                }
-                if (node.anchor('top', documentId)) {
-                    node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: 0 });
-                }
-            }
-            node.saveAsInitial(true);
-            return node;
-        }
-
         public setControlType(controlName: string, containerType?: number) {
             this.controlName = controlName;
             if (containerType) {
@@ -1111,10 +663,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else if (width === '100%') {
                             if (!maxDimension && this.hasPX('maxWidth')) {
                                 const maxWidth = this.css('maxWidth');
-                                const maxValue = this.parseUnit(maxWidth);
+                                const maxValue = this.parseWidth(maxWidth);
                                 const absoluteParent = this.absoluteParent || actualParent;
                                 if (maxWidth === '100%') {
-                                    if (flexibleWidth && aboveRange(maxValue, absoluteParent.box.width)) {
+                                    if (flexibleWidth && Math.ceil(maxValue) >= absoluteParent.box.width) {
                                         layoutWidth = matchParent;
                                     }
                                     else {
@@ -1126,7 +678,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         value = Math.min(this.actualWidth, maxValue);
                                     }
                                     else {
-                                        layoutWidth = Math.ceil(maxValue) < Math.floor(absoluteParent.width) ? 'wrap_content' : matchParent;
+                                        layoutWidth = Math.floor(maxValue) < absoluteParent.width ? 'wrap_content' : matchParent;
                                     }
                                 }
                             }
@@ -1260,10 +812,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else if (height === '100%') {
                             if (!maxDimension) {
                                 const maxHeight = this.css('maxHeight');
-                                const maxValue = this.parseUnit(maxHeight);
+                                const maxValue = this.parseHeight(maxHeight);
                                 const absoluteParent = this.absoluteParent || actualParent;
                                 if (maxHeight === '100%') {
-                                    if (flexibleHeight && aboveRange(maxValue, absoluteParent.box.height)) {
+                                    if (flexibleHeight && Math.ceil(maxValue) >= absoluteParent.box.height) {
                                         layoutHeight = 'match_parent';
                                     }
                                     else {
@@ -1275,7 +827,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         value = Math.min(this.actualHeight, maxValue);
                                     }
                                     else {
-                                        layoutHeight = Math.ceil(maxValue) < Math.floor(absoluteParent.box.height) ? 'wrap_content' : 'match_parent';
+                                        layoutHeight = Math.floor(maxValue) < absoluteParent.box.height ? 'wrap_content' : 'match_parent';
                                     }
                                 }
                             }
@@ -1331,7 +883,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.setLayoutWidth(matchParent);
                 }
                 else {
-                    this.android('minWidth', formatPX(this.parseUnit(minWidth) + (this.contentBox && !actualParent.gridElement ? this.contentBoxWidth : 0)), false);
+                    this.android('minWidth', formatPX(this.parseWidth(minWidth) + (this.contentBox && !actualParent.gridElement ? this.contentBoxWidth : 0)), false);
                 }
             }
             if (this.hasPX('minHeight') && this.display !== 'table-cell' && (!Node.isFlexDirection(this, 'column') || actualParent.flexElement && !this.flexibleHeight)) {
@@ -1340,7 +892,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.setLayoutHeight('match_parent');
                 }
                 else {
-                    this.android('minHeight', formatPX(this.parseUnit(minHeight, 'height') + (this.contentBox && !actualParent.gridElement ? this.contentBoxHeight : 0)), false);
+                    this.android('minHeight', formatPX(this.parseHeight(minHeight) + (this.contentBox && !actualParent.gridElement ? this.contentBoxHeight : 0)), false);
                 }
             }
             if (maxDimension) {
@@ -1366,7 +918,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                     else {
-                        width = this.parseUnit(maxWidth);
+                        width = this.parseWidth(maxWidth);
                     }
                 }
                 else if (!this.pageFlow && this.multiline && this.inlineWidth && !this.preserveWhiteSpace && (this.ascend({ condition: item => item.hasPX('width') }).length || !this.textContent.includes('\n'))) {
@@ -1382,11 +934,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             this.setLayoutHeight('match_parent');
                         }
                         else {
-                            height = this.imageElement ? this.toElementInt('naturalHeight') : this.parseUnit(maxHeight, 'height');
+                            height = this.imageElement ? this.toElementInt('naturalHeight') : this.parseHeight(maxHeight);
                         }
                     }
                     else {
-                        height = this.parseUnit(maxHeight, 'height');
+                        height = this.parseHeight(maxHeight);
                     }
                     if (height >= 0) {
                         this.android('maxHeight', formatPX(height));
@@ -1522,154 +1074,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (autoMargin.vertical && (renderParent.layoutFrame || renderParent.layoutVertical && renderParent.layoutLinear)) {
                 node.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : (autoMargin.top ? 'bottom' : 'top'));
-            }
-        }
-
-        public mergeGravity(attr: string, alignment: string, overwrite = true) {
-            if (attr === 'layout_gravity') {
-                const renderParent = this.renderParent;
-                if (renderParent) {
-                    if (isHorizontalAlign(alignment) && (this.blockWidth || renderParent.inlineWidth && this.onlyChild || !overwrite && this.outerWrapper && this.hasPX('maxWidth'))) {
-                        return;
-                    }
-                    else if (renderParent.layoutRelative) {
-                        if (alignment === 'center_horizontal' && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
-                            this.anchorDelete('left', 'right');
-                            this.anchor('centerHorizontal', 'true');
-                            return;
-                        }
-                    }
-                    else if (renderParent.layoutConstraint) {
-                        if (!renderParent.layoutHorizontal && !this.positioned) {
-                            switch (alignment) {
-                                case 'top':
-                                    this.anchor('top', 'parent', false);
-                                    break;
-                                case 'right':
-                                case 'end':
-                                    if (this.alignSibling('rightLeft') === '') {
-                                        this.anchor('right', 'parent', false);
-                                    }
-                                    break;
-                                case 'bottom':
-                                    this.anchor('bottom', 'parent', false);
-                                    break;
-                                case 'left':
-                                case 'start':
-                                    if (this.alignSibling('leftRight') === '') {
-                                        this.anchor('left', 'parent', false);
-                                    }
-                                    break;
-                                case 'center_horizontal':
-                                    if (this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
-                                        this.anchorParent('horizontal', 0.5);
-                                    }
-                                    break;
-                            }
-                        }
-                        return;
-                    }
-                }
-            }
-            else {
-                switch (this.tagName) {
-                    case '#text':
-                    case 'IMG':
-                    case 'SVG':
-                    case 'HR':
-                        return;
-                    case 'INPUT':
-                        switch (this.toElementString('type')) {
-                            case 'radio':
-                            case 'checkbox':
-                            case 'image':
-                            case 'range':
-                                return;
-                        }
-                        break;
-                    default:
-                        if (this.controlElement || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.length && (this.layoutFrame || this.layoutConstraint || this.layoutGrid)) {
-                            return;
-                        }
-                        break;
-                }
-            }
-            const direction = getGravityValues(this, attr);
-            const gravity = this.localizeString(alignment);
-            if (!direction.has(gravity)) {
-                direction.add(gravity);
-                let result = '';
-                let x = '';
-                let y = '';
-                let z = '';
-                for (const value of direction.values()) {
-                    if (isHorizontalAlign(value)) {
-                        if (x === '' || overwrite) {
-                            x = value;
-                        }
-                    }
-                    else if (isVerticalAlign(value)) {
-                        if (y === '' || overwrite) {
-                            y = value;
-                        }
-                    }
-                    else {
-                        z += (z !== '' ? '|' : '') + value;
-                    }
-                }
-                result = x !== '' && y !== '' ? x + '|' + y : x || y;
-                if (z !== '') {
-                    result += (result !== '' ? '|' : '') + z;
-                }
-                if (result !== '') {
-                    this.android(attr, result);
-                }
-            }
-        }
-
-        public applyOptimizations() {
-            const renderParent = this.renderParent;
-            if (renderParent) {
-                this.alignLayout(renderParent);
-                this.setLineHeight(renderParent);
-                this.finalizeGravity('layout_gravity');
-                this.finalizeGravity('gravity');
-                if (this.imageElement) {
-                    const layoutWidth = this.layoutWidth;
-                    const layoutHeight = this.layoutHeight;
-                    if (layoutWidth === 'wrap_content' && layoutHeight !== 'wrap_content' ||
-                        layoutWidth !== 'wrap_content' && layoutHeight === 'wrap_content' ||
-                        layoutWidth === 'match_parent' || layoutHeight === 'match_parent' ||
-                        layoutWidth === '0px' || layoutHeight === '0px' ||
-                        this.android('minWidth') !== '' || this.android('minHeight') !== '' ||
-                        this.android('maxWidth') !== '' || this.android('maxHeight') !== '')
-                    {
-                        this.android('adjustViewBounds', 'true');
-                    }
-                }
-            }
-        }
-
-        public applyCustomizations(overwrite = true) {
-            const setCustomization = (obj: Undef<ObjectMap<StringMap>>) => {
-                if (obj) {
-                    for (const name in obj) {
-                        const data = obj[name];
-                        for (const attr in data) {
-                            this.attr(name, attr, data[attr], overwrite);
-                        }
-                    }
-                }
-            };
-            const { tagName, controlName } = this;
-            let assign = API_ANDROID[0].assign;
-            setCustomization(assign[tagName]);
-            setCustomization(assign[controlName]);
-            const api = API_ANDROID[this.api];
-            if (api) {
-                assign = api.assign;
-                setCustomization(assign[tagName]);
-                setCustomization(assign[controlName]);
             }
         }
 
@@ -1928,16 +1332,57 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             setBoxModel(BOX_PADDING, false, false);
         }
 
-        public setSingleLine(ellipsize = false) {
-            if (this.textElement && this.naturalChild) {
-                const parent = this.actualParent as T;
-                if (!parent.preserveWhiteSpace && parent.tagName !== 'CODE' && (!this.multiline || parent.css('whiteSpace') === 'nowrap')) {
-                    this.android('maxLines', '1');
+        public apply(options: {}) {
+            for (const name in options) {
+                const data = options[name];
+                if (isPlainObject(data)) {
+                    for (const attr in data) {
+                        this.attr(name, attr, data[attr]);
+                    }
                 }
-                if (ellipsize && this.textContent.trim().length > 1) {
-                    this.android('ellipsize', 'end');
+                else if (data) {
+                    this.attr('_', name, data.toString());
                 }
             }
+        }
+
+        public clone(id?: number, attributes = true, position = false): T {
+            const node = new View(id || this.id, this.sessionId, this.element || undefined);
+            node.unsafe('localization', this._localization);
+            node.localSettings = { ...this.localSettings };
+            if (id !== undefined) {
+                node.setControlType(this.controlName, this.containerType);
+            }
+            else {
+                node.controlId = this.controlId;
+                node.controlName = this.controlName;
+                node.containerType = this.containerType;
+            }
+            this.cloneBase(node);
+            if (attributes) {
+                Object.assign(node.unsafe('boxReset'), this._boxReset);
+                Object.assign(node.unsafe('boxAdjustment'), this._boxAdjustment);
+                for (const name of this._namespaces) {
+                    const obj: StringMap = this['__' + name];
+                    if (obj) {
+                        for (const attr in obj) {
+                            node.attr(name, attr, attr === 'id' && name === 'android' ? node.documentId : obj[attr]);
+                        }
+                    }
+                }
+            }
+            if (position) {
+                node.anchorClear();
+                const documentId = this.documentId;
+                if (node.anchor('left', documentId)) {
+                    node.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1, adjustment: 0 });
+                }
+                if (node.anchor('top', documentId)) {
+                    node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: 0 });
+                }
+            }
+            node.saveAsInitial(true);
+            return node;
         }
 
         public extractAttributes(depth: number) {
@@ -1975,6 +1420,84 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 output += indent + value;
             }
             return output;
+        }
+
+        public alignParent(position: string) {
+            const node = this.anchorTarget;
+            const renderParent = node.renderParent as T;
+            if (renderParent) {
+                if (renderParent.layoutConstraint) {
+                    const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
+                    if (attr) {
+                        return node.app(this.localizeString(attr)) === 'parent';
+                    }
+                }
+                else if (renderParent.layoutRelative) {
+                    const attr: Undef<string> = LAYOUT_RELATIVE_PARENT[position];
+                    if (attr) {
+                        return node.android(this.localizeString(attr)) === 'true';
+                    }
+                }
+                else if (renderParent.layoutLinear) {
+                    const children = renderParent.renderChildren;
+                    if (renderParent.layoutVertical) {
+                        switch (position) {
+                            case 'top':
+                                return node === children[0];
+                            case 'bottom':
+                                return node === children[children.length - 1];
+                        }
+                    }
+                    else {
+                        switch (position) {
+                            case 'left':
+                            case 'start':
+                                return node === children[0];
+                            case 'right':
+                            case 'end':
+                                return node === children[children.length - 1];
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public alignSibling(position: string, documentId?: string) {
+            const node = this.anchorTarget;
+            const renderParent = node.renderParent as T;
+            if (renderParent) {
+                if (documentId) {
+                    if (renderParent.layoutConstraint) {
+                        const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
+                        if (attr) {
+                            node.app(this.localizeString(attr), documentId);
+                        }
+                    }
+                    else if (renderParent.layoutRelative) {
+                        const attr: Undef<string> = LAYOUT_RELATIVE[position];
+                        if (attr) {
+                            node.android(this.localizeString(attr), documentId);
+                        }
+                    }
+                }
+                else {
+                    if (renderParent.layoutConstraint) {
+                        const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
+                        if (attr) {
+                            const value = node.app(this.localizeString(attr));
+                            return value !== 'parent' && value !== renderParent.documentId ? value : '';
+                        }
+                    }
+                    else if (renderParent.layoutRelative) {
+                        const attr: Undef<string> = LAYOUT_RELATIVE[position];
+                        if (attr) {
+                            return node.android(this.localizeString(attr));
+                        }
+                    }
+                }
+            }
+            return '';
         }
 
         public actualRect(direction: string, dimension: BoxType = 'linear') {
@@ -2083,6 +1606,489 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 return true;
             }
             return false;
+        }
+
+        public localizeString(value: string) {
+            return localizeString(value, this._localization, this.api);
+        }
+
+        public removeTry(replacement?: T, beforeReplace?: () => void) {
+            if (beforeReplace === undefined && replacement) {
+                beforeReplace = () => replacement.anchorClear();
+            }
+            return super.removeTry(replacement, beforeReplace);
+        }
+
+        public hide(options?: HideUIOptions<T>) {
+            if (options) {
+                if (options.hidden) {
+                    this.android('visibility', 'invisible');
+                    return;
+                }
+                else if (options.collapse) {
+                    this.android('visibility', 'gone');
+                    return;
+                }
+            }
+            super.hide(options);
+        }
+
+        public android(attr: string, value?: string, overwrite = true) {
+            if (value) {
+                value = this.attr('android', attr, value, overwrite);
+                if (value !== '') {
+                    return value;
+                }
+            }
+            return this.__android[attr] || '';
+        }
+
+        public app(attr: string, value?: string, overwrite = true) {
+            if (value) {
+                value = this.attr('app', attr, value, overwrite);
+                if (value !== '') {
+                    return value;
+                }
+            }
+            return this.__app[attr] || '';
+        }
+
+        public formatted(value: string, overwrite = true) {
+            const match = REGEX_FORMATTED.exec(value);
+            if (match) {
+                this.attr(match[1] || '_', match[2], match[3], overwrite);
+            }
+        }
+
+        public anchor(position: string, documentId = '', overwrite?: boolean) {
+            const node = this.anchorTarget;
+            const renderParent = node.renderParent as T;
+            if (renderParent && node.documentId !== documentId) {
+                if (renderParent.layoutConstraint) {
+                    if (documentId === '' || node.constraint.current[position] === undefined || overwrite) {
+                        const anchored = documentId === 'parent';
+                        if (overwrite === undefined && documentId !== '') {
+                            overwrite = anchored;
+                        }
+                        const attr: Undef<string> = LAYOUT_CONSTRAINT[position];
+                        if (attr) {
+                            let horizontal = false;
+                            node.app(this.localizeString(attr), documentId, overwrite);
+                            switch (position) {
+                                case 'left':
+                                case 'right':
+                                    if (anchored) {
+                                        node.constraint.horizontal = true;
+                                    }
+                                case 'leftRight':
+                                case 'rightLeft':
+                                    horizontal = true;
+                                    break;
+                                case 'top':
+                                case 'bottom':
+                                case 'baseline':
+                                    if (anchored) {
+                                        node.constraint.vertical = true;
+                                    }
+                                    break;
+                            }
+                            node.constraint.current[position] = { documentId, horizontal };
+                            return true;
+                        }
+                    }
+                }
+                else if (renderParent.layoutRelative) {
+                    const relativeParent = documentId === 'true';
+                    if (overwrite === undefined && documentId !== '') {
+                        overwrite = relativeParent;
+                    }
+                    const attr: Undef<string> = (relativeParent ? LAYOUT_RELATIVE_PARENT : LAYOUT_RELATIVE)[position];
+                    if (attr) {
+                        node.android(this.localizeString(attr), documentId, overwrite);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public anchorParent(orientation: string, bias?: number, style = '', overwrite?: boolean) {
+            const node = this.anchorTarget;
+            const renderParent = node.renderParent as T;
+            if (renderParent) {
+                const horizontal = orientation === 'horizontal';
+                if (renderParent.layoutConstraint) {
+                    if (overwrite || !node.constraint[orientation]) {
+                        if (horizontal) {
+                            node.anchor('left', 'parent', overwrite);
+                            node.anchor('right', 'parent', overwrite);
+                            node.constraint.horizontal = true;
+                        }
+                        else {
+                            node.anchor('top', 'parent', overwrite);
+                            node.anchor('bottom', 'parent', overwrite);
+                            node.constraint.vertical = true;
+                        }
+                        if (bias !== undefined) {
+                            node.anchorStyle(orientation, bias, style, overwrite);
+                        }
+                        return true;
+                    }
+                }
+                else if (renderParent.layoutRelative) {
+                    node.anchor(horizontal ? 'centerHorizontal' : 'centerVertical', 'true', overwrite);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public anchorStyle(orientation: string, bias: number, value?: string, overwrite = true) {
+            const node = this.anchorTarget;
+            if (orientation === 'horizontal') {
+                node.app('layout_constraintHorizontal_bias', bias.toString(), overwrite);
+                if (value) {
+                    node.app('layout_constraintHorizontal_chainStyle', value, overwrite);
+                }
+            }
+            else {
+                node.app('layout_constraintVertical_bias', bias.toString(), overwrite);
+                if (value) {
+                    node.app('layout_constraintVertical_chainStyle', value, overwrite);
+                }
+            }
+        }
+
+        public anchorChain(direction: BoxPosition) {
+            const result: T[] = [];
+            const node = this.anchorTarget;
+            const renderParent = node.renderParent as T;
+            if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
+                let anchorA: string;
+                let anchorB: string;
+                switch (direction) {
+                    case 'top':
+                        anchorA = 'topBottom';
+                        anchorB = 'bottomTop';
+                        break;
+                    case 'right':
+                        anchorA = 'rightLeft';
+                        anchorB = 'leftRight';
+                        break;
+                    case 'bottom':
+                        anchorA = 'bottomTop';
+                        anchorB = 'topBottom';
+                        break;
+                    case 'left':
+                        anchorA = 'leftRight';
+                        anchorB = 'rightLeft';
+                        break;
+                }
+                const siblings = renderParent.renderChildren;
+                let current = node;
+                do {
+                    const adjacent = current.alignSibling(anchorA);
+                    if (adjacent !== '') {
+                        const sibling = siblings.find(item => item.documentId === adjacent) as T | undefined;
+                        if (sibling?.alignSibling(anchorB) === current.documentId) {
+                            result.push(sibling);
+                            current = sibling;
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    else {
+                        break;
+                    }
+                }
+                while (true);
+            }
+            return result;
+        }
+
+        public anchorDelete(...position: string[]) {
+            const node = this.anchorTarget;
+            const renderParent = node.renderParent as T;
+            if (renderParent) {
+                if (renderParent.layoutConstraint) {
+                    node.delete('app', ...replaceMap<string, string>(position, value => this.localizeString(LAYOUT_CONSTRAINT[value])));
+                }
+                else if (renderParent.layoutRelative) {
+                    const layout: string[] = [];
+                    for (const value of position) {
+                        let attr: Undef<string> = LAYOUT_RELATIVE[value];
+                        if (attr) {
+                            layout.push(this.localizeString(attr));
+                        }
+                        attr = LAYOUT_RELATIVE_PARENT[value];
+                        if (attr) {
+                            layout.push(this.localizeString(attr));
+                        }
+                    }
+                    node.delete('android', ...layout);
+                }
+            }
+        }
+
+        public anchorClear() {
+            const node = this.anchorTarget;
+            const renderParent = node.renderParent as T;
+            if (renderParent) {
+                if (renderParent.layoutConstraint) {
+                    node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT));
+                    node.delete('app', 'layout_constraintHorizontal_bias', 'layout_constraintHorizontal_chainStyle', 'layout_constraintVertical_bias', 'layout_constraintVertical_chainStyle');
+                }
+                else if (renderParent.layoutRelative) {
+                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE_PARENT));
+                    node.anchorDelete(...Object.keys(LAYOUT_RELATIVE));
+                }
+            }
+        }
+
+        public supported(attr: string, result = {}): boolean {
+            if (typeof DEPRECATED[attr] === 'function') {
+                const valid = DEPRECATED[attr](result, this.api, this);
+                if (!valid || Object.keys(result).length) {
+                    return valid;
+                }
+            }
+            for (let i = this.api; i <= BUILD_ANDROID.LATEST; i++) {
+                const callback = API_ANDROID[i]?.android[attr];
+                switch (typeof callback) {
+                    case 'boolean':
+                        return callback;
+                    case 'function':
+                        return callback(result, this.api, this);
+                }
+            }
+            return true;
+        }
+
+        public combine(...objs: string[]) {
+            const namespaces = this._namespaces;
+            const all = objs.length === 0;
+            const result: string[] = [];
+            let requireId = false;
+            let id = '';
+            for (const name of namespaces) {
+                if (all || objs.includes(name)) {
+                    const obj: StringMap = this['__' + name];
+                    if (obj) {
+                        let prefix = name + ':';
+                        switch (name) {
+                            case 'android':
+                                if (this.api < BUILD_ANDROID.LATEST) {
+                                    for (let attr in obj) {
+                                        if (attr === 'id') {
+                                            id = obj[attr];
+                                        }
+                                        else {
+                                            const data: ObjectMap<string | boolean> = {};
+                                            let value = obj[attr];
+                                            if (!this.supported(attr, data)) {
+                                                continue;
+                                            }
+                                            if (Object.keys(data).length) {
+                                                if (isString(data.attr)) {
+                                                    attr = data.attr;
+                                                }
+                                                if (isString(data.value)) {
+                                                    value = data.value;
+                                                }
+                                            }
+                                            result.push(prefix + `${attr}="${value}"`);
+                                        }
+                                    }
+                                }
+                                else {
+                                    for (const attr in obj) {
+                                        if (attr === 'id') {
+                                            id = obj[attr];
+                                        }
+                                        else {
+                                            result.push(prefix + `${attr}="${obj[attr]}"`);
+                                        }
+                                    }
+                                }
+                                requireId = true;
+                                break;
+                            case '_':
+                                prefix = '';
+                            default:
+                                for (const attr in obj) {
+                                    result.push(prefix + `${attr}="${obj[attr]}"`);
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            result.sort((a, b) => a > b ? 1 : -1);
+            if (requireId) {
+                result.unshift('android:id="' + (id || `@+id/${this.controlId}`) + '"');
+            }
+            return result;
+        }
+
+        public mergeGravity(attr: string, alignment: string, overwrite = true) {
+            if (attr === 'layout_gravity') {
+                const renderParent = this.renderParent;
+                if (renderParent) {
+                    if (isHorizontalAlign(alignment) && (this.blockWidth || renderParent.inlineWidth && this.onlyChild || !overwrite && this.outerWrapper && this.hasPX('maxWidth'))) {
+                        return;
+                    }
+                    else if (renderParent.layoutRelative) {
+                        if (alignment === 'center_horizontal' && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
+                            this.anchorDelete('left', 'right');
+                            this.anchor('centerHorizontal', 'true');
+                            return;
+                        }
+                    }
+                    else if (renderParent.layoutConstraint) {
+                        if (!renderParent.layoutHorizontal && !this.positioned) {
+                            switch (alignment) {
+                                case 'top':
+                                    this.anchor('top', 'parent', false);
+                                    break;
+                                case 'right':
+                                case 'end':
+                                    if (this.alignSibling('rightLeft') === '') {
+                                        this.anchor('right', 'parent', false);
+                                    }
+                                    break;
+                                case 'bottom':
+                                    this.anchor('bottom', 'parent', false);
+                                    break;
+                                case 'left':
+                                case 'start':
+                                    if (this.alignSibling('leftRight') === '') {
+                                        this.anchor('left', 'parent', false);
+                                    }
+                                    break;
+                                case 'center_horizontal':
+                                    if (this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
+                                        this.anchorParent('horizontal', 0.5);
+                                    }
+                                    break;
+                            }
+                        }
+                        return;
+                    }
+                }
+            }
+            else {
+                switch (this.tagName) {
+                    case '#text':
+                    case 'IMG':
+                    case 'SVG':
+                    case 'HR':
+                        return;
+                    case 'INPUT':
+                        switch (this.toElementString('type')) {
+                            case 'radio':
+                            case 'checkbox':
+                            case 'image':
+                            case 'range':
+                                return;
+                        }
+                        break;
+                    default:
+                        if (this.controlElement || this.is(CONTAINER_NODE.TEXT) && this.textEmpty || this.length && (this.layoutFrame || this.layoutConstraint || this.layoutGrid)) {
+                            return;
+                        }
+                        break;
+                }
+            }
+            const direction = getGravityValues(this, attr);
+            const gravity = this.localizeString(alignment);
+            if (!direction.has(gravity)) {
+                direction.add(gravity);
+                let result = '';
+                let x = '';
+                let y = '';
+                let z = '';
+                for (const value of direction.values()) {
+                    if (isHorizontalAlign(value)) {
+                        if (x === '' || overwrite) {
+                            x = value;
+                        }
+                    }
+                    else if (isVerticalAlign(value)) {
+                        if (y === '' || overwrite) {
+                            y = value;
+                        }
+                    }
+                    else {
+                        z += (z !== '' ? '|' : '') + value;
+                    }
+                }
+                result = x !== '' && y !== '' ? x + '|' + y : x || y;
+                if (z !== '') {
+                    result += (result !== '' ? '|' : '') + z;
+                }
+                if (result !== '') {
+                    this.android(attr, result);
+                }
+            }
+        }
+
+        public applyOptimizations() {
+            const renderParent = this.renderParent;
+            if (renderParent) {
+                this.alignLayout(renderParent);
+                this.setLineHeight(renderParent);
+                this.finalizeGravity('layout_gravity');
+                this.finalizeGravity('gravity');
+                if (this.imageElement) {
+                    const layoutWidth = this.layoutWidth;
+                    const layoutHeight = this.layoutHeight;
+                    if (layoutWidth === 'wrap_content' && layoutHeight !== 'wrap_content' ||
+                        layoutWidth !== 'wrap_content' && layoutHeight === 'wrap_content' ||
+                        layoutWidth === 'match_parent' || layoutHeight === 'match_parent' ||
+                        layoutWidth === '0px' || layoutHeight === '0px' ||
+                        this.android('minWidth') !== '' || this.android('minHeight') !== '' ||
+                        this.android('maxWidth') !== '' || this.android('maxHeight') !== '')
+                    {
+                        this.android('adjustViewBounds', 'true');
+                    }
+                }
+            }
+        }
+
+        public applyCustomizations(overwrite = true) {
+            const setCustomization = (obj: Undef<ObjectMap<StringMap>>) => {
+                if (obj) {
+                    for (const name in obj) {
+                        const data = obj[name];
+                        for (const attr in data) {
+                            this.attr(name, attr, data[attr], overwrite);
+                        }
+                    }
+                }
+            };
+            const { tagName, controlName } = this;
+            let assign = API_ANDROID[0].assign;
+            setCustomization(assign[tagName]);
+            setCustomization(assign[controlName]);
+            const api = API_ANDROID[this.api];
+            if (api) {
+                assign = api.assign;
+                setCustomization(assign[tagName]);
+                setCustomization(assign[controlName]);
+            }
+        }
+
+        public setSingleLine(ellipsize = false) {
+            if (this.textElement && this.naturalChild) {
+                const parent = this.actualParent as T;
+                if (!parent.preserveWhiteSpace && parent.tagName !== 'CODE' && (!this.multiline || parent.css('whiteSpace') === 'nowrap')) {
+                    this.android('maxLines', '1');
+                }
+                if (ellipsize && this.textContent.trim().length > 1) {
+                    this.android('ellipsize', 'end');
+                }
+            }
         }
 
         public setLayoutWidth(value: string, overwrite = true) {
@@ -2225,9 +2231,17 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        get documentId() {
-            const controlId = this.controlId;
-            return controlId !== '' ? `@id/${controlId}` : '';
+        set containerType(value) {
+            this._containerType = value;
+        }
+        get containerType() {
+            if (this._containerType === 0) {
+                const value: number = ELEMENT_ANDROID[this.containerName];
+                if (value > 0) {
+                    this._containerType = value;
+                }
+            }
+            return this._containerType;
         }
 
         set controlId(value) {
@@ -2261,65 +2275,24 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return result;
         }
 
-        get anchorTarget(): T {
-            let target = this as T;
-            do {
-                const renderParent = target.renderParent as T;
-                if (renderParent) {
-                    if (renderParent.layoutConstraint || renderParent.layoutRelative) {
-                        return target;
-                    }
-                }
-                else {
-                    break;
-                }
-                target = target.outerWrapper as T;
-            }
-            while (target);
-            return this;
+        get documentId() {
+            const controlId = this.controlId;
+            return controlId !== '' ? `@id/${controlId}` : '';
         }
 
-        set anchored(value) {
-            const constraint = this.constraint;
-            constraint.horizontal = value;
-            constraint.vertical = value;
-        }
-        get anchored() {
-            const constraint = this.constraint;
-            return constraint.horizontal === true && constraint.vertical === true;
-        }
-
-        set containerType(value) {
-            this._containerType = value;
-        }
-        get containerType() {
-            if (this._containerType === 0) {
-                const value: number = ELEMENT_ANDROID[this.containerName];
-                if (value > 0) {
-                    this._containerType = value;
+        get support() {
+            let result = this._cached.support;
+            if (result === undefined) {
+                result = <SupportAndroid> {
+                    positionTranslation: this.layoutConstraint,
+                    positionRelative: this.layoutRelative,
+                    maxDimension: this.textElement || this.imageOrSvgElement
+                };
+                if (this.containerType !== 0) {
+                    this._cached.support = result;
                 }
             }
-            return this._containerType;
-        }
-
-        get imageOrSvgElement() {
-            return this.imageElement || this.svgElement;
-        }
-
-        get layoutFrame() {
-            return this._containerType === CONTAINER_NODE.FRAME;
-        }
-        get layoutLinear() {
-            return this._containerType === CONTAINER_NODE.LINEAR;
-        }
-        get layoutGrid() {
-            return this._containerType === CONTAINER_NODE.GRID;
-        }
-        get layoutRelative() {
-            return this._containerType === CONTAINER_NODE.RELATIVE;
-        }
-        get layoutConstraint() {
-            return this._containerType === CONTAINER_NODE.CONSTRAINT;
+            return <SupportAndroid> result;
         }
 
         set renderExclude(value) {
@@ -2401,38 +2374,63 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return result;
         }
 
-        get leftTopAxis() {
-            let result = this._cached.leftTopAxis;
-            if (result === undefined) {
-                switch (this.cssInitial('position')) {
-                    case 'absolute':
-                        result = this.absoluteParent === this.documentParent;
-                        break;
-                    case 'fixed':
-                        result = true;
-                        break;
-                    default:
-                        result = false;
-                        break;
-                }
-                this._cached.leftTopAxis = result;
+        get innerWrapped() {
+            return this._innerWrapped;
+        }
+        set innerWrapped(value) {
+            if (value) {
+                value = value.outerMostWrapper as T;
+                this._innerWrapped = value;
+                value.outerWrapper = this;
             }
-            return result;
         }
 
-        get support() {
-            let result = this._cached.support;
-            if (result === undefined) {
-                result = <SupportAndroid> {
-                    positionTranslation: this.layoutConstraint,
-                    positionRelative: this.layoutRelative,
-                    maxDimension: this.textElement || this.imageOrSvgElement
-                };
-                if (this.containerType !== 0) {
-                    this._cached.support = result;
+        get anchorTarget(): T {
+            let target = this as T;
+            do {
+                const renderParent = target.renderParent as T;
+                if (renderParent) {
+                    if (renderParent.layoutConstraint || renderParent.layoutRelative) {
+                        return target;
+                    }
                 }
+                else {
+                    break;
+                }
+                target = target.outerWrapper as T;
             }
-            return <SupportAndroid> result;
+            while (target);
+            return this;
+        }
+
+        set anchored(value) {
+            const constraint = this.constraint;
+            constraint.horizontal = value;
+            constraint.vertical = value;
+        }
+        get anchored() {
+            const constraint = this.constraint;
+            return constraint.horizontal === true && constraint.vertical === true;
+        }
+
+        get imageOrSvgElement() {
+            return this.imageElement || this.svgElement;
+        }
+
+        get layoutFrame() {
+            return this._containerType === CONTAINER_NODE.FRAME;
+        }
+        get layoutLinear() {
+            return this._containerType === CONTAINER_NODE.LINEAR;
+        }
+        get layoutGrid() {
+            return this._containerType === CONTAINER_NODE.GRID;
+        }
+        get layoutRelative() {
+            return this._containerType === CONTAINER_NODE.RELATIVE;
+        }
+        get layoutConstraint() {
+            return this._containerType === CONTAINER_NODE.CONSTRAINT;
         }
 
         get layoutWidth() {
@@ -2472,17 +2470,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 value.companion = this;
             }
             this._labelFor = value;
-        }
-
-        get innerWrapped() {
-            return this._innerWrapped;
-        }
-        set innerWrapped(value) {
-            if (value) {
-                value = value.outerMostWrapper as T;
-                this._innerWrapped = value;
-                value.outerWrapper = this;
-            }
         }
 
         set localSettings(value) {

@@ -159,6 +159,7 @@ export interface SupportUI {
 }
 
 export interface CachedValueUI<T> extends CachedValue<T> {
+    leftTopAxis?: boolean;
     autoPosition?: boolean;
     positiveAxis?: boolean;
     renderExclude?: boolean;

@@ -6,7 +6,6 @@ export interface LocalSettingsAndroidUI extends LocalSettingsUI {
 }
 
 export interface CachedValueAndroidUI<T> extends CachedValueUI<T> {
-    leftTopAxis?: boolean;
 }
 
 export interface Constraint {

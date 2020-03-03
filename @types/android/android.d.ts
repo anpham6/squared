@@ -95,7 +95,6 @@ declare namespace base {
         readonly blockHeight: boolean;
         readonly flexibleWidth: boolean;
         readonly flexibleHeight: boolean;
-        readonly leftTopAxis: boolean;
         readonly support: SupportAndroid;
         android(attr: string, value?: string, overwrite?: boolean): string;
         app(attr: string, value?: string, overwrite?: boolean): string;

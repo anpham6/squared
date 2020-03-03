@@ -235,7 +235,7 @@ function getBottomChild(node: NodeUI) {
     let bottomChild: Undef<NodeUI>;
     if (!node.floatContainer) {
         bottomChild = <NodeUI> node.lastStaticChild;
-        if (!isBlockElement(node, false)) {
+        if (!isBlockElement(node, false) || node.hasHeight && Math.floor(bottomChild.linear.bottom) < node.box.bottom) {
             bottomChild = undefined;
         }
     }
@@ -252,7 +252,7 @@ function getBottomChild(node: NodeUI) {
                             bottomFloatChild = item;
                         }
                     }
-                    else if (item.linear.bottom >= node.box.bottom) {
+                    else if (Math.ceil(item.linear.bottom) >= node.box.bottom) {
                         bottomFloatChild = item;
                     }
                 }
@@ -276,8 +276,8 @@ function getBottomChild(node: NodeUI) {
     return bottomChild;
 }
 
-const setMinHeight = (node: NodeUI, offset: number) => node.css('minHeight', formatPX(Math.max(offset, node.hasPX('minHeight', false) ? node.parseUnit(node.css('minHeight')) : 0)));
-const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && node.length > 0) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
+const setMinHeight = (node: NodeUI, offset: number) => node.css('minHeight', formatPX(Math.max(offset, node.hasPX('minHeight', false) ? node.parseHeight(node.css('minHeight')) : 0)));
+const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && node.length > 0 && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
 const validAboveChild = (node: NodeUI, children: boolean) => !node.hasPX('height') && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
 const validBelowChild = (node: NodeUI, children: boolean) => !node.hasPX('height') && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
 
@@ -464,7 +464,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             }
                                         }
                                     }
-                                    else if (previous.floatContainer && marginTop > 0 && (previous.bounds.height === 0 || previous.lastChild?.floating)) {
+                                    else if (previous.floatContainer && marginTop > 0 && (previous.bounds.height === 0 || previous.lastChild?.floating) && !hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
                                         current.modifyBox(BOX_STANDARD.MARGIN_TOP, previous.box.top - maxArray(previous.map(item => item.linear.bottom)), false);
                                     }
                                     if (inheritedTop) {
@@ -636,7 +636,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             const children = renderParent.renderChildren;
                             const index = children.findIndex(item => item === outerWrapper);
                             if (index !== -1) {
-                                if (!node.lineBreakLeading) {
+                                if (!node.lineBreakLeading && !node.baselineAltered) {
                                     const previous = children[index - 1];
                                     if (previous?.pageFlow) {
                                         setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, previous.actualRect('bottom'), previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[1]);
@@ -650,7 +650,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                             }
                         }
-                        else {
+                        else if (!node.baselineAltered) {
                             const horizontalRows = renderParent.horizontalRows;
                             const validSibling = (item: T) => item.pageFlow && item.blockDimension && !item.floating;
                             let horizontal: Undef<T[]>;
@@ -707,7 +707,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     if (actualChildren.includes(item)) {
                                         break;
                                     }
-                                    else if (item.lineBreak) {
+                                    else if (item.lineBreak || item.block) {
                                         maxBottom = Number.NEGATIVE_INFINITY;
                                     }
                                     else if (item.excluded) {

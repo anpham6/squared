@@ -452,7 +452,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             else if (!overflowX && (node.left < 0 || node.right > 0) && Math.floor(node.bounds.right) < linear.left || !overflowY && (node.top < 0 || node.bottom > 0) && Math.floor(node.bounds.bottom) < linear.top) {
                                                 outside = true;
                                             }
-                                            else if (outsideX && outsideY && (!parent.pageFlow || (parent.actualParent as T).documentBody) && (node.top > 0 || node.left > 0)) {
+                                            else if (outsideX && outsideY && (!parent.pageFlow || (parent.actualParent as T).documentRoot) && (node.top > 0 || node.left > 0)) {
                                                 outside = true;
                                             }
                                             else if (!overflowX && !overflowY && !node.intersectX(linear) && !node.intersectY(linear)) {
@@ -560,7 +560,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         for (const item of order) {
                             item.containerIndex = maxIndex + k++;
                         }
-                        for (let l = 0; l < children.length; l++) {
+                        const q = children.length;
+                        for (let l = 0; l < q; l++) {
                             if (order.includes(children[l])) {
                                 children[l] = undefined as any;
                             }
@@ -600,7 +601,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public cascadeDocument(templates: NodeTemplate<T>[], depth: number) {
         const showAttributes = this.userSettings.showAttributes;
-        const indent = depth > 0 ? '\t'.repeat(depth) : '';
+        const indent = '\t'.repeat(depth);
         let output = '';
         for (const item of templates) {
             const node = item.node;
@@ -608,14 +609,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case NODE_TEMPLATE.XML: {
                     const { controlName, attributes } = <NodeXmlTemplate<T>> item;
                     const { id, renderTemplates } = node;
-                    const renderDepth = depth + 1;
-                    const beforeInside = this.getBeforeInsideTemplate(id, renderDepth);
-                    const afterInside = this.getAfterInsideTemplate(id, renderDepth);
-                    let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? pushIndent(attributes, renderDepth) : node.extractAttributes(renderDepth)) : '')}`;
+                    const depthA = depth + 1;
+                    const beforeInside = this.getBeforeInsideTemplate(id, depthA);
+                    const afterInside = this.getAfterInsideTemplate(id, depthA);
+                    let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? pushIndent(attributes, depthA) : node.extractAttributes(depthA)) : '')}`;
                     if (renderTemplates || beforeInside !== '' || afterInside !== '') {
                         template += '>\n' +
                                     beforeInside +
-                                    (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> renderTemplates), renderDepth) : '') +
+                                    (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> renderTemplates), depthA) : '') +
                                     afterInside +
                                     indent + `</${controlName}>\n`;
                     }
@@ -637,8 +638,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         return output;
     }
 
-    public getEnclosingXmlTag(controlName: string, attributes?: string, content?: string) {
-        return '<' + controlName + (attributes || '') + (content ? `>\n${content}</${controlName}>\n` : ' />\n');
+    public getEnclosingXmlTag(controlName: string, attributes = '', content?: string) {
+        return '<' + controlName + attributes + (content ? `>\n${content}</${controlName}>\n` : ' />\n');
     }
 
     get generateSessionId() {

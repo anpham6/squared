@@ -58,7 +58,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") 
     const horizontal = attr === 'width';
     const hasDimension = `has${capitalize(attr)}`;
     const setPercentage = (item: View) => item.flexbox.basis = (item.bounds[attr] / parent.box[attr] * 100) + '%';
-    let percent: boolean = parent[hasDimension] || parent.blockStatic && withinRange(parent.parseUnit(parent.css(horizontal ? 'maxWidth' : 'maxHeight'), attr), parent.box.width);
+    let percent: boolean = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseWidth(parent.css('maxWidth')), parent.box.width);
     let result = 0;
     let growShrinkType = 0;
     for (const item of items) {
@@ -90,7 +90,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") 
             const dimension = item.bounds[attr];
             let growPercent = false;
             if (grow > 0 || shrink !== 1) {
-                const value = basis === 'auto' ? item.parseUnit(item.css(attr), attr) : item.parseUnit(basis, attr);
+                const value = item.parseUnit(basis === 'auto' ? item.css(attr) : basis, attr);
                 if (value > 0) {
                     let largest = false;
                     if (dimension < value) {

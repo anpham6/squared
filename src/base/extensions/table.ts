@@ -243,7 +243,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     else {
                         const percent = isPercent(columnWidth);
                         const length = isLength(mapWidth[j]);
-                        if (reevaluate || width < mapBounds[j] || width === mapBounds[j] && (length && percent || percent && isPercent(mapWidth[j]) && td.parseUnit(columnWidth) >= td.parseUnit(mapWidth[j]) || length && isLength(columnWidth) && td.parseUnit(columnWidth) > td.parseUnit(mapWidth[j]))) {
+                        if (reevaluate || width < mapBounds[j] || width === mapBounds[j] && (length && percent || percent && isPercent(mapWidth[j]) && td.parseWidth(columnWidth) >= td.parseWidth(mapWidth[j]) || length && isLength(columnWidth) && td.parseWidth(columnWidth) > td.parseWidth(mapWidth[j]))) {
                             mapWidth[j] = columnWidth;
                         }
                         if (reevaluate || element.colSpan === 1) {

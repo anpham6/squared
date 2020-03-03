@@ -86,7 +86,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                     offset = parseFloat(unit) / 100;
                 }
                 else if (isLength(unit)) {
-                    offset = node.parseUnit(unit, horizontal ? 'width' : 'height', false) / size;
+                    offset = (horizontal ? node.parseWidth(unit, false) : node.parseHeight(unit, false)) / size;
                 }
                 else if (isCalc(unit)) {
                     offset = calculate(match[6], size, node.fontSize) / size;
@@ -497,7 +497,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                         const radiusXY = name.split(' ');
                                         const length = radiusXY.length;
                                         for (let j = 0; j < length; j++) {
-                                            minRadius = Math.min(node.parseUnit(radiusXY[j], j === 0 ? 'width' : 'height', false), minRadius);
+                                            minRadius = Math.min(j === 0 ? node.parseWidth(radiusXY[j], false) : node.parseHeight(radiusXY[j], false), minRadius);
                                         }
                                         radius = minRadius;
                                         radiusExtent = minRadius;
