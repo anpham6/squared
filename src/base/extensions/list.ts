@@ -8,7 +8,10 @@ import { NODE_RESOURCE } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
 
-const { convertListStyle } = squared.lib.css;
+const $lib = squared.lib;
+
+const { convertListStyle } = $lib.css;
+const { isNumber } = $lib.util;
 
 const hasSingleImage = (visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat;
 
@@ -70,19 +73,22 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
         let i = ordered && node.toElementInt('start') || 1;
         node.each((item: T) => {
             const mainData = List.createDataAttribute();
-            const value = item.css('listStyleType');
+            const type = item.css('listStyleType');
             const enabled = item.display === 'list-item';
-            if (enabled || value !== '' && value !== 'none' || hasSingleImage(item.visibleStyle)) {
+            if (enabled || type !== '' && type !== 'none' || hasSingleImage(item.visibleStyle)) {
                 if (item.has('listStyleImage')) {
                     mainData.imageSrc = item.css('listStyleImage');
                 }
                 else {
                     if (ordered && enabled && item.tagName === 'LI') {
-                        i = item.toElementInt('value') || i;
+                        const value = item.attributes['value'];
+                        if (isNumber(value)) {
+                            i = Math.floor(parseFloat(value));
+                        }
                     }
-                    let ordinal = convertListStyle(value, i);
+                    let ordinal = convertListStyle(type, i);
                     if (ordinal === '') {
-                        switch (value) {
+                        switch (type) {
                             case 'disc':
                                 ordinal = '●';
                                 break;

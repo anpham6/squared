@@ -6,8 +6,6 @@ import { EXT_NAME } from '../lib/constant';
 
 type NodeUI = squared.base.NodeUI;
 
-const { USER_AGENT, isUserAgent } = squared.lib.client;
-
 export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
         return (node.blockDimension && node.display !== 'table') && !node.layoutElement && node.length > 1;
@@ -34,10 +32,13 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
                 rows.push(items);
             }
             else {
+                if (item.textElement && item.textBounds?.overflow) {
+                    maxSize = NaN;
+                }
                 if (item.multiline) {
                     multiline = true;
                 }
-                else {
+                else if (!isNaN(maxSize)) {
                     maxSize = Math.min(item.bounds.width, maxSize);
                 }
                 items.push(item);
@@ -47,23 +48,17 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
             rows.pop();
         }
         const [borderLeftStyle, borderLeftWidth, borderLeftColor] = node.cssAsTuple('columnRuleStyle', 'columnRuleWidth', 'columnRuleColor');
+        const boxWidth = node.box.width;
         const columnCount = node.toInt('columnCount');
         const columnWidth = node.parseWidth(node.css('columnWidth'));
         let columnGap = node.parseWidth(node.css('columnGap'));
-        let boxWidth: number;
-        const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Number.POSITIVE_INFINITY;
-        if (isUserAgent(USER_AGENT.SAFARI)) {
-            boxWidth = Math.min(node.width > 0 ? node.width - (!node.contentBox ? node.contentBoxWidth : 0) : Number.POSITIVE_INFINITY, node.box.width * (columnCount || 1), node.documentParent.box.width - node.contentBoxWidth);
-        }
-        else {
-            boxWidth = node.box.width;
-        }
         let columnSized: number;
+        const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Number.POSITIVE_INFINITY;
         if (columnGap > 0) {
             columnSized = Math.floor(getColumnSizing());
         }
         else {
-            columnGap = (columnWidth > 0 && maxSize !== Number.POSITIVE_INFINITY ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
+            columnGap = (columnWidth > 0 && !isNaN(maxSize) && maxSize !== Number.POSITIVE_INFINITY ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
             columnSized = Math.ceil(getColumnSizing());
         }
         node.data(EXT_NAME.COLUMN, 'mainData', <ColumnData<T>> {

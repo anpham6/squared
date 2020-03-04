@@ -12,13 +12,17 @@ interface PositiveXData {
     right: boolean;
     bottom: boolean;
 }
+
 const checkMarginLeft = (node: View, item: View) => item.marginLeft < 0 && (node.originalRoot || item.linear.left < Math.floor(node.box.left));
 const checkMarginRight = (node: View, item: View) => item.marginRight < 0 && (node.originalRoot || item.linear.right > Math.ceil(node.box.right));
 const checkMarginTop = (node: View, item: View) => item.marginTop < 0 && (node.originalRoot || item.linear.top < Math.floor(node.box.top));
 const checkMarginBottom = (node: View, item: View) => item.marginBottom < 0 && (node.originalRoot || item.linear.bottom > Math.ceil(node.box.bottom));
 
-function setFixedNodes(node: View) {
+function setFixedNodes(node: View, contentBox: boolean) {
     const documentBody = node.documentBody;
+    if (!contentBox && !documentBody) {
+        return false;
+    }
     const documentRoot = node.originalRoot;
     const expandBody = documentBody && node.positionStatic;
     const children = new Set<View>();
@@ -29,10 +33,11 @@ function setFixedNodes(node: View) {
     let right = false;
     let bottom = false;
     node.each((item: View) => {
-        if (item.pageFlow) {
+        const fixed = documentRoot && item.css('position') === 'fixed';
+        if (item.pageFlow || !contentBox && !fixed) {
             return;
         }
-        const fixedPosition = item.autoPosition && item.css('position') === 'fixed';
+        const fixedPosition = fixed && item.autoPosition;
         if (item.hasPX('left') || fixedPosition) {
             if (documentBody && (item.css('width') === '100%' || item.css('minWidth') === '100%')) {
                 children.add(item);
@@ -121,11 +126,11 @@ function setFixedNodes(node: View) {
 
 export default class PositiveX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return node.absoluteContainer && (node.contentBoxWidth > 0 || node.contentBoxHeight > 0 || node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0 || node.documentBody);
+        return node.length > 0;
     }
 
     public condition(node: T) {
-        return setFixedNodes(node);
+        return setFixedNodes(node, node.contentBoxWidth > 0 || node.contentBoxHeight > 0 || node.marginTop > 0 || node.marginRight > 0 || node.marginBottom > 0 || node.marginLeft > 0);
     }
 
     public processNode(node: T, parent: T) {
@@ -173,9 +178,9 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     public postBaseLayout(node: T) {
         const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
         if (mainData) {
+            const documentId = node.documentId;
             for (const item of mainData.children) {
-                const nested = item.absoluteParent !== item.documentParent || item.css('position') === 'fixed';
-                const documentId = node.documentId;
+                const nested = !item.pageFlow && (item.absoluteParent !== item.documentParent || item.css('position') === 'fixed' || node.documentBody);
                 const wrapper = item.outerMostWrapper as T;
                 if (item.hasPX('left')) {
                     if (!nested) {
@@ -185,7 +190,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
                 }
-                else if (item.hasPX('right')) {
+                if (item.hasPX('right')) {
                     if (!nested) {
                         item.translateX(-item.right);
                         item.alignSibling('right', documentId);
@@ -193,7 +198,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
                 }
-                else if (item.marginLeft < 0 && !nested && checkMarginLeft(node, item)) {
+                else if (item.marginLeft < 0 && checkMarginLeft(node, item)) {
                     wrapper.alignSibling('left', documentId);
                     wrapper.translateX(item.linear.left - node.bounds.left);
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.borderLeftWidth);
@@ -208,7 +213,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);
                 }
-                else if (item.hasPX('bottom')) {
+                if (item.hasPX('bottom')) {
                     if (!nested) {
                         item.translateY(-item.bottom);
                         item.alignSibling('bottom', documentId);
@@ -216,7 +221,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);
                 }
-                else if (item.marginTop < 0 && !nested && checkMarginTop(node, item)) {
+                else if (item.marginTop < 0 && checkMarginTop(node, item)) {
                     wrapper.alignSibling('top', documentId);
                     wrapper.translateY(item.linear.top - node.bounds.top);
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, node.borderTopWidth);

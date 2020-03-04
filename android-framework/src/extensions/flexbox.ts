@@ -158,8 +158,15 @@ function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") 
         }
     }
     if (horizontal && growShrinkType === 0) {
+        let valid = false;
         for (const item of items) {
             if (item.find(child => child.multiline && child.ascend({ condition: above => above[hasDimension], including: parent }).length === 0, { cascade: true })) {
+                valid = true;
+                break;
+            }
+        }
+        if (valid) {
+            for (const item of items) {
                 setPercentage(item);
             }
         }

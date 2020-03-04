@@ -46,7 +46,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                     size = width;
                     break;
                 default: {
-                    size = Math.abs(width * sin(angle)) + Math.abs(height * cos(angle));
+                    size = Math.abs(width * sin(angle - 180)) + Math.abs(height * cos(angle - 180));
                     horizontal = width >= height;
                     break;
                 }
@@ -290,6 +290,7 @@ function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: 'background
     return false;
 }
 
+const replaceAmpersand = (value: string) => value.replace(/&/g, '&amp;');
 const getGradientPosition = (value: string) => isString(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : <RegExpExecArray> [value, value]) : null;
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
@@ -904,12 +905,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const textContent = node.textContent;
                     if (node.plainText || node.pseudoElement) {
                         key = textContent.trim();
-                        [value, inlined, trimming] = replaceWhiteSpace(node, textContent.replace(/&/g, '&amp;'));
+                        [value, inlined, trimming] = replaceWhiteSpace(node, replaceAmpersand(textContent));
                         inlined = true;
                     }
                     else if (node.inlineText) {
                         key = textContent.trim();
-                        [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(NODE_ALIGNMENT.INLINE) ? textContent : this.removeExcludedFromText(node, element));
+                        [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(NODE_ALIGNMENT.INLINE) ? replaceAmpersand(textContent) : this.removeExcludedFromText(node, element));
                     }
                     else if (node.naturalChildren.length === 0 && textContent?.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                         value = textContent;
@@ -962,7 +963,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                 }
                 if (value !== '') {
-                    node.data(ResourceUI.KEY_NAME, 'valueString', { key, value });
+                    node.data(ResourceUI.KEY_NAME, 'valueString', { key, value: value.replace(/\\n\\n$/, '\\n') });
                 }
             }
             if (hint !== '') {
@@ -1004,7 +1005,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         return;
                     }
                     else {
-                        const textContent = child[attr];
+                        const textContent = child.plainText ? child.textContent : child[attr];
                         if (isString(textContent)) {
                             if (!preserveWhitespace) {
                                 value = value.replace(textContent, '');

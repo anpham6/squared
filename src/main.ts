@@ -191,27 +191,21 @@ export function close() {
 
 export function copyToDisk(value: string, options?: FileActionOptions) {
     if (checkMain() && util.isString(value)) {
-        if (!main.closed) {
-            main.finalize();
-        }
+        main.finalize();
         main.copyToDisk(value, options);
     }
 }
 
 export function appendToArchive(value: string, options?: FileActionOptions) {
     if (checkMain() && util.isString(value)) {
-        if (!main.closed) {
-            main.finalize();
-        }
+        main.finalize();
         main.appendToArchive(value, options);
     }
 }
 
 export function saveToArchive(value?: string, options?: FileActionOptions) {
     if (checkMain()) {
-        if (!main.closed) {
-            main.finalize();
-        }
+        main.finalize();
         main.saveToArchive(value, options);
     }
 }

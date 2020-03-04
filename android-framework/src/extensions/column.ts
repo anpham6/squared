@@ -52,18 +52,20 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         borderLeftStyle,
                         borderLeftWidth,
                         borderLeftColor,
+                        lineHeight: 'initial',
                         boxSizing: 'border-box',
                         display: 'inline-block'
                     });
                 }
                 else {
                     width = formatPX(columnGap);
-                    divider.cssApply({ width, display: 'inline-block' });
+                    divider.cssApply({ width, lineHeight: 'initial', display: 'inline-block' });
                 }
                 divider.saveAsInitial();
                 divider.setLayoutWidth(width);
                 divider.setLayoutHeight('0px');
                 divider.render(node);
+                divider.positioned = true;
                 divider.renderExclude = false;
                 application.addLayoutTemplate(
                     node,
@@ -188,7 +190,19 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         for (let k = 0; k < s; k++) {
                             const column = seg[k];
                             if (column.naturalChild) {
-                                elements.push(<Element> (<Element> column.element).cloneNode(true));
+                                const element = <HTMLElement> (<Element> column.element).cloneNode(true);
+                                if (column.styleElement) {
+                                    if (column.imageOrSvgElement) {
+                                        element.style.height = formatPX(column.bounds.height);
+                                    }
+                                    else {
+                                        const textStyle = column.textStyle;
+                                        for (const attr in textStyle) {
+                                            element.style[attr] = textStyle[attr];
+                                        }
+                                    }
+                                }
+                                elements.push(element);
                             }
                             else {
                                 height += column.linear.height;
@@ -274,7 +288,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 if (i === length - 1) {
                                     item.anchor('bottom', 'parent');
                                 }
-                                item.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1});
+                                item.setBox(BOX_STANDARD.MARGIN_BOTTOM, { reset: 1 });
                             }
                         }
                     }

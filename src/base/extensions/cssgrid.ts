@@ -1020,10 +1020,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         const { columnSpan, rowSpan } = <CssGridCellData> item.data(CSS_GRID, 'cellData');
                                         const x = j + columnSpan - 1;
                                         const y = i + rowSpan - 1;
-                                        if (x < columnCount - 1) {
+                                        if (columnGap > 0 && x < columnCount - 1) {
                                             item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, columnGap);
                                         }
-                                        if (y < rowCount - 1) {
+                                        if (rowGap > 0 && y < rowCount - 1) {
                                             item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, rowGap);
                                         }
                                         if (rowSpan === 1) {

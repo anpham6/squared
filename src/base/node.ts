@@ -555,6 +555,26 @@ function hasTextAlign(node: T, value: string, localizedValue?: string) {
     return false;
 }
 
+function setStyleCache(element: HTMLElement, attr: string, sessionId: string, value: string, current: string) {
+    if (current !== value) {
+        element.style.setProperty(attr, value);
+        if (validateCssSet(value, element.style.getPropertyValue(attr))) {
+            setElementCache(element, attr, sessionId, value !== 'auto' ? current : '');
+            return true;
+        }
+        return false;
+    }
+    return true;
+}
+
+function deleteStyleCache(element: HTMLElement, attr: string, sessionId: string) {
+    const value: string = getElementCache(element, attr, sessionId);
+    if (value !== undefined) {
+        element.style.setProperty(attr, value);
+        deleteElementCache(element, attr, sessionId);
+    }
+}
+
 const canTextAlign = (node: T) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
 
@@ -952,34 +972,47 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssTry(attr: string, value: string) {
         if (this.styleElement) {
             const element = <HTMLElement> this._element;
-            const current = getStyle(element).getPropertyValue(attr);
-            if (current !== value) {
-                const style = element.style;
-                style.setProperty(attr, value);
-                if (validateCssSet(value, style.getPropertyValue(attr))) {
-                    setElementCache(element, attr, this.sessionId, value !== 'auto' ? current : '');
-                    return true;
-                }
-            }
-            else {
-                return true;
-            }
+            return setStyleCache(element, attr, this.sessionId, value, getStyle(element).getPropertyValue(attr));
         }
         return false;
     }
 
     public cssFinally(attr: string) {
         if (this.styleElement) {
+            deleteStyleCache(<HTMLElement> this._element, attr, this.sessionId);
+        }
+    }
+
+    public cssTryAll(values: StringMap) {
+        if (this.styleElement) {
             const sessionId = this.sessionId;
             const element = <HTMLElement> this._element;
-            const value: string = getElementCache(element, attr, sessionId);
-            if (value !== undefined) {
-                element.style.setProperty(attr, value);
-                deleteElementCache(element, attr, sessionId);
-                return true;
+            const style = getStyle(element);
+            const valid: string[] = [];
+            for (const attr in values) {
+                if (setStyleCache(element, attr, sessionId, values[attr], style.getPropertyValue(attr))) {
+                    valid.push(attr);
+                }
+                else {
+                    for (const value of valid) {
+                        this.cssFinally(value);
+                    }
+                    return undefined;
+                }
+            }
+            return values;
+        }
+        return undefined;
+    }
+
+    public cssFinallyAll(values: StringMap) {
+        if (this.styleElement) {
+            const sessionId = this.sessionId;
+            const element = <HTMLElement> this._element;
+            for (const attr in values) {
+                deleteStyleCache(element, attr, sessionId);
             }
         }
-        return false;
     }
 
     public cssParent(attr: string, value?: string, cache = false) {
@@ -1085,9 +1118,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'rgba(0, 0, 0, 0)':
                     return false;
                 case 'baseline':
+                    return attr !== 'verticalAlign';
                 case 'left':
                 case 'start':
-                    return this.layoutElement || this.actualParent?.layoutElement ? /^(align|justify|place)/.test(attr) : false;
+                    return attr !== 'textAlign';
                 default:
                     if (not) {
                         if (Array.isArray(not)) {
@@ -1950,7 +1984,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                     }
                 }
-                else if (this.naturalChild) {
+                else {
                     const parent = this.ascend({ condition: item => item.lineHeight > 0 })[0];
                     if (parent) {
                         value = parent.lineHeight;
@@ -1967,7 +2001,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                     }
                 }
-                if (hasOwnStyle || value > this.actualHeight || this.multiline || this.block && this.naturalChildren.some(node => node.textElement)) {
+                if (hasOwnStyle || value > this.height || this.multiline || this.block && this.naturalChildren.some(node => node.textElement)) {
                     result = value;
                 }
             }
@@ -2561,7 +2595,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = '';
                     break;
                 default:
-                    if (result !== '' && this.pageFlow && !this.plainText && !this.inputElement && (this._initial === undefined || this.cssInitial('backgroundColor') === result)) {
+                    if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (this._initial === undefined || this.cssInitial('backgroundColor') === result)) {
                         let parent = this.actualParent;
                         while (parent) {
                             const color = parent.cssInitial('backgroundColor', true);
@@ -2672,7 +2706,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         case 'initial':
                         case 'unset':
                             result = result.actualParent;
-                            break;
+                            continue;
                     }
                     break;
                 }
@@ -2856,7 +2890,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._fontSize;
         if (result === undefined) {
             const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
-            if (this.naturalElement) {
+            if (this.naturalChild && this.styleElement) {
                 const value = this.css('fontSize');
                 if (PX.test(value)) {
                     result = parseFloat(value);

@@ -113,10 +113,14 @@ export function getRangeClientRect(element: Element) {
     if (length) {
         bounds = assignRect(domRect[0]);
         let numberOfLines = 1;
+        let overflow = false;
         for (let i = 1; i < length; i++) {
             const { left, right, top, bottom, width } = domRect[i];
             if (left < bounds.left) {
                 bounds.left = left;
+            }
+            else if (left > bounds.right) {
+                overflow = true;
             }
             if (right > bounds.right) {
                 bounds.right = right;
@@ -124,7 +128,7 @@ export function getRangeClientRect(element: Element) {
             if (top < bounds.top) {
                 bounds.top = top;
             }
-            else if (top >= bounds.bottom) {
+            else if (top >= domRect[i - 1].bottom) {
                 numberOfLines++;
             }
             if (bottom > bounds.bottom) {
@@ -135,6 +139,7 @@ export function getRangeClientRect(element: Element) {
         bounds.height = bounds.bottom - bounds.top;
         if (numberOfLines > 1) {
             bounds.numberOfLines = numberOfLines;
+            bounds.overflow = overflow;
         }
     }
     else {
@@ -188,7 +193,12 @@ export function createElement(parent: HTMLElement, tagName: string, attrs: Strin
     const element = document.createElement(tagName);
     const style = element.style;
     for (const attr in attrs) {
-        style.setProperty(attr, attrs[attr]);
+        if (attr.includes('-')) {
+            style.setProperty(attr, attrs[attr]);
+        }
+        else {
+            style[attr] = attrs[attr];
+        }
     }
     parent.appendChild(element);
     return element;

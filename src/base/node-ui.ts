@@ -178,10 +178,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     return heightA > heightB ? -1 : 1;
                 }
                 else if (a.textElement && b.textElement) {
-                    if (!a.plainText && b.plainText || !a.pseudoElement && b.pseudoElement) {
+                    if (!a.pseudoElement && b.pseudoElement) {
                         return -1;
                     }
-                    else if (a.plainText && !b.plainText || a.pseudoElement && !b.pseudoElement) {
+                    else if (a.pseudoElement && !b.pseudoElement) {
+                        return 1;
+                    }
+                    else if (!a.plainText && b.plainText) {
+                        return -1;
+                    }
+                    else if (a.plainText && !b.plainText) {
                         return 1;
                     }
                 }
@@ -358,7 +364,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public excluded = false;
     public originalRoot = false;
     public floatContainer = false;
-    public absoluteContainer = false;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
     public baselineActive = false;
@@ -954,7 +959,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {
-        if (offset !== 0) {
+         if (offset !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
                 const node = this._boxRegister[region];
@@ -998,27 +1003,36 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public setBox(region: number, options: BoxOptions) {
         const attr = CSS_SPACING.get(region);
         if (attr) {
-            const { reset, adjustment } = options;
-            const boxReset = this._boxReset;
-            if (reset !== undefined) {
-                boxReset[attr] = reset;
+            const node = this._boxRegister[region];
+            if (node) {
+                node.setBox(region, options);
             }
-            if (adjustment !== undefined) {
+            else {
+                const { reset, adjustment } = options;
+                const boxReset = this._boxReset;
                 const boxAdjustment = this._boxAdjustment;
-                let value = boxAdjustment[attr];
-                if (options.accumulate) {
-                    value += adjustment;
+                if (reset !== undefined) {
+                    boxReset[attr] = reset;
                 }
-                else {
-                    value = adjustment;
-                }
-                if (options.negative === false && (boxReset[attr] === 0 ? this[attr] : 0) + value <= 0) {
-                    value = 0;
-                    if (this[attr] >= 0 && value < 0) {
-                        boxReset[attr] = 1;
+                if (adjustment !== undefined) {
+                    let value = boxAdjustment[attr];
+                    if (options.accumulate) {
+                        value += adjustment;
                     }
+                    else {
+                        value = adjustment;
+                    }
+                    if (options.negative === false && (boxReset[attr] === 0 ? this[attr] : 0) + value <= 0) {
+                        value = 0;
+                        if (this[attr] >= 0 && value < 0) {
+                            boxReset[attr] = 1;
+                        }
+                    }
+                    boxAdjustment[attr] = value;
                 }
-                boxAdjustment[attr] = value;
+                else if (reset === 1 && !this.naturalChild) {
+                    boxAdjustment[attr] = 0;
+                }
             }
         }
     }
@@ -1349,20 +1363,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    set contentBoxWidth(value: number) {
-        this._cached.contentBoxWidth = value;
-    }
-    get contentBoxWidth() {
-        return super.contentBoxWidth;
-    }
-
-    set contentBoxHeight(value: number) {
-        this._cached.contentBoxHeight = value;
-    }
-    get contentBoxHeight() {
-        return super.contentBoxHeight;
-    }
-
     set textContent(value: string) {
         this._cached.textContent = value;
     }
@@ -1413,10 +1413,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get overflow() {
         return super.overflow;
-    }
-
-    get baseline() {
-        return super.baseline;
     }
 
     get baselineElement() {

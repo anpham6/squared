@@ -28,7 +28,6 @@ if (env === 'development') {
 }
 
 const separator = process.platform === 'win32' ? '\\' : '/';
-const separator_opposing = separator === '/' ? '\\' : '/';
 
 function getQueryData(req, directory) {
     const query = req.query;
@@ -67,8 +66,7 @@ function createGzipWriteStream(level, filename, filenameOut) {
     return out;
 }
 
-const replaceSeparator = value => value.replace(new RegExp(separator_opposing, 'g'), separator);
-const encodeString = value => value.replace(/[<>:"/\\|?*]/g, '_');
+const replaceSeparator = value => value.replace(separator === '/' ? '\\' : '/', separator);
 const isLocalFile = value => !/^[A-Za-z]+:\/\//.test(value);
 
 app.post('/api/assets/copy', (req, res) => {

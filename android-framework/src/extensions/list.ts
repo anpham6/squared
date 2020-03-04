@@ -28,7 +28,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             if (layout.linearY) {
                 layout.rowCount = node.length;
                 layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
-                layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.AUTO_LAYOUT);
+                layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.VERTICAL);
             }
             else if (layout.linearX || layout.singleRowAligned) {
                 layout.rowCount = 1;
@@ -84,9 +84,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     containerType,
                     alignmentType
                 });
-                if (marginTop !== 0) {
-                    node.resetBox(BOX_STANDARD.MARGIN_TOP, container);
-                }
+                node.resetBox(BOX_STANDARD.MARGIN_VERTICAL, container);
             }
             else {
                 container = node;
@@ -270,7 +268,12 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         const companion = !node.naturalChild && node.companion;
         if (companion) {
             const [reset, adjustment] = companion.getBox(BOX_STANDARD.MARGIN_TOP);
-            node.modifyBox(BOX_STANDARD.MARGIN_TOP, (reset === 0 ? adjustment : 0) - node.getBox(BOX_STANDARD.MARGIN_TOP)[1], false);
+            if (reset === 0) {
+                node.modifyBox(BOX_STANDARD.MARGIN_TOP, adjustment - node.getBox(BOX_STANDARD.MARGIN_TOP)[1], false);
+            }
+            else {
+                node.setBox(BOX_STANDARD.MARGIN_TOP, { adjustment: 0 });
+            }
         }
     }
 }

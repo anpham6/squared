@@ -188,7 +188,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     break;
                                 case 'currentcolor':
                                 case 'currentColor':
-                                    color = parseColor(this.color || getAttribute(this.element, attr, true));
+                                    color = parseColor(this.color || getAttribute(this.element, 'color', true));
                                     break;
                                 default:
                                     color = parseColor(value);

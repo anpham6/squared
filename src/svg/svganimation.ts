@@ -172,7 +172,16 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             else {
                 const element = this.element;
                 if (element) {
-                    baseValue = getAttribute(element, value);
+                    switch (value) {
+                        case 'opacity':
+                        case 'stroke-opacity':
+                        case 'fill-opacity':
+                            baseValue = getAttribute(element, value) || '1';
+                            break;
+                        default:
+                            baseValue = getAttribute(element, value);
+                            break;
+                    }
                     if (!isString(baseValue)) {
                         const animationElement = this.animationElement;
                         if (animationElement && getComputedStyle(element).animationPlayState === 'paused') {

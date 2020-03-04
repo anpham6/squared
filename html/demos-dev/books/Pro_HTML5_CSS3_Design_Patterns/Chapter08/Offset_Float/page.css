@@ -6,8 +6,8 @@ p   { margin:0; padding:5px; background-color:gold; text-align:center;
 *.widened { width:175px; }
 *.shrunk  { margin:3px; padding:1px; background-color:white; }
 
-*.right-extended { margin-right:120px; }  *.right-retracted { margin-right:-55px; }
-*.left-retracted { margin-left:-185px; }  *.top-extended    { margin-top:20px;    }
+*.right-extended { margin-right:120px; }  *.right-retracted { margin-right:-55px; margin-left: -50px; }
+*.left-retracted { margin-left:-185px; margin-right: -50px; }  *.top-extended    { margin-top:20px;    }
 
 *.float-left  { float:left;  }            *.float-right { float:right; }
 *.clear-left  { clear:left;  }            *.clear-right { clear:right; }

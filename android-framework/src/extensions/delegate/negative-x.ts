@@ -25,7 +25,7 @@ function outsideX(node: View, parent: View) {
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.originalRoot && node.css('overflowX') !== 'hidden';
+        return node.length > 0 && !node.originalRoot && node.css('overflowX') !== 'hidden';
     }
 
     public condition(node: T) {
@@ -58,47 +58,17 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 }
             }
         }
-        if (!isNaN(left)) {
-            let offset = node.linear.left - left;
-            if (offset > 0) {
-                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
-                for (const item of children) {
-                    if (!item.pageFlow && item.left < 0) {
-                        item.setCacheValue('left', item.left + offset);
-                    }
+        if (!node.pageFlow) {
+            if (!isNaN(left) && !node.has('left')) {
+                const offset = node.linear.left - left;
+                if (offset > 0) {
+                    node.modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
                 }
             }
-            else {
-                for (const item of children) {
-                    if (!item.pageFlow && item.left < 0) {
-                        item.setCacheValue('left', node.marginLeft + item.left);
-                    }
-                }
-                offset = Math.abs(offset);
-            }
-            offset += Math.max(node.marginLeft, 0);
-        }
-        if (!isNaN(right)) {
-            const marginRight = node.marginRight;
-            const rightA = node.linear.right;
-            let offset = right - rightA;
-            if (offset > marginRight) {
-                offset -= marginRight;
-                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, offset);
-            }
-            else {
-                offset = 0;
-            }
-            const outerRight = rightA + offset;
-            if (marginRight > 0) {
-                offset += marginRight;
-            }
-            if (offset > 0 && container.hasPX('width', false)) {
-                container.cssPX('width', offset, true);
-            }
-            for (const item of children) {
-                if (item.right < 0) {
-                    item.setCacheValue('right', outerRight - item.linear.right);
+            if (!isNaN(right) && !node.has('right')) {
+                const offset = right - node.linear.right;
+                if (offset > 0) {
+                    node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, offset);
                 }
             }
         }
@@ -136,6 +106,21 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 firstChild.modifyBox(BOX_STANDARD.MARGIN_LEFT, mainData.offsetLeft);
                 View.setConstraintDimension(firstChild);
                 firstChild.positioned = true;
+            }
+            for (const item of mainData.children) {
+                if (item === firstChild) {
+                    continue;
+                }
+                if (item.hasPX('left')) {
+                    item.translateX(item.left);
+                    item.alignSibling('left', node.documentId);
+                    item.constraint.horizontal = true;
+                }
+                else if (item.hasPX('right')) {
+                    item.translateX(-item.right);
+                    item.alignSibling('right', node.documentId);
+                    item.constraint.horizontal = true;
+                }
             }
             node.anchorParent('horizontal', 0);
             node.anchorParent('vertical', 0);

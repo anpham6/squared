@@ -42,13 +42,13 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]): squared.base.LayoutUI<T>;
     public abstract processTraverseVertical(layout: squared.base.LayoutUI<T>, siblings: T[]): squared.base.LayoutUI<T>;
     public abstract processLayoutHorizontal(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
-    public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
+    public abstract createNodeGroup(node: T, children: T[], options?: NodeGroupUIOptions<T>): T;
     public abstract renderNode(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
+    public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     public abstract setConstraints(): void;
     public abstract optimize(nodes: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
-    public abstract createNodeGroup(node: T, children: T[], options?: NodeGroupUIOptions<T>): T;
 
     public abstract get userSettings(): UserUISettings;
     public abstract get screenDimension(): Dimension;
@@ -141,6 +141,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             }
             else if (isWinEdge()) {
                 switch (tagName) {
+                    case 'BODY':
+                        if (styleMap.backgroundColor === 'transparent') {
+                            styleMap.backgroundColor = 'rgb(255, 255, 255)';
+                        }
+                        break;
                     case 'INPUT':
                         switch ((<HTMLInputElement> element).type) {
                             case 'text':
@@ -236,6 +241,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     if (styleMap.display === undefined) {
                         styleMap.display = 'block';
                     }
+                case 'svg':
                 case 'IMG': {
                     const setDimension = (attr: string, opposing: string) => {
                         const dimension = styleMap[attr];
@@ -407,8 +413,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public evaluateNonStatic(documentRoot: T, cache: squared.base.NodeList<T>) {
         const altered = new Set<T>();
+        const removed = new Set<T>();
         for (const node of cache) {
-            if (!node.documentRoot) {
+            if (!node.documentRoot && !node.pageFlow) {
                 const actualParent = node.parent as T;
                 let parent: Undef<T>;
                 switch (node.css('position')) {
@@ -449,7 +456,10 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                             if (outsideX && (node.left < 0 || node.right > 0) || outsideY && (node.top < 0 || node.bottom !== 0)) {
                                                 outside = true;
                                             }
-                                            else if (!overflowX && (node.left < 0 || node.right > 0) && Math.floor(node.bounds.right) < linear.left || !overflowY && (node.top < 0 || node.bottom > 0) && Math.floor(node.bounds.bottom) < linear.top) {
+                                            else if (!overflowX && ((node.left < 0 || node.right > 0) && Math.ceil(node.bounds.right) < linear.left || (node.left > 0 || node.right < 0) && Math.floor(node.bounds.left) > linear.right)) {
+                                                outside = true;
+                                            }
+                                            else if (!overflowY && ((node.top < 0 || node.bottom > 0) && Math.ceil(node.bounds.bottom) < parent.bounds.top || (node.top > 0 || node.bottom < 0) && Math.floor(node.bounds.top) > parent.bounds.bottom)) {
                                                 outside = true;
                                             }
                                             else if (outsideX && outsideY && (!parent.pageFlow || (parent.actualParent as T).documentRoot) && (node.top > 0 || node.left > 0)) {
@@ -478,7 +488,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                 }
                 if (parent === undefined) {
-                    parent = !node.pageFlow ? documentRoot : actualParent;
+                    parent = documentRoot;
                 }
                 if (parent !== actualParent) {
                     const absoluteParent = node.absoluteParent as T;
@@ -514,11 +524,16 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     node.css('opacity', opacity.toString());
                     node.parent = parent;
                     node.containerIndex = Number.POSITIVE_INFINITY;
-                    parent.absoluteContainer = true;
                     altered.add(parent);
+                    removed.add(actualParent);
                 }
                 node.documentParent = parent;
             }
+        }
+        for (const node of removed) {
+            node.each((item: T, index) => {
+                item.containerIndex = index;
+            });
         }
         for (const node of altered) {
             const layers: Array<T[]> = [];

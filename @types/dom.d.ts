@@ -9,6 +9,7 @@ interface BoxRect {
 
 interface BoxRectDimension extends BoxRect, Dimension {
     numberOfLines?: number;
+    overflow?: boolean;
 }
 
 interface BoxRectPosition extends BoxRect {

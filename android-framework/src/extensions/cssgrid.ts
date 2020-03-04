@@ -705,7 +705,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             }
             const [rowStart, rowSpan] = applyLayout(target, false, 'height');
             if (alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (<BoxRectDimension> node.data(CSS_GRID, 'boundsData'))?.height && checkRowSpan(node, mainData, rowSpan, rowStart)) {
-                target.css('minHeight', formatPX(node.actualHeight), true);
+                target.css('minHeight', formatPX(node.box.height));
             }
             else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && /^space/.test(alignContent)) && !REGEX_ALIGNSELF.test(mainData.alignItems)) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');

@@ -10,7 +10,7 @@ const $lib = squared.lib;
 const $base_lib = squared.base.lib;
 
 const { formatPX } = $lib.css;
-const { aboveRange, convertFloat, convertInt, trimEnd } = $lib.util;
+const { convertFloat, convertInt, trimEnd } = $lib.util;
 
 const { CSS_UNIT, NODE_ALIGNMENT } = $base_lib.enumeration;
 
@@ -35,6 +35,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     if (data.flexible) {
                         item.android('layout_columnWeight', item.toElementString('colSpan', '1'));
                         item.setLayoutWidth('0px');
+                        requireWidth = true;
                     }
                     else {
                         const { downsized, expand, percent } = data;
@@ -44,9 +45,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                                 if (value > 0) {
                                     item.setLayoutWidth('0px');
                                     item.android('layout_columnWeight', trimEnd(value.toPrecision(3), '0'));
-                                    if (!requireWidth) {
-                                        requireWidth = !item.hasWidth;
-                                    }
+                                    requireWidth = true;
                                 }
                             }
                         }
@@ -57,6 +56,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                             if (data.exceed) {
                                 item.setLayoutWidth('0px');
                                 item.android('layout_columnWeight', '0.01');
+                                requireWidth = true;
                             }
                             else if (item.hasPX('width')) {
                                 const width = item.bounds.width;
@@ -81,26 +81,28 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     setLayoutHeight(item);
                 });
             }
-            if (requireWidth) {
-                if (parent.hasPX('width') && aboveRange(node.actualWidth, parent.actualWidth)) {
+            if (node.hasWidth) {
+                if (node.width < Math.floor(node.bounds.width)) {
+                    if (mainData.layoutFixed) {
+                        node.android('width', formatPX(node.bounds.width));
+                    }
+                    else {
+                        if (!node.hasPX('minWidth')) {
+                            node.android('minWidth', formatPX(node.actualWidth));
+                        }
+                        node.css('width', 'auto');
+                    }
+                }
+            }
+            else if (requireWidth) {
+                if ((parent.blockStatic || parent.hasPX('width')) && Math.ceil(node.bounds.width) >= parent.box.width) {
                     node.setLayoutWidth('match_parent');
                 }
                 else {
                     node.css('width', formatPX(node.actualWidth));
                 }
             }
-            else if (node.hasPX('width') && node.actualWidth < Math.floor(node.bounds.width)) {
-                if (mainData.layoutFixed) {
-                    node.android('width', formatPX(node.bounds.width));
-                }
-                else {
-                    if (!node.hasPX('minWidth')) {
-                        node.android('minWidth', formatPX(node.actualWidth));
-                    }
-                    node.css('width', 'auto');
-                }
-            }
-            if (node.hasPX('height') && node.actualHeight < Math.floor(node.bounds.height)) {
+            if (node.hasHeight && node.height < Math.floor(node.bounds.height)) {
                 if (!node.hasPX('minHeight')) {
                     node.android('minHeight', formatPX(node.actualHeight));
                 }

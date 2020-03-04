@@ -163,6 +163,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public finalize() {
+        if (this.closed) {
+            return;
+        }
         const { controllerHandler, session } = this;
         const cache = session.cache;
         const extensions = this.extensions;
@@ -218,8 +221,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const baseTemplate = this._localSettings.layout.baseTemplate;
         for (const layout of documentRoot) {
             const node = layout.node;
-            if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText && node.naturalElements.every(item => item.documentRoot)) {
-                continue;
+            if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText) {
+                const naturalElement = node.naturalElements;
+                if (naturalElement.length && node.naturalElements.every(item => item.documentRoot)) {
+                    continue;
+                }
             }
             const renderTemplates = (node.renderParent as T).renderTemplates;
             if (renderTemplates) {
@@ -679,7 +685,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (length > 1) {
                 let trailing = children[0];
                 let floating = false;
-                let absolute = false;
                 for (let i = 0, j = 0; i < length; i++) {
                     const child = children[i];
                     if (child.excluded) {
@@ -714,14 +719,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                     }
-                    else {
-                        absolute = true;
-                    }
                     child.actualParent = node;
                 }
                 trailing.siblingsTrailing = siblingsTrailing;
                 node.floatContainer = floating;
-                node.absoluteContainer = absolute;
             }
             else {
                 const child = children[0];
@@ -734,6 +735,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     child.parent = node;
                     child.containerIndex = 0;
                     cache.append(child);
+                    node.floatContainer = child.floating;
                 }
                 child.actualParent = node;
             }
@@ -1121,12 +1123,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             cache.afterAppend = (node: T, cascade = false) => {
                 setMap(getIndex(node.depth), node.id, node);
-                if (cascade) {
-                    node.each((item: T) => {
-                        const depth = item.depth;
-                        mapY.get(depth)?.delete(item.id);
-                        setMap(getIndex(depth), item.id, item);
-                    });
+                if (cascade && node.length) {
+                    for (const item of node.cascade() as T[]) {
+                        if (item.length) {
+                            const depth = item.depth;
+                            mapY.get(depth)?.delete(item.id);
+                            setMap(getIndex(depth), item.id, item);
+                        }
+                    }
                 }
             };
         }
@@ -1181,7 +1185,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (m === 0) {
                                         const next = item.siblingsTrailing[0];
                                         if (next) {
-                                            if (!isHorizontalAligned(item) || next.alignedVertically([item]) > 0) {
+                                            if (!isHorizontalAligned(item) || next.alignedVertically([item], floatContainer ? clearMap : undefined) > 0) {
                                                 vertical.push(item);
                                             }
                                             else {
@@ -1396,6 +1400,22 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         cache.sort((a, b) => {
             if (a.depth === b.depth) {
+                const innerA = a.innerWrapped;
+                const innerB = b.innerWrapped;
+                if (innerA === b) {
+                    return -1;
+                }
+                else if (a === innerB) {
+                    return 1;
+                }
+                const outerA = a.outerWrapper;
+                const outerB = b.outerWrapper;
+                if (a === outerB || outerA === undefined && outerB) {
+                    return -1;
+                }
+                else if (b === outerA || outerB === undefined && outerA) {
+                    return 1;
+                }
                 const groupA = a.nodeGroup;
                 const groupB = b.nodeGroup;
                 if (groupA && groupB) {
@@ -1405,23 +1425,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     return -1;
                 }
                 else if (groupB) {
-                    return 1;
-                }
-                const wrapperA = a.outerWrapper;
-                const wrapperB = b.outerWrapper;
-                if (wrapperA && wrapperB) {
-                    if (a === wrapperB) {
-                        return -1;
-                    }
-                    else if (b === wrapperA) {
-                        return 1;
-                    }
-                    return a.id > b.id ? -1 : 1;
-                }
-                else if (wrapperA) {
-                    return -1;
-                }
-                else if (wrapperB) {
                     return 1;
                 }
                 return 0;

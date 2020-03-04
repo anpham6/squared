@@ -16,4 +16,16 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
         this.documentParent = node.documentParent;
         this.retain(children);
     }
+
+    set containerType(value) {
+        this._containerType = value;
+    }
+    get containerType() {
+        return this._containerType;
+    }
+
+    set renderExclude(value) {}
+    get renderExclude() {
+        return false;
+    }
 }

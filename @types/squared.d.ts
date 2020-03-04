@@ -455,7 +455,9 @@ declare namespace base {
         cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
         cssSpecificity(attr: string): number;
         cssTry(attr: string, value: string): boolean;
-        cssFinally(attr: string): boolean;
+        cssTryAll(values: StringMap): Undef<StringMap>;
+        cssFinally(attr: string): void;
+        cssFinallyAll(values: StringMap): void;
         cssParent(attr: string, value?: string, cache?: boolean): string;
         cssAsTuple(...attrs: string[]): string[];
         cssAsObject(...attrs: string[]): StringMap;
@@ -500,14 +502,11 @@ declare namespace base {
         multiline: boolean;
         overflow: number;
         naturalChild: boolean;
-        contentBoxWidth: number;
-        contentBoxHeight: number;
         lineBreakLeading: boolean;
         lineBreakTrailing: boolean;
         siblingsLeading: NodeUI[];
         siblingsTrailing: NodeUI[];
         floatContainer: boolean;
-        absoluteContainer: boolean;
         containerIndex: number;
         localSettings: LocalSettingsUI;
         fontSize: number;
