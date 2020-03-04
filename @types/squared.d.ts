@@ -1,4 +1,4 @@
-import { AppHandler, AppNodeUIOptions, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserUISettings, UserSettings } from './base/application';
+import { AppHandler, NodeUIOptions, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeGroupUIOptions, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserUISettings, UserSettings } from './base/application';
 import { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
 import { AutoMargin, AscendOptions, BoxOptions, BoxType, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './base/node';
 
@@ -84,7 +84,7 @@ declare namespace base {
         readonly layouts: FileAsset[];
         readonly clearMap: Map<T, string>;
         conditionElement(element: HTMLElement, pseudoElt?: string): boolean;
-        createNode(options: AppNodeUIOptions<T>): T;
+        createNode(options: NodeUIOptions<T>): T;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         resolveTarget(target: Undef<string>): Undef<T>;
         addLayout(layout: LayoutUI<T>): void;
@@ -139,7 +139,7 @@ declare namespace base {
         setConstraints(): void;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
-        createNodeGroup(node: T, children: T[], parent?: T, traverse?: boolean): T;
+        createNodeGroup(node: T, children: T[], options?: NodeGroupUIOptions<T>): T;
         sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
         addBeforeOutsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
         addBeforeInsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
@@ -1036,6 +1036,7 @@ declare namespace lib {
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
         function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
+        function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
         function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
         function filterMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[];
         function objectMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];

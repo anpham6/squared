@@ -27,18 +27,13 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             super.processNode(node, parent);
             if (layout.linearY) {
                 layout.rowCount = node.length;
-                layout.columnCount = 2;
-                layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.COLUMN);
+                layout.columnCount = node.some(item => item.css('listStylePosition') === 'inside') ? 3 : 2;
+                layout.setContainerType(CONTAINER_NODE.GRID, NODE_ALIGNMENT.AUTO_LAYOUT);
             }
             else if (layout.linearX || layout.singleRowAligned) {
                 layout.rowCount = 1;
                 layout.columnCount = layout.length;
-                if ((<android.base.Controller<T>> this.controller).checkLinearHorizontal(layout)) {
-                    layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
-                }
-                else {
-                    layout.setContainerType(CONTAINER_NODE.RELATIVE, NODE_ALIGNMENT.HORIZONTAL);
-                }
+                layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
             }
             else {
                 return undefined;

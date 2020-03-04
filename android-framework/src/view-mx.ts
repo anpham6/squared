@@ -201,7 +201,7 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
     if (node.styleText) {
         if (node.cssTry('display', 'inline-block')) {
             if (node.cssTry('height', 'auto')) {
-                if (node.cssTry('minHeight', 'auto')) {
+                if (node.cssTry('min-height', 'auto')) {
                     if (node.cssTry('line-height', 'normal')) {
                         if (node.cssTry('white-space', 'nowrap')) {
                             height = actualTextRangeRect(<Element> node.element).height;
@@ -209,7 +209,7 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
                         }
                         node.cssFinally('line-height');
                     }
-                    node.cssFinally('minHeight');
+                    node.cssFinally('min-height');
                 }
                 node.cssFinally('height');
             }
@@ -2102,14 +2102,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         private alignLayout(renderParent: T) {
             if (this.layoutLinear) {
+                const children = this.renderChildren;
                 if (this.layoutVertical) {
-                    if (!renderParent.layoutFrame && !this.documentRoot && (this.baselineElement || this.renderChildren.every(node => node.textElement))) {
+                    if (!renderParent.layoutFrame && !this.documentRoot && children.length && (this.baselineElement || children.every(node => node.textElement))) {
                         this.android('baselineAlignedChildIndex', '0');
                     }
                 }
                 else {
                     let baseline = true;
-                    const children = this.renderChildren;
                     if (children.some(node => node.floating) && !children.some(node => node.imageElement && node.baseline)) {
                         this.android('baselineAligned', 'false');
                         baseline = false;

@@ -263,7 +263,11 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
 }
 
 function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: 'backgroundClip' | 'backgroundOrigin') {
-    switch (node.css(attr)) {
+    let value = node.css(attr);
+    if (value === 'initial') {
+        value = attr === 'backgroundClip' ? 'border-box' : 'padding-box';
+    }
+    switch (value) {
         case 'border-box':
             return true;
         case 'padding-box':
@@ -692,7 +696,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public setBoxStyle(node: T) {
         if ((node.styleElement || node.visibleStyle.background) && node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
             const boxStyle = <BoxStyle> (node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY') as unknown);
-            if (setBackgroundOffset(node, boxStyle, 'backgroundClip') && node.has('backgroundOrigin')) {
+            if (setBackgroundOffset(node, boxStyle, 'backgroundClip')) {
                 setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
             }
             if (node.css('borderRadius') !== '0px') {

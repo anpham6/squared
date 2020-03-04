@@ -1,4 +1,4 @@
-import { FileAsset, ImageAsset, LayoutType, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
+import { FileAsset, ImageAsset, LayoutType, NodeGroupUIOptions, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
 import { ControllerSettingsAndroid, GuidelineOptions, RenderNodeStaticAttribute } from '../../@types/android/application';
 import { LocalSettingsAndroidUI, RenderSpaceAttribute, ViewAttribute, WrapperOptions } from '../../@types/android/node';
 
@@ -718,21 +718,23 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 return undefined;
             }
             else {
-                layout.node = this.createNodeGroup(layout.node, layout.children, parent);
+                layout.node = this.createNodeGroup(layout.node, layout.children, { parent });
                 layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
             }
         }
         else if (this.checkFrameHorizontal(layout)) {
-            layout.node = this.createNodeGroup(layout.node, layout.children, parent);
+            layout.node = this.createNodeGroup(layout.node, layout.children, { parent });
             layout.addRender(NODE_ALIGNMENT.FLOAT);
             layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (layout.length !== siblings.length || parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
-            layout.node = this.createNodeGroup(layout.node, layout.children, parent);
+            layout.node = this.createNodeGroup(layout.node, layout.children, { parent });
             this.processLayoutHorizontal(layout);
         }
         else {
-            parent.addAlign(NODE_ALIGNMENT.HORIZONTAL);
+            if (!parent.hasAlign(NODE_ALIGNMENT.INLINE)) {
+                parent.addAlign(NODE_ALIGNMENT.HORIZONTAL);
+            }
             parent.removeAlign(NODE_ALIGNMENT.UNKNOWN);
         }
         return layout;
@@ -1006,7 +1008,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public checkLinearHorizontal(layout: squared.base.LayoutUI<T>) {
         const floated = layout.floated;
-        if ((floated.size === 0 || floated.size === 1 && floated.has('left')) && layout.singleRowAligned) {
+        if ((floated.size === 0 || floated.size === 1 && floated.has('left')) && layout.node.lineHeight === 0 && layout.singleRowAligned) {
             const { fontSize, lineHeight } = layout.item(0) as T;
             const boxWidth = layout.parent.actualBoxWidth();
             let contentWidth = 0;
@@ -2025,7 +2027,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    public createNodeGroup(node: T, children: T[], parent?: T, traverse = false) {
+    public createNodeGroup(node: T, children: T[], options: NodeGroupUIOptions<T> = {}) {
+        const { parent, delegate, cascade } = options;
         const group = new ViewGroup(this.cache.nextId, node, children, this.afterInsertNode) as T;
         if (parent) {
             parent.appendTry(node, group);
@@ -2034,7 +2037,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             group.containerIndex = node.containerIndex;
         }
-        this.cache.append(group, traverse);
+        this.cache.append(group, delegate === true, cascade === true);
         return group;
     }
 
@@ -3077,7 +3080,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     private createLayoutNodeGroup(layout: squared.base.LayoutUI<T>) {
-        return this.createNodeGroup(layout.node, layout.children, layout.parent);
+        return this.createNodeGroup(layout.node, layout.children, { parent: layout.parent });
     }
 
     get containerTypeHorizontal(): LayoutType {

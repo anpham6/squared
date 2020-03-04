@@ -59,6 +59,7 @@ const FONTALIAS_ANDROID = {
     'courier new': 'serif-monospace'
 };
 const FONTREPLACE_ANDROID = {
+    'arial black': 'sans-serif',
     'ms shell dlg \\32': 'sans-serif',
     'system-ui': 'sans-serif',
     '-apple-system': 'sans-serif',
@@ -171,17 +172,16 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 return false;
                             }
                             else {
-                                value = trimBoth(array[0], "'").toLowerCase();
-                                fontName = value;
+                                fontFamily = this.options.systemDefaultFont;
                             }
                         }
-                        fontName = convertWord(fontName);
                         if (createFont) {
+                            fontName = convertWord(fontName);
                             const font = fonts.get(fontName) || {};
                             font[value + '|' + fontStyle + '|' + fontWeight] = FONTWEIGHT_ANDROID[fontWeight] || fontWeight;
                             fonts.set(fontName, font);
+                            fontFamily = `@font/${fontName}`;
                         }
-                        fontFamily = `@font/${fontName}`;
                     }
                     else {
                         return false;

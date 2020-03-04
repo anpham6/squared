@@ -8,7 +8,8 @@ const $lib = squared.lib;
 
 const { formatPX } = $lib.css;
 const { maxArray } = $lib.math;
-const { hasBit } = $lib.util;
+const { getElementCache } = $lib.session;
+const { hasBit, iterateReverseArray } = $lib.util;
 
 const DOCTYPE_HTML = document.doctype?.name === 'html';
 const COLLAPSE_TOP: [string, string, string, number] = ['marginTop', 'borderTopWidth', 'paddingTop', BOX_STANDARD.MARGIN_TOP];
@@ -293,10 +294,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 if (length === 0 || node.id === 0) {
                     continue;
                 }
-                const actualParent = node.actualParent as T;
-                const blockParent = isBlockElement(node, true) && !actualParent.layoutElement;
                 const pageFlow = node.pageFlow;
-                const collapseMargin = blockParent && pageFlow;
+                const collapseMargin = pageFlow && isBlockElement(node, true) && !(node.actualParent as T).layoutElement;
                 let firstChild: Undef<T>;
                 let lastChild: Undef<T>;
                 for (let i = 0; i < length; i++) {
@@ -356,89 +355,87 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         }
                                     }
                                     let inheritedBottom = false;
-                                    if (blockParent) {
-                                        let inherit = previous;
-                                        while (validAboveChild(inherit, true)) {
-                                            let bottomChild = getBottomChild(inherit);
-                                            if (bottomChild?.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
-                                                let childBottom = bottomChild.marginBottom;
-                                                let currentChild = bottomChild;
-                                                while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                    childBottom = Math.max(currentChild.marginTop, currentChild.marginBottom, childBottom);
-                                                    resetMargin(currentChild, BOX_STANDARD.MARGIN_TOP);
-                                                    const sibling = currentChild.previousSibling as T;
-                                                    if (sibling) {
-                                                        if (sibling.marginBottom >= childBottom) {
-                                                            resetMargin(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
-                                                            bottomChild = sibling;
-                                                            childBottom = sibling.marginBottom;
-                                                            currentChild = sibling;
-                                                        }
-                                                        else if (sibling.bounds.height > 0) {
-                                                            break;
-                                                        }
-                                                        else {
-                                                            resetMargin(sibling, BOX_STANDARD.MARGIN_BOTTOM);
-                                                            currentChild = sibling;
-                                                        }
+                                    let inherit = previous;
+                                    while (validAboveChild(inherit, true)) {
+                                        let bottomChild = getBottomChild(inherit);
+                                        if (bottomChild?.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
+                                            let childBottom = bottomChild.marginBottom;
+                                            let currentChild = bottomChild;
+                                            while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
+                                                childBottom = Math.max(currentChild.marginTop, currentChild.marginBottom, childBottom);
+                                                resetMargin(currentChild, BOX_STANDARD.MARGIN_TOP);
+                                                const sibling = currentChild.previousSibling as T;
+                                                if (sibling) {
+                                                    if (sibling.marginBottom >= childBottom) {
+                                                        resetMargin(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
+                                                        bottomChild = sibling;
+                                                        childBottom = sibling.marginBottom;
+                                                        currentChild = sibling;
                                                     }
-                                                    else {
+                                                    else if (sibling.bounds.height > 0) {
                                                         break;
                                                     }
+                                                    else {
+                                                        resetMargin(sibling, BOX_STANDARD.MARGIN_BOTTOM);
+                                                        currentChild = sibling;
+                                                    }
                                                 }
-                                                resetMargin(bottomChild, BOX_STANDARD.MARGIN_BOTTOM);
-                                                if (childBottom > marginBottom) {
-                                                    marginBottom = childBottom;
-                                                    inheritedBottom = true;
-                                                }
-                                                else if (childBottom === 0 && marginBottom === 0) {
-                                                    inherit = bottomChild;
-                                                    continue;
+                                                else {
+                                                    break;
                                                 }
                                             }
-                                            break;
+                                            resetMargin(bottomChild, BOX_STANDARD.MARGIN_BOTTOM);
+                                            if (childBottom > marginBottom) {
+                                                marginBottom = childBottom;
+                                                inheritedBottom = true;
+                                            }
+                                            else if (childBottom === 0 && marginBottom === 0) {
+                                                inherit = bottomChild;
+                                                continue;
+                                            }
                                         }
-                                        inherit = current;
-                                        while (validBelowChild(inherit, true)) {
-                                            let topChild = inherit.firstStaticChild as T;
-                                            if (isBlockElement(topChild, true) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0) {
-                                                let childTop = topChild.marginTop;
-                                                let currentChild = topChild;
-                                                while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                    childTop = Math.max(currentChild.marginTop, currentChild.marginBottom, childTop);
-                                                    resetMargin(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
-                                                    const sibling = currentChild.nextSibling as T;
-                                                    if (sibling) {
-                                                        if (sibling.marginTop >= childTop) {
-                                                            resetMargin(currentChild, BOX_STANDARD.MARGIN_TOP);
-                                                            topChild = sibling;
-                                                            childTop = sibling.marginTop;
-                                                            currentChild = sibling;
-                                                        }
-                                                        else if (sibling.bounds.height > 0) {
-                                                            break;
-                                                        }
-                                                        else {
-                                                            resetMargin(sibling, BOX_STANDARD.MARGIN_TOP);
-                                                            currentChild = sibling;
-                                                        }
+                                        break;
+                                    }
+                                    inherit = current;
+                                    while (validBelowChild(inherit, true)) {
+                                        let topChild = inherit.firstStaticChild as T;
+                                        if (isBlockElement(topChild, true) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0) {
+                                            let childTop = topChild.marginTop;
+                                            let currentChild = topChild;
+                                            while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
+                                                childTop = Math.max(currentChild.marginTop, currentChild.marginBottom, childTop);
+                                                resetMargin(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
+                                                const sibling = currentChild.nextSibling as T;
+                                                if (sibling) {
+                                                    if (sibling.marginTop >= childTop) {
+                                                        resetMargin(currentChild, BOX_STANDARD.MARGIN_TOP);
+                                                        topChild = sibling;
+                                                        childTop = sibling.marginTop;
+                                                        currentChild = sibling;
                                                     }
-                                                    else {
+                                                    else if (sibling.bounds.height > 0) {
                                                         break;
                                                     }
+                                                    else {
+                                                        resetMargin(sibling, BOX_STANDARD.MARGIN_TOP);
+                                                        currentChild = sibling;
+                                                    }
                                                 }
-                                                resetMargin(topChild, BOX_STANDARD.MARGIN_TOP);
-                                                if (childTop > marginTop) {
-                                                    marginTop = childTop;
-                                                    inheritedTop = true;
-                                                }
-                                                else if (childTop === 0 && marginTop === 0) {
-                                                    inherit = topChild;
-                                                    continue;
+                                                else {
+                                                    break;
                                                 }
                                             }
-                                            break;
+                                            resetMargin(topChild, BOX_STANDARD.MARGIN_TOP);
+                                            if (childTop > marginTop) {
+                                                marginTop = childTop;
+                                                inheritedTop = true;
+                                            }
+                                            else if (childTop === 0 && marginTop === 0) {
+                                                inherit = topChild;
+                                                continue;
+                                            }
                                         }
+                                        break;
                                     }
                                     if (marginBottom > 0 && marginTop > 0) {
                                         if (marginTop <= marginBottom) {
@@ -464,8 +461,31 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             }
                                         }
                                     }
-                                    else if (previous.floatContainer && marginTop > 0 && (previous.bounds.height === 0 || previous.lastChild?.floating) && !hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
-                                        current.modifyBox(BOX_STANDARD.MARGIN_TOP, previous.box.top - maxArray(previous.map(item => item.linear.bottom)), false);
+                                    else if (previous.floatContainer && marginTop > 0 && !hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
+                                        let valid = false;
+                                        if (previous.bounds.height === 0) {
+                                            valid = true;
+                                        }
+                                        else {
+                                            let float: Undef<string>;
+                                            iterateReverseArray(previous.naturalElements, (item: T) => {
+                                                if (clearMap.has(item)) {
+                                                    return true;
+                                                }
+                                                else if (item.floating) {
+                                                    float = item.float;
+                                                    return true;
+                                                }
+                                                return;
+                                            });
+                                            if (float) {
+                                                const clear = (<Undef<StringMap>> getElementCache(<Element> previous.element, 'styleMap::after', previous.sessionId))?.clear;
+                                                valid = !(clear === 'both' || clear === float);
+                                            }
+                                        }
+                                        if (valid) {
+                                            current.modifyBox(BOX_STANDARD.MARGIN_TOP, previous.box.top - maxArray(previous.map(item => item.linear.bottom)), false);
+                                        }
                                     }
                                     if (inheritedTop) {
                                         const previousSibling = previous.previousSibling;

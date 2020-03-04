@@ -131,18 +131,19 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                     }
                     break;
                 case ':checked':
-                    if (tagName === 'INPUT') {
-                        if (!node.toElementBoolean('checked')) {
+                    switch (tagName) {
+                        case 'INPUT':
+                            if (!node.toElementBoolean('checked')) {
+                                return false;
+                            }
+                            break;
+                        case 'OPTION':
+                            if (!node.toElementBoolean('selected')) {
+                                return false;
+                            }
+                            break;
+                        default:
                             return false;
-                        }
-                    }
-                    else if (tagName === 'OPTION') {
-                        if (!node.toElementBoolean('selected')) {
-                            return false;
-                        }
-                    }
-                    else {
-                        return false;
                     }
                     break;
                 case ':enabled':
@@ -555,7 +556,7 @@ function hasTextAlign(node: T, value: string, localizedValue?: string) {
 }
 
 const canTextAlign = (node: T) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
-const validateCssSet = (value: string, actualValue: string) => value === actualValue || value === 'auto' && actualValue === '' || isLength(value, true) && PX.test(actualValue);
+const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public documentRoot = false;
@@ -956,7 +957,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const style = element.style;
                 style.setProperty(attr, value);
                 if (validateCssSet(value, style.getPropertyValue(attr))) {
-                    setElementCache(element, attr, this.sessionId, current);
+                    setElementCache(element, attr, this.sessionId, value !== 'auto' ? current : '');
                     return true;
                 }
             }
@@ -972,7 +973,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const sessionId = this.sessionId;
             const element = <HTMLElement> this._element;
             const value: string = getElementCache(element, attr, sessionId);
-            if (value) {
+            if (value !== undefined) {
                 element.style.setProperty(attr, value);
                 deleteElementCache(element, attr, sessionId);
                 return true;
@@ -1086,7 +1087,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'baseline':
                 case 'left':
                 case 'start':
-                    return this.flexElement || this.actualParent?.flexElement ? /^(align|justify|place)/.test(attr) : false;
+                    return this.layoutElement || this.actualParent?.layoutElement ? /^(align|justify|place)/.test(attr) : false;
                 default:
                     if (not) {
                         if (Array.isArray(not)) {
@@ -2665,12 +2666,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             result = this.actualParent;
             if (!this.pageFlow && !this.documentBody) {
-                while (result) {
-                    const position = result.cssInitial('position', false, true);
-                    if (result.documentBody || position !== 'static' && position !== 'initial') {
-                        break;
+                while (result && !result.documentBody) {
+                    switch (result.cssInitial('position', false, true)) {
+                        case 'static':
+                        case 'initial':
+                        case 'unset':
+                            result = result.actualParent;
+                            break;
                     }
-                    result = result.actualParent;
+                    break;
                 }
             }
             this._cached.absoluteParent = result;

@@ -730,8 +730,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         const backgroundImage = data.backgroundImage;
         if (backgroundImage || node.extracted && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
             const resource = <android.base.Resource<T>> this.resource;
-            const bounds = node.bounds;
             const screenDimension = node.localSettings.screenDimension;
+            const { bounds, fontSize } = node;
             const { width: boundsWidth, height: boundsHeight } = bounds;
             const result: BackgroundImageData[] = [];
             const images: (string | GradientTemplate)[] = [];
@@ -836,7 +836,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
                         const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
                         backgroundPosition[length] = getBackgroundPosition(checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'), node.actualDimension, {
-                            fontSize: node.fontSize,
+                            fontSize,
                             imageDimension: imageDimensions[length],
                             imageSize: backgroundSize[i],
                             screenDimension
@@ -872,7 +872,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             image.containerName === 'INPUT_IMAGE' ? getPixelUnit(0, 0) : getPixelUnit(imageDimension.left - bounds.left + node.borderLeftWidth, imageDimension.top - bounds.top + node.borderTopWidth),
                             node.actualDimension,
                             {
-                                fontSize: node.fontSize,
+                                fontSize,
                                 imageDimension,
                                 screenDimension
                             }
@@ -890,6 +890,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
             }
+            const { backgroundClip, backgroundOrigin } = data;
             const documentBody = node.innerMostWrapped.documentBody;
             for (let i = length - 1, j = 0; i >= 0; i--) {
                 const value = images[i];
@@ -918,10 +919,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let right = 0;
                 let bottom = 0;
                 let left = 0;
-                let posTop = NaN;
-                let posRight = NaN;
-                let posBottom = NaN;
-                let posLeft = NaN;
+                let posRight = false;
+                let posBottom = false;
                 let negativeOffset = 0;
                 let offsetX = false;
                 let offsetY = false;
@@ -971,8 +970,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '0%':
                     case '0px':
                         gravityX = node.localizeString('left');
-                        if (padded) {
-                            posLeft = 0;
+                        if (padded && position.left !== 0) {
                             offsetX = true;
                         }
                         break;
@@ -983,29 +981,21 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case 'right':
                     case '100%':
                         gravityX = node.localizeString('right');
-                        posRight = 0;
-                        if (padded) {
-                            offsetX = true;
-                        }
+                        posRight = true;
+                        offsetX = padded && position.right !== 0;
                         break;
                     default: {
                         const percent = position.leftAsPercent;
-                        if (percent === 0.5) {
-                            gravityX = 'center_horizontal';
-                            if (padded) {
-                                posLeft = 0;
+                        if (percent < 1) {
+                            gravityX = 'left';
+                            if (position.left !== 0) {
                                 offsetX = true;
                             }
                         }
-                        else if (percent < 1) {
-                            gravityX = 'left';
-                            posLeft = 0;
-                            offsetX = true;
-                        }
                         else {
                             gravityX = 'right';
-                            posRight = 0;
-                            offsetX = true;
+                            posRight = true;
+                            offsetX = position.right !== 0;
                         }
                         break;
                     }
@@ -1015,8 +1005,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '0%':
                     case '0px':
                         gravityY = 'top';
-                        if (padded) {
-                            posTop = 0;
+                        if (padded && position.top !== 0) {
                             offsetY = true;
                         }
                         break;
@@ -1027,29 +1016,19 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case 'bottom':
                     case '100%':
                         gravityY = 'bottom';
-                        posBottom = 0;
-                        if (padded) {
-                            offsetY = true;
-                        }
+                        posBottom = true;
+                        offsetY = padded && position.bottom !== 0;
                         break;
                     default: {
                         const percent = position.topAsPercent;
-                        if (percent === 0.5) {
-                            gravityY = 'center_vertical';
-                            if (padded) {
-                                posTop = 0;
-                                offsetY = true;
-                            }
-                        }
-                        else if (percent < 1) {
+                        if (percent < 1) {
                             gravityY = 'top';
-                            posTop = 0;
                             offsetY = true;
                         }
                         else {
                             gravityY = 'bottom';
-                            posBottom = 0;
-                            offsetY = true;
+                            posBottom = true;
+                            offsetY = position.bottom !== 0;
                         }
                         break;
                     }
@@ -1148,10 +1127,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             gravityY = '';
                         }
                         if (coordinates) {
-                            posTop = NaN;
-                            posRight = NaN;
-                            posBottom = NaN;
-                            posLeft = NaN;
+                            posRight = false;
+                            posBottom = false;
                             offsetX = false;
                             offsetY = false;
                         }
@@ -1189,14 +1166,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     if (!node.hasPX('height')) {
                                         node.css('height', formatPX(boundsHeight - node.contentBoxHeight));
                                     }
-                                    gravityAlign = 'center_horizontal|fill_horizontal';
+                                    if (!offsetX) {
+                                        gravityAlign = 'center_horizontal|fill_horizontal';
+                                    }
                                 }
                                 else {
                                     if (height < boundsHeight) {
                                         width = fittedWidth * boundsHeight / height;
                                         height = boundsHeight;
                                     }
-                                    gravityAlign = 'center_horizontal|fill';
+                                    if (!offsetX) {
+                                        gravityAlign = 'center_horizontal|fill';
+                                    }
                                 }
                             }
                             else if (ratioWidth > ratioHeight) {
@@ -1209,14 +1190,18 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             left = Math.round((boundsWidth - width) * percent);
                                         }
                                     }
-                                    gravityAlign = 'center_vertical|fill_vertical';
+                                    if (!offsetY) {
+                                        gravityAlign = 'center_vertical|fill_vertical';
+                                    }
                                 }
                                 else {
                                     if (width < boundsWidth) {
                                         width = boundsWidth;
                                         height = fittedHeight * boundsWidth / width;
                                     }
-                                    gravityAlign = 'center_vertical|fill';
+                                    if (!offsetY) {
+                                        gravityAlign = 'center_vertical|fill';
+                                    }
                                 }
                                 offsetX = false;
                             }
@@ -1254,8 +1239,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             break;
                     }
                 }
-                if (data.backgroundClip) {
-                    const { top: clipTop, right: clipRight, left: clipLeft, bottom: clipBottom } = data.backgroundClip;
+                if (backgroundClip) {
+                    const { top: clipTop, right: clipRight, left: clipLeft, bottom: clipBottom } = backgroundClip;
                     if (width === 0) {
                         width = boundsWidth;
                     }
@@ -1270,13 +1255,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     width -= clipLeft + clipRight;
                     height -= clipTop + clipBottom;
-                    if (!isNaN(posRight)) {
+                    if (posRight) {
                         right += clipRight;
                     }
                     else {
                         left += clipLeft;
                     }
-                    if (!isNaN(posBottom)) {
+                    if (posBottom) {
                         bottom += clipBottom;
                     }
                     else {
@@ -1284,13 +1269,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                     gravityX = '';
                     gravityY = '';
-                    recalibrate = false;
                 }
                 else if (recalibrate) {
-                    const backgroundOrigin = data.backgroundOrigin;
                     if (backgroundOrigin) {
                         if (tileModeX !== 'repeat') {
-                            if (!isNaN(posRight)) {
+                            if (posRight) {
                                 right += backgroundOrigin.right;
                             }
                             else {
@@ -1298,55 +1281,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                         if (tileModeY !== 'repeat') {
-                            if (!isNaN(posBottom)) {
+                            if (posBottom) {
                                 bottom += backgroundOrigin.bottom;
                             }
                             else {
                                 top += backgroundOrigin.top;
-                            }
-                        }
-                        recalibrate = false;
-                    }
-                    else {
-                        if (tileModeX !== 'repeat') {
-                            switch (gravityX) {
-                                case 'start':
-                                case 'left':
-                                    if (position.left === 0) {
-                                        const borderWidth = node.borderLeftWidth;
-                                        if (borderWidth > 0 && dimenWidth < boundsWidth) {
-                                            left += borderWidth;
-                                        }
-                                    }
-                                    break;
-                                case 'right':
-                                    if (position.right === 0) {
-                                        const borderWidth = node.borderRightWidth;
-                                        if (borderWidth > 0 && dimenWidth < boundsWidth) {
-                                            right += borderWidth;
-                                        }
-                                    }
-                                    break;
-                            }
-                        }
-                        if (tileModeY !== 'repeat') {
-                            switch (gravityY) {
-                                case 'top':
-                                    if (position.top === 0) {
-                                        const borderWidth = node.borderTopWidth;
-                                        if (borderWidth > 0 && dimenHeight < boundsHeight) {
-                                            top += borderWidth;
-                                        }
-                                    }
-                                    break;
-                                case 'bottom':
-                                    if (position.bottom === 0) {
-                                        const borderWidth = node.borderBottomWidth;
-                                        if (borderWidth > 0 && dimenHeight < boundsHeight) {
-                                            bottom += borderWidth;
-                                        }
-                                    }
-                                    break;
                             }
                         }
                     }
@@ -1355,7 +1294,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             width = boundsWidth - (offsetX ? Math.min(position.left, 0) : 0);
                             let fill = true;
                             if (tileModeY === 'repeat' && gravityX !== '') {
-                                let clearTile = false;
                                 switch (gravityX) {
                                     case 'start':
                                     case 'left':
@@ -1369,18 +1307,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             right -= offset;
                                             fill = false;
                                             gravityX = 'right';
-                                            clearTile = true;
                                         }
                                         else {
                                             gravityX = '';
-                                            clearTile = dimenWidth / 2 >= boundsWidth;
                                         }
-                                        posLeft = NaN;
-                                        posRight = 0;
+                                        posRight = true;
                                         break;
                                     case 'center_horizontal':
                                         gravityX += '|fill_vertical';
-                                        clearTile = true;
+                                        tileModeY = '';
                                         break;
                                     case 'right':
                                         left += boundsWidth - dimenWidth;
@@ -1393,20 +1328,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             left -= offset;
                                             fill = false;
                                             gravityX = node.localizeString('left');
-                                            clearTile = true;
                                         }
                                         else {
                                             gravityX = '';
-                                            clearTile = dimenWidth / 2 >= boundsWidth;
                                         }
-                                        posLeft = 0;
-                                        posRight = NaN;
+                                        posRight = false;
                                         break;
                                 }
                                 offsetX = false;
-                                if (clearTile) {
-                                    tileModeY = '';
-                                }
                                 gravityY = '';
                             }
                             if (fill) {
@@ -1421,7 +1350,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             height = boundsHeight;
                             let fill = true;
                             if (tileModeX === 'repeat' && gravityY !== '') {
-                                let clearTile = false;
                                 switch (gravityY) {
                                     case 'top':
                                         bottom += boundsHeight - dimenHeight;
@@ -1434,18 +1362,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             bottom -= offset;
                                             fill = false;
                                             gravityY = 'bottom';
-                                            clearTile = true;
                                         }
                                         else {
                                             gravityY = '';
-                                            clearTile = dimenHeight / 2 >= boundsHeight;
                                         }
-                                        posTop = NaN;
-                                        posBottom = 0;
+                                        posBottom = true;
                                         break;
                                     case 'center_vertical':
                                         gravityY += '|fill_horizontal';
-                                        clearTile = true;
+                                        tileModeX = '';
                                         break;
                                     case 'bottom':
                                         top += boundsHeight - dimenHeight;
@@ -1458,18 +1383,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             top -= offset;
                                             fill = false;
                                             gravityY = 'top';
-                                            clearTile = true;
                                         }
                                         else {
                                             gravityY = '';
-                                            clearTile = dimenHeight / 2 >= boundsHeight;
                                         }
-                                        posTop = 0;
-                                        posBottom = NaN;
+                                        posBottom = false;
                                         break;
-                                }
-                                if (clearTile) {
-                                    tileModeX = '';
                                 }
                                 gravityX = '';
                                 offsetY = false;
@@ -1505,7 +1424,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (tileModeX === 'repeat') {
                         switch (gravityY) {
                             case 'top':
-                                if (!isNaN(posTop)) {
+                                if (!posBottom && offsetY) {
                                     tileModeX = '';
                                 }
                                 gravityY = '';
@@ -1517,9 +1436,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 else if (unsizedHeight) {
                                     width = dimenWidth;
                                     gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_horizontal');
-                                    if (dimenHeight >= dimenWidth) {
-                                        tileModeX = '';
-                                    }
                                 }
                                 break;
                         }
@@ -1529,13 +1445,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         switch (originalX) {
                             case 'start':
                             case 'left':
-                                if (!isNaN(posLeft)) {
+                                if (!posRight && offsetX) {
                                     tileModeY = '';
                                 }
                                 gravityX = '';
-                                break;
-                            case 'center_horizontal':
-                                tileModeY = '';
                                 break;
                             case 'right':
                             case 'end':
@@ -1545,9 +1458,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 else if (unsizedWidth) {
                                     height = dimenHeight;
                                     gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_vertical');
-                                    if (dimenWidth >= dimenHeight) {
-                                        tileModeY = '';
-                                    }
                                 }
                                 break;
                         }
@@ -1626,7 +1536,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 const gravity = gravityX === 'center_horizontal' && gravityY === 'center_vertical' ? 'center' : delimitString({ value: gravityX }, gravityY);
                 if (src) {
-                    if (bitmap && (!autoFit && (gravityAlign !== '' && gravity !== '' || tileModeX === 'repeat' || tileModeY === 'repeat' || documentBody) || gravityAlign !== 'fill' && (unsizedWidth || unsizedHeight))) {
+                    if (bitmap && (!autoFit && (gravityAlign !== '' && gravity !== '' || tileModeX === 'repeat' || tileModeY === 'repeat' || documentBody) || unsizedWidth || unsizedHeight)) {
                         let tileMode = '';
                         if (tileModeX === 'disabled' && tileModeY === 'disabled') {
                             tileMode = 'disabled';
@@ -1652,11 +1562,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         imageData.drawable = src;
                     }
                     if (imageData.drawable || imageData.bitmap || imageData.gradient) {
-                        if (!isNaN(posBottom)) {
+                        if (posBottom) {
                             if (offsetY) {
                                 bottom += position.bottom;
                             }
-                            bottom += posBottom;
                             if (bottom !== 0) {
                                 imageData.bottom = formatPX(bottom);
                             }
@@ -1668,9 +1577,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (offsetY) {
                                 top += position.top;
                             }
-                            if (!isNaN(posTop)) {
-                                top += posTop;
-                            }
                             if (top !== 0) {
                                 imageData.top = formatPX(top);
                             }
@@ -1678,11 +1584,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 imageData.bottom = formatPX(negativeOffset);
                             }
                         }
-                        if (!isNaN(posRight)) {
+                        if (posRight) {
                             if (offsetX) {
                                 right += position.right;
                             }
-                            right += posRight;
                             if (right !== 0) {
                                 imageData[node.localizeString('right')] = formatPX(right);
                             }
@@ -1693,9 +1598,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         else {
                             if (offsetX) {
                                 left += position.left;
-                            }
-                            if (!isNaN(posLeft)) {
-                                left += posLeft;
                             }
                             if (left !== 0) {
                                 imageData[node.localizeString('left')] = formatPX(left);

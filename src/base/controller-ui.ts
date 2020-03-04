@@ -1,4 +1,4 @@
-import { ControllerUISettings, FileAsset, LayoutResult, LayoutType, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserUISettings } from '../../@types/base/application';
+import { ControllerUISettings, FileAsset, LayoutResult, LayoutType, NodeGroupUIOptions, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserUISettings } from '../../@types/base/application';
 
 import Controller from './controller';
 
@@ -48,7 +48,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract setConstraints(): void;
     public abstract optimize(nodes: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
-    public abstract createNodeGroup(node: T, children: T[], parent?: T, traverse?: boolean): T;
+    public abstract createNodeGroup(node: T, children: T[], options?: NodeGroupUIOptions<T>): T;
 
     public abstract get userSettings(): UserUISettings;
     public abstract get screenDimension(): Dimension;
@@ -514,6 +514,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     node.css('opacity', opacity.toString());
                     node.parent = parent;
                     node.containerIndex = Number.POSITIVE_INFINITY;
+                    parent.absoluteContainer = true;
                     altered.add(parent);
                 }
                 node.documentParent = parent;

@@ -608,6 +608,18 @@ export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate
     return length;
 }
 
+export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Number.POSITIVE_INFINITY) {
+    const length = Math.min(list.length, end);
+    for (let i = length - 1; i >= start; i--) {
+        const item = list[i];
+        const result = predicate(item, i, list);
+        if (result === true) {
+            return Number.POSITIVE_INFINITY;
+        }
+    }
+    return length;
+}
+
 export function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = new Array(length);

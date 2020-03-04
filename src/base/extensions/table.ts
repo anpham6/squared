@@ -339,13 +339,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         else {
                             const td = node.cascade(item => item.tagName === 'TD');
-                            if (td.length && td.every(item => withinRange(item.bounds.width, td[0].bounds.width))) {
-                                return LAYOUT_TABLE.NONE;
-                            }
-                            return LAYOUT_TABLE.VARIABLE;
+                            return td.length && td.every(item => withinRange(item.bounds.width, td[0].bounds.width)) ? LAYOUT_TABLE.NONE : LAYOUT_TABLE.VARIABLE;
                         }
                     }
                     else if (node.hasWidth) {
+
                         return LAYOUT_TABLE.FIXED;
                     }
                 }
@@ -438,7 +436,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             }
                             break;
                         case LAYOUT_TABLE.FIXED:
-                            data.flexible = true;
+                            setAutoWidth(node, td, data);
                             break;
                         case LAYOUT_TABLE.STRETCH:
                             if (columnWidth === 'auto') {

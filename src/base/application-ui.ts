@@ -1,4 +1,4 @@
-import { AppNodeUIOptions, AppSessionUI, ControllerUISettings, FileActionOptions, FileAsset, LayoutResult, NodeTemplate, UserUISettings } from '../../@types/base/application';
+import { NodeUIOptions, AppSessionUI, ControllerUISettings, FileActionOptions, FileAsset, LayoutResult, NodeTemplate, UserUISettings } from '../../@types/base/application';
 
 import Application from './application';
 import ControllerUI from './controller-ui';
@@ -386,7 +386,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public createNode(options: AppNodeUIOptions<T>) {
+    public createNode(options: NodeUIOptions<T>) {
         const processing = this.processing;
         const { element, parent, children } = options;
         const node = new this.Node(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode);
@@ -1148,7 +1148,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    if (length > 1 && k < length - 1 && nodeY.pageFlow && !nodeY.nodeGroup && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (length > 1 && k < length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && !nodeY.nodeGroup && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let l = k;
@@ -1590,7 +1590,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     floatgroup = node;
                 }
                 else {
-                    floatgroup = controllerHandler.createNodeGroup(grouping[0], grouping, node);
+                    floatgroup = controllerHandler.createNodeGroup(grouping[0], grouping, { parent: node });
                     this.addLayout(LayoutUI.create({
                         parent: node,
                         node: floatgroup,
@@ -1606,7 +1606,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             for (const seg of segments) {
                 const first = seg[0];
                 const node = floatgroup || layout.node;
-                const target = controllerHandler.createNodeGroup(first, seg, node, true);
+                const target = controllerHandler.createNodeGroup(first, seg, { parent: node, delegate: true });
                 const group = new LayoutUI(node, target, 0, NODE_ALIGNMENT.SEGMENTED);
                 if (seg === inlineAbove) {
                     group.add(NODE_ALIGNMENT.COLUMN);
@@ -1644,7 +1644,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const clearMap = this.session.clearMap;
         if (layout.containerType !== 0) {
             const node = layout.node;
-            const parent = controllerHandler.createNodeGroup(node, [node], layout.parent);
+            const parent = controllerHandler.createNodeGroup(node, [node], { parent: layout.parent });
             this.addLayout(new LayoutUI(
                 parent,
                 node,
@@ -1715,7 +1715,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     const layoutType = controllerHandler.containerTypeVertical;
                     this.addLayout(new LayoutUI(
                         node,
-                        controllerHandler.createNodeGroup(pageFlow[0], pageFlow, node),
+                        controllerHandler.createNodeGroup(pageFlow[0], pageFlow, { parent: node }),
                         layoutType.containerType,
                         layoutType.alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
                         pageFlow
@@ -1724,13 +1724,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 else {
                     const floating = floatedRows[i] || [];
                     if (pageFlow.length || floating.length) {
-                        const basegroup = controllerHandler.createNodeGroup(floating[0] || pageFlow[0], [], node);
+                        const basegroup = controllerHandler.createNodeGroup(floating[0] || pageFlow[0], [], { parent: node });
                         const group = new LayoutUI(node, basegroup);
                         group.type = controllerHandler.containerTypeVerticalMargin;
                         const children: T[] = [];
                         let subgroup!: T;
                         if (floating.length) {
-                            const floatgroup = controllerHandler.createNodeGroup(floating[0], floating, basegroup);
+                            const floatgroup = controllerHandler.createNodeGroup(floating[0], floating, { parent: basegroup });
                             group.add(NODE_ALIGNMENT.FLOAT);
                             if (pageFlow.length === 0 && floating.every(item => item.float === 'right')) {
                                 group.add(NODE_ALIGNMENT.RIGHT);
@@ -1738,14 +1738,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             children.push(floatgroup);
                         }
                         if (pageFlow.length) {
-                            subgroup = controllerHandler.createNodeGroup(pageFlow[0], pageFlow, basegroup);
+                            subgroup = controllerHandler.createNodeGroup(pageFlow[0], pageFlow, { parent: basegroup });
                             children.push(subgroup);
                         }
                         group.itemCount = children.length;
                         this.addLayout(group);
                         for (let item of children) {
                             if (!item.nodeGroup) {
-                                item = controllerHandler.createNodeGroup(item, [item], basegroup, true);
+                                item = controllerHandler.createNodeGroup(item, [item], { parent: basegroup, delegate: true });
                             }
                             this.addLayout(new LayoutUI(
                                 basegroup,

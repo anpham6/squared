@@ -75,7 +75,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 layout = controller.processLayoutHorizontal(
                     new LayoutUI(
                         parent,
-                        controller.createNodeGroup(node, siblings, parent, true),
+                        controller.createNodeGroup(node, siblings, { parent, delegate: true, cascade: true }),
                         0,
                         0,
                         siblings

@@ -11,7 +11,7 @@ const $lib = squared.lib;
 
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { CHAR, CSS } = $lib.regex;
-const { isNumber, safeNestedArray, trimBoth, withinRange } = $lib.util;
+const { isNumber, safeNestedArray, trimString, withinRange } = $lib.util;
 
 const CSS_GRID = EXT_NAME.CSS_GRID;
 
@@ -500,7 +500,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             autoHeight = setAutoFill(row, node.actualHeight);
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
                 if (template !== 'none') {
-                    trimBoth(template.trim(), '"').split(CHAR.SPACE).forEach((area, j) => {
+                    trimString(template.trim(), '"').split(CHAR.SPACE).forEach((area, j) => {
                         if (area.charAt(0) !== '.') {
                             const templateArea = templateAreas[area];
                             if (templateArea) {

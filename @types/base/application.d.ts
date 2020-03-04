@@ -110,16 +110,6 @@ export interface AppProcessing<T extends Node> {
 
 export interface AppProcessingUI<T extends Node> extends AppProcessing<T> {}
 
-export interface AppNodeUIOptions<T extends NodeUI> {
-    parent?: T;
-    element?: Null<Element>;
-    children?: T[];
-    append?: boolean;
-    delegate?: boolean;
-    cascade?: boolean;
-    replace?: T;
-}
-
 export interface ExtensionDependency {
     name: string;
     preload: boolean;
@@ -222,4 +212,20 @@ export interface FileCopyingOptions extends FileActionOptions {
 export interface FileArchivingOptions extends FileActionOptions {
     filename?: string;
     appendTo?: string;
+}
+
+export interface NodeUIOptions<T extends NodeUI> {
+    parent?: T;
+    element?: Null<Element>;
+    children?: T[];
+    append?: boolean;
+    delegate?: boolean;
+    cascade?: boolean;
+    replace?: T;
+}
+
+export interface NodeGroupUIOptions<T extends NodeUI> {
+    parent?: T;
+    delegate?: boolean;
+    cascade?: boolean;
 }
