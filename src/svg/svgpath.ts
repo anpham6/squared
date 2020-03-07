@@ -1007,7 +1007,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         return [animations, result, path, clipPath];
     }
 
-    private init() {
+    protected init() {
         const element = this.element;
         if (SVG.path(element)) {
             this.setBaseValue('d');

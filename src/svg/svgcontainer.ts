@@ -60,7 +60,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
 
     public append(item: SvgView, viewport?: Svg) {
         item.parent = this;
-        item.viewport = viewport || this.getViewport();
+        item.viewport = viewport || this._getViewport();
         return super.append(item);
     }
 
@@ -81,24 +81,24 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         }
         this.clear();
         let requireClip = false;
-        const viewport = this.getViewport();
+        const viewport = this._getViewport();
         iterateArray(element.children, (item: SVGElement) => {
             let svg: Undef<SvgView>;
             if (SVG.svg(item)) {
                 svg = new squared.svg.Svg(item, false);
-                this.setAspectRatio(<SvgGroup> svg, item.viewBox.baseVal);
+                this._setAspectRatio(<SvgGroup> svg, item.viewBox.baseVal);
                 requireClip = true;
             }
             else if (SVG.g(item)) {
                 svg = new squared.svg.SvgG(item);
-                this.setAspectRatio(<SvgGroup> svg);
+                this._setAspectRatio(<SvgGroup> svg);
             }
             else if (SVG.use(item)) {
                 const target = getTargetElement(item);
                 if (target) {
                     if (SVG.symbol(target)) {
                         svg = new squared.svg.SvgUseSymbol(item, target);
-                        this.setAspectRatio(<SvgGroup> svg, target.viewBox.baseVal);
+                        this._setAspectRatio(<SvgGroup> svg, target.viewBox.baseVal);
                         requireClip = true;
                     }
                     else if (SVG.image(target)) {
@@ -108,7 +108,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                         const pattern = getFillPattern(item, viewport);
                         if (pattern) {
                             svg = new squared.svg.SvgUsePattern(item, target, pattern);
-                            this.setAspectRatio(<SvgGroup> svg);
+                            this._setAspectRatio(<SvgGroup> svg);
                         }
                         else {
                             svg = new squared.svg.SvgUse(item, target, initialize);
@@ -123,7 +123,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 const target = getFillPattern(item, viewport);
                 if (target) {
                     svg = new squared.svg.SvgShapePattern(item, target);
-                    this.setAspectRatio(<SvgGroup> svg);
+                    this._setAspectRatio(<SvgGroup> svg);
                 }
                 else {
                     svg = new squared.svg.SvgShape(item, initialize);
@@ -208,11 +208,11 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         return result;
     }
 
-    private getViewport(): Undef<Svg> {
+    private _getViewport(): Undef<Svg> {
         return this.viewport || SvgBuild.asSvg(this) && this || undefined;
     }
 
-    private setAspectRatio(group: SvgGroup, viewBox?: DOMRect) {
+    private _setAspectRatio(group: SvgGroup, viewBox?: DOMRect) {
         const parent = getNearestViewBox(this);
         if (parent) {
             const aspectRatio = group.aspectRatio;

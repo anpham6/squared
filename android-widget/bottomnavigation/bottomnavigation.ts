@@ -47,7 +47,7 @@ export default class BottomNavigation<T extends View> extends squared.base.Exten
         for (const item of node.cascade()) {
             this.addDescendant(item as T);
         }
-        this.setStyleTheme();
+        this._setStyleTheme();
         return {
             output: <NodeXmlTemplate<T>> {
                 type: NODE_TEMPLATE.XML,
@@ -78,7 +78,7 @@ export default class BottomNavigation<T extends View> extends squared.base.Exten
         }
     }
 
-    private setStyleTheme() {
+    private _setStyleTheme() {
         const options = createStyleAttribute(this.options.resource);
         assignEmptyValue(options, 'name', (<UserSettingsAndroid> this.application.userSettings).manifestThemeName);
         assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');

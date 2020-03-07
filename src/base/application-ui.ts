@@ -280,12 +280,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 switch (getStyle(element).position) {
                     case 'absolute':
                     case 'fixed':
-                        return this.isUseElement(element);
+                        return this._isUseElement(element);
                 }
                 let current = element.parentElement;
                 while (current) {
                     if (getStyle(current).display === 'none') {
-                        return this.isUseElement(element);
+                        return this._isUseElement(element);
                     }
                     current = current.parentElement;
                 }
@@ -293,7 +293,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (iterateArray(element.children, (item: HTMLElement) => controllerHandler.visibleElement(item)) === Number.POSITIVE_INFINITY) {
                     return true;
                 }
-                return this.isUseElement(element);
+                return this._isUseElement(element);
             }
         }
         return false;
@@ -1385,7 +1385,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
-                        let layout = this.createLayoutControl(parentY, nodeY);
+                        let layout = this._createLayoutControl(parentY, nodeY);
                         if (layout.containerType === 0) {
                             const result: LayoutResult<T> = nodeY.length ? controllerHandler.processUnknownParent(layout) : controllerHandler.processUnknownChild(layout);
                             if (result.next) {
@@ -1634,7 +1634,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 this.addLayout(group);
                 if (seg === inlineAbove) {
-                    this.setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
+                    this._setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
                 }
             }
         }
@@ -1760,7 +1760,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         if (pageFlow.length && floating.length) {
                             const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
-                            this.setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
+                            this._setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
                         }
                     }
                 }
@@ -1780,7 +1780,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return { ...options, assets };
     }
 
-    private setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
+    private _setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
         let paddingNodes: T[] = [];
         for (const child of inlineAbove) {
             if (requirePadding(child)) {
@@ -1858,7 +1858,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
     }
 
-    private createLayoutControl(parent: T, node: T) {
+    private _createLayoutControl(parent: T, node: T) {
         return new LayoutUI(
             parent,
             node,
@@ -1868,7 +1868,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         );
     }
 
-    private isUseElement(element: HTMLElement) {
+    private _isUseElement(element: HTMLElement) {
         const use = element.dataset.use;
         return isString(use) && use.split(XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
     }

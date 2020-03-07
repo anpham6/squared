@@ -151,7 +151,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return values.some(value => hasBit(this.synchronizeState, value));
     }
 
-    private setFillMode(mode: boolean, value: number) {
+    private _setFillMode(mode: boolean, value: number) {
         const valid = hasBit(this.fillMode, value);
         if (mode) {
             if (!valid) {
@@ -226,21 +226,21 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set fillBackwards(value) {
-        this.setFillMode(value, FILL_MODE.BACKWARDS);
+        this._setFillMode(value, FILL_MODE.BACKWARDS);
     }
     get fillBackwards() {
         return hasBit(this.fillMode, FILL_MODE.BACKWARDS);
     }
 
     set fillForwards(value) {
-        this.setFillMode(value, FILL_MODE.FORWARDS);
+        this._setFillMode(value, FILL_MODE.FORWARDS);
     }
     get fillForwards() {
         return hasBit(this.fillMode, FILL_MODE.FORWARDS);
     }
 
     set fillFreeze(value) {
-        this.setFillMode(value, FILL_MODE.FREEZE);
+        this._setFillMode(value, FILL_MODE.FREEZE);
     }
     get fillFreeze() {
         return hasBit(this.fillMode, FILL_MODE.FREEZE);

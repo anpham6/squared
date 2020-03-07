@@ -69,7 +69,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     public copyToDisk(directory: string, options?: FileActionOptions) {
         this.copying({
             ...options,
-            assets: this.getAssetsAll(options?.assets),
+            assets: this._getAssetsAll(options?.assets),
             directory
         });
     }
@@ -77,7 +77,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     public appendToArchive(pathname: string, options?: FileActionOptions) {
         this.archiving({
             ...options,
-            assets: this.getAssetsAll(options?.assets),
+            assets: this._getAssetsAll(options?.assets),
             filename: this.userSettings.outputArchiveName,
             appendTo: pathname
         });
@@ -86,7 +86,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     public saveToArchive(filename: string, options?: FileActionOptions) {
         this.archiving({
             ...options,
-            assets: this.getAssetsAll(options?.assets),
+            assets: this._getAssetsAll(options?.assets),
             filename
         });
     }
@@ -134,7 +134,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         for (const [name, innerText] of Array.from(STORED.strings.entries()).sort(caseInsensitive)) {
             itemArray.push(<ItemValue> { name, innerText });
         }
-        return this.checkFileAssets([
+        return this._checkFileAssets([
             replaceTab(
                 applyTemplate('resources', STRING_TMPL, [item]),
                 this.userSettings.insertSpaces,
@@ -155,7 +155,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     item: objectMap<string, {}>(values, innerText => ({ innerText }))
                 });
             }
-            return this.checkFileAssets([
+            return this._checkFileAssets([
                 replaceTab(
                     applyTemplate('resources', STRINGARRAY_TMPL, [item]),
                     this.userSettings.insertSpaces,
@@ -213,7 +213,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 }
                 result.push(output, pathname, `${name}.xml`);
             }
-            return this.checkFileAssets(result, options);
+            return this._checkFileAssets(result, options);
         }
         return [];
     }
@@ -225,7 +225,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             for (const [innerText, name] of Array.from(STORED.colors.entries()).sort()) {
                 itemArray.push(<ItemValue> { name, innerText });
             }
-            return this.checkFileAssets([
+            return this._checkFileAssets([
                 replaceTab(
                     applyTemplate('resources', COLOR_TMPL, [item]),
                     this.userSettings.insertSpaces
@@ -304,7 +304,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 }
             }
         }
-        return this.checkFileAssets(result, options);
+        return this._checkFileAssets(result, options);
     }
 
     public resourceDimenToXml(options: FileOutputOptions = {}) {
@@ -315,7 +315,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             for (const [name, value] of Array.from(STORED.dimens.entries()).sort()) {
                 itemArray.push({ name, innerText: convertPixels ? convertLength(value, false) : value });
             }
-            return this.checkFileAssets([
+            return this._checkFileAssets([
                 replaceTab(applyTemplate('resources', DIMEN_TMPL, [item])),
                 this.directory.string,
                 'dimens.xml'
@@ -339,7 +339,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     `${name}.xml`
                 );
             }
-            return this.checkFileAssets(result, options);
+            return this._checkFileAssets(result, options);
         }
         return [];
     }
@@ -396,7 +396,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     `${name}.xml`
                 );
             }
-            return this.checkFileAssets(result, options);
+            return this._checkFileAssets(result, options);
         }
         return [];
     }
@@ -426,7 +426,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return result;
     }
 
-    private getAssetsAll(assets?: FileAsset[]) {
+    private _getAssetsAll(assets?: FileAsset[]) {
         let result: FileAsset[] = [];
         if (assets) {
             const length = assets.length;
@@ -460,7 +460,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         );
     }
 
-    private checkFileAssets(content: string[], options: FileOutputOptions) {
+    private _checkFileAssets(content: string[], options: FileOutputOptions) {
         const { directory, filename } = options;
         if (directory || filename) {
             options.assets = getFileAssets(content).concat(options.assets || []);

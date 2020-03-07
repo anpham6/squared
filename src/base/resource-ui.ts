@@ -290,6 +290,18 @@ function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: 'background
     return false;
 }
 
+function getStoredName(asset: string, value: any): string {
+    const stored = ResourceUI.STORED[asset];
+    if (stored) {
+        for (const [name, data] of stored.entries()) {
+            if (isEqual(value, data)) {
+                return name;
+            }
+        }
+    }
+    return '';
+}
+
 const replaceAmpersand = (value: string) => value.replace(/&/g, '&amp;');
 const getGradientPosition = (value: string) => isString(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : <RegExpExecArray> [value, value]) : null;
 
@@ -329,7 +341,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static insertStoredAsset(asset: string, name: string, value: any) {
         const stored: Map<string, any> = ResourceUI.STORED[asset];
         if (stored && hasValue(value)) {
-            let result = this.getStoredName(asset, value);
+            let result = getStoredName(asset, value);
             if (result === '') {
                 if (isNumber(name)) {
                     name = '__' + name;
@@ -663,18 +675,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return undefined;
     }
 
-    private static getStoredName(asset: string, value: any): string {
-        const stored = ResourceUI.STORED[asset];
-        if (stored) {
-            for (const [name, data] of stored.entries()) {
-                if (isEqual(value, data)) {
-                    return name;
-                }
-            }
-        }
-        return '';
-    }
-
     public fileHandler?: squared.base.FileUI<T>;
     public abstract controllerSettings: ControllerUISettings;
 
@@ -910,7 +910,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                     else if (node.inlineText) {
                         key = textContent.trim();
-                        [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(NODE_ALIGNMENT.INLINE) ? replaceAmpersand(textContent) : this.removeExcludedFromText(node, element));
+                        [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(NODE_ALIGNMENT.INLINE) ? replaceAmpersand(textContent) : this._removeExcludedFromText(node, element));
                     }
                     else if (node.naturalChildren.length === 0 && textContent?.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                         value = textContent;
@@ -978,7 +978,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         }
     }
 
-    private removeExcludedFromText(node: T, element: Element) {
+    private _removeExcludedFromText(node: T, element: Element) {
         const styled = element.children.length > 0 || element.tagName === 'CODE';
         const preserveWhitespace = node.preserveWhiteSpace;
         const attr = styled ? 'innerHTML' : 'textContent';

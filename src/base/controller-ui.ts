@@ -124,6 +124,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const tagName = element.tagName;
             if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (tagName) {
+                    case 'BODY':
+                        if (styleMap.backgroundColor === 'rgba(0, 0, 0, 0)') {
+                            styleMap.backgroundColor = 'rgb(255, 255, 255)';
+                        }
+                        break;
                     case 'INPUT':
                     case 'SELECT':
                     case 'BUTTON':

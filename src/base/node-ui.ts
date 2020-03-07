@@ -1338,7 +1338,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get blockStatic() {
-        return super.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK) && !this.floating && this.pageFlow;
+        return super.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK) && this.pageFlow && !this.floating;
     }
 
     get rightAligned() {

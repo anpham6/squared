@@ -10,6 +10,7 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 type T = android.base.View;
 
 const $lib = squared.lib;
+const $base = squared.base;
 
 const { BOX_MARGIN, BOX_PADDING, formatPX, isLength, isPercent } = $lib.css;
 const { createElement, getNamedItem, newBoxModel } = $lib.dom;
@@ -17,7 +18,8 @@ const { clamp, truncate } = $lib.math;
 const { actualTextRangeRect } = $lib.session;
 const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
 
-const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
+const { EXT_NAME } = $base.lib.constant;
+const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = $base.lib.enumeration;
 
 const ResourceUI = squared.base.ResourceUI;
 
@@ -1603,6 +1605,47 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return super.removeTry(replacement, beforeReplace);
         }
 
+        public hasFlex(direction: "row" | "column") {
+            if (super.hasFlex(direction)) {
+                const parent = this.actualParent as T;
+                if (direction === 'column' && !parent.hasHeight) {
+                    const grandParent = parent.actualParent;
+                    if (grandParent) {
+                        if (grandParent.flexElement && !grandParent.flexdata.column) {
+                            if (!grandParent.hasHeight) {
+                                let maxHeight = 0;
+                                let parentHeight = 0;
+                                for (const item of grandParent) {
+                                    const height = (item.data(EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
+                                    if (height > maxHeight) {
+                                        maxHeight = height;
+                                    }
+                                    if (item === parent) {
+                                        parentHeight = height;
+                                        if (parentHeight < maxHeight) {
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (parentHeight >= maxHeight) {
+                                    return false;
+                                }
+                            }
+                        }
+                        else if (!grandParent.gridElement) {
+                            return false;
+                        }
+                    }
+                    else {
+                        return false;
+                    }
+                }
+                const { grow, shrink } = this.flexbox;
+                return grow > 0 || shrink !== 1;
+            }
+            return false;
+        }
+
         public hide(options?: HideUIOptions<T>) {
             if (options) {
                 if (options.hidden) {
@@ -2020,10 +2063,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public applyOptimizations() {
             const renderParent = this.renderParent;
             if (renderParent) {
-                this.alignLayout(renderParent);
-                this.setLineHeight(renderParent);
-                this.finalizeGravity('layout_gravity');
-                this.finalizeGravity('gravity');
+                this._alignLayout(renderParent);
+                this._setLineHeight(renderParent);
+                this._finalizeGravity('layout_gravity');
+                this._finalizeGravity('gravity');
                 if (this.imageElement) {
                     const layoutWidth = this.layoutWidth;
                     const layoutHeight = this.layoutHeight;
@@ -2083,7 +2126,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             this.android('layout_height', value, overwrite);
         }
 
-        private alignLayout(renderParent: T) {
+        private _alignLayout(renderParent: T) {
             if (this.layoutLinear) {
                 const children = this.renderChildren;
                 if (this.layoutVertical) {
@@ -2110,7 +2153,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        private setLineHeight(renderParent: T) {
+        private _setLineHeight(renderParent: T) {
             const lineHeight = this.lineHeight;
             if (lineHeight > 0) {
                 const hasOwnStyle = this.has('lineHeight', { map: 'initial' });
@@ -2169,7 +2212,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        private finalizeGravity(attr: string) {
+        private _finalizeGravity(attr: string) {
             const direction = getGravityValues(this, attr);
             if (direction.size > 1) {
                 checkMergableGravity('center', direction);

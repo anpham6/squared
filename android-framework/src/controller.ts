@@ -660,8 +660,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else if (layout.parent.flexElement && child.baselineElement && node.flexbox.alignSelf === 'baseline') {
                     layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
                 }
-                else if (child.percentWidth > 0) {
-                    layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK);
+                else if (child.percentWidth > 0 && child.percentWidth < 1) {
+                    layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.PERCENT);
                 }
                 else if (node.autoMargin.leftRight || node.autoMargin.left) {
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
@@ -839,7 +839,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             return undefined;
                         }
                     }
-                    layout.node = this.createLayoutNodeGroup(layout);
+                    layout.node = this._createLayoutNodeGroup(layout);
                     layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
                 }
             }
@@ -851,12 +851,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     return undefined;
                 }
                 else {
-                    layout.node = this.createLayoutNodeGroup(layout);
+                    layout.node = this._createLayoutNodeGroup(layout);
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
                 }
             }
             else if (hasCleared(layout, clearMap) || this.checkFrameHorizontal(layout)) {
-                layout.node = this.createLayoutNodeGroup(layout);
+                layout.node = this._createLayoutNodeGroup(layout);
                 layout.addRender(NODE_ALIGNMENT.FLOAT);
                 layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
             }
@@ -873,19 +873,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             return undefined;
                         }
                     }
-                    layout.node = this.createLayoutNodeGroup(layout);
+                    layout.node = this._createLayoutNodeGroup(layout);
                     layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL);
                 }
             }
         }
         else if (floatSize) {
             if (hasCleared(layout, clearMap)) {
-                layout.node = this.createLayoutNodeGroup(layout);
+                layout.node = this._createLayoutNodeGroup(layout);
                 layout.addRender(NODE_ALIGNMENT.FLOAT);
                 layout.addRender(NODE_ALIGNMENT.VERTICAL);
             }
             else if ((layout.item(0) as T).floating) {
-                layout.node = this.createLayoutNodeGroup(layout);
+                layout.node = this._createLayoutNodeGroup(layout);
                 layout.addRender(NODE_ALIGNMENT.FLOAT);
                 layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
             }
@@ -903,7 +903,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         return undefined;
                     }
                 }
-                layout.node = this.createLayoutNodeGroup(layout);
+                layout.node = this._createLayoutNodeGroup(layout);
                 layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL);
             }
         }
@@ -1078,7 +1078,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             {
                 return false;
             }
-            return layout.some(node => node.blockVertical || node.percentWidth > 0 && !node.inputElement && !node.controlElement || node.marginTop < 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight);
+            return layout.some(node => node.blockVertical || node.percentWidth > 0 && node.percentWidth < 1 && !node.inputElement && !node.controlElement || node.marginTop < 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight);
         }
         return false;
     }
@@ -3150,7 +3150,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         node.horizontalRows = horizontal;
     }
 
-    private createLayoutNodeGroup(layout: squared.base.LayoutUI<T>) {
+    private _createLayoutNodeGroup(layout: squared.base.LayoutUI<T>) {
         return this.createNodeGroup(layout.node, layout.children, { parent: layout.parent });
     }
 

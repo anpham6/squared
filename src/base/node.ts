@@ -1,7 +1,6 @@
 import { AscendOptions, BoxType, CachedValue, InitialData, HasOptions, QueryAttribute, QueryData } from '../../@types/base/node';
 
 import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
-import { EXT_NAME } from './lib/constant';
 
 type T = Node;
 
@@ -1152,44 +1151,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public hasFlex(direction: "row" | "column") {
-        const parent = this.actualParent;
-        if (parent?.flexElement && parent.flexdata[direction]) {
-            if (direction === 'column' && !parent.hasHeight) {
-                const grandParent = parent.actualParent;
-                if (grandParent) {
-                    if (grandParent.flexElement && !grandParent.flexdata.column) {
-                        if (!grandParent.hasHeight) {
-                            let maxHeight = 0;
-                            let parentHeight = 0;
-                            for (const item of grandParent) {
-                                const height = (item.data(EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
-                                if (height > maxHeight) {
-                                    maxHeight = height;
-                                }
-                                if (item === parent) {
-                                    parentHeight = height;
-                                    if (parentHeight < maxHeight) {
-                                        break;
-                                    }
-                                }
-                            }
-                            if (parentHeight >= maxHeight) {
-                                return false;
-                            }
-                        }
-                    }
-                    else if (!grandParent.gridElement) {
-                        return false;
-                    }
-                }
-                else {
-                    return false;
-                }
-            }
-            const { grow, shrink } = this.flexbox;
-            return grow > 0 || shrink !== 1;
-        }
-        return false;
+        return this._flexParent(direction);
     }
 
     public setBounds(cache = true) {
@@ -1451,7 +1413,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    private setDimension(attr: "width" | "height", attrMin: string, attrMax: string) {
+    private _setDimension(attr: "width" | "height", attrMin: string, attrMax: string) {
         const styleMap = this._styleMap;
         const valueA = styleMap[attr];
         const baseValue = this.parseUnit(valueA, attr);
@@ -1501,7 +1463,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return maxValue > 0 ? Math.min(value, maxValue) : value;
     }
 
-    private convertPosition(attr: string) {
+    private _convertPosition(attr: string) {
         if (!this.positionStatic) {
             const unit = this.cssInitial(attr, true);
             if (isLength(unit)) {
@@ -1514,7 +1476,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return 0;
     }
 
-    private convertBorderWidth(index: number) {
+    private _convertBorderWidth(index: number) {
         if (!this.plainText) {
             const [borderStyle, borderWidth] = BOX_BORDER[index];
             const value = this.css(borderStyle);
@@ -1539,7 +1501,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return 0;
     }
 
-    private convertBox(attr: string, margin: boolean) {
+    private _convertBox(attr: string, margin: boolean) {
         switch (this.display) {
             case 'table':
                 if (!margin && this.css('borderCollapse') === 'collapse') {
@@ -1622,6 +1584,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
         }
         return result;
+    }
+
+    private _flexParent(direction: "row" | "column") {
+        const parent = this.actualParent;
+        return parent?.flexElement === true && parent.flexdata[direction] === true;
     }
 
     set parent(value) {
@@ -1920,7 +1887,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get width() {
         let result = this._cached.width;
         if (result === undefined) {
-            result = this.setDimension('width', 'minWidth', 'maxWidth');
+            result = this._setDimension('width', 'minWidth', 'maxWidth');
             this._cached.width = result;
         }
         return result;
@@ -1928,7 +1895,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get height() {
         let result = this._cached.height;
         if (result === undefined) {
-            result = this.setDimension('height', 'minHeight', 'maxHeight');
+            result = this._setDimension('height', 'minHeight', 'maxHeight');
             this._cached.height = result;
         }
         return result;
@@ -2060,7 +2027,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get top() {
         let result = this._cached.top;
         if (result === undefined) {
-            result = this.convertPosition('top');
+            result = this._convertPosition('top');
             this._cached.top = result;
         }
         return result;
@@ -2068,7 +2035,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get right() {
         let result = this._cached.right;
         if (result === undefined) {
-            result = this.convertPosition('right');
+            result = this._convertPosition('right');
             this._cached.right = result;
         }
         return result;
@@ -2076,7 +2043,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get bottom() {
         let result = this._cached.bottom;
         if (result === undefined) {
-            result = this.convertPosition('bottom');
+            result = this._convertPosition('bottom');
             this._cached.bottom = result;
         }
         return result;
@@ -2084,7 +2051,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get left() {
         let result = this._cached.left;
         if (result === undefined) {
-            result = this.convertPosition('left');
+            result = this._convertPosition('left');
             this._cached.left = result;
         }
         return result;
@@ -2093,7 +2060,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get marginTop() {
         let result = this._cached.marginTop;
         if (result === undefined) {
-            result = this.inlineStatic ? 0 : this.convertBox('marginTop', true);
+            result = this.inlineStatic ? 0 : this._convertBox('marginTop', true);
             this._cached.marginTop = result;
         }
         return result;
@@ -2101,7 +2068,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get marginRight() {
         let result = this._cached.marginRight;
         if (result === undefined) {
-            result = this.convertBox('marginRight', true);
+            result = this._convertBox('marginRight', true);
             this._cached.marginRight = result;
         }
         return result;
@@ -2109,7 +2076,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get marginBottom() {
         let result = this._cached.marginBottom;
         if (result === undefined) {
-            result = this.inlineStatic ? 0 : this.convertBox('marginBottom', true);
+            result = this.inlineStatic ? 0 : this._convertBox('marginBottom', true);
             this._cached.marginBottom = result;
         }
         return result;
@@ -2117,7 +2084,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get marginLeft() {
         let result = this._cached.marginLeft;
         if (result === undefined) {
-            result = this.convertBox('marginLeft', true);
+            result = this._convertBox('marginLeft', true);
             this._cached.marginLeft = result;
         }
         return result;
@@ -2126,7 +2093,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get borderTopWidth() {
         let result = this._cached.borderTopWidth;
         if (result === undefined) {
-            result = this.convertBorderWidth(0);
+            result = this._convertBorderWidth(0);
             this._cached.borderTopWidth = result;
         }
         return result;
@@ -2134,7 +2101,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get borderRightWidth() {
         let result = this._cached.borderRightWidth;
         if (result === undefined) {
-            result = this.convertBorderWidth(1);
+            result = this._convertBorderWidth(1);
             this._cached.borderRightWidth = result;
         }
         return result;
@@ -2142,7 +2109,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get borderBottomWidth() {
         let result = this._cached.borderBottomWidth;
         if (result === undefined) {
-            result = this.convertBorderWidth(2);
+            result = this._convertBorderWidth(2);
             this._cached.borderBottomWidth = result;
         }
         return result;
@@ -2150,7 +2117,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get borderLeftWidth() {
         let result = this._cached.borderLeftWidth;
         if (result === undefined) {
-            result = this.convertBorderWidth(3);
+            result = this._convertBorderWidth(3);
             this._cached.borderLeftWidth = result;
         }
         return result;
@@ -2159,7 +2126,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get paddingTop() {
         let result = this._cached.paddingTop;
         if (result === undefined) {
-            result = this.convertBox('paddingTop', false);
+            result = this._convertBox('paddingTop', false);
             this._cached.paddingTop = result;
         }
         return result;
@@ -2167,7 +2134,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get paddingRight() {
         let result = this._cached.paddingRight;
         if (result === undefined) {
-            result = this.convertBox('paddingRight', false);
+            result = this._convertBox('paddingRight', false);
             this._cached.paddingRight = result;
         }
         return result;
@@ -2175,7 +2142,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get paddingBottom() {
         let result = this._cached.paddingBottom;
         if (result === undefined) {
-            result = this.convertBox('paddingBottom', false);
+            result = this._convertBox('paddingBottom', false);
             this._cached.paddingBottom = result;
         }
         return result;
@@ -2183,7 +2150,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get paddingLeft() {
         let result = this._cached.paddingLeft;
         if (result === undefined) {
-            result = this.convertBox('paddingLeft', false);
+            result = this._convertBox('paddingLeft', false);
             this._cached.paddingLeft = result;
         }
         return result;
@@ -2746,7 +2713,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         break;
                 }
             }
-            else if (this.inlineStatic || this.display === 'table-cell' || this.hasFlex('row')) {
+            else if (this.inlineStatic || this.display === 'table-cell' || this._flexParent('row')) {
                 result = this.bounds.width;
             }
             else {
@@ -2768,7 +2735,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get actualHeight() {
         let result = this._cached.actualHeight;
         if (result === undefined) {
-            if (!this.inlineStatic && this.display !== 'table-cell' && !this.hasFlex('column')) {
+            if (!this.inlineStatic && this.display !== 'table-cell' && !this._flexParent('column')) {
                 result = this.height;
                 if (result > 0) {
                     if (this.contentBox && !this.tableElement) {

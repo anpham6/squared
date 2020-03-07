@@ -64,7 +64,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public copyToDisk(directory: string, options?: FileActionOptions) {
         this.copying({
             ...options,
-            assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
+            assets: <FileAsset[]> this._getAssetsAll().concat(options?.assets || []),
             directory
         });
     }
@@ -72,7 +72,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public appendToArchive(pathname: string, options?: FileActionOptions) {
         this.archiving({
             ...options,
-            assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
+            assets: <FileAsset[]> this._getAssetsAll().concat(options?.assets || []),
             filename: this.userSettings.outputArchiveName,
             appendTo: pathname
         });
@@ -81,7 +81,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public saveToArchive(filename: string, options?: FileActionOptions) {
         this.archiving({
             ...options,
-            assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
+            assets: <FileAsset[]> this._getAssetsAll().concat(options?.assets || []),
             filename
         });
     }
@@ -101,10 +101,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     data.filename = 'index.html';
                 }
             }
-            if (this.validFile(data)) {
+            if (this._validFile(data)) {
                 data.uri = href;
                 data.mimeType = File.getMimeType('html');
-                this.processExtensions(data);
+                this._processExtensions(data);
                 result.push(data);
             }
         }
@@ -118,13 +118,13 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             if (src !== '') {
                 const uri = resolvePath(src);
                 const data = parseUri(uri);
-                if (this.validFile(data)) {
+                if (this._validFile(data)) {
                     data.uri = uri;
                     const type = element.type;
                     if (type) {
                         data.mimeType = type;
                     }
-                    this.processExtensions(data);
+                    this._processExtensions(data);
                     result.push(data);
                 }
             }
@@ -139,9 +139,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             if (href !== '') {
                 const uri = resolvePath(href);
                 const data = parseUri(uri);
-                if (this.validFile(data)) {
+                if (this._validFile(data)) {
                     data.uri = uri;
-                    this.processExtensions(data);
+                    this._processExtensions(data);
                     result.push(data);
                 }
             }
@@ -153,9 +153,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         const result: ChromeAsset[] = [];
         for (const uri of ASSETS.images.keys()) {
             const data = parseUri(uri);
-            if (this.validFile(data)) {
+            if (this._validFile(data)) {
                 data.uri = uri;
-                this.processExtensions(data);
+                this._processExtensions(data);
                 result.push(data);
             }
         }
@@ -176,9 +176,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 else {
                     continue;
                 }
-                if (this.validFile(data)) {
+                if (this._validFile(data)) {
                     data.mimeType = mimeType;
-                    this.processExtensions(data);
+                    this._processExtensions(data);
                     result.push(data);
                 }
             }
@@ -198,7 +198,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             for (const src of images) {
                 if (COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
                     const data = parseUri(src);
-                    if (this.validFile(data)) {
+                    if (this._validFile(data)) {
                         data.uri = src;
                         result.push(data);
                     }
@@ -215,9 +215,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 const url = font.srcUrl;
                 if (url) {
                     const data = parseUri(url);
-                    if (this.validFile(data)) {
+                    if (this._validFile(data)) {
                         data.uri = url;
-                        this.processExtensions(data);
+                        this._processExtensions(data);
                         result.push(data);
                     }
                 }
@@ -226,7 +226,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
-    private getAssetsAll() {
+    private _getAssetsAll() {
         return this.getHtmlPage()
             .concat(this.getScriptAssets())
             .concat(this.getLinkAssets())
@@ -234,7 +234,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             .concat(this.getFontAssets());
     }
 
-    private validFile(data: Undef<ChromeAsset>): data is ChromeAsset {
+    private _validFile(data: Undef<ChromeAsset>): data is ChromeAsset {
         if (data) {
             const fullpath = `${data.pathname}/${data.filename}`;
             return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
@@ -242,7 +242,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return false;
     }
 
-    private processExtensions(data: ChromeAsset) {
+    private _processExtensions(data: ChromeAsset) {
         for (const ext of this.application.extensions) {
             ext.processFile(data);
         }
