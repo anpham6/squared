@@ -1,4 +1,4 @@
-/* android.widget.drawer 1.4.1
+/* android.widget.drawer 1.5.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -8,7 +8,7 @@ this.android.widget.drawer = (function () {
 
     const $lib = squared.lib;
     const $libA = android.lib;
-    const { assignEmptyValue, cloneObject, includes, optionalAsString } = $lib.util;
+    const { assignEmptyValue, cloneObject, safeNestedMap, includes, iterateArray } = $lib.util;
     const { getElementAsNode } = $lib.session;
     const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
@@ -25,18 +25,15 @@ this.android.widget.drawer = (function () {
         }
         init(element) {
             if (this.included(element)) {
-                const children = element.children;
-                const length = children.length;
-                if (length) {
-                    for (let i = 0; i < length; i++) {
-                        const item = children[i];
-                        if (item.tagName === 'NAV') {
-                            const use = item.dataset.use;
-                            if (!includes(use, EXT_ANDROID.EXTERNAL)) {
-                                item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
-                            }
+                const result = iterateArray(element.children, (item) => {
+                    if (item.tagName === 'NAV') {
+                        const use = item.dataset.use;
+                        if (!includes(use, EXT_ANDROID.EXTERNAL)) {
+                            item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
                         }
                     }
+                });
+                if (result) {
                     this.application.rootElements.add(element);
                     return true;
                 }
@@ -73,41 +70,42 @@ this.android.widget.drawer = (function () {
                     controlName
                 },
                 complete: true,
+                include: true,
                 remove: true
             };
         }
         afterParseDocument() {
+            var _a, _b;
             for (const node of this.subscribers) {
                 const element = node.element;
                 const options = createViewAttribute(this.options.navigationView);
-                const menu = optionalAsString(Drawer.findNestedElement(element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
-                const headerLayout = optionalAsString(Drawer.findNestedElement(element, EXT_ANDROID.EXTERNAL), 'dataset.layoutName');
-                let app = options.app;
-                if (app === undefined) {
-                    app = {};
-                    options.app = app;
+                const menu = (_a = Drawer.findNestedElement(element, "android.widget.menu" /* MENU */)) === null || _a === void 0 ? void 0 : _a.dataset.layoutName;
+                const headerLayout = (_b = Drawer.findNestedElement(element, EXT_ANDROID.EXTERNAL)) === null || _b === void 0 ? void 0 : _b.dataset.layoutName;
+                const app = safeNestedMap(options, 'app');
+                if (menu) {
+                    assignEmptyValue(app, 'menu', `@menu/${menu}`);
                 }
-                if (menu !== '') {
-                    assignEmptyValue(app, 'menu', '@menu/' + menu);
+                if (headerLayout) {
+                    assignEmptyValue(app, 'headerLayout', `@layout/${headerLayout}`);
                 }
-                if (headerLayout !== '') {
-                    assignEmptyValue(app, 'headerLayout', '@layout/' + headerLayout);
-                }
-                if (menu !== '' || headerLayout !== '') {
+                if (menu || headerLayout) {
                     const controller = this.controller;
-                    assignEmptyValue(options, 'android', 'id', node.documentId.replace('@', '@+') + '_navigation');
+                    assignEmptyValue(options, 'android', 'id', `@+id/${node.controlId}_navigation`);
                     assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                     assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
-                    controller.addAfterInsideTemplate(node.id, controller.renderNodeStatic(node.api < 29 /* Q */ ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW, Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')), 'wrap_content', 'match_parent'));
+                    controller.addAfterInsideTemplate(node.id, controller.renderNodeStatic({
+                        controlName: node.api < 29 /* Q */ ? SUPPORT_ANDROID.NAVIGATION_VIEW : SUPPORT_ANDROID_X.NAVIGATION_VIEW,
+                        width: 'wrap_content',
+                        height: 'match_parent'
+                    }, Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'))));
                 }
             }
         }
         postOptimize(node) {
-            var _a;
             const element = Drawer.findNestedElement(node.element, "android.widget.coordinator" /* COORDINATOR */);
             if (element) {
                 const coordinator = getElementAsNode(element, node.sessionId);
-                if (((_a = coordinator) === null || _a === void 0 ? void 0 : _a.inlineHeight) && coordinator.some((item) => item.positioned)) {
+                if ((coordinator === null || coordinator === void 0 ? void 0 : coordinator.inlineHeight) && coordinator.some((item) => item.positioned)) {
                     coordinator.setLayoutHeight('match_parent');
                 }
             }

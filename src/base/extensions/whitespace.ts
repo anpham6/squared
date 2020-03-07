@@ -322,7 +322,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     if (isBlockElement(previous, false)) {
                                         let marginBottom = previous.marginBottom;
                                         let marginTop = current.marginTop;
-                                        if (previous.excluded && !current.excluded) {
+                                        if (previous.marginTop < 0 && previous.bounds.height === 0) {
                                             const offset = Math.min(marginBottom, previous.marginTop);
                                             if (offset < 0) {
                                                 if (Math.abs(offset) < marginTop) {
@@ -332,10 +332,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     resetBox(current, BOX_STANDARD.MARGIN_TOP);
                                                 }
                                                 processed.add(previous.id);
+                                                previous.hide({ collapse: true });
                                                 continue;
                                             }
                                         }
-                                        else if (!previous.excluded && current.excluded) {
+                                        else if (current.marginBottom < 0 && current.bounds.height === 0) {
                                             const offset = Math.min(marginTop, current.marginBottom);
                                             if (offset < 0) {
                                                 if (Math.abs(offset) < marginBottom) {
@@ -345,6 +346,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     resetBox(previous, BOX_STANDARD.MARGIN_BOTTOM);
                                                 }
                                                 processed.add(current.id);
+                                                current.hide({ collapse: true });
                                                 continue;
                                             }
                                         }
@@ -460,6 +462,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 marginTop = Math.min(marginTop, current.marginBottom);
                                                 if (marginTop < 0) {
                                                     previous.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, marginTop);
+                                                    current.hide({ collapse: true });
                                                 }
                                             }
                                         }
@@ -811,6 +814,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
             if (node.floatContainer && node.layoutVertical) {
                 const floating: T[] = [];
                 for (const item of node.naturalChildren as T[]) {
+                    if (!item.pageFlow) {
+                        continue;
+                    }
                     if (!item.floating) {
                         if (floating.length) {
                             const outerWrapper = item.outerMostWrapper;

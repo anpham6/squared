@@ -1185,7 +1185,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (m === 0) {
                                         const next = item.siblingsTrailing[0];
                                         if (next) {
-                                            if (!isHorizontalAligned(item) || next.alignedVertically([item], floatContainer ? clearMap : undefined) > 0) {
+                                            if (!isHorizontalAligned(item) || next.alignedVertically([item]) > 0) {
                                                 vertical.push(item);
                                             }
                                             else {
@@ -1550,7 +1550,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 inlineBelow[0].addAlign(NODE_ALIGNMENT.EXTENDABLE);
             }
             inlineBelow.unshift(node);
-            const wrapper = this.createNode({ parent, children: inlineBelow });
+            const wrapper = controllerHandler.createNodeGroup(node, inlineBelow, { parent });
             wrapper.childIndex = node.childIndex;
             wrapper.containerName = node.containerName;
             wrapper.inherit(node, 'boxStyle');

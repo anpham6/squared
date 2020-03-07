@@ -934,13 +934,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let gravityY = '';
                 let gravityAlign = '';
                 let repeat = backgroundRepeat[i];
-                const setGravityFill = () => {
-                    tileModeX = '';
-                    tileModeY = '';
-                    gravityX = '';
-                    gravityY = '';
-                    gravityAlign = 'fill';
-                };
                 if (repeat.includes(' ')) {
                     const [x, y] = repeat.split(' ');
                     if (x === 'no-repeat') {
@@ -1053,7 +1046,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case 'auto auto':
                     case 'initial':
                         if (typeof value !== 'string') {
-                            setGravityFill();
+                            gravityAlign = 'fill';
                         }
                         break;
                     case '100%':
@@ -1063,7 +1056,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case 'contain':
                     case 'cover':
                     case 'round':
-                        setGravityFill();
+                        tileModeX = '';
+                        tileModeY = '';
+                        gravityAlign = 'fill';
                         if (documentBody) {
                             const visibleStyle = node.visibleStyle;
                             visibleStyle.backgroundRepeat = true;
@@ -1076,11 +1071,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 if (dimen === '100%') {
                                     if (index === 0) {
                                         gravityAlign = 'fill_horizontal';
-                                        gravityX = '';
                                     }
                                     else {
                                         gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
-                                        gravityY = '';
                                     }
                                 }
                                 else if (dimen !== 'auto') {
@@ -1097,7 +1090,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         break;
                 }
-                const bitmap = svg[i] !== true;
+                let bitmap = svg[i] !== true;
                 let autoFit = node.is(CONTAINER_NODE.IMAGE) || typeof value !== 'string';
                 let resizedWidth = false;
                 let resizedHeight = false;
@@ -1217,7 +1210,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 offsetX = false;
                             }
                             else {
-                                setGravityFill();
+                                gravityAlign = 'fill';
                             }
                             offsetY = false;
                             break;
@@ -1422,7 +1415,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 switch (node.controlName) {
                     case SUPPORT_ANDROID.TOOLBAR:
                     case SUPPORT_ANDROID_X.TOOLBAR:
-                        setGravityFill();
+                        gravityX = '';
+                        gravityY = '';
+                        gravityAlign = 'fill';
                         break;
                 }
                 if (!autoFit) {
@@ -1450,7 +1445,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 else if (unsizedHeight) {
                                     width = dimenWidth;
                                     gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_horizontal');
-                                    tileModeX = '';
+                                    if (dimenHeight >= dimenWidth) {
+                                        tileModeX = '';
+                                    }
                                 }
                                 break;
                         }
@@ -1478,7 +1475,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 else if (unsizedWidth) {
                                     height = dimenHeight;
                                     gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_vertical');
-                                    tileModeY = '';
+                                    if (dimenWidth >= dimenHeight) {
+                                        tileModeY = '';
+                                    }
                                 }
                                 break;
                         }
@@ -1492,6 +1491,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         gravityAlign = delimitString({ value: gravityAlign }, gravityY);
                         gravityY = '';
                     }
+                }
+                else if (width === 0 && height === 0 && gravityAlign === 'fill') {
+                    bitmap = false;
                 }
                 let src: Undef<string>;
                 if (typeof value === 'string') {

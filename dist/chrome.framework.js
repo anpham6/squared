@@ -1,4 +1,4 @@
-/* chrome-framework 1.4.0
+/* chrome-framework 1.5.0
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -17,7 +17,6 @@ var chrome = (function () {
     }
 
     const { isTextNode } = squared.lib.dom;
-    const ASSETS = Resource.ASSETS;
     class Application extends squared.base.Application {
         constructor() {
             super(...arguments);
@@ -51,7 +50,8 @@ var chrome = (function () {
             }
         }
         get length() {
-            return ASSETS.images.size + ASSETS.rawData.size + ASSETS.fonts.size;
+            const { images, rawData, fonts } = Resource.ASSETS;
+            return images.size + rawData.size + fonts.size;
         }
     }
 
@@ -113,7 +113,7 @@ var chrome = (function () {
     const $lib$1 = squared.lib;
     const { COMPONENT } = $lib$1.regex;
     const { convertWord, fromLastIndexOf, resolvePath, spliceString, trimEnd } = $lib$1.util;
-    const ASSETS$1 = Resource.ASSETS;
+    const ASSETS = Resource.ASSETS;
     const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
     const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
     function parseUri(value) {
@@ -158,14 +158,14 @@ var chrome = (function () {
             super.reset();
             this._outputFileExclusions = undefined;
         }
-        copyToDisk(directory, assets = [], callback) {
-            this.copying(directory, assets.concat(this.getAssetsAll()), callback);
+        copyToDisk(directory, options) {
+            this.copying(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), directory }));
         }
-        appendToArchive(pathname, assets = []) {
-            this.archiving(this.userSettings.outputArchiveName, assets.concat(this.getAssetsAll()), pathname);
+        appendToArchive(pathname, options) {
+            this.archiving(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), filename: this.userSettings.outputArchiveName, appendTo: pathname }));
         }
-        saveToArchive(filename) {
-            this.archiving(filename, this.getAssetsAll());
+        saveToArchive(filename, options) {
+            this.archiving(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), filename }));
         }
         getHtmlPage(name) {
             const result = [];
@@ -200,8 +200,9 @@ var chrome = (function () {
                     const data = parseUri(uri);
                     if (this.validFile(data)) {
                         data.uri = uri;
-                        if (element.type) {
-                            data.mimeType = element.type;
+                        const type = element.type;
+                        if (type) {
+                            data.mimeType = type;
                         }
                         this.processExtensions(data);
                         result.push(data);
@@ -228,7 +229,7 @@ var chrome = (function () {
         }
         getImageAssets() {
             const result = [];
-            for (const uri of ASSETS$1.images.keys()) {
+            for (const uri of ASSETS.images.keys()) {
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
                     data.uri = uri;
@@ -236,7 +237,7 @@ var chrome = (function () {
                     result.push(data);
                 }
             }
-            for (const [uri, rawData] of ASSETS$1.rawData) {
+            for (const [uri, rawData] of ASSETS.rawData) {
                 const filename = rawData.filename;
                 if (filename) {
                     const { pathname, base64, content, mimeType } = rawData;
@@ -248,7 +249,10 @@ var chrome = (function () {
                         data = { pathname: 'generated/base64', filename, base64 };
                     }
                     else if (content && mimeType) {
-                        data = { pathname: 'generated/' + mimeType, filename, content };
+                        data = { pathname: `generated/${mimeType}`, filename, content };
+                    }
+                    else {
+                        continue;
                     }
                     if (this.validFile(data)) {
                         data.mimeType = mimeType;
@@ -283,7 +287,7 @@ var chrome = (function () {
         }
         getFontAssets() {
             const result = [];
-            for (const fonts of ASSETS$1.fonts.values()) {
+            for (const fonts of ASSETS.fonts.values()) {
                 for (const font of fonts) {
                     const url = font.srcUrl;
                     if (url) {
@@ -307,7 +311,7 @@ var chrome = (function () {
         }
         validFile(data) {
             if (data) {
-                const fullpath = data.pathname + '/' + data.filename;
+                const fullpath = `${data.pathname}/${data.filename}`;
                 return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
             }
             return false;
@@ -409,6 +413,7 @@ var chrome = (function () {
         excludePlainText: true,
         outputFileExclusions: ['squared.*', 'chrome.framework.*'],
         outputDirectory: '',
+        outputEmptyCopyDirectory: false,
         outputArchiveName: 'chrome-data',
         outputArchiveFormat: 'zip',
         outputArchiveTimeout: 60
@@ -486,6 +491,10 @@ var chrome = (function () {
             return result;
         });
     }
+    function createAssetsOptions(assets, options, directory, filename) {
+        return Object.assign(Object.assign({}, options), { assets: assets.concat((options === null || options === void 0 ? void 0 : options.assets) || []), directory,
+            filename });
+    }
     const appBase = {
         base: {
             Application,
@@ -542,61 +551,60 @@ var chrome = (function () {
                 return result;
             },
             getElementMap() {
-                return controller ? controller.elementMap : new Map();
+                return (controller === null || controller === void 0 ? void 0 : controller.elementMap) || new Map();
             },
             clearElementMap() {
-                var _a;
-                (_a = controller) === null || _a === void 0 ? void 0 : _a.elementMap.clear();
+                controller === null || controller === void 0 ? void 0 : controller.elementMap.clear();
             },
-            copyHtmlPage(directory, callback, name) {
-                var _a;
-                if (isString(directory)) {
-                    (_a = file) === null || _a === void 0 ? void 0 : _a.copying(directory, file.getHtmlPage(name), callback);
+            copyHtmlPage(directory, options) {
+                if (file && isString(directory)) {
+                    file.copying(createAssetsOptions(file.getHtmlPage(options === null || options === void 0 ? void 0 : options.name), options, directory));
                 }
             },
-            copyScriptAssets(directory, callback) {
-                var _a;
-                if (isString(directory)) {
-                    (_a = file) === null || _a === void 0 ? void 0 : _a.copying(directory, file.getScriptAssets(), callback);
+            copyScriptAssets(directory, options) {
+                if (file && isString(directory)) {
+                    file.copying(createAssetsOptions(file.getScriptAssets(), options, directory));
                 }
             },
-            copyLinkAssets(directory, callback, rel) {
-                var _a;
-                if (isString(directory)) {
-                    (_a = file) === null || _a === void 0 ? void 0 : _a.copying(directory, file.getLinkAssets(rel), callback);
+            copyLinkAssets(directory, options) {
+                if (file && isString(directory)) {
+                    file.copying(createAssetsOptions(file.getLinkAssets(options === null || options === void 0 ? void 0 : options.rel), options, directory));
                 }
             },
-            copyImageAssets(directory, callback) {
-                var _a;
-                if (isString(directory)) {
-                    (_a = file) === null || _a === void 0 ? void 0 : _a.copying(directory, file.getImageAssets(), callback);
+            copyImageAssets(directory, options) {
+                if (file && isString(directory)) {
+                    file.copying(createAssetsOptions(file.getImageAssets(), options, directory));
                 }
             },
-            copyFontAssets(directory, callback) {
-                var _a;
-                if (isString(directory)) {
-                    (_a = file) === null || _a === void 0 ? void 0 : _a.copying(directory, file.getFontAssets(), callback);
+            copyFontAssets(directory, options) {
+                if (file && isString(directory)) {
+                    file.copying(createAssetsOptions(file.getFontAssets(), options, directory));
                 }
             },
-            saveHtmlPage(filename, name) {
-                var _a;
-                (_a = file) === null || _a === void 0 ? void 0 : _a.archiving((filename || userSettings.outputArchiveName) + '-html', file.getHtmlPage(name));
+            saveHtmlPage(filename, options) {
+                if (file) {
+                    file.archiving(createAssetsOptions(file.getHtmlPage(options === null || options === void 0 ? void 0 : options.name), options, undefined, (filename || userSettings.outputArchiveName) + '-html'));
+                }
             },
-            saveScriptAssets(filename) {
-                var _a;
-                (_a = file) === null || _a === void 0 ? void 0 : _a.archiving((filename || userSettings.outputArchiveName) + '-script', file.getScriptAssets());
+            saveScriptAssets(filename, options) {
+                if (file) {
+                    file.archiving(createAssetsOptions(file.getScriptAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-script'));
+                }
             },
-            saveLinkAssets(filename, rel) {
-                var _a;
-                (_a = file) === null || _a === void 0 ? void 0 : _a.archiving((filename || userSettings.outputArchiveName) + '-link', file.getLinkAssets(rel));
+            saveLinkAssets(filename, options) {
+                if (file) {
+                    file.archiving(createAssetsOptions(file.getLinkAssets(options === null || options === void 0 ? void 0 : options.rel), options, undefined, (filename || userSettings.outputArchiveName) + '-link'));
+                }
             },
-            saveImageAssets(filename) {
-                var _a;
-                (_a = file) === null || _a === void 0 ? void 0 : _a.archiving((filename || userSettings.outputArchiveName) + '-image', file.getImageAssets());
+            saveImageAssets(filename, options) {
+                if (file) {
+                    file.archiving(createAssetsOptions(file.getImageAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-image'));
+                }
             },
-            saveFontAssets(filename) {
-                var _a;
-                (_a = file) === null || _a === void 0 ? void 0 : _a.archiving((filename || userSettings.outputArchiveName) + '-font', file.getFontAssets());
+            saveFontAssets(filename, options) {
+                if (file) {
+                    file.archiving(createAssetsOptions(file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
+                }
             }
         },
         create() {

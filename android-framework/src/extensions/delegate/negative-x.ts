@@ -72,6 +72,9 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 }
             }
         }
+        else if (node.hasWidth) {
+            container.setLayoutWidth('wrap_content');
+        }
         node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData', <NegativeXData> {
             container,
             children,

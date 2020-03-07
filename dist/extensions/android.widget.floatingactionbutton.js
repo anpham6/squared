@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 1.4.1
+/* android.widget.floatingactionbutton 1.5.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -9,10 +9,10 @@ this.android.widget.floatingactionbutton = (function () {
     const $lib = squared.lib;
     const $libA = android.lib;
     const { parseColor } = $lib.color;
-    const { assignEmptyValue } = $lib.util;
+    const { assignEmptyValue, safeNestedMap } = $lib.util;
     const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
-    const { EXT_ANDROID, STRING_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
+    const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
     const Resource = android.base.Resource;
     const PREFIX_DIALOG = 'ic_dialog_';
@@ -31,7 +31,7 @@ this.android.widget.floatingactionbutton = (function () {
             const target = node.dataset.target;
             const options = createViewAttribute(this.options[element.id]);
             const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1)));
-            assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? '@color/' + colorName : '?attr/colorAccent');
+            assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
             if (!node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 assignEmptyValue(options, 'android', 'focusable', 'false');
             }
@@ -50,12 +50,8 @@ this.android.widget.floatingactionbutton = (function () {
                     break;
             }
             if (src !== '') {
-                let app = options.app;
-                if (app === undefined) {
-                    app = {};
-                    options.app = app;
-                }
-                assignEmptyValue(app, 'srcCompat', '@drawable/' + src);
+                const app = safeNestedMap(options, 'app');
+                assignEmptyValue(app, 'srcCompat', `@drawable/${src}`);
             }
             const controlName = node.api < 29 /* Q */ ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
             node.setControlType(controlName, CONTAINER_NODE.BUTTON);
@@ -74,7 +70,7 @@ this.android.widget.floatingactionbutton = (function () {
                     gravity.push(node.localizeString('right'));
                 }
                 else {
-                    gravity.push(STRING_ANDROID.CENTER_HORIZONTAL);
+                    gravity.push('center_horizontal');
                 }
                 if (verticalBias < 0.5) {
                     gravity.push('top');
@@ -84,7 +80,7 @@ this.android.widget.floatingactionbutton = (function () {
                     gravity.push('bottom');
                 }
                 else {
-                    gravity.push(STRING_ANDROID.CENTER_VERTICAL);
+                    gravity.push('center_vertical');
                 }
                 for (const value of gravity) {
                     node.mergeGravity('layout_gravity', value);

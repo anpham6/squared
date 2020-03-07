@@ -1,4 +1,4 @@
-/* android.widget.bottomnavigation 1.4.1
+/* android.widget.bottomnavigation 1.5.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -7,7 +7,7 @@ this.android.widget.bottomnavigation = (function () {
     'use strict';
 
     const $lib = android.lib;
-    const { assignEmptyValue, optionalAsString } = squared.lib.util;
+    const { assignEmptyValue, iterateArray, safeNestedMap } = squared.lib.util;
     const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $lib.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $lib.enumeration;
@@ -21,15 +21,12 @@ this.android.widget.bottomnavigation = (function () {
         processNode(node, parent) {
             const options = createViewAttribute(this.options[node.elementId]);
             assignEmptyValue(options, 'android', 'background', '?android:attr/windowBackground');
-            const children = node.children;
-            const length = children.length;
-            for (let i = 5; i < length; i++) {
-                const item = children[i];
+            iterateArray(node.children, (item) => {
                 item.hide();
                 for (const child of item.cascade()) {
                     child.hide();
                 }
-            }
+            }, 5);
             const controlName = node.api < 29 /* Q */ ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
             node.setControlType(controlName, CONTAINER_NODE.BLOCK);
             node.exclude({ resource: NODE_RESOURCE.ASSET });
@@ -47,29 +44,27 @@ this.android.widget.bottomnavigation = (function () {
                     node,
                     controlName
                 },
-                complete: true
+                complete: true,
+                include: true
             };
         }
-        afterParseDocument() {
-            for (const node of this.subscribers) {
-                const renderParent = node.renderParent;
-                if (!renderParent.hasPX('width')) {
+        postOptimize(node) {
+            var _a;
+            const renderParent = node.renderParent;
+            if (renderParent.documentRoot) {
+                if (renderParent.inlineWidth) {
                     renderParent.setLayoutWidth('match_parent');
                 }
-                if (!renderParent.hasPX('height')) {
+                if (renderParent.inlineHeight) {
                     renderParent.setLayoutHeight('match_parent');
                 }
-                const menu = optionalAsString(BottomNavigation.findNestedElement(node.element, "android.widget.menu" /* MENU */), 'dataset.layoutName');
-                if (menu !== '') {
-                    const options = createViewAttribute(this.options[node.elementId]);
-                    let app = options.app;
-                    if (app === undefined) {
-                        app = {};
-                        options.app = app;
-                    }
-                    assignEmptyValue(app, 'menu', '@menu/' + menu);
-                    node.app('menu', app.menu);
-                }
+            }
+            const menu = (_a = BottomNavigation.findNestedElement(node.element, "android.widget.menu" /* MENU */)) === null || _a === void 0 ? void 0 : _a.dataset.layoutName;
+            if (menu) {
+                const options = createViewAttribute(this.options[node.elementId]);
+                const app = safeNestedMap(options, 'app');
+                assignEmptyValue(app, 'menu', `@menu/${menu}`);
+                node.app('menu', app.menu);
             }
         }
         setStyleTheme() {

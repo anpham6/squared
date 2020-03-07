@@ -1,4 +1,4 @@
-/* android.widget.menu 1.4.1
+/* android.widget.menu 1.5.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -6,8 +6,8 @@ this.android.widget = this.android.widget || {};
 this.android.widget.menu = (function () {
     'use strict';
 
-    const { isNumber } = squared.lib.util;
     const $lib = android.lib;
+    const { isNumber, sameArray, safeNestedMap } = squared.lib.util;
     const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { EXT_ANDROID } = $lib.constant;
     const { CONTAINER_NODE } = $lib.enumeration;
@@ -58,11 +58,7 @@ this.android.widget.menu = (function () {
                     const match = pattern.exec(value);
                     if (match) {
                         const name = NAMESPACE_APP.includes(attr) ? 'app' : 'android';
-                        let data = options[name];
-                        if (data === undefined) {
-                            data = {};
-                            options[name] = data;
-                        }
+                        const data = safeNestedMap(options, name);
                         data[attr] = Array.from(new Set(match)).join('|');
                     }
                 }
@@ -70,14 +66,13 @@ this.android.widget.menu = (function () {
         }
     }
     function getTitle(node, element) {
-        var _a;
         const title = element.title;
         if (title) {
             return title;
         }
         else {
             for (const child of node.naturalChildren) {
-                if ((_a = child) === null || _a === void 0 ? void 0 : _a.textElement) {
+                if (child.textElement) {
                     return child.textContent.trim();
                 }
             }
@@ -93,14 +88,9 @@ this.android.widget.menu = (function () {
         }
         init(element) {
             if (this.included(element)) {
-                const children = element.children;
-                const length = children.length;
-                if (length) {
-                    const tagName = children[0].tagName;
-                    for (let i = 1; i < length; i++) {
-                        if (children[i].tagName !== tagName) {
-                            return false;
-                        }
+                if (element.childElementCount) {
+                    if (!sameArray(element.children, (item) => item.tagName)) {
+                        return false;
                     }
                     const application = this.application;
                     let current = element.parentElement;
@@ -191,14 +181,14 @@ this.android.widget.menu = (function () {
                         const resource = this.resource;
                         let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);
                         if (src !== '') {
-                            android.icon = '@drawable/' + src;
+                            android.icon = `@drawable/${src}`;
                         }
                         else {
                             const image = node.find(item => item.imageElement);
                             if (image) {
                                 src = resource.addImageSrc(image.element, PREFIX_MENU);
                                 if (src !== '') {
-                                    android.icon = '@drawable/' + src;
+                                    android.icon = `@drawable/${src}`;
                                 }
                             }
                         }
@@ -209,7 +199,7 @@ this.android.widget.menu = (function () {
             if (title !== '') {
                 const numberResourceValue = this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
                 const name = Resource.addString(title, '', numberResourceValue);
-                android.title = numberResourceValue || !isNumber(name) ? '@string/' + name : title;
+                android.title = numberResourceValue || !isNumber(name) ? `@string/${name}` : title;
             }
             node.setControlType(controlName, CONTAINER_NODE.INLINE);
             node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });

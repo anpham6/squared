@@ -717,7 +717,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     else if (!this.imageElement && !this.inputElement && !this.controlElement) {
                         const checkParentWidth = (block: boolean) => {
-                            if (this.styleText) {
+                            if (!actualParent.pageFlow && this.some(node => node.textElement)) {
+                                return;
+                            }
+                            else if (this.styleText) {
                                 const multiline = (this.textBounds?.numberOfLines as number) > 1;
                                 if (multiline) {
                                     if (block) {
@@ -1073,6 +1076,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                         if (!this.onlyChild && !this.alignParent('left')) {
                                             this.setSingleLine(true);
                                         }
+                                        continue;
+                                    }
+                                    else if (inner + value > outer) {
+                                        value = clamp(outer - inner, 0, value);
                                     }
                                 }
                                 break;

@@ -49,7 +49,8 @@ export default abstract class NodeGroupUI extends NodeUI {
         if (result === undefined) {
             const documentParent = this.actualParent || this.documentParent;
             result = (
-                this.some(node => node.blockStatic) ||
+                this.some(node => node.blockStatic || node.percentWidth > 0) ||
+                documentParent.percentWidth > 0 ||
                 this.layoutVertical && (documentParent.hasWidth || this.some(node => node.centerAligned || node.rightAligned)) ||
                 documentParent.blockStatic && (documentParent.layoutVertical || this.hasAlign(NODE_ALIGNMENT.COLUMN))
             );
