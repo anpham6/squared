@@ -1,4 +1,4 @@
-/* android.widget.bottomnavigation 1.5.0
+/* android.widget.bottomnavigation 1.5.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -37,7 +37,7 @@ this.android.widget.bottomnavigation = (function () {
             for (const item of node.cascade()) {
                 this.addDescendant(item);
             }
-            this.setStyleTheme();
+            this._setStyleTheme();
             return {
                 output: {
                     type: 1 /* XML */,
@@ -67,7 +67,7 @@ this.android.widget.bottomnavigation = (function () {
                 node.app('menu', app.menu);
             }
         }
-        setStyleTheme() {
+        _setStyleTheme() {
             const options = createStyleAttribute(this.options.resource);
             assignEmptyValue(options, 'name', this.application.userSettings.manifestThemeName);
             assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');

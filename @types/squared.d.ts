@@ -455,9 +455,8 @@ declare namespace base {
         cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
         cssSpecificity(attr: string): number;
         cssTry(attr: string, value: string): boolean;
-        cssTryAll(values: StringMap): Undef<StringMap>;
-        cssFinally(attr: string): void;
-        cssFinallyAll(values: StringMap): void;
+        cssTryAll(attrs: StringMap): Undef<StringMap>;
+        cssFinally(attrs: string | StringMap): void;
         cssParent(attr: string, value?: string, cache?: boolean): string;
         cssAsTuple(...attrs: string[]): string[];
         cssAsObject(...attrs: string[]): StringMap;

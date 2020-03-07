@@ -1,4 +1,4 @@
-/* squared.svg 1.5.0
+/* squared.svg 1.5.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1591,7 +1591,7 @@
         hasState(...values) {
             return values.some(value => hasBit$1(this.synchronizeState, value));
         }
-        setFillMode(mode, value) {
+        _setFillMode(mode, value) {
             const valid = hasBit$1(this.fillMode, value);
             if (mode) {
                 if (!valid) {
@@ -1662,19 +1662,19 @@
             return this._to;
         }
         set fillBackwards(value) {
-            this.setFillMode(value, 8 /* BACKWARDS */);
+            this._setFillMode(value, 8 /* BACKWARDS */);
         }
         get fillBackwards() {
             return hasBit$1(this.fillMode, 8 /* BACKWARDS */);
         }
         set fillForwards(value) {
-            this.setFillMode(value, 4 /* FORWARDS */);
+            this._setFillMode(value, 4 /* FORWARDS */);
         }
         get fillForwards() {
             return hasBit$1(this.fillMode, 4 /* FORWARDS */);
         }
         set fillFreeze(value) {
-            this.setFillMode(value, 2 /* FREEZE */);
+            this._setFillMode(value, 2 /* FREEZE */);
         }
         get fillFreeze() {
             return hasBit$1(this.fillMode, 2 /* FREEZE */);
@@ -4972,7 +4972,7 @@
                 }
             }
         }
-        setOffsetPath() {
+        _setOffsetPath() {
             if (this._offsetPath === undefined && isString$3(this.path)) {
                 const { duration, rotateData } = this;
                 let offsetPath = SvgBuild.getOffsetPath(this.path, this.rotate);
@@ -5172,10 +5172,10 @@
                 }
             }
         }
-        reverseKeyPoints() {
+        _reverseKeyPoints() {
             let keyTimes;
             let keyPoints;
-            if (this.validKeyPoints()) {
+            if (this._validKeyPoints()) {
                 keyPoints = this._keyPoints.slice(0);
                 keyPoints.reverse();
                 keyTimes = [];
@@ -5186,7 +5186,7 @@
             }
             return { keyTimes, keyPoints };
         }
-        validKeyPoints() {
+        _validKeyPoints() {
             const keyPoints = this.keyPoints;
             return keyPoints.length > 0 && keyPoints.length === super.keyTimes.length;
         }
@@ -5202,7 +5202,7 @@
             }
         }
         get keyTimes() {
-            this.setOffsetPath();
+            this._setOffsetPath();
             const path = this._offsetPath;
             if (path) {
                 const duration = this.duration;
@@ -5216,7 +5216,7 @@
             }
         }
         get values() {
-            this.setOffsetPath();
+            this._setOffsetPath();
             const path = this._offsetPath;
             if (path) {
                 return objectMap$1(path, item => {
@@ -5227,7 +5227,7 @@
             return super.values;
         }
         get rotateValues() {
-            this.setOffsetPath();
+            this._setOffsetPath();
             const path = this._offsetPath;
             return path ? objectMap$1(path, item => item.rotate) : undefined;
         }
@@ -5236,7 +5236,7 @@
         }
         set reverse(value) {
             if (value !== super.reverse) {
-                const { keyTimes, keyPoints } = this.reverseKeyPoints();
+                const { keyTimes, keyPoints } = this._reverseKeyPoints();
                 if (keyTimes && keyPoints) {
                     this.length = 0;
                     this._keyPoints = keyPoints;
@@ -5251,7 +5251,7 @@
         set alternate(value) {
             const iterationCount = this.iterationCount;
             if (value !== super.alternate && (iterationCount === -1 || iterationCount > 1)) {
-                const { keyTimes, keyPoints } = this.reverseKeyPoints();
+                const { keyTimes, keyPoints } = this._reverseKeyPoints();
                 if (keyTimes && keyPoints) {
                     let keyTimesBase = super.keyTimes;
                     let keyPointsBase = this.keyPoints;
@@ -5933,7 +5933,7 @@
         }
         append(item, viewport) {
             item.parent = this;
-            item.viewport = viewport || this.getViewport();
+            item.viewport = viewport || this._getViewport();
             return super.append(item);
         }
         build(options) {
@@ -5953,24 +5953,24 @@
             }
             this.clear();
             let requireClip = false;
-            const viewport = this.getViewport();
+            const viewport = this._getViewport();
             iterateArray$2(element.children, (item) => {
                 let svg;
                 if (SVG.svg(item)) {
                     svg = new squared.svg.Svg(item, false);
-                    this.setAspectRatio(svg, item.viewBox.baseVal);
+                    this._setAspectRatio(svg, item.viewBox.baseVal);
                     requireClip = true;
                 }
                 else if (SVG.g(item)) {
                     svg = new squared.svg.SvgG(item);
-                    this.setAspectRatio(svg);
+                    this._setAspectRatio(svg);
                 }
                 else if (SVG.use(item)) {
                     const target = getTargetElement(item);
                     if (target) {
                         if (SVG.symbol(target)) {
                             svg = new squared.svg.SvgUseSymbol(item, target);
-                            this.setAspectRatio(svg, target.viewBox.baseVal);
+                            this._setAspectRatio(svg, target.viewBox.baseVal);
                             requireClip = true;
                         }
                         else if (SVG.image(target)) {
@@ -5980,7 +5980,7 @@
                             const pattern = getFillPattern(item, viewport);
                             if (pattern) {
                                 svg = new squared.svg.SvgUsePattern(item, target, pattern);
-                                this.setAspectRatio(svg);
+                                this._setAspectRatio(svg);
                             }
                             else {
                                 svg = new squared.svg.SvgUse(item, target, initialize);
@@ -5995,7 +5995,7 @@
                     const target = getFillPattern(item, viewport);
                     if (target) {
                         svg = new squared.svg.SvgShapePattern(item, target);
-                        this.setAspectRatio(svg);
+                        this._setAspectRatio(svg);
                     }
                     else {
                         svg = new squared.svg.SvgShape(item, initialize);
@@ -6072,10 +6072,10 @@
             }
             return result;
         }
-        getViewport() {
+        _getViewport() {
             return this.viewport || SvgBuild.asSvg(this) && this || undefined;
         }
-        setAspectRatio(group, viewBox) {
+        _setAspectRatio(group, viewBox) {
             const parent = getNearestViewBox$1(this);
             if (parent) {
                 const aspectRatio = group.aspectRatio;
@@ -6193,10 +6193,10 @@
                     }
                 });
             }
-            this.setDefinitions(element);
-            element.querySelectorAll('defs').forEach(def => this.setDefinitions(def));
+            this._setDefinitions(element);
+            element.querySelectorAll('defs').forEach(def => this._setDefinitions(def));
         }
-        setDefinitions(item) {
+        _setDefinitions(item) {
             const definitions = this.definitions;
             item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element) => {
                 let id = element.id;

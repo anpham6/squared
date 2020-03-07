@@ -203,7 +203,7 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
         });
         if (values) {
             height = actualTextRangeRect(<Element> node.element).height;
-            node.cssFinallyAll(values);
+            node.cssFinally(values);
         }
     }
     else if (node.plainText) {

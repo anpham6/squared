@@ -976,9 +976,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return false;
     }
 
-    public cssFinally(attr: string) {
+    public cssFinally(attrs: string | StringMap) {
         if (this.styleElement) {
-            deleteStyleCache(<HTMLElement> this._element, attr, this.sessionId);
+            if (typeof attrs === 'string') {
+                deleteStyleCache(<HTMLElement> this._element, attrs, this.sessionId);
+            }
+            else {
+                const sessionId = this.sessionId;
+                const element = <HTMLElement> this._element;
+                for (const attr in attrs) {
+                    deleteStyleCache(element, attr, sessionId);
+                }
+            }
         }
     }
 
@@ -1002,16 +1011,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             return values;
         }
         return undefined;
-    }
-
-    public cssFinallyAll(values: StringMap) {
-        if (this.styleElement) {
-            const sessionId = this.sessionId;
-            const element = <HTMLElement> this._element;
-            for (const attr in values) {
-                deleteStyleCache(element, attr, sessionId);
-            }
-        }
     }
 
     public cssParent(attr: string, value?: string, cache = false) {

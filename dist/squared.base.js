@@ -1,4 +1,4 @@
-/* squared.base 1.5.0
+/* squared.base 1.5.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1213,36 +1213,6 @@
         }
     }
 
-    const CSS_SPACING = new Map([
-        [2 /* MARGIN_TOP */, 'marginTop'],
-        [4 /* MARGIN_RIGHT */, 'marginRight'],
-        [8 /* MARGIN_BOTTOM */, 'marginBottom'],
-        [16 /* MARGIN_LEFT */, 'marginLeft'],
-        [32 /* PADDING_TOP */, 'paddingTop'],
-        [64 /* PADDING_RIGHT */, 'paddingRight'],
-        [128 /* PADDING_BOTTOM */, 'paddingBottom'],
-        [256 /* PADDING_LEFT */, 'paddingLeft']
-    ]);
-    const EXT_NAME = {
-        ACCESSIBILITY: 'squared.accessibility',
-        COLUMN: 'squared.column',
-        CSS_GRID: 'squared.css-grid',
-        FLEXBOX: 'squared.flexbox',
-        GRID: 'squared.grid',
-        LIST: 'squared.list',
-        RELATIVE: 'squared.relative',
-        SPRITE: 'squared.sprite',
-        TABLE: 'squared.table',
-        VERTICAL_ALIGN: 'squared.verticalalign',
-        WHITESPACE: 'squared.whitespace'
-    };
-
-    var constant = /*#__PURE__*/Object.freeze({
-        __proto__: null,
-        CSS_SPACING: CSS_SPACING,
-        EXT_NAME: EXT_NAME
-    });
-
     const $lib$2 = squared.lib;
     const { USER_AGENT, isUserAgent } = $lib$2.client;
     const { BOX_BORDER, TEXT_STYLE, checkStyleValue, formatPX, getInheritedStyle, getStyle: getStyle$1, hasComputedStyle: hasComputedStyle$1, isLength, isPercent, parseSelectorText: parseSelectorText$1, parseUnit } = $lib$2.css;
@@ -2157,9 +2127,18 @@
             }
             return false;
         }
-        cssFinally(attr) {
+        cssFinally(attrs) {
             if (this.styleElement) {
-                deleteStyleCache(this._element, attr, this.sessionId);
+                if (typeof attrs === 'string') {
+                    deleteStyleCache(this._element, attrs, this.sessionId);
+                }
+                else {
+                    const sessionId = this.sessionId;
+                    const element = this._element;
+                    for (const attr in attrs) {
+                        deleteStyleCache(element, attr, sessionId);
+                    }
+                }
             }
         }
         cssTryAll(values) {
@@ -2182,15 +2161,6 @@
                 return values;
             }
             return undefined;
-        }
-        cssFinallyAll(values) {
-            if (this.styleElement) {
-                const sessionId = this.sessionId;
-                const element = this._element;
-                for (const attr in values) {
-                    deleteStyleCache(element, attr, sessionId);
-                }
-            }
         }
         cssParent(attr, value, cache = false) {
             return this.naturalChild ? this.actualParent.css(attr, value, cache) : '';
@@ -2324,44 +2294,7 @@
             return isLength((initial && ((_a = this._initial) === null || _a === void 0 ? void 0 : _a.styleMap) || this._styleMap)[attr], percent);
         }
         hasFlex(direction) {
-            const parent = this.actualParent;
-            if ((parent === null || parent === void 0 ? void 0 : parent.flexElement) && parent.flexdata[direction]) {
-                if (direction === 'column' && !parent.hasHeight) {
-                    const grandParent = parent.actualParent;
-                    if (grandParent) {
-                        if (grandParent.flexElement && !grandParent.flexdata.column) {
-                            if (!grandParent.hasHeight) {
-                                let maxHeight = 0;
-                                let parentHeight = 0;
-                                for (const item of grandParent) {
-                                    const height = (item.data(EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
-                                    if (height > maxHeight) {
-                                        maxHeight = height;
-                                    }
-                                    if (item === parent) {
-                                        parentHeight = height;
-                                        if (parentHeight < maxHeight) {
-                                            break;
-                                        }
-                                    }
-                                }
-                                if (parentHeight >= maxHeight) {
-                                    return false;
-                                }
-                            }
-                        }
-                        else if (!grandParent.gridElement) {
-                            return false;
-                        }
-                    }
-                    else {
-                        return false;
-                    }
-                }
-                const { grow, shrink } = this.flexbox;
-                return grow > 0 || shrink !== 1;
-            }
-            return false;
+            return this._flexParent(direction);
         }
         setBounds(cache = true) {
             if (this.styleElement) {
@@ -2618,7 +2551,7 @@
             }
             return result;
         }
-        setDimension(attr, attrMin, attrMax) {
+        _setDimension(attr, attrMin, attrMax) {
             const styleMap = this._styleMap;
             const valueA = styleMap[attr];
             const baseValue = this.parseUnit(valueA, attr);
@@ -2667,7 +2600,7 @@
             }
             return maxValue > 0 ? Math.min(value, maxValue) : value;
         }
-        convertPosition(attr) {
+        _convertPosition(attr) {
             if (!this.positionStatic) {
                 const unit = this.cssInitial(attr, true);
                 if (isLength(unit)) {
@@ -2679,7 +2612,7 @@
             }
             return 0;
         }
-        convertBorderWidth(index) {
+        _convertBorderWidth(index) {
             if (!this.plainText) {
                 const [borderStyle, borderWidth] = BOX_BORDER[index];
                 const value = this.css(borderStyle);
@@ -2703,7 +2636,7 @@
             }
             return 0;
         }
-        convertBox(attr, margin) {
+        _convertBox(attr, margin) {
             var _a, _b;
             switch (this.display) {
                 case 'table':
@@ -2787,6 +2720,10 @@
                 }
             }
             return result;
+        }
+        _flexParent(direction) {
+            const parent = this.actualParent;
+            return (parent === null || parent === void 0 ? void 0 : parent.flexElement) === true && parent.flexdata[direction] === true;
         }
         set parent(value) {
             if (value) {
@@ -3058,7 +2995,7 @@
         get width() {
             let result = this._cached.width;
             if (result === undefined) {
-                result = this.setDimension('width', 'minWidth', 'maxWidth');
+                result = this._setDimension('width', 'minWidth', 'maxWidth');
                 this._cached.width = result;
             }
             return result;
@@ -3066,7 +3003,7 @@
         get height() {
             let result = this._cached.height;
             if (result === undefined) {
-                result = this.setDimension('height', 'minHeight', 'maxHeight');
+                result = this._setDimension('height', 'minHeight', 'maxHeight');
                 this._cached.height = result;
             }
             return result;
@@ -3193,7 +3130,7 @@
         get top() {
             let result = this._cached.top;
             if (result === undefined) {
-                result = this.convertPosition('top');
+                result = this._convertPosition('top');
                 this._cached.top = result;
             }
             return result;
@@ -3201,7 +3138,7 @@
         get right() {
             let result = this._cached.right;
             if (result === undefined) {
-                result = this.convertPosition('right');
+                result = this._convertPosition('right');
                 this._cached.right = result;
             }
             return result;
@@ -3209,7 +3146,7 @@
         get bottom() {
             let result = this._cached.bottom;
             if (result === undefined) {
-                result = this.convertPosition('bottom');
+                result = this._convertPosition('bottom');
                 this._cached.bottom = result;
             }
             return result;
@@ -3217,7 +3154,7 @@
         get left() {
             let result = this._cached.left;
             if (result === undefined) {
-                result = this.convertPosition('left');
+                result = this._convertPosition('left');
                 this._cached.left = result;
             }
             return result;
@@ -3225,7 +3162,7 @@
         get marginTop() {
             let result = this._cached.marginTop;
             if (result === undefined) {
-                result = this.inlineStatic ? 0 : this.convertBox('marginTop', true);
+                result = this.inlineStatic ? 0 : this._convertBox('marginTop', true);
                 this._cached.marginTop = result;
             }
             return result;
@@ -3233,7 +3170,7 @@
         get marginRight() {
             let result = this._cached.marginRight;
             if (result === undefined) {
-                result = this.convertBox('marginRight', true);
+                result = this._convertBox('marginRight', true);
                 this._cached.marginRight = result;
             }
             return result;
@@ -3241,7 +3178,7 @@
         get marginBottom() {
             let result = this._cached.marginBottom;
             if (result === undefined) {
-                result = this.inlineStatic ? 0 : this.convertBox('marginBottom', true);
+                result = this.inlineStatic ? 0 : this._convertBox('marginBottom', true);
                 this._cached.marginBottom = result;
             }
             return result;
@@ -3249,7 +3186,7 @@
         get marginLeft() {
             let result = this._cached.marginLeft;
             if (result === undefined) {
-                result = this.convertBox('marginLeft', true);
+                result = this._convertBox('marginLeft', true);
                 this._cached.marginLeft = result;
             }
             return result;
@@ -3257,7 +3194,7 @@
         get borderTopWidth() {
             let result = this._cached.borderTopWidth;
             if (result === undefined) {
-                result = this.convertBorderWidth(0);
+                result = this._convertBorderWidth(0);
                 this._cached.borderTopWidth = result;
             }
             return result;
@@ -3265,7 +3202,7 @@
         get borderRightWidth() {
             let result = this._cached.borderRightWidth;
             if (result === undefined) {
-                result = this.convertBorderWidth(1);
+                result = this._convertBorderWidth(1);
                 this._cached.borderRightWidth = result;
             }
             return result;
@@ -3273,7 +3210,7 @@
         get borderBottomWidth() {
             let result = this._cached.borderBottomWidth;
             if (result === undefined) {
-                result = this.convertBorderWidth(2);
+                result = this._convertBorderWidth(2);
                 this._cached.borderBottomWidth = result;
             }
             return result;
@@ -3281,7 +3218,7 @@
         get borderLeftWidth() {
             let result = this._cached.borderLeftWidth;
             if (result === undefined) {
-                result = this.convertBorderWidth(3);
+                result = this._convertBorderWidth(3);
                 this._cached.borderLeftWidth = result;
             }
             return result;
@@ -3289,7 +3226,7 @@
         get paddingTop() {
             let result = this._cached.paddingTop;
             if (result === undefined) {
-                result = this.convertBox('paddingTop', false);
+                result = this._convertBox('paddingTop', false);
                 this._cached.paddingTop = result;
             }
             return result;
@@ -3297,7 +3234,7 @@
         get paddingRight() {
             let result = this._cached.paddingRight;
             if (result === undefined) {
-                result = this.convertBox('paddingRight', false);
+                result = this._convertBox('paddingRight', false);
                 this._cached.paddingRight = result;
             }
             return result;
@@ -3305,7 +3242,7 @@
         get paddingBottom() {
             let result = this._cached.paddingBottom;
             if (result === undefined) {
-                result = this.convertBox('paddingBottom', false);
+                result = this._convertBox('paddingBottom', false);
                 this._cached.paddingBottom = result;
             }
             return result;
@@ -3313,7 +3250,7 @@
         get paddingLeft() {
             let result = this._cached.paddingLeft;
             if (result === undefined) {
-                result = this.convertBox('paddingLeft', false);
+                result = this._convertBox('paddingLeft', false);
                 this._cached.paddingLeft = result;
             }
             return result;
@@ -3846,7 +3783,7 @@
                             break;
                     }
                 }
-                else if (this.inlineStatic || this.display === 'table-cell' || this.hasFlex('row')) {
+                else if (this.inlineStatic || this.display === 'table-cell' || this._flexParent('row')) {
                     result = this.bounds.width;
                 }
                 else {
@@ -3867,7 +3804,7 @@
         get actualHeight() {
             let result = this._cached.actualHeight;
             if (result === undefined) {
-                if (!this.inlineStatic && this.display !== 'table-cell' && !this.hasFlex('column')) {
+                if (!this.inlineStatic && this.display !== 'table-cell' && !this._flexParent('column')) {
                     result = this.height;
                     if (result > 0) {
                         if (this.contentBox && !this.tableElement) {
@@ -4064,6 +4001,36 @@
             };
         }
     }
+
+    const CSS_SPACING = new Map([
+        [2 /* MARGIN_TOP */, 'marginTop'],
+        [4 /* MARGIN_RIGHT */, 'marginRight'],
+        [8 /* MARGIN_BOTTOM */, 'marginBottom'],
+        [16 /* MARGIN_LEFT */, 'marginLeft'],
+        [32 /* PADDING_TOP */, 'paddingTop'],
+        [64 /* PADDING_RIGHT */, 'paddingRight'],
+        [128 /* PADDING_BOTTOM */, 'paddingBottom'],
+        [256 /* PADDING_LEFT */, 'paddingLeft']
+    ]);
+    const EXT_NAME = {
+        ACCESSIBILITY: 'squared.accessibility',
+        COLUMN: 'squared.column',
+        CSS_GRID: 'squared.css-grid',
+        FLEXBOX: 'squared.flexbox',
+        GRID: 'squared.grid',
+        LIST: 'squared.list',
+        RELATIVE: 'squared.relative',
+        SPRITE: 'squared.sprite',
+        TABLE: 'squared.table',
+        VERTICAL_ALIGN: 'squared.verticalalign',
+        WHITESPACE: 'squared.whitespace'
+    };
+
+    var constant = /*#__PURE__*/Object.freeze({
+        __proto__: null,
+        CSS_SPACING: CSS_SPACING,
+        EXT_NAME: EXT_NAME
+    });
 
     var APP_SECTION;
     (function (APP_SECTION) {
@@ -5302,7 +5269,7 @@
             return this._renderAs;
         }
         get blockStatic() {
-            return super.blockStatic || this.hasAlign(64 /* BLOCK */) && !this.floating && this.pageFlow;
+            return super.blockStatic || this.hasAlign(64 /* BLOCK */) && this.pageFlow && !this.floating;
         }
         get rightAligned() {
             return super.rightAligned || this.hasAlign(2048 /* RIGHT */);
@@ -5992,12 +5959,12 @@
                     switch (getStyle$2(element).position) {
                         case 'absolute':
                         case 'fixed':
-                            return this.isUseElement(element);
+                            return this._isUseElement(element);
                     }
                     let current = element.parentElement;
                     while (current) {
                         if (getStyle$2(current).display === 'none') {
-                            return this.isUseElement(element);
+                            return this._isUseElement(element);
                         }
                         current = current.parentElement;
                     }
@@ -6005,7 +5972,7 @@
                     if (iterateArray$2(element.children, (item) => controllerHandler.visibleElement(item)) === Number.POSITIVE_INFINITY) {
                         return true;
                     }
-                    return this.isUseElement(element);
+                    return this._isUseElement(element);
                 }
             }
             return false;
@@ -7084,7 +7051,7 @@
                             }
                         }
                         if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
-                            let layout = this.createLayoutControl(parentY, nodeY);
+                            let layout = this._createLayoutControl(parentY, nodeY);
                             if (layout.containerType === 0) {
                                 const result = nodeY.length ? controllerHandler.processUnknownParent(layout) : controllerHandler.processUnknownChild(layout);
                                 if (result.next) {
@@ -7324,7 +7291,7 @@
                     }
                     this.addLayout(group);
                     if (seg === inlineAbove) {
-                        this.setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
+                        this._setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
                     }
                 }
             }
@@ -7431,7 +7398,7 @@
                             }
                             if (pageFlow.length && floating.length) {
                                 const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
-                                this.setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
+                                this._setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
                             }
                         }
                     }
@@ -7449,7 +7416,7 @@
             }
             return Object.assign(Object.assign({}, options), { assets });
         }
-        setFloatPadding(parent, target, inlineAbove, leftAbove, rightAbove) {
+        _setFloatPadding(parent, target, inlineAbove, leftAbove, rightAbove) {
             let paddingNodes = [];
             for (const child of inlineAbove) {
                 if (requirePadding(child)) {
@@ -7526,10 +7493,10 @@
                 }
             }
         }
-        createLayoutControl(parent, node) {
+        _createLayoutControl(parent, node) {
             return new LayoutUI(parent, node, node.containerType, node.alignmentType, node.children);
         }
-        isUseElement(element) {
+        _isUseElement(element) {
             const use = element.dataset.use;
             return isString$3(use) && use.split(XML$4.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
         }
@@ -7651,6 +7618,11 @@
                 const tagName = element.tagName;
                 if (isUserAgent$1(8 /* FIREFOX */)) {
                     switch (tagName) {
+                        case 'BODY':
+                            if (styleMap.backgroundColor === 'rgba(0, 0, 0, 0)') {
+                                styleMap.backgroundColor = 'rgb(255, 255, 255)';
+                            }
+                            break;
                         case 'INPUT':
                         case 'SELECT':
                         case 'BUTTON':
@@ -8794,6 +8766,17 @@
         }
         return false;
     }
+    function getStoredName(asset, value) {
+        const stored = ResourceUI.STORED[asset];
+        if (stored) {
+            for (const [name, data] of stored.entries()) {
+                if (isEqual(value, data)) {
+                    return name;
+                }
+            }
+        }
+        return '';
+    }
     const replaceAmpersand = (value) => value.replace(/&/g, '&amp;');
     const getGradientPosition = (value) => isString$4(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value]) : null;
     class ResourceUI extends Resource {
@@ -8820,7 +8803,7 @@
         static insertStoredAsset(asset, name, value) {
             const stored = ResourceUI.STORED[asset];
             if (stored && hasValue$1(value)) {
-                let result = this.getStoredName(asset, value);
+                let result = getStoredName(asset, value);
                 if (result === '') {
                     if (isNumber$1(name)) {
                         name = '__' + name;
@@ -9137,17 +9120,6 @@
             }
             return undefined;
         }
-        static getStoredName(asset, value) {
-            const stored = ResourceUI.STORED[asset];
-            if (stored) {
-                for (const [name, data] of stored.entries()) {
-                    if (isEqual(value, data)) {
-                        return name;
-                    }
-                }
-            }
-            return '';
-        }
         finalize(layouts) { }
         reset() {
             super.reset();
@@ -9375,7 +9347,7 @@
                         }
                         else if (node.inlineText) {
                             key = textContent.trim();
-                            [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(1024 /* INLINE */) ? replaceAmpersand(textContent) : this.removeExcludedFromText(node, element));
+                            [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(1024 /* INLINE */) ? replaceAmpersand(textContent) : this._removeExcludedFromText(node, element));
                         }
                         else if (node.naturalChildren.length === 0 && (textContent === null || textContent === void 0 ? void 0 : textContent.trim()) === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                             value = textContent;
@@ -9440,7 +9412,7 @@
                 }
             }
         }
-        removeExcludedFromText(node, element) {
+        _removeExcludedFromText(node, element) {
             const styled = element.children.length > 0 || element.tagName === 'CODE';
             const preserveWhitespace = node.preserveWhiteSpace;
             const attr = styled ? 'innerHTML' : 'textContent';

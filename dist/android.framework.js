@@ -1,4 +1,4 @@
-/* android-framework 1.5.0
+/* android-framework 1.5.1
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -1273,12 +1273,14 @@ var android = (function () {
     });
 
     const $lib$2 = squared.lib;
+    const $base = squared.base;
     const { BOX_MARGIN, BOX_PADDING, formatPX, isLength, isPercent } = $lib$2.css;
     const { createElement, getNamedItem, newBoxModel } = $lib$2.dom;
     const { clamp, truncate: truncate$1 } = $lib$2.math;
     const { actualTextRangeRect } = $lib$2.session;
     const { capitalize: capitalize$1, convertFloat, convertInt, convertWord, fromLastIndexOf: fromLastIndexOf$1, isNumber: isNumber$1, isPlainObject: isPlainObject$2, isString: isString$2, replaceMap } = $lib$2.util;
-    const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = squared.base.lib.enumeration;
+    const { EXT_NAME } = $base.lib.constant;
+    const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = $base.lib.enumeration;
     const ResourceUI = squared.base.ResourceUI;
     const DEPRECATED = DEPRECATED_ANDROID.android;
     const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_ANDROID;
@@ -1448,7 +1450,7 @@ var android = (function () {
             });
             if (values) {
                 height = actualTextRangeRect(node.element).height;
-                node.cssFinallyAll(values);
+                node.cssFinally(values);
             }
         }
         else if (node.plainText) {
@@ -2792,6 +2794,46 @@ var android = (function () {
                 }
                 return super.removeTry(replacement, beforeReplace);
             }
+            hasFlex(direction) {
+                if (super.hasFlex(direction)) {
+                    const parent = this.actualParent;
+                    if (direction === 'column' && !parent.hasHeight) {
+                        const grandParent = parent.actualParent;
+                        if (grandParent) {
+                            if (grandParent.flexElement && !grandParent.flexdata.column) {
+                                if (!grandParent.hasHeight) {
+                                    let maxHeight = 0;
+                                    let parentHeight = 0;
+                                    for (const item of grandParent) {
+                                        const height = (item.data(EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
+                                        if (height > maxHeight) {
+                                            maxHeight = height;
+                                        }
+                                        if (item === parent) {
+                                            parentHeight = height;
+                                            if (parentHeight < maxHeight) {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if (parentHeight >= maxHeight) {
+                                        return false;
+                                    }
+                                }
+                            }
+                            else if (!grandParent.gridElement) {
+                                return false;
+                            }
+                        }
+                        else {
+                            return false;
+                        }
+                    }
+                    const { grow, shrink } = this.flexbox;
+                    return grow > 0 || shrink !== 1;
+                }
+                return false;
+            }
             hide(options) {
                 if (options) {
                     if (options.hidden) {
@@ -3196,10 +3238,10 @@ var android = (function () {
             applyOptimizations() {
                 const renderParent = this.renderParent;
                 if (renderParent) {
-                    this.alignLayout(renderParent);
-                    this.setLineHeight(renderParent);
-                    this.finalizeGravity('layout_gravity');
-                    this.finalizeGravity('gravity');
+                    this._alignLayout(renderParent);
+                    this._setLineHeight(renderParent);
+                    this._finalizeGravity('layout_gravity');
+                    this._finalizeGravity('gravity');
                     if (this.imageElement) {
                         const layoutWidth = this.layoutWidth;
                         const layoutHeight = this.layoutHeight;
@@ -3253,7 +3295,7 @@ var android = (function () {
             setLayoutHeight(value, overwrite = true) {
                 this.android('layout_height', value, overwrite);
             }
-            alignLayout(renderParent) {
+            _alignLayout(renderParent) {
                 if (this.layoutLinear) {
                     const children = this.renderChildren;
                     if (this.layoutVertical) {
@@ -3279,7 +3321,7 @@ var android = (function () {
                     }
                 }
             }
-            setLineHeight(renderParent) {
+            _setLineHeight(renderParent) {
                 var _a;
                 const lineHeight = this.lineHeight;
                 if (lineHeight > 0) {
@@ -3338,7 +3380,7 @@ var android = (function () {
                     }
                 }
             }
-            finalizeGravity(attr) {
+            _finalizeGravity(attr) {
                 const direction = getGravityValues(this, attr);
                 if (direction.size > 1) {
                     checkMergableGravity('center', direction);
@@ -3649,7 +3691,7 @@ var android = (function () {
     }
 
     const $lib$3 = squared.lib;
-    const $base = squared.base;
+    const $base$1 = squared.base;
     const { PLATFORM, isPlatform } = $lib$3.client;
     const { parseColor: parseColor$1 } = $lib$3.color;
     const { formatPX: formatPX$1, getSrcSet: getSrcSet$1, hasComputedStyle, isLength: isLength$1, isPercent: isPercent$1 } = $lib$3.css;
@@ -3659,8 +3701,8 @@ var android = (function () {
     const { getElementAsNode, getPseudoElt } = $lib$3.session;
     const { assignEmptyValue, convertFloat: convertFloat$1, hasBit, isString: isString$3, objectMap, partitionArray, withinRange } = $lib$3.util;
     const { STRING_XMLENCODING, replaceTab } = $lib$3.xml;
-    const { APP_SECTION, BOX_STANDARD: BOX_STANDARD$1, NODE_ALIGNMENT: NODE_ALIGNMENT$1, NODE_PROCEDURE: NODE_PROCEDURE$1, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
-    const NodeUI = $base.NodeUI;
+    const { APP_SECTION, BOX_STANDARD: BOX_STANDARD$1, NODE_ALIGNMENT: NODE_ALIGNMENT$1, NODE_PROCEDURE: NODE_PROCEDURE$1, NODE_RESOURCE, NODE_TEMPLATE } = $base$1.lib.enumeration;
+    const NodeUI = $base$1.NodeUI;
     const REGEX_TEXTSHADOW = /^(?:(rgba?\([^)]+\)|[a-z]+) )?(-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?.*$/;
     function sortHorizontalFloat(list) {
         list.sort((a, b) => {
@@ -4256,8 +4298,8 @@ var android = (function () {
                     else if (layout.parent.flexElement && child.baselineElement && node.flexbox.alignSelf === 'baseline') {
                         layout.setContainerType(CONTAINER_NODE.LINEAR, 8 /* HORIZONTAL */);
                     }
-                    else if (child.percentWidth > 0) {
-                        layout.setContainerType(CONTAINER_NODE.CONSTRAINT, 64 /* BLOCK */);
+                    else if (child.percentWidth > 0 && child.percentWidth < 1) {
+                        layout.setContainerType(CONTAINER_NODE.CONSTRAINT, 32768 /* PERCENT */);
                     }
                     else if (node.autoMargin.leftRight || node.autoMargin.left) {
                         layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
@@ -4430,7 +4472,7 @@ var android = (function () {
                                 return undefined;
                             }
                         }
-                        layout.node = this.createLayoutNodeGroup(layout);
+                        layout.node = this._createLayoutNodeGroup(layout);
                         layout.setContainerType(containerType, 16 /* VERTICAL */ | 2 /* UNKNOWN */);
                     }
                 }
@@ -4442,12 +4484,12 @@ var android = (function () {
                         return undefined;
                     }
                     else {
-                        layout.node = this.createLayoutNodeGroup(layout);
+                        layout.node = this._createLayoutNodeGroup(layout);
                         layout.setContainerType(CONTAINER_NODE.CONSTRAINT, 512 /* FLOAT */);
                     }
                 }
                 else if (hasCleared(layout, clearMap) || this.checkFrameHorizontal(layout)) {
-                    layout.node = this.createLayoutNodeGroup(layout);
+                    layout.node = this._createLayoutNodeGroup(layout);
                     layout.addRender(512 /* FLOAT */);
                     layout.addRender(8 /* HORIZONTAL */);
                 }
@@ -4464,19 +4506,19 @@ var android = (function () {
                                 return undefined;
                             }
                         }
-                        layout.node = this.createLayoutNodeGroup(layout);
+                        layout.node = this._createLayoutNodeGroup(layout);
                         layout.setContainerType(containerType, 16 /* VERTICAL */);
                     }
                 }
             }
             else if (floatSize) {
                 if (hasCleared(layout, clearMap)) {
-                    layout.node = this.createLayoutNodeGroup(layout);
+                    layout.node = this._createLayoutNodeGroup(layout);
                     layout.addRender(512 /* FLOAT */);
                     layout.addRender(16 /* VERTICAL */);
                 }
                 else if (layout.item(0).floating) {
-                    layout.node = this.createLayoutNodeGroup(layout);
+                    layout.node = this._createLayoutNodeGroup(layout);
                     layout.addRender(512 /* FLOAT */);
                     layout.addRender(8 /* HORIZONTAL */);
                 }
@@ -4494,7 +4536,7 @@ var android = (function () {
                             return undefined;
                         }
                     }
-                    layout.node = this.createLayoutNodeGroup(layout);
+                    layout.node = this._createLayoutNodeGroup(layout);
                     layout.setContainerType(containerType, 16 /* VERTICAL */);
                 }
             }
@@ -4660,7 +4702,7 @@ var android = (function () {
                     layout.some(item => item.float === 'right') && layout.some(item => item.autoMargin.right === true))) {
                     return false;
                 }
-                return layout.some(node => node.blockVertical || node.percentWidth > 0 && !node.inputElement && !node.controlElement || node.marginTop < 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight);
+                return layout.some(node => node.blockVertical || node.percentWidth > 0 && node.percentWidth < 1 && !node.inputElement && !node.controlElement || node.marginTop < 0 || node.verticalAlign === 'bottom' && !layout.parent.hasHeight);
             }
             return false;
         }
@@ -6713,7 +6755,7 @@ var android = (function () {
             }
             node.horizontalRows = horizontal;
         }
-        createLayoutNodeGroup(layout) {
+        _createLayoutNodeGroup(layout) {
             return this.createNodeGroup(layout.node, layout.children, { parent: layout.parent });
         }
         get containerTypeHorizontal() {
@@ -6874,13 +6916,13 @@ var android = (function () {
     const caseInsensitive = (a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
     class File extends squared.base.FileUI {
         copyToDisk(directory, options) {
-            this.copying(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll(options === null || options === void 0 ? void 0 : options.assets), directory }));
+            this.copying(Object.assign(Object.assign({}, options), { assets: this._getAssetsAll(options === null || options === void 0 ? void 0 : options.assets), directory }));
         }
         appendToArchive(pathname, options) {
-            this.archiving(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll(options === null || options === void 0 ? void 0 : options.assets), filename: this.userSettings.outputArchiveName, appendTo: pathname }));
+            this.archiving(Object.assign(Object.assign({}, options), { assets: this._getAssetsAll(options === null || options === void 0 ? void 0 : options.assets), filename: this.userSettings.outputArchiveName, appendTo: pathname }));
         }
         saveToArchive(filename, options) {
-            this.archiving(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll(options === null || options === void 0 ? void 0 : options.assets), filename }));
+            this.archiving(Object.assign(Object.assign({}, options), { assets: this._getAssetsAll(options === null || options === void 0 ? void 0 : options.assets), filename }));
         }
         resourceAllToXml(options = {}) {
             const { directory, filename } = options;
@@ -6924,7 +6966,7 @@ var android = (function () {
             for (const [name, innerText] of Array.from(STORED$1.strings.entries()).sort(caseInsensitive)) {
                 itemArray.push({ name, innerText });
             }
-            return this.checkFileAssets([
+            return this._checkFileAssets([
                 replaceTab$1(applyTemplate('resources', STRING_TMPL, [item]), this.userSettings.insertSpaces, true),
                 this.directory.string,
                 'strings.xml'
@@ -6940,7 +6982,7 @@ var android = (function () {
                         item: objectMap$1(values, innerText => ({ innerText }))
                     });
                 }
-                return this.checkFileAssets([
+                return this._checkFileAssets([
                     replaceTab$1(applyTemplate('resources', STRINGARRAY_TMPL, [item]), this.userSettings.insertSpaces, true),
                     this.directory.string,
                     'string_arrays.xml'
@@ -6994,7 +7036,7 @@ var android = (function () {
                     }
                     result.push(output, pathname, `${name}.xml`);
                 }
-                return this.checkFileAssets(result, options);
+                return this._checkFileAssets(result, options);
             }
             return [];
         }
@@ -7005,7 +7047,7 @@ var android = (function () {
                 for (const [innerText, name] of Array.from(STORED$1.colors.entries()).sort()) {
                     itemArray.push({ name, innerText });
                 }
-                return this.checkFileAssets([
+                return this._checkFileAssets([
                     replaceTab$1(applyTemplate('resources', COLOR_TMPL, [item]), this.userSettings.insertSpaces),
                     this.directory.string,
                     'colors.xml'
@@ -7063,7 +7105,7 @@ var android = (function () {
                     }
                 }
             }
-            return this.checkFileAssets(result, options);
+            return this._checkFileAssets(result, options);
         }
         resourceDimenToXml(options = {}) {
             if (STORED$1.dimens.size) {
@@ -7073,7 +7115,7 @@ var android = (function () {
                 for (const [name, value] of Array.from(STORED$1.dimens.entries()).sort()) {
                     itemArray.push({ name, innerText: convertPixels ? convertLength(value, false) : value });
                 }
-                return this.checkFileAssets([
+                return this._checkFileAssets([
                     replaceTab$1(applyTemplate('resources', DIMEN_TMPL, [item])),
                     this.directory.string,
                     'dimens.xml'
@@ -7089,7 +7131,7 @@ var android = (function () {
                 for (const [name, value] of STORED$1.drawables.entries()) {
                     result.push(replaceTab$1(replaceDrawableLength(value, convertPixels), insertSpaces), directory, `${name}.xml`);
                 }
-                return this.checkFileAssets(result, options);
+                return this._checkFileAssets(result, options);
             }
             return [];
         }
@@ -7132,7 +7174,7 @@ var android = (function () {
                 for (const [name, value] of STORED$1.animators.entries()) {
                     result.push(replaceTab$1(value, insertSpaces), 'res/anim', `${name}.xml`);
                 }
-                return this.checkFileAssets(result, options);
+                return this._checkFileAssets(result, options);
             }
             return [];
         }
@@ -7160,7 +7202,7 @@ var android = (function () {
             }
             return result;
         }
-        getAssetsAll(assets) {
+        _getAssetsAll(assets) {
             let result = [];
             if (assets) {
                 const length = assets.length;
@@ -7183,7 +7225,7 @@ var android = (function () {
             }
             return result.concat(getFileAssets(this.resourceStringToXml()), getFileAssets(this.resourceStringArrayToXml()), getFileAssets(this.resourceFontToXml()), getFileAssets(this.resourceColorToXml()), getFileAssets(this.resourceDimenToXml()), getFileAssets(this.resourceStyleToXml()), getFileAssets(this.resourceDrawableToXml()), getImageAssets(this.resourceDrawableImageToXml()), getFileAssets(this.resourceAnimToXml()));
         }
-        checkFileAssets(content, options) {
+        _checkFileAssets(content, options) {
             const { directory, filename } = options;
             if (directory || filename) {
                 options.assets = getFileAssets(content).concat(options.assets || []);
@@ -7563,16 +7605,16 @@ var android = (function () {
     }
 
     const $lib$6 = squared.lib;
-    const $base$1 = squared.base;
-    const $base_lib$1 = $base$1.lib;
+    const $base$2 = squared.base;
+    const $base_lib$1 = $base$2.lib;
     const { formatPercent, formatPX: formatPX$3, isLength: isLength$2, isPercent: isPercent$2 } = $lib$6.css;
     const { maxArray: maxArray$1, truncate: truncate$4 } = $lib$6.math;
     const { CHAR: CHAR$2, CSS: CSS$1 } = $lib$6.regex;
     const { captureMap, flatMultiArray, hasValue, isArray } = $lib$6.util;
     const { BOX_STANDARD: BOX_STANDARD$3, NODE_ALIGNMENT: NODE_ALIGNMENT$3, NODE_PROCEDURE: NODE_PROCEDURE$4, NODE_RESOURCE: NODE_RESOURCE$2 } = $base_lib$1.enumeration;
-    const LayoutUI = $base$1.LayoutUI;
+    const LayoutUI = $base$2.LayoutUI;
     const CSS_GRID = $base_lib$1.constant.EXT_NAME.CSS_GRID;
-    const CssGrid = $base$1.extensions.CssGrid;
+    const CssGrid = $base$2.extensions.CssGrid;
     const REGEX_JUSTIFYSELF = /start|left|center|right|end/;
     const REGEX_JUSTIFYLEFT = /(start|left|baseline)$/;
     const REGEX_JUSTIFYRIGHT = /(right|end)$/;
@@ -8582,13 +8624,13 @@ var android = (function () {
 
     var LayoutUI$1 = squared.base.LayoutUI;
     const $lib$7 = squared.lib;
-    const $base$2 = squared.base;
-    const $base_lib$2 = $base$2.lib;
+    const $base$3 = squared.base;
+    const $base_lib$2 = $base$3.lib;
     const { isLength: isLength$3 } = $lib$7.css;
     const { truncate: truncate$5 } = $lib$7.math;
     const { capitalize: capitalize$2, sameArray, withinRange: withinRange$1 } = $lib$7.util;
     const { BOX_STANDARD: BOX_STANDARD$4, NODE_ALIGNMENT: NODE_ALIGNMENT$4 } = $base_lib$2.enumeration;
-    const NodeUI$1 = $base$2.NodeUI;
+    const NodeUI$1 = $base$3.NodeUI;
     const FLEXBOX = $base_lib$2.constant.EXT_NAME.FLEXBOX;
     const MAP_horizontal = {
         orientation: 'horizontal',
@@ -10092,10 +10134,10 @@ var android = (function () {
     }
 
     var LayoutUI$8 = squared.base.LayoutUI;
-    const $base$3 = squared.base;
+    const $base$4 = squared.base;
     const { isLength: isLength$4 } = squared.lib.css;
-    const { BOX_STANDARD: BOX_STANDARD$8, CSS_UNIT: CSS_UNIT$2, NODE_ALIGNMENT: NODE_ALIGNMENT$c, NODE_RESOURCE: NODE_RESOURCE$4, NODE_TEMPLATE: NODE_TEMPLATE$4 } = $base$3.lib.enumeration;
-    const CssGrid$2 = $base$3.extensions.CssGrid;
+    const { BOX_STANDARD: BOX_STANDARD$8, CSS_UNIT: CSS_UNIT$2, NODE_ALIGNMENT: NODE_ALIGNMENT$c, NODE_RESOURCE: NODE_RESOURCE$4, NODE_TEMPLATE: NODE_TEMPLATE$4 } = $base$4.lib.enumeration;
+    const CssGrid$2 = $base$4.extensions.CssGrid;
     const RESOURCE_IGNORE = NODE_RESOURCE$4.BOX_SPACING | NODE_RESOURCE$4.FONT_STYLE | NODE_RESOURCE$4.VALUE_STRING;
     const hasVisibleWidth = (node) => !node.blockStatic && !node.hasPX('width') || node.has('width', { type: 2 /* LENGTH */ | 4 /* PERCENT */, not: '100%' }) && node.css('minWidth') !== '100%' || node.has('maxWidth', { type: 2 /* LENGTH */ | 4 /* PERCENT */, not: '100%' });
     const hasFullHeight = (node) => node.css('height') === '100%' || node.css('minHeight') === '100%';
@@ -10224,9 +10266,9 @@ var android = (function () {
     }
 
     var LayoutUI$9 = squared.base.LayoutUI;
-    const $base$4 = squared.base;
-    const { BOX_STANDARD: BOX_STANDARD$9, NODE_ALIGNMENT: NODE_ALIGNMENT$d, NODE_RESOURCE: NODE_RESOURCE$5 } = $base$4.lib.enumeration;
-    const CssGrid$3 = $base$4.extensions.CssGrid;
+    const $base$5 = squared.base;
+    const { BOX_STANDARD: BOX_STANDARD$9, NODE_ALIGNMENT: NODE_ALIGNMENT$d, NODE_RESOURCE: NODE_RESOURCE$5 } = $base$5.lib.enumeration;
+    const CssGrid$3 = $base$5.extensions.CssGrid;
     const getLayoutDimension = (value) => value === 'space-between' ? 'match_parent' : 'wrap_content';
     class Grid$1 extends squared.base.ExtensionUI {
         is(node) {
@@ -10723,10 +10765,10 @@ var android = (function () {
         }
     }
 
-    const $base$5 = squared.base;
+    const $base$6 = squared.base;
     const { getElementAsNode: getElementAsNode$1 } = squared.lib.session;
-    const { NODE_ALIGNMENT: NODE_ALIGNMENT$i, NODE_RESOURCE: NODE_RESOURCE$6, NODE_TEMPLATE: NODE_TEMPLATE$5 } = $base$5.lib.enumeration;
-    const NodeUI$2 = $base$5.NodeUI;
+    const { NODE_ALIGNMENT: NODE_ALIGNMENT$i, NODE_RESOURCE: NODE_RESOURCE$6, NODE_TEMPLATE: NODE_TEMPLATE$5 } = $base$6.lib.enumeration;
+    const NodeUI$2 = $base$6.NodeUI;
     function setBaselineIndex(children, container) {
         let valid = false;
         const length = children.length;
@@ -14228,8 +14270,8 @@ var android = (function () {
             const templateName = `${node.tagName}_${convertWord$2(node.controlId, true)}_viewbox`.toLowerCase();
             svg.build({ exclude, residual: partitionTransforms, precision });
             svg.synchronize({ keyTimeMode, framesPerSecond: this.controller.userSettings.framesPerSecond, precision });
-            this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
-            const vectorData = this.parseVectorData(svg);
+            this._queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
+            const vectorData = this._parseVectorData(svg);
             const viewBox = svg.viewBox;
             const imageLength = imageData.length;
             let drawable;
@@ -14422,7 +14464,7 @@ var android = (function () {
                                     let transformOrigin;
                                     const resetBeforeValue = (propertyName, value) => {
                                         if (isString$5(value) && beforeAnimator.findIndex(before => before.propertyName === propertyName) === -1) {
-                                            beforeAnimator.push(this.createPropertyValue(propertyName, value, '0', valueType));
+                                            beforeAnimator.push(this._createPropertyValue(propertyName, value, '0', valueType));
                                         }
                                     };
                                     const insertFillAfter = (propertyName, propertyValues, startOffset) => {
@@ -14467,15 +14509,15 @@ var android = (function () {
                                                             valueTo = valueTo.split(' ')[propertyName === 'trimPathStart' ? 0 : 1];
                                                             break;
                                                     }
-                                                    afterAnimator.push(this.createPropertyValue(propertyName, valueTo, '1', valueType, valueType === 'pathType' ? previousValue : '', startOffset ? startOffset.toString() : ''));
+                                                    afterAnimator.push(this._createPropertyValue(propertyName, valueTo, '1', valueType, valueType === 'pathType' ? previousValue : '', startOffset ? startOffset.toString() : ''));
                                                 }
                                             }
                                             if (transformOrigin) {
                                                 if (/X$/.test(propertyName)) {
-                                                    afterAnimator.push(this.createPropertyValue('translateX', '0', '1', valueType));
+                                                    afterAnimator.push(this._createPropertyValue('translateX', '0', '1', valueType));
                                                 }
                                                 else if (/Y$/.test(propertyName)) {
-                                                    afterAnimator.push(this.createPropertyValue('translateY', '0', '1', valueType));
+                                                    afterAnimator.push(this._createPropertyValue('translateY', '0', '1', valueType));
                                                 }
                                             }
                                         }
@@ -14499,7 +14541,7 @@ var android = (function () {
                                                             valueFrom = convertValueType(item, baseValue.trim().split(' ')[i]);
                                                         }
                                                     }
-                                                    const propertyValue = this.createPropertyValue(propertyNames[i], values[i], '1', valueType, valueFrom, item.delay > 0 ? item.delay.toString() : '');
+                                                    const propertyValue = this._createPropertyValue(propertyNames[i], values[i], '1', valueType, valueFrom, item.delay > 0 ? item.delay.toString() : '');
                                                     if (index > 1) {
                                                         customAnimator.push(propertyValue);
                                                         insertFillAfter(propertyNames[i], undefined, index > 1 ? item.duration : 0);
@@ -14543,7 +14585,7 @@ var android = (function () {
                                         else {
                                             repeatCount = item.iterationCount !== -1 ? Math.ceil(item.iterationCount - 1).toString() : '-1';
                                         }
-                                        const options = this.createPropertyValue('', '', item.duration.toString(), valueType, '', item.delay > 0 ? item.delay.toString() : '', repeatCount);
+                                        const options = this._createPropertyValue('', '', item.duration.toString(), valueType, '', item.delay > 0 ? item.delay.toString() : '', repeatCount);
                                         let beforeValues;
                                         let propertyNames;
                                         let values;
@@ -14716,7 +14758,7 @@ var android = (function () {
                                                                         translateTo = origin.y;
                                                                     }
                                                                     if (direction) {
-                                                                        const valueData = this.createPropertyValue(direction, truncate$7(translateTo, precision), duration.toString(), 'floatType');
+                                                                        const valueData = this._createPropertyValue(direction, truncate$7(translateTo, precision), duration.toString(), 'floatType');
                                                                         valueData.interpolator = createPathInterpolator(KEYSPLINE_NAME['step-start']);
                                                                         translateData.objectAnimator.push(valueData);
                                                                     }
@@ -14842,7 +14884,7 @@ var android = (function () {
                         if (objectAnimator === undefined) {
                             objectAnimator = [];
                         }
-                        objectAnimator.push(this.createPropertyValue(propertyName, valueTo, '0', valueType, valueFrom, startOffset));
+                        objectAnimator.push(this._createPropertyValue(propertyName, valueTo, '0', valueType, valueFrom, startOffset));
                     };
                     for (const item of target.animate) {
                         if (SvgBuild.asAnimateMotion(item)) {
@@ -14919,9 +14961,9 @@ var android = (function () {
             node.data(Resource.KEY_NAME, 'svgViewBox', viewBox);
             return drawable;
         }
-        parseVectorData(group, depth = 0) {
+        _parseVectorData(group, depth = 0) {
             const floatPrecisionValue = this.options.floatPrecisionValue;
-            const result = this.createGroup(group);
+            const result = this._createGroup(group);
             const length = result.length;
             const renderDepth = depth + length;
             let output = '';
@@ -14930,7 +14972,7 @@ var android = (function () {
                     if (SvgBuild.isShape(item)) {
                         const itemPath = item.path;
                         if (itemPath === null || itemPath === void 0 ? void 0 : itemPath.value) {
-                            const [path, groupArray] = this.createPath(item, itemPath);
+                            const [path, groupArray] = this._createPath(item, itemPath);
                             const pathArray = [];
                             if (itemPath.strokeWidth && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                                 const animateData = this._animateData.get(item.name);
@@ -14985,7 +15027,7 @@ var android = (function () {
                     }
                     else if (SvgBuild.isContainer(item)) {
                         if (item.length) {
-                            output += this.parseVectorData(item, renderDepth);
+                            output += this._parseVectorData(item, renderDepth);
                         }
                     }
                     else if (SvgBuild.asImage(item)) {
@@ -15004,7 +15046,7 @@ var android = (function () {
                 return output;
             }
         }
-        createGroup(target) {
+        _createGroup(target) {
             const clipMain = [];
             const clipBox = [];
             const groupMain = { 'clip-path': clipMain };
@@ -15017,7 +15059,7 @@ var android = (function () {
                 transformData.translateY = target.y.toString();
             }
             if (target.clipRegion !== '') {
-                this.createClipPath(target, clipMain, target.clipRegion);
+                this._createClipPath(target, clipMain, target.clipRegion);
             }
             if (clipMain.length || Object.keys(transformData).length) {
                 Object.assign(groupMain, transformData);
@@ -15027,10 +15069,10 @@ var android = (function () {
                 const baseData = {};
                 const [transforms] = groupTransforms(target.element, target.transforms, true);
                 const groupName = getVectorName(target, 'animate');
-                if ((SvgBuild.asG(target) || SvgBuild.asUseSymbol(target)) && isString$5(target.clipPath) && this.createClipPath(target, clipBox, target.clipPath)) {
+                if ((SvgBuild.asG(target) || SvgBuild.asUseSymbol(target)) && isString$5(target.clipPath) && this._createClipPath(target, clipBox, target.clipPath)) {
                     baseData.name = groupName;
                 }
-                if (this.queueAnimations(target, groupName, item => SvgBuild.asAnimateTransform(item))) {
+                if (this._queueAnimations(target, groupName, item => SvgBuild.asAnimateTransform(item))) {
                     baseData.name = groupName;
                 }
                 if (Object.keys(baseData).length) {
@@ -15048,7 +15090,7 @@ var android = (function () {
             }
             return result;
         }
-        createPath(target, path) {
+        _createPath(target, path) {
             const precision = this.options.floatPrecisionValue;
             const result = { name: target.name };
             const renderData = [];
@@ -15058,15 +15100,15 @@ var android = (function () {
             const opacity = getOuterOpacity(target);
             const useTarget = SvgBuild.asUse(target);
             if (SvgBuild.asUse(target) && isString$5(target.clipPath)) {
-                this.createClipPath(target, clipElement, target.clipPath);
+                this._createClipPath(target, clipElement, target.clipPath);
             }
             if (isString$5(path.clipPath)) {
                 const shape = new SvgShape(path.element);
                 shape.build({ exclude: this.options.transformExclude, residual: partitionTransforms, precision });
                 shape.synchronize({ keyTimeMode: this._synchronizeMode, precision });
-                this.createClipPath(shape, clipElement, path.clipPath);
+                this._createClipPath(shape, clipElement, path.clipPath);
             }
-            if (this.queueAnimations(target, groupName, item => SvgBuild.isAnimateTransform(item), '', target.name)) {
+            if (this._queueAnimations(target, groupName, item => SvgBuild.isAnimateTransform(item), '', target.name)) {
                 baseData.name = groupName;
             }
             else if (clipElement.length) {
@@ -15297,7 +15339,7 @@ var android = (function () {
                     }
                 }
             }
-            if (!this.queueAnimations(target, result.name, item => (SvgBuild.asAnimate(item) || SvgBuild.asSet(item)) && item.attributeName !== 'clip-path', pathData) && replaceResult.length === 0 && baseData.name !== groupName) {
+            if (!this._queueAnimations(target, result.name, item => (SvgBuild.asAnimate(item) || SvgBuild.asSet(item)) && item.attributeName !== 'clip-path', pathData) && replaceResult.length === 0 && baseData.name !== groupName) {
                 result.name = '';
             }
             const animateData = this._animateData;
@@ -15322,7 +15364,7 @@ var android = (function () {
             }
             return [result, renderData];
         }
-        createClipPath(target, clipArray, clipPath) {
+        _createClipPath(target, clipArray, clipPath) {
             const { transformExclude: exclude, floatPrecisionValue: precision } = this.options;
             const definitions = this._svgInstance.definitions;
             const keyTimeMode = this._synchronizeMode;
@@ -15340,7 +15382,7 @@ var android = (function () {
                                 const pathData = path.value;
                                 if (pathData) {
                                     let name = getVectorName(child, 'clip_path', array.length > 1 ? index + 1 : -1);
-                                    if (!this.queueAnimations(child, name, item => SvgBuild.asAnimate(item) || SvgBuild.asSet(item), pathData)) {
+                                    if (!this._queueAnimations(child, name, item => SvgBuild.asAnimate(item) || SvgBuild.asSet(item), pathData)) {
                                         name = '';
                                     }
                                     clipArray.push({ name, pathData });
@@ -15352,7 +15394,7 @@ var android = (function () {
                 }
                 else {
                     let name = getVectorName(target, 'clip_path', array.length > 1 ? index + 1 : -1);
-                    if (!this.queueAnimations(target, name, item => (SvgBuild.asAnimate(item) || SvgBuild.asSet(item)) && item.attributeName === 'clip-path', value)) {
+                    if (!this._queueAnimations(target, name, item => (SvgBuild.asAnimate(item) || SvgBuild.asSet(item)) && item.attributeName === 'clip-path', value)) {
                         name = '';
                     }
                     clipArray.push({ name, pathData: value });
@@ -15361,7 +15403,7 @@ var android = (function () {
             });
             return result > 0;
         }
-        queueAnimations(svg, name, predicate, pathData = '', targetName) {
+        _queueAnimations(svg, name, predicate, pathData = '', targetName) {
             if (svg.animations.length) {
                 const animate = svg.animations.filter((item, index, array) => !item.paused && (item.duration >= 0 || item.setterType) && predicate(item, index, array));
                 if (animate.length) {
@@ -15383,7 +15425,7 @@ var android = (function () {
             }
             return false;
         }
-        createPropertyValue(propertyName, valueTo, duration, valueType, valueFrom = '', startOffset = '', repeatCount = '0') {
+        _createPropertyValue(propertyName, valueTo, duration, valueType, valueFrom = '', startOffset = '', repeatCount = '0') {
             const floatPrecisionValue = this.options.floatPrecisionValue;
             return {
                 propertyName,

@@ -1,4 +1,4 @@
-/* chrome-framework 1.5.0
+/* chrome-framework 1.5.1
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -159,13 +159,13 @@ var chrome = (function () {
             this._outputFileExclusions = undefined;
         }
         copyToDisk(directory, options) {
-            this.copying(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), directory }));
+            this.copying(Object.assign(Object.assign({}, options), { assets: this._getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), directory }));
         }
         appendToArchive(pathname, options) {
-            this.archiving(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), filename: this.userSettings.outputArchiveName, appendTo: pathname }));
+            this.archiving(Object.assign(Object.assign({}, options), { assets: this._getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), filename: this.userSettings.outputArchiveName, appendTo: pathname }));
         }
         saveToArchive(filename, options) {
-            this.archiving(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), filename }));
+            this.archiving(Object.assign(Object.assign({}, options), { assets: this._getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), filename }));
         }
         getHtmlPage(name) {
             const result = [];
@@ -182,10 +182,10 @@ var chrome = (function () {
                         data.filename = 'index.html';
                     }
                 }
-                if (this.validFile(data)) {
+                if (this._validFile(data)) {
                     data.uri = href;
                     data.mimeType = File.getMimeType('html');
-                    this.processExtensions(data);
+                    this._processExtensions(data);
                     result.push(data);
                 }
             }
@@ -198,13 +198,13 @@ var chrome = (function () {
                 if (src !== '') {
                     const uri = resolvePath(src);
                     const data = parseUri(uri);
-                    if (this.validFile(data)) {
+                    if (this._validFile(data)) {
                         data.uri = uri;
                         const type = element.type;
                         if (type) {
                             data.mimeType = type;
                         }
-                        this.processExtensions(data);
+                        this._processExtensions(data);
                         result.push(data);
                     }
                 }
@@ -218,9 +218,9 @@ var chrome = (function () {
                 if (href !== '') {
                     const uri = resolvePath(href);
                     const data = parseUri(uri);
-                    if (this.validFile(data)) {
+                    if (this._validFile(data)) {
                         data.uri = uri;
-                        this.processExtensions(data);
+                        this._processExtensions(data);
                         result.push(data);
                     }
                 }
@@ -231,9 +231,9 @@ var chrome = (function () {
             const result = [];
             for (const uri of ASSETS.images.keys()) {
                 const data = parseUri(uri);
-                if (this.validFile(data)) {
+                if (this._validFile(data)) {
                     data.uri = uri;
-                    this.processExtensions(data);
+                    this._processExtensions(data);
                     result.push(data);
                 }
             }
@@ -254,9 +254,9 @@ var chrome = (function () {
                     else {
                         continue;
                     }
-                    if (this.validFile(data)) {
+                    if (this._validFile(data)) {
                         data.mimeType = mimeType;
-                        this.processExtensions(data);
+                        this._processExtensions(data);
                         result.push(data);
                     }
                 }
@@ -276,7 +276,7 @@ var chrome = (function () {
                 for (const src of images) {
                     if (COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
                         const data = parseUri(src);
-                        if (this.validFile(data)) {
+                        if (this._validFile(data)) {
                             data.uri = src;
                             result.push(data);
                         }
@@ -292,9 +292,9 @@ var chrome = (function () {
                     const url = font.srcUrl;
                     if (url) {
                         const data = parseUri(url);
-                        if (this.validFile(data)) {
+                        if (this._validFile(data)) {
                             data.uri = url;
-                            this.processExtensions(data);
+                            this._processExtensions(data);
                             result.push(data);
                         }
                     }
@@ -302,21 +302,21 @@ var chrome = (function () {
             }
             return result;
         }
-        getAssetsAll() {
+        _getAssetsAll() {
             return this.getHtmlPage()
                 .concat(this.getScriptAssets())
                 .concat(this.getLinkAssets())
                 .concat(this.getImageAssets())
                 .concat(this.getFontAssets());
         }
-        validFile(data) {
+        _validFile(data) {
             if (data) {
                 const fullpath = `${data.pathname}/${data.filename}`;
                 return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
             }
             return false;
         }
-        processExtensions(data) {
+        _processExtensions(data) {
             for (const ext of this.application.extensions) {
                 ext.processFile(data);
             }

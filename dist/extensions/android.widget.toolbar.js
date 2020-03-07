@@ -1,4 +1,4 @@
-/* android.widget.toolbar 1.5.0
+/* android.widget.toolbar 1.5.1
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -137,7 +137,7 @@ this.android.widget.toolbar = (function () {
                 else {
                     assignEmptyValue(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
                 }
-                appBarNode = this.createPlaceholder(node, appBarChildren, target);
+                appBarNode = this._createPlaceholder(node, appBarChildren, target);
                 appBarNode.parent = parent;
                 let id = android.id;
                 if (isString(id)) {
@@ -154,7 +154,7 @@ this.android.widget.toolbar = (function () {
                     }
                     assignEmptyValue(app, 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
                     assignEmptyValue(app, 'toolbarId', node.documentId);
-                    collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
+                    collapsingToolbarNode = this._createPlaceholder(node, collapsingToolbarChildren, target);
                     if (collapsingToolbarNode) {
                         collapsingToolbarNode.parent = appBarNode;
                         android = collapsingToolbarOptions.android;
@@ -308,7 +308,7 @@ this.android.widget.toolbar = (function () {
                 }
             }
         }
-        createPlaceholder(node, children, target) {
+        _createPlaceholder(node, children, target) {
             const delegate = children.length > 0;
             const placeholder = this.application.createNode({ parent: node, children, delegate, cascade: true });
             placeholder.inherit(node, 'base');
