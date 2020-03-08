@@ -411,8 +411,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                     else {
                         match = REGEX_QUERY_LANG.exec(pseudo);
                         if (match) {
-                            const attributes = node.attributes;
-                            if (attributes['lang'] && match[1].toLowerCase() === attributes['lang'].toLowerCase()) {
+                            if (node.attributes['lang']?.trim().toLowerCase() === match[1].toLowerCase()) {
                                 continue;
                             }
                         }
@@ -532,23 +531,11 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
 function hasTextAlign(node: T, value: string, localizedValue?: string) {
     const textAlign = node.cssAscend('textAlign', node.textElement && node.blockStatic && !node.hasPX('width'));
     if (textAlign === value || textAlign === localizedValue) {
-        if (node.textElement && node.blockStatic) {
-            return !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true);
+        if (node.blockStatic) {
+            return node.textElement && !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true);
         }
         else {
-            const parent = node.actualParent;
-            if (parent) {
-                const children = parent.naturalChildren;
-                if (children.length === 1) {
-                    return true;
-                }
-                else {
-                    const index = node.childIndex;
-                    const previousSibling = children[index - 1];
-                    const nextSibling = children[index + 1];
-                    return (previousSibling === undefined || !previousSibling.pageFlow || previousSibling.blockStatic || previousSibling.lineBreak) && (nextSibling === undefined || !nextSibling.pageFlow || nextSibling.blockStatic || nextSibling.lineBreak);
-                }
-            }
+            return REGEX_INLINE.test(node.display) && !node.floating;
         }
     }
     return false;

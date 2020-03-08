@@ -1783,7 +1783,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private _setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
         let paddingNodes: T[] = [];
         for (const child of inlineAbove) {
-            if (requirePadding(child)) {
+            if (requirePadding(child) || child.centerAligned) {
                 paddingNodes.push(child);
             }
             if (child.blockStatic) {
@@ -1811,7 +1811,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             if (floatPosition !== Number.NEGATIVE_INFINITY) {
                 for (const child of paddingNodes) {
-                    if (Math.floor(child.linear.left) <= floatPosition) {
+                    if (Math.floor(child.linear.left) <= floatPosition || child.centerAligned) {
                         marginLeft = Math.max(marginLeft, child.marginLeft);
                         invalid = true;
                     }

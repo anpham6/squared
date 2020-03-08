@@ -272,8 +272,8 @@ function getBottomChild(node: NodeUI) {
 const resetBox = (node: NodeUI, region: number) => node.setBox(region, { reset: 1 });
 const setMinHeight = (node: NodeUI, offset: number) => node.css('minHeight', formatPX(Math.max(offset, node.hasPX('minHeight', false) ? node.parseHeight(node.css('minHeight')) : 0)));
 const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && node.length > 0 && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
-const validAboveChild = (node: NodeUI, children: boolean) => !node.hasPX('height') && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
-const validBelowChild = (node: NodeUI, children: boolean) => !node.hasPX('height') && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
+const validAboveChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
+const validBelowChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
 
 export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T> {
     public afterBaseLayout() {
