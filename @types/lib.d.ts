@@ -6,8 +6,7 @@ interface ContainerFindOptions<T> extends ContainerCascadeOptions<T> {
     cascade?: boolean;
 }
 
-interface ContainerSomeOptions<T> extends ContainerFindOptions<T> {
-}
+interface ContainerSomeOptions<T> extends ContainerFindOptions<T> {}
 
 interface ColorData extends StringValue {
     valueAsRGBA: string;

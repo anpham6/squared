@@ -45,12 +45,14 @@ export interface StyleAttribute {
 }
 
 export interface GuidelineOptions {
+    orientation?: string;
     percent?: boolean;
     opposing?: boolean;
 }
 
 export interface RenderNodeStaticAttribute {
-    controlName: string;
+    controlName?: string;
+    controlType?: number;
     width?: string;
     height?: string;
     content?: string;

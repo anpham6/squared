@@ -78,12 +78,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             }
             let container: T;
             if (node.length === 0) {
-                const { containerType, alignmentType } = controller.containerTypeVertical;
-                container = controller.createNodeWrapper(node, parent, undefined, {
-                    controlName: View.getControlName(CONTAINER_NODE.LINEAR, node.api),
-                    containerType,
-                    alignmentType
-                });
+                container = controller.createNodeWrapper(node, parent, { ...controller.containerTypeVertical });
                 node.resetBox(BOX_STANDARD.MARGIN_VERTICAL, container);
             }
             else {

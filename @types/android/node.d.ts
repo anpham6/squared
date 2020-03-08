@@ -5,8 +5,7 @@ export interface LocalSettingsAndroidUI extends LocalSettingsUI {
     floatPrecision: number;
 }
 
-export interface CachedValueAndroidUI<T> extends CachedValueUI<T> {
-}
+export interface CachedValueAndroidUI<T> extends CachedValueUI<T> {}
 
 export interface Constraint {
     current: ObjectMap<{ documentId: string; horizontal: boolean }>;
@@ -31,8 +30,8 @@ export interface RenderSpaceAttribute extends ViewAttribute {
     rowSpan?: number;
 }
 
-export interface WrapperOptions extends ExcludeUIOptions {
-    controlName?: string;
+export interface WrapperOptions<T> extends ExcludeUIOptions {
+    children?: T[];
     containerType?: number;
     alignmentType?: number;
     cascade?: boolean;

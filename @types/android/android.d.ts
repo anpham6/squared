@@ -27,10 +27,10 @@ declare namespace base {
         checkConstraintFloat(data: LayoutUI<T>): boolean;
         checkConstraintHorizontal(data: LayoutUI<T>): boolean;
         checkLinearHorizontal(data: LayoutUI<T>): boolean;
-        addGuideline(node: T, parent: T, orientation?: string, options?: GuidelineOptions): void;
+        addGuideline(node: T, parent: T, options?: GuidelineOptions): void;
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
-        createNodeWrapper(node: T, parent: T, children?: T[], options?: WrapperOptions): T;
+        createNodeWrapper(node: T, parent: T, options?: WrapperOptions<T>): T;
     }
 
     class Controller<T extends View> implements Controller<T> {
@@ -105,7 +105,7 @@ declare namespace base {
         anchor(position: string, documentId?: string, overwrite?: boolean): boolean;
         anchorChain(direction: BoxPosition): View[];
         anchorParent(orientation: string, bias?: number, style?: string, overwrite?: boolean): boolean;
-        anchorStyle(orientation: string, bias: number, value?: string, overwrite?: boolean): void;
+        anchorStyle(orientation: string, bias: number, style?: string, overwrite?: boolean): void;
         anchorDelete(...position: string[]): void;
         anchorClear(): void;
         supported(obj: string, attr: string, result?: {}): boolean;

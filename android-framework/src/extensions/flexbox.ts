@@ -730,8 +730,8 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     if (q > 1) {
                                         segStart.constraint[orientation] = false;
                                         segEnd.constraint[orientation] = false;
-                                        controller.addGuideline(segStart, node, orientation, { percent: true });
-                                        controller.addGuideline(segEnd, node, orientation, { percent: true, opposing: true });
+                                        controller.addGuideline(segStart, node, { orientation, percent: true });
+                                        controller.addGuideline(segEnd, node, { orientation, percent: true, opposing: true });
                                         segStart.anchorStyle(orientation, 0, 'spread_inside');
                                         continue;
                                     }

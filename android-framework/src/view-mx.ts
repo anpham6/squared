@@ -1770,18 +1770,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public anchorStyle(orientation: string, bias: number, value?: string, overwrite = true) {
+        public anchorStyle(orientation: string, bias: number, style?: string, overwrite = true) {
             const node = this.anchorTarget;
             if (orientation === 'horizontal') {
                 node.app('layout_constraintHorizontal_bias', bias.toString(), overwrite);
-                if (value) {
-                    node.app('layout_constraintHorizontal_chainStyle', value, overwrite);
+                if (style) {
+                    node.app('layout_constraintHorizontal_chainStyle', style, overwrite);
                 }
             }
             else {
                 node.app('layout_constraintVertical_bias', bias.toString(), overwrite);
-                if (value) {
-                    node.app('layout_constraintVertical_chainStyle', value, overwrite);
+                if (style) {
+                    node.app('layout_constraintVertical_chainStyle', style, overwrite);
                 }
             }
         }

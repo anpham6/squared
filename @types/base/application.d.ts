@@ -89,7 +89,7 @@ export interface AppHandler<T extends Node> {
     readonly userSettings: UserSettings;
 }
 
-export interface AppSession<T extends Node> {
+export interface AppSession<T> {
     active: string[];
 }
 
@@ -115,7 +115,7 @@ export interface ExtensionDependency {
     preload: boolean;
 }
 
-export interface ExtensionResult<T extends NodeUI> {
+export interface ExtensionResult<T> {
     output?: NodeTemplate<T>;
     parent?: T;
     outerParent?: T;
@@ -135,7 +135,7 @@ export interface LayoutType {
     renderType?: number;
 }
 
-export interface LayoutOptions<T extends NodeUI> extends Optional<LayoutType> {
+export interface LayoutOptions<T> extends Optional<LayoutType> {
     parent: T;
     node: T;
     containerType?: number;
@@ -185,18 +185,18 @@ export interface RawAsset extends FileAsset, ImageAsset {
     base64?: string;
 }
 
-export interface NodeTemplate<T extends NodeUI> {
+export interface NodeTemplate<T> {
     type: number;
     node: T;
     parent?: T;
 }
 
-export interface NodeXmlTemplate<T extends NodeUI> extends NodeTemplate<T> {
+export interface NodeXmlTemplate<T> extends NodeTemplate<T> {
     controlName?: string;
     attributes?: string;
 }
 
-export interface NodeIncludeTemplate<T extends NodeUI> extends NodeTemplate<T> {
+export interface NodeIncludeTemplate<T> extends NodeTemplate<T> {
     content: string;
 }
 
@@ -214,7 +214,7 @@ export interface FileArchivingOptions extends FileActionOptions {
     appendTo?: string;
 }
 
-export interface NodeUIOptions<T extends NodeUI> {
+export interface NodeUIOptions<T> {
     parent?: T;
     element?: Null<Element>;
     children?: T[];
@@ -224,7 +224,7 @@ export interface NodeUIOptions<T extends NodeUI> {
     replace?: T;
 }
 
-export interface NodeGroupUIOptions<T extends NodeUI> {
+export interface NodeGroupUIOptions<T> {
     parent?: T;
     delegate?: boolean;
     cascade?: boolean;

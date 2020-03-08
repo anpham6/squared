@@ -63,7 +63,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         const fixed = node.css('backgroundAttachment') === 'fixed';
         if (backgroundColor !== '') {
             if (!(backgroundImageA && backgroundRepeatX && backgroundRepeatY)) {
-                container = controller.createNodeWrapper(node, renderParent, undefined, { resource: RESOURCE_IGNORE });
+                container = controller.createNodeWrapper(node, renderParent, { resource: RESOURCE_IGNORE });
                 container.css('backgroundColor', backgroundColor);
                 container.setCacheValue('backgroundColor', backgroundColor);
                 if (!parentVisible) {
@@ -83,11 +83,11 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             if (container) {
                 if (backgroundSeparate || fixed) {
                     createFrameWrapper(container);
-                    container = controller.createNodeWrapper(node, parentAs, undefined, { resource: NODE_RESOURCE.BOX_SPACING });
+                    container = controller.createNodeWrapper(node, parentAs, { resource: NODE_RESOURCE.BOX_SPACING });
                 }
             }
             else {
-                container = controller.createNodeWrapper(node, renderParent, undefined, { resource: RESOURCE_IGNORE });
+                container = controller.createNodeWrapper(node, renderParent, { resource: RESOURCE_IGNORE });
             }
             container.setLayoutWidth('match_parent');
             const height = parent.cssInitial('height');

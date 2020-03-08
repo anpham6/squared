@@ -1146,10 +1146,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         }
                                     }
                                     if (!constraint.horizontal) {
-                                        this.addGuideline(item, node, 'horizontal');
+                                        this.addGuideline(item, node, { orientation: 'horizontal' });
                                     }
                                     if (!constraint.vertical) {
-                                        this.addGuideline(item, node, 'vertical');
+                                        this.addGuideline(item, node, { orientation: 'vertical' });
                                     }
                                     item.positioned = true;
                                 }
@@ -1639,7 +1639,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute) {
-        const { controlName, width, height, content } = attrs;
+        const { controlType, width, height, content } = attrs;
+        let controlName = attrs.controlName;
+        if (!isString(controlName)) {
+            if (controlType) {
+                controlName = View.getControlName(controlType, this.userSettings.targetAPI);
+            }
+            else {
+                return '';
+            }
+        }
         const node = new View(0, '0', undefined, this.afterInsertNode);
         node.setControlType(controlName);
         node.setLayoutWidth(width || 'wrap_content');
@@ -1690,12 +1699,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return output;
     }
 
-    public addGuideline(node: T, parent: T, orientation?: string, options?: GuidelineOptions) {
+    public addGuideline(node: T, parent: T, options?: GuidelineOptions) {
         let percent = false;
         let opposing = false;
+        let orientation: Undef<string>;
         if (options) {
             percent = options.percent === true;
             opposing = options.opposing === true;
+            orientation = options.orientation;
         }
         let documentParent = node.documentParent as T;
         if (parent.nodeGroup && !documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
@@ -2093,8 +2104,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return group;
     }
 
-    public createNodeWrapper(node: T, parent: T, children?: T[], options: WrapperOptions = {}) {
-        const { controlName, containerType, alignmentType, resource, procedure, section } = options;
+    public createNodeWrapper(node: T, parent: T, options: WrapperOptions<T> = {}) {
+        const { children, containerType, alignmentType, resource, procedure, section } = options;
         const container = this.application.createNode({ parent, children, append: true, replace: node, delegate: true, cascade: options.cascade === true || !!children && children.length > 0 && !node.originalRoot });
         container.inherit(node, 'base', 'alignment');
         if (node.documentRoot) {
@@ -2104,8 +2115,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (container.actualParent === null && parent.naturalElement) {
             container.actualParent = parent;
         }
-        if (controlName) {
-            container.setControlType(controlName, containerType);
+        if (containerType) {
+            container.setControlType(View.getControlName(containerType, node.api), containerType);
         }
         if (alignmentType) {
             container.addAlign(alignmentType);

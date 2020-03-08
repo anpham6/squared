@@ -23,11 +23,7 @@ export default class Grid<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public processNode(node: T, parent: T) {
-        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, undefined, {
-            controlName: View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api),
-            containerType: CONTAINER_NODE.CONSTRAINT,
-            resource: NODE_RESOURCE.ASSET
-        });
+        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET });
         container.inherit(node, 'styleMap', 'boxStyle');
         node.resetBox(BOX_STANDARD.MARGIN, container);
         node.resetBox(BOX_STANDARD.PADDING, container);

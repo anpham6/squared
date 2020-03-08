@@ -1562,13 +1562,13 @@ declare namespace svg {
                 radialGradient(element: Element): element is SVGRadialGradientElement;
             };
 
+            function createPath(value: string): SVGPathElement;
             function getAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getParentAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getAttributeURL(value: string): string;
             function getDOMRect(element: SVGElement): DOMRect;
             function getTargetElement(element: SVGElement, rootElement?: Null<HTMLElement | SVGElement>): Null<SVGElement>;
             function getNearestViewBox(element: SVGElement): Undef<DOMRect>;
-            function createPath(value: string): SVGPathElement;
             function getPathLength(value: string): string;
         }
     }
