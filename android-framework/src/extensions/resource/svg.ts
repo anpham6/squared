@@ -1576,7 +1576,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const groupBox: VectorGroupData = { 'clip-path': clipBox };
         const result: VectorGroupData[] = [];
         const transformData: TransformData = {};
-        if ((target !== this._svgInstance && SvgBuild.asSvg(target) || SvgBuild.asUseSymbol(target) || SvgBuild.asUsePattern(target)) && (target.x !== 0 || target.y !== 0)) {
+        if ((SvgBuild.asSvg(target) && !target.documentRoot || SvgBuild.asUseSymbol(target) || SvgBuild.asUsePattern(target)) && (target.x !== 0 || target.y !== 0)) {
             transformData.name = getVectorName(target, 'main');
             transformData.translateX = target.x.toString();
             transformData.translateY = target.y.toString();

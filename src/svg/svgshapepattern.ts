@@ -38,7 +38,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
 
     public build(options?: SvgBuildOptions) {
         const element = options?.element || <SVGGeometryElement> this.element;
-        const path = new SvgPath(element);
+        const path: SvgPath = new SvgPath(element);
         path.build({ ...options });
         const pathValue = path.value;
         if (pathValue) {
@@ -59,10 +59,10 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
             let width = drawRegion.right;
             let remainingHeight = drawRegion.bottom;
             if (boundingBox) {
-                width -= drawRegion.left;
-                remainingHeight -= drawRegion.top;
                 boundingX = drawRegion.left;
                 boundingY = drawRegion.top;
+                width -= boundingX;
+                remainingHeight -= boundingY;
             }
             let j = 0;
             if (offsetX !== 0) {

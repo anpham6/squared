@@ -10,6 +10,8 @@ import SvgShape from './svgshape';
 import { INSTANCE_TYPE } from './lib/constant';
 
 export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUse {
+    protected _retainStyle = false;
+
     private __get_transforms = false;
     private __get_animations = false;
 

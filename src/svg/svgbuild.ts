@@ -555,7 +555,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return result;
     }
 
-    public static getPathPoints(values: SvgPathCommand[], radius = false) {
+    public static getPathPoints(values: SvgPathCommand[]) {
         const result: SvgPoint[] = [];
         let x = 0;
         let y = 0;
@@ -575,14 +575,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 if (item.key.toUpperCase() === 'A') {
                     pt.rx = item.radiusX;
                     pt.ry = item.radiusY;
-                    if (radius) {
-                        if (coordinates[i] >= 0) {
-                            pt.y -= item.radiusY as number;
-                        }
-                        else {
-                            pt.y += item.radiusY as number;
-                        }
-                    }
                 }
                 result.push(pt);
             }
@@ -820,27 +812,51 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         }
     }
 
-    public static minMaxPoints(values: Point[]) {
-        let { x, y } = values[0];
-        let maxX = x;
-        let maxY = y;
+    public static minMaxPoints(values: SvgPoint[], radius = false): [number, number, number, number] {
+        let { x: minX, y: minY } = values[0];
+        let maxX = minX;
+        let maxY = minY;
         const length = values.length;
         for (let i = 1; i < length; i++) {
-            const pt = values[i];
-            if (pt.x < x) {
-                x = pt.x;
+            const { x, y } = values[i];
+            if (radius && i > 0) {
+                const { rx, ry } = values[i];
+                if (rx !== undefined && ry !== undefined) {
+                    const { x: x1, y: y1 } = values[i - 1];
+                    let x2 = (x + x1) / 2;
+                    let y2 = (y + y1) / 2;
+                    if (x > x1) {
+                        y2 += ry;
+                    }
+                    else if (x < x1) {
+                        y2 -= ry;
+                    }
+                    if (y < y1) {
+                        x2 += rx;
+                    }
+                    else if (y > x1) {
+                        x2 -= rx;
+                    }
+                    minX = Math.min(x2, minX);
+                    maxX = Math.max(x2, maxX);
+                    minY = Math.min(y2, minY);
+                    maxY = Math.max(y2, maxY);
+                }
             }
-            else if (pt.x > maxX) {
-                maxX = pt.x;
+            if (x < minX) {
+                minX = x;
             }
-            if (pt.y < y) {
-                y = pt.y;
+            else if (x > maxX) {
+                maxX = x;
             }
-            else if (pt.y > maxY) {
-                maxY = pt.y;
+            if (y < minY) {
+                minY = y;
+            }
+            else if (y > maxY) {
+                maxY = y;
             }
         }
-        return [x, y, maxX, maxY];
+        return [minX, minY, maxX, maxY];
     }
 
     public static centerPoints(...values: SvgPoint[]): SvgPoint {
@@ -885,9 +901,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static getBoxRect(values: string[]): BoxRect {
         let points: SvgPoint[] = [];
         for (const value of values) {
-            points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(value), true));
+            points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(value)));
         }
-        const result = this.minMaxPoints(points);
+        const result = this.minMaxPoints(points, true);
         return { top: result[1], right: result[2], bottom: result[3], left: result[0] };
     }
 }

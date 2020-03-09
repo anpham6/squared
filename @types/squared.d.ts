@@ -1159,10 +1159,10 @@ declare namespace svg {
         public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
         public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
         public static convertTransforms(transforms: SVGTransformList): SvgTransform[];
-        public static getPathPoints(values: SvgPathCommand[], radius?: boolean): SvgPoint[];
+        public static getPathPoints(values: SvgPathCommand[]): SvgPoint[];
         public static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
         public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
-        public static minMaxPoints(values: Point[]): number[];
+        public static minMaxPoints(values: SvgPoint[]): [number, number, number, number];
         public static centerPoints(...values: Point[]): Point[];
         public static convertPoints(values: number[]): Point[];
         public static parsePoints(value: string): Point[];

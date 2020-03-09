@@ -4,6 +4,10 @@ export interface SvgAspectRatio extends SvgRect {
     position: Point;
     parent: Point;
     unit: number;
+    meetOrSlice: number;
+    align: number;
+    alignX: boolean;
+    alignY: boolean;
 }
 
 export interface SvgGradient extends Gradient {

@@ -341,7 +341,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             let y = this.getBaseValue('y');
             let width = this.getBaseValue('width');
             let height = this.getBaseValue('height');
-            if (transforms?.length) {
+            if (requireRefit || transforms?.length) {
                 let points: SvgPoint[] = [
                     { x, y },
                     { x: x + width, y },
@@ -351,18 +351,19 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 if (patternRefit) {
                     patternParent.patternRefitPoints(points);
                 }
-                if (typeof residual === 'function') {
-                    [this.transformResidual, transforms] = residual.call(this, element, transforms);
+                if (transforms?.length) {
+                    if (typeof residual === 'function') {
+                        [this.transformResidual, transforms] = residual.call(this, element, transforms);
+                    }
+                    if (transforms.length) {
+                        points = SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element));
+                        this.transformed = transforms;
+                    }
                 }
-                if (transforms.length) {
-                    points = SvgBuild.applyTransforms(transforms, points, TRANSFORM.origin(this.element));
-                    this.transformed = transforms;
-                }
-                const drawPolygon = () => SvgBuild.drawPolygon(points, precision);
-                this.baseValue = drawPolygon();
+                this.baseValue = SvgBuild.drawPolygon(points, precision);
                 if (requireRefit) {
                     parent.refitPoints(points);
-                    d = drawPolygon();
+                    d = SvgBuild.drawPolygon(points, precision);
                 }
                 else {
                     d = this.baseValue;
@@ -375,18 +376,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     width = patternParent.patternRefitX(width);
                     height = patternParent.patternRefitY(height);
                 }
-                const drawRect = () => SvgBuild.drawRect(width, height, x, y, precision);
-                this.baseValue = drawRect();
-                if (requireRefit) {
-                    x = parent.refitX(x);
-                    y = parent.refitY(y);
-                    width = parent.refitSize(width);
-                    height = parent.refitSize(height);
-                    d = drawRect();
-                }
-                else {
-                    d = this.baseValue;
-                }
+                d = SvgBuild.drawRect(width, height, x, y, precision);
+                this.baseValue = d;
             }
         }
         else if (SVG.polygon(element) || SVG.polyline(element)) {

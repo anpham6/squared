@@ -11,6 +11,7 @@ const $lib = squared.lib;
 
 const { parseColor } = $lib.color;
 const { calculateVar, getFontSize, isCustomProperty, isLength, isPercent, parseUnit } = $lib.css;
+const { truncate } = $lib.math;
 const { CSS, STRING, XML } = $lib.regex;
 const { convertCamelCase, convertFloat, isNumber, isString, joinMap, objectMap, replaceMap } = $lib.util;
 
@@ -30,7 +31,6 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public fillOpacity!: string;
         public fillRule!: string;
         public stroke!: string;
-        public strokeWidth!: string;
         public strokePattern!: string;
         public strokeOpacity!: string;
         public strokeLinecap!: string;
@@ -41,9 +41,17 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public color!: string;
         public clipPath!: string;
         public clipRule!: string;
-
         public patternParent?: SvgShapePattern;
         public useParent?: SvgUse | SvgUseSymbol;
+
+        protected _retainStyle = true;
+
+        private _strokeWidth = '1';
+
+        public setStroke() {
+            this.setAttribute('stroke');
+            this.setAttribute('stroke-width');
+        }
 
         public setPaint(d?: string[], precision?: number) {
             this.resetPaint();
@@ -51,9 +59,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             this.setAttribute('fill');
             this.setAttribute('fill-opacity');
             this.setAttribute('fill-rule');
-            this.setAttribute('stroke');
+            this.setStroke();
             this.setAttribute('stroke-opacity');
-            this.setAttribute('stroke-width');
             this.setAttribute('stroke-linecap');
             this.setAttribute('stroke-linejoin');
             this.setAttribute('stroke-miterlimit');
@@ -203,6 +210,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
                 this[convertCamelCase(attr)] = value;
             }
+            else if (!this._retainStyle) {
+                this[convertCamelCase(attr)] = '';
+            }
         }
 
         public getAttribute(attr: string, computed = false, inherited = true) {
@@ -258,6 +268,24 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             this.color = '';
             this.clipPath = '';
             this.clipRule = '';
+        }
+
+        set strokeWidth(value) {
+            this._strokeWidth = value;
+        }
+        get strokeWidth() {
+            const stroke = this.stroke;
+            if (isString(stroke) && stroke !== 'none') {
+                const result = this._strokeWidth;
+                if (result !== '') {
+                    const parent = this.parent;
+                    if (parent?.requireRefit) {
+                        return truncate(parent.refitSize(parseFloat(result)));
+                    }
+                    return result;
+                }
+            }
+            return '';
         }
     };
 };

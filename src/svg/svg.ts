@@ -71,7 +71,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         super.synchronize(options);
     }
 
-    private init() {
+    protected init() {
         const element = this.element;
         if (this.documentRoot) {
             cloneObject(element.viewBox.baseVal, this.aspectRatio);
