@@ -12,8 +12,8 @@ import { INSTANCE_TYPE } from './lib/constant';
 export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUse {
     protected _retainStyle = false;
 
-    private __get_transforms = false;
-    private __get_animations = false;
+    #get_transforms = false;
+    #get_animations = false;
 
     constructor(
         public readonly element: SVGUseElement,
@@ -48,20 +48,20 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
 
     get transforms() {
         let result = super.transforms;
-        if (!this.__get_transforms) {
+        if (!this.#get_transforms) {
             result = result.concat(this.getTransforms(this.shapeElement));
             this._transforms = result;
-            this.__get_transforms = true;
+            this.#get_transforms = true;
         }
         return result;
     }
 
     get animations() {
         let result = <SvgAnimation[]> super.animations;
-        if (!this.__get_animations) {
+        if (!this.#get_animations) {
             result = result.concat(<SvgAnimation[]> this.getAnimations(this.shapeElement));
             this._animations = result;
-            this.__get_animations = true;
+            this.#get_animations = true;
         }
         return result;
     }

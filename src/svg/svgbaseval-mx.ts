@@ -19,24 +19,24 @@ function adjustPoints(values: SvgPoint[], x: number, y: number, scaleX: number, 
 
 export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgBaseVal {
-        private _baseVal: ObjectMap<any> = {};
+        #baseVal: ObjectMap<any> = {};
 
         public setBaseValue(attr: string, value?: any) {
             if (value !== undefined) {
                 if (this.verifyBaseValue(attr, value)) {
-                    this._baseVal[attr] = value;
+                    this.#baseVal[attr] = value;
                     return true;
                 }
             }
             else {
                 switch (attr) {
                     case 'd':
-                        this._baseVal[attr] = getNamedItem(this.element, 'd');
+                        this.#baseVal[attr] = getNamedItem(this.element, 'd');
                         return true;
                     case 'points': {
                         const points: SVGPointList = this.element[attr];
                         if (Array.isArray(points)) {
-                            this._baseVal[attr] = SvgBuild.clonePoints(points);
+                            this.#baseVal[attr] = SvgBuild.clonePoints(points);
                             return true;
                         }
                         break;
@@ -46,7 +46,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         if (object) {
                             const baseVal = object.baseVal;
                             if (baseVal) {
-                                this._baseVal[attr] = baseVal.value;
+                                this.#baseVal[attr] = baseVal.value;
                                 return true;
                             }
                         }
@@ -58,11 +58,11 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         public getBaseValue(attr: string, fallback?: any): any {
-            return this._baseVal[attr] ?? (!this.setBaseValue(attr) ? fallback : undefined);
+            return this.#baseVal[attr] ?? (!this.setBaseValue(attr) ? fallback : undefined);
         }
 
         public refitBaseValue(x: number, y: number, precision?: number, scaleX = 1, scaleY = 1) {
-            const baseVal = this._baseVal;
+            const baseVal = this.#baseVal;
             for (const attr in baseVal) {
                 const value = baseVal[attr];
                 if (typeof value === 'string') {

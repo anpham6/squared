@@ -56,7 +56,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     public parent?: SvgContainer;
     public viewport?: Svg;
 
-    protected _clipRegion: string[] = [];
+    #clipRegion: string[] = [];
 
     constructor(public readonly element: SVGSVGElement | SVGGElement | SVGUseElement) {
         super();
@@ -441,14 +441,14 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
 
     set clipRegion(value) {
         if (value !== '') {
-            this._clipRegion.push(value);
+            this.#clipRegion.push(value);
         }
         else {
-            this._clipRegion.length = 0;
+            this.#clipRegion.length = 0;
         }
     }
     get clipRegion() {
-        return this._clipRegion.join(';');
+        return this.#clipRegion.join(';');
     }
 
     get requireRefit() {

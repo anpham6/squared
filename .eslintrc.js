@@ -223,9 +223,6 @@ module.exports = {
             "default": [
                 "static-field",
                 "static-method",
-                "public-field",
-                "protected-field",
-                "private-field",
                 "public-method",
                 "protected-method",
                 "private-method"

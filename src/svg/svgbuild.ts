@@ -826,10 +826,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     let x2 = (x + x1) / 2;
                     let y2 = (y + y1) / 2;
                     if (x > x1) {
-                        y2 += ry;
+                        y2 -= ry;
                     }
                     else if (x < x1) {
-                        y2 -= ry;
+                        y2 += ry;
                     }
                     if (y < y1) {
                         x2 += rx;
@@ -903,7 +903,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         for (const value of values) {
             points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(value)));
         }
-        const result = this.minMaxPoints(points, true);
-        return { top: result[1], right: result[2], bottom: result[3], left: result[0] };
+        const [left, top, right, bottom] = this.minMaxPoints(points, true);
+        return { top, right, bottom, left };
     }
 }

@@ -13,8 +13,8 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     public rotateAngle?: number;
     public readonly imageElement: Null<SVGImageElement> = null;
 
-    private __get_transforms = false;
-    private __get_animations = false;
+    #get_transforms = false;
+    #get_animations = false;
 
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
@@ -154,26 +154,26 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
 
     get transforms() {
         let result = super.transforms;
-        if (!this.__get_transforms) {
+        if (!this.#get_transforms) {
             const imageElement = this.imageElement;
             if (imageElement) {
                 result = result.concat(this.getTransforms(imageElement));
                 this._transforms = result;
             }
-            this.__get_transforms = true;
+            this.#get_transforms = true;
         }
         return result;
     }
 
     get animations() {
         let result = super.animations;
-        if (!this.__get_animations) {
+        if (!this.#get_animations) {
             const imageElement = this.imageElement;
             if (imageElement) {
                 result = result.concat(this.getAnimations(imageElement));
                 this._animations = result;
             }
-            this.__get_animations = true;
+            this.#get_animations = true;
         }
         return result;
     }

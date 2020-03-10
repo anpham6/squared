@@ -13,7 +13,7 @@ const { parseColor } = $lib.color;
 const { calculateVar, getFontSize, isCustomProperty, isLength, isPercent, parseUnit } = $lib.css;
 const { truncate } = $lib.math;
 const { CSS, STRING, XML } = $lib.regex;
-const { convertCamelCase, convertFloat, isNumber, isString, joinMap, objectMap, replaceMap } = $lib.util;
+const { convertCamelCase, convertFloat, isNumber, isString, joinMap, objectMap } = $lib.util;
 
 const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
 const REGEX_CACHE: ObjectMap<RegExp> = {
@@ -46,7 +46,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
 
         protected _retainStyle = true;
 
-        private _strokeWidth = '1';
+        #strokeWidth = '1';
 
         public setStroke() {
             this.setAttribute('stroke');
@@ -116,9 +116,16 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 }
                                 case 'polygon': {
                                     const points = objectMap<string, Point>(match[1].split(XML.SEPARATOR), values => {
-                                        let [x, y] = replaceMap<string, number>(values.trim().split(' '), (value, index) => this.convertLength(value, index === 0 ? width : height));
-                                        x += left;
-                                        y += top;
+                                        let x = left;
+                                        let y = top;
+                                        values.trim().split(' ').forEach((value, index) => {
+                                            if (index === 0) {
+                                                x += this.convertLength(value, width);
+                                            }
+                                            else {
+                                                y += this.convertLength(value, height);
+                                            }
+                                        });
                                         return { x, y };
                                     });
                                     parent?.refitPoints(points);
@@ -271,12 +278,12 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         set strokeWidth(value) {
-            this._strokeWidth = value;
+            this.#strokeWidth = value;
         }
         get strokeWidth() {
             const stroke = this.stroke;
             if (isString(stroke) && stroke !== 'none') {
-                const result = this._strokeWidth;
+                const result = this.#strokeWidth;
                 if (result !== '') {
                     const parent = this.parent;
                     if (parent?.requireRefit) {

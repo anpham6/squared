@@ -210,7 +210,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     public transformed?: SvgTransform[];
     public transformResidual?: SvgTransform[][];
 
-    private _transforms?: SvgTransform[];
+    #transforms?: SvgTransform[];
 
     constructor(public readonly element: SVGGeometryElement) {
         super(element);
@@ -1032,10 +1032,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     get transforms() {
-        let result = this._transforms;
+        let result = this.#transforms;
         if (result === undefined) {
             result = SvgBuild.filterTransforms(TRANSFORM.parse(this.element) || SvgBuild.convertTransforms(this.element.transform.baseVal));
-            this._transforms = result;
+            this.#transforms = result;
         }
         return result;
     }

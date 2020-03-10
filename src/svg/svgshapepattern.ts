@@ -25,7 +25,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     public readonly patternUnits: number;
     public readonly patternContentUnits: number;
 
-    private __get_transforms = false;
+    #get_transforms = false;
 
     constructor(
         public element: SVGGeometryElement | SVGUseElement,
@@ -163,7 +163,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     get transforms() {
-        if (!this.__get_transforms) {
+        if (!this.#get_transforms) {
             const patternElement = this.patternElement;
             const transforms = SvgBuild.convertTransforms(patternElement.patternTransform.baseVal);
             if (transforms.length) {
@@ -195,7 +195,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 }
                 this._transforms = super.transforms.concat(SvgBuild.filterTransforms(transforms));
             }
-            this.__get_transforms = true;
+            this.#get_transforms = true;
         }
         return super.transforms;
     }
