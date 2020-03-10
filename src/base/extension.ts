@@ -1,4 +1,4 @@
-import { ExtensionDependency } from '../../@types/base/application';
+import type { ExtensionDependency } from '../../@types/base/application';
 
 export default abstract class Extension<T extends squared.base.Node> implements squared.base.Extension<T> {
     public readonly options: StandardMap = {};

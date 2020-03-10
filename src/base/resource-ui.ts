@@ -1,4 +1,4 @@
-import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } from '../../@types/base/application';
+import type { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } from '../../@types/base/application';
 
 import NodeUI from './node-ui';
 import Resource from './resource';

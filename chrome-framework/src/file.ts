@@ -1,5 +1,5 @@
-import { FileAsset, FileActionOptions } from '../../@types/base/application';
-import { ChromeAsset } from '../../@types/chrome/application';
+import type { FileAsset, FileActionOptions } from '../../@types/base/application';
+import type { ChromeAsset } from '../../@types/chrome/application';
 
 import Resource from './resource';
 

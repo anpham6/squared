@@ -1,4 +1,4 @@
-import { SvgOffsetPath } from '../../@types/svg/object';
+import type { SvgOffsetPath } from '../../@types/svg/object';
 
 import SvgAnimateTransform from './svganimatetransform';
 import SvgBuild from './svgbuild';

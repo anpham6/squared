@@ -1,4 +1,4 @@
-import { ControllerSettings, UserSettings } from '../../@types/base/application';
+import type { ControllerSettings, UserSettings } from '../../@types/base/application';
 
 export default abstract class Controller<T extends squared.base.Node> implements squared.base.Controller<T> {
     public sessionId!: string;

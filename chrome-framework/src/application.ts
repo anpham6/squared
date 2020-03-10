@@ -1,4 +1,4 @@
-import { ChromeNodeOptions, UserSettingsChrome } from '../../@types/chrome/application';
+import type { ChromeNodeOptions, UserSettingsChrome } from '../../@types/chrome/application';
 
 import Resource from './resource';
 

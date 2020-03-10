@@ -1,4 +1,4 @@
-import { UserUISettings } from '../../@types/base/application';
+import type { UserUISettings } from '../../@types/base/application';
 
 import File from './file';
 

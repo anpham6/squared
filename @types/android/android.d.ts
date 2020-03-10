@@ -1,6 +1,6 @@
-import { FileActionOptions, FileAsset } from '../base/application';
-import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
-import { Constraint, LocalSettingsAndroidUI, RenderSpaceAttribute, SupportAndroid, ViewAttribute, WrapperOptions } from './node';
+import type { FileAsset } from '../base/application';
+import type { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
+import type { Constraint, LocalSettingsAndroidUI, RenderSpaceAttribute, SupportAndroid, ViewAttribute, WrapperOptions } from './node';
 
 import LayoutUI = squared.base.LayoutUI;
 

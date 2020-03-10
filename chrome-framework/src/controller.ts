@@ -1,4 +1,4 @@
-import { ControllerSettings } from '../../@types/base/application';
+import type { ControllerSettings } from '../../@types/base/application';
 
 import View from './view';
 

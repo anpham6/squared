@@ -1,4 +1,4 @@
-import { NodeXmlTemplate } from '../../../@types/base/application';
+import type { NodeXmlTemplate } from '../../../@types/base/application';
 
 import Resource from '../resource';
 

@@ -1,5 +1,5 @@
-import { ChromeAsset } from '../../../../@types/chrome/application';
-import { CompressOptions } from '../../../../@types/chrome/extension';
+import type { ChromeAsset } from '../../../../@types/chrome/application';
+import type { CompressOptions } from '../../../../@types/chrome/extension';
 
 import Extension from '../../extension';
 

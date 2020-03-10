@@ -1,4 +1,4 @@
-import { GridCellData } from '../../../@types/base/extension';
+import type { GridCellData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';

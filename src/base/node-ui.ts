@@ -1,5 +1,5 @@
-import { NodeTemplate } from '../../@types/base/application';
-import { BoxOptions, BoxType, CachedValueUI, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions } from '../../@types/base/node';
+import type { NodeTemplate } from '../../@types/base/application';
+import type { BoxOptions, BoxType, CachedValueUI, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions } from '../../@types/base/node';
 
 import Node from './node';
 

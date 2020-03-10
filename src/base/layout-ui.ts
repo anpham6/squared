@@ -1,4 +1,4 @@
-import { LayoutOptions, LayoutType } from '../../@types/base/application';
+import type { LayoutOptions, LayoutType } from '../../@types/base/application';
 
 import NodeUI from './node-ui';
 

@@ -1,4 +1,4 @@
-import { AscendOptions, BoxType, CachedValue, InitialData, HasOptions, QueryAttribute, QueryData } from '../../@types/base/node';
+import type { AscendOptions, BoxType, CachedValue, InitialData, HasOptions, QueryAttribute, QueryData } from '../../@types/base/node';
 
 import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
 

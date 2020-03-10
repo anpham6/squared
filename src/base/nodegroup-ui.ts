@@ -1,4 +1,4 @@
-import { SiblingOptions } from '../../@types/base/node';
+import type { SiblingOptions } from '../../@types/base/node';
 
 import NodeUI from './node-ui';
 

@@ -1,4 +1,4 @@
-import { AppFramework, FileCopyingOptions, FileArchivingOptions, RawAsset, UserSettings } from '../base/application';
+import type { AppFramework, FileCopyingOptions, FileArchivingOptions, RawAsset, UserSettings } from '../base/application';
 
 type View = chrome.base.View;
 

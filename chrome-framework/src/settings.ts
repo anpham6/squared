@@ -1,4 +1,4 @@
-import { UserSettingsChrome } from '../../@types/chrome/application';
+import type { UserSettingsChrome } from '../../@types/chrome/application';
 
 const settings: UserSettingsChrome = {
     builtInExtensions: [

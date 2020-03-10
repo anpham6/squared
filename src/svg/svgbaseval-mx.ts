@@ -1,4 +1,4 @@
-import { SvgPoint } from '../../@types/svg/object';
+import type { SvgPoint } from '../../@types/svg/object';
 
 import SvgBuild from './svgbuild';
 

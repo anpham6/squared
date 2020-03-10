@@ -1,5 +1,5 @@
-import { FileActionOptions, FileAsset } from '../../@types/base/application';
-import { FileOutputOptions, ResourceStoredMapAndroid } from '../../@types/android/application';
+import type { FileActionOptions, FileAsset } from '../../@types/base/application';
+import type { FileOutputOptions, ResourceStoredMapAndroid } from '../../@types/android/application';
 
 import Resource from './resource';
 

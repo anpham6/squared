@@ -1,4 +1,4 @@
-import { RawAsset } from '../../../@types/base/application';
+import type { RawAsset } from '../../../@types/base/application';
 
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';

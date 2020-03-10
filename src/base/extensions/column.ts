@@ -1,4 +1,4 @@
-import { ColumnData } from '../../../@types/base/extension';
+import type { ColumnData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
 

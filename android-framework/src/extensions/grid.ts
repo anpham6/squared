@@ -1,4 +1,4 @@
-import { GridCellData } from '../../../@types/base/extension';
+import type { GridCellData } from '../../../@types/base/extension';
 
 import Resource from '../resource';
 

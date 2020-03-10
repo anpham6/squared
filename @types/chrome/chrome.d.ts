@@ -1,4 +1,4 @@
-import { ChromeAsset, UserSettingsChrome } from './application';
+import type { ChromeAsset, UserSettingsChrome } from './application';
 
 type View = chrome.base.View;
 
