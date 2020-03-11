@@ -585,7 +585,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const flexibleWidth = !renderParent.inlineWidth;
             const flexibleHeight = !renderParent.inlineHeight;
             const maxDimension = this.support.maxDimension;
-            const matchParent = renderParent.layoutConstraint && !renderParent.flexibleWidth && (!renderParent.inlineWidth || this.renderChildren.length) && !this.onlyChild && (!this.textElement && !this.inputElement && !this.controlElement && this.alignParent('left') && this.alignParent('right') || this.alignSibling('leftRight') !== '' || this.alignSibling('rightLeft') !== '') ? '0px' : 'match_parent';
+            const matchParent = renderParent.layoutConstraint && !renderParent.flexibleWidth && (!renderParent.inlineWidth || this.renderChildren.length) && !this.onlyChild && (!this.textElement && !this.inputElement && !this.controlElement && this.alignParent('left') && this.alignParent('right') || this.alignSibling('leftRight') || this.alignSibling('rightLeft')) ? '0px' : 'match_parent';
             let { layoutWidth, layoutHeight } = this;
             if (layoutWidth === '') {
                 if (this.hasPX('width') && (!this.inlineStatic || this.cssInitial('width') === '')) {
@@ -763,7 +763,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else if (
                             this.inlineStatic && !this.blockDimension && this.naturalElement && this.some(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (
                                 renderParent.layoutVertical ||
-                                this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === ''
+                                !this.alignSibling('leftRight') && !this.alignSibling('rightLeft')
                             ))
                         {
                             checkParentWidth(false);
@@ -1966,7 +1966,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         return;
                     }
                     else if (renderParent.layoutRelative) {
-                        if (alignment === 'center_horizontal' && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
+                        if (alignment === 'center_horizontal' && !this.alignSibling('leftRight') && !this.alignSibling('rightLeft')) {
                             this.anchorDelete('left', 'right');
                             this.anchor('centerHorizontal', 'true');
                             return;
@@ -1976,25 +1976,31 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (!renderParent.layoutHorizontal && !this.positioned) {
                             switch (alignment) {
                                 case 'top':
-                                    this.anchor('top', 'parent', false);
+                                    this.anchorStyle('vertical', 0);
                                     break;
                                 case 'right':
                                 case 'end':
-                                    if (this.alignSibling('rightLeft') === '') {
+                                    if (!this.alignSibling('rightLeft')) {
                                         this.anchor('right', 'parent', false);
+                                        if (this.alignParent('left') || this.alignSibling('left')) {
+                                            this.anchorStyle('horizontal', 1);
+                                        }
                                     }
                                     break;
                                 case 'bottom':
-                                    this.anchor('bottom', 'parent', false);
+                                    this.anchorStyle('vertical', 1);
                                     break;
                                 case 'left':
                                 case 'start':
-                                    if (this.alignSibling('leftRight') === '') {
+                                    if (!this.alignSibling('leftRight')) {
                                         this.anchor('left', 'parent', false);
+                                        if (this.alignParent('right') || this.alignSibling('right')) {
+                                            this.anchorStyle('horizontal', 0);
+                                        }
                                     }
                                     break;
                                 case 'center_horizontal':
-                                    if (this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '') {
+                                    if (!this.alignSibling('leftRight') && !this.alignSibling('rightLeft')) {
                                         this.anchorParent('horizontal', 0.5);
                                     }
                                     break;

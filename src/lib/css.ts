@@ -739,7 +739,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
             else {
                 const widthA = a.width;
                 const widthB = b.width;
-                if (widthA > 0 && widthB > 0 && widthA !== widthB) {
+                if (widthA !== widthB && widthA > 0 && widthB > 0) {
                     return widthA < widthB ? -1 : 1;
                 }
             }
@@ -762,7 +762,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                 if (unit) {
                     const calcMatch = CSS.CALC.exec(unit);
                     if (calcMatch) {
-                        width = calculate(calcMatch[1]) || 0;
+                        width = calculate(calcMatch[1]) ?? 0;
                     }
                     else {
                         width = parseUnit(unit);
@@ -999,7 +999,7 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
             case undefined:
             case 'em':
             case 'ch':
-                result *= fontSize !== undefined && !isNaN(fontSize) ? fontSize : (getFontSize(document.body) || 16);
+                result *= fontSize ?? (getFontSize(document.body) || 16);
                 break;
             case 'rem':
                 result *= getFontSize(document.body) || 16;
@@ -1040,7 +1040,7 @@ export function parseAngle(value: string) {
 }
 
 export function formatPX(value: number) {
-    return (Math.round(value) || 0) + 'px';
+    return Math.round(value) + 'px';
 }
 
 export function formatPercent(value: string | number, round = true) {

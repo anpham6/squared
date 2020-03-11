@@ -286,10 +286,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 const result = this.#strokeWidth;
                 if (result !== '') {
                     const parent = this.parent;
-                    if (parent?.requireRefit) {
-                        return truncate(parent.refitSize(parseFloat(result)));
-                    }
-                    return result;
+                    return parent?.requireRefit ? truncate(parent.refitSize(parseFloat(result))) : result;
                 }
             }
             return '';

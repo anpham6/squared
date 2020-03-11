@@ -679,7 +679,8 @@ declare namespace base {
                 FLOAT_WRAP = 4,
                 FLOAT_CLEAR = 5,
                 FLOAT_BLOCK = 6,
-                FLOAT_INTERSECT = 7
+                FLOAT_INTERSECT = 7,
+                PERCENT_WRAP = 8
             }
             const enum CSS_UNIT {
                 LENGTH = 2,

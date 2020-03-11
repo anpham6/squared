@@ -2014,7 +2014,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (vertical) {
                 verticalAligned.push(node);
             }
-            if (node.alignParent('top') || node.alignSibling('top') !== '') {
+            if (node.alignParent('top') || node.alignSibling('top')) {
                 let current = node;
                 do {
                     const bottomTop = current.alignSibling('bottomTop');
@@ -2695,7 +2695,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     requireBottom = true;
                 }
                 for (const sibling of items) {
-                    if (previousBaseline && sibling.alignSibling('baseline') === '') {
+                    if (previousBaseline && !sibling.alignSibling('baseline')) {
                         sibling.anchor('topBottom', previousBaseline.documentId);
                     }
                     if (requireBottom && sibling.linear.bottom >= baseline.linear.bottom) {

@@ -10,7 +10,10 @@ type SvgGroup = squared.svg.SvgGroup;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
+const { STRING } = squared.lib.regex;
 const { cloneObject, iterateArray } = squared.lib.util;
+
+const REGEX_LENGTHPERCENTAGE = new RegExp(STRING.LENGTH_PERCENTAGE);
 
 function getNearestViewBox(instance: Undef<SvgContainer>) {
     while (instance) {
@@ -38,6 +41,8 @@ function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): Undef<SVGP
     }
     return undefined;
 }
+
+const isLength = (value: string) => REGEX_LENGTHPERCENTAGE.test(value);
 
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
     public aspectRatio: SvgAspectRatio = {
@@ -347,12 +352,17 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                         aspectRatio.unit = Math.min(ratioA, ratioB);
                     }
                     if (element) {
-                        const ratioW = parseFloat(getAttribute(element, 'width')) / width;
-                        const ratioH = parseFloat(getAttribute(element, 'height')) / height;
-                        if (!isNaN(ratioW) && !isNaN(ratioH)) {
+                        const hasWidth = isLength(getAttribute(element, 'width'));
+                        const hasHeight = isLength(getAttribute(element, 'height'));
+                        if (hasWidth || hasHeight) {
                             const { align, meetOrSlice } = element.preserveAspectRatio.baseVal;
+                            const ratioW = element.width.baseVal.value / width;
+                            const ratioH = element.height.baseVal.value / height;
+                            const resizeUnit = hasWidth && hasHeight;
                             if (ratioW === ratioH) {
-                                aspectRatio.unit *= ratioW;
+                                if (resizeUnit) {
+                                    aspectRatio.unit *= ratioW;
+                                }
                                 aspectRatio.align = SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMINYMIN;
                                 if (width > height) {
                                     aspectRatio.alignX = true;
@@ -365,41 +375,49 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                                 switch (meetOrSlice) {
                                     case SVGPreserveAspectRatio.SVG_MEETORSLICE_MEET:
                                         if (ratioH < ratioW) {
-                                            if (height >= width && height >= parentHeight) {
-                                                aspectRatio.unit = ratioH;
-                                            }
-                                            else {
-                                                aspectRatio.unit *= ratioH;
+                                            if (resizeUnit) {
+                                                if (height >= width && height >= parentHeight) {
+                                                    aspectRatio.unit = ratioH;
+                                                }
+                                                else {
+                                                    aspectRatio.unit *= ratioH;
+                                                }
                                             }
                                             aspectRatio.alignX = true;
                                         }
                                         else {
-                                            if (width >= height && width >= parentWidth) {
-                                                aspectRatio.unit = ratioW;
-                                            }
-                                            else {
-                                                aspectRatio.unit *= ratioW;
+                                            if (resizeUnit) {
+                                                if (width >= height && width >= parentWidth) {
+                                                    aspectRatio.unit = ratioW;
+                                                }
+                                                else {
+                                                    aspectRatio.unit *= ratioW;
+                                                }
                                             }
                                             aspectRatio.alignY = true;
                                         }
                                         break;
                                     case SVGPreserveAspectRatio.SVG_MEETORSLICE_SLICE:
                                         if (ratioH > ratioW) {
-                                            if (height >= width && height >= parentHeight) {
-                                                aspectRatio.unit = ratioH;
-                                            }
-                                            else {
-                                                aspectRatio.unit *= ratioH;
+                                            if (resizeUnit) {
+                                                if (height >= width && height >= parentHeight) {
+                                                    aspectRatio.unit = ratioH;
+                                                }
+                                                else {
+                                                    aspectRatio.unit *= ratioH;
+                                                }
                                             }
                                             aspectRatio.alignX = true;
                                             aspectRatio.alignY = height > parentHeight;
                                         }
                                         else {
-                                            if (width >= height && width >= parentWidth) {
-                                                aspectRatio.unit = ratioW;
-                                            }
-                                            else {
-                                                aspectRatio.unit *= ratioW;
+                                            if (resizeUnit) {
+                                                if (width >= height && width >= parentWidth) {
+                                                    aspectRatio.unit = ratioW;
+                                                }
+                                                else {
+                                                    aspectRatio.unit *= ratioW;
+                                                }
                                             }
                                             aspectRatio.alignX = width > parentWidth;
                                             aspectRatio.alignY = true;
@@ -410,12 +428,6 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                             }
                             aspectRatio.meetOrSlice = meetOrSlice;
                             recenter = false;
-                        }
-                        else if (!isNaN(ratioW)) {
-                            aspectRatio.unit *= ratioW;
-                        }
-                        else if (!isNaN(ratioH)) {
-                            aspectRatio.unit *= ratioH;
                         }
                     }
                     if (recenter) {

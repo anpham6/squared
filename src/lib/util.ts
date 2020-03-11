@@ -317,24 +317,22 @@ export function resolvePath(value: string, href?: string) {
         if (value.charAt(0) === '/') {
             value = origin + value;
         }
-        else {
-            if (value.startsWith('../')) {
-                const segments: string[] = [];
-                let levels = 0;
-                for (const dir of value.split('/')) {
-                    if (dir === '..') {
-                        levels++;
-                    }
-                    else {
-                        segments.push(dir);
-                    }
+        else if (value.startsWith('../')) {
+            const segments: string[] = [];
+            let levels = 0;
+            for (const dir of value.split('/')) {
+                if (dir === '..') {
+                    levels++;
                 }
-                pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
-                value = origin + pathname.join('/');
+                else {
+                    segments.push(dir);
+                }
             }
-            else {
-                value = origin + pathname.join('/') + '/' + value;
-            }
+            pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
+            value = origin + pathname.join('/');
+        }
+        else {
+            value = origin + pathname.join('/') + '/' + value;
         }
     }
     return value;
@@ -597,6 +595,7 @@ export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
 }
 
 export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Number.POSITIVE_INFINITY) {
+    start = Math.max(start, 0);
     const length = Math.min(list.length, end);
     for (let i = start; i < length; i++) {
         const item = list[i];
@@ -609,6 +608,7 @@ export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate
 }
 
 export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Number.POSITIVE_INFINITY) {
+    start = Math.max(start, 0);
     const length = Math.min(list.length, end);
     for (let i = length - 1; i >= start; i--) {
         const item = list[i];

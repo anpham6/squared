@@ -4,7 +4,6 @@ export default class View extends squared.base.Node implements chrome.base.View 
     public queryMap?: View[][];
 
     protected _cached: CachedValue<View> = {};
-    protected _documentParent?: View;
 
     constructor(
         id: number,

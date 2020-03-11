@@ -1496,7 +1496,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     if (itemPath?.value) {
                         const [path, groupArray] = this._createPath(item, itemPath);
                         const pathArray: PathData[] = [];
-                        if (itemPath.strokeWidth && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
+                        if (parseFloat(itemPath.strokeWidth) > 0 && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                             const animateData = this._animateData.get(item.name);
                             if (animateData === undefined || animateData.animate.every(animate => /^stroke-dash/.test(animate.attributeName))) {
                                 const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData?.animate, floatPrecisionValue);
