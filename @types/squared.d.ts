@@ -814,6 +814,12 @@ declare namespace lib {
             imageSize?: string;
             screenDimension?: Dimension;
         }
+        interface CalculateVarOptions {
+            attr?: string;
+            boundingSize?: number;
+            parent?: boolean;
+            fontSize?: number;
+        }
 
         const BOX_POSITION: string[];
         const BOX_MARGIN: string[];
@@ -833,7 +839,7 @@ declare namespace lib {
         function isParentStyle(element: Element, attr: string, ...styles: string[]): boolean;
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
         function parseVar(element: HTMLElement | SVGElement, value: string): Undef<string>;
-        function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number): Undef<number>;
+        function calculateVar(element: HTMLElement | SVGElement, value: string, options?: CalculateVarOptions): number;
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;

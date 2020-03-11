@@ -203,17 +203,20 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             for (const percent in keyframes) {
                                 const key = parseFloat(percent) / 100;
                                 const data = keyframes[percent];
-                                for (const name in data) {
-                                    let value: Undef<string | number> = data[name];
+                                for (const attr in data) {
+                                    let value: Undef<string | number> = data[attr];
                                     if (value) {
                                         if (isCalc(value)) {
-                                            value = calculateVar(element, value, name);
+                                            value = calculateVar(element, value, { attr });
+                                            if (isNaN(value)) {
+                                                continue;
+                                            }
                                         }
                                         else if (isCustomProperty(value)) {
                                             value = parseVar(element, value);
                                         }
                                         if (value !== undefined) {
-                                            safeNestedArray(ANIMATION_DEFAULT[name] ? keyframeMap : attrMap, name).push({ key, value: value.toString() });
+                                            safeNestedArray(ANIMATION_DEFAULT[attr] ? keyframeMap : attrMap, attr).push({ key, value: value.toString() });
                                         }
                                     }
                                 }

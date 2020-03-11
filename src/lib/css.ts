@@ -6,6 +6,7 @@ import { convertAlpha, convertFloat, convertRoman, isString, iterateArray, repla
 
 type KeyframesData = squared.lib.css.KeyframesData;
 type BackgroundPositionOptions = squared.lib.css.BackgroundPositionOptions;
+type CalculateVarOptions = squared.lib.css.CalculateVarOptions;
 
 const { LENGTH, PERCENT } = UNIT;
 
@@ -199,7 +200,8 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
             return style[attr];
         }
         else if (isCalc(value)) {
-            value = calculateVar(element, value, attr)?.toString() as string;
+            const result = calculateVar(element, value, { attr });
+            value = !isNaN(result) ? result.toString() : '';
         }
         else {
             value = parseVar(element, value) as string;
@@ -429,22 +431,44 @@ export function parseVar(element: HTMLElement | SVGElement, value: string) {
     return value;
 }
 
-export function calculateVar(element: HTMLElement | SVGElement, value: string, attr?: string, dimension?: number) {
+export function calculateVar(element: HTMLElement | SVGElement, value: string, options?: CalculateVarOptions) {
     const result = parseVar(element, value);
     if (result) {
-        if (attr && !dimension) {
-            const rect = (element instanceof SVGElement ? element : (element.parentElement || element)).getBoundingClientRect();
-            attr = attr.toLowerCase();
-            if (/^(margin|padding|border)/.test(attr)) {
-                dimension = rect.width;
-            }
-            else {
-                dimension = /(top|bottom|height|vertical)/.test(attr) || attr.length <= 2 && attr.includes('y') ? rect.height : rect.width;
+        let attr: Undef<string>;
+        let boundingSize: Undef<number>;
+        let fontSize: Undef<number>;
+        if (options) {
+            ({ attr, boundingSize, fontSize } = options);
+            if (boundingSize === undefined && attr) {
+                attr = attr.toLowerCase();
+                let boundingElement: HTMLElement | SVGElement | null = element.parentElement;
+                if (boundingElement instanceof HTMLElement) {
+                    if (options.parent === false) {
+                        boundingElement = element;
+                    }
+                }
+                else if (element instanceof SVGElement) {
+                    if (options.parent !== true) {
+                        boundingElement = element;
+                    }
+                }
+                else {
+                    boundingElement = null;
+                }
+                if (boundingElement) {
+                    const rect = boundingElement.getBoundingClientRect();
+                    if (/^(margin|padding|border)/.test(attr)) {
+                        boundingSize = rect.width;
+                    }
+                    else {
+                        boundingSize = /(top|bottom|height|vertical)/.test(attr) || attr.length <= 2 && attr.endsWith('y') || attr.endsWith('Y') ? rect.height : rect.width;
+                    }
+                }
             }
         }
-        return calculate(result, dimension, getFontSize(element));
+        return calculate(result, boundingSize, fontSize || getFontSize(element));
     }
-    return undefined;
+    return NaN;
 }
 
 export function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
@@ -761,12 +785,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                 const unit = match[4];
                 if (unit) {
                     const calcMatch = CSS.CALC.exec(unit);
-                    if (calcMatch) {
-                        width = calculate(calcMatch[1]) ?? 0;
-                    }
-                    else {
-                        width = parseUnit(unit);
-                    }
+                    width = calcMatch ? calculate(calcMatch[1]) : parseUnit(unit);
                 }
                 if (width > 0) {
                     break;
@@ -873,7 +892,7 @@ export function convertPX(value: string, fontSize?: number) {
     return value ? parseUnit(value, fontSize) + 'px' : '0px';
 }
 
-export function calculate(value: string, dimension = 0, fontSize?: number) {
+export function calculate(value: string, boundingSize = 0, fontSize?: number) {
     value = value.trim();
     if (value.charAt(0) !== '(' || value.charAt(value.length - 1) !== ')') {
         value = `(${value})`;
@@ -931,20 +950,20 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                                     seg.push(parseUnit(partial, fontSize));
                                 }
                                 else if (isPercent(partial)) {
-                                    seg.push(parseFloat(partial) / 100 * dimension);
+                                    seg.push(parseFloat(partial) / 100 * boundingSize);
                                 }
                                 else if (isAngle(partial)) {
                                     seg.push(parseAngle(partial));
                                 }
                                 else {
-                                    return undefined;
+                                    return NaN;
                                 }
                                 break;
                             }
                         }
                     }
                     if (seg.length !== evaluate.length + 1) {
-                        return undefined;
+                        return NaN;
                     }
                     for (let k = 0; k < evaluate.length; k++) {
                         if (evaluate[k] === '/') {
@@ -953,7 +972,7 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                                 evaluate.splice(k--, 1);
                             }
                             else {
-                                return undefined;
+                                return NaN;
                             }
                         }
                     }
@@ -980,13 +999,13 @@ export function calculate(value: string, dimension = 0, fontSize?: number) {
                         }
                     }
                     else {
-                        return undefined;
+                        return NaN;
                     }
                 }
             }
         }
     }
-    return undefined;
+    return NaN;
 }
 
 export function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension) {

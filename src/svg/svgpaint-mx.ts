@@ -173,8 +173,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             let value = this.getAttribute(attr, computed, inherited);
             if (isString(value)) {
                 if (isCustomProperty(value)) {
-                    const result = calculateVar(this.element, value, attr);
-                    if (result !== undefined) {
+                    const result = calculateVar(this.element, value, { attr });
+                    if (!isNaN(result)) {
                         value = result.toString();
                     }
                 }

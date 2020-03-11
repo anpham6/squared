@@ -1,9 +1,9 @@
 import type { SvgBuildOptions, SvgSynchronizeOptions } from '../../@types/svg/object';
 
-import SvgAnimation from './svganimation';
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
+import SvgAnimation from './svganimation';
 import SvgPath from './svgpath';
 import SvgShape from './svgshape';
 
