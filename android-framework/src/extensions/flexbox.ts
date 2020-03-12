@@ -19,7 +19,7 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 const NodeUI = $base.NodeUI;
 const FLEXBOX = $base_lib.constant.EXT_NAME.FLEXBOX;
 
-type WH = "width" | "height";
+type WH = DimensionAttr;
 
 type FlexBasis = {
     item: View;
@@ -54,7 +54,7 @@ const MAP_vertical = {
     RLBT: 'bottomTop'
 };
 
-function adjustGrowRatio(parent: View, items: View[], attr: "width" | "height") {
+function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
     const horizontal = attr === 'width';
     const hasDimension = `has${capitalize(attr)}`;
     const setPercentage = (item: View) => item.flexbox.basis = (item.bounds[attr] / parent.box[attr] * 100) + '%';

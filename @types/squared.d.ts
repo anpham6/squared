@@ -468,7 +468,7 @@ declare namespace base {
         toElementFloat(attr: string, fallback?: number): number;
         toElementBoolean(attr: string, fallback?: boolean): boolean;
         toElementString(attr: string, fallback?: string): string;
-        parseUnit(value: string, dimension?: "width" | "height", parent?: boolean, screenDimension?: Dimension): number;
+        parseUnit(value: string, dimension?: DimensionAttr, parent?: boolean, screenDimension?: Dimension): number;
         has(attr: string, options?: HasOptions): boolean;
         hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
         hasFlex(direction: "row" | "column"): boolean;
@@ -816,9 +816,16 @@ declare namespace lib {
         }
         interface CalculateVarOptions {
             attr?: string;
-            boundingSize?: number;
+            boundingSize?: number[] | number;
+            dimension?: DimensionAttr[] | DimensionAttr;
             parent?: boolean;
             fontSize?: number;
+            unit?: string;
+            roundValue?: boolean;
+            precision?: number;
+            separator?: string;
+            checkUnit?: boolean;
+            checkPercent?: boolean;
         }
 
         const BOX_POSITION: string[];
@@ -840,16 +847,19 @@ declare namespace lib {
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
         function parseVar(element: HTMLElement | SVGElement, value: string): Undef<string>;
         function calculateVar(element: HTMLElement | SVGElement, value: string, options?: CalculateVarOptions): number;
+        function calculateVarAsString(element: HTMLElement | SVGElement, value: string, options?: CalculateVarOptions): string;
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function resolveURL(value: string): string;
         function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
         function convertAngle(value: string, unit?: string): number;
+        function convertTime(value: string, unit?: string): number;
         function convertPX(value: string, fontSize?: number): string;
         function calculate(value: string, dimension?: number, fontSize?: number): number;
         function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension): number;
         function parseAngle(value: string): number;
+        function parseTime(value: string): number;
         function formatPX(value: number): string;
         function formatPercent(value: string | number, round?: boolean): string;
         function isLength(value: string, percent?: boolean): boolean;
@@ -913,6 +923,7 @@ declare namespace lib {
             CSS_SELECTOR_PSEUDO_CLASS: string;
             CSS_SELECTOR_ATTR: string;
             CSS_ANGLE: string;
+            CSS_TIME: string;
             CSS_CALC: string;
         };
         const UNIT: {
@@ -1004,6 +1015,7 @@ declare namespace lib {
         function buildAlphaString(length: number): string;
         function formatString(value: string, ...params: string[]): string;
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
+        function splitEnclosing(value: string, prefix?: string, separator?: string, opening?: string, closing?: string): string[];
         function hasBit(value: number, offset: number): boolean;
         function isNumber(value: any): boolean;
         function isString(value: any): value is string;

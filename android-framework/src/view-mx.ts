@@ -404,7 +404,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return percentWidth;
         }
 
-        public static setFlexDimension<T extends View>(node: T, dimension: "width" | "height") {
+        public static setFlexDimension<T extends View>(node: T, dimension: DimensionAttr) {
             const { grow, basis, shrink } = node.flexbox;
             const horizontal = dimension === 'width';
             const setFlexGrow = (value: number) => {
@@ -466,7 +466,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public static availablePercent(nodes: T[], dimension: "width" | "height", boxSize: number) {
+        public static availablePercent(nodes: T[], dimension: DimensionAttr, boxSize: number) {
             const horizontal = dimension === 'width';
             let percent = 1;
             let i = 0;
@@ -1786,7 +1786,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public anchorChain(direction: BoxPosition) {
+        public anchorChain(direction: PositionAttr) {
             const result: T[] = [];
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;

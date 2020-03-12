@@ -12,6 +12,7 @@ export const STRING = {
     CSS_SELECTOR_PSEUDO_CLASS: ':[\\w\\-]+(?:\\(\\s*([^()]+)\\s*\\)|\\(\\s*([\\w\\-]+\\(.+?\\))\\s*\\))?',
     CSS_SELECTOR_ATTR: '\\[([\\w\\-]+)(?:([~^$*|])?=(?:"([^"]+)"|\'([^\']+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
+    CSS_TIME: `(${DECIMAL})(ms|s)`,
     CSS_CALC: 'calc(\\(.+\\))'
 };
 
@@ -28,7 +29,8 @@ export const UNIT = {
 export const CSS = {
     PX: /px$/,
     ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
-    CALC: new RegExp(`^${STRING.CSS_CALC}$`),
+    TIME: new RegExp(`^${STRING.CSS_TIME}$`),
+    CALC: new RegExp(STRING.CSS_CALC),
     VAR: /var\((--[A-Za-z\d-]+)(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/,
     URL: /^url\("?(.+?)"?\)$/,
     CUSTOM_PROPERTY: /^\s*(?:var|calc)\(.+\)$/,

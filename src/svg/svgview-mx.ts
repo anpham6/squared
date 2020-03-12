@@ -13,7 +13,7 @@ type SvgElement = squared.svg.SvgElement;
 
 const $lib = squared.lib;
 
-const { calculateVar, isAngle, isCalc, isCustomProperty, getFontSize, getKeyframeRules, parseAngle, parseVar } = $lib.css;
+const { calculateVarAsString, isAngle, isCalc, isCustomProperty, getFontSize, getKeyframeRules, parseAngle, parseVar } = $lib.css;
 const { isWinEdge } = $lib.client;
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;
@@ -204,20 +204,21 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 const key = parseFloat(percent) / 100;
                                 const data = keyframes[percent];
                                 for (const attr in data) {
-                                    let value: Undef<string | number> = data[attr];
+                                    let value: Undef<string> = data[attr];
                                     if (value) {
                                         if (isCalc(value)) {
-                                            value = calculateVar(element, value, { attr });
-                                            if (isNaN(value)) {
+                                            value = calculateVarAsString(element, value, { attr });
+                                            if (value === '') {
                                                 continue;
                                             }
                                         }
                                         else if (isCustomProperty(value)) {
                                             value = parseVar(element, value);
+                                            if (value === undefined) {
+                                                continue;
+                                            }
                                         }
-                                        if (value !== undefined) {
-                                            safeNestedArray(ANIMATION_DEFAULT[attr] ? keyframeMap : attrMap, attr).push({ key, value: value.toString() });
-                                        }
+                                        safeNestedArray(ANIMATION_DEFAULT[attr] ? keyframeMap : attrMap, attr).push({ key, value });
                                     }
                                 }
                             }

@@ -515,7 +515,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this.rendered = true;
     }
 
-    public parseUnit(value: string, dimension: "width" | "height" = 'width', parent = true, screenDimension?: Dimension) {
+    public parseUnit(value: string, dimension: DimensionAttr = 'width', parent = true, screenDimension?: Dimension) {
         return super.parseUnit(value, dimension, parent, screenDimension || this.localSettings.screenDimension);
     }
 

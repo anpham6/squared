@@ -103,7 +103,7 @@ declare namespace base {
         formatted(value: string, overwrite?: boolean): void;
         mergeGravity(attr: string, alignment: string, overwrite?: boolean): void;
         anchor(position: string, documentId?: string, overwrite?: boolean): boolean;
-        anchorChain(direction: BoxPosition): View[];
+        anchorChain(direction: PositionAttr): View[];
         anchorParent(orientation: string, bias?: number, style?: string, overwrite?: boolean): boolean;
         anchorStyle(orientation: string, bias: number, style?: string, overwrite?: boolean): void;
         anchorDelete(...position: string[]): void;
@@ -117,7 +117,7 @@ declare namespace base {
 
     class View implements View {
         public static getControlName(containerType: number, api?: number): string;
-        public static availablePercent(nodes: View[], dimension: "width" | "height", boxSize: number): number;
+        public static availablePercent(nodes: View[], dimension: DimensionAttr, boxSize: number): number;
     }
 
     class ViewGroup<T extends View> extends View {}

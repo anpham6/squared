@@ -1066,7 +1066,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return (this._element?.[attr] || fallback).toString();
     }
 
-    public parseUnit(value: string, dimension: "width" | "height" = 'width', parent = true, screenDimension?: Dimension) {
+    public parseUnit(value: string, dimension: DimensionAttr = 'width', parent = true, screenDimension?: Dimension) {
         if (value) {
             if (isPercent(value)) {
                 const bounds = parent && this.absoluteParent?.box || this.bounds;
@@ -1399,7 +1399,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    private _setDimension(attr: "width" | "height", attrMin: string, attrMax: string) {
+    private _setDimension(attr: DimensionAttr, attrMin: string, attrMax: string) {
         const styleMap = this._styleMap;
         const valueA = styleMap[attr];
         const baseValue = this.parseUnit(valueA, attr);

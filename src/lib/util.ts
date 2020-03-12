@@ -206,6 +206,101 @@ export function delimitString(options: DelimitStringOptions, ...appending: strin
     return values.join(delimiter);
 }
 
+export function splitEnclosing(value: string, prefix?: string, separator = '', opening = '(', closing = ')') {
+    if (separator.length > 1) {
+        return [];
+    }
+    if (!isString(prefix)) {
+        prefix = opening;
+    }
+    const prefixed = prefix !== opening;
+    const combined = prefixed ? prefix + opening : opening;
+    const result: string[] = [];
+    const appendValues = (segment: string) => {
+        for (let seg of segment.split(separator)) {
+            seg = seg.trim();
+            if (seg !== '') {
+                result.push(seg);
+            }
+        }
+    };
+    let position = 0;
+    let index = -1;
+    const length = value.length;
+    while ((index = value.indexOf(combined, position)) !== -1) {
+        let preceding = '';
+        if (index !== position) {
+            let segment = value.substring(position, index);
+            if (separator) {
+                segment = segment.trim();
+                if (segment !== '') {
+                    appendValues(segment);
+                    if (!prefixed) {
+                        const joined = result[result.length - 1];
+                        if (value.substring(index - joined.length, index + 1) === joined + prefix) {
+                            preceding = joined;
+                            result.length--;
+                        }
+                    }
+                }
+            }
+            else {
+                result.push(segment);
+            }
+        }
+        let i = 1;
+        let j = 0;
+        let k = index + (prefixed ? prefix.length : 0) + 1;
+        let found = false;
+        for ( ; k < length; k++) {
+            switch (value.charAt(k)) {
+                case opening:
+                    i++;
+                    break;
+                case closing:
+                    j++;
+                    break;
+            }
+            if (i === j) {
+                if (separator) {
+                    for ( ; k < length; k++) {
+                        if (value.charAt(k) === separator) {
+                            break;
+                        }
+                    }
+                    position = k + 1;
+                    result.push(preceding + value.substring(index, k).trim());
+                }
+                else {
+                    position = k + 1;
+                    result.push(value.substring(index, position));
+                }
+                if (position === length) {
+                    return result;
+                }
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            return [];
+        }
+    }
+    if (position < length) {
+        const excess = value.substring(position);
+        if (separator) {
+            const segment = excess.trim();
+            if (segment !== '') {
+                appendValues(segment);
+            }
+        }
+        else {
+            result.push(excess);
+        }
+    }
+    return result;
+}
+
 export function hasBit(value: number, offset: number) {
     return (value & offset) === offset;
 }
