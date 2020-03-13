@@ -508,7 +508,6 @@ declare namespace base {
         floatContainer: boolean;
         containerIndex: number;
         localSettings: LocalSettingsUI;
-        fontSize: number;
         renderAs?: NodeUI;
         renderParent?: NodeUI;
         renderExtension?: Extension<NodeUI>[];
@@ -682,10 +681,6 @@ declare namespace base {
                 FLOAT_INTERSECT = 7,
                 PERCENT_WRAP = 8
             }
-            const enum CSS_UNIT {
-                LENGTH = 2,
-                PERCENT = 4
-            }
             const enum BOX_STANDARD {
                 MARGIN_TOP = 2,
                 MARGIN_RIGHT = 4,
@@ -798,8 +793,8 @@ declare namespace lib {
     }
 
     namespace css {
-        type KeyframesData = ObjectMap<StringMap>;
-        
+        interface KeyframesData extends ObjectMap<StringMap> {
+        }
         interface FontFaceData {
             fontFamily: string;
             fontWeight: number;
@@ -814,18 +809,36 @@ declare namespace lib {
             imageSize?: string;
             screenDimension?: Dimension;
         }
-        interface CalculateVarOptions {
+        interface CalculateOptions {
+            boundingSize?: number;
+            unitType?: number;
+            fontSize?: number;
+        }
+        interface CalculateVarAsStringOptions {
             attr?: string;
             boundingSize?: number[] | number;
             dimension?: DimensionAttr[] | DimensionAttr;
             parent?: boolean;
             fontSize?: number;
-            unit?: string;
+            unitType?: number;
             roundValue?: boolean;
             precision?: number;
             separator?: string;
             checkUnit?: boolean;
             checkPercent?: boolean;
+        }
+        interface CalculateVarOptions extends CalculateVarAsStringOptions {
+            boundingSize?: number;
+            dimension?: DimensionAttr;
+        }
+
+        const enum CSS_UNIT {
+            NONE = 0,
+            LENGTH = 2,
+            PERCENT = 4,
+            TIME = 8,
+            ANGLE = 16,
+            DECIMAL = 32
         }
 
         const BOX_POSITION: string[];
@@ -846,8 +859,9 @@ declare namespace lib {
         function isParentStyle(element: Element, attr: string, ...styles: string[]): boolean;
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
         function parseVar(element: HTMLElement | SVGElement, value: string): Undef<string>;
+        function calculate(value: string, options?: CalculateOptions): number;
         function calculateVar(element: HTMLElement | SVGElement, value: string, options?: CalculateVarOptions): number;
-        function calculateVarAsString(element: HTMLElement | SVGElement, value: string, options?: CalculateVarOptions): string;
+        function calculateVarAsString(element: HTMLElement | SVGElement, value: string, options?: CalculateVarAsStringOptions): string;
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
@@ -856,7 +870,6 @@ declare namespace lib {
         function convertAngle(value: string, unit?: string): number;
         function convertTime(value: string, unit?: string): number;
         function convertPX(value: string, fontSize?: number): string;
-        function calculate(value: string, dimension?: number, fontSize?: number): number;
         function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension): number;
         function parseAngle(value: string): number;
         function parseTime(value: string): number;
@@ -929,6 +942,7 @@ declare namespace lib {
         const UNIT: {
             DECIMAL: RegExp;
             LENGTH: RegExp;
+            LENGTH_PERCENTAGE: RegExp; 
             PERCENT: RegExp;
         };
         const FILE: {

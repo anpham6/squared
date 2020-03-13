@@ -39,11 +39,6 @@ export const enum NODE_TRAVERSE {
     PERCENT_WRAP = 8
 }
 
-export const enum CSS_UNIT {
-    LENGTH = 2,
-    PERCENT = 4
-}
-
 export const enum BOX_STANDARD {
     MARGIN_TOP = 2,
     MARGIN_RIGHT = 4,

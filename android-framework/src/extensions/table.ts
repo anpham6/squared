@@ -9,10 +9,10 @@ import LayoutUI = squared.base.LayoutUI;
 const $lib = squared.lib;
 const $base_lib = squared.base.lib;
 
-const { formatPX } = $lib.css;
+const { CSS_UNIT, formatPX } = $lib.css;
 const { convertFloat, convertInt, trimEnd } = $lib.util;
 
-const { CSS_UNIT, NODE_ALIGNMENT } = $base_lib.enumeration;
+const { NODE_ALIGNMENT } = $base_lib.enumeration;
 
 const TABLE = $base_lib.constant.EXT_NAME.TABLE;
 

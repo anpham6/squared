@@ -594,7 +594,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 case 'textStyle':
                     this.cssApply(node.textStyle);
-                    this.fontSize = node.fontSize;
+                    this.setCacheValue('fontSize', node.fontSize);
                     break;
                 case 'boxStyle': {
                     const { backgroundColor, backgroundImage } = node;
@@ -1662,13 +1662,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         return null;
-    }
-
-    set fontSize(value) {
-        this._fontSize = value;
-    }
-    get fontSize() {
-        return super.fontSize;
     }
 
     get extensions() {

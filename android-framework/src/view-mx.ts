@@ -12,14 +12,14 @@ type T = android.base.View;
 const $lib = squared.lib;
 const $base = squared.base;
 
-const { BOX_MARGIN, BOX_PADDING, formatPX, isLength, isPercent } = $lib.css;
+const { BOX_MARGIN, BOX_PADDING, CSS_UNIT, formatPX, isLength, isPercent } = $lib.css;
 const { createElement, getNamedItem, newBoxModel } = $lib.dom;
 const { clamp, truncate } = $lib.math;
 const { actualTextRangeRect } = $lib.session;
 const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
 
 const { EXT_NAME } = $base.lib.constant;
-const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_PROCEDURE } = $base.lib.enumeration;
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = $base.lib.enumeration;
 
 const ResourceUI = squared.base.ResourceUI;
 

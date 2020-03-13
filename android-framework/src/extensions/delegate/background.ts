@@ -8,8 +8,8 @@ import LayoutUI = squared.base.LayoutUI;
 
 const $base = squared.base;
 
-const { isLength } = squared.lib.css;
-const { BOX_STANDARD, CSS_UNIT, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
+const { CSS_UNIT, isLength } = squared.lib.css;
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
 
 const CssGrid = $base.extensions.CssGrid;
 

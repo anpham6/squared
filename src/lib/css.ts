@@ -2,13 +2,13 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { truncate } from './math';
 import { CSS, STRING, UNIT, XML } from './regex';
-import { convertAlpha, convertFloat, convertRoman, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
+import { convertAlpha, convertFloat, convertRoman, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
 
 type KeyframesData = squared.lib.css.KeyframesData;
 type BackgroundPositionOptions = squared.lib.css.BackgroundPositionOptions;
+type CalculateOptions = squared.lib.css.CalculateOptions;
 type CalculateVarOptions = squared.lib.css.CalculateVarOptions;
-
-const { LENGTH, PERCENT } = UNIT;
+type CalculateVarAsStringOptions = squared.lib.css.CalculateVarAsStringOptions;
 
 const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
@@ -31,10 +31,19 @@ function compareRange(operation: string, unit: number, range: number) {
     }
 }
 
-const getInnerWidth = (dimensions: Undef<Dimension>) => dimensions?.width || window.innerWidth;
-const getInnerHeight = (dimensions: Undef<Dimension>) => dimensions?.height || window.innerHeight;
+const getInnerWidth = (dimension: Undef<Dimension>) => dimension?.width || window.innerWidth;
+const getInnerHeight = (dimension: Undef<Dimension>) => dimension?.height || window.innerHeight;
 const convertLength = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize, screenDimension);
 const convertPercent = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize, screenDimension) / dimension;
+
+export const enum CSS_UNIT {
+    NONE = 0,
+    LENGTH = 2,
+    PERCENT = 4,
+    TIME = 8,
+    ANGLE = 16,
+    DECIMAL = 32
+}
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -195,91 +204,162 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
                 return getInheritedStyle(element, attr);
         }
     }
-    else if (isCustomProperty(value)) {
-        if (style) {
-            const result: string = style[attr];
-            if (result) {
-                return result;
-            }
+    else if (isCalc(value)) {
+        const result: string = style?.[attr];
+        if (result) {
+            return result;
         }
-        if (isCalc(value)) {
-            switch (attr) {
-                case 'width':
-                case 'right':
-                case 'left':
-                case 'textIndent':
-                case 'shapeMargin': {
-                    const result = calculateVar(element, value, { dimension: 'width' });
-                    return !isNaN(result) ? formatPX(result) : '';
+        switch (attr) {
+            case 'width':
+            case 'right':
+            case 'left':
+            case 'textIndent':
+            case 'shapeMargin': {
+                const result = calculateVar(element, value, { dimension: 'width' });
+                return !isNaN(result) ? formatPX(result) : '';
+            }
+            case 'height':
+            case 'top':
+            case 'bottom':
+            case 'verticalAlign': {
+                const result = calculateVar(element, value, { dimension: 'height' });
+                return !isNaN(result) ? formatPX(result) : '';
+            }
+            case 'margin':
+            case 'padding':
+            case 'outline':
+            case 'scrollMargin':
+            case 'scrollPadding':
+            case 'borderRadius':
+            case 'borderImageOutset':
+            case 'borderSpacing':
+                return calculateVarAsString(element, value, { dimension: 'width', roundValue: true, unitType: CSS_UNIT.LENGTH });
+            case 'objectPosition':
+                return calculateVarAsString(element, value, { dimension: ['width', 'height'], roundValue: true, unitType: CSS_UNIT.LENGTH });
+            case 'offsetDistance': {
+                if (element instanceof SVGGeometryElement) {
+                    return calculateVarAsString(element, value, { boundingSize: element.getTotalLength(), unitType: CSS_UNIT.LENGTH });
                 }
-                case 'height':
-                case 'top':
-                case 'bottom':
-                case 'verticalAlign': {
-                    const result = calculateVar(element, value, { dimension: 'height' });
-                    return !isNaN(result) ? formatPX(result) : '';
+                break;
+            }
+            case 'transition':
+            case 'transitionDelay':
+            case 'transitionDuration':
+            case 'animationDelay':
+            case 'animationDuration':
+                return calculateVarAsString(element, value, { checkPercent: false, roundValue: true, unitType: CSS_UNIT.TIME, separator: ',' });
+            case 'offsetRotate':
+                return calculateVarAsString(element, value, { checkPercent: false, roundValue: true, unitType: CSS_UNIT.ANGLE });
+            case 'backgroundSize':
+                return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], roundValue: true, unitType: CSS_UNIT.LENGTH, separator: ',' });
+            case 'maskPosition':
+                return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], unitType: CSS_UNIT.LENGTH, separator: ',' });
+            case 'perspectiveOrigin':
+                return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], unitType: CSS_UNIT.LENGTH });
+            case 'boxShadow':
+            case 'textShadow':
+                return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height', 'width'], roundValue: true, unitType: CSS_UNIT.LENGTH, separator: ',' });
+            case 'gridAutoRows':
+            case 'gridTemplateRows':
+            case 'gridAutoColumns':
+            case 'gridTemplateColumns':
+                return calculateVarAsString(element, value, { parent: false, dimension: attr.endsWith('Columns') ? 'width' : 'height', roundValue: true, unitType: CSS_UNIT.LENGTH });
+            case 'flexBasis': {
+                const parentElement = element.parentElement;
+                if (parentElement) {
+                    const { display, flexDirection } = getStyle(parentElement);
+                    if (display.includes('flex')) {
+                        return calculateVarAsString(element, value, { dimension: flexDirection.includes('column') ? 'height' : 'width', roundValue: true, unitType: CSS_UNIT.LENGTH });
+                    }
                 }
-                case 'margin':
-                case 'padding':
-                case 'outline':
-                case 'scrollMargin':
-                case 'scrollPadding':
-                case 'borderRadius':
-                case 'borderImageOutset':
-                case 'borderSpacing':
-                    return calculateVarAsString(element, value, { dimension: 'width', roundValue: true, unit: 'px' });
-                case 'objectPosition':
-                    return calculateVarAsString(element, value, { dimension: ['width', 'height'], roundValue: true, unit: 'px' });
-                case 'transform':
-                case 'offsetRotate':
-                case 'perspectiveOrigin':
-                case 'shapeOutside':
-                case 'offsetDistance':
-                    return calculateVarAsString(element, value, { checkPercent: false });
-                case 'transition':
-                case 'transitionDelay':
-                case 'transitionDuration':
-                case 'animationDelay':
-                case 'animationDuration':
-                    return calculateVarAsString(element, value, { checkPercent: false, roundValue: true, unit: 'ms', separator: ',' });
-                case 'backgroundSize':
-                    return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], roundValue: true, unit: 'px', separator: ',' });
-                case 'backgroundPosition':
-                case 'maskPosition':
-                case 'offsetAnchor':
-                    return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], roundValue: true, unit: 'px', checkUnit: true, separator: ',' });
-                case 'boxShadow':
-                case 'textShadow':
-                    return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height', 'width'], roundValue: true, unit: 'px', separator: ',' });
-                case 'gridAutoColumns':
-                case 'gridTemplateColumns':
-                case 'gridAutoRows':
-                case 'gridTemplateRows':
-                    return calculateVarAsString(element, value, { parent: false, dimension: attr.endsWith('Columns') ? 'width' : 'height', roundValue: true, unit: 'px' });
-                case 'flexBasis': {
-                    const parentElement = element.parentElement;
-                    if (parentElement) {
-                        const { display, flexDirection } = getStyle(parentElement);
-                        if (display.includes('flex')) {
-                            return calculateVarAsString(element, value, { dimension: flexDirection.includes('column') ? 'height' : 'width', roundValue: true, unit: 'px' });
+                break;
+            }
+            case 'perspective': {
+                const result = calculateVar(element, value, { checkPercent: false });
+                return !isNaN(result) ? formatPX(result) : '';
+            }
+            case 'backgroundPosition':
+            case 'offsetAnchor':
+                break;
+            case 'shapeOutside':
+                break;
+            case 'transform': {
+                const transforms = splitEnclosing(value);
+                const length = transforms.length;
+                if (length > 1) {
+                    for (let i = 1; i < length; i++) {
+                        let seg = transforms[i];
+                        seg = seg.substring(1, seg.length - 1);
+                        if (isCalc(seg)) {
+                            let calc: Undef<string>;
+                            switch (transforms[i - 1].trim()) {
+                                case 'matrix':
+                                case 'matrix3d':
+                                case 'scale':
+                                case 'scaleX':
+                                case 'scaleY':
+                                case 'scaleZ':
+                                case 'scale3d':
+                                    calc = calculateVarAsString(element, seg, { checkPercent: false, unitType: CSS_UNIT.DECIMAL });
+                                    break;
+                                case 'translateX':
+                                    calc = calculateVarAsString(element, seg, { parent: true, dimension: 'width', unitType: CSS_UNIT.LENGTH });
+                                    break;
+                                case 'translateY':
+                                    calc = calculateVarAsString(element, seg, { parent: true, dimension: 'height', unitType: CSS_UNIT.LENGTH });
+                                    break;
+                                case 'translateZ':
+                                case 'perspective':
+                                    calc = calculateVarAsString(element, seg, { checkPercent: false, unitType: CSS_UNIT.LENGTH });
+                                    break;
+                                case 'translate':
+                                case 'translate3d':
+                                    calc = calculateVarAsString(element, seg, { parent: true, dimension: ['width', 'height'], unitType: CSS_UNIT.LENGTH });
+                                    break;
+                                case 'rotate':
+                                case 'rotateX':
+                                case 'rotateY':
+                                case 'rotateZ':
+                                case 'rotate3d':
+                                case 'skew':
+                                case 'skewX':
+                                case 'skewY':
+                                    calc = calculateVarAsString(element, seg, { checkPercent: false, unitType: CSS_UNIT.ANGLE });
+                                    break;
+                            }
+                            if (calc) {
+                                transforms[i] = `(${calc})`;
+                            }
+                            else {
+                                return '';
+                            }
                         }
                     }
+                    return transforms.join('');
                 }
-                case 'background':
-                case 'backgroundImage':
-                case 'columns':
-                case 'rows':
-                case 'gridTemplate':
-                case 'offset':
-                    break;
-                default: {
-                    const result = calculateVar(element, value, { attr });
-                    if (!isNaN(result)) {
-                        return (/^(margin|padding)/.test(attr) || /(Width|Height|Start|End|Size|Radius|Spacing|Offset|Gap)$/.test(attr)) && !/^grid/.test(attr) ? formatPX(result) : result.toString();
-                    }
+                break;
+            }
+            case 'background':
+            case 'backgroundImage':
+            case 'gridTemplate':
+            case 'rows':
+            case 'columns':
+            case 'animation':
+            case 'offset':
+                break;
+            default: {
+                const result = calculateVar(element, value, { attr });
+                if (!isNaN(result)) {
+                    return (/^(margin|padding)/.test(attr) || /(Width|Height|Start|End|Size|Radius|Spacing|Offset|Gap)$/.test(attr)) && !/^grid/.test(attr) ? formatPX(result) : result.toString();
                 }
             }
-            return '';
+        }
+        return '';
+    }
+    else if (isCustomProperty(value)) {
+        const result: string = style?.[attr];
+        if (result) {
+            return result;
         }
         return parseVar(element, value) || '';
     }
@@ -480,7 +560,7 @@ export function getInheritedStyle(element: Element, attr: string, exclude?: RegE
         if (value === 'inherit' || exclude?.test(value)) {
             value = '';
         }
-        if (value || current === document.body) {
+        if (value) {
             break;
         }
         current = current.parentElement;
@@ -494,7 +574,7 @@ export function parseVar(element: HTMLElement | SVGElement, value: string) {
     while ((match = CSS.VAR.exec(value)) !== null) {
         let customValue = style.getPropertyValue(match[1]).trim();
         const fallback = match[2];
-        if (fallback && (isLength(fallback, true) && !isLength(customValue, true) || parseColor(fallback) && !parseColor(customValue))) {
+        if (fallback && (isLength(fallback, true) && !isLength(customValue, true) || isNumber(fallback) && !isNumber(customValue) || parseColor(fallback) && !parseColor(customValue))) {
             customValue = fallback;
         }
         if (customValue !== '') {
@@ -507,23 +587,13 @@ export function parseVar(element: HTMLElement | SVGElement, value: string) {
     return value;
 }
 
-export function calculateVarAsString(element: HTMLElement | SVGElement, value: string, options?: CalculateVarOptions) {
-    let separator = '';
-    let unit = '';
-    if (options) {
-        separator = options.separator || '';
-        unit = options.unit || '';
-    }
-    let segments: string[];
-    if (separator !== '') {
-        segments = value.split(separator);
-    }
-    else {
-        segments = [value];
-    }
+export function calculateVarAsString(element: HTMLElement | SVGElement, value: string, options?: CalculateVarAsStringOptions) {
+    const optionsVar = <CalculateVarOptions> Object.assign({}, options);
     let boundingSize: Undef<number[]>;
     let dimension: Undef<DimensionAttr[]>;
-    let checkUnit = false;
+    let separator: Undef<string>;
+    let unitType: Undef<number>;
+    let checkUnit: Undef<boolean>;
     if (options) {
         if (Array.isArray(options.dimension)) {
             dimension = options.dimension;
@@ -531,12 +601,23 @@ export function calculateVarAsString(element: HTMLElement | SVGElement, value: s
         if (Array.isArray(options.boundingSize)) {
             boundingSize = options.boundingSize;
         }
-        if (dimension || boundingSize) {
-            options = { ...options };
-        }
-        checkUnit = options.checkUnit === true;
+        ({ separator, unitType, checkUnit } = options);
+    }
+    let unit = '';
+    switch (unitType) {
+        case CSS_UNIT.LENGTH:
+        case CSS_UNIT.PERCENT:
+            unit = 'px';
+            break;
+        case CSS_UNIT.TIME:
+            unit = 'ms';
+            break;
+        case CSS_UNIT.ANGLE:
+            unit = 'deg';
+            break;
     }
     const result: string[] = [];
+    const segments = separator ? value.split(separator) : [value];
     for (let seg of segments) {
         seg = seg.trim();
         if (seg !== '') {
@@ -548,12 +629,12 @@ export function calculateVarAsString(element: HTMLElement | SVGElement, value: s
                     const output = calc[i];
                     if (isCalc(output)) {
                         if (boundingSize) {
-                            (<CalculateVarOptions> options).boundingSize = boundingSize[j];
+                            optionsVar.boundingSize = boundingSize[j];
                         }
                         else if (dimension) {
-                            (<CalculateVarOptions> options).dimension = dimension[j];
+                            optionsVar.dimension = dimension[j];
                         }
-                        const k = calculateVar(element, output, options);
+                        const k = calculateVar(element, output, optionsVar);
                         if (!isNaN(k)) {
                             partial += k + unit;
                         }
@@ -564,7 +645,7 @@ export function calculateVarAsString(element: HTMLElement | SVGElement, value: s
                     }
                     else {
                         partial += output;
-                        if (!checkUnit && output.trim() !== '' || isLength(output, true) || output === 'auto') {
+                        if (!checkUnit && output.trim() !== '' || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto')) {
                             j++;
                         }
                     }
@@ -576,58 +657,64 @@ export function calculateVarAsString(element: HTMLElement | SVGElement, value: s
             }
         }
     }
-    return result.length === 1 ? result[0] : result.join(separator === ' ' ? ' ' : (separator !== '' ? separator + ' ' : ''));
+    return result.length === 1 ? result[0] : result.join(separator === ' ' ? ' ' : (separator ? separator + ' ' : ''));
 }
 
 export function calculateVar(element: HTMLElement | SVGElement, value: string, options?: CalculateVarOptions) {
-    const replaced = parseVar(element, value);
-    if (replaced) {
-        let boundingSize: Undef<number[] | number>;
+    const output = parseVar(element, value);
+    if (output) {
+        let boundingSize: Undef<number>;
         let fontSize: Undef<number>;
         let precision: Undef<number>;
         let roundValue: Undef<boolean>;
+        let unitType: Undef<number>;
         if (options) {
-            ({ boundingSize, fontSize, precision, roundValue } = options);
-            if (value.includes('%') && boundingSize === undefined && options.checkPercent !== false) {
-                let boundingElement: Null<Element> = element.parentElement;
-                if (boundingElement instanceof HTMLElement) {
-                    if (options.parent === false) {
-                        boundingElement = element;
-                    }
+            ({ boundingSize, unitType, fontSize, precision, roundValue } = options);
+            if (value.includes('%')) {
+                if (options.checkPercent === false) {
+                    return NaN;
                 }
-                else if (element instanceof SVGElement) {
-                    if (options.parent !== true) {
-                        boundingElement = element;
+                if (boundingSize === undefined) {
+                    let boundingElement: Null<Element> = element.parentElement;
+                    if (boundingElement instanceof HTMLElement) {
+                        if (options.parent === false) {
+                            boundingElement = element;
+                        }
                     }
-                }
-                else {
-                    boundingElement = null;
-                }
-                if (boundingElement) {
-                    let dimension = options.dimension;
-                    if (Array.isArray(dimension)) {
-                        dimension = dimension[0];
-                    }
-                    const rect = boundingElement.getBoundingClientRect();
-                    if (dimension) {
-                        boundingSize = rect[dimension];
+                    else if (element instanceof SVGElement) {
+                        if (options.parent !== true) {
+                            boundingElement = element;
+                        }
                     }
                     else {
-                        const attr = options.attr?.toLowerCase();
-                        if (!attr) {
-                            boundingSize = Math.min(rect.width, rect.height);
-                        }
-                        else if (/^(margin|padding|border)/.test(attr)) {
-                            boundingSize = rect.width;
+                        boundingElement = null;
+                    }
+                    if (boundingElement) {
+                        const rect = boundingElement.getBoundingClientRect();
+                        const dimension = options.dimension;
+                        if (dimension) {
+                            boundingSize = rect[dimension];
                         }
                         else {
-                            boundingSize = /(top|bottom|height|vertical)/.test(attr) || attr.length <= 2 && attr.endsWith('y') || attr.endsWith('Y') ? rect.height : rect.width;
+                            const attr = options.attr?.toLowerCase();
+                            if (!isString(attr)) {
+                                boundingSize = Math.min(rect.width, rect.height);
+                            }
+                            else if (/^(margin|padding|border)/.test(attr)) {
+                                boundingSize = rect.width;
+                            }
+                            else if (/(top|bottom|height|vertical)/.test(attr) || attr.length <= 2 && attr.endsWith('y') || attr.endsWith('Y')) {
+                                boundingSize = rect.height;
+                            }
+                            else {
+                                boundingSize = rect.width;
+                            }
                         }
                     }
                 }
             }
         }
-        let result = calculate(replaced, typeof boundingSize === 'number' ? boundingSize : boundingSize?.[0], fontSize || getFontSize(element));
+        let result = calculate(output, { boundingSize, unitType, fontSize: fontSize || getFontSize(element) });
         if (precision !== undefined) {
             result = precision === 0 ? Math.floor(result) : parseFloat(truncate(result, precision));
         }
@@ -954,7 +1041,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                 if (unit) {
                     match = CSS.CALC.exec(unit);
                     if (match) {
-                        width = calculate(match[1], element.parentElement?.getBoundingClientRect().width);
+                        width = calculate(match[1], { boundingSize: element.parentElement?.getBoundingClientRect().width, unitType: CSS_UNIT.LENGTH });
                     }
                     else if (isPercent(unit)) {
                         width = parseFloat(unit) / 100 * (element.parentElement?.getBoundingClientRect().width || 0);
@@ -1078,8 +1165,12 @@ export function convertPX(value: string, fontSize?: number) {
     return value ? parseUnit(value, fontSize) + 'px' : '0px';
 }
 
-export function calculate(value: string, boundingSize = 0, fontSize?: number) {
+export function calculate(value: string, options: CalculateOptions = {}) {
     value = value.trim();
+    if (value === '') {
+        return NaN;
+    }
+    const { boundingSize, unitType, fontSize } = options;
     if (value.charAt(0) !== '(' || value.charAt(value.length - 1) !== ')') {
         value = `(${value})`;
     }
@@ -1128,24 +1219,51 @@ export function calculate(value: string, boundingSize = 0, fontSize?: number) {
                                 evaluate.push(partial);
                                 break;
                             default: {
-                                const match = /{(\d+)}/.exec(partial);
+                                const match = /\s*{(\d+)}\s*/.exec(partial);
                                 if (match) {
                                     seg.push(equated[parseInt(match[1])]);
                                 }
-                                else if (isLength(partial)) {
-                                    seg.push(parseUnit(partial, fontSize));
-                                }
-                                else if (isPercent(partial)) {
-                                    seg.push(parseFloat(partial) / 100 * boundingSize);
-                                }
-                                else if (isAngle(partial)) {
-                                    seg.push(parseAngle(partial));
-                                }
-                                else if (isTime(partial)) {
-                                    seg.push(parseTime(partial));
-                                }
                                 else {
-                                    return NaN;
+                                    switch (unitType) {
+                                        case CSS_UNIT.TIME:
+                                            if (isTime(partial)) {
+                                                seg.push(parseTime(partial));
+                                            }
+                                            else {
+                                                return NaN;
+                                            }
+                                            break;
+                                        case CSS_UNIT.ANGLE:
+                                            if (isAngle(partial)) {
+                                                seg.push(parseAngle(partial));
+                                            }
+                                            else {
+                                                return NaN;
+                                            }
+                                            break;
+                                        case CSS_UNIT.DECIMAL:
+                                            if (isNumber(partial)) {
+                                                seg.push(parseFloat(partial));
+                                            }
+                                            else {
+                                                return NaN;
+                                            }
+                                            break;
+                                        default:
+                                            if (isNumber(partial)) {
+                                                seg.push(parseFloat(partial));
+                                            }
+                                            else if (isLength(partial)) {
+                                                seg.push(parseUnit(partial, fontSize));
+                                            }
+                                            else if (boundingSize !== undefined && isPercent(partial)) {
+                                                seg.push(parseFloat(partial) / 100 * boundingSize);
+                                            }
+                                            else {
+                                                return NaN;
+                                            }
+                                            break;
+                                    }
                                 }
                                 break;
                             }
@@ -1203,8 +1321,8 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
         let result = parseFloat(match[1]);
         switch (match[2]) {
             case 'px':
-                return result;
             case undefined:
+                return result;
             case 'em':
             case 'ch':
                 result *= fontSize ?? (getFontSize(document.body) || 16);
@@ -1267,8 +1385,8 @@ export function formatPercent(value: string | number, round = true) {
     return (round ? Math.round(value) : value) + '%';
 }
 
-export function isLength(value: string, percent = false) {
-    return LENGTH.test(value) || percent && isPercent(value);
+export function isLength(value: string, percent?: boolean) {
+    return !percent ? UNIT.LENGTH.test(value) : UNIT.LENGTH_PERCENTAGE.test(value);
 }
 
 export function isCalc(value: string) {
@@ -1288,5 +1406,5 @@ export function isTime(value: string) {
 }
 
 export function isPercent(value: string) {
-    return PERCENT.test(value);
+    return UNIT.PERCENT.test(value);
 }

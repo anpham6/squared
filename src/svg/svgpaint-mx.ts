@@ -171,19 +171,18 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
 
         public setAttribute(attr: string, computed = false, inherited = true) {
             let value = this.getAttribute(attr, computed, inherited);
+            attr = convertCamelCase(attr);
             if (isString(value)) {
                 if (isCustomProperty(value)) {
                     const result = calculateVar(this.element, value, { attr });
-                    if (!isNaN(result)) {
-                        value = result.toString();
-                    }
+                    value = !isNaN(result) ? result.toString() : getComputedStyle(this.element)[attr];
                 }
                 switch (attr) {
-                    case 'stroke-dasharray':
+                    case 'strokeDasharray':
                         value = value !== 'none' ? joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ', false) : '';
                         break;
-                    case 'stroke-dashoffset':
-                    case 'stroke-width':
+                    case 'strokeDashoffset':
+                    case 'strokeWidth':
                         value = this.convertLength(value).toString();
                         break;
                     case 'fill':
@@ -215,10 +214,10 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         return;
                     }
                 }
-                this[convertCamelCase(attr)] = value;
+                this[attr] = value;
             }
             else if (!this._retainStyle) {
-                this[convertCamelCase(attr)] = '';
+                this[attr] = '';
             }
         }
 

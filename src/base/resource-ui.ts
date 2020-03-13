@@ -89,7 +89,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                     offset = (horizontal ? node.parseWidth(unit, false) : node.parseHeight(unit, false)) / size;
                 }
                 else if (isCalc(unit)) {
-                    offset = calculate(match[6], size, node.fontSize) / size;
+                    offset = calculate(match[6], { boundingSize: size, fontSize: node.fontSize }) / size;
                     if (isNaN(offset)) {
                         offset = -1;
                     }

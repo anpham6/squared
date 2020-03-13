@@ -4,7 +4,9 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { CSS_UNIT, NODE_ALIGNMENT } = squared.base.lib.enumeration;
+const { CSS_UNIT } = squared.lib.css;
+
+const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 function hasPercentWidth(node: View) {
     const value = node.percentWidth;

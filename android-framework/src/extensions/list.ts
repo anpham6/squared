@@ -147,7 +147,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 ordinal.containerName = node.containerName + '_ORDINAL';
                 ordinal.inherit(node, 'textStyle');
                 if (value !== '' && !value.endsWith('.')) {
-                    ordinal.fontSize *= 0.75;
+                    ordinal.setCacheValue('fontSize', ordinal.fontSize * 0.75);
                 }
                 if (gravity === 'right') {
                     if (image) {

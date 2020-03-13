@@ -1,13 +1,13 @@
 import type { AscendOptions, BoxType, CachedValue, InitialData, HasOptions, QueryAttribute, QueryData } from '../../@types/base/node';
 
-import { CSS_UNIT, NODE_ALIGNMENT } from './lib/enumeration';
+import { NODE_ALIGNMENT } from './lib/enumeration';
 
 type T = Node;
 
 const $lib = squared.lib;
 
 const { USER_AGENT, isUserAgent } = $lib.client;
-const { BOX_BORDER, TEXT_STYLE, checkStyleValue, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
+const { BOX_BORDER, CSS_UNIT, TEXT_STYLE, checkStyleValue, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
 const { CHAR, CSS, FILE, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = $lib.session;
@@ -1926,6 +1926,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     const lineHeight = this.css('lineHeight');
                     if (isPercent(lineHeight)) {
                         value = convertFloat(this.style.lineHeight);
+                    }
+                    else if (isNumber(lineHeight)) {
+                        value = parseFloat(lineHeight) * this.fontSize;
                     }
                     else {
                         value = parseUnit(lineHeight, this.fontSize);

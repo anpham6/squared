@@ -306,7 +306,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const node = this.createNode({ parent, element, append: false });
                 if (parent) {
                     node.cssApply(parent.textStyle);
-                    node.fontSize = parent.fontSize;
+                    node.setCacheValue('fontSize', parent.fontSize);
                 }
                 return node;
             }

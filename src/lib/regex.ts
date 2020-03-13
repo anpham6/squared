@@ -23,7 +23,8 @@ export const FILE = {
 export const UNIT = {
     DECIMAL: new RegExp(`^${STRING.DECIMAL}$`),
     LENGTH: new RegExp(`^${STRING.LENGTH}$`),
-    PERCENT: new RegExp(`^${STRING.PERCENT}$`)
+    PERCENT: new RegExp(`^${STRING.PERCENT}$`),
+    LENGTH_PERCENTAGE: new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`)
 };
 
 export const CSS = {
