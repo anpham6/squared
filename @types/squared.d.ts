@@ -810,17 +810,16 @@ declare namespace lib {
             screenDimension?: Dimension;
         }
         interface CalculateOptions {
+            min?: number;
+            max?: number;
             boundingSize?: number;
             unitType?: number;
             fontSize?: number;
         }
-        interface CalculateVarAsStringOptions {
-            attr?: string;
-            boundingSize?: number[] | number;
+        interface CalculateVarAsStringOptions extends CalculateOptions {
             dimension?: DimensionAttr[] | DimensionAttr;
+            orderedSize?: number[];
             parent?: boolean;
-            fontSize?: number;
-            unitType?: number;
             roundValue?: boolean;
             precision?: number;
             separator?: string;
@@ -828,7 +827,6 @@ declare namespace lib {
             checkPercent?: boolean;
         }
         interface CalculateVarOptions extends CalculateVarAsStringOptions {
-            boundingSize?: number;
             dimension?: DimensionAttr;
         }
 
@@ -838,7 +836,8 @@ declare namespace lib {
             PERCENT = 4,
             TIME = 8,
             ANGLE = 16,
-            DECIMAL = 32
+            INTEGER = 32,
+            DECIMAL = 64
         }
 
         const BOX_POSITION: string[];
@@ -858,10 +857,11 @@ declare namespace lib {
         function validMediaRule(value: string, fontSize?: number): boolean;
         function isParentStyle(element: Element, attr: string, ...styles: string[]): boolean;
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
-        function parseVar(element: HTMLElement | SVGElement, value: string): Undef<string>;
         function calculate(value: string, options?: CalculateOptions): number;
+        function parseVar(element: HTMLElement | SVGElement, value: string): string;
         function calculateVar(element: HTMLElement | SVGElement, value: string, options?: CalculateVarOptions): number;
         function calculateVarAsString(element: HTMLElement | SVGElement, value: string, options?: CalculateVarAsStringOptions): string;
+        function calculateStyle(element: HTMLElement | SVGElement, attr: string, value: string): string;
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
@@ -880,6 +880,7 @@ declare namespace lib {
         function isCalc(value: string): boolean;
         function isCustomProperty(value: string): boolean;
         function isAngle(value: string): boolean;
+        function hasCalc(value: string): boolean;
     }
 
     namespace dom {
@@ -1031,7 +1032,7 @@ declare namespace lib {
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
         function splitEnclosing(value: string, prefix?: string, separator?: string, opening?: string, closing?: string): string[];
         function hasBit(value: number, offset: number): boolean;
-        function isNumber(value: any): boolean;
+        function isNumber(value: string): boolean;
         function isString(value: any): value is string;
         function isArray<T>(value: any): value is Array<T>;
         function isObject(value: any): value is {};

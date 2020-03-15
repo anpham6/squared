@@ -31,7 +31,7 @@ export const CSS = {
     PX: /px$/,
     ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
     TIME: new RegExp(`^${STRING.CSS_TIME}$`),
-    CALC: new RegExp(STRING.CSS_CALC),
+    CALC: new RegExp(`^${STRING.CSS_CALC}$`),
     VAR: /var\((--[A-Za-z\d-]+)(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/,
     URL: /^url\("?(.+?)"?\)$/,
     CUSTOM_PROPERTY: /^\s*(?:var|calc)\(.+\)$/,

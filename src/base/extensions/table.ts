@@ -114,11 +114,14 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             hideCell(section);
         }
         inheritStyles(tfoot);
+        const hasWidth = node.hasWidth;
         const borderCollapse = mainData.borderCollapse;
-        const [horizontal, vertical] = borderCollapse ? [0, 0] : replaceMap<string, number>(node.css('borderSpacing').split(' '), (value, index) => node.parseUnit(value, index === 0 ? 'width' : 'height'));
+        const [horizontal, vertical] = borderCollapse ? [0, 0] : replaceMap<string, number>(node.css('borderSpacing').split(' '), (value, index) => index === 0 ? node.parseWidth(value) : node.parseHeight(value));
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const colgroup = (<Element> node.element).querySelector('COLGROUP');
+        const caption = node.find(item => item.tagName === 'CAPTION');
+        const captionBottom = node.css('captionSide') === 'bottom';
         const rowWidth: number[] = [];
         const mapBounds: number[] = [];
         const tableFilled: T[][] = [];
@@ -279,6 +282,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             });
         }
         let percentAll = false;
+        let mapPercent = 0;
         if (mapWidth.every(value => isPercent(value))) {
             if (mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
                 let percentTotal = 100;
@@ -318,7 +322,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 node.css('width', formatPX(node.bounds.width));
             }
         }
-        let mapPercent = 0;
         mainData.layoutType = (() => {
             if (mapWidth.length > 1) {
                 mapPercent = mapWidth.reduce((a, b) => a + (isPercent(b) ? parseFloat(b) : 0), 0);
@@ -356,7 +359,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             }
             return LAYOUT_TABLE.NONE;
         })();
-        const caption = node.find(item => item.tagName === 'CAPTION');
         node.clear();
         if (caption) {
             if (!caption.hasWidth) {
@@ -373,9 +375,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 caption.css('textAlign', 'center');
             }
             caption.data(TABLE, 'cellData', { colSpan: columnCount });
-            caption.parent = node;
+            if (!captionBottom) {
+                caption.parent = node;
+            }
         }
-        const hasWidth = node.hasWidth;
         for (let i = 0; i < rowCount; i++) {
             const tr = tableFilled[i];
             const length = tr.length;
@@ -470,6 +473,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
         }
+        if (caption && captionBottom) {
+            caption.parent = node;
+        }
         if (mainData.borderCollapse) {
             const borderTop = node.cssAsObject('borderTopColor', 'borderTopStyle', 'borderTopWidth');
             const borderRight = node.cssAsObject('borderRightColor', 'borderRightStyle', 'borderRightWidth');
@@ -558,7 +564,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }, true);
             }
         }
-        mainData.rowCount = rowCount;
+        mainData.rowCount = rowCount + (caption ? 1 : 0);
         mainData.columnCount = columnCount;
         node.data(TABLE, 'mainData', mainData);
         return undefined;

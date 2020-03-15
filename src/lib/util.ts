@@ -305,7 +305,7 @@ export function hasBit(value: number, offset: number) {
     return (value & offset) === offset;
 }
 
-export function isNumber(value: any): value is string {
+export function isNumber(value: string) {
     return typeof value === 'string' && UNIT.DECIMAL.test(value.trim());
 }
 

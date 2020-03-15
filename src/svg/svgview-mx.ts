@@ -13,7 +13,7 @@ type SvgElement = squared.svg.SvgElement;
 
 const $lib = squared.lib;
 
-const { calculateVarAsString, isAngle, isCalc, isCustomProperty, getFontSize, getKeyframeRules, parseAngle, parseVar } = $lib.css;
+const { calculateVarAsString, getFontSize, getKeyframeRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = $lib.css;
 const { isWinEdge } = $lib.client;
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;
@@ -206,19 +206,15 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 for (const attr in data) {
                                     let value: Undef<string> = data[attr];
                                     if (value) {
-                                        if (isCalc(value)) {
+                                        if (hasCalc(value)) {
                                             value = calculateVarAsString(element, value, { attr });
-                                            if (value === '') {
-                                                continue;
-                                            }
                                         }
                                         else if (isCustomProperty(value)) {
                                             value = parseVar(element, value);
-                                            if (value === undefined) {
-                                                continue;
-                                            }
                                         }
-                                        safeNestedArray(ANIMATION_DEFAULT[attr] ? keyframeMap : attrMap, attr).push({ key, value });
+                                        if (value) {
+                                            safeNestedArray(ANIMATION_DEFAULT[attr] ? keyframeMap : attrMap, attr).push({ key, value });
+                                        }
                                     }
                                 }
                             }
