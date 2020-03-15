@@ -7,13 +7,13 @@ import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
 import { KEYSPLINE_NAME, STRING_CUBICBEZIER } from './lib/constant';
-import { TRANSFORM, getAttribute } from './lib/util';
+import { TRANSFORM, calculateStyle, getAttribute } from './lib/util';
 
 type SvgElement = squared.svg.SvgElement;
 
 const $lib = squared.lib;
 
-const { calculateVarAsString, getFontSize, getKeyframeRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = $lib.css;
+const { getFontSize, getKeyframeRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = $lib.css;
 const { isWinEdge } = $lib.client;
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;
@@ -124,7 +124,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         if (/^[a-zA-Z]+$/.test(begin)) {
                             return;
                         }
-                        const times = begin ? sortNumber(replaceMap<string, number>(begin.split(';'), value => SvgAnimation.convertClockTime(value))) : [0];
+                        const times = begin ? sortNumber(replaceMap(begin.split(';'), (value: string) => SvgAnimation.convertClockTime(value))) : [0];
                         if (times.length) {
                             switch (item.tagName) {
                                 case 'set':
@@ -205,16 +205,14 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 const data = keyframes[percent];
                                 for (const attr in data) {
                                     let value: Undef<string> = data[attr];
+                                    if (hasCalc(value)) {
+                                        value = calculateStyle(element, attr, value);
+                                    }
+                                    else if (isCustomProperty(value)) {
+                                        value = parseVar(element, value);
+                                    }
                                     if (value) {
-                                        if (hasCalc(value)) {
-                                            value = calculateVarAsString(element, value, { attr });
-                                        }
-                                        else if (isCustomProperty(value)) {
-                                            value = parseVar(element, value);
-                                        }
-                                        if (value) {
-                                            safeNestedArray(ANIMATION_DEFAULT[attr] ? keyframeMap : attrMap, attr).push({ key, value });
-                                        }
+                                        safeNestedArray(ANIMATION_DEFAULT[attr] ? keyframeMap : attrMap, attr).push({ key, value });
                                     }
                                 }
                             }

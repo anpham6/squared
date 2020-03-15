@@ -1,6 +1,6 @@
 import SvgBuild from './svgbuild';
 
-import { getAttribute, getAttributeURL } from './lib/util';
+import { calculateStyle, getAttribute, getAttributeURL } from './lib/util';
 
 type SvgElement = squared.svg.SvgElement;
 type SvgShapePattern = squared.svg.SvgShapePattern;
@@ -10,7 +10,7 @@ type SvgUseSymbol = squared.svg.SvgUseSymbol;
 const $lib = squared.lib;
 
 const { parseColor } = $lib.color;
-const { calculateVar, getFontSize, isCustomProperty, isLength, isPercent, parseUnit } = $lib.css;
+const { getFontSize, isCustomProperty, isLength, isPercent, parseUnit } = $lib.css;
 const { truncate } = $lib.math;
 const { CSS, STRING, XML } = $lib.regex;
 const { convertCamelCase, convertFloat, isNumber, isString, joinMap, objectMap } = $lib.util;
@@ -174,8 +174,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             attr = convertCamelCase(attr);
             if (isString(value)) {
                 if (isCustomProperty(value)) {
-                    const result = calculateVar(this.element, value, { attr });
-                    value = !isNaN(result) ? result.toString() : getComputedStyle(this.element)[attr];
+                    value = calculateStyle(this.element, attr, value) || getComputedStyle(this.element)[attr];
                 }
                 switch (attr) {
                     case 'strokeDasharray':

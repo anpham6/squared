@@ -858,10 +858,10 @@ declare namespace lib {
         function isParentStyle(element: Element, attr: string, ...styles: string[]): boolean;
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
         function calculate(value: string, options?: CalculateOptions): number;
-        function parseVar(element: HTMLElement | SVGElement, value: string): string;
-        function calculateVar(element: HTMLElement | SVGElement, value: string, options?: CalculateVarOptions): number;
-        function calculateVarAsString(element: HTMLElement | SVGElement, value: string, options?: CalculateVarAsStringOptions): string;
-        function calculateStyle(element: HTMLElement | SVGElement, attr: string, value: string): string;
+        function parseVar(element: CSSElement, value: string): string;
+        function calculateVar(element: CSSElement, value: string, options?: CalculateVarOptions): number;
+        function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions): string;
+        function calculateStyle(element: CSSElement, attr: string, value: string): string;
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
@@ -1596,12 +1596,13 @@ declare namespace svg {
                 radialGradient(element: Element): element is SVGRadialGradientElement;
             };
 
+            function calculateStyle(element: SVGElement, attr: string, value: string): string;
             function createPath(value: string): SVGPathElement;
             function getAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getParentAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getAttributeURL(value: string): string;
             function getDOMRect(element: SVGElement): DOMRect;
-            function getTargetElement(element: SVGElement, rootElement?: Null<HTMLElement | SVGElement>): Null<SVGElement>;
+            function getTargetElement(element: SVGElement, rootElement?: Null<CSSElement>): Null<SVGElement>;
             function getNearestViewBox(element: SVGElement): Undef<DOMRect>;
             function getPathLength(value: string): string;
         }

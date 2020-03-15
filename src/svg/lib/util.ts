@@ -2,12 +2,12 @@ import type { SvgMatrix, SvgPoint, SvgTransform } from '../../../@types/svg/obje
 
 const $lib = squared.lib;
 
-const { convertAngle, getFontSize, isLength, isPercent, parseUnit } = $lib.css;
+const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, convertAngle, getFontSize, isLength, isPercent, parseUnit } = $lib.css;
 const { getNamedItem } = $lib.dom;
-const { convertRadian } = $lib.math;
+const { clamp, convertRadian, hypotenuse } = $lib.math;
 const { CSS, STRING } = $lib.regex;
 const { getStyleValue } = $lib.session;
-const { isString } = $lib.util;
+const { convertCamelCase, convertFloat, isString } = $lib.util;
 
 const STRING_DECIMAL = `(${STRING.DECIMAL})`;
 const SHAPES = {
@@ -185,6 +185,7 @@ export const TRANSFORM = {
                 const pattern = REGEX_TRANSFORM[name];
                 let match: Null<RegExpExecArray>;
                 while ((match = pattern.exec(transform)) !== null) {
+                    const index = match.index;
                     const attr = match[1];
                     const isX = /X$/.test(attr);
                     const isY = /Y$/.test(attr);
@@ -201,44 +202,43 @@ export const TRANSFORM = {
                             matrix.c = 0;
                             matrix.d = 1;
                         }
-                        ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
+                        ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
                     }
                     else if (/^skew/.test(attr)) {
-                        const x = isY ? 0 : convertAngle(match[2], match[3]);
-                        const y = isY ? convertAngle(match[2], match[3]) : (match[4] && match[5] ? convertAngle(match[4], match[5]) : 0);
+                        const angle = convertAngle(match[2], match[3]);
+                        const x = isY ? 0 : angle;
+                        const y = isY ? angle : (match[4] && match[5] ? convertAngle(match[4], match[5]) : 0);
                         const matrix = MATRIX.skew(x, y);
                         if (isX) {
-                            ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false);
+                            ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false);
                         }
                         else if (isY) {
-                            ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, matrix, y, false, true);
+                            ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, matrix, y, false, true);
                         }
                         else {
-                            ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, { ...matrix, b: 0 }, x, true, false);
+                            ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, { ...matrix, b: 0 }, x, true, false);
                             if (y !== 0) {
-                                ordered[match.index + 1] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, { ...matrix, c: 0 }, y, false, true);
+                                ordered[index + 1] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, { ...matrix, c: 0 }, y, false, true);
                             }
                         }
                     }
                     else if (/^scale/.test(attr)) {
                         const x = isY ? undefined : parseFloat(match[2]);
                         const y = isY ? parseFloat(match[2]) : (!isX && match[3] ? parseFloat(match[3]) : x);
-                        const matrix = MATRIX.scale(x, isX ? undefined : y);
-                        ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, matrix, 0, !isY, !isX);
+                        ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, isX ? undefined : y), 0, !isY, !isX);
                     }
                     else if (/^translate/.test(attr)) {
                         const fontSize = getFontSize(element);
                         const arg1 = parseUnit(match[2], fontSize);
-                        const arg2 = (!isX && match[3] ? parseUnit(match[3], fontSize) : 0);
+                        const arg2 = !isX && match[3] ? parseUnit(match[3], fontSize) : 0;
                         const x = isY ? 0 : arg1;
                         const y = isY ? arg1 : arg2;
-                        const matrix = MATRIX.translate(x, y);
-                        ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, matrix, 0);
+                        ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, MATRIX.translate(x, y), 0);
                     }
                     else if (/^matrix/.test(attr)) {
                         const matrix = TRANSFORM.matrix(element, value);
                         if (matrix) {
-                            ordered[match.index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix);
+                            ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix);
                         }
                     }
                 }
@@ -255,7 +255,7 @@ export const TRANSFORM = {
     },
     matrix(element: SVGElement, value?: string): Undef<SvgMatrix> {
         REGEX_TRANSFORM.MATRIX.lastIndex = 0;
-        const match = REGEX_TRANSFORM.MATRIX.exec(value || getComputedStyle(element).transform || '');
+        const match = REGEX_TRANSFORM.MATRIX.exec(value || getComputedStyle(element).transform);
         if (match) {
             switch (match[1]) {
                 case 'matrix':
@@ -287,25 +287,22 @@ export const TRANSFORM = {
         const result: Point = { x: 0, y: 0 };
         if (value !== '') {
             const viewBox = getNearestViewBox(element);
-            let width = 0;
-            let height = 0;
+            let width: Undef<number>;
+            let height: Undef<number>;
             if (viewBox) {
-                width = viewBox.width;
-                height = viewBox.height;
+                ({ width, height } = viewBox);
             }
             else {
-                const parent = element.parentElement;
-                if (parent instanceof SVGGraphicsElement) {
-                    const viewportElement = parent.viewportElement;
+                const parentElement = element.parentElement;
+                if (parentElement instanceof SVGGraphicsElement) {
+                    const viewportElement = parentElement.viewportElement;
                     if (viewportElement && (SVG.svg(viewportElement) || SVG.symbol(viewportElement))) {
                         ({ width, height } = viewportElement.viewBox.baseVal);
                     }
                 }
             }
             if (!width || !height) {
-                const bounds = element.getBoundingClientRect();
-                width = bounds.width;
-                height = bounds.height;
+                ({ width, height } = element.getBoundingClientRect());
             }
             const positions = value.split(' ');
             if (positions.length === 1) {
@@ -352,8 +349,8 @@ export const TRANSFORM = {
                 if (angle !== 0) {
                     result.push({
                         angle,
-                        x: parseFloat(match[2]) || 0,
-                        y: parseFloat(match[3]) || 0
+                        x: convertFloat(match[2]),
+                        y: convertFloat(match[3])
                     });
                 }
             }
@@ -406,6 +403,85 @@ export function getDOMRect(element: SVGElement) {
     return <DOMRect> result;
 }
 
+export function calculateStyle(element: SVGElement, attr: string, value: string) {
+    attr = convertCamelCase(attr);
+    value = value.trim();
+    switch (attr) {
+        case 'width':
+        case 'height':
+        case 'clipPath':
+        case 'transform':
+        case 'transformOrigin':
+        case 'offsetAnchor':
+        case 'offsetRotate':
+        case 'offsetDistance':
+        case 'animationDelay':
+        case 'animationDuration':
+        case 'animationIterationCount':
+            return calculateCssStyle(element, attr, value);
+        case 'fill':
+        case 'stroke':
+            return calculateCssStyle(element, 'fontColor', value);
+        case 'fillOpacity':
+        case 'strokeOpacity': {
+            const result = calculateVar(element, value, { boundingSize: 1, unitType: CSS_UNIT.DECIMAL });
+            return !isNaN(result) ? clamp(result).toString() : '';
+        }
+        case 'strokeMiterlimit': {
+            const result = calculateVar(element, value, { checkPercent: false, unitType: CSS_UNIT.DECIMAL, min: 1 });
+            return !isNaN(result) ? result.toString() : '';
+        }
+    }
+    const viewBox = getNearestViewBox(element) || element.getBoundingClientRect();
+    const getViewportArea = (min: boolean) => {
+        const { width, height } = viewBox;
+        return min ? Math.min(width, height) : hypotenuse(width, height);
+    };
+    switch (attr) {
+        case 'x':
+        case 'x1':
+        case 'x2':
+        case 'cx': {
+            const result = calculateVar(element, value, { boundingSize: viewBox.width });
+            return !isNaN(result) ? result.toString() : '';
+        }
+        case 'y':
+        case 'y1':
+        case 'y2':
+        case 'cy': {
+            const result = calculateVar(element, value, { boundingSize: viewBox.height });
+            return !isNaN(result) ? result.toString() : '';
+        }
+        case 'r': {
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(true), min: 0 });
+            return !isNaN(result) ? result.toString() : '0';
+        }
+        case 'rx': {
+            const result = calculateVar(element, value, { boundingSize: viewBox.width, min: 0 });
+            if (!isNaN(result)) {
+                return SVG.rect(element) ? Math.min(result, viewBox.width / 2).toString() : result.toString();
+            }
+            return '0';
+        }
+        case 'ry': {
+            const result = calculateVar(element, value, { boundingSize: viewBox.height, min: 0 });
+            if (!isNaN(result)) {
+                return SVG.rect(element) ? Math.min(result, viewBox.height / 2).toString() : result.toString();
+            }
+            return '0';
+        }
+        case 'strokeWidth': {
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(false), unitType: CSS_UNIT.DECIMAL, min: 0 });
+            return !isNaN(result) ? result.toString() : '';
+        }
+        case 'strokeDashoffset': {
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(true), unitType: CSS_UNIT.DECIMAL });
+            return !isNaN(result) ? result.toString() : '';
+        }
+    }
+    return '';
+}
+
 export function getAttribute(element: SVGElement, attr: string, computed = false) {
     let value: string;
     if (computed) {
@@ -421,8 +497,8 @@ export function getAttribute(element: SVGElement, attr: string, computed = false
 }
 
 export function getParentAttribute(element: SVGElement, attr: string, computed = true) {
-    let current: Null<HTMLElement | SVGElement> = element;
-    let value = '';
+    let current: Null<CSSElement> = element;
+    let value: string;
     do {
         value = getAttribute(current, attr, computed);
         if (value !== '' && value !== 'inherit') {

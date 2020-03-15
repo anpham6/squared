@@ -73,14 +73,18 @@ export function convertUnderscore(value: string) {
 }
 
 export function convertCamelCase(value: string, char = '-') {
+    let i = value.indexOf(char);
+    if (i === -1) {
+        return value;
+    }
     const cacheData = CACHE_CAMELCASE[value];
     if (cacheData) {
         return cacheData;
     }
-    let result = '';
+    let result = value.substring(0, i);
     let previous = '';
     const length = value.length;
-    for (let i = 0; i < length; i++) {
+    for ( ; i < length; i++) {
         const ch = value.charAt(i);
         if (ch !== char) {
             if (previous === char) {
@@ -96,7 +100,7 @@ export function convertCamelCase(value: string, char = '-') {
     return result;
 }
 
-export function convertWord(value: string, dash = false) {
+export function convertWord(value: string, dash?: boolean) {
     const pattern = dash ? CHAR.WORDDASH : CHAR.WORD;
     let result = '';
     const length = value.length;

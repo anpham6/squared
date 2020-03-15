@@ -1,3 +1,4 @@
+type CSSElement = HTMLElement | SVGElement;
 type PositionAttr = "top" | "right" | "bottom" | "left";
 type DimensionAttr = "width" | "height";
 

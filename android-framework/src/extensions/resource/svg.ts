@@ -1144,13 +1144,13 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 if (requireBefore) {
                                                     const baseValue = item.baseValue;
                                                     if (baseValue) {
-                                                        beforeValues = replaceMap<number, string>(SvgBuild.parseCoordinates(baseValue), value => Math.trunc(value).toString());
+                                                        beforeValues = replaceMap(SvgBuild.parseCoordinates(baseValue), (value: number) => Math.trunc(value).toString());
                                                     }
                                                 }
                                                 break;
                                             case 'floatType':
                                                 if (item.attributeName === 'stroke-dasharray') {
-                                                    values = objectMap<string, number[]>(item.values, value => replaceMap<string, number>(value.split(' '), fraction => parseFloat(fraction)));
+                                                    values = objectMap<string, number[]>(item.values, value => replaceMap(value.split(' '), (fraction: string) => parseFloat(fraction)));
                                                 }
                                                 else {
                                                     values = item.values;
@@ -1158,7 +1158,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 if (requireBefore) {
                                                     const baseValue = item.baseValue;
                                                     if (baseValue) {
-                                                        beforeValues = replaceMap<number, string>(SvgBuild.parseCoordinates(baseValue), value => value.toString());
+                                                        beforeValues = replaceMap(SvgBuild.parseCoordinates(baseValue), (value: number) => value.toString());
                                                     }
                                                 }
                                                 break;

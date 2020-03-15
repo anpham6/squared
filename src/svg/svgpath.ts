@@ -672,17 +672,11 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     const intervalMap = new SvgAnimationIntervalMap(sorted, 'stroke-dasharray', 'stroke-dashoffset');
                     const getDashOffset = (time: number, playing = false) => {
                         const value = intervalMap.get('stroke-dashoffset', time, playing);
-                        if (value) {
-                            return parseFloat(value);
-                        }
-                        return valueOffset;
+                        return value ? parseFloat(value) : valueOffset;
                     };
                     const getDashArray = (time: number, playing = false) => {
                         const value = intervalMap.get('stroke-dasharray', time, playing);
-                        if (value) {
-                            return SvgBuild.parseCoordinates(value);
-                        }
-                        return valueArray;
+                        return value ? SvgBuild.parseCoordinates(value) : valueArray;
                     };
                     const getFromToValue = (item?: SvgStrokeDash) => item ? item.start + ' ' + item.end : '1 1';
                     if (sorted.length > 1) {
