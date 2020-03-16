@@ -14,9 +14,12 @@ const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
 const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
 const REGEX_SRCSET = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
-const REGEX_CALCULATE = /(\s+[+-]\s+|\s*[*/]\s*)/;
-const REGEX_INTEGER = /^-?\d+$/;
+const REGEX_OPERATOR = /\s+([+-]\s+|\s*[*/])\s*/;
+const REGEX_INTEGER = /^\s*-?\d+\s*$/;
 const REGEX_CALC = new RegExp(STRING.CSS_CALC);
+const REGEX_LENGTH = new RegExp(`(${STRING.UNIT_LENGTH}|%)`);
+const REGEX_WIDTH = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH_PERCENTAGE}\\))?\\s*(.+)`);
+const REGEX_DIVIDER = /\s*\/\s*/;
 
 function compareRange(operation: string, unit: number, range: number) {
     switch (operation) {
@@ -33,70 +36,58 @@ function compareRange(operation: string, unit: number, range: number) {
     }
 }
 
-function calculatePosition(element: CSSElement, value: string) {
-    const component = value.split(CHAR.SPACE);
+function calculatePosition(element: CSSElement, value: string, boundingBox?: Dimension) {
+    const component = splitEnclosing(value.trim(), 'calc').filter(item => item.trim() !== '');
     const length = component.length;
     switch (length) {
         case 1:
         case 2:
-            return calculateVarAsString(element, component.join(' '), { parent: false, dimension: ['width', 'height'] });
+            return calculateVarAsString(element, component.join(''), { parent: false, dimension: ['width', 'height'], boundingBox });
         case 3:
         case 4: {
+            const options: CalculateVarOptions = { boundingBox };
             let horizontal = 0;
             let vertical = 0;
             for (let i = 0; i < length; i++) {
-                const calc = component[i];
+                const calc = component[i].trim();
                 if (isCalc(calc)) {
                     if (i === 0) {
-                        if (length === 3 && !/^(top|right|bottom|left)$/.test(component[2])) {
+                        if (length === 3 && !/^(top|right|bottom|left)$/.test(component[2].trim())) {
                             switch (component[1]) {
                                 case 'top':
-                                case 'bottom': {
-                                    const result = calculateVar(element, calc, { dimension: 'width' });
-                                    if (!isNaN(result)) {
-                                        component[i] = result + 'px';
-                                        break;
-                                    }
-                                    return '';
-                                }
+                                case 'bottom':
+                                    options.dimension = 'width';
+                                    break;
                                 case 'left':
-                                case 'right': {
-                                    const result = calculateVar(element, calc, { dimension: 'height' });
-                                    if (!isNaN(result)) {
-                                        component[i] = result + 'px';
-                                        break;
-                                    }
-                                }
+                                case 'right':
+                                    options.dimension = 'height';
+                                    break;
                                 default:
                                     return '';
                             }
                         }
-                        else {
-                            return '';
-                        }
                     }
-                    else if (i > 0) {
+                    else {
                         switch (component[i - 1]) {
                             case 'top':
-                            case 'bottom': {
-                                const result = calculateVar(element, calc, { dimension: 'height' });
-                                if (!isNaN(result)) {
-                                    component[i] = result + 'px';
-                                    break;
-                                }
-                                return '';
-                            }
+                            case 'bottom':
+                                options.dimension = 'height';
+                                break;
                             case 'left':
-                            case 'right': {
-                                const result = calculateVar(element, calc, { dimension: 'width' });
-                                if (!isNaN(result)) {
-                                    component[i] = result + 'px';
-                                    break;
-                                }
-                            }
+                            case 'right':
+                                options.dimension = 'width';
+                                break;
                             default:
                                 return '';
                         }
+                    }
+                    options.boundingSize = undefined;
+                    const result = formatVar(calculateVar(element, calc, options));
+                    if (result !== '') {
+                        component[i] = result;
+                    }
+                    else {
+                        return '';
                     }
                 }
                 else {
@@ -114,6 +105,7 @@ function calculatePosition(element: CSSElement, value: string) {
                             }
                             break;
                     }
+                    component[i] = calc;
                 }
             }
             return component.join(' ');
@@ -127,52 +119,132 @@ function calculateColor(element: CSSElement, value: string) {
     const length = color.length;
     if (length > 1) {
         for (let i = 1; i < length; i++) {
-            const name = color[i - 1].trim();
-            let seg = color[i];
-            if (/^(rgb|hsl)/.test(name) && hasCalc(seg)) {
-                seg = seg.substring(1, seg.length - 1).trim();
-                const component = seg.split(XML.SEPARATOR);
-                const q = component.length;
-                if (q === (/a$/.test(name) ? 4 : 3)) {
-                    for (let j = 0; j < q; j++) {
-                        const rgb = component[j];
-                        if (isCalc(rgb)) {
-                            if (/^hsl/.test(name) && (j === 1 || j === 2)) {
-                                const result = calculateVar(element, rgb, { boundingSize: 1, unitType: CSS_UNIT.PERCENT });
-                                if (!isNaN(result)) {
-                                    component[j] = clamp(result * 100, 0, 100) + '%';
+            const seg = color[i].trim();
+            if (hasCalc(seg)) {
+                const name = color[i - 1].trim();
+                if (isColor(name)) {
+                    const component = trimEnclosing(seg).split(XML.SEPARATOR);
+                    const q = component.length;
+                    if (q >= 3) {
+                        const hsl = /^hsl/.test(name);
+                        for (let j = 0; j < q; j++) {
+                            const rgb = component[j];
+                            if (isCalc(rgb)) {
+                                if (hsl && (j === 1 || j === 2)) {
+                                    const result = calculateVar(element, rgb, { checkPercent: true, unitType: CSS_UNIT.PERCENT });
+                                    if (!isNaN(result)) {
+                                        component[j] = clamp(result, 0, 100) + '%';
+                                    }
+                                    else {
+                                        return '';
+                                    }
+                                }
+                                else if (j === 3) {
+                                    const percent = rgb.includes('%');
+                                    let result = calculateVar(element, rgb, percent ? { unitType: CSS_UNIT.PERCENT } : { unitType: CSS_UNIT.DECIMAL });
+                                    if (!isNaN(result)) {
+                                        if (percent) {
+                                            result /= 100;
+                                        }
+                                        component[j] = clamp(result).toString();
+                                    }
+                                    else {
+                                        return '';
+                                    }
                                 }
                                 else {
-                                    return '';
-                                }
-                            }
-                            else {
-                                const result = calculateVar(element, rgb, { checkPercent: false, unitType: CSS_UNIT.DECIMAL });
-                                if (!isNaN(result)) {
-                                    component[j] = clamp(result, 0, j === 3 ? 1 : 255).toString();
-                                }
-                                else {
-                                    return '';
+                                    const result = calculateVar(element, rgb, { checkPercent: false, unitType: CSS_UNIT.DECIMAL });
+                                    if (!isNaN(result)) {
+                                        component[j] = clamp(result, 0, 255).toString();
+                                    }
+                                    else {
+                                        return '';
+                                    }
                                 }
                             }
                         }
+                        color[i] = `(${component.join(', ')})`;
+                        continue;
                     }
-                    color[i] = `(${component.join(', ')})`;
                 }
-                else {
-                    return '';
-                }
+                return '';
             }
         }
         return color.join('');
     }
-    return '';
+    return value;
+}
+
+function calculateGeneric(element: CSSElement, value: string, unitType: number, min: number, boundingBox?: Dimension, dimension: DimensionAttr = 'width') {
+    const segments = splitEnclosing(value, 'calc');
+    const length = segments.length;
+    for (let i = 0; i < length; i++) {
+        const seg = segments[i];
+        if (isCalc(seg)) {
+            const px = REGEX_LENGTH.test(seg);
+            const result = calculateVar(element, seg, px ? { parent: false, dimension, boundingBox, min: 0 } : { checkPercent: false, unitType, min });
+            if (!isNaN(result)) {
+                segments[i] = result + (px ? 'px' : '');
+            }
+            else {
+                return '';
+            }
+        }
+    }
+    return segments.join('').trim();
+}
+
+function getWritingMode(value: string) {
+    switch (value) {
+        case 'vertical-lr':
+            return 1;
+        case 'vertical-rl':
+            return 2;
+    }
+    return 0;
+}
+
+function hasBorderStyle(value: string) {
+    switch (value) {
+        case 'none':
+        case 'initial':
+        case 'hidden':
+            return false;
+    }
+    return true;
+}
+
+function getContentBoxWidth(style: CSSStyleDeclaration) {
+    return (
+        (hasBorderStyle(style.getPropertyValue('border-left-style')) ? parseFloat(style.getPropertyValue('border-left-width')) : 0) +
+        parseFloat(style.getPropertyValue('padding-left')) +
+        parseFloat(style.getPropertyValue('padding-right')) +
+        (hasBorderStyle(style.getPropertyValue('border-right-style')) ? parseFloat(style.getPropertyValue('border-right-width')) : 0)
+    );
+}
+
+function getContentBoxHeight(style: CSSStyleDeclaration) {
+    return (
+        (hasBorderStyle(style.getPropertyValue('border-top-style')) ? parseFloat(style.getPropertyValue('border-top-width')) : 0) +
+        parseFloat(style.getPropertyValue('padding-top')) +
+        parseFloat(style.getPropertyValue('padding-bottom')) +
+        (hasBorderStyle(style.getPropertyValue('border-bottom-style')) ? parseFloat(style.getPropertyValue('border-bottom-width')) : 0)
+    );
+}
+
+function getBoundingWidth(element: HTMLElement) {
+    const parentElement = element.parentElement;
+    return parentElement ? Math.max(0, parentElement.getBoundingClientRect().width - getContentBoxWidth(getStyle(parentElement))) : 0;
 }
 
 const getInnerWidth = (dimension: Undef<Dimension>) => dimension?.width || window.innerWidth;
 const getInnerHeight = (dimension: Undef<Dimension>) => dimension?.height || window.innerHeight;
 const convertLength = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize, screenDimension);
 const convertPercent = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize, screenDimension) / dimension;
+const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
+const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
+const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
+const trimEnclosing = (value: string) => value.substring(1, value.length - 1);
 
 export const enum CSS_UNIT {
     NONE = 0,
@@ -331,270 +403,408 @@ export function getSpecificity(value: string) {
     return result;
 }
 
-export function calculateStyle(element: CSSElement, attr: string, value: string) {
-    value = value.trim();
+export function checkWritingMode(attr: string, value: string) {
     switch (attr) {
-        case 'width':
-        case 'minWidth':
-        case 'maxWidth':
-        case 'columnWidth':
-        case 'marginTop':
-        case 'marginRight':
-        case 'marginBottom':
-        case 'marginLeft':
-        case 'paddingTop':
-        case 'paddingRight':
-        case 'paddingBottom':
-        case 'paddingLeft':
-        case 'columnGap':
-        case 'gridColumnGap': {
-            const result = calculateVar(element, value, { dimension: 'width', min: 0 });
-            return !isNaN(result) ? result + 'px' : '';
-        }
+        case 'inlineSize':
+            return getWritingMode(value) === 0 ? 'width': 'height';
+        case 'blockSize':
+            return getWritingMode(value) === 0 ? 'height' : 'width';
+        case 'maxInlineSize':
+            return getWritingMode(value) === 0 ? 'maxWidth': 'maxHeight';
+        case 'maxBlockSize':
+            return getWritingMode(value) === 0 ? 'maxHeight' : 'maxWidth';
+        case 'minInlineSize':
+            return getWritingMode(value) === 0 ? 'minWidth': 'minHeight';
+        case 'minBlockSize':
+            return getWritingMode(value) === 0 ? 'minHeight' : 'minWidth';
+        case 'borderInlineStart':
+            return getWritingMode(value) === 0 ? 'borderLeft' : 'borderTop';
+        case 'borderInlineEnd':
+            return getWritingMode(value) === 0 ? 'borderRight' : 'borderBottom';
+        case 'borderInlineStartWidth':
+            return getWritingMode(value) === 0 ? 'borderLeftWidth' : 'borderTopWidth';
+        case 'borderInlineEndWidth':
+            return getWritingMode(value) === 0 ? 'borderRightWidth' : 'borderBottomWidth';
+        case 'insetInlineStart':
+            return getWritingMode(value) === 0 ? 'left' : 'top';
+        case 'insetInlineEnd':
+            return getWritingMode(value) === 0 ? 'right' : 'bottom';
+        case 'marginInlineStart':
+            return getWritingMode(value) === 0 ? 'marginLeft' : 'marginTop';
+        case 'marginInlineEnd':
+            return getWritingMode(value) === 0 ? 'marginRight' : 'marginBottom';
+        case 'paddingInlineStart':
+            return getWritingMode(value) === 0 ? 'paddingLeft' : 'paddingTop';
+        case 'paddingInlineEnd':
+            return getWritingMode(value) === 0 ? 'paddingRight' : 'paddingBottom';
+        case 'scrollMarginInlineStart':
+            return getWritingMode(value) === 0 ? 'scrollMarginLeft' : 'scrollMarginTop';
+        case 'scrollMarginInlineEnd':
+            return getWritingMode(value) === 0 ? 'scrollMarginRight' : 'scrollMarginBottom';
+        case 'scrollPaddingInlineStart':
+            return getWritingMode(value) === 0 ? 'scrollPaddingLeft' : 'scrollPaddingTop';
+        case 'scrollPaddingInlineEnd':
+            return getWritingMode(value) === 0 ? 'scrollPaddingRight' : 'scrollPaddingBottom';
+        case 'borderBlockStart':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'borderTop';
+                case 1:
+                    return 'borderLeft';
+                case 2:
+                    return 'borderRight';
+            }
+        case 'borderBlockEnd':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'borderBottom';
+                case 1:
+                    return 'borderRight';
+                case 2:
+                    return 'borderLeft';
+            }
+        case 'borderBlockStartWidth':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'borderTopWidth';
+                case 1:
+                    return 'borderLeftWidth';
+                case 2:
+                    return 'borderRightWidth';
+            }
+        case 'borderBlockEndWidth':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'borderBottomWidth';
+                case 1:
+                    return 'borderRightWidth';
+                case 2:
+                    return 'borderLeftWidth';
+            }
+        case 'insetBlockStart':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'top';
+                case 1:
+                    return 'left';
+                case 2:
+                    return 'right';
+            }
+        case 'insetBlockEnd':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'bottom';
+                case 1:
+                    return 'right';
+                case 2:
+                    return 'left';
+            }
+        case 'marginBlockStart':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'marginTop';
+                case 1:
+                    return 'marginLeft';
+                case 2:
+                    return 'marginRight';
+            }
+        case 'marginBlockEnd':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'marginBottom';
+                case 1:
+                    return 'marginRight';
+                case 2:
+                    return 'marginLeft';
+            }
+        case 'paddingBlockStart':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'paddingTop';
+                case 1:
+                    return 'paddingLeft';
+                case 2:
+                    return 'paddingRight';
+            }
+        case 'paddingBlockEnd':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'paddingBottom';
+                case 1:
+                    return 'paddingRight';
+                case 2:
+                    return 'paddingLeft';
+            }
+        case 'scrollMarginBlockStart':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'scrollMarginTop';
+                case 1:
+                    return 'scrollMarginLeft';
+                case 2:
+                    return 'scrollMarginRight';
+            }
+        case 'scrollMarginBlockEnd':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'scrollMarginBottom';
+                case 1:
+                    return 'scrollMarginRight';
+                case 2:
+                    return 'scrollMarginLeft';
+            }
+        case 'scrollPaddingBlockStart':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'scrollPaddingTop';
+                case 1:
+                    return 'scrollPaddingLeft';
+                case 2:
+                    return 'scrollPaddingRight';
+            }
+        case 'scrollPaddingBlockEnd':
+            switch (getWritingMode(value)) {
+                case 0:
+                    return 'scrollPaddingBottom';
+                case 1:
+                    return 'scrollPaddingRight';
+                case 2:
+                    return 'scrollPaddingLeft';
+            }
+    }
+    return '';
+}
+
+export function calculateStyle(element: CSSElement, attr: string, value: string, boundingBox?: Dimension): string {
+    switch (attr) {
         case 'left':
         case 'right':
-        case 'textIndent': {
-            const result = calculateVar(element, value, { dimension: 'width' });
-            return !isNaN(result) ? result + 'px' : '';
-        }
-        case 'height':
-        case 'minHeight':
-        case 'maxHeight':
-        case 'rowGap':
-        case 'gridRowGap': {
-            const result = calculateVar(element, value, { dimension: 'height', min: 0 });
-            return !isNaN(result) ? result + 'px' : '';
-        }
-        case 'top':
-        case 'bottom':
-        case 'verticalAlign': {
-            const result = calculateVar(element, value, { dimension: 'height' });
-            return !isNaN(result) ? result + 'px' : '';
-        }
-        case 'gridGap':
-            return calculateVarAsString(element, value, { dimension: ['width', 'height'], min: 0 });
-        case 'clip':
-            return calculateVarAsString(element, value, { parent: false, dimension: ['height', 'width', 'height', 'width'], min: 0 });
-        case 'backgroundSize':
-        case 'maskSize':
-            return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], min: 0, separator: ',' });
-        case 'boxShadow':
-        case 'textShadow':
-            return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height', 'width'], min: 0, separator: ',' });
-        case 'margin':
-        case 'padding':
-        case 'outline':
-        case 'columnRule':
-        case 'borderRadius':
-        case 'borderBottomLeftRadius':
-        case 'borderBottomRightRadius':
-        case 'borderTopLeftRadius':
-        case 'borderTopRightRadius':
-        case 'borderSpacing':
-        case 'borderImageOutset':
-        case 'borderImageWidth':
-        case 'borderInline':
-        case 'borderBlock':
-            return calculateVarAsString(element, value, { dimension: 'width', min: 0 });
-        case 'insetInline':
-        case 'insetBlock':
-            return calculateVarAsString(element, value, { parent: false, dimension: 'width', min: 0 });
+        case 'textIndent':
+            return formatVar(calculateVar(element, value, { dimension: 'width', boundingBox }));
+        case 'borderBottomWidth':
+        case 'borderLeftWidth':
+        case 'borderRightWidth':
+        case 'borderTopWidth':
+        case 'columnGap':
+        case 'columnWidth':
+        case 'gridColumnGap':
+        case 'marginBottom':
+        case 'marginLeft':
+        case 'marginRight':
+        case 'marginTop':
+        case 'maxWidth':
+        case 'minWidth':
+        case 'paddingBottom':
+        case 'paddingLeft':
+        case 'paddingRight':
+        case 'paddingTop':
+        case 'scrollMarginBottom':
+        case 'scrollMarginLeft':
+        case 'scrollMarginRight':
+        case 'scrollMarginTop':
+        case 'scrollPaddingBottom':
+        case 'scrollPaddingLeft':
+        case 'scrollPaddingRight':
+        case 'scrollPaddingTop':
+        case 'width':
+            return formatVar(calculateVar(element, value, { dimension: 'width', boundingBox, min: 0 }));
         case 'shapeMargin':
-        case 'marginInlineStart':
-        case 'marginInlineEnd':
-        case 'marginBlockStart':
-        case 'marginBlockEnd':
-        case 'paddingInlineStart':
-        case 'paddingInlineEnd':
-        case 'paddingBlockStart':
-        case 'paddingBlockEnd':
-        case 'insetInlineStart':
-        case 'insetInlineEnd':
-        case 'insetBlockStart':
-        case 'insetBlockEnd':
-        case 'borderInlineStart':
-        case 'borderInlineEnd':
-        case 'borderBlockStart':
-        case 'borderBlockEnd': {
-            const result = calculateVar(element, value, { parent: false, dimension: 'width', min: 0 });
-            return !isNaN(result) ? result + 'px' : '';
-        }
-        case 'borderImageSlice':
-            return calculateVarAsString(element, value, { parent: false, dimension: 'width', unitType: CSS_UNIT.DECIMAL, min: 0 });
-        case 'inlineSize':
-        case 'blockSize':
-        case 'minInlineSize':
-        case 'minBlockSize':
-        case 'maxInlineSize':
-        case 'maxBlockSize': {
-            let boundingSize: Undef<number>;
-            if (value.includes('%')) {
-                let current: Null<HTMLElement> = <HTMLElement> element;
-                while (current && getStyle(current).display === 'block') {
-                    current = current.parentElement;
-                }
-                if (current) {
-                    boundingSize = current.getBoundingClientRect()[!getStyle(element).writingMode.includes('vertical') ? 'width' : 'height'];
-                }
-                else {
-                    break;
-                }
-            }
-            const result = calculateVar(element, value, { boundingSize, min: 0 });
-            return !isNaN(result) ? result + 'px' : '';
-        }
-        case 'gridAutoRows':
-        case 'gridTemplateRows':
-        case 'gridAutoColumns':
-        case 'gridTemplateColumns':
-            return calculateVarAsString(element, value, { parent: false, dimension: attr.endsWith('Columns') ? 'width' : 'height', min: 0 });
-        case 'columnCount':
-        case 'flexGrow':
-        case 'flexShrink':
-        case 'fontWeight':
-        case 'widows': {
-            const result = calculateVar(element, value, { checkPercent: false, unitType: CSS_UNIT.INTEGER, min: 0 });
-            return !isNaN(result) ? result.toString() : '';
-        }
-        case 'fontSizeAdjust':
-        case 'animationIterationCount': {
-            const result = calculateVar(element, value, { checkPercent: false, unitType: CSS_UNIT.DECIMAL, min: 0 });
-            return !isNaN(result) ? result.toString() : '';
-        }
-        case 'letterSpacing':
-        case 'wordSpacing':
-        case 'outlineOffset':
-        case 'outlineWidth':
-        case 'perspective': {
-            const result = calculateVar(element, value, { checkPercent: false, min: 0 });
-            return !isNaN(result) ? result + 'px' : '';
-        }
-        case 'fontVariationSettings':
-            return calculateVarAsString(element, value, { checkPercent: false, unitType: CSS_UNIT.INTEGER, min: 0 });
-        case 'fontStretch':
-            return calculateVarAsString(element, value, { checkPercent: false, unitType: CSS_UNIT.PERCENT, min: 0 });
-        case 'transition':
-        case 'transitionDelay':
-        case 'transitionDuration':
-        case 'animationDelay':
-        case 'animationDuration':
-            return calculateVarAsString(element, value, { checkPercent: false, unitType: CSS_UNIT.TIME, roundValue: true, min: 0, separator: ',' });
-        case 'fontSize': {
-            const parentElement = element.parentElement;
-            if (parentElement) {
-                const result = calculateVar(element, value, { boundingSize: getFontSize(parentElement), min: 0 });
-                return !isNaN(result) ? result.toString() : '';
-            }
-            break;
-        }
-        case 'lineHeight': {
-            const boundingSize = getFontSize(element);
-            if (isNumber(value)) {
-                return parseFloat(value) * boundingSize + 'px';
-            }
-            const result = calculateVar(element, value, { boundingSize, min: 0 });
-            return !isNaN(result) ? result.toString() : '';
-        }
-        case 'tabSize': {
-            if (isNumber(value)) {
-                const result = parseInt(value);
-                return result >= 0 && REGEX_INTEGER.test(value) ? result.toString() : '';
-            }
-            const result = calculateVar(element, value, { checkPercent: false, min: 0 });
-            return !isNaN(result) ? result.toString() : '';
-        }
+            return formatVar(calculateVar(element, value, { parent: false, dimension: 'width', boundingBox, min: 0 }));
+        case 'bottom':
+        case 'top':
+        case 'verticalAlign':
+            return formatVar(calculateVar(element, value, { dimension: 'height', boundingBox }));
+        case 'gridRowGap':
+        case 'height':
+        case 'maxHeight':
+        case 'minHeight':
+        case 'rowGap':
+            return formatVar(calculateVar(element, value, { dimension: 'height', boundingBox, min: 0 }));
         case 'flexBasis': {
             const parentElement = element.parentElement;
             if (parentElement) {
                 const { display, flexDirection } = getStyle(parentElement);
                 if (display.includes('flex')) {
-                    return calculateVarAsString(element, value, { dimension: flexDirection.includes('column') ? 'height' : 'width', min: 0 });
+                    return formatVar(calculateVar(element, value, { dimension: flexDirection.includes('column') ? 'height' : 'width', boundingBox, min: 0 }));
                 }
             }
             break;
         }
-        case 'gridArea':
-            return calculateVarAsString(element, value, { checkPercent: false, unitType: CSS_UNIT.INTEGER, min: 1 });
+        case 'letterSpacing':
+        case 'outlineOffset':
+        case 'outlineWidth':
+        case 'perspective':
+        case 'wordSpacing':
+            return formatVar(calculateVar(element, value, { checkPercent: false, min: 0 }));
+        case 'offsetDistance': {
+            let boundingSize = 0;
+            if (value.includes('%')) {
+                const offsetPath = getStyle(element).getPropertyValue('offset-path');
+                if (offsetPath !== 'none') {
+                    const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    pathElement.setAttribute('d', offsetPath);
+                    boundingSize = pathElement.getTotalLength();
+                }
+            }
+            return formatVar(calculateVar(element, value, { boundingSize }));
+        }
+        case 'fontSize':
+            return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element.parentElement), min: 0 }));
+        case 'lineHeight':
+            return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element), min: 0 }));
+        case 'margin':
+            return calculateVarAsString(element, value, { dimension: 'width', boundingBox });
+        case 'borderBottomLeftRadius':
+        case 'borderBottomRightRadius':
+        case 'borderTopLeftRadius':
+        case 'borderTopRightRadius':
+        case 'borderRadius':
+        case 'borderSpacing':
+        case 'columnRule':
+        case 'padding':
+        case 'scrollMargin':
+        case 'scrollMarginBlock':
+        case 'scrollMarginInline':
+        case 'scrollPadding':
+        case 'scrollPaddingBlock':
+        case 'scrollPaddingInline':
+            return calculateVarAsString(element, value, { dimension: 'width', boundingBox, min: 0 });
         case 'objectPosition':
-            return calculateVarAsString(element, value, { dimension: ['width', 'height'] });
+            return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox });
+        case 'gridGap':
         case 'perspectiveOrigin':
-            return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'] });
-        case 'maskPosition':
-            return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], separator: ',' });
+            return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], boundingBox, min: attr === 'gridGap' ? 0 : undefined });
+        case 'borderImageOutset':
+        case 'borderImageWidth':
+            return calculateVarAsString(element, value, { parent: false, dimension: ['height', 'width', 'height', 'width'], boundingBox, min: 0 });
+        case 'borderWidth':
+        case 'clip':
+            return calculateVarAsString(element, value, { checkPercent: false, min: attr === 'borderWidth' ? 0 : undefined });
+        case 'gridAutoColumns':
+        case 'gridTemplateColumns':
+            return calculateGeneric(element, value, CSS_UNIT.INTEGER, 1, boundingBox);
+        case 'gridAutoRows':
+        case 'gridTemplateRows':
+            return calculateGeneric(element, value, CSS_UNIT.INTEGER, 1, boundingBox, 'height');
+        case 'zIndex':
+            return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.INTEGER }));
+        case 'tabSize':
+            return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.INTEGER, min: 0 }));
+        case 'columnCount':
+        case 'fontWeight':
+        case 'widows':
+            return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.INTEGER, min: 1 }));
+        case 'gridRow':
+        case 'gridRowEnd':
+        case 'gridRowStart':
+        case 'gridColumn':
+        case 'gridColumnEnd':
+        case 'gridColumnStart':
+        case 'counterIncrement':
+        case 'counterReset':
+            return calculateVarAsString(element, value, { unitType: CSS_UNIT.INTEGER });
+        case 'fontVariationSettings':
+            return calculateVarAsString(element, value, { unitType: CSS_UNIT.INTEGER, min: 0 });
+        case 'gridArea':
+            return calculateVarAsString(element, value, { unitType: CSS_UNIT.INTEGER, min: 1 });
+        case 'flexGrow':
+        case 'flexShrink':
+            return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.DECIMAL, min: 0 }));
+        case 'animationIterationCount':
+        case 'fontSizeAdjust':
+            return formatDecimal(calculateVar(element, value, { checkPercent: false, unitType: CSS_UNIT.DECIMAL, min: 0 }));
+        case 'opacity':
+        case 'shapeImageThreshold': {
+            const percent = value.includes('%');
+            const result = calculateVar(element, value, { unitType: percent ? CSS_UNIT.PERCENT : CSS_UNIT.DECIMAL });
+            return !isNaN(result) ? clamp(result * (percent ? 1 / 100 : 1)).toString() : '';
+        }
+        case 'fontStretch':
+            return calculateVarAsString(element, value, { checkPercent: true, unitType: CSS_UNIT.PERCENT, min: 0 });
         case 'fontStyle':
         case 'offsetRotate':
             return calculateVarAsString(element, value, { checkPercent: false, unitType: CSS_UNIT.ANGLE });
-        case 'gridRow':
-        case 'gridRowStart':
-        case 'gridRowEnd':
-        case 'gridColumn':
-        case 'gridColumnStart':
-        case 'gridColumnEnd':
-        case 'counterSet':
-        case 'counterReset':
-        case 'counterIncrement':
-            return calculateVarAsString(element, value, { checkPercent: false, unitType: CSS_UNIT.INTEGER });
-        case 'zIndex': {
-            const result = calculateVar(element, value, { checkPercent: false, unitType: CSS_UNIT.INTEGER });
-            return !isNaN(result) ? result.toString() : '';
-        }
-        case 'opacity':
-        case 'shapeImageThreshold': {
-            const result = calculateVar(element, value, { boundingSize: 1, unitType: CSS_UNIT.DECIMAL });
-            return !isNaN(result) ? clamp(result).toString() : '';
-        }
-        case 'offsetDistance': {
-            if (element instanceof SVGGeometryElement) {
-                const result = calculateVar(element, value, { boundingSize: element.getTotalLength() });
-                return !isNaN(result) ? Math.max(result, 0).toString() : '';
-            }
-            break;
-        }
+        case 'offsetAnchor':
+        case 'transformOrigin':
+            return calculatePosition(element, value, boundingBox);
         case 'transform': {
+            value = value.trim();
             const transform = splitEnclosing(value);
             const length = transform.length;
             if (length > 1) {
                 for (let i = 1; i < length; i++) {
                     let seg = transform[i];
                     if (hasCalc(seg)) {
-                        seg = seg.substring(1, seg.length - 1);
+                        seg = trimEnclosing(seg);
                         let calc: Undef<string>;
                         switch (transform[i - 1].trim()) {
                             case 'matrix':
                             case 'matrix3d':
                                 calc = calculateVarAsString(element, seg, { checkPercent: false, unitType: CSS_UNIT.DECIMAL });
                                 break;
-                            case 'scale':
                             case 'scaleX':
                             case 'scaleY':
-                            case 'scaleZ':
+                            case 'scaleZ': {
+                                const result = calculateVar(element, seg, { checkPercent: false, unitType: CSS_UNIT.DECIMAL, min: 0 });
+                                if (!isNaN(result)) {
+                                    calc = result.toString();
+                                }
+                                break;
+                            }
+                            case 'scale':
                             case 'scale3d':
                                 calc = calculateVarAsString(element, seg, { checkPercent: false, unitType: CSS_UNIT.DECIMAL, min: 0 });
                                 break;
                             case 'translateX':
-                                calc = calculateVarAsString(element, seg, { parent: true, dimension: 'width' });
+                                calc = formatVar(calculateVar(element, seg, { parent: true, dimension: 'width', boundingBox }));
                                 break;
                             case 'translateY':
-                                calc = calculateVarAsString(element, seg, { parent: true, dimension: 'height' });
+                                calc = formatVar(calculateVar(element, seg, { parent: true, dimension: 'height', boundingBox }));
                                 break;
                             case 'translateZ':
                             case 'perspective':
-                                calc = calculateVarAsString(element, seg, { checkPercent: false });
+                                calc = formatVar(calculateVar(element, seg, { checkPercent: false }));
                                 break;
                             case 'translate':
                             case 'translate3d':
-                                calc = calculateVarAsString(element, seg, { parent: true, dimension: ['width', 'height'] });
+                                calc = calculateVarAsString(element, seg, { parent: true, dimension: ['width', 'height'], boundingBox });
                                 break;
-                            case 'rotate':
-                            case 'rotateX':
-                            case 'rotateY':
-                            case 'rotateZ':
-                            case 'rotate3d':
                             case 'skew':
-                            case 'skewX':
-                            case 'skewY':
+                            case 'rotate':
                                 calc = calculateVarAsString(element, seg, { checkPercent: false, unitType: CSS_UNIT.ANGLE });
                                 break;
+                            case 'skewX':
+                            case 'skewY':
+                            case 'rotateX':
+                            case 'rotateY':
+                            case 'rotateZ': {
+                                const result = calculateVar(element, seg, { checkPercent: false, unitType: CSS_UNIT.ANGLE });
+                                if (!isNaN(result)) {
+                                    calc = result + 'deg';
+                                }
+                                break;
+                            }
+                            case 'rotate3d': {
+                                const component = seg.split(XML.SEPARATOR);
+                                const q = component.length;
+                                if (q === 3 || q === 4) {
+                                    calc = '';
+                                    for (let j = 0; j < q; j++) {
+                                        let rotate = component[j];
+                                        if (isCalc(rotate)) {
+                                            const result = calculateVar(element, rotate, { checkPercent: false, unitType: j === 3 ? CSS_UNIT.ANGLE : CSS_UNIT.DECIMAL });
+                                            if (!isNaN(result)) {
+                                                rotate = result + (j === 3 ? 'deg' : '');
+                                            }
+                                            else {
+                                                return '';
+                                            }
+                                        }
+                                        calc += (calc !== '' ? ', ' : '') + rotate;
+                                    }
+                                }
+                                break;
+                            }
                         }
                         if (calc) {
                             transform[i] = `(${calc})`;
@@ -606,11 +816,45 @@ export function calculateStyle(element: CSSElement, attr: string, value: string)
                 }
                 return transform.join('');
             }
-            break;
+            return value;
         }
+        case 'backgroundImage':
+        case 'borderImageSource':
+        case 'maskImage': {
+            value = value.trim();
+            const image = splitEnclosing(value);
+            const length = image.length;
+            if (length > 1) {
+                for (let i = 1; i < length; i++) {
+                    const color = image[i];
+                    if (isColor(color) && hasCalc(color)) {
+                        const component = splitEnclosing(trimEnclosing(color));
+                        const q = component.length;
+                        for (let j = 1; j < q; j++) {
+                            if (hasCalc(component[j])) {
+                                const previous = component[j - 1];
+                                if (isColor(previous)) {
+                                    const name = previous.split(CHAR.SPACE).pop() as string;
+                                    const segment = calculateColor(element, name + component[j]);
+                                    if (segment !== '') {
+                                        component[j] = segment.replace(name, '');
+                                        continue;
+                                    }
+                                }
+                                return '';
+                            }
+                        }
+                        image[i] = `(${component.join('')})`;
+                    }
+                }
+                return image.join('');
+            }
+            return value;
+        }
+        case 'borderColor':
         case 'scrollbarColor': {
             const result: string[] = [];
-            for (const color of value.split(XML.SEPARATOR)) {
+            for (const color of value.trim().split(XML.SEPARATOR)) {
                 const segment = calculateColor(element, color);
                 if (segment !== '') {
                     result.push(segment);
@@ -621,10 +865,30 @@ export function calculateStyle(element: CSSElement, attr: string, value: string)
             }
             return result.join(', ');
         }
+        case 'boxShadow':
+        case 'textShadow':
+            return calculateVarAsString(element, value, { checkPercent: false, min: 0, separator: ',' });
+        case 'backgroundSize':
+        case 'maskPosition':
+        case 'maskSize':
+            return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], boundingBox, min: attr !== 'maskPosition' ? 0 : undefined, separator: ',' });
+        case 'animation':
+        case 'animationDelay':
+        case 'animationDuration':
+        case 'transition':
+        case 'transitionDelay':
+        case 'transitionDuration':
+            return calculateVarAsString(element, value, { checkPercent: false, unitType: CSS_UNIT.TIME, roundValue: true, min: 0, separator: ',' });
+        case 'columns':
+            return calculateGeneric(element, value, CSS_UNIT.INTEGER, 1, boundingBox);
+        case 'borderImageSlice':
+        case 'flex':
+        case 'font':
+            return calculateGeneric(element, value, CSS_UNIT.DECIMAL, 0, boundingBox);
         case 'backgroundPosition': {
             const result: string[] = [];
             for (const position of value.split(XML.SEPARATOR)) {
-                const segment = calculatePosition(element, position);
+                const segment = calculatePosition(element, position, boundingBox);
                 if (segment !== '') {
                     result.push(segment);
                 }
@@ -634,54 +898,311 @@ export function calculateStyle(element: CSSElement, attr: string, value: string)
             }
             return result.join(', ');
         }
-        case 'offsetAnchor':
-        case 'transformOrigin':
-            return calculatePosition(element, value);
-        case 'transitionTimingFunction':
+        case 'border':
+        case 'borderBottom':
+        case 'borderLeft':
+        case 'borderRight':
+        case 'borderTop':
+        case 'outline': {
+            value = value.trim();
+            const border = splitEnclosing(value);
+            const length = border.length;
+            if (length > 1) {
+                for (let i = 1; i < length; i++) {
+                    const previous = border[i - 1].trim();
+                    let seg = border[i];
+                    if (previous === 'calc') {
+                        border[i - 1] = '';
+                        seg = formatVar(calculateVar(element, `calc${seg}`, { dimension: 'width', boundingBox, min: 0 }));
+                    }
+                    else if (isColor(previous)) {
+                        const partial = previous.split(CHAR.SPACE);
+                        seg = calculateColor(element, partial.pop() + seg);
+                        border[i - 1] = partial.join(' ');
+                    }
+                    else {
+                        continue;
+                    }
+                    if (seg !== '') {
+                        border[i] = seg;
+                    }
+                    else {
+                        return '';
+                    }
+                }
+                return border.join(' ');
+            }
+            return value;
+        }
         case 'animationTimingFunction':
-            break;
+        case 'transitionTimingFunction': {
+            value = value.trim();
+            const timingFunction = splitEnclosing(value);
+            const length = timingFunction.length;
+            if (length > 1) {
+                for (let i = 1; i < length; i++) {
+                    let seg = timingFunction[i];
+                    if (hasCalc(seg)) {
+                        const name = timingFunction[i - 1].trim();
+                        seg = trimEnclosing(seg);
+                        let calc: Undef<string>;
+                        if (/cubic-bezier$/.test(name)) {
+                            const cubic = seg.split(XML.SEPARATOR);
+                            const q = cubic.length;
+                            if (q === 4) {
+                                calc = '';
+                                const options: CalculateVarOptions = { checkPercent: false, unitType: CSS_UNIT.DECIMAL };
+                                for (let j = 0; j < q; j++) {
+                                    let bezier = cubic[j];
+                                    if (isCalc(bezier)) {
+                                        if (j % 2 === 0) {
+                                            options.min = 0;
+                                            options.max = 1;
+                                        }
+                                        else {
+                                            options.min = undefined;
+                                            options.max = undefined;
+                                        }
+                                        const p = calculateVar(element, bezier, options);
+                                        if (!isNaN(p)) {
+                                            bezier = p.toString();
+                                        }
+                                        else {
+                                            return '';
+                                        }
+                                    }
+                                    calc += (calc !== '' ? ', ' : '') + bezier;
+                                }
+                            }
+                        }
+                        else if (/steps$/.test(name)) {
+                            calc = calculateVarAsString(element, seg, { unitType: CSS_UNIT.INTEGER, min: 1 });
+                        }
+                        if (calc) {
+                            timingFunction[i] = `(${calc})`;
+                        }
+                        else {
+                            return '';
+                        }
+                    }
+                }
+                return timingFunction.join('');
+            }
+            return value;
+        }
         case 'clipPath':
-            break;
-        case 'backgroundImage':
-        case 'maskImage':
-            break;
-        case 'borderImage':
-            break;
-        case 'shapeOutside':
-            break;
-        case 'font':
-        case 'background':
-        case 'borderColor':
-        case 'grid':
-        case 'gridTemplate':
-        case 'flex':
-        case 'rows':
-        case 'columns':
-        case 'animation':
-        case 'offset':
-            break;
-        default:
-            if (/Color$/.test(attr)) {
-                return calculateColor(element, value);
+        case 'offsetPath':
+        case 'shapeOutside': {
+            value = value.trim();
+            const path = splitEnclosing(value);
+            const length = path.length;
+            if (length === 2) {
+                const name = path[0].trim();
+                switch (name) {
+                    case 'url':
+                    case 'path':
+                        return !hasCalc(path[1]) ? value : '';
+                    case 'linear-gradient':
+                    case 'repeating-linear-gradient':
+                    case 'radial-gradient':
+                    case 'repeating-radial-gradient':
+                    case 'conic-gradient':
+                        return calculateStyle(element, 'backgroundImage', value, boundingBox);
+                }
+                let shape = path[1].trim();
+                shape = trimEnclosing(shape);
+                switch (name) {
+                    case 'circle':
+                    case 'ellipse': {
+                        const result: string[] = [];
+                        let [radius, position] = shape.split(/\s+at\s+/);
+                        if (hasCalc(radius)) {
+                            const options: CalculateVarAsStringOptions = { parent: true, boundingBox, min: 0 };
+                            if (name === 'circle') {
+                                if (radius.includes('%')) {
+                                    if (boundingBox) {
+                                        const { width, height } = boundingBox;
+                                        options.boundingSize = Math.min(width, height);
+                                    }
+                                    else {
+                                        const parentElement = element.parentElement;
+                                        if (parentElement) {
+                                            const { width, height } = parentElement.getBoundingClientRect();
+                                            const style = getStyle(parentElement);
+                                            options.boundingSize = Math.max(0, Math.min(width - getContentBoxWidth(style), height - getContentBoxHeight(style)));
+                                        }
+                                        else {
+                                            return '';
+                                        }
+                                    }
+                                }
+                            }
+                            else {
+                                options.dimension = ['width', 'height'];
+                            }
+                            radius = calculateVarAsString(element, radius, options);
+                            if (radius !== '') {
+                                result.push(radius);
+                            }
+                            else {
+                                return '';
+                            }
+                        }
+                        else if (radius) {
+                            result.push(radius);
+                        }
+                        if (hasCalc(position)) {
+                            position = calculateVarAsString(element, position, { parent: true, dimension: ['width', 'height'], boundingBox });
+                            if (position !== '') {
+                                result.push(position);
+                            }
+                            else {
+                                return '';
+                            }
+                        }
+                        else if (position) {
+                            result.push(position);
+                        }
+                        shape = result.join(' at ');
+                        break;
+                    }
+                    case 'inset':
+                        shape = calculateVarAsString(element, shape, { checkUnit: true, dimension: ['height', 'width', 'height', 'width', 'width'], boundingBox });
+                        break;
+                    case 'polygon': {
+                        const result: string[] = [];
+                        for (let points of shape.split(XML.SEPARATOR)) {
+                            if (hasCalc(points)) {
+                                points = calculateVarAsString(element, points, { parent: true, dimension: ['width', 'height'], boundingBox });
+                                if (points !== '') {
+                                    result.push(points);
+                                }
+                                else {
+                                    return '';
+                                }
+                            }
+                            else {
+                                result.push(points);
+                            }
+                        }
+                        shape = result.join(', ');
+                        break;
+                    }
+                }
+                if (shape !== '') {
+                    return `${name}(${shape})`;
+                }
             }
-            else if (/^scroll(Margin|Padding)/.test(attr)) {
-                return calculateVarAsString(element, value, { dimension: 'width', min: 0 });
+            return value;
+        }
+        case 'grid': {
+            let [row, column] = value.trim().split(REGEX_DIVIDER);
+            if (hasCalc(row)) {
+                const result = calculateStyle(element, 'gridTemplateRows', row, boundingBox);
+                if (result !== '') {
+                    row = result;
+                }
+                else {
+                    return '';
+                }
             }
-            else if (isCalc(value)) {
-                if (/Width$/.test(attr)) {
-                    const result = calculateVar(element, value, { dimension: 'width', min: 0 });
-                    if (!isNaN(result)) {
-                        return result + 'px';
+            if (hasCalc(column)) {
+                const result = calculateStyle(element, 'gridTemplateColumns', column, boundingBox);
+                if (result !== '') {
+                    column = result;
+                }
+                else {
+                    return '';
+                }
+            }
+            return row + (column ? ` / ${column}` : '');
+        }
+        case 'offset': {
+            let [offset, anchor] = value.trim().split(REGEX_DIVIDER);
+            if (hasCalc(offset)) {
+                const url = splitEnclosing(offset.trim());
+                const length = url.length;
+                if (length >= 2) {
+                    offset = url[0] + url[1];
+                    if (hasCalc(offset)) {
+                        offset = calculateStyle(element, 'offsetPath', offset, boundingBox);
+                        if (offset === '') {
+                            return '';
+                        }
+                    }
+                    if (length > 2) {
+                        let distance = url.slice(2).join('');
+                        if (hasCalc(offset)) {
+                            distance = calculateStyle(element, REGEX_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate', distance, boundingBox);
+                            if (distance === '') {
+                                return '';
+                            }
+                        }
+                        offset += ' ' + distance;
                     }
                 }
                 else {
-                    const result = calculateVar(element, value, { unitType: CSS_UNIT.DECIMAL });
-                    if (!isNaN(result)) {
-                        return result.toString();
-                    }
+                    return '';
                 }
             }
+            if (hasCalc(anchor)) {
+                const result = calculateStyle(element, 'offsetAnchor', anchor, boundingBox);
+                if (result !== '') {
+                    anchor = result;
+                }
+                else {
+                    return '';
+                }
+            }
+            return offset + (anchor ? ` / ${anchor}` : '');
+        }
+        case 'borderImage': {
+            const match = /([a-z-]+\(.+?\))\s*([^/]+)(?:\s*\/\s*)?(.+)?/.exec(value.trim());
+            if (match) {
+                let slice = match[2].trim();
+                slice = hasCalc(slice) ? calculateStyle(element, 'borderImageSlice', slice, boundingBox) : slice;
+                if (slice !== '') {
+                    let width: Undef<string>;
+                    let outset: Undef<string>;
+                    if (match[3]) {
+                        [width, outset] = match[3].trim().split(REGEX_DIVIDER);
+                        if (hasCalc(width)) {
+                            const result = calculateStyle(element, 'borderImageWidth', width, boundingBox);
+                            if (result !== '') {
+                                width = result;
+                            }
+                            else {
+                                return '';
+                            }
+                        }
+                        if (hasCalc(outset)) {
+                            const result = calculateStyle(element, 'borderImageOutset', outset, boundingBox);
+                            if (result !== '') {
+                                outset = result;
+                            }
+                            else {
+                                return '';
+                            }
+                        }
+                    }
+                    return match[1] + ' ' + slice + (width ? ` / ${width}` : '') + (outset ? ` / ${outset}` : '');
+                }
+            }
+            return '';
+        }
+        case 'background':
+        case 'gridTemplate':
             break;
+        default:
+            if (/Color$/.test(attr)) {
+                return calculateColor(element, value.trim());
+            }
+            else {
+                const alias = checkWritingMode(attr, getStyle(element).writingMode);
+                if (alias !== '') {
+                    return calculateStyle(element, alias, value, boundingBox);
+                }
+            }
     }
     return '';
 }
@@ -699,18 +1220,16 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
         }
     }
     else if (hasCalc(value)) {
-        const result: string = style?.[attr];
-        if (result) {
-            return result;
+        value = calculateStyle(element, attr, value);
+        if (value === '' && style) {
+            value = style[attr];
         }
-        return calculateStyle(element, attr, value);
     }
     else if (isCustomProperty(value)) {
-        const result: string = style?.[attr];
-        if (result) {
-            return result;
+        value = parseVar(element, value);
+        if (value === '' && style) {
+            value = style[attr];
         }
-        return parseVar(element, value);
     }
     return value || '';
 }
@@ -757,8 +1276,7 @@ export function parseKeyframeRule(rules: CSSRuleList) {
         const item = rules[i];
         const match = REGEX_KEYFRAME.exec(item.cssText);
         if (match) {
-            for (let percent of (item['keyText'] || match[1].trim()).split(XML.SEPARATOR)) {
-                percent = percent.trim();
+            for (let percent of (item['keyText'] || match[1]).trim().split(XML.SEPARATOR)) {
                 switch (percent) {
                     case 'from':
                         percent = '0%';
@@ -767,17 +1285,18 @@ export function parseKeyframeRule(rules: CSSRuleList) {
                         percent = '100%';
                         break;
                 }
-                result[percent] = {};
+                const keyframe: StringMap = {};
                 for (const property of match[2].split(XML.DELIMITER)) {
                     const index = property.indexOf(':');
                     if (index !== -1) {
                         const value = property.substring(index + 1).trim();
                         if (value !== '') {
                             const attr = property.substring(0, index).trim();
-                            result[percent][attr] = value;
+                            keyframe[attr] = value;
                         }
                     }
                 }
+                result[percent] = keyframe;
             }
         }
     }
@@ -795,8 +1314,8 @@ export function validMediaRule(value: string, fontSize?: number) {
                 let match: Null<RegExpExecArray>;
                 while ((match = REGEX_MEDIARULE.exec(value)) !== null) {
                     const negate = match[1] === 'not';
-                    let condition: Null<RegExpExecArray>;
                     let valid = false;
+                    let condition: Null<RegExpExecArray>;
                     while ((condition = REGEX_MEDIACONDITION.exec(match[2])) !== null) {
                         const attr = condition[1];
                         let operation = condition[2];
@@ -927,7 +1446,7 @@ export function parseVar(element: CSSElement, value: string) {
             customValue = fallback;
         }
         if (customValue) {
-            value = value.replace(match[0], customValue);
+            value = value.replace(match[0], customValue).trim();
         }
         else {
             return '';
@@ -937,6 +1456,7 @@ export function parseVar(element: CSSElement, value: string) {
 }
 
 export function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions) {
+    value = value.trim();
     const optionsVar = <CalculateVarOptions> Object.assign({}, options);
     let orderedSize: Undef<number[]>;
     let dimension: Undef<DimensionAttr[]>;
@@ -982,13 +1502,14 @@ export function calculateVarAsString(element: CSSElement, value: string, options
             if (length) {
                 let partial = '';
                 for (let i = 0, j = 0; i < length; i++) {
-                    const output = calc[i];
+                    let output = calc[i];
                     if (isCalc(output)) {
-                        if (orderedSize) {
+                        if (orderedSize && orderedSize[j + 1] !== undefined) {
                             optionsVar.boundingSize = orderedSize[j++];
                         }
                         else if (dimension) {
                             optionsVar.dimension = dimension[j++];
+                            optionsVar.boundingSize = undefined;
                         }
                         const k = calculateVar(element, output, optionsVar);
                         if (!isNaN(k)) {
@@ -1000,8 +1521,11 @@ export function calculateVarAsString(element: CSSElement, value: string, options
                     }
                     else {
                         partial += output;
-                        if (dimension && (!checkUnit && output.trim() !== '' || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
-                            j++;
+                        if (dimension) {
+                            output = output.trim();
+                            if (output !== '' && (!checkUnit || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
+                                j++;
+                            }
                         }
                     }
                 }
@@ -1015,55 +1539,84 @@ export function calculateVarAsString(element: CSSElement, value: string, options
     return result.length === 1 ? result[0] : result.join(separator === ' ' ? ' ' : (separator ? separator + ' ' : ''));
 }
 
-export function calculateVar(element: CSSElement, value: string, options?: CalculateVarOptions) {
+export function calculateVar(element: CSSElement, value: string, options: CalculateVarOptions = {}) {
     const output = parseVar(element, value);
     if (output) {
-        let precision: Undef<number>;
-        let unitType: Undef<number>;
-        let roundValue: Undef<boolean>;
-        if (options) {
-            ({ precision, unitType, roundValue } = options);
-            if (value.includes('%')) {
-                if (options.checkPercent === false) {
-                    return NaN;
-                }
-                if (options.boundingSize === undefined) {
-                    const dimension = options.dimension;
-                    if (dimension) {
-                        let boundingElement: Null<Element> = element.parentElement;
-                        if (boundingElement instanceof HTMLElement) {
-                            if (options.parent === false) {
-                                boundingElement = element;
-                            }
-                        }
-                        else if (element instanceof SVGElement) {
-                            if (options.parent !== true) {
-                                boundingElement = element;
-                            }
+        const { precision, unitType } = options;
+        if (value.includes('%')) {
+            if (options.checkPercent === false || unitType === CSS_UNIT.INTEGER) {
+                return NaN;
+            }
+            if (options.boundingSize === undefined) {
+                const { dimension, boundingBox } = options;
+                if (dimension) {
+                    if (boundingBox) {
+                        options.boundingSize = boundingBox[dimension];
+                    }
+                    else {
+                        let boundingElement: Null<Element>;
+                        let offsetPadding = 0;
+                        if (options.parent === false) {
+                            boundingElement = element;
                         }
                         else {
-                            boundingElement = null;
+                            boundingElement = element.parentElement;
+                            if (boundingElement instanceof HTMLElement) {
+                                let style: CSSStyleDeclaration | undefined;
+                                switch (getStyle(element).display) {
+                                    case 'absolute':
+                                    case 'fixed':
+                                        do {
+                                            style = getStyle(boundingElement);
+                                            if (boundingElement === document.body) {
+                                                break;
+                                            }
+                                            switch (style.position) {
+                                                case 'static':
+                                                case 'initial':
+                                                case 'unset':
+                                                    boundingElement = boundingElement.parentElement;
+                                                    continue;
+                                            }
+                                            break;
+                                        }
+                                        while (boundingElement);
+                                        break;
+                                    default:
+                                        style = getStyle(boundingElement);
+                                        break;
+                                }
+                                if (style) {
+                                    offsetPadding = dimension === 'width' ? getContentBoxWidth(style) : getContentBoxHeight(style);
+                                }
+                            }
+                            else if (element instanceof SVGElement) {
+                                if (options.parent !== true) {
+                                    boundingElement = element;
+                                }
+                            }
+                            else {
+                                boundingElement = null;
+                            }
                         }
                         if (boundingElement) {
-                            options.boundingSize = boundingElement.getBoundingClientRect()[dimension];
+                            options.boundingSize = Math.max(0, boundingElement.getBoundingClientRect()[dimension] - offsetPadding);
                         }
                     }
                 }
             }
         }
-        if ((!unitType || unitType === CSS_UNIT.LENGTH) && /(em|ch)/.test(value)) {
-            if (options === undefined) {
-                options = {};
-            }
-            if (options.fontSize === undefined) {
-                options.fontSize = getFontSize(element);
-            }
+        else if (options.checkPercent) {
+            return NaN;
+        }
+        if ((!unitType || unitType === CSS_UNIT.LENGTH) && /\d(em|ch)/.test(value) && options.fontSize === undefined) {
+            options.fontSize = getFontSize(element);
         }
         let result = calculate(output, options);
         if (precision !== undefined) {
             result = precision === 0 ? Math.floor(result) : parseFloat(truncate(result, precision));
         }
-        else if (roundValue) {
+        else if (options.roundValue) {
             result = Math.round(result);
         }
         return result;
@@ -1071,15 +1624,9 @@ export function calculateVar(element: CSSElement, value: string, options?: Calcu
     return NaN;
 }
 
-export function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
-    let fontSize: Undef<number>;
-    let imageDimension: Undef<Dimension>;
-    let imageSize: Undef<string>;
-    let screenDimension: Undef<Dimension>;
-    if (options) {
-        ({ fontSize, imageDimension, imageSize, screenDimension } = options);
-    }
-    const orientation = value === 'center' ? ['center', 'center'] : value.split(' ');
+export function getBackgroundPosition(value: string, dimension: Dimension, options: BackgroundPositionOptions = {}) {
+    const { fontSize, imageDimension, imageSize, screenDimension } = options;
+    const orientation = value === 'center' ? ['center', 'center'] : value.split(CHAR.SPACE);
     const { width, height } = dimension;
     const result: BoxRectPosition = {
         static: true,
@@ -1099,7 +1646,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
         if (imageDimension && !isLength(position)) {
             let offset = result[directionAsPercent];
             if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
-                const [sizeW, sizeH] = imageSize.split(' ');
+                const [sizeW, sizeH] = imageSize.split(CHAR.SPACE);
                 if (horizontal) {
                     let imageWidth = width;
                     if (isLength(sizeW, true)) {
@@ -1366,10 +1913,9 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         result.push({ src: element.src, pixelRatio: 1, width: 0 });
     }
     else if (result.length > 1 && isString(sizes)) {
-        const pattern = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH}\\))?\\s*(.+)`);
         let width = 0;
-        for (const value of sizes.split(XML.SEPARATOR)) {
-            let match = pattern.exec(value.trim());
+        for (const value of sizes.trim().split(XML.SEPARATOR)) {
+            let match = REGEX_WIDTH.exec(value);
             if (match) {
                 if (!validMediaRule(match[1])) {
                     continue;
@@ -1378,10 +1924,10 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                 if (unit) {
                     match = CSS.CALC.exec(unit);
                     if (match) {
-                        width = calculate(match[1], { boundingSize: element.parentElement?.getBoundingClientRect().width });
+                        width = calculate(match[1], match[1].includes('%') ? { boundingSize: getBoundingWidth(element) } : undefined);
                     }
                     else if (isPercent(unit)) {
-                        width = parseFloat(unit) / 100 * (element.parentElement?.getBoundingClientRect().width || 0);
+                        width = parseFloat(unit) / 100 * getBoundingWidth(element);
                     }
                     else {
                         width = parseUnit(unit);
@@ -1491,8 +2037,8 @@ export function convertAngle(value: string, unit = 'deg') {
 export function convertTime(value: string, unit = 's') {
     let result = convertFloat(value);
     switch (unit) {
-        case 'm':
-            result *= 60;
+        case 's':
+            result *= 1000;
             break;
     }
     return result;
@@ -1508,13 +2054,14 @@ export function calculate(value: string, options: CalculateOptions = {}) {
         return NaN;
     }
     const { boundingSize, min, max, unitType, fontSize } = options;
-    if (value.charAt(0) !== '(' || value.charAt(value.length - 1) !== ')') {
+    let length = value.length;
+    if (value.charAt(0) !== '(' || value.charAt(length - 1) !== ')') {
         value = `(${value})`;
+        length += 2;
     }
     let opened = 0;
     const opening: boolean[] = [];
     const closing: number[] = [];
-    const length = value.length;
     for (let i = 0; i < length; i++) {
         switch (value.charAt(i)) {
             case '(':
@@ -1544,9 +2091,41 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                     }
                 }
                 if (valid) {
+                    let operand: Undef<string>;
+                    let operator: Undef<string>;
+                    const checkNumber = () => {
+                        if (operand) {
+                            switch (operator) {
+                                case '+':
+                                case '-':
+                                    if (isNumber(operand)) {
+                                        return false;
+                                    }
+                                    break;
+                                case '*':
+                                case '/':
+                                    if (!isNumber(operand)) {
+                                        return false;
+                                    }
+                                    break;
+                            }
+                        }
+                        return true;
+                    };
+                    const checkOperator = () => {
+                        if (operand) {
+                            switch (operator) {
+                                case '+':
+                                case '-':
+                                    return false;
+                            }
+                        }
+                        return true;
+                    };
                     const seg: number[] = [];
                     const evaluate: string[] = [];
-                    for (let partial of value.substring(j + 1, closing[i]).split(REGEX_CALCULATE)) {
+                    let found = false;
+                    for (let partial of value.substring(j + 1, closing[i]).split(REGEX_OPERATOR)) {
                         partial = partial.trim();
                         switch (partial) {
                             case '+':
@@ -1554,41 +2133,86 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                             case '*':
                             case '/':
                                 evaluate.push(partial);
+                                operator = partial;
                                 break;
                             default: {
                                 const match = /\s*{(\d+)}\s*/.exec(partial);
                                 if (match) {
-                                    seg.push(equated[parseInt(match[1])]);
+                                    switch (unitType) {
+                                        case CSS_UNIT.INTEGER:
+                                        case CSS_UNIT.DECIMAL:
+                                            break;
+                                        default:
+                                            if (!checkNumber()) {
+                                                return NaN;
+                                            }
+                                            break;
+                                    }
+                                    const unit = equated[parseInt(match[1])];
+                                    seg.push(unit);
+                                    operand = unit.toString();
+                                    found = true;
                                 }
                                 else {
                                     switch (unitType) {
                                         case CSS_UNIT.PERCENT:
-                                            if (isPercent(partial)) {
+                                            if (isNumber(partial)) {
+                                                if (!checkOperator()) {
+                                                    return NaN;
+                                                }
                                                 seg.push(parseFloat(partial));
+                                            }
+                                            else if (isPercent(partial)) {
+                                                if (!checkNumber()) {
+                                                    return NaN;
+                                                }
+                                                seg.push(parseFloat(partial));
+                                                found = true;
                                             }
                                             else {
                                                 return NaN;
                                             }
                                             break;
                                         case CSS_UNIT.TIME:
-                                            if (isTime(partial)) {
+                                            if (isNumber(partial)) {
+                                                if (!checkOperator()) {
+                                                    return NaN;
+                                                }
+                                                seg.push(parseFloat(partial));
+                                            }
+                                            else if (isTime(partial)) {
+                                                if (!checkNumber()) {
+                                                    return NaN;
+                                                }
                                                 seg.push(parseTime(partial));
+                                                found = true;
                                             }
                                             else {
                                                 return NaN;
                                             }
                                             break;
                                         case CSS_UNIT.ANGLE:
-                                            if (isAngle(partial)) {
+                                            if (isNumber(partial)) {
+                                                if (!checkOperator()) {
+                                                    return NaN;
+                                                }
+                                                seg.push(parseFloat(partial));
+                                            }
+                                            else if (isAngle(partial)) {
+                                                if (!checkNumber()) {
+                                                    return NaN;
+                                                }
                                                 seg.push(parseAngle(partial));
+                                                found = true;
                                             }
                                             else {
                                                 return NaN;
                                             }
                                             break;
                                         case CSS_UNIT.INTEGER:
-                                            if (REGEX_INTEGER.test(partial.trim())) {
+                                            if (REGEX_INTEGER.test(partial)) {
                                                 seg.push(parseInt(partial));
+                                                found = true;
                                             }
                                             else {
                                                 return NaN;
@@ -1597,8 +2221,9 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                                         case CSS_UNIT.DECIMAL:
                                             if (isNumber(partial)) {
                                                 seg.push(parseFloat(partial));
+                                                found = true;
                                             }
-                                            else if (boundingSize !== undefined && isPercent(partial)) {
+                                            else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
                                                 seg.push(parseFloat(partial) / 100 * boundingSize);
                                             }
                                             else {
@@ -1607,25 +2232,37 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                                             break;
                                         default:
                                             if (isNumber(partial)) {
-                                                return NaN;
+                                                if (!checkOperator()) {
+                                                    return NaN;
+                                                }
+                                                seg.push(parseFloat(partial));
                                             }
                                             else if (isLength(partial)) {
+                                                if (!checkNumber()) {
+                                                    return NaN;
+                                                }
                                                 seg.push(parseUnit(partial, fontSize));
+                                                found = true;
                                             }
-                                            else if (boundingSize !== undefined && isPercent(partial)) {
+                                            else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
+                                                if (!checkNumber()) {
+                                                    return NaN;
+                                                }
                                                 seg.push(parseFloat(partial) / 100 * boundingSize);
+                                                found = true;
                                             }
                                             else {
                                                 return NaN;
                                             }
                                             break;
                                     }
+                                    operand = partial;
                                 }
                                 break;
                             }
                         }
                     }
-                    if (seg.length !== evaluate.length + 1) {
+                    if (!found || seg.length !== evaluate.length + 1) {
                         return NaN;
                     }
                     for (let k = 0; k < evaluate.length; k++) {
@@ -1646,7 +2283,7 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                         }
                     }
                     for (let k = 0; k < evaluate.length; k++) {
-                        seg.splice(k, 2, seg[k] + (evaluate[k] === '-' ? -seg[k + 1] : seg[k + 1]));
+                        seg.splice(k, 2, seg[k] + seg[k + 1] * (evaluate[k] === '-' ? -1 : 1));
                         evaluate.splice(k--, 1);
                     }
                     if (seg.length === 1) {

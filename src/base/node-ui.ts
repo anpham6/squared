@@ -1403,18 +1403,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    set overflow(value: number) {
-        if (value === 0 || value === NODE_ALIGNMENT.VERTICAL || value === NODE_ALIGNMENT.HORIZONTAL || value === (NODE_ALIGNMENT.HORIZONTAL | NODE_ALIGNMENT.VERTICAL)) {
-            if (hasBit(this.overflow, NODE_ALIGNMENT.BLOCK)) {
-                value |= NODE_ALIGNMENT.BLOCK;
-            }
-            this._cached.overflow = value;
-        }
-    }
-    get overflow() {
-        return super.overflow;
-    }
-
     get baselineElement() {
         let result = this._cached.baselineElement;
         if (result === undefined) {

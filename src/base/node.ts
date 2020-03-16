@@ -7,7 +7,7 @@ type T = Node;
 const $lib = squared.lib;
 
 const { USER_AGENT, isUserAgent } = $lib.client;
-const { BOX_BORDER, CSS_UNIT, TEXT_STYLE, checkStyleValue, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
+const { BOX_BORDER, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = $lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
 const { CHAR, CSS, FILE, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = $lib.session;
@@ -530,15 +530,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
 
 function hasTextAlign(node: T, value: string, localizedValue?: string) {
     const textAlign = node.cssAscend('textAlign', node.textElement && node.blockStatic && !node.hasPX('width'));
-    if (textAlign === value || textAlign === localizedValue) {
-        if (node.blockStatic) {
-            return node.textElement && !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true);
-        }
-        else {
-            return REGEX_INLINE.test(node.display) && !node.floating;
-        }
-    }
-    return false;
+    return (textAlign === value || textAlign === localizedValue) && (node.blockStatic ? node.textElement && !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true) : REGEX_INLINE.test(node.display));
 }
 
 function setStyleCache(element: HTMLElement, attr: string, sessionId: string, value: string, current: string) {
@@ -612,12 +604,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public init() {
         const element = <HTMLElement> this._element;
         if (element) {
+            const styleElement = this.styleElement;
             const sessionId = this.sessionId;
-            const styleMap = getElementCache(element, 'styleMap', sessionId) || {};
+            const styleMap: StringMap = getElementCache(element, 'styleMap', sessionId) || {};
             let style: CSSStyleDeclaration;
             if (!this.pseudoElement) {
                 style = getStyle(element);
-                if (this.styleElement) {
+                if (styleElement) {
                     const items = Array.from(element.style);
                     if (items.length) {
                         const inline = element.style;
@@ -630,12 +623,23 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             else {
                 style = getStyle(element.parentElement, getPseudoElt(element, sessionId));
             }
-            if (this.styleElement) {
+            if (styleElement) {
                 const revisedMap: StringMap = {};
-                for (const attr in styleMap) {
-                    const value = checkStyleValue(element, attr, styleMap[attr], style);
-                    if (value !== '') {
-                        revisedMap[attr] = value;
+                const writingMode = style.writingMode;
+                for (let attr in styleMap) {
+                    const value = styleMap[attr];
+                    const alias = checkWritingMode(attr, writingMode);
+                    if (alias !== '') {
+                        if (!styleMap[alias]) {
+                            attr = alias;
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    const result = checkStyleValue(element, attr, value, style);
+                    if (result !== '') {
+                        revisedMap[attr] = result;
                     }
                 }
                 this._styleMap = revisedMap;
@@ -1464,24 +1468,27 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     private _convertBorderWidth(index: number) {
         if (!this.plainText) {
-            const [borderStyle, borderWidth] = BOX_BORDER[index];
-            const value = this.css(borderStyle);
-            if (value !== 'none') {
-                const width = this.css(borderWidth);
-                let result: number;
-                switch (width) {
-                    case 'thin':
-                    case 'medium':
-                    case 'thick':
-                        result = convertFloat(this.style[borderWidth]);
-                        break;
-                    default:
-                        result = this.parseUnit(width, index === 1 || index === 3 ? 'width' : 'height');
-                        break;
-                }
-                if (result > 0) {
-                    return Math.max(Math.round(result), 1);
-                }
+            switch (this.css(BOX_BORDER[index][0])) {
+                case 'none':
+                case 'initial':
+                case 'hidden':
+                    return 0;
+            }
+            const borderWidth = BOX_BORDER[index][1];
+            const width = this.css(borderWidth);
+            let result: number;
+            switch (width) {
+                case 'thin':
+                case 'medium':
+                case 'thick':
+                    result = convertFloat(this.style[borderWidth]);
+                    break;
+                default:
+                    result = this.parseUnit(width, index === 1 || index === 3 ? 'width' : 'height');
+                    break;
+            }
+            if (result > 0) {
+                return Math.max(Math.round(result), 1);
             }
         }
         return 0;
@@ -1525,51 +1532,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 break;
         }
-        const result = this.parseUnit(this.css(attr), 'width', this.actualParent?.gridElement !== true);
-        if (!margin) {
-            let paddingStart = this.toFloat('paddingInlineStart', 0);
-            let paddingEnd = this.toFloat('paddingInlineEnd', 0);
-            if (paddingStart > 0 || paddingEnd > 0) {
-                if (this.css('writingMode') === 'vertical-rl') {
-                    if (this.dir === 'rtl') {
-                        if (attr !== 'paddingBottom') {
-                            paddingStart = 0;
-                        }
-                        if (attr !== 'paddingTop') {
-                            paddingEnd = 0;
-                        }
-                    }
-                    else {
-                        if (attr !== 'paddingTop') {
-                            paddingStart = 0;
-                        }
-                        if (attr !== 'paddingBottom') {
-                            paddingEnd = 0;
-                        }
-                    }
-                }
-                else {
-                    if (this.dir === 'rtl') {
-                        if (attr !== 'paddingRight') {
-                            paddingStart = 0;
-                        }
-                        if (attr !== 'paddingLeft') {
-                            paddingEnd = 0;
-                        }
-                    }
-                    else {
-                        if (attr !== 'paddingLeft') {
-                            paddingStart = 0;
-                        }
-                        if (attr !== 'paddingRight') {
-                            paddingEnd = 0;
-                        }
-                    }
-                }
-                return paddingStart + result + paddingEnd;
-            }
-        }
-        return result;
+        return this.parseUnit(this.css(attr), 'width', this.actualParent?.gridElement !== true);
     }
 
     private _flexParent(direction: "row" | "column") {

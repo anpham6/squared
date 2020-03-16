@@ -1,11 +1,12 @@
-const DECIMAL = '-?\\d+(?:\\.\\d+)?';
-const UNIT_TYPE = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in';
+const DECIMAL = '-?(?:\\d+(?:\\.\\d+)?|\\d*\\.\\d+)';
+const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in';
 
 export const STRING = {
     DECIMAL,
     PERCENT: '-?\\d+(?:\\.\\d+)?%',
-    LENGTH: `(${DECIMAL})(${UNIT_TYPE})?`,
-    LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_TYPE}|%)?)`,
+    LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
+    LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
+    UNIT_LENGTH,
     DATAURI: '(?:data:([^,]+),)?(.*?)',
     CSS_SELECTOR_LABEL: '[\\.#]?[\\w\\-]+',
     CSS_SELECTOR_PSEUDO_ELEMENT: '::[\\w\\-]+',
@@ -34,7 +35,7 @@ export const CSS = {
     CALC: new RegExp(`^${STRING.CSS_CALC}$`),
     VAR: /var\((--[A-Za-z\d-]+)(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/,
     URL: /^url\("?(.+?)"?\)$/,
-    CUSTOM_PROPERTY: /^\s*(?:var|calc)\(.+\)$/,
+    CUSTOM_PROPERTY: /^\s*var\(.+\)\s*$/,
     HEX: /[A-Za-z\d]{3,8}/,
     RGBA: /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/,
     HSLA: /hsla?\((\d+), (\d+)%, (\d+)%(?:, ([\d.]+))?\)/,

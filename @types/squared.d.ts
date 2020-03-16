@@ -499,7 +499,6 @@ declare namespace base {
         textContent: string;
         autoPosition: boolean;
         multiline: boolean;
-        overflow: number;
         naturalChild: boolean;
         lineBreakLeading: boolean;
         lineBreakTrailing: boolean;
@@ -817,6 +816,7 @@ declare namespace lib {
             fontSize?: number;
         }
         interface CalculateVarAsStringOptions extends CalculateOptions {
+            boundingBox?: Dimension;
             dimension?: DimensionAttr[] | DimensionAttr;
             orderedSize?: number[];
             parent?: boolean;
@@ -849,6 +849,7 @@ declare namespace lib {
         function getStyle(element: Null<Element>, pseudoElt?: string): CSSStyleDeclaration;
         function getFontSize(element: Null<Element>): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
+        function checkWritingMode(attr: string, value: string): string;
         function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
         function parseSelectorText(value: string): string;
         function getSpecificity(value: string): number;
@@ -858,10 +859,10 @@ declare namespace lib {
         function isParentStyle(element: Element, attr: string, ...styles: string[]): boolean;
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
         function calculate(value: string, options?: CalculateOptions): number;
-        function parseVar(element: CSSElement, value: string): string;
         function calculateVar(element: CSSElement, value: string, options?: CalculateVarOptions): number;
         function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions): string;
-        function calculateStyle(element: CSSElement, attr: string, value: string): string;
+        function calculateStyle(element: CSSElement, attr: string, value: string, boundingBox?: Dimension): string;
+        function parseVar(element: CSSElement, value: string): string;
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
@@ -931,6 +932,7 @@ declare namespace lib {
             PERCENT: string;
             LENGTH: string;
             LENGTH_PERCENTAGE: string;
+            UNIT_LENGTH: string;
             DATAURI: string;
             CSS_SELECTOR_LABEL: string;
             CSS_SELECTOR_PSEUDO_ELEMENT: string;

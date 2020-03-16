@@ -5,7 +5,10 @@ import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
 type View = android.base.View;
 
-const { formatPX } = squared.lib.css;
+const $lib = squared.lib;
+
+const { formatPX } = $lib.css;
+const { hasBit } = $lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -15,7 +18,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
     }
 
     public condition(node: T) {
-        return node.overflowX && node.hasPX('width') || node.overflowY && node.hasPX('height') && node.hasHeight || this.included(<HTMLElement> node.element);
+        return node.overflowX && node.hasPX('width') || node.overflowY && node.hasPX('height') && node.hasHeight;
     }
 
     public processNode(node: T, parent: T) {
@@ -31,18 +34,6 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         }
         else if (node.overflowY) {
             overflow.push(verticalScroll);
-        }
-        else {
-            let overflowType = 0;
-            if (node.hasPX('width')) {
-                overflowType |= NODE_ALIGNMENT.HORIZONTAL;
-                overflow.push(horizontalScroll);
-            }
-            if (node.hasPX('height', false) || node.hasHeight && node.hasPX('height')) {
-                overflowType |= NODE_ALIGNMENT.VERTICAL;
-                overflow.push(verticalScroll);
-            }
-            node.overflow = overflowType;
         }
         if (overflow.includes(horizontalScroll)) {
             const children: T[] = [];
@@ -152,7 +143,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     item.innerWrapped = parent;
                 }
             }
-            node.overflow = 0;
+            node.setCacheValue('overflow', hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) ? NODE_ALIGNMENT.BLOCK : 0);
             node.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
             node.resetBox(BOX_STANDARD.MARGIN, scrollView[0]);
             node.parent = parent;

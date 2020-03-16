@@ -405,19 +405,20 @@ export function getDOMRect(element: SVGElement) {
 
 export function calculateStyle(element: SVGElement, attr: string, value: string) {
     attr = convertCamelCase(attr);
-    value = value.trim();
     switch (attr) {
-        case 'width':
-        case 'height':
         case 'clipPath':
+        case 'height':
+        case 'offsetAnchor':
+        case 'offsetPath':
         case 'transform':
         case 'transformOrigin':
-        case 'offsetAnchor':
-        case 'offsetRotate':
-        case 'offsetDistance':
+        case 'width':
+            return calculateCssStyle(element, attr, value, getNearestViewBox(element));
         case 'animationDelay':
         case 'animationDuration':
         case 'animationIterationCount':
+        case 'offsetDistance':
+        case 'offsetRotate':
             return calculateCssStyle(element, attr, value);
         case 'fill':
         case 'stroke':
@@ -438,17 +439,17 @@ export function calculateStyle(element: SVGElement, attr: string, value: string)
         return min ? Math.min(width, height) : hypotenuse(width, height);
     };
     switch (attr) {
+        case 'cx':
         case 'x':
         case 'x1':
-        case 'x2':
-        case 'cx': {
+        case 'x2': {
             const result = calculateVar(element, value, { boundingSize: viewBox.width });
             return !isNaN(result) ? result.toString() : '';
         }
+        case 'cy':
         case 'y':
         case 'y1':
-        case 'y2':
-        case 'cy': {
+        case 'y2': {
             const result = calculateVar(element, value, { boundingSize: viewBox.height });
             return !isNaN(result) ? result.toString() : '';
         }
@@ -470,12 +471,12 @@ export function calculateStyle(element: SVGElement, attr: string, value: string)
             }
             return '0';
         }
-        case 'strokeWidth': {
-            const result = calculateVar(element, value, { boundingSize: getViewportArea(false), unitType: CSS_UNIT.DECIMAL, min: 0 });
-            return !isNaN(result) ? result.toString() : '';
-        }
         case 'strokeDashoffset': {
             const result = calculateVar(element, value, { boundingSize: getViewportArea(true), unitType: CSS_UNIT.DECIMAL });
+            return !isNaN(result) ? result.toString() : '';
+        }
+        case 'strokeWidth': {
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(false), unitType: CSS_UNIT.DECIMAL, min: 0 });
             return !isNaN(result) ? result.toString() : '';
         }
     }

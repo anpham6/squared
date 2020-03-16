@@ -98,7 +98,7 @@ These settings are available in the global variable "squared" to customize your 
 
 ```javascript
 squared.settings = {
-        builtInExtensions: [
+    builtInExtensions: [
         'android.delegate.background',
         'android.delegate.negative-x',
         'android.delegate.positive-x',
@@ -158,7 +158,7 @@ squared.settings = {
 
 ```javascript
 squared.settings = {
-        builtInExtensions: [
+    builtInExtensions: [
         'chrome.compress.brotli',
         'chrome.compress.gzip'
     ],
