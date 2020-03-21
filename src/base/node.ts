@@ -11,7 +11,7 @@ const { BOX_BORDER, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, for
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib.dom;
 const { CHAR, CSS, FILE, XML } = $lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = $lib.session;
-const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, iterateArray, spliceString } = $lib.util;
+const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, iterateArray, spliceString, splitEnclosing } = $lib.util;
 
 const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
@@ -20,7 +20,7 @@ const REGEX_INLINEDASH = /^inline-/;
 const REGEX_MARGIN = /^margin/;
 const REGEX_PADDING = /^padding/;
 const REGEX_BORDER = /^border/;
-const REGEX_BACKGROUND = /\s*(url\(.+?\))\s*/;
+const REGEX_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
 const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
@@ -2537,12 +2537,27 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get backgroundImage() {
         let result = this._cached.backgroundImage;
         if (result === undefined) {
-            const value = this.css('backgroundImage');
+            let value = this.css('backgroundImage');
             if (value !== '' && value !== 'none' && value !== 'initial') {
                 result = value;
             }
             else {
-                result = REGEX_BACKGROUND.exec(this.css('background'))?.[1] || '';
+                value = this.css('background');
+                if (REGEX_BACKGROUND.test(value)) {
+                    const segments: string[] = [];
+                    const background = splitEnclosing(value);
+                    const length = background.length;
+                    for (let i = 1; i < length; i++) {
+                        const name = background[i - 1].trim();
+                        if (REGEX_BACKGROUND.test(name)) {
+                            segments.push(name + background[i]);
+                        }
+                    }
+                    result = segments.join(', ');
+                }
+                else {
+                    result = '';
+                }
             }
             this._cached.backgroundImage = result;
         }

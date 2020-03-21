@@ -249,7 +249,9 @@ export default abstract class Application<T extends Node> implements squared.bas
             });
         }
         if (imageElements.length) {
-            this.initializing = true;
+            if (THEN) {
+                this.initializing = true;
+            }
             Promise.all(objectMap<PreloadImage, Promise<PreloadImage>>(imageElements, image => {
                 return new Promise((resolve, reject) => {
                     if (typeof image === 'string') {
@@ -275,7 +277,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                         resource.addImage(value);
                     }
                 }
-                resume();
+                if (THEN) {
+                    resume();
+                }
             })
             .catch((error: Event | HTMLImageElement) => {
                 if (error instanceof Event) {
@@ -283,9 +287,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 const message = error instanceof HTMLImageElement ? error.src : '';
                 if (!this.userSettings.showErrorMessages || !isString(message) || confirm('FAIL: ' + message)) {
-                    resume();
+                    if (THEN) {
+                        resume();
+                    }
                 }
             });
+            if (!THEN) {
+                resume();
+            }
         }
         else {
             resume();
