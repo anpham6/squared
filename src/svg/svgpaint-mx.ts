@@ -46,7 +46,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
 
         protected _retainStyle = true;
 
-        #strokeWidth = '1';
+        private _strokeWidth = '1';
 
         public setStroke() {
             this.setAttribute('stroke');
@@ -279,12 +279,12 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         set strokeWidth(value) {
-            this.#strokeWidth = value;
+            this._strokeWidth = value;
         }
         get strokeWidth() {
             const stroke = this.stroke;
             if (isString(stroke) && stroke !== 'none') {
-                const result = this.#strokeWidth;
+                const result = this._strokeWidth;
                 if (result !== '') {
                     const parent = this.parent;
                     return parent?.requireRefit ? truncate(parent.refitSize(parseFloat(result))) : result;

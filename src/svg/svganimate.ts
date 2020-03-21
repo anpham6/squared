@@ -171,13 +171,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     protected _keyTimes?: number[];
     protected _keySplines?: string[];
 
-    #iterationCount = 1;
-    #from = '';
-    #reverse = false;
-    #alternate = false;
-    #setterType = false;
-    #repeatDuration = -1;
-    #timingFunction = '';
+    private _iterationCount = 1;
+    private _from = '';
+    private _reverse = false;
+    private _alternate = false;
+    private _setterType = false;
+    private _repeatDuration = -1;
+    private _timingFunction = '';
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement) {
         super(element, animationElement);
@@ -204,7 +204,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
             const repeatDur = getNamedItem(animationElement, 'repeatDur');
             if (repeatDur !== '' && repeatDur !== 'indefinite') {
-                this.#repeatDuration = SvgAnimation.convertClockTime(repeatDur);
+                this._repeatDuration = SvgAnimation.convertClockTime(repeatDur);
             }
             const repeatCount = getNamedItem(animationElement, 'repeatCount');
             this.iterationCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount);
@@ -215,7 +215,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     get from() {
-        return this.#from;
+        return this._from;
     }
     set from(value) {
         if (this._values === undefined) {
@@ -246,7 +246,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 }
             }
         }
-        this.#from = value;
+        this._from = value;
     }
 
     public setCalcMode(attributeName?: string, mode?: string) {
@@ -387,14 +387,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
     get duration() {
         const value = super.duration;
-        if (value === -1 && this.#repeatDuration !== -1) {
-            return this.#repeatDuration;
+        if (value === -1 && this._repeatDuration !== -1) {
+            return this._repeatDuration;
         }
         return value;
     }
 
     set iterationCount(value) {
-        this.#iterationCount = isNaN(value) ? 1 : value;
+        this._iterationCount = isNaN(value) ? 1 : value;
         const animationElement = this.animationElement;
         if (animationElement) {
             if (this.iterationCount !== -1) {
@@ -410,8 +410,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     get iterationCount() {
         const duration = this.duration;
         if (duration > 0) {
-            const iterationCount = this.#iterationCount;
-            const repeatDuration = this.#repeatDuration;
+            const iterationCount = this._iterationCount;
+            const repeatDuration = this._repeatDuration;
             if (repeatDuration !== -1 && (iterationCount === -1 || repeatDuration < iterationCount * duration)) {
                 return repeatDuration / duration;
             }
@@ -424,7 +424,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         super.to = value;
     }
     get to() {
-        if (this.#setterType) {
+        if (this._setterType) {
             return this.valueTo || super.to;
         }
         return this.setterType ? this.values[0] : super.to;
@@ -492,14 +492,14 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set timingFunction(value) {
-        this.#timingFunction = value ? SvgAnimate.convertTimingFunction(value) : value;
+        this._timingFunction = value ? SvgAnimate.convertTimingFunction(value) : value;
     }
     get timingFunction() {
-        return this.#timingFunction || this.keySplines?.[0] || '';
+        return this._timingFunction || this.keySplines?.[0] || '';
     }
 
     set reverse(value) {
-        if (this.length && value !== this.#reverse) {
+        if (this.length && value !== this._reverse) {
             const keyTimesBase = this.keyTimes;
             const keySplinesBase = this._keySplines;
             const length = keyTimesBase.length;
@@ -518,17 +518,17 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 this._keySplines = keySplines;
             }
         }
-        this.#reverse = value;
+        this._reverse = value;
     }
     get reverse() {
-        return this.#reverse;
+        return this._reverse;
     }
 
     set alternate(value) {
-        this.#alternate = value;
+        this._alternate = value;
     }
     get alternate() {
-        return this.#alternate;
+        return this._alternate;
     }
 
     get playable() {
@@ -554,10 +554,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     set setterType(value) {
-        this.#setterType = value;
+        this._setterType = value;
     }
     get setterType() {
-        if (this.#setterType) {
+        if (this._setterType) {
             return true;
         }
         else if (this.animationElement && this.duration === 0) {

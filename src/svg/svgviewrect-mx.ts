@@ -16,10 +16,10 @@ function hasUnsupportedAccess(element: SVGElement) {
 
 export default <T extends Constructor<SvgBaseVal>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
-        #x?: number;
-        #y?: number;
-        #width?: number;
-        #height?: number;
+        private _x?: number;
+        private _y?: number;
+        private _width?: number;
+        private _height?: number;
 
         public setRect() {
             const parent = this.parent;
@@ -49,24 +49,24 @@ export default <T extends Constructor<SvgBaseVal>>(Base: T) => {
         }
 
         set x(value) {
-            this.#x = value;
+            this._x = value;
         }
         get x() {
-            return this.#x ?? (this._getElement()?.x.baseVal.value || 0);
+            return this._x ?? (this._getElement()?.x.baseVal.value || 0);
         }
 
         set y(value) {
-            this.#y = value;
+            this._y = value;
         }
         get y() {
-            return this.#y ?? (this._getElement()?.y.baseVal.value || 0);
+            return this._y ?? (this._getElement()?.y.baseVal.value || 0);
         }
 
         set width(value) {
-            this.#width = value;
+            this._width = value;
         }
         get width() {
-            const result = this.#width;
+            const result = this._width;
             if (result !== undefined) {
                 return result;
             }
@@ -80,10 +80,10 @@ export default <T extends Constructor<SvgBaseVal>>(Base: T) => {
         }
 
         set height(value) {
-            this.#height = value;
+            this._height = value;
         }
         get height() {
-            const result = this.#height;
+            const result = this._height;
             if (result !== undefined) {
                 return result;
             }

@@ -93,7 +93,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         protected _transforms?: SvgTransform[];
         protected _animations?: SvgAnimation[];
 
-        #name?: string;
+        private _name?: string;
 
         public getTransforms(element?: SVGGraphicsElement) {
             if (element === undefined) {
@@ -473,13 +473,13 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         set name(value) {
-            this.#name = value;
+            this._name = value;
         }
         get name() {
-            let result = this.#name;
+            let result = this._name;
             if (result === undefined) {
                 result = SvgBuild.setName(this.element);
-                this.#name = result;
+                this._name = result;
             }
             return result;
         }

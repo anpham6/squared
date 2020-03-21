@@ -80,13 +80,13 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     public companion?: NumberValue<SvgAnimation>;
     public readonly animationElement: Null<SVGAnimationElement> = null;
 
-    #attributeName = '';
-    #duration = -1;
-    #delay = 0;
-    #to = '';
-    #dataset: ObjectMap<ObjectMap<any>> = {};
-    #parent?: SvgView | SvgPath;
-    #group?: SvgAnimationGroup;
+    private _attributeName = '';
+    private _duration = -1;
+    private _delay = 0;
+    private _to = '';
+    private _dataset: ObjectMap<ObjectMap<any>> = {};
+    private _parent?: SvgView | SvgPath;
+    private _group?: SvgAnimationGroup;
 
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement) {
         if (element) {
@@ -95,7 +95,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 const value = dataset[name];
                 if (isString(value)) {
                     try {
-                        this.#dataset[name] = JSON.parse(value);
+                        this._dataset[name] = JSON.parse(value);
                     }
                     catch {
                     }
@@ -165,7 +165,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
 
     set attributeName(value) {
         if (value !== 'transform' && !isString(this.baseValue)) {
-            let baseValue: Undef<string> = this.#dataset.baseValue?.[value]?.toString().trim();
+            let baseValue: Undef<string> = this._dataset.baseValue?.[value]?.toString().trim();
             if (baseValue) {
                 this.baseValue = baseValue;
             }
@@ -198,31 +198,31 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
                 }
             }
         }
-        this.#attributeName = value;
+        this._attributeName = value;
     }
     get attributeName() {
-        return this.#attributeName;
+        return this._attributeName;
     }
 
     set delay(value) {
-        this.#delay = value;
+        this._delay = value;
     }
     get delay() {
-        return this.#delay;
+        return this._delay;
     }
 
     set duration(value) {
-        this.#duration = Math.round(value);
+        this._duration = Math.round(value);
     }
     get duration() {
-        return this.#duration;
+        return this._duration;
     }
 
     set to(value) {
-        this.#to = value;
+        this._to = value;
     }
     get to() {
-        return this.#to;
+        return this._to;
     }
 
     set fillBackwards(value) {
@@ -252,7 +252,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get parentContainer() {
-        let result = <Undef<SvgContainer>> this.#parent;
+        let result = <Undef<SvgContainer>> this._parent;
         while (result && !SvgBuild.isContainer(result)) {
             result = result.parent;
         }
@@ -260,17 +260,17 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set parent(value) {
-        this.#parent = value;
+        this._parent = value;
     }
     get parent() {
-        return this.#parent;
+        return this._parent;
     }
 
     set group(value) {
-        this.#group = value;
+        this._group = value;
      }
     get group() {
-        return this.#group || { id: Number.NEGATIVE_INFINITY, name: '' };
+        return this._group || { id: Number.NEGATIVE_INFINITY, name: '' };
     }
 
     set setterType(value) {}
@@ -279,7 +279,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get dataset() {
-        return this.#dataset;
+        return this._dataset;
     }
 
     get instanceType() {
