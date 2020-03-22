@@ -186,7 +186,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    public static addColor(color: Undef<ColorData | string>, transparency = false) {
+    public static addColor(color: Undef<squared.lib.color.ColorData | string>, transparency = false) {
         if (typeof color === 'string') {
             color = parseColor(color, 1, transparency);
         }

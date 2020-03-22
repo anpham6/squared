@@ -5,6 +5,9 @@ import Resource from './resource';
 
 import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
 
+type ColorData = squared.lib.color.ColorData;
+type ColorStop = squared.lib.color.ColorStop;
+
 const $lib = squared.lib;
 
 const { USER_AGENT, isUserAgent } = $lib.client;

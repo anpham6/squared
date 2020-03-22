@@ -144,7 +144,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return flatMap(this._children, predicate);
     }
 
-    public find(predicate: IteratorPredicate<T, boolean>, options: ContainerFindOptions<T> = {}) {
+    public find(predicate: IteratorPredicate<T, boolean>, options: squared.lib.base.ContainerFindOptions<T> = {}) {
         const { cascade, error } = options;
         let invalid = false;
         const recurse = (container: Container<T>): Undef<T> => {
@@ -174,11 +174,11 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return recurse(this);
     }
 
-    public some(predicate: IteratorPredicate<T, boolean>, options: ContainerFindOptions<T> = {}) {
+    public some(predicate: IteratorPredicate<T, boolean>, options: squared.lib.base.ContainerSomeOptions<T> = {}) {
         return this.find(predicate, options) !== undefined;
     }
 
-    public cascade(predicate?: (item: T) => boolean, options: ContainerCascadeOptions<T> = {}) {
+    public cascade(predicate?: (item: T) => boolean, options: squared.lib.base.ContainerCascadeOptions<T> = {}) {
         const { error } = options;
         let invalid = false;
         const recurse = (container: Container<T>) => {

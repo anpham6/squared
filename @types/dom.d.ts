@@ -68,7 +68,7 @@ interface FlexBox {
 interface BorderAttribute {
     width: string;
     style: string;
-    color: ColorData;
+    color: squared.lib.color.ColorData;
 }
 
 interface FontAttribute {
@@ -102,7 +102,7 @@ interface BoxStyle extends Optional<BoxBorder> {
 
 interface Gradient {
     type: string;
-    colorStops: ColorStop[];
+    colorStops: squared.lib.color.ColorStop[];
     dimension?: Dimension;
 }
 
@@ -129,11 +129,6 @@ interface RadialGradient extends RepeatingGradient {
 interface ConicGradient extends Gradient {
     angle: number;
     center: BoxRectPosition;
-}
-
-interface ColorStop {
-    color: ColorData;
-    offset: number;
 }
 
 interface ImageSrcSet {

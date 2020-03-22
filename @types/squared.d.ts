@@ -1,4 +1,4 @@
-import type { AppHandler, NodeUIOptions, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeGroupUIOptions, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserUISettings, UserSettings } from './base/application';
+import type { AppHandler, NodeUIOptions, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeGroupUIOptions, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import type { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
 import type { AutoMargin, AscendOptions, BoxOptions, BoxType, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './base/node';
 
@@ -726,6 +726,15 @@ declare namespace base {
 
 declare namespace lib {
     namespace base {
+        interface ContainerCascadeOptions<T> {
+            error?: IteratorPredicate<T, boolean>;
+        }
+        interface ContainerFindOptions<T> extends ContainerCascadeOptions<T> {
+            cascade?: boolean;
+        }
+        interface ContainerSomeOptions<T> extends ContainerFindOptions<T> {
+        }
+
         interface Container<T> extends Iterable<T> {
             readonly children: T[];
             readonly length: number;
@@ -760,6 +769,23 @@ declare namespace lib {
     }
 
     namespace color {
+        interface ColorData extends StringValue {
+            valueAsRGBA: string;
+            valueAsARGB: string;
+            rgba: RGBA;
+            hsl: HSL;
+            opacity: number;
+            transparent: boolean;
+        }
+        interface ColorResult extends StringValue {
+            rgb: RGB;
+            hsl: HSL;
+        }
+        interface ColorStop {
+            color: ColorData;
+            offset: number;
+        }
+
         function findColorName(value: string): Undef<ColorResult>;
         function findColorShade(value: string): Undef<ColorResult>;
         function parseColor(value: string, opacity?: number, transparency?: boolean): Undef<ColorData>;
@@ -824,7 +850,7 @@ declare namespace lib {
             precision?: number;
             separator?: string;
             checkUnit?: boolean;
-            checkPercent?: boolean;
+            supportPercent?: boolean;
         }
         interface CalculateVarOptions extends CalculateVarAsStringOptions {
             dimension?: DimensionAttr;

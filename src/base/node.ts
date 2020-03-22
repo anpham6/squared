@@ -1467,7 +1467,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     private _convertBorderWidth(index: number) {
-        if (!this.plainText) {
+        if (this.styleElement) {
             switch (this.css(BOX_BORDER[index][0])) {
                 case 'none':
                 case 'initial':

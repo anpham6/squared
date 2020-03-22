@@ -12,6 +12,8 @@ import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';
 import VECTOR_TMPL from '../../template/vector';
 
+type ColorData = squared.lib.color.ColorData;
+
 const $lib = squared.lib;
 
 const { reduceRGBA } = $lib.color;
@@ -470,7 +472,7 @@ const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColor
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 
-export function convertColorStops(list: ColorStop[], precision?: number) {
+export function convertColorStops(list: squared.lib.color.ColorStop[], precision?: number) {
     return objectMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
 }
 

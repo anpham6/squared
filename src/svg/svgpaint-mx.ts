@@ -194,7 +194,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             this[attr + 'Pattern'] = url;
                         }
                         else {
-                            let color: Undef<ColorData>;
+                            let color: Undef<squared.lib.color.ColorData>;
                             switch (value) {
                                 case 'none':
                                 case 'transparent':

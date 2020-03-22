@@ -53,7 +53,7 @@ declare namespace base {
         public static addTheme(theme: StyleAttribute, path?: string, file?: string): boolean;
         public static addString(value: string, name?: string, numberAlias?: boolean): string;
         public static addImage(images: StringMap, prefix?: string, imageFormat?: string[]): string;
-        public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
+        public static addColor(value: Undef<squared.lib.color.ColorData | string>, transparency?: boolean): string;
     }
 
     interface File<T extends View> extends squared.base.FileUI<T> {

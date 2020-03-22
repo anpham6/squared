@@ -429,7 +429,7 @@ export function calculateStyle(element: SVGElement, attr: string, value: string)
             return !isNaN(result) ? clamp(result).toString() : '';
         }
         case 'strokeMiterlimit': {
-            const result = calculateVar(element, value, { checkPercent: false, unitType: CSS_UNIT.DECIMAL, min: 1 });
+            const result = calculateVar(element, value, { supportPercent: false, unitType: CSS_UNIT.DECIMAL, min: 1 });
             return !isNaN(result) ? result.toString() : '';
         }
     }

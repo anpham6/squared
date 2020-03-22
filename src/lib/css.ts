@@ -132,7 +132,7 @@ function calculateColor(element: CSSElement, value: string) {
                             const rgb = component[j];
                             if (isCalc(rgb)) {
                                 if (hsl && (j === 1 || j === 2)) {
-                                    const result = calculateVar(element, rgb, { checkPercent: true, unitType: CSS_UNIT.PERCENT });
+                                    const result = calculateVar(element, rgb, { unitType: CSS_UNIT.PERCENT, supportPercent: true });
                                     if (!isNaN(result)) {
                                         component[j] = clamp(result, 0, 100) + '%';
                                     }
@@ -154,7 +154,7 @@ function calculateColor(element: CSSElement, value: string) {
                                     }
                                 }
                                 else {
-                                    const result = calculateVar(element, rgb, { checkPercent: false, unitType: CSS_UNIT.DECIMAL });
+                                    const result = calculateVar(element, rgb, { unitType: CSS_UNIT.DECIMAL, supportPercent: false });
                                     if (!isNaN(result)) {
                                         component[j] = clamp(result, 0, 255).toString();
                                     }
@@ -183,7 +183,7 @@ function calculateGeneric(element: CSSElement, value: string, unitType: number, 
         const seg = segments[i];
         if (isCalc(seg)) {
             const px = REGEX_LENGTH.test(seg);
-            const result = calculateVar(element, seg, px ? { parent: false, dimension, boundingBox, min: 0 } : { checkPercent: false, unitType, min });
+            const result = calculateVar(element, seg, px ? { dimension, boundingBox, min: 0, parent: false } : { unitType, min, supportPercent: false });
             if (!isNaN(result)) {
                 segments[i] = result + (px ? 'px' : '');
             }
@@ -236,6 +236,15 @@ function getContentBoxHeight(style: CSSStyleDeclaration) {
 function getBoundingWidth(element: HTMLElement) {
     const parentElement = element.parentElement;
     return parentElement ? Math.max(0, parentElement.getBoundingClientRect().width - getContentBoxWidth(getStyle(parentElement))) : 0;
+}
+
+function isAbsolutePosition(value: string) {
+    switch (value) {
+        case 'absolute':
+        case 'fixed':
+            return true;
+    }
+    return false;
 }
 
 const getInnerWidth = (dimension: Undef<Dimension>) => dimension?.width || window.innerWidth;
@@ -582,10 +591,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'right':
         case 'textIndent':
             return formatVar(calculateVar(element, value, { dimension: 'width', boundingBox }));
-        case 'borderBottomWidth':
-        case 'borderLeftWidth':
-        case 'borderRightWidth':
-        case 'borderTopWidth':
         case 'columnGap':
         case 'columnWidth':
         case 'gridColumnGap':
@@ -610,7 +615,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'width':
             return formatVar(calculateVar(element, value, { dimension: 'width', boundingBox, min: 0 }));
         case 'shapeMargin':
-            return formatVar(calculateVar(element, value, { parent: false, dimension: 'width', boundingBox, min: 0 }));
+            return formatVar(calculateVar(element, value, { dimension: 'width', boundingBox, min: 0, parent: false }));
         case 'bottom':
         case 'top':
         case 'verticalAlign':
@@ -631,12 +636,16 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             }
             break;
         }
+        case 'borderBottomWidth':
+        case 'borderLeftWidth':
+        case 'borderRightWidth':
+        case 'borderTopWidth':
         case 'letterSpacing':
         case 'outlineOffset':
         case 'outlineWidth':
         case 'perspective':
         case 'wordSpacing':
-            return formatVar(calculateVar(element, value, { checkPercent: false, min: 0 }));
+            return formatVar(calculateVar(element, value, { min: 0, supportPercent: false }));
         case 'offsetDistance': {
             let boundingSize = 0;
             if (value.includes('%')) {
@@ -660,8 +669,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'borderTopLeftRadius':
         case 'borderTopRightRadius':
         case 'borderRadius':
-        case 'borderSpacing':
-        case 'columnRule':
         case 'padding':
         case 'scrollMargin':
         case 'scrollMarginBlock':
@@ -674,13 +681,14 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox });
         case 'gridGap':
         case 'perspectiveOrigin':
-            return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], boundingBox, min: attr === 'gridGap' ? 0 : undefined });
+            return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox, min: attr === 'gridGap' ? 0 : undefined, parent: false });
         case 'borderImageOutset':
         case 'borderImageWidth':
-            return calculateVarAsString(element, value, { parent: false, dimension: ['height', 'width', 'height', 'width'], boundingBox, min: 0 });
+            return calculateVarAsString(element, value, { dimension: ['height', 'width', 'height', 'width'], boundingBox, min: 0, parent: false });
         case 'borderWidth':
-        case 'clip':
-            return calculateVarAsString(element, value, { checkPercent: false, min: attr === 'borderWidth' ? 0 : undefined });
+        case 'borderSpacing':
+        case 'columnRule':
+            return calculateVarAsString(element, value, { min: 0, supportPercent: false });
         case 'gridAutoColumns':
         case 'gridTemplateColumns':
             return calculateGeneric(element, value, CSS_UNIT.INTEGER, 1, boundingBox);
@@ -713,7 +721,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.DECIMAL, min: 0 }));
         case 'animationIterationCount':
         case 'fontSizeAdjust':
-            return formatDecimal(calculateVar(element, value, { checkPercent: false, unitType: CSS_UNIT.DECIMAL, min: 0 }));
+            return formatDecimal(calculateVar(element, value, { unitType: CSS_UNIT.DECIMAL, min: 0, supportPercent: false }));
         case 'opacity':
         case 'shapeImageThreshold': {
             const percent = value.includes('%');
@@ -721,10 +729,10 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             return !isNaN(result) ? clamp(result * (percent ? 1 / 100 : 1)).toString() : '';
         }
         case 'fontStretch':
-            return calculateVarAsString(element, value, { checkPercent: true, unitType: CSS_UNIT.PERCENT, min: 0 });
+            return calculateVarAsString(element, value, { unitType: CSS_UNIT.PERCENT, min: 0, supportPercent: true });
         case 'fontStyle':
         case 'offsetRotate':
-            return calculateVarAsString(element, value, { checkPercent: false, unitType: CSS_UNIT.ANGLE });
+            return calculateVarAsString(element, value, { unitType: CSS_UNIT.ANGLE, supportPercent: false });
         case 'offsetAnchor':
         case 'transformOrigin':
             return calculatePosition(element, value, boundingBox);
@@ -741,12 +749,12 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                         switch (transform[i - 1].trim()) {
                             case 'matrix':
                             case 'matrix3d':
-                                calc = calculateVarAsString(element, seg, { checkPercent: false, unitType: CSS_UNIT.DECIMAL });
+                                calc = calculateVarAsString(element, seg, { unitType: CSS_UNIT.DECIMAL, supportPercent: false });
                                 break;
                             case 'scaleX':
                             case 'scaleY':
                             case 'scaleZ': {
-                                const result = calculateVar(element, seg, { checkPercent: false, unitType: CSS_UNIT.DECIMAL, min: 0 });
+                                const result = calculateVar(element, seg, { unitType: CSS_UNIT.DECIMAL, min: 0, supportPercent: false });
                                 if (!isNaN(result)) {
                                     calc = result.toString();
                                 }
@@ -754,32 +762,32 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             }
                             case 'scale':
                             case 'scale3d':
-                                calc = calculateVarAsString(element, seg, { checkPercent: false, unitType: CSS_UNIT.DECIMAL, min: 0 });
+                                calc = calculateVarAsString(element, seg, { unitType: CSS_UNIT.DECIMAL, min: 0, supportPercent: false });
                                 break;
                             case 'translateX':
-                                calc = formatVar(calculateVar(element, seg, { parent: true, dimension: 'width', boundingBox }));
+                                calc = formatVar(calculateVar(element, seg, { dimension: 'width', boundingBox, parent: true }));
                                 break;
                             case 'translateY':
-                                calc = formatVar(calculateVar(element, seg, { parent: true, dimension: 'height', boundingBox }));
+                                calc = formatVar(calculateVar(element, seg, { dimension: 'height', boundingBox, parent: true }));
                                 break;
                             case 'translateZ':
                             case 'perspective':
-                                calc = formatVar(calculateVar(element, seg, { checkPercent: false }));
+                                calc = formatVar(calculateVar(element, seg, { supportPercent: false }));
                                 break;
                             case 'translate':
                             case 'translate3d':
-                                calc = calculateVarAsString(element, seg, { parent: true, dimension: ['width', 'height'], boundingBox });
+                                calc = calculateVarAsString(element, seg, { dimension: ['width', 'height'], boundingBox, parent: true });
                                 break;
                             case 'skew':
                             case 'rotate':
-                                calc = calculateVarAsString(element, seg, { checkPercent: false, unitType: CSS_UNIT.ANGLE });
+                                calc = calculateVarAsString(element, seg, { unitType: CSS_UNIT.ANGLE, supportPercent: false });
                                 break;
                             case 'skewX':
                             case 'skewY':
                             case 'rotateX':
                             case 'rotateY':
                             case 'rotateZ': {
-                                const result = calculateVar(element, seg, { checkPercent: false, unitType: CSS_UNIT.ANGLE });
+                                const result = calculateVar(element, seg, { unitType: CSS_UNIT.ANGLE, supportPercent: false });
                                 if (!isNaN(result)) {
                                     calc = result + 'deg';
                                 }
@@ -793,7 +801,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                                     for (let j = 0; j < q; j++) {
                                         let rotate = component[j];
                                         if (isCalc(rotate)) {
-                                            const result = calculateVar(element, rotate, { checkPercent: false, unitType: j === 3 ? CSS_UNIT.ANGLE : CSS_UNIT.DECIMAL });
+                                            const result = calculateVar(element, rotate, { unitType: j === 3 ? CSS_UNIT.ANGLE : CSS_UNIT.DECIMAL, supportPercent: false });
                                             if (!isNaN(result)) {
                                                 rotate = result + (j === 3 ? 'deg' : '');
                                             }
@@ -868,18 +876,18 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         }
         case 'boxShadow':
         case 'textShadow':
-            return calculateVarAsString(element, value, { checkPercent: false, min: 0, separator: ',' });
+            return calculateVarAsString(element, value, { min: 0, supportPercent: false, separator: ',' });
         case 'backgroundSize':
         case 'maskPosition':
         case 'maskSize':
-            return calculateVarAsString(element, value, { parent: false, dimension: ['width', 'height'], boundingBox, min: attr !== 'maskPosition' ? 0 : undefined, separator: ',' });
+            return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox, min: attr !== 'maskPosition' ? 0 : undefined, parent: false, separator: ',' });
         case 'animation':
         case 'animationDelay':
         case 'animationDuration':
         case 'transition':
         case 'transitionDelay':
         case 'transitionDuration':
-            return calculateVarAsString(element, value, { checkPercent: false, unitType: CSS_UNIT.TIME, roundValue: true, min: 0, separator: ',' });
+            return calculateVarAsString(element, value, { unitType: CSS_UNIT.TIME, min: 0, supportPercent: false, roundValue: true, separator: ',' });
         case 'columns':
             return calculateGeneric(element, value, CSS_UNIT.INTEGER, 1, boundingBox);
         case 'borderImageSlice':
@@ -914,7 +922,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                     let seg = border[i];
                     if (previous === 'calc') {
                         border[i - 1] = '';
-                        seg = formatVar(calculateVar(element, `calc${seg}`, { dimension: 'width', boundingBox, min: 0 }));
+                        seg = formatVar(calculateVar(element, `calc${seg}`, { min: 0, supportPercent: false }));
                     }
                     else if (isColor(previous)) {
                         const partial = previous.split(CHAR.SPACE);
@@ -952,7 +960,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             const q = cubic.length;
                             if (q === 4) {
                                 calc = '';
-                                const options: CalculateVarOptions = { checkPercent: false, unitType: CSS_UNIT.DECIMAL };
+                                const options: CalculateVarOptions = { unitType: CSS_UNIT.DECIMAL, supportPercent: false };
                                 for (let j = 0; j < q; j++) {
                                     let bezier = cubic[j];
                                     if (isCalc(bezier)) {
@@ -991,6 +999,8 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             }
             return value;
         }
+        case 'clip':
+            return isAbsolutePosition(getStyle(element).position) ? calculateVarAsString(element, value, { supportPercent: false }) : '';
         case 'clipPath':
         case 'offsetPath':
         case 'shapeOutside': {
@@ -1018,7 +1028,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                         const result: string[] = [];
                         let [radius, position] = shape.split(/\s+at\s+/);
                         if (hasCalc(radius)) {
-                            const options: CalculateVarAsStringOptions = { parent: true, boundingBox, min: 0 };
+                            const options: CalculateVarAsStringOptions = { boundingBox, min: 0, parent: true };
                             if (name === 'circle') {
                                 if (radius.includes('%')) {
                                     if (boundingBox) {
@@ -1053,7 +1063,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             result.push(radius);
                         }
                         if (hasCalc(position)) {
-                            position = calculateVarAsString(element, position, { parent: true, dimension: ['width', 'height'], boundingBox });
+                            position = calculateVarAsString(element, position, { dimension: ['width', 'height'], boundingBox, parent: true });
                             if (position !== '') {
                                 result.push(position);
                             }
@@ -1068,13 +1078,13 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                         break;
                     }
                     case 'inset':
-                        shape = calculateVarAsString(element, shape, { checkUnit: true, dimension: ['height', 'width', 'height', 'width', 'width'], boundingBox });
+                        shape = calculateVarAsString(element, shape, { dimension: ['height', 'width', 'height', 'width', 'width'], boundingBox, checkUnit: true });
                         break;
                     case 'polygon': {
                         const result: string[] = [];
                         for (let points of shape.split(XML.SEPARATOR)) {
                             if (hasCalc(points)) {
-                                points = calculateVarAsString(element, points, { parent: true, dimension: ['width', 'height'], boundingBox });
+                                points = calculateVarAsString(element, points, { dimension: ['width', 'height'], boundingBox, parent: true });
                                 if (points !== '') {
                                     result.push(points);
                                 }
@@ -1545,7 +1555,7 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
     if (output) {
         const { precision, unitType } = options;
         if (value.includes('%')) {
-            if (options.checkPercent === false || unitType === CSS_UNIT.INTEGER) {
+            if (options.supportPercent === false || unitType === CSS_UNIT.INTEGER) {
                 return NaN;
             }
             if (options.boundingSize === undefined) {
@@ -1564,28 +1574,25 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
                             boundingElement = element.parentElement;
                             if (boundingElement instanceof HTMLElement) {
                                 let style: CSSStyleDeclaration | undefined;
-                                switch (getStyle(element).display) {
-                                    case 'absolute':
-                                    case 'fixed':
-                                        do {
-                                            style = getStyle(boundingElement);
-                                            if (boundingElement === document.body) {
-                                                break;
-                                            }
-                                            switch (style.position) {
-                                                case 'static':
-                                                case 'initial':
-                                                case 'unset':
-                                                    boundingElement = boundingElement.parentElement;
-                                                    continue;
-                                            }
+                                if (isAbsolutePosition(getStyle(element).position)) {
+                                    do {
+                                        style = getStyle(boundingElement);
+                                        if (boundingElement === document.body) {
                                             break;
                                         }
-                                        while (boundingElement);
+                                        switch (style.position) {
+                                            case 'static':
+                                            case 'initial':
+                                            case 'unset':
+                                                boundingElement = boundingElement.parentElement;
+                                                continue;
+                                        }
                                         break;
-                                    default:
-                                        style = getStyle(boundingElement);
-                                        break;
+                                    }
+                                    while (boundingElement);
+                                }
+                                else {
+                                    style = getStyle(boundingElement);
                                 }
                                 if (style) {
                                     offsetPadding = dimension === 'width' ? getContentBoxWidth(style) : getContentBoxHeight(style);
@@ -1607,7 +1614,7 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
                 }
             }
         }
-        else if (options.checkPercent) {
+        else if (options.supportPercent) {
             return NaN;
         }
         if ((!unitType || unitType === CSS_UNIT.LENGTH) && /\d(em|ch)/.test(value) && options.fontSize === undefined) {
