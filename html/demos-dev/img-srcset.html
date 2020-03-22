@@ -51,12 +51,18 @@
         <br /><br />
         <div class="data-uri"></div>
         <br />
-        <img id="android" src="images/android.png" srcset="images/android-ldpi.png 0.75x,
-                                                           images/android.png 1x,
-                                                           images/android-hdpi.png 1.5x,
-                                                           images/android-xhdpi.png 2x,
-                                                           images/android-xxhdpi.png 3x,
-                                                           images/android-xxxhdpi.png 4x" />
+        <img id="android" src="images/android.png" srcset="images/android-ldpi.png 100w,
+                                                           images/android.png 200w,
+                                                           images/android-hdpi.png 133w,
+                                                           images/android-xhdpi.png 266w,
+                                                           images/android-xxhdpi.png 400w,
+                                                           images/android-xxxhdpi.png 533w"
+
+                                                    sizes="(min-width: 900px) 100px,
+                                                           (max-width: 900px) and (min-width: 400px) 5em,
+                                                           ( not (orientation: portrait) ) 300px,
+                                                           ( (orientation: landscape) or (min-width: 1000px) ) 5vw, 
+                                                           10vw" />
         <br /><br />
         <img id="pencil" src="images/pencil.png" srcset="images/pencil-ldpi.png 0.75x,
                                                          images/pencil.png,

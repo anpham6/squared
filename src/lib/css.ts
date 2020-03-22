@@ -10,15 +10,16 @@ type CalculateOptions = squared.lib.css.CalculateOptions;
 type CalculateVarOptions = squared.lib.css.CalculateVarOptions;
 type CalculateVarAsStringOptions = squared.lib.css.CalculateVarAsStringOptions;
 
+const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
 const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-const REGEX_SRCSET = /^(.*?)\s*(?:(\d*\.?\d*)([xw]))?$/;
+const REGEX_SRCSET = /^(.*?)\s*(?:([\d.]+)([xw]))?$/;
 const REGEX_OPERATOR = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEX_INTEGER = /^\s*-?\d+\s*$/;
 const REGEX_CALC = new RegExp(STRING.CSS_CALC);
 const REGEX_LENGTH = new RegExp(`(${STRING.UNIT_LENGTH}|%)`);
-const REGEX_WIDTH = new RegExp(`\\s*(\\((?:max|min)-width: ${STRING.LENGTH_PERCENTAGE}\\))?\\s*(.+)`);
+const REGEX_WIDTH = new RegExp(`\\s*(?:(\\(\\s*)?${STRING_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${STRING_SIZES}(\\s*\\))?)?\\s*(.+)`);
 const REGEX_DIVIDER = /\s*\/\s*/;
 
 function compareRange(operation: string, unit: number, range: number) {
@@ -1872,23 +1873,23 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         });
     }
     if (srcset !== '') {
-        for (const value of srcset.split(XML.SEPARATOR)) {
-            const match = REGEX_SRCSET.exec(value.trim());
+        for (const value of srcset.trim().split(XML.SEPARATOR)) {
+            const match = REGEX_SRCSET.exec(value);
             if (match) {
                 let width = 0;
                 let pixelRatio = 0;
                 switch (match[3]) {
                     case 'w':
-                        width = parseFloat(match[2]);
+                        width = convertFloat(match[2]);
                         break;
                     case 'x':
-                        pixelRatio = parseFloat(match[2]);
+                        pixelRatio = convertFloat(match[2]);
                         break;
                     default:
                         pixelRatio = 1;
                         break;
                 }
-                result.push({ src: resolvePath(match[1]), pixelRatio, width });
+                result.push({ src: resolvePath(match[1].split(CHAR.SPACE)[0]), pixelRatio, width });
             }
         }
         result.sort((a, b) => {
@@ -1913,14 +1914,35 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         result.push({ src: element.src, pixelRatio: 1, width: 0 });
     }
     else if (result.length > 1 && isString(sizes)) {
-        let width = 0;
+        let width = NaN;
         for (const value of sizes.trim().split(XML.SEPARATOR)) {
             let match = REGEX_WIDTH.exec(value);
             if (match) {
-                if (!validMediaRule(match[1])) {
-                    continue;
+                const ruleA = match[2] ? validMediaRule(match[2]) : undefined;
+                const ruleB = match[6] ? validMediaRule(match[6]) : undefined;
+                switch (match[5]) {
+                    case 'and':
+                        if (!ruleA || !ruleB) {
+                            continue;
+                        }
+                        break;
+                    case 'or':
+                        if (!ruleA && !ruleB) {
+                            continue;
+                        }
+                        break;
+                    case 'not':
+                        if (ruleA !== undefined || ruleB) {
+                            continue;
+                        }
+                        break;
+                    default:
+                        if (ruleA === false || ruleB !== undefined) {
+                            continue;
+                        }
+                        break;
                 }
-                const unit = match[4];
+                const unit = match[9];
                 if (unit) {
                     match = CSS.CALC.exec(unit);
                     if (match) {
@@ -1929,16 +1951,16 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                     else if (isPercent(unit)) {
                         width = parseFloat(unit) / 100 * getBoundingWidth(element);
                     }
-                    else {
+                    else if (isLength(unit)) {
                         width = parseUnit(unit);
                     }
                 }
-                if (width > 0) {
+                if (!isNaN(width)) {
                     break;
                 }
             }
         }
-        if (width > 0) {
+        if (!isNaN(width)) {
             const resolution = width * window.devicePixelRatio;
             let index = -1;
             const length = result.length;
