@@ -1,4 +1,4 @@
-import type { AppHandler, NodeUIOptions, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutType, NodeGroupUIOptions, NodeTemplate, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
+import type { AppHandler, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, AppViewModel, ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileAsset, FileCopyingOptions, ImageAsset, LayoutOptions, LayoutResult, LayoutRoot, LayoutType, NodeGroupUIOptions, NodeTemplate, NodeUIOptions, RawAsset, ResourceAssetMap, ResourceStoredMap, UserSettings, UserUISettings } from './base/application';
 import type { CssGridData, CssGridDirectionData, GridCellData } from './base/extension';
 import type { AutoMargin, AscendOptions, BoxOptions, BoxType, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './base/node';
 
@@ -13,6 +13,7 @@ declare class PromiseResult {
 declare const settings: UserSettings;
 declare const system: FunctionMap<any>;
 declare function setFramework(value: {}, cached?: boolean): void;
+declare function setViewModel(data?: {}): void;
 declare function parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
 declare function include(value: ExtensionRequest, options?: {}): boolean;
 declare function includeAsync(value: ExtensionRequest | string, options?: {}): boolean;
@@ -36,6 +37,7 @@ declare namespace base {
         userSettings: UserSettings;
         initializing: boolean;
         closed: boolean;
+        viewModel: Undef<AppViewModel>;
         readonly session: AppSession<T>;
         readonly processing: AppProcessing<T>;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
@@ -241,7 +243,7 @@ declare namespace base {
         afterConstraints(): void;
         afterResources(): void;
         beforeBaseLayout(): void;
-        beforeCascade(): void;
+        beforeCascade(documentRoot: LayoutRoot<T>[]): void;
         afterFinalize(): void;
     }
 
@@ -889,6 +891,7 @@ declare namespace lib {
         function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions): string;
         function calculateStyle(element: CSSElement, attr: string, value: string, boundingBox?: Dimension): string;
         function parseVar(element: CSSElement, value: string): string;
+        function getParentBoxDimension(element: CSSElement): Dimension;
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;

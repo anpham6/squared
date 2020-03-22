@@ -110,6 +110,8 @@ export interface AppProcessing<T extends Node> {
 
 export interface AppProcessingUI<T extends Node> extends AppProcessing<T> {}
 
+export interface AppViewModel extends StandardMap {}
+
 export interface ExtensionDependency {
     name: string;
     preload: boolean;
@@ -150,6 +152,11 @@ export interface LayoutResult<T extends NodeUI> {
     layout: squared.base.LayoutUI<T>;
     next?: boolean;
     renderAs?: T;
+}
+
+export interface LayoutRoot<T extends NodeUI> {
+    node: T;
+    layoutName: string
 }
 
 export interface ResourceAssetMap {

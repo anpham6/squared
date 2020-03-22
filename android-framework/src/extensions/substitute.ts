@@ -23,30 +23,32 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
 
     public processNode(node: T, parent: T) {
         const data = getDataSet(node.dataset, this.name);
-        const controlName = data.tag;
-        if (controlName) {
-            node.setControlType(controlName, node.blockStatic ? CONTAINER_NODE.BLOCK : CONTAINER_NODE.INLINE);
-            node.render(parent);
-            const tagChild = data.tagChild;
-            if (tagChild) {
-                const name = this.name;
-                node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
-                node.each((item: T) => {
-                    if (item.styleElement) {
-                        const dataset = item.dataset;
-                        dataset.use = name;
-                        dataset.androidSubstituteTag = tagChild;
-                    }
-                });
+        if (data) {
+            const controlName = data.tag;
+            if (controlName) {
+                node.setControlType(controlName, node.blockStatic ? CONTAINER_NODE.BLOCK : CONTAINER_NODE.INLINE);
+                node.render(parent);
+                const tagChild = data.tagChild;
+                if (tagChild) {
+                    const name = this.name;
+                    node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
+                    node.each((item: T) => {
+                        if (item.styleElement) {
+                            const dataset = item.dataset;
+                            dataset.use = name;
+                            dataset.androidSubstituteTag = tagChild;
+                        }
+                    });
+                }
+                return {
+                    output: <NodeXmlTemplate<T>> {
+                        type: NODE_TEMPLATE.XML,
+                        node,
+                        controlName
+                    },
+                    include: true
+                };
             }
-            return {
-                output: <NodeXmlTemplate<T>> {
-                    type: NODE_TEMPLATE.XML,
-                    node,
-                    controlName
-                },
-                include: true
-            };
         }
         return undefined;
     }

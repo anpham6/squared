@@ -1372,13 +1372,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (this.styleElement || this.hasAlign(NODE_ALIGNMENT.WRAPPER)) {
                 const dataset = getDataSet(this.dataset, 'android');
-                for (const namespace in dataset) {
-                    const name = namespace === 'attr' ? 'android' : (REGEX_DATASETATTR.test(namespace) ? capitalize(namespace.substring(4), false) : '');
-                    if (name !== '') {
-                        for (const values of dataset[namespace].split(';')) {
-                            const [key, value] = values.split('::');
-                            if (key) {
-                                this.attr(name, key, value);
+                if (dataset) {
+                    for (const namespace in dataset) {
+                        const name = namespace === 'attr' ? 'android' : (REGEX_DATASETATTR.test(namespace) ? capitalize(namespace.substring(4), false) : '');
+                        if (name !== '') {
+                            for (const values of dataset[namespace].split(';')) {
+                                const [key, value] = values.split('::');
+                                if (key) {
+                                    this.attr(name, key, value);
+                                }
                             }
                         }
                     }

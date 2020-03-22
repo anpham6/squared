@@ -19,6 +19,7 @@ export const EXT_ANDROID = {
     RESOURCE_STRINGS: 'android.resource.strings',
     RESOURCE_FONTS: 'android.resource.fonts',
     RESOURCE_DIMENS: 'android.resource.dimens',
+    RESOURCE_DATA: 'android.resource.data',
     RESOURCE_STYLES: 'android.resource.styles'
 };
 

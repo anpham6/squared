@@ -1,5 +1,5 @@
 import type { FileAsset } from '../base/application';
-import type { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
+import type { AppViewModelAndroid, CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
 import type { Constraint, LocalSettingsAndroidUI, RenderSpaceAttribute, SupportAndroid, ViewAttribute, WrapperOptions } from './node';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -8,6 +8,7 @@ type View = base.View;
 
 declare namespace base {
     interface Application<T extends View> extends squared.base.ApplicationUI<T> {
+        viewModel: Undef<AppViewModelAndroid>;
         readonly userSettings: UserSettingsAndroid;
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;
@@ -120,7 +121,7 @@ declare namespace base {
         public static availablePercent(nodes: View[], dimension: DimensionAttr, boxSize: number): number;
     }
 
-    class ViewGroup<T extends View> extends View {}
+    class ViewGroup extends View {}
 }
 
 declare namespace extensions {
@@ -155,6 +156,7 @@ declare namespace extensions {
 
     namespace resource {
         class Background<T extends View> extends squared.base.ExtensionUI<T> {}
+        class Data<T extends View> extends squared.base.ExtensionUI<T> {}
         class Dimens<T extends View> extends squared.base.ExtensionUI<T> {}
         class Fonts<T extends View> extends squared.base.ExtensionUI<T> {}
         class Includes<T extends View> extends squared.base.ExtensionUI<T> {}
@@ -433,7 +435,7 @@ declare namespace lib {
         function isGridAligned(node: View): boolean;
         function createViewAttribute(data?: StandardMap, options?: ViewAttribute): ViewAttribute;
         function createStyleAttribute(data?: StandardMap): Required<StyleAttribute>;
-        function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): StringMap;
+        function getDataSet(dataset: StringMap | DOMStringMap, prefix: string): Undef<StringMap>;
         function localizeString(value: string, rtl: boolean, api: number): string;
         function getXmlNs(value: string): string;
         function getRootNs(value: string): string;

@@ -124,6 +124,7 @@ squared.settings = {
         'android.resource.fonts',
         'android.resource.dimens',
         'android.resource.styles',
+        'android.resource.data',
         'android.resource.includes'
     ],
     targetAPI: 29,
@@ -185,6 +186,7 @@ There is no official documentation as this project is still in early development
 .settings // see user preferences section
 
 setFramework(module: {}, cached?: boolean) // install application converter
+setViewModel(data?: {}) // object data for layout bindings
 
 parseDocument() // see installation section
 
@@ -427,6 +429,59 @@ CSS Grid and Flexbox layouts are are for the most part fully supported. There is
     var sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
     squared.include(sample);
 </script>
+```
+
+### ANDROID: Layouts and binding expressions
+
+ViewModel data can be applied to most HTML elements using the dataset attribute.
+
+```javascript
+<script>
+    squared.setViewModel({
+        import: ['java.util.Map', 'java.util.List'],
+        variable: [
+            { name: 'user', type: 'com.example.User' },
+            { name: 'list', type: 'List&lt;String>' },
+            { name: 'map', type: 'Map&lt;String, String>' },
+            { name: 'index', type: 'int' },
+            { name: 'key', type: 'String' }
+        ]
+    });
+</script>
+```
+
+Two additional output parameters are required with the "data-viewmodel" prefix. 
+
+data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
+
+```xml
+<div>
+    <label for="order">Order:</label>
+    <input id="order" type="text" data-viewmodel-android-text="user.firstName" />
+</div>
+```
+
+```xml
+<layout>
+    <data>
+        <import type="java.util.Map" />
+        <import type="java.util.List" />
+        <variable name="user" type="com.example.User" />
+        <variable name="list" type="List<String>" />
+        <variable name="map" type="Map<String, String>" />
+        <variable name="index" type="int" />
+        <variable name="key" type="String" />
+    </data>
+    <LinearLayout>
+        <TextView
+            android:labelFor="@id/order"
+            android:text="Order:" />
+        <EditText
+            android:id="@+id/order"
+            android:inputType="text"
+            android:text="@{user.firstName}" />
+    </LinearLayout>
+</layout>
 ```
 
 ### ANDROID: Layout Includes / Merge Tag

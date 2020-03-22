@@ -72,6 +72,12 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
     }
 }
 
+export function setViewModel(data?: {}) {
+    if (main) {
+        main.viewModel = data;
+    }
+}
+
 export function parseDocument(...elements: (HTMLElement | string)[]): squared.PromiseResult {
     if (main) {
         if (settings.handleExtensionsAsync) {

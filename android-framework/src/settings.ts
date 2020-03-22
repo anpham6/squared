@@ -27,6 +27,7 @@ const settings: UserSettingsAndroid = {
         'android.resource.fonts',
         'android.resource.dimens',
         'android.resource.styles',
+        'android.resource.data',
         'android.resource.includes'
     ],
     targetAPI: 29,

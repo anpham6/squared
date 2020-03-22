@@ -630,21 +630,22 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case NODE_TEMPLATE.XML: {
                     const { controlName, attributes } = <NodeXmlTemplate<T>> item;
                     const { id, renderTemplates } = node;
-                    const depthA = depth + 1;
-                    const beforeInside = this.getBeforeInsideTemplate(id, depthA);
-                    const afterInside = this.getAfterInsideTemplate(id, depthA);
-                    let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? pushIndent(attributes, depthA) : node.extractAttributes(depthA)) : '')}`;
+                    const next = depth + 1;
+                    const previous = node.depth < 0 ? depth + node.depth : depth;
+                    const beforeInside = this.getBeforeInsideTemplate(id, next);
+                    const afterInside = this.getAfterInsideTemplate(id, next);
+                    let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? pushIndent(attributes, next) : node.extractAttributes(next)) : '')}`;
                     if (renderTemplates || beforeInside !== '' || afterInside !== '') {
                         template += '>\n' +
                                     beforeInside +
-                                    (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> renderTemplates), depthA) : '') +
+                                    (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> renderTemplates), next) : '') +
                                     afterInside +
                                     indent + `</${controlName}>\n`;
                     }
                     else {
                         template += ' />\n';
                     }
-                    output += this.getBeforeOutsideTemplate(id, depth) + template + this.getAfterOutsideTemplate(id, depth);
+                    output += this.getBeforeOutsideTemplate(id, previous) + template + this.getAfterOutsideTemplate(id, previous);
                     break;
                 }
                 case NODE_TEMPLATE.INCLUDE: {

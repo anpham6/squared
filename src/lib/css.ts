@@ -14,13 +14,13 @@ const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|m
 const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
 const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
-const REGEX_SRCSET = /^(.*?)\s*(?:([\d.]+)([xw]))?$/;
+const REGEX_SRCSET = /^(.*?)\s+(?:([\d.]+)([xw]))?$/;
 const REGEX_OPERATOR = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEX_INTEGER = /^\s*-?\d+\s*$/;
+const REGEX_DIVIDER = /\s*\/\s*/;
 const REGEX_CALC = new RegExp(STRING.CSS_CALC);
 const REGEX_LENGTH = new RegExp(`(${STRING.UNIT_LENGTH}|%)`);
 const REGEX_WIDTH = new RegExp(`\\s*(?:(\\(\\s*)?${STRING_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${STRING_SIZES}(\\s*\\))?)?\\s*(.+)`);
-const REGEX_DIVIDER = /\s*\/\s*/;
 
 function compareRange(operation: string, unit: number, range: number) {
     switch (operation) {
@@ -43,7 +43,7 @@ function calculatePosition(element: CSSElement, value: string, boundingBox?: Dim
     switch (length) {
         case 1:
         case 2:
-            return calculateVarAsString(element, component.join(''), { parent: false, dimension: ['width', 'height'], boundingBox });
+            return calculateVarAsString(element, component.join(''), { dimension: ['width', 'height'], boundingBox, parent: false });
         case 3:
         case 4: {
             const options: CalculateVarOptions = { boundingBox };
@@ -231,11 +231,6 @@ function getContentBoxHeight(style: CSSStyleDeclaration) {
         parseFloat(style.getPropertyValue('padding-bottom')) +
         (hasBorderStyle(style.getPropertyValue('border-bottom-style')) ? parseFloat(style.getPropertyValue('border-bottom-width')) : 0)
     );
-}
-
-function getBoundingWidth(element: HTMLElement) {
-    const parentElement = element.parentElement;
-    return parentElement ? Math.max(0, parentElement.getBoundingClientRect().width - getContentBoxWidth(getStyle(parentElement))) : 0;
 }
 
 function isAbsolutePosition(value: string) {
@@ -591,9 +586,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'right':
         case 'textIndent':
             return formatVar(calculateVar(element, value, { dimension: 'width', boundingBox }));
-        case 'columnGap':
         case 'columnWidth':
-        case 'gridColumnGap':
         case 'marginBottom':
         case 'marginLeft':
         case 'marginRight':
@@ -614,27 +607,24 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'scrollPaddingTop':
         case 'width':
             return formatVar(calculateVar(element, value, { dimension: 'width', boundingBox, min: 0 }));
+        case 'columnGap':
+        case 'gridColumnGap':
         case 'shapeMargin':
             return formatVar(calculateVar(element, value, { dimension: 'width', boundingBox, min: 0, parent: false }));
         case 'bottom':
         case 'top':
         case 'verticalAlign':
             return formatVar(calculateVar(element, value, { dimension: 'height', boundingBox }));
-        case 'gridRowGap':
         case 'height':
         case 'maxHeight':
         case 'minHeight':
-        case 'rowGap':
             return formatVar(calculateVar(element, value, { dimension: 'height', boundingBox, min: 0 }));
+        case 'gridRowGap':
+        case 'rowGap':
+            return formatVar(calculateVar(element, value, { dimension: 'height', boundingBox, min: 0, parent: false }));
         case 'flexBasis': {
             const parentElement = element.parentElement;
-            if (parentElement) {
-                const { display, flexDirection } = getStyle(parentElement);
-                if (display.includes('flex')) {
-                    return formatVar(calculateVar(element, value, { dimension: flexDirection.includes('column') ? 'height' : 'width', boundingBox, min: 0 }));
-                }
-            }
-            break;
+            return formatVar(calculateVar(element, value, { dimension: !!parentElement && getStyle(parentElement).flexDirection.includes('column') ? 'height' : 'width', boundingBox, min: 0 }));
         }
         case 'borderBottomWidth':
         case 'borderLeftWidth':
@@ -887,7 +877,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'transition':
         case 'transitionDelay':
         case 'transitionDuration':
-            return calculateVarAsString(element, value, { unitType: CSS_UNIT.TIME, min: 0, supportPercent: false, roundValue: true, separator: ',' });
+            return calculateVarAsString(element, value, { unitType: CSS_UNIT.TIME, min: 0, precision: 0, separator: ',' });
         case 'columns':
             return calculateGeneric(element, value, CSS_UNIT.INTEGER, 1, boundingBox);
         case 'borderImageSlice':
@@ -1031,20 +1021,12 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             const options: CalculateVarAsStringOptions = { boundingBox, min: 0, parent: true };
                             if (name === 'circle') {
                                 if (radius.includes('%')) {
-                                    if (boundingBox) {
-                                        const { width, height } = boundingBox;
+                                    const { width, height } = boundingBox || getParentBoxDimension(element);
+                                    if (width > 0 && height > 0) {
                                         options.boundingSize = Math.min(width, height);
                                     }
                                     else {
-                                        const parentElement = element.parentElement;
-                                        if (parentElement) {
-                                            const { width, height } = parentElement.getBoundingClientRect();
-                                            const style = getStyle(parentElement);
-                                            options.boundingSize = Math.max(0, Math.min(width - getContentBoxWidth(style), height - getContentBoxHeight(style)));
-                                        }
-                                        else {
-                                            return '';
-                                        }
+                                        return '';
                                     }
                                 }
                             }
@@ -1439,7 +1421,7 @@ export function getInheritedStyle(element: Element, attr: string, exclude?: RegE
         if (value === 'inherit' || exclude?.test(value)) {
             value = '';
         }
-        if (value) {
+        else if (value) {
             break;
         }
         current = current.parentElement;
@@ -1558,7 +1540,7 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
             if (options.supportPercent === false || unitType === CSS_UNIT.INTEGER) {
                 return NaN;
             }
-            if (options.boundingSize === undefined) {
+            else if (options.boundingSize === undefined) {
                 const { dimension, boundingBox } = options;
                 if (dimension) {
                     if (boundingBox) {
@@ -1632,9 +1614,22 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
     return NaN;
 }
 
+export function getParentBoxDimension(element: CSSElement) {
+    const parentElement = element.parentElement;
+    let width = 0;
+    let height = 0;
+    if (parentElement) {
+        const style = getStyle(parentElement);
+        ({ width, height } = parentElement.getBoundingClientRect());
+        width = Math.max(0, width - getContentBoxWidth(style));
+        height = Math.max(0, height - getContentBoxHeight(style));
+    }
+    return { width, height };
+}
+
 export function getBackgroundPosition(value: string, dimension: Dimension, options: BackgroundPositionOptions = {}) {
     const { fontSize, imageDimension, imageSize, screenDimension } = options;
-    const orientation = value === 'center' ? ['center', 'center'] : value.split(CHAR.SPACE);
+    const orientation = value === 'center' ? ['center', 'center'] : value.trim().split(CHAR.SPACE);
     const { width, height } = dimension;
     const result: BoxRectPosition = {
         static: true,
@@ -1870,7 +1865,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                 const type = item.type.trim();
                 const media = item.media.trim();
                 const value = item.srcset.trim();
-                if (value !== '' && (media !== '' && validMediaRule(media) || type !== '' && mimeType?.includes((type.split('/').pop() as string).toLowerCase()))) {
+                if (value !== '' && !(media !== '' && !validMediaRule(media)) && (!type || mimeType === undefined || mimeType.includes((type.split('/').pop() as string).trim().toLowerCase()))) {
                     srcset = value;
                     sizes = item.sizes;
                     return true;
@@ -1953,10 +1948,10 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                 if (unit) {
                     match = CSS.CALC.exec(unit);
                     if (match) {
-                        width = calculate(match[1], match[1].includes('%') ? { boundingSize: getBoundingWidth(element) } : undefined);
+                        width = calculate(match[1], match[1].includes('%') ? { boundingSize: getParentBoxDimension(element).width } : undefined);
                     }
                     else if (isPercent(unit)) {
-                        width = parseFloat(unit) / 100 * getBoundingWidth(element);
+                        width = parseFloat(unit) / 100 * getParentBoxDimension(element).width;
                     }
                     else if (isLength(unit)) {
                         width = parseUnit(unit);
@@ -2036,7 +2031,7 @@ export function insertStyleSheetRule(value: string, index = 0) {
         style.appendChild(document.createTextNode(''));
     }
     document.head.appendChild(style);
-    const sheet = style.sheet as any;
+    const sheet = <CSSStyleSheet> style.sheet;
     if (typeof sheet?.insertRule === 'function') {
         try {
             sheet.insertRule(value, index);

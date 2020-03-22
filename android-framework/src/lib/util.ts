@@ -58,13 +58,15 @@ export function isVerticalAlign(value: string) {
 
 export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
     const result: StringMap = {};
+    let found = false;
     prefix = convertCamelCase(prefix, '.');
     for (const attr in dataset) {
         if (attr.startsWith(prefix)) {
             result[capitalize(attr.substring(prefix.length), false)] = dataset[attr] as string;
+            found = true;
         }
     }
-    return result;
+    return found ? result : undefined;
 }
 
 export function getHorizontalBias(node: View) {

@@ -34,6 +34,7 @@ import DelegateRadioGroup from './extensions/delegate/radiogroup';
 import DelegateScrollBar from './extensions/delegate/scrollbar';
 
 import ResourceBackground from './extensions/resource/background';
+import ResourceData from './extensions/resource/data';
 import ResourceDimens from './extensions/resource/dimens';
 import ResourceFonts from './extensions/resource/fonts';
 import ResourceIncludes from './extensions/resource/includes';
@@ -117,6 +118,7 @@ const appBase: AppFramework<View> = {
         },
         resource: {
             Background: ResourceBackground,
+            Data: ResourceData,
             Dimens: ResourceDimens,
             Fonts: ResourceFonts,
             Includes: ResourceIncludes,
@@ -350,6 +352,7 @@ const appBase: AppFramework<View> = {
             [EA.DELEGATE_RADIOGROUP]: new DelegateRadioGroup(EA.DELEGATE_RADIOGROUP, framework),
             [EA.DELEGATE_SCROLLBAR]: new DelegateScrollBar(EA.DELEGATE_SCROLLBAR, framework),
             [EA.RESOURCE_BACKGROUND]: new ResourceBackground(EA.RESOURCE_BACKGROUND, framework),
+            [EA.RESOURCE_DATA]: new ResourceData(EA.RESOURCE_DATA, framework),
             [EA.RESOURCE_DIMENS]: new ResourceDimens(EA.RESOURCE_DIMENS, framework),
             [EA.RESOURCE_FONTS]: new ResourceFonts(EA.RESOURCE_FONTS, framework),
             [EA.RESOURCE_INCLUDES]: new ResourceIncludes(EA.RESOURCE_INCLUDES, framework),

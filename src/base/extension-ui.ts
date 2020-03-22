@@ -1,4 +1,4 @@
-import type { ExtensionResult } from '../../@types/base/application';
+import type { ExtensionResult, LayoutRoot } from '../../@types/base/application';
 
 import Extension from './extension';
 
@@ -92,7 +92,7 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     public afterResources() {}
 
     public beforeBaseLayout() {}
-    public beforeCascade() {}
+    public beforeCascade(documentRoot: LayoutRoot<T>[]) {}
     public afterFinalize() {}
 
     set application(value) {

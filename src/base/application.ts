@@ -1,4 +1,4 @@
-import type { AppProcessing, AppSession, FileActionOptions, UserSettings } from '../../@types/base/application';
+import type { AppProcessing, AppSession, AppViewModel, FileActionOptions, UserSettings } from '../../@types/base/application';
 
 import Controller from './controller';
 import Extension from './extension';
@@ -99,6 +99,9 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract insertNode(element: Element, parent?: T): Undef<T>;
     public abstract afterCreateCache(element: HTMLElement): void;
     public abstract finalize(): void;
+
+    public abstract set viewModel(data: Undef<AppViewModel>);
+    public abstract get viewModel(): Undef<AppViewModel>;
 
     public copyToDisk(directory: string, options?: FileActionOptions) {
         this.fileHandler?.copyToDisk(directory, options);

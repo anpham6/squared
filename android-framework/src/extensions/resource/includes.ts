@@ -27,6 +27,9 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                     const name = dataset.androidInclude;
                     const closing = dataset.androidIncludeEnd === 'true';
                     if (name || closing) {
+                        if (item.documentRoot) {
+                            return;
+                        }
                         const data: NodeRenderIndex = {
                             item,
                             name,
@@ -50,26 +53,26 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                 if (open && close) {
                     const application = this.application;
                     const controller = <android.base.Controller<T>> this.controller;
-                    open.length = Math.min(open.length, close.length);
-                    for (let i = open.length; i < close.length; i++) {
-                        close.shift();
+                    const length = Math.min(open.length, close.length);
+                    const excess = close.length - length;
+                    if (excess > 0) {
+                        close.splice(0, excess);
                     }
-                    for (let i = open.length - 1; i >= 0; i--) {
-                        const openData = open[i];
+                    for (let i = length - 1; i >= 0; i--) {
+                        const { index, include, item, name } = open[i];
                         for (let j = 0; j < close.length; j++) {
-                            const index = close[j].index;
-                            if (index >= openData.index) {
+                            const q = close[j].index;
+                            if (q >= index) {
                                 const templates: NodeTemplate<T>[] = [];
-                                for (let k = openData.index; k <= index; k++) {
+                                for (let k = index; k <= q; k++) {
                                     templates.push(<NodeTemplate<T>> renderTemplates[k]);
                                 }
-                                const length = templates.length;
-                                const merge = !openData.include || length > 1;
+                                const merge = !include || templates.length > 1;
                                 const depth = merge ? 1 : 0;
-                                renderTemplates.splice(openData.index, length, <NodeIncludeTemplate<T>> {
+                                renderTemplates.splice(index, templates.length, <NodeIncludeTemplate<T>> {
                                     type: NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
-                                    content: controller.renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${openData.name}`, android: {} }),
+                                    content: controller.renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name}`, android: {} }),
                                     indent: true
                                 });
                                 let content = controller.cascadeDocument(templates, depth);
@@ -77,9 +80,9 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                     content = controller.getEnclosingXmlTag('merge', getRootNs(content), content);
                                 }
                                 else {
-                                    openData.item.documentRoot = true;
+                                    item.documentRoot = true;
                                 }
-                                application.saveDocument(openData.name as string, content, '', Number.POSITIVE_INFINITY);
+                                application.saveDocument(name as string, content, '', Number.POSITIVE_INFINITY);
                                 close.splice(j, 1);
                                 break;
                             }

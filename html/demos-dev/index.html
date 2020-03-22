@@ -103,6 +103,17 @@
                 System.import('/build/android-framework/src/main.js').then(result => {
                     android = result.default;
                     squared.setFramework(android);
+                    squared.setViewModel({
+                        import: ['android.util.SparseArray', 'java.util.Map', 'java.util.List'],
+                        variable: [
+                            { name: 'user', type: 'com.example.User' },
+                            { name: 'list', type: 'List&lt;String>' },
+                            { name: 'sparse', type: 'SparseArray&lt;String>' },
+                            { name: 'map', type: 'Map&lt;String, String>' },
+                            { name: 'index', type: 'int' },
+                            { name: 'key', type: 'String' }
+                        ]
+                    });
                     squared.system.customize(squared.settings.targetAPI, 'Button', {
                         android: {
                             layout_height: 'wrap_content',
@@ -131,7 +142,7 @@
             <ul>
                 <li>
                     <label for="order" style="font-style: italic;">Order:</label>
-                    <input id="order" type="text" name="order" class="null-allowed" />
+                    <input id="order" type="text" name="order" class="null-allowed" data-viewmodel-android-text="user.firstName" />
                 </li>
                 <li>
                     <label>Date (<a href="#">Add</a>):</label>
@@ -387,7 +398,7 @@
                 <li>
                     <label>Topic (<a href="#">Add</a>):</label>
                     <div class="entry-topic">
-                        <input type="text" name="topic0" />
+                        <input type="text" name="topic0" data-viewmodel-android-text="map[key]" />
                         <select name="prominence0">
                             <option value="0">0</option>
                             <option value="1">1</option>

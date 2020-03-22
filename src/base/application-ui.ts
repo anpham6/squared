@@ -1,4 +1,4 @@
-import type { NodeUIOptions, AppSessionUI, ControllerUISettings, FileActionOptions, FileAsset, LayoutResult, NodeTemplate, UserUISettings } from '../../@types/base/application';
+import type { NodeUIOptions, AppSessionUI, ControllerUISettings, FileActionOptions, FileAsset, LayoutResult, LayoutRoot, NodeTemplate, UserUISettings } from '../../@types/base/application';
 
 import Application from './application';
 import ControllerUI from './controller-ui';
@@ -203,12 +203,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 ext.postOptimize(node);
             }
         }
-        const documentRoot: { node: T; layoutName: string }[] = [];
+        const documentRoot: LayoutRoot<T>[] = [];
         for (const node of rendered) {
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
             if (node.documentRoot) {
+                if (node.renderChildren.length === 0 && !node.inlineText) {
+                    const naturalElement = node.naturalElements;
+                    if (naturalElement.length && node.naturalElements.every(item => item.documentRoot)) {
+                        continue;
+                    }
+                }
                 const layoutName = node.innerMostWrapped.dataset.layoutName;
                 if (layoutName) {
                     documentRoot.push({ node, layoutName });
@@ -216,22 +222,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         for (const ext of extensions) {
-            ext.beforeCascade();
+            ext.beforeCascade(documentRoot);
         }
         const baseTemplate = this._localSettings.layout.baseTemplate;
         for (const layout of documentRoot) {
             const node = layout.node;
-            if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText) {
-                const naturalElement = node.naturalElements;
-                if (naturalElement.length && node.naturalElements.every(item => item.documentRoot)) {
-                    continue;
-                }
-            }
             const renderTemplates = (node.renderParent as T).renderTemplates;
             if (renderTemplates) {
                 this.saveDocument(
                     layout.layoutName,
-                    baseTemplate + controllerHandler.cascadeDocument(<NodeTemplate<T>[]> renderTemplates, 0),
+                    baseTemplate + controllerHandler.cascadeDocument(<NodeTemplate<T>[]> renderTemplates, Math.abs(node.depth)),
                     node.dataset.pathname,
                     node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
                 );

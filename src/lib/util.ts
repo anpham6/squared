@@ -11,8 +11,8 @@ const NUMERALS = [
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
 
-export function capitalize(value: string, upper = true) {
-    return upper ? value.charAt(0).toUpperCase() + value.substring(1).toLowerCase() : value.charAt(0).toLowerCase() + value.substring(1);
+export function capitalize(value: string, upper?: boolean) {
+    return upper === false ? value.charAt(0).toLowerCase() + value.substring(1) : value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
 }
 
 export function capitalizeString(value: string) {

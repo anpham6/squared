@@ -103,20 +103,14 @@ app.post('/api/assets/copy', (req, res) => {
                 const writeBuffer = () => {
                     if (level > 0) {
                         delayed++;
-                        const filename_gz = `${filename}.gz`;
-                        createGzipWriteStream(level, filename, filename_gz).on('finish', () => {
-                            finalize(true);
-                        });
+                        createGzipWriteStream(level, filename, `${filename}.gz`)
+                            .on('finish', () => finalize(true));
                     }
                     if (quality > 0) {
                         delayed++;
-                        const filename_br = `${filename}.br`;
                         fs.writeFile(
-                            filename_br,
-                            brotli.compress(
-                                fs.readFileSync(filename),
-                                { mode: /^font\//.test(file.mimeType) ? 2 : 1, quality }
-                            ),
+                            `${filename}.br`,
+                            brotli.compress(fs.readFileSync(filename), { mode: /^font\//.test(file.mimeType) ? 2 : 1, quality }),
                             () => finalize(true)
                         );
                     }
@@ -214,7 +208,7 @@ app.post('/api/assets/archive', (req, res) => {
     let delayed = 0;
     let fileerror = '';
     let zipname = '';
-    function resume(unzip_to = '') {
+    const resume = (unzip_to = '') => {
         const { directory, timeout, finalizeTime } = getQueryData(req, unzip_to || dirname);
         try {
             fs.mkdirpSync(directory);
@@ -259,12 +253,13 @@ app.post('/api/assets/archive', (req, res) => {
                         if (level > 0) {
                             delayed++;
                             const filename_gz = `${filename}.gz`;
-                            createGzipWriteStream(level, filename, filename_gz).on('finish', () => {
-                                if (delayed !== Number.POSITIVE_INFINITY) {
-                                    archive.file(filename_gz, { name: `${data.name}.gz` });
-                                    finalize(true);
-                                }
-                            });
+                            createGzipWriteStream(level, filename, filename_gz)
+                                .on('finish', () => {
+                                    if (delayed !== Number.POSITIVE_INFINITY) {
+                                        archive.file(filename_gz, { name: `${data.name}.gz` });
+                                        finalize(true);
+                                    }
+                                });
                         }
                         if (quality > 0) {
                             delayed++;
@@ -345,7 +340,7 @@ app.post('/api/assets/archive', (req, res) => {
         catch (err) {
             res.json({ application: `FILE: ${fileerror}`, system: err });
         }
-    }
+    };
     if (append_to) {
         const match = /([^/\\]+)\.(zip|tar)$/i.exec(append_to);
         if (match) {
@@ -354,9 +349,8 @@ app.post('/api/assets/archive', (req, res) => {
                 const copied = () => {
                     format = match[2].toLowerCase();
                     const unzip_to = dirname + separator + replaceSeparator(match[1]);
-                    decompress(zipname, unzip_to).then(() => {
-                        resume(unzip_to);
-                    });
+                    decompress(zipname, unzip_to)
+                        .then(() => resume(unzip_to));
                 };
                 if (!isLocalFile(append_to)) {
                     const stream = fs.createWriteStream(zipname);

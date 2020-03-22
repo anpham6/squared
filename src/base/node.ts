@@ -756,11 +756,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public ascend(options: AscendOptions = {}) {
-        const { condition, including, error, every, excluding } = options;
         let attr = options.attr;
         if (!isString(attr)) {
             attr = 'actualParent';
         }
+        else if (!/Parent$/i.test(attr)) {
+            return [];
+        }
+        const { condition, including, error, every, excluding } = options;
         const result: T[] = [];
         let parent = options.startSelf ? this : this[attr];
         while (parent && parent !== excluding) {
@@ -1474,14 +1477,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'hidden':
                     return 0;
             }
-            const borderWidth = BOX_BORDER[index][1];
-            const width = this.css(borderWidth);
+            const width = this.css(BOX_BORDER[index][1]);
             let result: number;
             switch (width) {
                 case 'thin':
                 case 'medium':
                 case 'thick':
-                    result = convertFloat(this.style[borderWidth]);
+                    result = convertFloat(this.style[BOX_BORDER[index][1]]);
                     break;
                 default:
                     result = this.parseUnit(width, index === 1 || index === 3 ? 'width' : 'height');

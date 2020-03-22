@@ -1,4 +1,4 @@
-import type { ControllerUISettings, FileAsset, FileCopyingOptions, FileArchivingOptions, ResourceStoredMap, UserUISettings } from '../base/application';
+import type { AppViewModel, ControllerUISettings, FileCopyingOptions, FileArchivingOptions, ResourceStoredMap, UserUISettings } from '../base/application';
 
 type View = android.base.View;
 
@@ -23,6 +23,11 @@ export interface ControllerSettingsAndroid extends ControllerUISettings {
         superscriptTopOffset: number;
         legendBottomOffset: number;
     };
+}
+
+export interface AppViewModelAndroid extends AppViewModel {
+    import?: string[];
+    variable?: { name: string; type: string }[];
 }
 
 export interface ResourceStoredMapAndroid extends ResourceStoredMap {
