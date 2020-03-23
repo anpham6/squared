@@ -53,20 +53,7 @@ function calculatePosition(element: CSSElement, value: string, boundingBox?: Dim
                 const calc = component[i].trim();
                 if (isCalc(calc)) {
                     if (i === 0) {
-                        if (length === 3 && !/^(top|right|bottom|left)$/.test(component[2].trim())) {
-                            switch (component[1]) {
-                                case 'top':
-                                case 'bottom':
-                                    options.dimension = 'width';
-                                    break;
-                                case 'left':
-                                case 'right':
-                                    options.dimension = 'height';
-                                    break;
-                                default:
-                                    return '';
-                            }
-                        }
+                        return '';
                     }
                     else {
                         switch (component[i - 1]) {
@@ -96,6 +83,11 @@ function calculatePosition(element: CSSElement, value: string, boundingBox?: Dim
                         case 'top':
                         case 'bottom':
                             if (++vertical > 1) {
+                                return '';
+                            }
+                            break;
+                        case 'center':
+                            if (length === 4) {
                                 return '';
                             }
                             break;
@@ -240,6 +232,23 @@ function isAbsolutePosition(value: string) {
             return true;
     }
     return false;
+}
+
+function newBoxRectPosition(orientation: string[] = ['left', 'top']) {
+    return <BoxRectPosition> {
+        static: true,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        topAsPercent: 0,
+        leftAsPercent: 0,
+        rightAsPercent: 0,
+        bottomAsPercent: 0,
+        horizontal: 'left',
+        vertical: 'top',
+        orientation
+    };
 }
 
 const getInnerWidth = (dimension: Undef<Dimension>) => dimension?.width || window.innerWidth;
@@ -1628,231 +1637,287 @@ export function getParentBoxDimension(element: CSSElement) {
 }
 
 export function getBackgroundPosition(value: string, dimension: Dimension, options: BackgroundPositionOptions = {}) {
-    const { fontSize, imageDimension, imageSize, screenDimension } = options;
-    const orientation = value === 'center' ? ['center', 'center'] : value.trim().split(CHAR.SPACE);
-    const { width, height } = dimension;
-    const result: BoxRectPosition = {
-        static: true,
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        topAsPercent: 0,
-        leftAsPercent: 0,
-        rightAsPercent: 0,
-        bottomAsPercent: 0,
-        horizontal: 'left',
-        vertical: 'top',
-        orientation
-    };
-    const setImageOffset = (position: string, horizontal: boolean, direction: string, directionAsPercent: string) => {
-        if (imageDimension && !isLength(position)) {
-            let offset = result[directionAsPercent];
-            if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
-                const [sizeW, sizeH] = imageSize.split(CHAR.SPACE);
-                if (horizontal) {
-                    let imageWidth = width;
-                    if (isLength(sizeW, true)) {
-                        if (isPercent(sizeW)) {
-                            imageWidth *= parseFloat(sizeW) / 100;
-                        }
-                        else {
-                            const length = parseUnit(sizeW, fontSize, screenDimension);
-                            if (length) {
-                                imageWidth = length;
-                            }
-                        }
-                    }
-                    else if (sizeH) {
-                        let percent = 1;
-                        if (isPercent(sizeH)) {
-                            percent = ((parseFloat(sizeH) / 100) * height) / imageDimension.height;
-                        }
-                        else if (isLength(sizeH)) {
-                            const length = parseUnit(sizeH, fontSize, screenDimension);
-                            if (length) {
-                                percent = length / imageDimension.height;
-                            }
-                        }
-                        imageWidth = percent * imageDimension.width;
-                    }
-                    offset *= imageWidth;
-                }
-                else {
-                    let imageHeight = height;
-                    if (isLength(sizeH, true)) {
-                        if (isPercent(sizeH)) {
-                            imageHeight *= parseFloat(sizeH) / 100;
-                        }
-                        else {
-                            const length = parseUnit(sizeH, fontSize, screenDimension);
-                            if (length) {
-                                imageHeight = length;
-                            }
-                        }
-                    }
-                    else if (sizeW) {
-                        let percent = 1;
-                        if (isPercent(sizeW)) {
-                            percent = ((parseFloat(sizeW) / 100) * width) / imageDimension.width;
-                        }
-                        else if (isLength(sizeW)) {
-                            const length = parseUnit(sizeW, fontSize, screenDimension);
-                            if (length) {
-                                percent = length / imageDimension.width;
-                            }
-                        }
-                        imageHeight = percent * imageDimension.height;
-                    }
-                    offset *= imageHeight;
-                }
-            }
-            else {
-                offset *= horizontal ? imageDimension.width : imageDimension.height;
-            }
-            result[direction] -= offset;
+    value = value.trim();
+    if (value !== '') {
+        const { fontSize, imageDimension, imageSize, screenDimension } = options;
+        const { width, height } = dimension;
+        const orientation = value.split(CHAR.SPACE);
+        if (orientation.length === 1) {
+            orientation.push('center');
         }
-    };
-    if (orientation.length === 2) {
-        for (let i = 0; i < 2; i++) {
-            let position = orientation[i];
-            const horizontal = i === 0;
-            const [direction, offsetParent] = horizontal ? ['left', width] : ['top', height];
-            const directionAsPercent = direction + 'AsPercent';
-            switch (position) {
-                case '0%':
-                    if (horizontal) {
-                        position = 'left';
-                    }
-                case 'left':
-                case 'top':
-                    break;
-                case '100%':
-                    if (horizontal) {
-                        position = 'right';
-                    }
-                case 'right':
-                case 'bottom':
-                    result[direction] = offsetParent;
-                    result[directionAsPercent] = 1;
-                    break;
-                case '50%':
-                case 'center':
-                    result[direction] = offsetParent / 2;
-                    result[directionAsPercent] = 0.5;
-                    break;
-                default: {
-                    const percent = convertPercent(position, offsetParent, fontSize, screenDimension);
-                    if (percent > 1) {
-                        orientation[i] = '100%';
-                        position = horizontal ? 'right' : 'bottom';
-                        result[position] = convertLength(formatPercent(percent - 1), offsetParent, fontSize, screenDimension) * -1;
+        const length = orientation.length;
+        if (length <= 4) {
+            const result = newBoxRectPosition(orientation);
+            const setImageOffset = (position: string, horizontal: boolean, direction: string, directionAsPercent: string) => {
+                if (imageDimension && !isLength(position)) {
+                    let offset = result[directionAsPercent];
+                    if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
+                        const [sizeW, sizeH] = imageSize.split(CHAR.SPACE);
+                        if (horizontal) {
+                            let imageWidth = width;
+                            if (isLength(sizeW, true)) {
+                                if (isPercent(sizeW)) {
+                                    imageWidth *= parseFloat(sizeW) / 100;
+                                }
+                                else {
+                                    const unit = parseUnit(sizeW, fontSize, screenDimension);
+                                    if (unit) {
+                                        imageWidth = unit;
+                                    }
+                                }
+                            }
+                            else if (sizeH) {
+                                let percent = 1;
+                                if (isPercent(sizeH)) {
+                                    percent = ((parseFloat(sizeH) / 100) * height) / imageDimension.height;
+                                }
+                                else if (isLength(sizeH)) {
+                                    const unit = parseUnit(sizeH, fontSize, screenDimension);
+                                    if (unit) {
+                                        percent = unit / imageDimension.height;
+                                    }
+                                }
+                                imageWidth = percent * imageDimension.width;
+                            }
+                            offset *= imageWidth;
+                        }
+                        else {
+                            let imageHeight = height;
+                            if (isLength(sizeH, true)) {
+                                if (isPercent(sizeH)) {
+                                    imageHeight *= parseFloat(sizeH) / 100;
+                                }
+                                else {
+                                    const unit = parseUnit(sizeH, fontSize, screenDimension);
+                                    if (unit) {
+                                        imageHeight = unit;
+                                    }
+                                }
+                            }
+                            else if (sizeW) {
+                                let percent = 1;
+                                if (isPercent(sizeW)) {
+                                    percent = ((parseFloat(sizeW) / 100) * width) / imageDimension.width;
+                                }
+                                else if (isLength(sizeW)) {
+                                    const unit = parseUnit(sizeW, fontSize, screenDimension);
+                                    if (unit) {
+                                        percent = unit / imageDimension.width;
+                                    }
+                                }
+                                imageHeight = percent * imageDimension.height;
+                            }
+                            offset *= imageHeight;
+                        }
                     }
                     else {
-                        result[direction] = convertLength(position, offsetParent, fontSize, screenDimension);
+                        offset *= horizontal ? imageDimension.width : imageDimension.height;
                     }
-                    result[directionAsPercent] = percent;
-                    break;
+                    result[direction] -= offset;
                 }
-            }
-            if (horizontal) {
-                result.horizontal = position;
-            }
-            else {
-                result.vertical = position;
-            }
-            setImageOffset(position, horizontal, direction, directionAsPercent);
-        }
-    }
-    else if (orientation.length === 4) {
-        for (let i = 0; i < 4; i++) {
-            const position = orientation[i];
-            switch (i) {
-                case 0:
+            };
+            if (length === 2) {
+                orientation.sort((a, b) => {
+                    switch (a) {
+                        case 'left':
+                        case 'right':
+                            return -1;
+                        case 'top':
+                        case 'bottom':
+                            return 1;
+                    }
+                    switch (b) {
+                        case 'left':
+                        case 'right':
+                            return 1;
+                        case 'top':
+                        case 'bottom':
+                            return -1;
+                    }
+                    return 0;
+                });
+                for (let i = 0; i < 2; i++) {
+                    let position = orientation[i];
+                    const horizontal = i === 0;
+                    const [direction, offsetParent] = horizontal ? ['left', width] : ['top', height];
+                    const directionAsPercent = direction + 'AsPercent';
                     switch (position) {
                         case '0%':
-                            result.horizontal = 'left';
-                            break;
-                        case '50%':
-                            result.horizontal = 'center';
+                            if (horizontal) {
+                                position = 'left';
+                            }
+                        case 'left':
+                        case 'top':
                             break;
                         case '100%':
-                            result.horizontal = 'right';
+                            if (horizontal) {
+                                position = 'right';
+                            }
+                        case 'right':
+                        case 'bottom':
+                            result[direction] = offsetParent;
+                            result[directionAsPercent] = 1;
                             break;
-                        default:
+                        case '50%':
+                        case 'center':
+                            result[direction] = offsetParent / 2;
+                            result[directionAsPercent] = 0.5;
+                            break;
+                        default: {
+                            const percent = convertPercent(position, offsetParent, fontSize, screenDimension);
+                            if (percent > 1) {
+                                orientation[i] = '100%';
+                                position = horizontal ? 'right' : 'bottom';
+                                result[position] = convertLength(formatPercent(percent - 1), offsetParent, fontSize, screenDimension) * -1;
+                            }
+                            else {
+                                result[direction] = convertLength(position, offsetParent, fontSize, screenDimension);
+                            }
+                            result[directionAsPercent] = percent;
+                            break;
+                        }
+                    }
+                    if (horizontal) {
+                        result.horizontal = position;
+                    }
+                    else {
+                        result.vertical = position;
+                    }
+                    setImageOffset(position, horizontal, direction, directionAsPercent);
+                }
+            }
+            else {
+                let horizontal = 0;
+                let vertical = 0;
+                const checkPosition = (position: string, nextPosition: string) => {
+                    switch (position) {
+                        case 'left':
+                        case 'right':
                             result.horizontal = position;
+                            horizontal++;
                             break;
-                    }
-                    break;
-                case 1: {
-                    const location = convertLength(position, width, fontSize, screenDimension);
-                    const locationAsPercent = convertPercent(position, width, fontSize, screenDimension);
-                    if (result.horizontal === 'right') {
-                        result.right = location;
-                        result.rightAsPercent = locationAsPercent;
-                        setImageOffset(position, true, 'right', 'rightAsPercent');
-                        result.left = width - location;
-                        result.leftAsPercent = 1 - locationAsPercent;
-                    }
-                    else {
-                        if (locationAsPercent > 1) {
-                            const percent = 1 - locationAsPercent;
-                            result.horizontal = 'right';
-                            result.right = convertLength(formatPercent(percent), width, fontSize, screenDimension);
-                            result.rightAsPercent = percent;
-                            setImageOffset(position, true, 'right', 'rightAsPercent');
+                        case 'center': {
+                            if (length === 4) {
+                                return false;
+                            }
+                            else {
+                                let centerHorizontal = true;
+                                if (nextPosition === undefined) {
+                                    if (horizontal > 0) {
+                                        result.vertical = position;
+                                        centerHorizontal = false;
+                                    }
+                                    else {
+                                        result.horizontal = position;
+                                    }
+                                }
+                                else {
+                                    switch (nextPosition) {
+                                        case 'left':
+                                        case 'right':
+                                            result.vertical = position;
+                                            centerHorizontal = false;
+                                            break;
+                                        case 'top':
+                                        case 'bottom':
+                                            result.horizontal = position;
+                                            break;
+                                        default:
+                                            return false;
+                                    }
+                                }
+                                if (centerHorizontal) {
+                                    result.left = width / 2;
+                                    result.leftAsPercent = 0.5;
+                                    setImageOffset(position, true, 'left', 'leftAsPercent');
+                                }
+                                else {
+                                    result.top = height / 2;
+                                    result.topAsPercent = 0.5;
+                                    setImageOffset(position, false, 'top', 'topAsPercent');
+                                }
+                            }
+                            break;
                         }
-                        result.left = location;
-                        result.leftAsPercent = locationAsPercent;
-                    }
-                    setImageOffset(position, true, 'left', 'leftAsPercent');
-                    break;
-                }
-                case 2:
-                    switch (position) {
-                        case '0%':
-                            result.vertical = 'top';
-                            break;
-                        case '50%':
-                            result.vertical = 'center';
-                            break;
-                        case '100%':
-                            result.vertical = 'bottom';
+                        case 'top':
+                        case 'bottom':
+                            result.vertical = position;
+                            vertical++;
                             break;
                         default:
-                            result.vertical = position;
-                            break;
+                            return false;
                     }
-                    break;
-                case 3: {
-                    const location = convertLength(position, height, fontSize, screenDimension);
-                    const locationAsPercent = convertPercent(position, height, fontSize, screenDimension);
-                    if (result.vertical === 'bottom') {
-                        result.bottom = location;
-                        result.bottomAsPercent = locationAsPercent;
-                        setImageOffset(position, false, 'bottom', 'bottomAsPercent');
-                        result.top = height - location;
-                        result.topAsPercent = 1 - locationAsPercent;
-                    }
-                    else {
-                        if (locationAsPercent > 1) {
-                            const percent = 1 - locationAsPercent;
-                            result.horizontal = 'bottom';
-                            result.bottom = convertLength(formatPercent(percent), height, fontSize, screenDimension);
-                            result.bottomAsPercent = percent;
-                            setImageOffset(position, false, 'bottom', 'bottomAsPercent');
+                    return horizontal < 2 && vertical < 2;
+                };
+                for (let i = 0; i < length; i++) {
+                    const position = orientation[i];
+                    if (isLength(position, true)) {
+                        const alignment = orientation[i - 1];
+                        switch (alignment) {
+                            case 'left':
+                            case 'right': {
+                                const location = convertLength(position, width, fontSize, screenDimension);
+                                const locationAsPercent = convertPercent(position, width, fontSize, screenDimension);
+                                if (alignment === 'right') {
+                                    result.right = location;
+                                    result.rightAsPercent = locationAsPercent;
+                                    setImageOffset(position, true, 'right', 'rightAsPercent');
+                                    result.left = width - location;
+                                    result.leftAsPercent = 1 - locationAsPercent;
+                                }
+                                else {
+                                    if (locationAsPercent > 1) {
+                                        const percent = 1 - locationAsPercent;
+                                        result.horizontal = 'right';
+                                        result.right = convertLength(formatPercent(percent), width, fontSize, screenDimension);
+                                        result.rightAsPercent = percent;
+                                        setImageOffset(position, true, 'right', 'rightAsPercent');
+                                    }
+                                    result.left = location;
+                                    result.leftAsPercent = locationAsPercent;
+                                }
+                                setImageOffset(position, true, 'left', 'leftAsPercent');
+                                break;
+                            }
+                            case 'top':
+                            case 'bottom': {
+                                const location = convertLength(position, height, fontSize, screenDimension);
+                                const locationAsPercent = convertPercent(position, height, fontSize, screenDimension);
+                                if (alignment === 'bottom') {
+                                    result.bottom = location;
+                                    result.bottomAsPercent = locationAsPercent;
+                                    setImageOffset(position, false, 'bottom', 'bottomAsPercent');
+                                    result.top = height - location;
+                                    result.topAsPercent = 1 - locationAsPercent;
+                                }
+                                else {
+                                    if (locationAsPercent > 1) {
+                                        const percent = 1 - locationAsPercent;
+                                        result.horizontal = 'bottom';
+                                        result.bottom = convertLength(formatPercent(percent), height, fontSize, screenDimension);
+                                        result.bottomAsPercent = percent;
+                                        setImageOffset(position, false, 'bottom', 'bottomAsPercent');
+                                    }
+                                    result.top = location;
+                                    result.topAsPercent = locationAsPercent;
+                                }
+                                setImageOffset(position, false, 'top', 'topAsPercent');
+                                break;
+                            }
+                            default:
+                                return newBoxRectPosition();
                         }
-                        result.top = location;
-                        result.topAsPercent = locationAsPercent;
                     }
-                    setImageOffset(position, false, 'top', 'topAsPercent');
-                    break;
+                    else if (!checkPosition(position, orientation[i + 1])) {
+                        return newBoxRectPosition();
+                    }
                 }
             }
+            result.static = result.top === 0 && result.right === 0 && result.bottom === 0 && result.left === 0;
+            return result;
         }
     }
-    result.static = result.top === 0 && result.right === 0 && result.bottom === 0 && result.left === 0;
-    return result;
+    return newBoxRectPosition();
 }
 
 export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
