@@ -29,7 +29,7 @@ const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE
 
 const NodeUI = $base.NodeUI;
 
-const REGEX_TEXTSHADOW = /^(?:(rgba?\([^)]+\)|[a-z]+) )?(-?[\d.]+[a-z]+) (-?[\d.]+[a-z]+)\s*(-?[\d.]+[a-z]+)?.*$/;
+const REGEX_TEXTSHADOW = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)\s+(-?[\d.]+[a-z]+)\s*([\d.]+[a-z]+)?/;
 
 function sortHorizontalFloat(list: View[]) {
     list.sort((a, b) => {
@@ -1555,11 +1555,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const color = Resource.addColor(parseColor(match[1] || node.css('color')));
                         if (color !== '') {
                             const precision = node.localSettings.floatPrecision;
-                            const shadowRadius = match[4];
                             node.android('shadowColor', `@color/${color}`);
-                            node.android('shadowDx', truncate(node.parseWidth(match[2], false) * 2, precision));
-                            node.android('shadowDy', truncate(node.parseHeight(match[3], false) * 2, precision));
-                            node.android('shadowRadius', truncate(isString(shadowRadius) ? node.parseWidth(shadowRadius, false) : 0.01, precision));
+                            node.android('shadowDx', truncate(node.parseWidth(match[2]) * 2, precision));
+                            node.android('shadowDy', truncate(node.parseHeight(match[3]) * 2, precision));
+                            node.android('shadowRadius', truncate(isString(match[4]) ? Math.max(node.parseWidth(match[4]), 0) : 0.01, precision));
                         }
                     }
                 }

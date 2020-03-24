@@ -853,6 +853,7 @@ declare namespace lib {
             separator?: string;
             checkUnit?: boolean;
             supportPercent?: boolean;
+            errorString?: RegExp;
         }
         interface CalculateVarOptions extends CalculateVarAsStringOptions {
             dimension?: DimensionAttr;

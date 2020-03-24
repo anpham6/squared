@@ -842,10 +842,10 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             if (hasCalc(component[j])) {
                                 const previous = component[j - 1];
                                 if (isColor(previous)) {
-                                    const name = previous.split(CHAR.SPACE).pop() as string;
-                                    const segment = calculateColor(element, name + component[j]);
-                                    if (segment !== '') {
-                                        component[j] = segment.replace(name, '');
+                                    const prefix = previous.split(CHAR.SPACE).pop() as string;
+                                    const result = calculateColor(element, prefix + component[j]);
+                                    if (result !== '') {
+                                        component[j] = result.replace(prefix, '');
                                         continue;
                                     }
                                 }
@@ -861,21 +861,31 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         }
         case 'borderColor':
         case 'scrollbarColor': {
-            const result: string[] = [];
-            for (const color of value.trim().split(XML.SEPARATOR)) {
-                const segment = calculateColor(element, color);
-                if (segment !== '') {
-                    result.push(segment);
+            value = value.trim();
+            const color = splitEnclosing(value);
+            const length = color.length;
+            if (length > 1) {
+                for (let i = 1; i < length; i++) {
+                    const previous = color[i - 1];
+                    if (isColor(previous) && hasCalc(color[i])) {
+                        const prefix = previous.split(CHAR.SPACE).pop() as string;
+                        const result = calculateColor(element, prefix + color[i]);
+                        if (result !== '') {
+                            color[i] = result;
+                            color[i - 1] = previous.substring(0, previous.length - prefix.length);
+                        }
+                        else {
+                            return '';
+                        }
+                    }
                 }
-                else {
-                    return '';
-                }
+                return color.join('');
             }
-            return result.join(', ');
+            return value;
         }
         case 'boxShadow':
         case 'textShadow':
-            return calculateVarAsString(element, value, { min: 0, supportPercent: false, separator: ',' });
+            return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*(\s+-[\d.]+[a-z]*)/ });
         case 'backgroundSize':
         case 'maskPosition':
         case 'maskSize':
@@ -917,28 +927,27 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             const length = border.length;
             if (length > 1) {
                 for (let i = 1; i < length; i++) {
-                    const previous = border[i - 1].trim();
-                    let seg = border[i];
-                    if (previous === 'calc') {
-                        border[i - 1] = '';
-                        seg = formatVar(calculateVar(element, `calc${seg}`, { min: 0, supportPercent: false }));
+                    const previous = border[i - 1];
+                    const prefix = previous.split(CHAR.SPACE).pop() as string;
+                    let result: string;
+                    if (prefix === 'calc') {
+                        result = formatVar(calculateVar(element, prefix + border[i], { min: 0, supportPercent: false }));
                     }
-                    else if (isColor(previous)) {
-                        const partial = previous.split(CHAR.SPACE);
-                        seg = calculateColor(element, partial.pop() + seg);
-                        border[i - 1] = partial.join(' ');
+                    else if (isColor(prefix)) {
+                        result = calculateColor(element, prefix + border[i]);
                     }
                     else {
                         continue;
                     }
-                    if (seg !== '') {
-                        border[i] = seg;
+                    if (result !== '') {
+                        border[i] = result;
+                        border[i - 1] = previous.substring(0, previous.length - prefix.length);
                     }
                     else {
                         return '';
                     }
                 }
-                return border.join(' ');
+                return border.join('');
             }
             return value;
         }
@@ -951,10 +960,10 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                 for (let i = 1; i < length; i++) {
                     let seg = timingFunction[i];
                     if (hasCalc(seg)) {
-                        const name = timingFunction[i - 1].trim();
+                        const prefix = timingFunction[i - 1].trim();
                         seg = trimEnclosing(seg);
                         let calc: Undef<string>;
-                        if (/cubic-bezier$/.test(name)) {
+                        if (/cubic-bezier$/.test(prefix)) {
                             const cubic = seg.split(XML.SEPARATOR);
                             const q = cubic.length;
                             if (q === 4) {
@@ -983,7 +992,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                                 }
                             }
                         }
-                        else if (/steps$/.test(name)) {
+                        else if (/steps$/.test(prefix)) {
                             calc = calculateVarAsString(element, seg, { unitType: CSS_UNIT.INTEGER, min: 1 });
                         }
                         if (calc) {
@@ -1007,8 +1016,8 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             const path = splitEnclosing(value);
             const length = path.length;
             if (length === 2) {
-                const name = path[0].trim();
-                switch (name) {
+                const prefix = path[0].trim();
+                switch (prefix) {
                     case 'url':
                     case 'path':
                         return !hasCalc(path[1]) ? value : '';
@@ -1021,14 +1030,14 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                 }
                 let shape = path[1].trim();
                 shape = trimEnclosing(shape);
-                switch (name) {
+                switch (prefix) {
                     case 'circle':
                     case 'ellipse': {
                         const result: string[] = [];
                         let [radius, position] = shape.split(/\s+at\s+/);
                         if (hasCalc(radius)) {
                             const options: CalculateVarAsStringOptions = { boundingBox, min: 0, parent: true };
-                            if (name === 'circle') {
+                            if (prefix === 'circle') {
                                 if (radius.includes('%')) {
                                     const { width, height } = boundingBox || getParentBoxDimension(element);
                                     if (width > 0 && height > 0) {
@@ -1092,7 +1101,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                     }
                 }
                 if (shape !== '') {
-                    return `${name}(${shape})`;
+                    return `${prefix}(${shape})`;
                 }
             }
             return value;
@@ -1465,6 +1474,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
     let separator: Undef<string>;
     let unitType: Undef<number>;
     let checkUnit: Undef<boolean>;
+    let errorString: Undef<RegExp>;
     if (options) {
         if (Array.isArray(options.dimension)) {
             dimension = options.dimension;
@@ -1472,7 +1482,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
         if (Array.isArray(options.orderedSize)) {
             orderedSize = options.orderedSize;
         }
-        ({ separator, unitType, checkUnit } = options);
+        ({ separator, unitType, checkUnit, errorString } = options);
     }
     let unit: string;
     switch (unitType) {
@@ -1541,7 +1551,28 @@ export function calculateVarAsString(element: CSSElement, value: string, options
             }
         }
     }
-    return result.length === 1 ? result[0] : result.join(separator === ' ' ? ' ' : (separator ? separator + ' ' : ''));
+    value = result.length === 1 ? result[0] : result.join(separator === ' ' ? ' ' : (separator ? separator + ' ' : ''));
+    if (errorString) {
+        let match: RegExpExecArray | null;
+        while ((match = errorString.exec(value)) !== null) {
+            if (match[1] === undefined) {
+                return '';
+            }
+            const segment = match[0];
+            let optional = segment;
+            const length = match.length;
+            for (let i = length - 1; i >= 1; i--) {
+                optional = optional.replace(new RegExp(match[i] + '$'), '');
+            }
+            if (optional === segment) {
+                return '';
+            }
+            else {
+                value = value.replace(segment, optional);
+            }
+        }
+    }
+    return value;
 }
 
 export function calculateVar(element: CSSElement, value: string, options: CalculateVarOptions = {}) {
