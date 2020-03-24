@@ -898,6 +898,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         else {
                             let found = false;
+                            REGEX_COUNTER.lastIndex = 0;
                             let match: Null<RegExpExecArray>;
                             while ((match = REGEX_COUNTER.exec(value)) !== null) {
                                 const attr = match[1];
@@ -1006,7 +1007,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             if (!found) {
                                 content = value;
                             }
-                            REGEX_COUNTER.lastIndex = 0;
                         }
                         break;
                     }

@@ -20,20 +20,20 @@ const SHAPES = {
     polygon: 7
 };
 const REGEX_TRANSFORM = {
-    MATRIX: new RegExp(`(matrix(?:3d)?)\\(${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}, ${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?(?:, ${STRING_DECIMAL})?\\)`, 'g'),
+    MATRIX: new RegExp(`(matrix(?:3d)?)\\(${STRING_DECIMAL},\\s+${STRING_DECIMAL},\\s+${STRING_DECIMAL},\\s+${STRING_DECIMAL},\\s+${STRING_DECIMAL},\\s+${STRING_DECIMAL}(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?\\)`, 'g'),
     ROTATE: new RegExp(`(rotate[XY]?)\\(${STRING.CSS_ANGLE}\\)`, 'g'),
-    SKEW: new RegExp(`(skew[XY]?)\\(${STRING.CSS_ANGLE}(?:, ${STRING.CSS_ANGLE})?\\)`, 'g'),
-    SCALE: new RegExp(`(scale[XY]?)\\(${STRING_DECIMAL}(?:, ${STRING_DECIMAL})?\\)`, 'g'),
-    TRANSLATE: new RegExp(`(translate[XY]?)\\(${STRING.LENGTH_PERCENTAGE}(?:, ${STRING.LENGTH_PERCENTAGE})?\\)`, 'g')
+    SKEW: new RegExp(`(skew[XY]?)\\(${STRING.CSS_ANGLE}(?:,\\s+${STRING.CSS_ANGLE})?\\)`, 'g'),
+    SCALE: new RegExp(`(scale[XY]?)\\(${STRING_DECIMAL}(?:,\\s+${STRING_DECIMAL})?\\)`, 'g'),
+    TRANSLATE: new RegExp(`(translate[XY]?)\\(${STRING.LENGTH_PERCENTAGE}(?:,\\s+${STRING.LENGTH_PERCENTAGE})?\\)`, 'g')
 };
-const REGEX_ROTATEORIGIN = /rotate\((-?[\d.]+)(?:,? (-?[\d.]+))?(?:,? (-?[\d.]+))?\)/g;
+const REGEX_ROTATEORIGIN = /rotate\((-?[\d.]+)(?:,?\s+(-?[\d.]+))?(?:,?\s+(-?[\d.]+))?\)/g;
 
 function setOriginPosition(element: Element, point: Point, attr: string, position: string, dimension: number) {
     if (isLength(position)) {
         point[attr] = parseUnit(position, getFontSize(element));
     }
     else if (isPercent(position)) {
-        point[attr] = (parseFloat(position) / 100) * dimension;
+        point[attr] = parseFloat(position) / 100 * dimension;
     }
 }
 
@@ -343,6 +343,7 @@ export const TRANSFORM = {
         const value = getNamedItem(element, attr);
         const result: SvgPoint[] = [];
         if (value !== '') {
+            REGEX_ROTATEORIGIN.lastIndex = 0;
             let match: Null<RegExpExecArray>;
             while ((match = REGEX_ROTATEORIGIN.exec(value)) !== null) {
                 const angle = parseFloat(match[1]);
@@ -354,7 +355,6 @@ export const TRANSFORM = {
                     });
                 }
             }
-            REGEX_ROTATEORIGIN.lastIndex = 0;
         }
         return result;
     },

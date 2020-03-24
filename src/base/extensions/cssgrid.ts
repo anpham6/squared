@@ -93,7 +93,7 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
         let sizeMin = 0;
         [unit[0], unitMin[0]].forEach(value => {
             if (isPercent(value)) {
-                sizeMin = Math.max((parseFloat(value) / 100) * dimension, sizeMin);
+                sizeMin = Math.max(parseFloat(value) / 100 * dimension, sizeMin);
             }
             else if (isLength(value)) {
                 sizeMin = Math.max(parseFloat(value), sizeMin);
@@ -281,8 +281,9 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             if (value !== '' && value !== 'none' && value !== 'auto') {
                 const data = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = data;
-                let match: Null<RegExpMatchArray>;
                 let i = 1;
+                REGEX_NAMED.lastIndex = 0;
+                let match: Null<RegExpMatchArray>;
                 while ((match = REGEX_NAMED.exec(value)) !== null) {
                     const command = match[1].trim();
                     switch (index) {
@@ -308,6 +309,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                                 if (iterations > 0) {
                                     const repeating: RepeatItem[] = [];
+                                    REGEX_REPEAT.lastIndex = 0;
                                     let subMatch: Null<RegExpMatchArray>;
                                     while ((subMatch = REGEX_REPEAT.exec(match[3])) !== null) {
                                         const subPattern = subMatch[1];
@@ -345,7 +347,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                             }
                                         }
                                     }
-                                    REGEX_REPEAT.lastIndex = 0;
                                 }
                             }
                             else if (/^minmax/.test(command)) {
@@ -373,7 +374,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             break;
                     }
                 }
-                REGEX_NAMED.lastIndex = 0;
             }
         });
         if (horizontal) {

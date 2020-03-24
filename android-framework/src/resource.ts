@@ -273,8 +273,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             }
         }
         if (mdpi) {
-            result.mdpi = mdpi;
             const resource = this.application.resourceHandler;
+            result.mdpi = mdpi;
             const rawData = resource.getRawData(mdpi);
             if (rawData) {
                 const { base64, filename } = rawData;

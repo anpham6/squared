@@ -252,9 +252,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             });
         }
         if (imageElements.length) {
-            if (THEN) {
-                this.initializing = true;
-            }
+            this.initializing = true;
             Promise.all(objectMap<PreloadImage, Promise<PreloadImage>>(imageElements, image => {
                 return new Promise((resolve, reject) => {
                     if (typeof image === 'string') {
@@ -280,9 +278,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         resource.addImage(value);
                     }
                 }
-                if (THEN) {
-                    resume();
-                }
+                resume();
             })
             .catch((error: Event | HTMLImageElement) => {
                 if (error instanceof Event) {
@@ -290,14 +286,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 const message = error instanceof HTMLImageElement ? error.src : '';
                 if (!this.userSettings.showErrorMessages || !isString(message) || confirm('FAIL: ' + message)) {
-                    if (THEN) {
-                        resume();
-                    }
+                    resume();
                 }
             });
-            if (!THEN) {
-                resume();
-            }
         }
         else {
             resume();
@@ -509,6 +500,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const value = styleMap[attr];
                     if (value && value !== 'initial') {
                         let result = value;
+                        REGEX_DATAURI.lastIndex = 0;
                         let match: Null<RegExpExecArray>;
                         while ((match = REGEX_DATAURI.exec(value)) !== null) {
                             if (match[3]) {
@@ -526,7 +518,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                             }
                         }
                         styleMap[attr] = result;
-                        REGEX_DATAURI.lastIndex = 0;
                     }
                 };
                 for (const attr of Array.from(cssStyle)) {
@@ -535,6 +526,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 parseImageUrl(baseMap, 'backgroundImage');
                 parseImageUrl(baseMap, 'listStyleImage');
                 parseImageUrl(baseMap, 'content');
+                REGEX_IMPORTANT.lastIndex = 0;
                 let match: Null<RegExpExecArray>;
                 while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
                     const attr = convertCamelCase(match[1]);
@@ -605,7 +597,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     important[attr] = true;
                 }
-                REGEX_IMPORTANT.lastIndex = 0;
                 for (const selectorText of parseSelectorText(item.selectorText)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');

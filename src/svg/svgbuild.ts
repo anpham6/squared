@@ -406,6 +406,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         value = value.trim();
         const result: SvgPathCommand[] = [];
         let first = true;
+        REGEX_COMMAND.lastIndex = 0;
         let match: Null<RegExpExecArray>;
         while ((match = REGEX_COMMAND.exec(value)) !== null) {
             let key = match[1];
@@ -506,13 +507,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                 case 'A':
                     if (coordinates.length >= 7) {
-                        radiusX = coordinates[0];
-                        radiusY = coordinates[1];
-                        xAxisRotation = coordinates[2];
-                        largeArcFlag = coordinates[3];
-                        sweepFlag = coordinates[4];
-                        coordinates[0] = coordinates[5];
-                        coordinates[1] = coordinates[6];
+                        [radiusX, radiusY, xAxisRotation, largeArcFlag, sweepFlag] = coordinates.splice(0, 5);
                         coordinates.length = 2;
                         break;
                     }
@@ -551,7 +546,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 first = false;
             }
         }
-        REGEX_COMMAND.lastIndex = 0;
         return result;
     }
 
@@ -887,6 +881,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static parseCoordinates(value: string) {
         const result: number[] = [];
+        REGEX_DECIMAL.lastIndex = 0;
         let match: Null<RegExpExecArray>;
         while ((match = REGEX_DECIMAL.exec(value)) !== null) {
             const coord = parseFloat(match[0]);
@@ -894,7 +889,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 result.push(coord);
             }
         }
-        REGEX_DECIMAL.lastIndex = 0;
         return result;
     }
 

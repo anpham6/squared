@@ -1184,6 +1184,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 let offset = -1;
                 invalid: {
                     let adjacent: Undef<string>;
+                    SELECTOR_G.lastIndex = 0;
                     let match: Null<RegExpExecArray>;
                     while ((match = SELECTOR_G.exec(query)) !== null) {
                         let segment = match[1];
@@ -1294,7 +1295,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         offset++;
                         adjacent = undefined;
                     }
-                    SELECTOR_G.lastIndex = 0;
                 }
                 let length = queryMap.length;
                 if (selectors.length && offset !== -1 && offset < length) {

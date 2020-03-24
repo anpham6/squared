@@ -900,7 +900,6 @@ declare namespace lib {
         function resolveURL(value: string): string;
         function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
         function convertAngle(value: string, unit?: string): number;
-        function convertTime(value: string, unit?: string): number;
         function convertPX(value: string, fontSize?: number): string;
         function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension): number;
         function parseAngle(value: string): number;

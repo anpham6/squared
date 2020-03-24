@@ -13,7 +13,7 @@ export const STRING = {
     CSS_SELECTOR_PSEUDO_CLASS: ':[\\w\\-]+(?:\\(\\s*([^()]+)\\s*\\)|\\(\\s*([\\w\\-]+\\(.+?\\))\\s*\\))?',
     CSS_SELECTOR_ATTR: '\\[([\\w\\-]+)(?:([~^$*|])?=(?:"([^"]+)"|\'([^\']+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
-    CSS_TIME: `(${DECIMAL})(ms|s)`,
+    CSS_TIME: `(${DECIMAL})(s|ms)`,
     CSS_CALC: 'calc\\((.+)\\)'
 };
 

@@ -1,6 +1,6 @@
 import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
-import { clamp, truncate } from './math';
+import { clamp, truncate, truncateFraction } from './math';
 import { CHAR, CSS, STRING, UNIT, XML } from './regex';
 import { convertAlpha, convertFloat, convertRoman, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
 
@@ -12,15 +12,15 @@ type CalculateVarAsStringOptions = squared.lib.css.CalculateVarAsStringOptions;
 
 const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen) and )?((?:\([^)]+\)(?: and )?)+),?\s*/g;
-const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?: and )?/g;
+const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
+const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
 const REGEX_SRCSET = /^(.*?)\s+(?:([\d.]+)([xw]))?$/;
 const REGEX_OPERATOR = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEX_INTEGER = /^\s*-?\d+\s*$/;
 const REGEX_DIVIDER = /\s*\/\s*/;
 const REGEX_CALC = new RegExp(STRING.CSS_CALC);
 const REGEX_LENGTH = new RegExp(`(${STRING.UNIT_LENGTH}|%)`);
-const REGEX_WIDTH = new RegExp(`\\s*(?:(\\(\\s*)?${STRING_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${STRING_SIZES}(\\s*\\))?)?\\s*(.+)`);
+const REGEX_SOURCESIZES = new RegExp(`\\s*(?:(\\(\\s*)?${STRING_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${STRING_SIZES}(\\s*\\))?)?\\s*(.+)`);
 
 function compareRange(operation: string, unit: number, range: number) {
     switch (operation) {
@@ -38,70 +38,73 @@ function compareRange(operation: string, unit: number, range: number) {
 }
 
 function calculatePosition(element: CSSElement, value: string, boundingBox?: Dimension) {
-    const component = splitEnclosing(value.trim(), 'calc').filter(item => item.trim() !== '');
-    const length = component.length;
+    const component = replaceMap(splitEnclosing(value.trim(), 'calc'), (seg: string) => seg.trim());
+    const alignment: string[] = [];
+    for (const seg of component) {
+        if (seg.includes(' ') && !isCalc(seg)) {
+            alignment.push(...seg.split(CHAR.SPACE));
+        }
+        else {
+            alignment.push(seg);
+        }
+    }
+    const length = alignment.length;
     switch (length) {
         case 1:
         case 2:
-            return calculateVarAsString(element, component.join(''), { dimension: ['width', 'height'], boundingBox, parent: false });
+            return calculateVarAsString(element, alignment.join(' '), { dimension: ['width', 'height'], boundingBox, parent: false });
         case 3:
         case 4: {
-            const options: CalculateVarOptions = { boundingBox };
             let horizontal = 0;
             let vertical = 0;
             for (let i = 0; i < length; i++) {
-                const calc = component[i].trim();
-                if (isCalc(calc)) {
-                    if (i === 0) {
-                        return '';
-                    }
-                    else {
-                        switch (component[i - 1]) {
+                const position = alignment[i];
+                switch (position) {
+                    case 'top':
+                    case 'bottom':
+                        if (++vertical === 2) {
+                            return '';
+                        }
+                        break;
+                    case 'center':
+                        if (length === 4) {
+                            return '';
+                        }
+                        break;
+                    case 'left':
+                    case 'right':
+                        if (++horizontal === 2) {
+                            return '';
+                        }
+                        break;
+                    default: {
+                        let dimension: DimensionAttr;
+                        switch (alignment[i - 1]) {
                             case 'top':
                             case 'bottom':
-                                options.dimension = 'height';
+                                dimension = 'height';
                                 break;
                             case 'left':
                             case 'right':
-                                options.dimension = 'width';
+                                dimension = 'width';
                                 break;
                             default:
                                 return '';
                         }
-                    }
-                    options.boundingSize = undefined;
-                    const result = formatVar(calculateVar(element, calc, options));
-                    if (result !== '') {
-                        component[i] = result;
-                    }
-                    else {
-                        return '';
-                    }
-                }
-                else {
-                    switch (calc) {
-                        case 'top':
-                        case 'bottom':
-                            if (++vertical > 1) {
+                        if (isCalc(position)) {
+                            const result = formatVar(calculateVar(element, position, { dimension, boundingBox }));
+                            if (result !== '') {
+                                alignment[i] = result;
+                            }
+                            else {
                                 return '';
                             }
-                            break;
-                        case 'center':
-                            if (length === 4) {
-                                return '';
-                            }
-                            break;
-                        case 'left':
-                        case 'right':
-                            if (++horizontal > 1) {
-                                return '';
-                            }
-                            break;
+                        }
+                        break;
                     }
-                    component[i] = calc;
                 }
             }
-            return component.join(' ');
+            return alignment.join(' ');
         }
     }
     return '';
@@ -253,7 +256,7 @@ function newBoxRectPosition(orientation: string[] = ['left', 'top']) {
 
 const getInnerWidth = (dimension: Undef<Dimension>) => dimension?.width || window.innerWidth;
 const getInnerHeight = (dimension: Undef<Dimension>) => dimension?.height || window.innerHeight;
-const convertLength = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? Math.round(dimension * (convertFloat(value) / 100)) : parseUnit(value, fontSize, screenDimension);
+const convertLength = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? Math.round(convertFloat(value) / 100 * dimension) : parseUnit(value, fontSize, screenDimension);
 const convertPercent = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? parseFloat(value) / 100 : parseUnit(value, fontSize, screenDimension) / dimension;
 const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
@@ -343,8 +346,8 @@ export function parseSelectorText(value: string) {
 }
 
 export function getSpecificity(value: string) {
-    CSS.SELECTOR_G.lastIndex = 0;
     let result = 0;
+    CSS.SELECTOR_G.lastIndex = 0;
     let match: Null<RegExpExecArray>;
     while ((match = CSS.SELECTOR_G.exec(value)) !== null) {
         let segment = match[1];
@@ -657,10 +660,10 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             }
             return formatVar(calculateVar(element, value, { boundingSize }));
         }
-        case 'fontSize':
-            return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element.parentElement), min: 0 }));
         case 'lineHeight':
             return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element), min: 0 }));
+        case 'fontSize':
+            return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element.parentElement), min: 0 }));
         case 'margin':
             return calculateVarAsString(element, value, { dimension: 'width', boundingBox });
         case 'borderBottomLeftRadius':
@@ -1171,7 +1174,9 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             const match = /([a-z-]+\(.+?\))\s*([^/]+)(?:\s*\/\s*)?(.+)?/.exec(value.trim());
             if (match) {
                 let slice = match[2].trim();
-                slice = hasCalc(slice) ? calculateStyle(element, 'borderImageSlice', slice, boundingBox) : slice;
+                if (hasCalc(slice)) {
+                    slice = calculateStyle(element, 'borderImageSlice', slice, boundingBox);
+                }
                 if (slice !== '') {
                     let width: Undef<string>;
                     let outset: Undef<string>;
@@ -1315,102 +1320,100 @@ export function parseKeyframeRule(rules: CSSRuleList) {
 }
 
 export function validMediaRule(value: string, fontSize?: number) {
-    if (value) {
-        switch (value) {
-            case 'only all':
-            case 'only screen':
-                return true;
-            default: {
-                REGEX_MEDIARULE.lastIndex = 0;
-                let match: Null<RegExpExecArray>;
-                while ((match = REGEX_MEDIARULE.exec(value)) !== null) {
-                    const negate = match[1] === 'not';
-                    let valid = false;
-                    let condition: Null<RegExpExecArray>;
-                    while ((condition = REGEX_MEDIACONDITION.exec(match[2])) !== null) {
-                        const attr = condition[1];
-                        let operation = condition[2];
-                        const rule = condition[3];
-                        if (/^min/.test(attr)) {
-                            operation = '>=';
-                        }
-                        else if (/^max/.test(attr)) {
-                            operation = '<=';
-                        }
-                        switch (attr) {
-                            case 'aspect-ratio':
-                            case 'min-aspect-ratio':
-                            case 'max-aspect-ratio':
-                                if (rule) {
-                                    const [width, height] = replaceMap(rule.split('/'), (ratio: string) => parseInt(ratio));
-                                    valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
-                                }
-                                else {
-                                    valid = false;
-                                }
-                                break;
-                            case 'width':
-                            case 'min-width':
-                            case 'max-width':
-                            case 'height':
-                            case 'min-height':
-                            case 'max-height':
-                                valid = compareRange(operation, /width$/.test(attr) ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
-                                break;
-                            case 'orientation':
-                                valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
-                                break;
-                            case 'resolution':
-                            case 'min-resolution':
-                            case 'max-resolution':
-                                if (rule) {
-                                    let resolution = parseFloat(rule);
-                                    if (/dpcm$/.test(rule)) {
-                                        resolution *= 2.54;
-                                    }
-                                    else if (/dppx$/.test(rule)) {
-                                        resolution *= 96;
-                                    }
-                                    valid = compareRange(operation, getDeviceDPI(), resolution);
-                                }
-                                else {
-                                    valid = false;
-                                }
-                                break;
-                            case 'grid':
-                                valid = rule === '0';
-                                break;
-                            case 'color':
-                                valid = rule === undefined || parseInt(rule) > 0;
-                                break;
-                            case 'min-color':
-                                valid = parseInt(rule) <= screen.colorDepth / 3;
-                                break;
-                            case 'max-color':
-                                valid = parseInt(rule) >= screen.colorDepth / 3;
-                                break;
-                            case 'color-index':
-                            case 'min-color-index':
-                            case 'monochrome':
-                            case 'min-monochrome':
-                                valid = rule === '0';
-                                break;
-                            case 'max-color-index':
-                            case 'max-monochrome':
-                                valid = parseInt(rule) >= 0;
-                                break;
-                            default:
+    switch (value) {
+        case 'only all':
+        case 'only screen':
+            return true;
+        default: {
+            REGEX_MEDIARULE.lastIndex = 0;
+            let match: Null<RegExpExecArray>;
+            while ((match = REGEX_MEDIARULE.exec(value)) !== null) {
+                const negate = match[1] === 'not';
+                let valid = false;
+                REGEX_MEDIACONDITION.lastIndex = 0;
+                let condition: Null<RegExpExecArray>;
+                while ((condition = REGEX_MEDIACONDITION.exec(match[2])) !== null) {
+                    const attr = condition[1];
+                    let operation = condition[2];
+                    const rule = condition[3];
+                    if (/^min/.test(attr)) {
+                        operation = '>=';
+                    }
+                    else if (/^max/.test(attr)) {
+                        operation = '<=';
+                    }
+                    switch (attr) {
+                        case 'aspect-ratio':
+                        case 'min-aspect-ratio':
+                        case 'max-aspect-ratio':
+                            if (rule) {
+                                const [width, height] = replaceMap(rule.split('/'), (ratio: string) => parseInt(ratio));
+                                valid = compareRange(operation, window.innerWidth / window.innerHeight, width / height);
+                            }
+                            else {
                                 valid = false;
-                                break;
-                        }
-                        if (!valid) {
+                            }
                             break;
-                        }
+                        case 'width':
+                        case 'min-width':
+                        case 'max-width':
+                        case 'height':
+                        case 'min-height':
+                        case 'max-height':
+                            valid = compareRange(operation, /width$/.test(attr) ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
+                            break;
+                        case 'orientation':
+                            valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
+                            break;
+                        case 'resolution':
+                        case 'min-resolution':
+                        case 'max-resolution':
+                            if (rule) {
+                                let resolution = parseFloat(rule);
+                                if (/dpcm$/.test(rule)) {
+                                    resolution *= 2.54;
+                                }
+                                else if (/dppx$/.test(rule)) {
+                                    resolution *= 96;
+                                }
+                                valid = compareRange(operation, getDeviceDPI(), resolution);
+                            }
+                            else {
+                                valid = false;
+                            }
+                            break;
+                        case 'grid':
+                            valid = rule === '0';
+                            break;
+                        case 'color':
+                            valid = rule === undefined || parseInt(rule) > 0;
+                            break;
+                        case 'min-color':
+                            valid = parseInt(rule) <= screen.colorDepth / 3;
+                            break;
+                        case 'max-color':
+                            valid = parseInt(rule) >= screen.colorDepth / 3;
+                            break;
+                        case 'color-index':
+                        case 'min-color-index':
+                        case 'monochrome':
+                        case 'min-monochrome':
+                            valid = rule === '0';
+                            break;
+                        case 'max-color-index':
+                        case 'max-monochrome':
+                            valid = parseInt(rule) >= 0;
+                            break;
+                        default:
+                            valid = false;
+                            break;
                     }
-                    REGEX_MEDIACONDITION.lastIndex = 0;
-                    if (!negate && valid || negate && !valid) {
-                        return true;
+                    if (!valid) {
+                        break;
                     }
+                }
+                if (!negate && valid || negate && !valid) {
+                    return true;
                 }
             }
         }
@@ -1476,11 +1479,11 @@ export function calculateVarAsString(element: CSSElement, value: string, options
     let checkUnit: Undef<boolean>;
     let errorString: Undef<RegExp>;
     if (options) {
-        if (Array.isArray(options.dimension)) {
-            dimension = options.dimension;
-        }
         if (Array.isArray(options.orderedSize)) {
             orderedSize = options.orderedSize;
+        }
+        if (Array.isArray(options.dimension)) {
+            dimension = options.dimension;
         }
         ({ separator, unitType, checkUnit, errorString } = options);
     }
@@ -1703,7 +1706,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                             else if (sizeH) {
                                 let percent = 1;
                                 if (isPercent(sizeH)) {
-                                    percent = ((parseFloat(sizeH) / 100) * height) / imageDimension.height;
+                                    percent = (parseFloat(sizeH) / 100 * height) / imageDimension.height;
                                 }
                                 else if (isLength(sizeH)) {
                                     const unit = parseUnit(sizeH, fontSize, screenDimension);
@@ -1731,7 +1734,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                             else if (sizeW) {
                                 let percent = 1;
                                 if (isPercent(sizeW)) {
-                                    percent = ((parseFloat(sizeW) / 100) * width) / imageDimension.width;
+                                    percent = (parseFloat(sizeW) / 100 * width) / imageDimension.width;
                                 }
                                 else if (isLength(sizeW)) {
                                     const unit = parseUnit(sizeW, fontSize, screenDimension);
@@ -1794,6 +1797,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                             break;
                         case '50%':
                         case 'center':
+                            position = 'center';
                             result[direction] = offsetParent / 2;
                             result[directionAsPercent] = 0.5;
                             break;
@@ -1961,11 +1965,9 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     if (parentElement?.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
             if (item.tagName === 'SOURCE') {
-                const type = item.type.trim();
-                const media = item.media.trim();
-                const value = item.srcset.trim();
-                if (value !== '' && !(media !== '' && !validMediaRule(media)) && (!type || mimeType === undefined || mimeType.includes((type.split('/').pop() as string).trim().toLowerCase()))) {
-                    srcset = value;
+                const { media, type, srcset: srcsetA } = item;
+                if (isString(srcsetA) && !(isString(media) && !validMediaRule(media)) && (!isString(type) || mimeType === undefined || mimeType.includes((type.split('/').pop() as string).trim().toLowerCase()))) {
+                    srcset = srcsetA;
                     sizes = item.sizes;
                     return true;
                 }
@@ -2017,7 +2019,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     else if (result.length > 1 && isString(sizes)) {
         let width = NaN;
         for (const value of sizes.trim().split(XML.SEPARATOR)) {
-            let match = REGEX_WIDTH.exec(value);
+            let match = REGEX_SOURCESIZES.exec(value);
             if (match) {
                 const ruleA = match[2] ? validMediaRule(match[2]) : undefined;
                 const ruleB = match[6] ? validMediaRule(match[6]) : undefined;
@@ -2157,16 +2159,6 @@ export function convertAngle(value: string, unit = 'deg') {
             result /= 400;
         case 'turn':
             result *= 360;
-            break;
-    }
-    return result;
-}
-
-export function convertTime(value: string, unit = 's') {
-    let result = convertFloat(value);
-    switch (unit) {
-        case 's':
-            result *= 1000;
             break;
     }
     return result;
@@ -2420,7 +2412,7 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                             if (min !== undefined && result < min || max !== undefined && result > max) {
                                 return NaN;
                             }
-                            return result;
+                            return truncateFraction(result);
                         }
                         else {
                             equated[index] = seg[0];
@@ -2446,41 +2438,31 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
         let result = parseFloat(match[1]);
         switch (match[2]) {
             case 'px':
-            case undefined:
                 return result;
             case 'em':
             case 'ch':
-                result *= fontSize ?? (getFontSize(document.body) || 16);
-                break;
+                return result * (fontSize ?? (getFontSize(document.body) || 16));
             case 'rem':
-                result *= getFontSize(document.body) || 16;
-                break;
+                return result * (getFontSize(document.body) || 16);
             case 'pc':
                 result *= 12;
             case 'pt':
-                result *= 4 / 3;
-                break;
+                return result * 4 / 3;
             case 'mm':
                 result /= 10;
             case 'cm':
                 result /= 2.54;
             case 'in':
-                result *= getDeviceDPI();
-                break;
+                return result * getDeviceDPI();
             case 'vw':
-                result *= getInnerWidth(screenDimension) / 100;
-                break;
+                return result * getInnerWidth(screenDimension) / 100;
             case 'vh':
-                result *= getInnerHeight(screenDimension) / 100;
-                break;
+                return result * getInnerHeight(screenDimension) / 100;
             case 'vmin':
-                result *= Math.min(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
-                break;
+                return result * Math.min(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
             case 'vmax':
-                result *= Math.max(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
-                break;
+                return result * Math.max(getInnerWidth(screenDimension), getInnerHeight(screenDimension)) / 100;
         }
-        return result;
     }
     return 0;
 }
@@ -2492,7 +2474,15 @@ export function parseAngle(value: string) {
 
 export function parseTime(value: string) {
     const match = CSS.TIME.exec(value);
-    return match ? convertTime(match[1], match[2]) : 0;
+    if (match) {
+        switch (match[2]) {
+            case 'ms':
+                return parseInt(match[1]);
+            case 's':
+                return parseFloat(match[1]) * 1000;
+        }
+    }
+    return 0;
 }
 
 export function formatPX(value: number) {

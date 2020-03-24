@@ -35,18 +35,18 @@ const ANIMATION_DEFAULT = {
     'animation-timing-function': 'ease'
 };
 const KEYFRAME_MAP = getKeyframeRules();
-const REGEX_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+, (?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
+const REGEX_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
 const REGEX_AUTO = /^auto/;
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
         const result: string[] = [];
+        REGEX_TIMINGFUNCTION.lastIndex = 0;
         let match: Null<RegExpMatchArray>;
         while ((match = REGEX_TIMINGFUNCTION.exec(value)) !== null) {
             result.push(match[1]);
         }
-        REGEX_TIMINGFUNCTION.lastIndex = 0;
         return result;
     }
     return value.split(XML.SEPARATOR);
@@ -70,7 +70,7 @@ function convertRotate(value: string) {
     if (value === 'reverse') {
         return 'auto 180deg';
     }
-    else if (/^reverse /.test(value)) {
+    else if (/^reverse\s+/.test(value)) {
         const angle = value.split(' ')[1];
         return 'auto ' + (isAngle(angle) ? 180 + parseAngle(angle) : '0') + 'deg';
     }

@@ -552,16 +552,19 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
                         cyDiameter = element.height.baseVal.value;
                     }
                     else if (SVG.circle(element)) {
-                        cx = element.cx.baseVal.value - element.r.baseVal.value;
-                        cy = element.cy.baseVal.value - element.r.baseVal.value;
-                        cxDiameter = element.r.baseVal.value * 2;
+                        cxDiameter = element.r.baseVal.value;
+                        cx = element.cx.baseVal.value - cxDiameter;
+                        cy = element.cy.baseVal.value - cxDiameter;
+                        cxDiameter *= 2;
                         cyDiameter = cxDiameter;
                     }
                     else if (SVG.ellipse(element)) {
-                        cx = element.cx.baseVal.value - element.rx.baseVal.value;
-                        cy = element.cy.baseVal.value - element.ry.baseVal.value;
-                        cxDiameter = element.rx.baseVal.value * 2;
-                        cyDiameter = element.ry.baseVal.value * 2;
+                        cxDiameter = element.rx.baseVal.value;
+                        cyDiameter = element.ry.baseVal.value;
+                        cx = element.cx.baseVal.value - cxDiameter;
+                        cy = element.cy.baseVal.value - cyDiameter;
+                        cxDiameter *= 2;
+                        cyDiameter *= 2;
                     }
                     else {
                         return undefined;
@@ -570,7 +573,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
             }
             result.centerX = (cx + cxDiameter * getRadiusPercent(cxAsString)).toString();
             result.centerY = (cy + cyDiameter * getRadiusPercent(cyAsString)).toString();
-            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * (isPercent(rAsString) ? (parseFloat(rAsString) / 100) : 1)).toString();
+            result.gradientRadius = (((cxDiameter + cyDiameter) / 2) * (isPercent(rAsString) ? parseFloat(rAsString) / 100 : 1)).toString();
             if (spreadMethod) {
                 result.tileMode = getTileMode(spreadMethod);
             }
