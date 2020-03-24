@@ -8,7 +8,9 @@ import { createViewAttribute, getDataSet } from '../lib/util';
 
 type View = android.base.View;
 
-const { NODE_ALIGNMENT, NODE_TEMPLATE } =  squared.base.lib.enumeration;
+const { convertCamelCase } = squared.lib.util;
+
+const { NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 export default class Substitute<T extends View> extends squared.base.ExtensionUI<T> {
     constructor(
@@ -22,7 +24,7 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
     }
 
     public processNode(node: T, parent: T) {
-        const data = getDataSet(node.dataset, this.name);
+        const data = getDataSet(node.dataset, convertCamelCase(this.name, '.'));
         if (data) {
             const controlName = data.tag;
             if (controlName) {

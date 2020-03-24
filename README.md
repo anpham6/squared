@@ -213,63 +213,6 @@ apply() // replacement: include() | configure()
 saveAllToDisk() // replacement: saveToArchive()
 ```
 
-### ALL: Excluding Procedures / Applied Attributes
-
-Most attributes can be excluded from the generated XML using the dataset feature in HTML. One or more can be applied to any tag using the OR "|" operator. These may cause warnings when you compile your project and should only be used in cases when an extension has their custom attributes overwritten.
-
-```xml
-<div data-exclude-section="DOM_TRAVERSE | EXTENSION | RENDER | ALL"
-     data-exclude-procedure="LAYOUT | ALIGNMENT | OPTIMIZATION | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION | ALL"
-     data-exclude-resource="BOX_STYLE | BOX_SPACING | FONT_STYLE | VALUE_STRING | IMAGE_SOURCE | ASSET | ALL">
-</div>
-<div>
-    <span data-exclude-resource="FONT_STYLE">content</span>
-    <input id="cb1" type="checkbox" data-exclude-procedure="ACCESSIBILITY"><label for="cb1">checkbox text</label>
-</div>
-```
-
-### ALL: Custom Attributes (example: android)
-
-System or extension generated attributes can be overridden with dataset. They will only be visible on the declared framework.
-
-```xml
-<div
-    data-android-attr="layout_width::match_parent;layout_height::match_parent"
-    data-android-attr-app="layout_scrollFlags::scroll|exitUntilCollapsed">
-</div>
-```
-
-### ALL: Redirecting Output Location
-
-It is sometimes necessary to append elements into other containers when trying to design a UI which will look identical on the Android device. Redirection will fail if the target "location" is not a block/container element.
-
-```xml
-<div>
-    <span>Item 1</span>
-    <span data-target="location">Item 2</span>
-    <span data-target="location" data-target-index="1">Item 3</span>
-<div>
-<ul id="location">
-    <li>Item 4</li>
-    <li>Item 5</li>
-    <!-- span -->
-</ul>
-```
-
-```xml
-<LinearLayout>
-    <TextView>Item 1</TextView>
-</LinearLayout>
-<LinearLayout>
-    <TextView>Item 4</TextView>
-    <TextView>Item 3</TextView>
-    <TextView>Item 5</TextView>
-    <TextView>Item 2</TextView>
-</LinearLayout>
-```
-
-Using "target" into a ConstraintLayout or RelativeLayout container will not include automatic positioning.
-
 ### ANDROID: Public System Methods
 
 You can use the "system.customize" method to change the default settings for the specific controls which are applied when a view is rendered.
@@ -362,33 +305,20 @@ await chrome.querySelector(value: string, cache?: boolean)
 await chrome.querySelectorAll(value: string, cache?: boolean)
 ```
 
-### ANDROID: Extension Widgets
+### ALL: Excluding Procedures / Applied Attributes
 
-Most of the Android support library extensions can be configured using the same attribute name in the Android documentation. See /demo/*.html for usage instructions.
+Most attributes can be excluded from the generated XML using the dataset feature in HTML. One or more can be applied to any tag using the OR "|" operator. These may cause warnings when you compile your project and should only be used in cases when an extension has their custom attributes overwritten.
 
-- android.external
-- android.substitute
-
-- android.constraint.guideline
-
-- android.widget.coordinator
-- android.widget.floatingactionbutton
-- android.widget.menu
-- android.widget.bottomnavigation
-- android.widget.toolbar
-- android.widget.drawer
-
-<img src="html/demos/android/custom.viewpager.tablayout.png" alt="custom: viewpager + tablayout" />
-
-<img src="html/demos/android/drawer.png" alt="drawer: floating action button" />
-
-<img src="html/demos/android/coordinator.scrolling.png" alt="coordinator: scrolling" />
-
-<img src="html/demos/android/bottomnavigation.png" alt="bottom navigation" />
-
-<img src="html/demos/android/drawer.navigationview.png" alt="drawer: actionbar" />
-
-<img src="html/demos/android/menu.png" alt="toolbar: menu" />
+```xml
+<div data-exclude-section="DOM_TRAVERSE | EXTENSION | RENDER | ALL"
+     data-exclude-procedure="LAYOUT | ALIGNMENT | OPTIMIZATION | CUSTOMIZATION | ACCESSIBILITY | LOCALIZATION | ALL"
+     data-exclude-resource="BOX_STYLE | BOX_SPACING | FONT_STYLE | VALUE_STRING | IMAGE_SOURCE | ASSET | ALL">
+</div>
+<div>
+    <span data-exclude-resource="FONT_STYLE">content</span>
+    <input id="cb1" type="checkbox" data-exclude-procedure="ACCESSIBILITY"><label for="cb1">checkbox text</label>
+</div>
+```
 
 ### ALL: Extension Configuration (example: android)
 
@@ -431,7 +361,7 @@ CSS Grid and Flexbox layouts are are for the most part fully supported. There is
 </script>
 ```
 
-### ANDROID: Layouts and binding expressions
+### ALL: Layouts and binding expressions (example: android)
 
 ViewModel data can be applied to most HTML elements using the dataset attribute.
 
@@ -456,8 +386,9 @@ data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
 
 ```xml
 <div>
-    <label for="order">Order:</label>
-    <input id="order" type="text" data-viewmodel-android-text="user.firstName" />
+    <label>Name:</label>
+    <input type="text" data-viewmodel-android-text="user.firstName" />
+    <input type="text" data-viewmodel-android-text="user.lastName" />
 </div>
 ```
 
@@ -474,15 +405,67 @@ data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
     </data>
     <LinearLayout>
         <TextView
-            android:labelFor="@id/order"
-            android:text="Order:" />
+            android:text="Name:" />
         <EditText
-            android:id="@+id/order"
             android:inputType="text"
             android:text="@{user.firstName}" />
+        <EditText
+            android:inputType="text"
+            android:text="@{user.lastName}" />
     </LinearLayout>
 </layout>
 ```
+
+### ALL: Custom Attributes (example: android)
+
+System or extension generated attributes can be overridden with dataset. They will only be visible on the declared framework.
+
+data-{framework}-attr-{namespace}? -> default: "android"
+
+```xml
+<div
+    data-android-attr="layout_width::match_parent;layout_height::match_parent"
+    data-android-attr-app="layout_scrollFlags::scroll|exitUntilCollapsed">
+</div>
+```
+
+```xml
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_scrollFlags="scroll|exitUntilCollapsed" />
+```
+
+### ALL: Redirecting Output Location
+
+It is sometimes necessary to append elements into other containers when trying to design a UI which will look identical on the Android device. Redirection will fail if the target "location" is not a block/container element.
+
+```xml
+<div>
+    <span>Item 1</span>
+    <span data-target="location">Item 2</span>
+    <span data-target="location" data-target-index="1">Item 3</span>
+<div>
+<ul id="location">
+    <li>Item 4</li>
+    <li>Item 5</li>
+    <!-- span -->
+</ul>
+```
+
+```xml
+<LinearLayout>
+    <TextView>Item 1</TextView>
+</LinearLayout>
+<LinearLayout>
+    <TextView>Item 4</TextView>
+    <TextView>Item 3</TextView>
+    <TextView>Item 5</TextView>
+    <TextView>Item 2</TextView>
+</LinearLayout>
+```
+
+Using "target" into a ConstraintLayout or RelativeLayout container will not include automatic positioning.
 
 ### ANDROID: Layout Includes / Merge Tag
 
@@ -532,6 +515,34 @@ Only the XML based layout and resource files are generated with squared which ca
         animatable.start();
     }
 ```
+
+### ANDROID: Extension Widgets
+
+Most of the Android support library extensions can be configured using the same attribute name in the Android documentation. See /demo/*.html for usage instructions.
+
+- android.external
+- android.substitute
+
+- android.constraint.guideline
+
+- android.widget.coordinator
+- android.widget.floatingactionbutton
+- android.widget.menu
+- android.widget.bottomnavigation
+- android.widget.toolbar
+- android.widget.drawer
+
+<img src="html/demos/android/custom.viewpager.tablayout.png" alt="custom: viewpager + tablayout" />
+
+<img src="html/demos/android/drawer.png" alt="drawer: floating action button" />
+
+<img src="html/demos/android/coordinator.scrolling.png" alt="coordinator: scrolling" />
+
+<img src="html/demos/android/bottomnavigation.png" alt="bottom navigation" />
+
+<img src="html/demos/android/drawer.navigationview.png" alt="drawer: actionbar" />
+
+<img src="html/demos/android/menu.png" alt="toolbar: menu" />
 
 ### ALL: User Written HTML
 

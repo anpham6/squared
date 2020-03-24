@@ -8,8 +8,8 @@ type View = android.base.View;
 const $lib = squared.lib;
 
 const { findColorShade, parseColor } = $lib.color;
-const { getSrcSet } = $lib.css;
-const { CHAR, COMPONENT, CSS, FILE, XML } = $lib.regex;
+const { extractURL, getSrcSet } = $lib.css;
+const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
 const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, spliceArray, trimString } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> squared.base.ResourceUI.STORED;
@@ -231,12 +231,9 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         const result: StringMap = {};
         let mdpi: Undef<string>;
         if (typeof element === 'string') {
-            const match = CSS.URL.exec(element);
-            if (match) {
-                mdpi = match[1];
-                if (!mdpi.startsWith('data:image/')) {
-                    return this.addImageSet({ mdpi: resolvePath(mdpi) }, prefix);
-                }
+            mdpi = extractURL(element);
+            if (mdpi !== '' && !mdpi.startsWith('data:image/')) {
+                return this.addImageSet({ mdpi: resolvePath(mdpi) }, prefix);
             }
         }
         else {
@@ -252,7 +249,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                             result.ldpi = src;
                         }
                         else if (pixelRatio === 1) {
-                            if (mdpi === undefined || image.actualWidth) {
+                            if (!mdpi || image.actualWidth) {
                                 mdpi = src;
                             }
                         }
@@ -271,7 +268,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     }
                 }
             }
-            if (mdpi === undefined) {
+            if (!mdpi) {
                 mdpi = element.src;
             }
         }

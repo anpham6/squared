@@ -37,9 +37,9 @@ type SvgView = squared.svg.SvgView;
 const $lib = squared.lib;
 const $svg_lib = squared.svg.lib;
 
-const { formatPX, isPercent } = $lib.css;
+const { extractURL, formatPX, isPercent } = $lib.css;
 const { truncate } = $lib.math;
-const { CHAR, CSS, FILE } = $lib.regex;
+const { CHAR, FILE } = $lib.regex;
 const { convertCamelCase, convertInt, convertWord, formatString, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = $lib.util;
 const { applyTemplate } = $lib.xml;
 
@@ -730,9 +730,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     public createSvgElement(node: T, src: string): [Undef<HTMLElement>, Undef<SVGSVGElement>] | [] {
-        const match = CSS.URL.exec(src);
-        if (match) {
-            src = match[1];
+        const value = extractURL(src);
+        if (value !== '') {
+            src = value;
         }
         if (FILE.SVG.test(src) || src.startsWith('data:image/svg+xml')) {
             const fileAsset = this.resource.getRawData(src);

@@ -1,6 +1,6 @@
 import SvgBuild from './svgbuild';
 
-import { calculateStyle, getAttribute, getAttributeURL } from './lib/util';
+import { calculateStyle, getAttribute } from './lib/util';
 
 type SvgElement = squared.svg.SvgElement;
 type SvgShapePattern = squared.svg.SvgShapePattern;
@@ -10,18 +10,17 @@ type SvgUseSymbol = squared.svg.SvgUseSymbol;
 const $lib = squared.lib;
 
 const { parseColor } = $lib.color;
-const { getFontSize, hasCalc, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = $lib.css;
+const { extractURL, getFontSize, hasCalc, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = $lib.css;
 const { truncate } = $lib.math;
-const { CSS, STRING, XML } = $lib.regex;
+const { STRING, XML } = $lib.regex;
 const { convertCamelCase, convertFloat, isNumber, isString, joinMap, objectMap } = $lib.util;
 
 const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
 const REGEX_CACHE: ObjectMap<RegExp> = {
-    url: CSS.URL,
     polygon: /polygon\(([^)]+)\)/,
     inset: new RegExp(`inset\\(${PERCENTAGE}\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\)`),
-    circle: new RegExp(`circle\\(${PERCENTAGE}(?: at ${PERCENTAGE} ${PERCENTAGE})?\\)`),
-    ellipse: new RegExp(`ellipse\\(${PERCENTAGE} ${PERCENTAGE}(?: at ${PERCENTAGE} ${PERCENTAGE})?\\)`)
+    circle: new RegExp(`circle\\(${PERCENTAGE}(?:\\s+at\\s+PERCENTAGE}\\s+${PERCENTAGE})?\\)`),
+    ellipse: new RegExp(`ellipse\\(${PERCENTAGE}\\s+${PERCENTAGE}(?:\\s+at\\s+${PERCENTAGE}\\s+${PERCENTAGE})?\\)`)
 };
 
 export default <T extends Constructor<SvgElement>>(Base: T) => {
@@ -69,18 +68,17 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             this.setAttribute('clip-rule');
             const clipPath = this.getAttribute('clip-path', true);
             if (clipPath !== '' && clipPath !== 'none') {
-                for (const name in REGEX_CACHE) {
-                    const match = REGEX_CACHE[name].exec(clipPath);
-                    if (match) {
-                        if (name === 'url') {
-                            this.clipPath = match[1];
-                            return;
-                        }
-                        else if (d?.length) {
+                const url = extractURL(clipPath);
+                if (url !== '') {
+                    this.clipPath = url;
+                }
+                else if (d?.length) {
+                    for (const name in REGEX_CACHE) {
+                        const match = REGEX_CACHE[name].exec(clipPath);
+                        if (match) {
                             const { top, right, bottom, left } = SvgBuild.getBoxRect(d);
                             const width = right - left;
                             const height = bottom - top;
-                            const parent = this.parent;
                             switch (name) {
                                 case 'inset': {
                                     let x1 = 0;
@@ -110,9 +108,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         { x: x2, y: y2 },
                                         { x: x1, y: y2 }
                                     ];
-                                    parent?.refitPoints(points);
+                                    this.parent?.refitPoints(points);
                                     this.clipPath = SvgBuild.drawPolygon(points, precision);
-                                    return;
+                                    break;
                                 }
                                 case 'polygon': {
                                     const points = objectMap<string, Point>(match[1].split(XML.SEPARATOR), values => {
@@ -128,12 +126,13 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         });
                                         return { x, y };
                                     });
-                                    parent?.refitPoints(points);
+                                    this.parent?.refitPoints(points);
                                     this.clipPath = SvgBuild.drawPolygon(points, precision);
-                                    return;
+                                    break;
                                 }
-                                default: {
+                                default:
                                     if (name === 'circle' || name === 'ellipse') {
+                                        const parent = this.parent;
                                         const dimension = width < height ? width : height;
                                         let rx: number;
                                         let ry: number;
@@ -160,9 +159,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         }
                                         this.clipPath = SvgBuild.drawEllipse(cx, cy, rx, ry, precision);
                                     }
-                                    return;
-                                }
+                                    break;
                             }
+                            break;
                         }
                     }
                 }
@@ -189,7 +188,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         break;
                     case 'fill':
                     case 'stroke': {
-                        const url = getAttributeURL(value);
+                        const url = extractURL(value);
                         if (url !== '') {
                             this[attr + 'Pattern'] = url;
                         }

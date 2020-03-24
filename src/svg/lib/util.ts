@@ -5,7 +5,7 @@ const $lib = squared.lib;
 const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, convertAngle, getFontSize, isLength, isPercent, parseUnit } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { clamp, convertRadian, hypotenuse } = $lib.math;
-const { CSS, STRING } = $lib.regex;
+const { STRING } = $lib.regex;
 const { getStyleValue } = $lib.session;
 const { convertCamelCase, convertFloat, isString } = $lib.util;
 
@@ -509,10 +509,6 @@ export function getParentAttribute(element: SVGElement, attr: string, computed =
     }
     while (current && !(current instanceof HTMLElement));
     return value;
-}
-
-export function getAttributeURL(value: string) {
-    return CSS.URL.exec(value)?.[1] || '';
 }
 
 export function getTargetElement(element: SVGElement, rootElement?: SVGElement) {

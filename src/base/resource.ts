@@ -4,7 +4,8 @@ type FontFaceData = squared.lib.css.FontFaceData;
 
 const $lib = squared.lib;
 
-const { CSS, STRING, XML } = $lib.regex;
+const { STRING, XML } = $lib.regex;
+const { extractURL } = $lib.css;
 const { buildAlphaString, fromLastIndexOf } = $lib.util;
 
 const getFileName = () => buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
@@ -130,11 +131,8 @@ export default abstract class Resource<T extends squared.base.Node> implements s
 
     public getRawData(uri: string) {
         if (/^url\(/.test(uri)) {
-            const match = CSS.URL.exec(uri);
-            if (match) {
-                uri = match[1];
-            }
-            else {
+            uri = extractURL(uri);
+            if (uri === '') {
                 return undefined;
             }
         }

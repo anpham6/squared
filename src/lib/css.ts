@@ -1506,11 +1506,14 @@ export function calculateVarAsString(element: CSSElement, value: string, options
                 for (let i = 0, j = 0; i < length; i++) {
                     let output = calc[i];
                     if (isCalc(output)) {
-                        if (orderedSize && orderedSize[j + 1] !== undefined) {
+                        if (orderedSize?.[j] !== undefined) {
                             optionsVar.boundingSize = orderedSize[j++];
                         }
                         else if (dimension) {
                             optionsVar.dimension = dimension[j++];
+                            optionsVar.boundingSize = undefined;
+                        }
+                        else if (orderedSize) {
                             optionsVar.boundingSize = undefined;
                         }
                         const k = calculateVar(element, output, optionsVar);
@@ -2085,9 +2088,14 @@ export function convertListStyle(name: string, value: number, valueAsDefault?: b
     return valueAsDefault ? value.toString() : '';
 }
 
-export function resolveURL(value: string) {
+export function extractURL(value: string) {
     const match = CSS.URL.exec(value);
-    return match ? resolvePath(match[1]) : '';
+    return match ? match[1] || match[2] : '';
+}
+
+export function resolveURL(value: string) {
+    value = extractURL(value);
+    return value !== '' ? resolvePath(value) : '';
 }
 
 export function insertStyleSheetRule(value: string, index = 0) {

@@ -23,9 +23,8 @@ const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = $base.lib.enumeration;
 
 const ResourceUI = squared.base.ResourceUI;
 
-const DEPRECATED = DEPRECATED_ANDROID.android;
 const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_ANDROID;
-
+const DEPRECATED = DEPRECATED_ANDROID.android;
 const SPACING_SELECT = 2;
 const SPACING_CHECKBOX = 4;
 const REGEX_DATASETATTR = /^attr[A-Z]/;
@@ -1378,7 +1377,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (name !== '') {
                             for (const values of dataset[namespace].split(';')) {
                                 const [key, value] = values.split('::');
-                                if (key) {
+                                if (value) {
                                     this.attr(name, key, value);
                                 }
                             }

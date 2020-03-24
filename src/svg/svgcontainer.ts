@@ -3,15 +3,18 @@ import type { SvgAspectRatio, SvgBuildOptions, SvgPoint, SvgSynchronizeOptions }
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getAttribute, getAttributeURL, getParentAttribute, getTargetElement } from './lib/util';
+import { SVG, getAttribute, getParentAttribute, getTargetElement } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
-const { STRING } = squared.lib.regex;
-const { cloneObject, iterateArray } = squared.lib.util;
+const $lib = squared.lib;
+
+const { STRING } = $lib.regex;
+const { extractURL } = $lib.css;
+const { cloneObject, iterateArray } = $lib.util;
 
 const REGEX_LENGTHPERCENTAGE = new RegExp(STRING.LENGTH_PERCENTAGE);
 
@@ -26,7 +29,7 @@ function getNearestViewBox(instance: Undef<SvgContainer>) {
 }
 
 function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): Undef<SVGPatternElement> {
-    const value = getAttributeURL(getParentAttribute(element, 'fill'));
+    const value = extractURL(getParentAttribute(element, 'fill'));
     if (value !== '') {
         if (viewport) {
             const pattern = viewport.definitions.pattern.get(value);

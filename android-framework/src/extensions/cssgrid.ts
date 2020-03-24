@@ -31,7 +31,6 @@ const REGEX_JUSTIFYRIGHT = /(right|end)$/;
 const REGEX_ALIGNSELF = /start|end|center|baseline/;
 const REGEX_ALIGNTOP = /(start|baseline)$/;
 const REGEX_ALIGNBOTTOM = /end$/;
-const REGEX_FR = /fr$/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
@@ -231,7 +230,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
             height = dimension;
         }
     }
-    else if (section.every(value => REGEX_FR.test(value))) {
+    else if (section.every(value => isFr(value))) {
         let fr = 0;
         for (const value of section) {
             fr += parseFloat(value);
@@ -302,7 +301,7 @@ function checkFlexibleParent(node: View) {
                 let valid = false;
                 for (let i = 0; i < columnSpan; i++) {
                     const value = unit[columnStart + i];
-                    if (REGEX_FR.test(value) || isPercent(value)) {
+                    if (isFr(value) || isPercent(value)) {
                         valid = true;
                     }
                     else if (value === 'auto') {
@@ -332,7 +331,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
         else if (isPercent(value)) {
             percent += parseFloat(value);
         }
-        else if (REGEX_FR.test(value)) {
+        else if (isFr(value)) {
             return 0;
         }
     }
@@ -346,7 +345,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     return 0;
 }
 
-const isFr = (value: string) => REGEX_FR.test(value);
+const isFr = (value: string) => /fr$/.test(value);
 const isPx = (value: string) => CSS.PX.test(value);
 
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
@@ -365,7 +364,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 rowCount: row.length,
                 columnCount
             });
-            if (!node.originalRoot && !node.hasWidth && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => REGEX_FR.test(value)) && checkFlexibleParent(node)) {
+            if (!node.originalRoot && !node.hasWidth && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => isFr(value)) && checkFlexibleParent(node)) {
                 const rowData = mainData.rowData;
                 const rowCount = rowData.length;
                 const constraintData: T[][] = new Array(rowCount);
@@ -390,7 +389,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
                 if (valid) {
                     column.frTotal = unit.reduce((a, b) => a + parseFloat(b), 0);
-                    row.frTotal = row.unit.reduce((a, b) => a + (REGEX_FR.test(b) ? parseFloat(b) : 0), 0);
+                    row.frTotal = row.unit.reduce((a, b) => a + (isFr(b) ? parseFloat(b) : 0), 0);
                     node.setLayoutWidth('match_parent');
                     node.lockAttr('android', 'layout_width');
                     node.data(CSS_GRID, 'constraintData', constraintData);

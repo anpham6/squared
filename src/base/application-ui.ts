@@ -17,7 +17,7 @@ const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertSt
 const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
 const { maxArray } = $lib.math;
 const { convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = $lib.util;
-const { CSS, XML } = $lib.regex;
+const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
 
@@ -883,9 +883,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             content = nested % 2 === 0 ? '”' : "’";
                         }
                         break;
-                    default:
-                        if (CSS.URL.test(value)) {
-                            content = resolveURL(value);
+                    default: {
+                        const url = resolveURL(value);
+                        if (url !== '') {
+                            content = url;
                             const format = fromLastIndexOf(content, '.').toLowerCase();
                             const imageFormat = this._localSettings.supported.imageFormat;
                             if (imageFormat === '*' || imageFormat.includes(format)) {
@@ -1008,6 +1009,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             REGEX_COUNTER.lastIndex = 0;
                         }
                         break;
+                    }
                 }
                 if (styleMap.display === undefined) {
                     styleMap.display = 'inline';

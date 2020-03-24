@@ -17,9 +17,9 @@ type ColorData = squared.lib.color.ColorData;
 const $lib = squared.lib;
 
 const { reduceRGBA } = $lib.color;
-const { formatPercent, formatPX, getBackgroundPosition } = $lib.css;
+const { extractURL, formatPercent, formatPX, getBackgroundPosition } = $lib.css;
 const { truncate } = $lib.math;
-const { CHAR, CSS, XML } = $lib.regex;
+const { CHAR, XML } = $lib.regex;
 const { delimitString, flatArray, isEqual, objectMap, resolvePath } = $lib.util;
 const { applyTemplate } = $lib.xml;
 
@@ -798,9 +798,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                             }
                             if (!valid) {
-                                const match = CSS.URL.exec(value);
-                                if (match) {
-                                    const uri = match[1];
+                                const uri = extractURL(value);
+                                if (uri !== '') {
                                     if (uri.startsWith('data:image/')) {
                                         const rawData = resource.getRawData(uri);
                                         if (rawData) {

@@ -895,6 +895,7 @@ declare namespace lib {
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
+        function extractURL(value: string): string;
         function resolveURL(value: string): string;
         function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
         function convertAngle(value: string, unit?: string): number;
@@ -1631,7 +1632,6 @@ declare namespace svg {
             function createPath(value: string): SVGPathElement;
             function getAttribute(element: SVGElement, attr: string, computed?: boolean): string;
             function getParentAttribute(element: SVGElement, attr: string, computed?: boolean): string;
-            function getAttributeURL(value: string): string;
             function getDOMRect(element: SVGElement): DOMRect;
             function getTargetElement(element: SVGElement, rootElement?: Null<CSSElement>): Null<SVGElement>;
             function getNearestViewBox(element: SVGElement): Undef<DOMRect>;
