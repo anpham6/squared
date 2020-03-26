@@ -12,7 +12,7 @@ const { assignEmptyValue, safeNestedMap } = $lib.util;
 
 const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const { createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
+const { adjustAbsolutePaddingOffset, createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
 
 const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
 const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
@@ -64,72 +64,84 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);
         node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
         Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-        let outerParent: Undef<T>;
-        if (!node.pageFlow || target) {
+        let outerParent = this.application.resolveTarget(target);
+        if (!node.pageFlow) {
+            const { leftRight, topBottom } = node.autoMargin;
+            const offsetParent = outerParent || parent;
+            if (leftRight) {
+                node.mergeGravity('layout_gravity', 'center_horizontal');
+            }
+            else if (node.hasPX('left')) {
+                node.mergeGravity('layout_gravity', node.localizeString('left'));
+                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, adjustAbsolutePaddingOffset(offsetParent, BOX_STANDARD.PADDING_LEFT, node.left));
+            }
+            else if (node.hasPX('right')) {
+                node.mergeGravity('layout_gravity', node.localizeString('right'));
+                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, adjustAbsolutePaddingOffset(offsetParent, BOX_STANDARD.PADDING_RIGHT, node.right));
+            }
+            if (topBottom) {
+                node.mergeGravity('layout_gravity', 'center_vertical');
+            }
+            else if (node.hasPX('top')) {
+                node.app('layout_dodgeInsetEdges', 'top');
+                node.mergeGravity('layout_gravity', 'top');
+                node.modifyBox(BOX_STANDARD.MARGIN_TOP, adjustAbsolutePaddingOffset(offsetParent, BOX_STANDARD.PADDING_TOP, node.top));
+            }
+            else if (node.hasPX('bottom')) {
+                node.mergeGravity('layout_gravity', 'bottom');
+                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, adjustAbsolutePaddingOffset(offsetParent, BOX_STANDARD.PADDING_BOTTOM, node.bottom));
+            }
+            node.positioned = true;
+        }
+        else if (target) {
             const horizontalBias = getHorizontalBias(node);
             const verticalBias = getVerticalBias(node);
             const documentParent = node.documentParent;
-            const gravity: string[] = [];
             if (horizontalBias < 0.5) {
-                gravity.push(node.localizeString('left'));
+                node.mergeGravity('layout_gravity', node.localizeString('left'));
+                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.linear.left - documentParent.box.left);
             }
             else if (horizontalBias > 0.5) {
-                gravity.push(node.localizeString('right'));
+                node.mergeGravity('layout_gravity', node.localizeString('right'));
+                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, documentParent.box.right - node.linear.right);
             }
             else {
-                gravity.push('center_horizontal');
+                node.mergeGravity('layout_gravity', 'center_horizontal');
             }
             if (verticalBias < 0.5) {
-                gravity.push('top');
                 node.app('layout_dodgeInsetEdges', 'top');
+                node.mergeGravity('layout_gravity', 'top');
+                node.modifyBox(BOX_STANDARD.MARGIN_TOP, node.linear.top - documentParent.box.top);
             }
             else if (verticalBias > 0.5) {
-                gravity.push('bottom');
+                node.mergeGravity('layout_gravity', 'bottom');
+                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, documentParent.box.bottom - node.linear.bottom);
             }
             else {
-                gravity.push('center_vertical');
-            }
-            for (const value of gravity) {
-                node.mergeGravity('layout_gravity', value);
-            }
-            if (horizontalBias > 0 && horizontalBias < 1 && horizontalBias !== 0.5) {
-                if (horizontalBias < 0.5) {
-                    node.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.linear.left - documentParent.box.left);
-                }
-                else {
-                    node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, documentParent.box.right - node.linear.right);
-                }
-            }
-            if (verticalBias > 0 && verticalBias < 1 && verticalBias !== 0.5) {
-                if (verticalBias < 0.5) {
-                    node.modifyBox(BOX_STANDARD.MARGIN_TOP, node.linear.top - documentParent.box.top);
-                }
-                else {
-                    node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, documentParent.box.bottom - node.linear.bottom);
-                }
+                node.mergeGravity('layout_gravity', 'center_vertical');
             }
             node.positioned = true;
-            if (target) {
-                const layoutGravity = node.android('layout_gravity');
-                let anchor = parent.documentId;
-                if (parent.controlName === (node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
-                    const value: string = parent.data(WIDGET_NAME.TOOLBAR, 'outerParent');
-                    if (value) {
-                        anchor = value;
-                    }
-                }
-                if (layoutGravity !== '') {
-                    node.app('layout_anchorGravity', layoutGravity);
-                    node.delete('android', 'layout_gravity');
-                }
-                node.app('layout_anchor', anchor);
-                node.exclude({ procedure: NODE_PROCEDURE.ALIGNMENT });
-                node.render(this.application.resolveTarget(target));
-                outerParent = node.renderParent as T;
-            }
         }
-        if (!target) {
+        if (target) {
+            const layoutGravity = node.android('layout_gravity');
+            let anchor = parent.documentId;
+            if (parent.controlName === (node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.TOOLBAR : SUPPORT_ANDROID_X.TOOLBAR)) {
+                const value: string = parent.data(WIDGET_NAME.TOOLBAR, 'outerParent');
+                if (value) {
+                    anchor = value;
+                }
+            }
+            if (layoutGravity !== '') {
+                node.app('layout_anchorGravity', layoutGravity);
+                node.delete('android', 'layout_gravity');
+            }
+            node.app('layout_anchor', anchor);
+            node.exclude({ procedure: NODE_PROCEDURE.ALIGNMENT });
+            node.render(outerParent);
+        }
+        else {
             node.render(parent);
+            outerParent = undefined;
         }
         node.apply(options);
         return {

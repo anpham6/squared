@@ -34,7 +34,7 @@ export const CSS = {
     TIME: new RegExp(`^${STRING.CSS_TIME}$`),
     CALC: new RegExp(`^${STRING.CSS_CALC}$`),
     VAR: /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/,
-    URL: /^url\((?:"([^"]+)"|([^)]+))\)$/,
+    URL: /^url\((?:"(.+)"|(.+))\)$/,
     CUSTOM_PROPERTY: /^\s*var\(.+\)\s*$/,
     HEX: /[A-Za-z\d]{3,8}/,
     RGBA: /rgba?\((\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+))?\)/,

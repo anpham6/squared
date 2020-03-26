@@ -11,6 +11,8 @@ const $lib = squared.lib;
 const { truncate } = $lib.math;
 const { capitalize, isPlainObject } = $lib.util;
 
+const { BOX_STANDARD } = squared.base.lib.enumeration;
+
 const REGEX_ID = /^@\+?id\//;
 
 function calculateBias(start: number, end: number, accuracy = 3) {
@@ -82,6 +84,66 @@ export function getVerticalBias(node: View) {
     const top = Math.max(0, node.actualRect('top', 'bounds') - box.top);
     const bottom = Math.max(0, box.bottom - node.actualRect('bottom', 'bounds'));
     return calculateBias(top, bottom, node.localSettings.floatPrecision);
+}
+
+export function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number) {
+    if (value > 0) {
+        if (parent.documentBody) {
+            switch (direction) {
+                case BOX_STANDARD.PADDING_TOP:
+                    if (parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0) {
+                        value -= parent.marginTop;
+                    }
+                    break;
+                case BOX_STANDARD.PADDING_RIGHT:
+                    value -= parent.marginRight;
+                    break;
+                case BOX_STANDARD.PADDING_BOTTOM:
+                    if (parent.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
+                        value -= parent.marginBottom;
+                    }
+                    break;
+                case BOX_STANDARD.PADDING_LEFT:
+                    value -= parent.marginLeft;
+                    break;
+            }
+        }
+        if (parent.getBox(direction)[0] === 0) {
+            switch (direction) {
+                case BOX_STANDARD.PADDING_TOP:
+                    value += parent.borderTopWidth - parent.paddingTop;
+                    break;
+                case BOX_STANDARD.PADDING_RIGHT:
+                    value += parent.borderRightWidth - parent.paddingRight;
+                    break;
+                case BOX_STANDARD.PADDING_BOTTOM:
+                    value += parent.borderBottomWidth - parent.paddingBottom;
+                    break;
+                case BOX_STANDARD.PADDING_LEFT:
+                    value += parent.borderLeftWidth - parent.paddingLeft;
+                    break;
+            }
+        }
+        return Math.max(value, 0);
+    }
+    else if (value < 0) {
+        switch (direction) {
+            case BOX_STANDARD.PADDING_TOP:
+                value += parent.marginTop;
+                break;
+            case BOX_STANDARD.PADDING_RIGHT:
+                value += parent.marginRight;
+                break;
+            case BOX_STANDARD.PADDING_BOTTOM:
+                value += parent.marginBottom;
+                break;
+            case BOX_STANDARD.PADDING_LEFT:
+                value += parent.marginLeft;
+                break;
+        }
+        return value;
+    }
+    return 0;
 }
 
 export function createViewAttribute(data?: StandardMap, options?: ViewAttribute): ViewAttribute {

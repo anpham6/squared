@@ -431,6 +431,7 @@ declare namespace lib {
         function isVerticalAlign(value: string): boolean;
         function getHorizontalBias(node: View): number;
         function getVerticalBias(node: View): number;
+        function adjustAbsolutePaddingOffset(parent: View, direction: number, value: number): number;
         function isGridJustified(node: View): boolean;
         function isGridAligned(node: View): boolean;
         function createViewAttribute(data?: StandardMap, options?: ViewAttribute): ViewAttribute;
