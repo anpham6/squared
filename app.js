@@ -5,7 +5,6 @@ const fs = require('fs-extra');
 const archiver = require('archiver');
 const decompress = require('decompress');
 const zlib = require('zlib');
-const brotli = require('brotli');
 const request = require('request');
 const { v4: uuidv4 } = require('uuid');
 
@@ -27,6 +26,7 @@ if (env === 'development') {
     app.use('/demos-dev', express.static(path.join(__dirname, 'html/demos-dev')));
 }
 
+const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
 const SEPARATOR = process.platform === 'win32' ? '\\' : '/';
 
 function getQueryData(req, directory) {
@@ -58,12 +58,44 @@ function getFileData(file, directory) {
     };
 }
 
-function createGzipWriteStream(filename, filenameOut, level) {
-    const gzip = zlib.createGzip({ level });
-    const inp = fs.createReadStream(filename);
-    const out = fs.createWriteStream(filenameOut);
-    inp.pipe(gzip).pipe(out);
-    return out;
+function createGzipWriteStream(source, filename, level) {
+    const o = fs.createWriteStream(filename);
+    fs.createReadStream(source)
+        .pipe(zlib.createGzip({ level }))
+        .pipe(o);
+    return o;
+}
+
+function createBrotliWriteStream(source, filename, quality, mimeType = '') {
+    const o = fs.createWriteStream(filename);
+    fs.createReadStream(source)
+        .pipe(
+            zlib.createBrotliCompress({
+                params: {
+                    [zlib.constants.BROTLI_PARAM_MODE]: /^text\//.test(mimeType) ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
+                    [zlib.constants.BROTLI_PARAM_QUALITY]: quality,
+                    [zlib.constants.BROTLI_PARAM_SIZE_HINT]: fs.statSync(source).size
+                }
+            })
+        )
+        .pipe(o);
+    return o;
+}
+
+function checkVersion(major, minor, patch = 0) {
+    if (NODE_VERSION_MAJOR < major) {
+        return false;
+    }
+    else if (NODE_VERSION_MAJOR === major) {
+        if (NODE_VERSION_MINOR < minor) {
+            return false;
+        }
+        else if (NODE_VERSION_MINOR === minor) {
+            return NODE_VERSION_PATCH >= patch;
+        }
+        return true;
+    }
+    return true;
 }
 
 const replaceSeparator = value => value.replace(SEPARATOR === '/' ? '\\' : '/', SEPARATOR);
@@ -113,13 +145,10 @@ app.post('/api/assets/copy', (req, res) => {
                         createGzipWriteStream(filename, `${filename}.gz`, gzipQuality)
                             .on('finish', () => finalize(true));
                     }
-                    if (brotliQuality !== -1) {
+                    if (brotliQuality !== -1 && checkVersion(11, 7)) {
                         delayed++;
-                        fs.writeFile(
-                            `${filename}.br`,
-                            brotli.compress(fs.readFileSync(filename), { mode: /^text\//.test(file.mimeType) ? 1 : 0, quality: brotliQuality }),
-                            () => finalize(true)
-                        );
+                        createBrotliWriteStream(filename, `${filename}.br`, brotliQuality, file.mimeType)
+                            .on('finish', () => finalize(true));
                     }
                 };
                 errorfile = filename;
@@ -293,22 +322,16 @@ app.post('/api/assets/archive', (req, res) => {
                                     }
                                 });
                         }
-                        if (brotliQuality !== -1) {
+                        if (brotliQuality !== -1 && checkVersion(11, 7)) {
                             delayed++;
                             const filename_br = `${filename}.br`;
-                            fs.writeFile(
-                                filename_br,
-                                brotli.compress(
-                                    fs.readFileSync(filename),
-                                    { mode: /^text\//.test(file.mimeType) ? 1 : 0, quality: brotliQuality }
-                                ),
-                                () => {
+                            createBrotliWriteStream(filename, filename_br, brotliQuality, file.mimeType)
+                                .on('finish', () => {
                                     if (delayed !== Number.POSITIVE_INFINITY) {
                                         archive.file(filename_br, { name: `${data.name}.br` });
                                         finalize(true);
                                     }
-                                }
-                            );
+                                });
                         }
                         archive.file(filename, data);
                     }
