@@ -27,14 +27,14 @@ if (env === 'development') {
     app.use('/demos-dev', express.static(path.join(__dirname, 'html/demos-dev')));
 }
 
-const separator = process.platform === 'win32' ? '\\' : '/';
+const SEPARATOR = process.platform === 'win32' ? '\\' : '/';
 
 function getQueryData(req, directory) {
     const query = req.query;
     const timeout = Math.max(parseInt(query.timeout) || 60, 1) * 1000;
     if (query.directory) {
-        if (!directory.endsWith(separator)) {
-            directory += separator;
+        if (!directory.endsWith(SEPARATOR)) {
+            directory += SEPARATOR;
         }
         directory += replaceSeparator(query.directory);
     }
@@ -46,19 +46,19 @@ function getQueryData(req, directory) {
 }
 
 function getFileData(file, directory) {
-    if (!directory.endsWith(separator)) {
-        directory += separator;
+    if (!directory.endsWith(SEPARATOR)) {
+        directory += SEPARATOR;
     }
     const pathname = replaceSeparator(directory + file.pathname);
     return {
         pathname,
-        filename: pathname + (!pathname.endsWith(separator) ? separator : '') + file.filename,
-        level: file.gzipQuality > 0 ? Math.min(file.gzipQuality, 9) : 0,
-        quality: file.brotliQuality > 0 ? Math.min(file.brotliQuality, 11) : 0
+        filename: pathname + (!pathname.endsWith(SEPARATOR) ? SEPARATOR : '') + file.filename,
+        gzipQuality: file.gzipQuality !== undefined ? Math.min(file.gzipQuality, 9) : -1,
+        brotliQuality: file.brotliQuality !== undefined ? Math.min(file.brotliQuality, 11) : -1
     };
 }
 
-function createGzipWriteStream(level, filename, filenameOut) {
+function createGzipWriteStream(filename, filenameOut, level) {
     const gzip = zlib.createGzip({ level });
     const inp = fs.createReadStream(filename);
     const out = fs.createWriteStream(filenameOut);
@@ -66,19 +66,18 @@ function createGzipWriteStream(level, filename, filenameOut) {
     return out;
 }
 
-const replaceSeparator = value => value.replace(separator === '/' ? '\\' : '/', separator);
-const isLocalFile = value => !/^[A-Za-z]+:\/\//.test(value);
+const replaceSeparator = value => value.replace(SEPARATOR === '/' ? '\\' : '/', SEPARATOR);
+const isRemoteFile = value => /^[A-Za-z]{3,}:\/\//.test(value);
 
 app.post('/api/assets/copy', (req, res) => {
     const dirname = replaceSeparator(req.query.to);
-    const empty = req.query.empty;
     if (dirname) {
         try {
             if (!fs.existsSync(dirname)) {
                 fs.mkdirpSync(dirname);
             }
             else if (!fs.lstatSync(dirname).isDirectory()) {
-                throw new Error('Path is not a directory.');
+                throw new Error('Root is not a directory');
             }
         }
         catch (err) {
@@ -86,52 +85,59 @@ app.post('/api/assets/copy', (req, res) => {
             return;
         }
         const { directory, timeout, finalizeTime } = getQueryData(req, dirname);
+        const empty = req.query.empty === '1';
         let delayed = 0;
-        let fileerror = '';
-        const finalize = (valid = false) => {
-            if (delayed !== Number.POSITIVE_INFINITY && (valid && --delayed === 0 || Date.now() >= finalizeTime)) {
+        let cleared = false;
+        let errorfile = '';
+        const finalize = (running = false) => {
+            if (delayed === Number.POSITIVE_INFINITY) {
+                return;
+            }
+            if (!running || running && --delayed === 0 && cleared || Date.now() >= finalizeTime) {
                 delayed = Number.POSITIVE_INFINITY;
                 res.json({ success: delayed === 0, directory: dirname });
             }
         };
         try {
-            const invalid = {};
-            const emptied = {};
+            const notFound = {};
+            const emptyDir = {};
             for (const file of req.body) {
-                const { pathname, filename, level, quality } = getFileData(file, directory);
+                if (delayed === Number.POSITIVE_INFINITY) {
+                    break;
+                }
+                const { pathname, filename, gzipQuality, brotliQuality } = getFileData(file, directory);
                 const { content, base64, uri } = file;
                 const writeBuffer = () => {
-                    if (level > 0) {
+                    if (gzipQuality !== -1) {
                         delayed++;
-                        createGzipWriteStream(level, filename, `${filename}.gz`)
+                        createGzipWriteStream(filename, `${filename}.gz`, gzipQuality)
                             .on('finish', () => finalize(true));
                     }
-                    if (quality > 0) {
+                    if (brotliQuality !== -1) {
                         delayed++;
                         fs.writeFile(
                             `${filename}.br`,
-                            brotli.compress(fs.readFileSync(filename), { mode: /^font\//.test(file.mimeType) ? 2 : 1, quality }),
+                            brotli.compress(fs.readFileSync(filename), { mode: /^text\//.test(file.mimeType) ? 1 : 0, quality: brotliQuality }),
                             () => finalize(true)
                         );
                     }
                 };
-                fileerror = filename;
-                if (!emptied[pathname]) {
-                    if (empty === '1') {
+                errorfile = filename;
+                if (!emptyDir[pathname]) {
+                    if (empty) {
                         try {
                             fs.emptyDirSync(pathname);
                         }
                         catch (err) {
                             console.log(`FAIL: ${pathname} (${err})`);
-                            fs.mkdirpSync(pathname);
                         }
                     }
-                    else {
+                    if (!fs.existsSync(pathname)) {
                         fs.mkdirpSync(pathname);
                     }
-                    emptied[pathname] = true;
+                    emptyDir[pathname] = true;
                 }
-                if (content || file.base64) {
+                if (content || base64) {
                     delayed++;
                     fs.writeFile(
                         filename,
@@ -146,53 +152,71 @@ app.post('/api/assets/copy', (req, res) => {
                     );
                 }
                 else if (uri) {
-                    if (!isLocalFile(uri)) {
+                    if (notFound[uri]) {
+                        continue;
+                    }
+                    const errorRequest = () => {
+                        if (!notFound[uri]) {
+                            finalize(true);
+                            notFound[uri] = true;
+                        }
+                    };
+                    try {
                         delayed++;
-                        const stream = fs.createWriteStream(filename);
-                        stream.on('finish', () => {
-                            if (!invalid[filename]) {
-                                writeBuffer();
-                                finalize(true);
-                            }
-                        });
-                        request(uri)
-                            .on('response', err => {
-                                const statusCode = err.statusCode;
-                                if (statusCode !== 200) {
-                                    invalid[filename] = true;
-                                    if (statusCode === 404) {
-                                        console.log(`FAIL: ${uri} (File not found)`);
+                        if (isRemoteFile(uri)) {
+                            const stream = fs.createWriteStream(filename);
+                            stream.on('finish', () => {
+                                if (!notFound[uri]) {
+                                    writeBuffer();
+                                    finalize(true);
+                                }
+                            });
+                            request(uri)
+                                .on('response', err => {
+                                    const statusCode = err.statusCode;
+                                    if (statusCode >= 300) {
+                                        errorRequest();
+                                        console.log(`FAIL: ${uri} (${statusCode} ${err.statusMessage})`);
+                                    }
+                                })
+                                .on('error', errorRequest)
+                                .pipe(stream);
+                        }
+                        else {
+                            fs.copyFile(
+                                uri,
+                                filename,
+                                err => {
+                                    if (!err) {
+                                        writeBuffer();
                                     }
                                     finalize(true);
                                 }
-                            })
-                            .on('error', () => {
-                                if (!invalid[filename]) {
-                                    finalize(true);
-                                }
-                            })
-                            .pipe(stream);
+                            );
+                        }
                     }
-                    else {
-                        try {
-                            fs.copyFileSync(replaceSeparator(uri), filename);
-                        }
-                        catch (err) {
-                            console.log(`FAIL: ${uri} (${err})`);
-                        }
+                    catch (err) {
+                        errorRequest();
+                        console.log(`FAIL: ${uri} (${err})`);
                     }
                 }
             }
-            setTimeout(finalize, timeout);
+            cleared = true;
+            if (delayed === 0) {
+                finalize();
+            }
+            else {
+                setTimeout(finalize, timeout);
+            }
         }
         catch (err) {
-            res.json({ application: `FILE: ${fileerror}`, system: err });
+            res.json({ application: `FILE: ${errorfile}`, system: err });
         }
     }
 });
 
 app.post('/api/assets/archive', (req, res) => {
-    const dirname = __dirname + separator + 'temp' + separator + uuidv4();
+    const dirname = __dirname + SEPARATOR + 'temp' + SEPARATOR + uuidv4();
     try {
         fs.mkdirpSync(dirname);
     }
@@ -206,7 +230,8 @@ app.post('/api/assets/archive', (req, res) => {
     let format = query.format.toLowerCase() === 'tar' ? 'tar' : 'zip';
     let success = false;
     let delayed = 0;
-    let fileerror = '';
+    let cleared = false;
+    let errorfile = '';
     let zipname = '';
     const resume = (unzip_to = '') => {
         const { directory, timeout, finalizeTime } = getQueryData(req, unzip_to || dirname);
@@ -219,21 +244,25 @@ app.post('/api/assets/archive', (req, res) => {
         }
         const archive = archiver(format, { zlib: { level: 9 } });
         if (!zipname) {
-            zipname = dirname + separator + (query.filename || 'squared') + '.' + format;
+            zipname = dirname + SEPARATOR + (query.filename || 'squared') + '.' + format;
         }
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
-            console.log(`WRITE: ${zipname} (${archive.pointer()} bytes)`);
+            const bytes = archive.pointer();
+            console.log(`WRITE: ${zipname} (${bytes} bytes)`);
             res.json({
                 success,
                 directory: dirname,
                 zipname,
-                bytes: archive.pointer()
+                bytes
             });
         });
         archive.pipe(output);
-        const finalize = (valid = false) => {
-            if (delayed !== Number.POSITIVE_INFINITY && (valid && --delayed === 0 || Date.now() >= finalizeTime)) {
+        const finalize = (running = false) => {
+            if (delayed === Number.POSITIVE_INFINITY) {
+                return;
+            }
+            if (!running || running && --delayed === 0 && cleared || Date.now() >= finalizeTime) {
                 success = delayed === 0;
                 delayed = Number.POSITIVE_INFINITY;
                 archive.finalize();
@@ -243,17 +272,20 @@ app.post('/api/assets/archive', (req, res) => {
             if (unzip_to) {
                 archive.directory(unzip_to, false);
             }
-            const invalid = {};
+            const notFound = {};
             for (const file of req.body) {
-                const { pathname, filename, level, quality } = getFileData(file, directory);
+                if (delayed === Number.POSITIVE_INFINITY) {
+                    break;
+                }
+                const { pathname, filename, gzipQuality, brotliQuality } = getFileData(file, directory);
                 const { content, base64, uri } = file;
-                const data = { name: (queryDirectory ? queryDirectory + separator : '') + file.pathname + separator + file.filename };
+                const data = { name: (queryDirectory ? queryDirectory + SEPARATOR : '') + file.pathname + SEPARATOR + file.filename };
                 const writeBuffer = () => {
                     if (delayed !== Number.POSITIVE_INFINITY) {
-                        if (level > 0) {
+                        if (gzipQuality !== -1) {
                             delayed++;
                             const filename_gz = `${filename}.gz`;
-                            createGzipWriteStream(level, filename, filename_gz)
+                            createGzipWriteStream(filename, filename_gz, gzipQuality)
                                 .on('finish', () => {
                                     if (delayed !== Number.POSITIVE_INFINITY) {
                                         archive.file(filename_gz, { name: `${data.name}.gz` });
@@ -261,14 +293,14 @@ app.post('/api/assets/archive', (req, res) => {
                                     }
                                 });
                         }
-                        if (quality > 0) {
+                        if (brotliQuality !== -1) {
                             delayed++;
                             const filename_br = `${filename}.br`;
                             fs.writeFile(
                                 filename_br,
                                 brotli.compress(
                                     fs.readFileSync(filename),
-                                    { mode: /^font\//.test(file.mimeType) ? 2 : 1, quality }
+                                    { mode: /^text\//.test(file.mimeType) ? 1 : 0, quality: brotliQuality }
                                 ),
                                 () => {
                                     if (delayed !== Number.POSITIVE_INFINITY) {
@@ -281,7 +313,7 @@ app.post('/api/assets/archive', (req, res) => {
                         archive.file(filename, data);
                     }
                 };
-                fileerror = filename;
+                errorfile = filename;
                 fs.mkdirpSync(pathname);
                 if (content || base64) {
                     delayed++;
@@ -298,80 +330,112 @@ app.post('/api/assets/archive', (req, res) => {
                     );
                 }
                 else if (uri) {
-                    if (!isLocalFile(uri)) {
+                    if (notFound[uri]) {
+                        continue;
+                    }
+                    const errorRequest = () => {
+                        if (!notFound[uri]) {
+                            finalize(true);
+                            notFound[uri] = true;
+                        }
+                    };
+                    try {
                         delayed++;
-                        const stream = fs.createWriteStream(filename);
-                        stream.on('finish', () => {
-                            if (!invalid[filename]) {
-                                writeBuffer();
-                                finalize(true);
-                            }
-                        });
-                        request(uri)
-                            .on('response', err => {
-                                const statusCode = err.statusCode;
-                                if (statusCode !== 200) {
-                                    invalid[filename] = true;
-                                    if (statusCode === 404) {
-                                        console.log(`FAIL: ${uri} (File not found)`);
+                        if (isRemoteFile(uri)) {
+                            const stream = fs.createWriteStream(filename);
+                            stream.on('finish', () => {
+                                if (!notFound[uri]) {
+                                    writeBuffer();
+                                    finalize(true);
+                                }
+                            });
+                            request(uri)
+                                .on('response', err => {
+                                    const statusCode = err.statusCode;
+                                    if (statusCode >= 300) {
+                                        errorRequest();
+                                        console.log(`FAIL: ${uri} (${statusCode} ${err.statusMessage})`);
+                                    }
+                                })
+                                .on('error', errorRequest)
+                                .pipe(stream);
+                        }
+                        else {
+                            fs.copyFile(
+                                uri,
+                                filename,
+                                err => {
+                                    if (!err) {
+                                        writeBuffer();
                                     }
                                     finalize(true);
                                 }
-                            })
-                            .on('error', () => {
-                                if (!invalid[filename]) {
-                                    finalize(true);
-                                }
-                            })
-                            .pipe(stream);
+                            );
+                        }
                     }
-                    else {
-                        try {
-                            fs.copyFileSync(uri, filename);
-                        }
-                        catch (err) {
-                            console.log(`FAIL: ${uri} (${err})`);
-                        }
+                    catch (err) {
+                        errorRequest();
+                        console.log(`FAIL: ${uri} (${err})`);
                     }
                 }
             }
-            setTimeout(finalize, timeout);
+            cleared = true;
+            if (delayed === 0) {
+                finalize();
+            }
+            else {
+                setTimeout(finalize, timeout);
+            }
         }
         catch (err) {
-            res.json({ application: `FILE: ${fileerror}`, system: err });
+            res.json({ application: `FILE: ${errorfile}`, system: err });
         }
     };
     if (append_to) {
+        const errorAppendTo = (name, err) => {
+            zipname = '';
+            resume();
+            console.log(`FAIL: ${name} (${err})`);
+        };
         const match = /([^/\\]+)\.(zip|tar)$/i.exec(append_to);
         if (match) {
-            zipname = dirname + separator + replaceSeparator(match[0]);
+            zipname = dirname + SEPARATOR + replaceSeparator(match[0]);
             try {
                 const copied = () => {
                     format = match[2].toLowerCase();
-                    const unzip_to = dirname + separator + replaceSeparator(match[1]);
+                    const unzip_to = dirname + SEPARATOR + replaceSeparator(match[1]);
                     decompress(zipname, unzip_to)
                         .then(() => resume(unzip_to));
                 };
-                if (!isLocalFile(append_to)) {
+                if (isRemoteFile(append_to)) {
                     const stream = fs.createWriteStream(zipname);
                     stream.on('finish', copied);
                     request(append_to)
-                        .on('error', () => {
-                            zipname = '';
-                            resume();
+                        .on('response', err => {
+                            const statusCode = err.statusCode;
+                            if (statusCode >= 300) {
+                                errorAppendTo(zipname, statusCode + ' ' + err.statusMessage);
+                            }
+                        })
+                        .on('error', err => {
+                            errorAppendTo(zipname, err);
                         })
                         .pipe(stream);
                 }
-                else {
-                    fs.copyFileSync(replaceSeparator(append_to), zipname);
+                else if (fs.existsSync(append_to)) {
+                    fs.copyFileSync(append_to, zipname);
                     copied();
+                }
+                else {
+                    errorAppendTo(append_to, 'Archive not found.');
                 }
             }
             catch (err) {
-                console.log(`FAIL: ${zipname} (${err})`);
-                zipname = '';
-                resume();
+                errorAppendTo(zipname, err);
             }
+        }
+        else {
+            errorAppendTo(append_to, 'Invalid archive format.');
         }
     }
     else {
@@ -384,7 +448,7 @@ app.get('/api/browser/download', (req, res) => {
     if (filename) {
         res.sendFile(filename, err => {
             if (err) {
-                console.log(`ERROR: ${err}`);
+                console.log(`FAIL: ${filename} (${err})`);
             }
         });
     }
