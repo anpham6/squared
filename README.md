@@ -39,16 +39,16 @@ GitHub
     // without Express: use either console.log() or element.innerHTML to display using "system.write" commands
 
     document.addEventListener('DOMContentLoaded', function() {
-        // required
+        // Required
         squared.setFramework(android); // OR: 'chrome'
 
-        // required: zero or more DOM elements
+        // Required: zero or more DOM elements
         squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview' */, /* etc... */);
         squared.close();
 
         // NOTE: options: { assets?: FileAsset[], callback?: () => void }
 
-        // Express required
+        // Optional: NodeJS Express / squared-apache
         squared.saveToArchive(/* optional: archive name */, /* options */);
         // OR
         squared.copyToDisk(/* required: local directory */, /* options */);
@@ -62,7 +62,7 @@ GitHub
 ```
 The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build into a single entity with combined shared resources.
 
-Library files are in the /dist folder. A minimum of *three* files are required to run squared.
+Library files are in the /dist folder. A minimum of *two* files are required to run squared.
 
 1. squared
 2. squared-base
@@ -151,7 +151,7 @@ squared.settings = {
     outputDirectory: 'app/src/main',
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'android-xml',
-    outputArchiveFormat: 'zip', // zip | tar
+    outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | bz2
     outputArchiveTimeout: 30 // seconds
 };
 ```
@@ -173,7 +173,7 @@ squared.settings = {
     outputDirectory: '',
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
-    outputArchiveFormat: 'zip', // zip | tar
+    outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | bz2
     outputArchiveTimeout: 60 // seconds
 };
 ```

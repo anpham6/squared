@@ -1386,14 +1386,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 break;
             }
-            case 'BUTTON': {
+            case 'BUTTON':
                 for (const item of node.naturalChildren as T[]) {
                     if (!item.pageFlow || !item.textElement) {
                         item.android('elevation', '2px');
                     }
                 }
                 break;
-            }
             case 'TEXTAREA': {
                 const { cols, maxLength, placeholder, rows } = <HTMLTextAreaElement> node.element;
                 node.android('minLines', rows > 0 ? rows.toString() : '2');

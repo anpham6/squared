@@ -260,7 +260,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         '/api/assets/archive' +
                         '?filename=' + encodeURIComponent(filename.trim()) +
                         '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
-                        '&format=' + outputArchiveFormat +
+                        '&format=' + outputArchiveFormat.trim().toLowerCase() +
                         '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
                         '&timeout=' + outputArchiveTimeout, {
                             method: 'POST',
