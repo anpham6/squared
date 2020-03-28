@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Width</title>
+ <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" href="site.css"   media="all"    type="text/css" />
+ <link rel="stylesheet" href="page.css"   media="all"    type="text/css" />
+     <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+    <h1>Width</h1>
+    <div id="before"><div class="parent">
+      
+      <span  class="static-inline-shrinkwrapped box" >Static Inline Shrinkwrapped <br />Element</span>
+   
+      <div   class="spacer" ></div>
+   
+      <img   class="replaced-inline-shrinkwrapped box" src="star.gif" alt="" />
+      <img   class="replaced-inline-sized box"         src="star.gif" alt="" />
+      <span  class="sized">
+       <img  class="replaced-inline-stretched box"     src="star.gif" alt="" /></span>
+      
+      <div   class="spacer" ></div>
+   
+      <div   class="static-block-sized box"     >Static Block Sized</div>
+      <div   class="static-block-stretched box" >Static Block Stretched Auto</div>
+   
+      <div   class="spacer" ></div>
+      
+      <table class="table-shrinkwrapped box"    ><tr><td>Table Shrinkwrapped</td></tr></table>
+      <table class="table-sized box"            ><tr><td>Table Sized</td></tr></table>
+      <table class="table-stretched box"        ><tr><td>Table Stretched 100%</td></tr></table>
+   
+      <div   class="spacer" ></div>
+      
+      <span  class="float-shrinkwrapped box"    >Float Shrinkwrapped</span>
+      <span  class="float-sized box"            >Float Sized</span>
+      <span  class="float-stretched box"        >Float Stretched 100%</span>
+   
+      <span  class="absolute-shrinkwrapped box" >Absolute Shrinkwrapped</span>
+      <span  class="absolute-sized box"         >Absolute Sized</span>
+      <span  class="absolute-stretched box"     >Absolute Stretched Auto</span>
+    </div></div>
+
+</body>
+</html>

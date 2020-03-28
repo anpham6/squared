@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Border image example</title>
+
+  <style>
+
+    .motto {
+      font-family: 'Goudy Old Style', Garamond, 'Big Caslon', 'Times New Roman', serif;
+      font-style: italic;
+      max-width: 400px;
+      text-align: center;
+      font-size: 2em;
+      border: 40px solid #f9b256;
+      -webkit-border-image: url(img/picture-frame.png) 40;
+         -moz-border-image: url(img/picture-frame.png) 40;
+           -o-border-image: url(img/picture-frame.png) 40;
+              border-image: url(img/picture-frame.png) 40;
+    }
+  </style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <div class="motto">
+    <p>Home sweet home.</p>
+  </div>
+</body>
+</html>

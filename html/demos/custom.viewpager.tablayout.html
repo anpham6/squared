@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        #squared_ui {
+            position: relative;
+            width: 300px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+        }
+        #squared_ui button {
+            position: absolute;
+            width: 56px;
+            height: 56px;
+            background: slateblue center no-repeat;
+            border: none;
+            border-radius: 28px;
+            margin: 8px;
+            padding: 0;
+        }
+        #toolbar_demo {
+            background-image: url(../demos/images/android_background.jpg);
+            background-size: 100% 100%;
+            overflow: hidden;
+        }
+        #toolbar_menu img {
+            margin-left: 0;
+        }
+        #toolbar_menu {
+            margin: 8px;
+            border: none;
+            float: right;
+        }
+        #toolbar_menu div {
+            margin-left: 8px;
+            float: left;
+        }
+        #squared_ui #fab_browse_page {
+            bottom: 0;
+            right: 0;
+            background-image: url(../demos/images/icons8-browse-page-24.png);
+        }
+        h3 {
+            margin-top: 0;
+        }
+        .content {
+            font-size: 12px;
+            color: #fff;
+            background-color: #aaa;
+            padding: 8px;
+        }
+        ul {
+            font-size: 0;
+            text-align: justify;
+            margin: 0;
+            padding: 0;
+            background-color: slateblue;
+            opacity: 0.7;
+            clear: right;
+        }
+        ul:after {
+            content: '';
+            display: inline-block;
+            width: 100%;
+        }
+        li:first-child {
+            padding-left: 40px;
+        }
+        li:last-child {
+            padding-right: 40px;
+        }
+        li {
+            font-size: 11px;
+            color: white;
+            margin: 0;
+            padding: 8px;
+            display: inline-block;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/demos/common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/android-framework/src/main.js').then(result => {
+                    android = result.default;
+                    squared.setFramework(android);
+                    Promise.all([
+                        System.import('/build/android-widget/coordinator/main.js'),
+                        System.import('/build/android-widget/floatingactionbutton/main.js'),
+                        System.import('/build/android-widget/menu/main.js'),
+                        System.import('/build/android-widget/toolbar/main.js')
+                    ]).then(() => {
+                        squared.configure('android.widget.toolbar', {
+                            toolbar_demo: {
+                                appBar: {}
+                            }
+                        });
+                        squared.include('android.substitute', {
+                            viewpager_demo: {
+                                android: {
+                                    layout_height: 'match_parent'
+                                },
+                                app: {
+                                    layout_behavior: '@string/appbar_scrolling_view_behavior'
+                                }
+                            }
+                        });
+                        squared.parseDocument('squared_ui').then(function() {
+                            squared.close();
+
+                            var views = squared.system.writeLayoutAllXml();
+                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                            var resource = squared.system.writeResourceAllXml();
+                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                        });
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui" data-use="android.widget.coordinator" data-android-attr="layout_width::match_parent;layout_height::match_parent">
+        <div id="toolbar_demo" data-use="android.widget.toolbar" data-exclude-section="DOM_TRAVERSE">
+            <nav id="toolbar_menu" data-use="android.widget.menu">
+                <div
+                    data-show-as-action="always"
+                    title="Web">
+                    <img src="../demos/images/icons8-web-24.png" />
+                </div>
+                <div
+                    data-show-as-action="always"
+                    title="Browse Page">
+                    <img src="../demos/images/icons8-browse-page-24.png" />
+                </div>
+            </nav>
+            <ul data-use="android.substitute"
+                data-android-substitute-tag="com.google.android.material.tabs.TabLayout"
+                data-android-substitute-tag-child="com.google.android.material.tabs.TabItem"
+                data-target-module="appBar"
+                data-exclude-resource-child="BOX_STYLE | BOX_SPACING | FONT_STYLE">
+                <li>TAB 1</li>
+                <li>TAB 2</li>
+                <li>TAB 3</li>
+            </ul>
+        </div>
+        <div id="viewpager_demo"
+            data-use="android.substitute"
+            data-android-substitute-tag="androidx.viewpager.widget.ViewPager"
+            data-exclude-section="DOM_TRAVERSE"
+            data-exclude-resource="BOX_STYLE | FONT_STYLE">
+            <div style="padding: 20px;" data-use="android.external" data-filename="fragment_main.xml">
+                <h3>title</h3>
+                <h4 style="text-align: center;">page</h4>
+                <div class="content">
+                    content content content content content content content content content content
+                    content content content content content content content content content content
+                    content content content content content content content content content content
+                    content content content content content content content content content content
+                    content content content content content content content content content content
+                    content content content content content content content content content content
+                    content content content content content content content content content content
+                    content content content content content content content content content content
+                    content content content content content content content content content content
+                </div>
+            </div>
+        </div>
+        <button id="fab_browse_page" data-use="android.widget.floatingactionbutton" data-exclude-procedure="ACCESSIBILITY"></button>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
+                <button onclick="squared.saveToArchive();">Save All</button>
+                <button onclick="squared.copyToDisk('D:/git/customviewpagertablayout');">Copy All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.saveResourceAllXml();">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

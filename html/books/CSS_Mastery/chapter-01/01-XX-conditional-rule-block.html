@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Conditional Rule Block</title>
+
+  <style>
+    body {
+      font-size: 1.5em;
+    }
+    .support-info {
+      color: #842e98;
+    }
+    /**
+    * Check if a certain declaration is supported, within the parentheses:
+    */
+    @supports (display: grid) {
+      body {
+        background-color: #333;
+      }
+      .support-info {
+        color: #a6edb2;
+      }
+    }
+    /**
+    *
+    * You can also check for combinations of declarations, or use "or" to test
+    * for either of multiple declarations. You can nest them in parentheses.
+    * Combinations use "and":
+    * @supports (display: grid) and (display: inline-grid) { ...  }
+    * Note: this rule is just for demo purposes: it will override the
+    * previous declaration with a more detailed one – there’s no practical benefit
+    * in combining them.
+    */
+    @supports ((display: grid) or (display: -webkit-grid)) and 
+              ((display: inline-grid) or (display: -webkit-inline-grid)) {
+      body {
+        background-color: #333;
+        color: #fff;
+      }
+      .support-info {
+        color: #a6edb2;
+      }
+    }
+  </style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <p class="support-info">If this is purple, your browser does not support Grid Layout. If this is light green on dark gray, it does!</p>
+
+  <p><small>(If it’s neither, you may have turned off CSS styling!)</small></p>
+</body>
+</html>

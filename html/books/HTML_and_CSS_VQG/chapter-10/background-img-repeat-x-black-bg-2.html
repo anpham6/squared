@@ -1,0 +1,43 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Background image repeat-x</title>
+	<style>
+	/* This rule on the html element makes your page at least 
+		as tall as the height of the browser window. Consequently, 
+		the page background always starts in the bottom, left
+		corner of the window, not higher up where your content ends.
+
+		It's not necessary to include if your content is longer than the window is tall.
+	*/
+	html {
+		min-height: 100%;
+	}
+
+	body {
+		background: black url(img/sky.png) repeat-x left bottom;
+		color: #fff;
+		font: 1.1em sans-serif;
+		padding: 1.5em 1.5em 1em;
+	}
+
+	p {
+		font-size: 1.125em;
+	}
+	</style>
+	    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../squared.js"></script>
+</head>
+<body>
+
+<h1>Background repeats horizontally</h1>
+
+<p>Black background color fills in space above image.</p>
+</body> 
+</html>

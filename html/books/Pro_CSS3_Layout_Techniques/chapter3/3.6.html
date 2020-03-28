@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Example of Relative and Absolute Positioning</title>		
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../squared.js"></script>
+	</head>
+	<body>
+<style>
+.relative {
+ padding: 10px;
+ position: relative;
+ width: 500px;
+ background: red;
+ margin: 10px;
+} 
+.navitem {
+  display: inline-block;
+  width: 70px;
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  background: grey
+}
+</style>
+
+<div class="relative">
+  <h1>Example of inline-block</h1>
+  <p>Here is some content <span>that includes an inline &lt;span&gt; element</span>.</p>
+  <p>Here’s some more content, and this time the &lt;span&gt; elements have the class navitem applied to them: <span class="navitem">Item 1</span> <span class="navitem">Item 2</span> <span class="navitem">Item 3</span></p>
+  <p>Note that inline-block elements contribute to the layout.</p>
+</div>
+
+
+	</body>
+</html>

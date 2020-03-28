@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Using the max-width media query for small-screen typography</title>
+  <!-- Load Open Sans Condensed & Regular from Google Fonts -->
+  <link href='http://fonts.googleapis.com/css?family=Open+Sans+Condensed:700|Open+Sans:700,400' rel='stylesheet' type='text/css'>
+  <style>
+    body {
+      font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.5;
+    }
+    @media only screen and (max-width: 37.5em) {
+      h1,h2,h3,h4,h5,h6 {
+        font-family: 'Open Sans Condensed', 'Arial Narrow', Arial, sans-serif;
+      }
+    }
+  </style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <h1>This is a heading with a few words.</h1>
+  
+  <p>This is a paragraph with many many words. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolore laboriosam esse distinctio tenetur ad sapiente aliquid quas consectetur eos provident, doloribus a, eum harum obcaecati, tempore iste iusto cumque porro?</p>
+
+  <p>Another paragraph with many many words. Lorem ipsum dolor sit amet, consectetur adipisicing elit. Dolore laboriosam esse distinctio tenetur ad sapiente aliquid quas consectetur eos provident, doloribus a, eum harum obcaecati, tempore iste iusto cumque porro?</p>
+</body>
+</html>

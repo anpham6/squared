@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Outside-in Box</title>
+  		<meta charset="utf-8" />
+  		<link rel="stylesheet" href="site.css"   media="all" />
+  		<link rel="stylesheet" href="page.css"   media="all" />
+              <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+    </head>
+<body>
+
+ <h1>Outside-in Box</h1>
+
+ <h2>Before</h2>
+ <div class="container">   <div  class="before float"   >Float   </div>    </div>
+ <div class="container">   <span class="before absolute">Absolute</span>   </div>
+ <div class="container">   <div  class="before static"  >Static  </div>    </div>
+
+ <div class="float-divider"></div><h2>After</h2>
+
+ <div class="container">
+   <div class="after float"   ><div class="oi">Float   </div></div>        </div>
+
+ <div class="container">
+   <span class="after absolute"><span class="oi">Absolute</span></span>    </div>
+
+ <div class="container">
+   <div class="after static"  ><div class="oi">Static  </div></div>        </div>
+
+ </body>
+</html>

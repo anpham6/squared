@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 9-7 & 9-8</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+    img { width: 100%; }
+    .bimage { height: 310px; }
+    .bimage div {
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+      border-width: 34px 10px;
+      height: 100%;
+    }
+    div.bimage-1 {
+      border-image-source: url('images/frame.png');
+      border-image-slice: 34;
+      border-image-repeat: stretch;
+    }
+    /* example of the shorthand property */
+    div.bimage-2 {
+      -webkit-border-image: url('images/frame.png') 34 fill stretch;
+      border-image: url('images/frame.png') 34 fill stretch;
+    }
+  </style>
+  		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/squared.svg.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-8">
+        <img src="images/frame.svg">
+    </div>
+    <div class="span-8 bimage">
+      <div class="bimage-1">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vel pulvinar justo. Donec pharetra iaculis justo sed vehicula.</p>
+      </div>
+    </div>
+    <!-- example of the shorthand property -->
+    <div class="span-8 last bimage">
+      <div class="bimage-2">
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam vel pulvinar justo. Donec pharetra iaculis justo sed vehicula.</p>
+      </div>
+    </div>
+</div>
+
+</body>
+</html>

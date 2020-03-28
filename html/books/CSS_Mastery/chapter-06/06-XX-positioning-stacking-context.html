@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stacking contexts and opacity</title>
+  <style>
+    .a, .b, .c, .d {
+      position: absolute;
+      border: 2px solid #333;
+      width: 200px;
+      height: 100px;
+    }
+    .a {
+      top: 10px;
+      left: 10px;
+      background-color: #f3bf8b;
+    }
+    .b {
+      background-color: #5a6bff;
+      opacity: 0.5;
+      top: 20px;
+      left: 20px;
+    }
+    .c {
+      top: 10px;
+      left: 10px;
+      background-color: #e299f3;
+      z-index: 9999;
+    }
+    .d {
+      top: 40px;
+      left: 40px;
+      background-color: #acf3ae;
+      z-index: 3;
+    }
+
+  </style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>  
+  <div class="a"></div>
+  <div class="b"><div class="c"></div></div>
+  <div class="d"></div>
+</body>
+</html>

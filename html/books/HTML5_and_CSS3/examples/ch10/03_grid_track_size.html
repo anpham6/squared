@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>How to add dimension to your grid items</title>
+    <style>
+        body { font-family: sans-serif; }
+        div { background: silver; }
+		#grid1, #grid2, #grid3, #grid4, #grid5 {
+			display: grid;
+            grid-gap: 20px;
+			margin-bottom: 20px;
+		}
+		/* FIXED */
+        #grid1 {
+            width: 640px;
+            grid-template: repeat(2, 50px) / repeat(3, 1fr);
+        }
+		/* FLUID */
+		#grid2 {
+            width: 640px;
+			grid-template: repeat(2, 50px) / 100px 30% 1fr;
+		}
+        /* REPEAT MULTIPLE COLUMNS */
+        #grid3 {
+            width: 640px;
+            grid-template: repeat(2, 50px) / repeat(2, 50px 1fr);
+        }
+        /* MINMAX WITH AUTO-FIT */
+        #grid4 {
+            max-width: 720px;
+            grid-template: repeat(2, 50px) / repeat(auto-fit, minmax(75px, 1fr));
+        }        
+        /* MINMAX WITH AUTO-FILL */
+        #grid5 {
+            max-width: 720px;
+            grid-template: repeat(2, 50px) / repeat(auto-fill, minmax(75px, 1fr));
+        }
+
+    </style>
+        <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../../squared.js"></script>
+</head>
+<body>
+<h1>Fractional Widths</h1>
+<section id="grid1">
+    <div>Div 1</div> <div>Div 2</div> <div>Div 3</div>
+    <div>Div 4</div> <div>Div 5</div> <div>Div 6</div>
+</section>
+<h1>Mixed Units</h1>
+<section id="grid2">
+    <div>Div 1</div> <div>Div 2</div> <div>Div 3</div>
+    <div>Div 4</div> <div>Div 5</div> <div>Div 6</div>
+</section>
+<h1>Repeat multiple widths</h1>
+<section id="grid3">
+    <div>Div 1</div> <div>Div 2</div> <div>Div 3</div>
+    <div>Div 4</div> <div>Div 5</div> <div>Div 6</div>
+</section>
+<h1>Repeat with auto-fit and minmax</h1>
+<section id="grid4">
+    <div>Div 1</div> <div>Div 2</div> <div>Div 3</div>
+    <div>Div 4</div> <div>Div 5</div> <div>Div 6</div>  
+</section>
+<h1>Repeat with auto-fill and minmax</h1>
+<section id="grid5">
+    <div>Div 1</div> <div>Div 2</div> <div>Div 3</div>
+    <div>Div 4</div> <div>Div 5</div> <div>Div 6</div>  
+</section></body>
+</html>

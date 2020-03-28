@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Choosing Where to Start List Numbering</title>
+	<style>
+	/* As always, place your CSS in an external file instead of embedding it. I embedded it here to simplify the demo. */
+	
+	/* :::: Not shown in book - just a little font and spacing treatment :::: */
+	body {
+		font-family: Georgia, serif;
+	}
+
+	.hdg {
+		font-size: 1.25em;
+		margin-bottom: 0;
+	}
+
+	.hdg + ol {
+		margin-top: .5em;
+	}
+	</style>
+	    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../squared.js"></script>
+</head>
+<body>
+
+<h1 class="hdg">Changing a light bulb (with a few steps missing)</h1>
+
+<ol start="2">
+	<li>Unscrew the old bulb.</li>
+	<li value="5">Screw in the new bulb.</li>
+	<li>Plug in the lamp and turn it on!</li>
+</ol>
+
+</body>
+</html>

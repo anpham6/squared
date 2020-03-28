@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Stretched</title>
+ <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" href="site.css"   media="all"    type="text/css" />
+ <link rel="stylesheet" href="page.css"   media="all"    type="text/css" />
+     <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+ <h1>Stretched</h1>
+ <div class="gp">Positioned Grandparent
+   <div class="parent">Non-positioned Parent
+     <span  id="inline" class="s">Cannot stretch a static inline</span>
+     <div   id="sized" ><img id="star" src="star.gif" alt="star" /></div>
+     <div   id="block"  class="s">Horizontally Stretched Static Block</div>
+     <table id="table"  class="s"><tr><td>Horiz. Stretched Table</td></tr></table>
+     <div   id="abs-v"  class="s">Vertically Stretched Absolute</div>
+     <span  id="abs-h"  class="s">Horizontally Stretched Absolute</span>
+     <span  id="float"  class="s">Almost Stretched Float</span>
+   </div>
+ </div>
+
+</body>
+</html>

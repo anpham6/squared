@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Gradient panel example</title>
+        <style>
+
+            .panel{
+                width: 220px;
+                height: 180px;
+                padding: 20px;
+                background: radial-gradient(ellipse at center,  #77b7ef 0%,#000000 100%); /* W3C */
+                background-size: 160% 160%;
+                background-position: center -160px;
+            }
+
+            .smaller {
+                background-size: 60% 60%;
+                background-position: center;
+            }
+
+            .panel h1{
+                margin-top: 0px;
+            }
+
+            .panel h1, .panel p, .panel a{
+                color: #fff;
+            }
+
+        </style>
+            <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+        <script src="/dist/squared.js"></script>
+        <script src="/dist/squared.base.js"></script>
+        <script src="/dist/android.framework.js"></script>
+        <script src="../../squared.js"></script>
+    </head>
+    <body>
+        <div class="panel">
+            <h1>Intro</h1>
+            <p>Cras mattis consectetur purus sit amet fermentum.</p>
+            <p><a href="#">read more</a></p>
+        </div>
+
+        <div class="panel smaller">
+            <h1>Intro</h1>
+            <p>Cras mattis consectetur purus sit amet fermentum.</p>
+            <p><a href="#">read more</a></p>
+        </div>
+    </body>
+</html>

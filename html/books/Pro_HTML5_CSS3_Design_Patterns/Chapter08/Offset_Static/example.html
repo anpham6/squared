@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Offset Static</title>
+ <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" href="site.css"   media="all"    type="text/css" />
+ <link rel="stylesheet" href="page.css"   media="all"    type="text/css" />
+     <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+ <h1>Offset Static</h1>
+ <div>
+   <span class="moved-left"  >&larr; Moved-left </span>
+   <span class="moved-right" >&rarr; Moved-right </span> 
+   <span class="push-right"  >Push-right &rarr; </span>
+   <span class="pull-left"   >Pull-left &larr; &nbsp; </span>
+   <em>None</em>
+ </div>
+ <div class="moved-down center" >&darr;<br />Moved-down Static Block </div>
+ <div class="moved-up   center" >&uarr;<br />Moved-up Static Block</div>
+ <div class="push-down  center" >Push-down Static Block<br />&darr;</div>
+ <div class="pull-up    center" >Pull-up Static Block<br />&uarr;</div>
+ <div class="           center" >None</div>
+
+ 
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 10-1</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+.span-8 { background-color: black; }
+.span-8 div {
+  background-color: white;
+  margin: 20px;
+}
+.semi-opaque-1 { opacity: 0.66; }
+.semi-opaque-2 { opacity: 0.33; }
+p {
+  background-color: white;
+  font-size: 180%;
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 0;
+  padding: 20px;
+}
+</style>
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="span-8">
+    <div>
+      <p>Call me Ishmael. Some years ago - never mind how long precisely…</p>
+    </div>
+  </div>
+  <div class="span-8">
+    <div class="semi-opaque-1">
+      <p class="semi-opaque-1">Call me Ishmael. Some years ago - never mind how long precisely…</p>
+    </div>
+  </div>
+  <div class="span-8 last">
+    <div class="semi-opaque-2">
+      <p>Call me Ishmael. Some years ago - never mind how long precisely…</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

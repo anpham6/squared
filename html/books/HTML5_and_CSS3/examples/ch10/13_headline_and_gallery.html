@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>The Headline &amp; Gallery Layout</title>
+    <style>
+
+		body {
+            margin: 0;
+            font-family: sans-serif;
+			display: grid;
+			width: 1000px;
+			grid-gap: 20px;
+			margin: 20px auto;
+			grid-template-columns: repeat(4, 1fr);
+			grid-template-rows: 80px 225px auto 50px;
+			grid-template-areas:
+				"logo .    navi navi"
+				"head head head head"
+				"main main main main"
+				"foot foot foot foot";            
+        }
+		div, nav ul, footer, a {
+            background: silver;
+        }
+        a {
+            color: black;
+            text-decoration: none;
+        }
+		h1 {
+            font-size: 2.8rem;
+            margin-top: .3em;
+        }
+		#logo {
+			grid-area: logo;
+		}
+		nav {
+			grid-area: navi;
+			align-self: center;
+		}
+		nav ul {
+			list-style-type: none;
+			margin: 0;
+			padding: 0;
+			display: grid;
+			height: 50px;
+			grid-template: auto / repeat(4, 1fr);
+			grid-gap: 20px;
+			justify-items: center;
+			align-content: center;
+		}
+		header {
+			grid-area: head;
+		}
+		main {
+			grid-area: main;
+			display: grid;
+			grid-gap: 10px;
+			grid-template: repeat(3, 170px) / repeat(3, 1fr);
+		}
+		footer {
+			grid-area: foot;
+			text-align: center;
+		}
+	</style>
+	    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../../squared.js"></script>
+</head>
+<body>
+	<div id="logo">Company Logo</div>
+    <nav>
+    	<ul>
+        	<li><a href="#">Item 1</a></li>
+        	<li><a href="#">Item 2</a></li>
+        	<li><a href="#">Item 3</a></li>
+        	<li><a href="#">Item 4</a></li>
+        </ul>
+    </nav>
+    <header>
+        <h1>Lorem ipsum dolor sit amet, ne saepe phaedrum cotidieque has, natum zril pro ei.</h1>
+        <h2>Cu vel aliquid lobortis deseruisse. Nam at adipisci dignissim forensibus. Qui an recteque maluisset assentior, cu ferri aperiam imperdiet sed.</h2>
+    </header>
+    <main>
+        <div></div> <div></div> <div></div>
+        <div></div> <div></div> <div></div>
+        <div></div> <div></div> <div></div>
+    </main>
+    <footer>
+        <p>Copyright Notice</p>
+    </footer>
+</body>
+</html>

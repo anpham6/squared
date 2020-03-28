@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>A navigation menu created using flexbox</title>
+    <style>
+
+        body { font-family: sans-serif; }
+        ul {
+            display: flex;
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            background: #999;
+            margin-right: 15px;
+            padding: 15px;
+            text-align: center;
+        }
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+    </style>
+        <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../../squared.js"></script>
+</head>
+
+<body>
+<nav>
+    <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="aboutus.html">Speakers</a></li>
+        <li><a href="solutions.html">Get Tickets</a></li>
+        <li><a href="support.html">Become a Member</a></li>
+        <li><a href="contactus.html">About Us</a></li>
+    </ul>
+</nav>
+</body>
+</html>

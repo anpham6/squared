@@ -1,0 +1,167 @@
+/*********************/
+/* BASIC */
+/*********************/
+
+body {
+	font-family: "Century Gothic", "Gill Sans", Arial, sans-serif;
+	font-size: 62.5%;
+	margin: 0;
+	padding: 0;
+	background-color: #FFFFFF;
+}
+
+p,h1,h2,h3,h4,h5,h5,ol,ul {
+	margin: 0px;
+	padding: 0px;
+}
+
+
+/*********************/
+/* BANNER STYLES */
+/*********************/
+
+#banner {
+	background: url(images/bg/banner_bg.jpg) repeat-x left top;
+	position: relative;
+	border: 1px solid black;
+}
+
+/*********************/
+/* MAIN NAV */
+/*********************/
+
+#nav {
+	margin-bottom: 0px;
+	position: absolute;
+	top: 75px;
+	left: 5px;
+}
+
+#nav li {
+	list-style-type: none;
+	padding: 0px;
+	margin: 0;
+	float: left;
+}
+
+#nav a {
+	display: block;
+	font-size: 11px;
+	color: #D6ECAE;
+	text-decoration: none;
+	background-color: #294E56;
+	padding: 2px 2px 2px 3px;
+	width: 8em;
+	margin-left: 2px;
+	border-right: 1px solid #73AFB7;
+	border-bottom: 1px solid #73AFB7;
+	font-weight: bold;
+	margin-bottom: 2px;
+}
+
+#nav a:hover {
+	background: #73AFB7;
+	border-right: 1px solid #14556B;
+	border-bottom: 1px solid #14556B;
+	color: #FBEF99;
+}
+
+/*highlight "you are here" buttons*/
+#home #nav a#homeLink,
+#feature #nav a#featureLink {
+	background: #73AFB7;
+	border-right: 1px solid #14556B;
+	border-bottom: 1px solid #14556B;
+	color: #FBEF99;
+}
+
+#logo {
+	background: url(images/bg/banner_flower.jpg) no-repeat right top;
+	height: 100px;
+}
+
+/*********************/
+/* SIDEBAR */
+/*********************/
+#news {
+	margin: 0px;
+	padding: 0px;
+	list-style: none;
+	font-size: 1.2em;
+	border-top: 1px dashed #294E56;
+	border-right: 1px dashed #294E56;
+}
+#news li {
+	display: inline;
+}
+#news .title {
+	font-weight: bold;
+	display: block;
+	color: #666666;
+}
+#news a {
+	text-decoration: none;
+	display: block;
+	padding: 5px;
+	border-bottom: 1px dashed #294E56;
+	color: #73AFB7;
+	line-height: 110%;
+	background: #FFFFFF url(images/bg/bg_link.png) no-repeat right top;
+}
+/* hack for IE 6 < to make entire block clickable */
+* html #news a {
+	height: 1px; 
+}
+
+#news a:hover {
+	color: #000000;
+	background-image: url(images/bg/bg_link_h.png);
+}
+
+/*********************/
+/* MAIN */
+/*********************/
+h1 {
+	color: #294E56;
+	margin-top: 10px;
+	font-size: 2.4em;
+	border-top: 4px solid #294E56;
+	line-height: 100%;
+}
+.section {
+	display: inline;
+	color: #999999;
+	font-weight: normal;
+}
+
+.floatRight {
+	float: right;
+	margin: 5px 10px 2px 15px;
+}
+img.floatRight {
+	border: 2px solid #000000;
+}
+
+p {
+	color: #666666;
+	font-size: 1.6em;
+}
+h2 {
+	color: #F4BE04;
+	font-size: 1.9em;
+	margin-top: 10px;
+	overflow: hidden;
+	padding-top: 0px;
+	background: url(images/bg/bg_h2.gif) repeat-x left bottom;
+}
+
+
+/*********************/
+/* FOOTER */
+/*********************/
+#footer {
+	margin-top: 15px;
+	border-top: 1px dashed #666666;
+	padding: 5px 0 0 5px;
+	margin-right: 200px;
+}

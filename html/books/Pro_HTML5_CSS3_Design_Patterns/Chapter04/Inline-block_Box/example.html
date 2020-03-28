@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Inline-block Box</title>
+ <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" href="site.css"   media="all"    type="text/css" />
+ <link rel="stylesheet" href="page.css"   media="all"    type="text/css" />
+     <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+ <h1>Inline-block Box</h1>
+
+ <div class="container" >
+   <span class="default">BEFORE</span>  
+   <img  class="replaced-box" src="star.gif" alt="star" />  
+   <span class="default">AFTER</span>  
+
+   <span class="default">BEFORE</span>  
+   <span class="inline-box">Inline element displayed as an inline block.</span>   
+   <span class="default">AFTER</span>  
+ </div>
+
+</body>
+</html>

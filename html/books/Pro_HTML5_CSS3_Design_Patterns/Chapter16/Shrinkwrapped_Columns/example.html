@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en"> 
+	<head>
+		<title>Shrinkwrapped Columns</title>
+  		<meta charset="utf-8" />
+  		<link rel="stylesheet" href="site.css"   media="all" />
+  		<link rel="stylesheet" href="page.css"   media="all" />
+              <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+<h1>Shrinkwrapped Columns</h1>
+
+<table class="auto-layout shrinkwrap" >   
+  <tr> 
+    <td class="shrinkwrap" >auto</td> 
+    <td class="shrinkwrap" >auto</td>
+  </tr> 
+</table> 
+
+<br />
+
+<table class="auto-layout shrinkwrap"> 
+ <tr> <td class="shrinkwrap">auto (less content - less width)</td> 
+      <td class="shrinkwrap">auto (extra content turns shrinkwrapped columns 
+                             into content-proportioned columns)</td></tr></table>
+
+
+</body>
+</html>

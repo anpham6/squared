@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+     <title>Inline Quote</title>
+     <meta charset="utf-8" />
+     <link rel="stylesheet" href="site.css"   media="all" />
+     <link rel="stylesheet" href="page.css"   media="all" />
+         <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+     <script src="/dist/squared.js"></script>
+     <script src="/dist/squared.base.js"></script>
+     <script src="/dist/android.framework.js"></script>
+     <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+  <h1>Inline Quote</h1>
+
+  <p><span class="quote">
+       "A quote should be followed by a citation." 
+       (<cite>Pro HTML5 and CSS3 Design Patterns</cite>)</span></p>
+
+  <p><q>  <!-- Do not use <q>. -->
+       "If you embed a quote inside <code>&lt;q&gt;</code> most browsers 
+       will automatically insert double quotes — whether or not you want them!" 
+       (<cite>Pro HTML5 and CSS3 Design Patterns</cite>)</q></p>
+
+</body>
+</html>

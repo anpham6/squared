@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 4-7</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+<style>
+.author { font-style: italic; font-weight: bold; }
+.comment {
+    border: 1px solid #999;
+    border-width: 1px 1px 0;
+    padding: 1em 1em 0.25em;
+}
+.comment:last-child { border-bottom-width: 1px; }
+.comment:target { background-color: #DDD; }
+a:visited { color: #AAA; }
+</style>
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body class="ch_04">
+<div class="container">
+    <div class="span-8">&nbsp;</div>
+    <div class="span-8">
+        <p><a href="#comment-03">Latest comment</a></p>
+        <div class="comment" id="comment-01">
+            <p>Thanks for this scintillating example!</p>
+            <p class="author">N.E. Boddy, April 13</p>
+        </div>
+        <div class="comment" id="comment-02">
+            <p>Meh.</p>
+            <p class="author">Sum1, April 14</p>
+        </div>
+        <div class="comment" id="comment-03">
+            <p>CSS3 is going to be great!</p>
+            <p class="author">Joe Blogs, April 15</p>
+        </div>
+    </div>
+    <div class="span-8 last">&nbsp;</div>
+</div>
+
+</body>
+</html>

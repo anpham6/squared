@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Navbar using flexbox, align-items: stretch</title>
+  <style>
+    nav {
+      display: block;
+    }
+    /**
+    * 1. Adding a height to the flex container causes the items to
+    *    stretch to fill the cross-axis height.
+    *    This would be the same as setting
+    *    align-items: stretch;
+    */
+    .navbar ul {
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: -webkit-box;
+      display: -moz-box;
+      display: flex;
+      min-height: 100px; /* [1] */
+      font-family: 'Avenir Next', Avenir, Corbel, 'Franklin Gothic', 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+      list-style: none;
+      padding: 0;
+      background-color: #486a8e;
+    }
+    .navbar li {
+      text-transform: uppercase;
+      text-align: center;
+      -moz-box-sizing: border-box;
+           box-sizing: border-box;
+      background-color: #12459e;
+      border: 1px solid #fff;
+    }
+    .navbar li a {
+      display: block;
+      text-decoration: none;
+      line-height: 1.75em;
+      padding: 1em;
+      color: #fff;
+    }
+  </style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <nav class="navbar">
+    <ul>
+      <li><a href="/home">Home</a></li>
+      <li><a href="/spaceships">Spaceships</a></li>
+      <li><a href="/planets">Planets</a></li>
+      <li><a href="/stars">Stars</a></li>
+    </ul>
+  </nav>
+</body>
+</html>

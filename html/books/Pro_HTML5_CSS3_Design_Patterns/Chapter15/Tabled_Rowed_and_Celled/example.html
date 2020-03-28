@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en"> 
+	<head>
+		<title>Tabled, Rowed, and Celled</title>
+  		<meta charset="utf-8" />
+  		<link rel="stylesheet" href="site.css"   media="all" />
+  		<link rel="stylesheet" href="page.css"   media="all" />
+              <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+<h1>Tabled, Rowed, and Celled</h1>
+ 
+<h2>Before</h2>
+ <div> 
+    <div>
+        <div>division</div>   
+        <div>division</div></div>
+    <span>
+        <span>span</span>  
+        <span>span</span></span>
+</div>
+
+<h2>After being rendered as a table with rows and cells</h2>
+ <div class="tabled"> 
+  <div class="rowed">
+    <div class="celled">division</div>   
+    <div class="celled">division</div></div>
+  <span class="rowed">
+    <span class="celled">span</span>  
+    <span class="celled">span</span></span></div>
+ 
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Positioned</title>
+ <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" href="site.css"   media="all"    type="text/css" />
+ <link rel="stylesheet" href="page.css"   media="all"    type="text/css" />
+     <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+ <h1>Positioned</h1>
+ <div  class="relative" id="canvas"  >   
+  <p   class="static">Static Positioned</p> 
+  <p   class="static">This text contains a relatively positioned span that is 
+       <span class="relative offset">offset</span> from its normal position.</p> 
+  <em  class="absolute">Absolutely Positioned</em> 
+  <img class="fixed1" src="star.gif" alt="star" /> 
+  <p   class="fixed2">Fixed Positioned</p>
+ </div>  
+
+
+</body>
+</html>

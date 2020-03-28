@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Selectors</title>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="../../normalize.css">
+		<style>
+			* { margin: .5em 1em; }
+			main { 
+				background-color: white;
+    			border: 2px solid black; 
+    			padding: 1em; }
+    		h1 { font-family: Arial, sans-serif; }
+			p { margin-left: 3em; }
+    		#copyright { font-size: 80%; }
+			.blue { color: blue; }
+			.right { text-align: right; }
+			body { background-image: url('../ch06/images/logo.gif'); background-repeat: repeat; };
+		</style>	
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../../squared.js"></script>
+	</head>
+	
+	<body>
+		<main>
+			<h1>This Season's Speaker Lineup</h1>
+			<p class="blue">October: Jeffrey Toobin</p>
+			<p class="blue">November: Andrew Ross Sorkin</p>
+		</main>
+		<footer>
+			<p id="copyright" class="blue right">Copyright 2018</p>
+		</footer>
+	</body>
+</html>

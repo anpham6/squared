@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 8-5</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+<style>
+.monkey-1, .monkey-2 {
+    background: #F00 url('images/monkey.svg') no-repeat 50% 50%;
+    height: 140px;
+}
+.monkey-1 { background-size: contain; }
+.monkey-2 { background-size: cover; }
+</style>
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/squared.svg.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+	<div class="span-6">&nbsp;</div>
+    <div class="span-6">
+      <div class="monkey-1"></div>
+    </div>
+    <div class="span-6">
+      <div class="monkey-2"></div>
+    </div>
+	<div class="span-6 last">&nbsp;</div>
+</div>
+
+</body>
+</html>

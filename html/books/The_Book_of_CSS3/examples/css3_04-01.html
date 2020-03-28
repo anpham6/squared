@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 4-1</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+.nth-child p:nth-child(2n) { font-weight: bolder; }
+.nth-of-type p:nth-of-type(2n) { font-weight: bolder; }
+</style>
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body class="ch_04">
+<div class="container">
+	<div class="span-12 content nth-child">
+		<h2>The Picture of Dorian Gray</h2>
+		<p>The artist is the creator of beautiful things.</p>
+		<p>To reveal art and conceal the artist is art's aim.</p>
+		<p>The critic is he who can translate into another manner or a new material his impression of beautiful things.</p>
+	</div>
+	<div class="span-12 last content nth-of-type">
+		<h2>The Picture of Dorian Gray</h2>
+		<p>The artist is the creator of beautiful things.</p>
+		<p>To reveal art and conceal the artist is art's aim.</p>
+		<p>The critic is he who can translate into another manner or a new material his impression of beautiful things.</p>
+	</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>How to create your first grid</title>
+    <style>
+        body { font-family: sans-serif; }
+        div { background-color: silver; }
+        main {
+            display: grid;
+            grid-template-rows: 100px 100px;
+            grid-template-columns: 150px 150px 150px;
+			/* OR */
+			/* grid-template: 150px 150px / 150px 150px 150px; */
+			
+			grid-gap: 15px 20px; /* grid-gap: 20px; */
+			/* OR */
+			/* grid-row-gap: 20px; */
+			/* grid-column-gap: 20px; */
+        }
+    </style>
+        <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../../squared.js"></script>
+</head>
+<body>
+<main>
+    <div>Div 1</div> <div>Div 2</div> <div>Div 3</div>
+    <div>Div 4</div> <div>Div 5</div> <div>Div 6</div>
+</main>
+</body>
+</html>

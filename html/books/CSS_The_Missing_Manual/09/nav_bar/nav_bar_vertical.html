@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+<title>CosmoFarmer</title>
+<style type="text/css">
+/* reset styles */
+html, body, h1, h2, h3, h4, h5, h6, p, ol, ul, li, pre, code, address, variable, form, fieldset, blockquote {
+ padding: 0;
+ margin: 0;
+ font-size: 100%;
+ font-weight: normal;
+}
+table { border-collapse: collapse; border-spacing: 0; }
+td, th, caption { font-weight: normal; text-align: left; }
+img, fieldset { border: 0; }
+ol { padding-left: 1.4em; list-style: decimal; }
+ul { padding-left: 1.4em; list-style:square; }
+q:before, q:after { content:''; }
+/* end reset */
+
+/* BASIC */
+body {
+	font: 62.5% Verdana, Arial, Helvetica, sans-serif;
+	padding: 20px;
+}
+
+#mainNav {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+	width: 175px;
+  border-bottom: 1px dashed #999;
+}
+
+#mainNav a {
+  color: #000;
+  font-size: 11px;
+  text-transform: uppercase;
+  text-decoration: none;
+	border: 1px dashed #999;
+	border-bottom: none; 
+  padding: 7px 5px 7px 30px;
+	display: block;
+	background-color: #E7E7E7; 
+  background-image: url(images/nav.png); 
+  background-repeat: no-repeat; 
+  background-position: 0 2px;
+  zoom: 1; 
+}
+
+#mainNav a:hover {
+  font-weight: bold;
+  background-color: #B2F511;
+  background-position: 3px 50%;
+}
+
+#home #homeLink, 
+#feature #featureLink, 
+#expert #experLink, 
+#quiz #quizLink, 
+#project #projectLink, 
+#horoscope #horoscopeLink  
+{
+  background-color: #FFFFFF;
+  background-position: 97% 100%;
+  padding-right: 15px;
+  padding-left: 30px;
+  font-weight: bold;
+}
+
+
+</style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+<script src="/dist/squared.js"></script>
+<script src="/dist/squared.base.js"></script>
+<script src="/dist/android.framework.js"></script>
+<script src="../../../squared.js"></script>
+</head>
+<body id="feature">
+  <ul id="mainNav">
+    <li><a href="/index.html" id="homeLink">Home</a></li>
+    <li><a href="/features/" id="featureLink">Features</a></li>
+    <li><a href="/experts/" id="experLink">Experts</a></li>
+    <li><a href="/quiz/" id="quizLink">Quiz</a></li>
+    <li><a href="/projects/" id="projectLink">Projects</a></li>
+    <li><a href="/horoscopes/" id="horoscopeLink">Horoscopes</a></li>
+  </ul>
+</body>
+</html>

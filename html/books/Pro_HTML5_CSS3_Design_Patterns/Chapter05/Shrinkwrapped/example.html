@@ -1,0 +1,32 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head><title>Shrinkwrapped</title>
+ <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" href="site.css"   media="all"    type="text/css" />
+ <link rel="stylesheet" href="page.css"   media="all"    type="text/css" />
+     <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+ <h1>Shrinkwrapped</h1>
+ 
+ <div class="gp">Positioned Grandparent
+   <div class="parent">Non-positioned Parent
+     <span  id="float"  class="z">Shrinkwrapped Float</span>
+     <span  id="inline" class="z">Shrinkwrapped Static Inline</span>
+     <img   id="star"   src="star.gif" alt="star" />
+     <div   id="block"  class="z">Vertically Shrinkwrapped Static Block</div>
+     <table id="table"  class="z"><tr><td>Shrinkwrapped Table</td></tr></table>
+     <span  id="abs"    class="z">Shrinkwrapped Absolute</span>     
+   </div>
+ </div>
+
+</body>
+</html>

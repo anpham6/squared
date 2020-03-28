@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en"> 
+	<head>
+		<title>Mixed Column Layouts</title>
+  		<meta charset="utf-8" />
+  		<link rel="stylesheet" href="site.css"   media="all" />
+  		<link rel="stylesheet" href="page.css"   media="all" />
+              <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+<h1>Mixed Column Layouts</h1>
+
+<h2>Shrinkwrapped, Stretched, or Sized Tables</h2>
+<table class="auto-layout stretched"> <tr> <td class="sized1">500px</td> 
+  <td class="p1">10%</td> <td class="flex">auto</td> </tr></table>
+
+<table class="auto-layout stretched"> <tr> <td class="sized1">500px</td>
+  <td class="sized2">200px</td> <td class="p3"  >40%</td> 
+  <td class="p1"    >10%  </td> <td class="flex">auto</td> </tr></table>   
+
+<table class="auto-layout stretched"> <tr> <td class="sized1">500px</td> 
+  <td class="sized2">200px</td> <td class="p4"  >80% </td> 
+  <td class="p2"    >20%  </td> <td class="flex">auto</td> </tr></table>
+   
+<h2>Fixed Table</h2>
+<table class="fixed-layout stretched"> <tr> <td class="sized1">500px</td> 
+  <td class="sized2">200px</td> <td class="p4"  >80% </td> 
+  <td class="p2"    >20%  </td> <td class="flex">auto</td> </tr></table>
+
+
+</body>
+</html>

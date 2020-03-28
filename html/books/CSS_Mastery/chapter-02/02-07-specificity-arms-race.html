@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Specificity arms race</title>
+  <style>
+    body {
+      color: black;
+      font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
+    }
+    .intro {
+      font-size: 1.2em;
+      color: gray;
+      padding: 1em;
+    }
+    .intro a {
+      color: blue;
+    }
+    .news .intro {
+      color: blue;
+    }
+    #home .intro {
+      color: black;
+      background: lightgray;
+    }
+    #home .intro a {
+      color: green;
+    }
+
+    a.call-to-action {
+      /*display: inline-block;*/
+      background-color: green;
+      color: white;
+      padding: .25em;
+    }
+
+
+  </style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <!-- Emulate the "home page" with a div, given the id that would normally be on the body etc -->
+  <div id="home">
+    <h1>Home page</h1>
+    <section class="intro">
+      <p>Lorem ipsum <a href="#">And a link</a> to something</p>
+      <p>Some more text. <a href="#" class="call-to-action">Buy my product</a></p>
+    </section>
+
+    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Mollitia, quam earum aut dignissimos sunt vitae qui doloremque illo obcaecati asperiores! Maiores, nobis officia velit nam consequatur sed sint alias nisi.</p>
+    <p><a href="#" class="call-to-action">Buy my product</a></p>
+  </div>
+  <hr>
+  <div>
+    <h1>Normal page</h1>
+    <section class="intro">
+      <p>Lorem ipsum <a href="#">And a link</a> to something</p>
+      <p>Some more text. <a href="#" class="call-to-action">Buy my product</a></p>
+    </section>
+
+    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Mollitia, quam earum aut dignissimos sunt vitae qui doloremque illo obcaecati asperiores! Maiores, nobis officia velit nam consequatur sed sint alias nisi.</p>
+    <p><a href="#" class="call-to-action">Buy my product</a></p>
+  </div>
+  
+
+  
+</body>
+</html>

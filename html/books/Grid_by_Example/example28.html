@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Example 28</title>
+    <style>
+        body {
+            margin: 40px;
+        }
+        
+        .wrapper {
+            display: grid;
+            grid-gap: 10px;
+            grid-template-columns: 100px repeat(auto-fill, minmax(200px, 1fr));
+            background-color: #fff;
+            color: #444;
+        }
+        
+        .box {
+            background-color: #444;
+            color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            font-size: 150%;
+        }
+    </style>
+        <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../squared.js"></script>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="box a">A</div>
+        <div class="box b">B</div>
+        <div class="box c">C</div>
+        <div class="box d">D</div>
+        <div class="box e">E</div>
+        <div class="box f">F</div>
+        <div class="box g">G</div>
+        <div class="box h">H</div>
+        <div class="box i">I</div>
+    </div>
+
+</body>
+</html>

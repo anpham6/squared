@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><title>Float and Clear</title>
+ <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" href="site.css"   media="all"    type="text/css" />
+ <link rel="stylesheet" href="page.css"   media="all"    type="text/css" />
+     <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+ <h1>Float and Clear</h1>
+ <div>
+  <div    class="float left  clear-left" >Float Left </div> 
+  <div    class="float right clear-right">Float Right</div>
+
+  <p      class="clear-none" >This paragraph does not clear floats. This paragraph clears floats on its left side. This paragraph clears floats on its left side. This paragraph clears floats on its left side. This paragraph clears floats on its left side.</p>
+  <span class="float right clear-right">Float Right - cleared right</span>
+  <span class="float right clear-none" >Float Right - NOT cleared</span>
+  <br class="clear-left" />
+  <p>This paragraph clears floats on its left side.</p>
+  <p>This paragraph clears floats on its left side.</p>
+  <em>INLINE</em>
+  <p>This paragraph clears floats on its left side.</p>
+
+  <div    class="float left  clear-left" >Float Left - cleared left</div>
+  <div    class="float left  clear-none" >Float Left - NOT cleared</div>
+  <p      class="clear-right" style="display: inline-block;">This paragraph clears floats on its right side.</p>
+  <p      class="clear-right" style="display: inline-block;">This paragraph clears floats on its right side.</p>
+  <span class="float left  clear-left" >Float Left </span> 
+  <span class="float right clear-right">Float Right</span>
+  <p      class="clear-both">This paragraph clears floats on both sides.</p> </div>
+
+</body>
+</html>

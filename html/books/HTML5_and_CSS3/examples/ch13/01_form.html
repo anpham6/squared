@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+    <title>Form</title>
+    <style>
+    	body {
+ 		    margin: 30px;
+		}
+		input {
+			width: 150px;
+		}
+	</style>
+	    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../../squared.js"></script>
+</head>
+
+<body>
+<form name="email_form" action="subscribe.php" >
+    <p>Please enter your e-mail address to subscribe to our newsletter.</p>
+    <p>E-Mail: <input type="text" id="email"></p>
+    <p><input type="submit" id="submit" value="Subscribe"></p>
+</form>
+</body>
+</html>

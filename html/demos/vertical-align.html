@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        p {
+            border: 2px solid #ccc;
+            font-size: 15px;
+            line-height: 4;
+        }
+        img.first {
+            vertical-align: top;
+            height: 50px;
+        }
+        img.second {
+            vertical-align: middle;
+        }
+        img.third {
+            vertical-align: bottom;
+            height: 75px;
+        }
+        .container1 {
+            width: 500px;
+            border: 5px solid rgb(111,41,97);
+            border-radius: .5em;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .container2 {
+            width: 500px;
+            border: 5px solid rgb(111,41,97);
+            border-radius: .5em;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            box-sizing: border-box;
+        }
+        .item {
+            width: 100px;
+            padding: 10px;
+            background-color: rgba(111,41,97,.3);
+            border: 2px solid rgba(111,41,97,.5);
+            display: inline-block;
+            vertical-align: middle;
+            box-sizing: border-box;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/demos/common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/android-framework/src/main.js').then(result => {
+                    android = result.default;
+                    squared.setFramework(android);
+                    squared.parseDocument('squared_ui');
+                    squared.close();
+
+                    var views = squared.system.writeLayoutAllXml();
+                    document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                    var resource = squared.system.writeResourceAllXml();
+                    document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui">
+        <p>A string of text <img src="images/purple-square.png" class="first" /> <img src="images/purple-square.png" class="second" /> <img src="images/purple-square.png" class="third" /> A string of text</p>
+        <p>A string of text <img src="images/purple-square.png" class="first" /> <img src="images/purple-square.png" class="second" /> <img src="images/purple-square.png" style="height: 75px;" /> <span style="vertical-align: middle;">A string of text</span></p>
+        <p>A string of text <img src="images/purple-square.png" class="first" /> <img src="images/purple-square.png" /> <img src="images/purple-square.png" class="third" /></p>
+        <p style="line-height: 150px;">A string of text <img src="images/purple-square.png" style="vertical-align: top;"></p>
+        <p><span style="vertical-align: sub;">A string of text</span> <img src="images/purple-square.png" class="first" /> <img src="images/purple-square.png" class="second" /> <img src="images/purple-square.png" class="third" /><span style="vertical-align: super;">A string of text</span></p>
+        <div class="container1">
+            <div class="item">One</div>
+            <div class="item">Two<br>Two</div>
+            <div class="item">Three<br>Three<br>Three</div>
+        </div>
+        <br />
+        <div class="container2">
+            <div class="item">One</div>
+            <div class="item">Two<br>Two</div>
+            <div class="item">Three<br>Three<br>Three</div>
+        </div>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
+                <button onclick="squared.saveToArchive();">Save All</button>
+                <button onclick="squared.copyToDisk('C:/Users/An/git/flexbox');">Copy All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.saveResourceAllXml();">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

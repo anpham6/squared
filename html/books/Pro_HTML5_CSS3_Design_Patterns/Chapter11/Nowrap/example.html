@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en"> 
+	<head>
+		<title>Nowrap</title>
+  		<meta charset="utf-8" />
+  		<link rel="stylesheet" href="site.css"   media="all" />
+  		<link rel="stylesheet" href="page.css"   media="all" />
+              <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+	</head>
+ 
+	<body>
+ 
+ <h1>Nowrap</h1>
+ <div>
+   <p>You can keep a phrase together using <code>nowrap</code>, such as 
+    <span class="nowrap">DO NOT BREAK THIS ACROSS TWO LINES!</span></p>
+  
+   <p>You can use nowrap to keep some browsers from breaking a hyphenated word
+      across two lines, such as the following word:
+      <span class="nowrap">super-cali-fragilistic-expi-ali-docious!</span></p>
+  
+   <p>You can keep together a small code snippet containing a space, such as
+      <code class="nowrap">&lt;br /&gt;</code>.</p>
+   <p>Notice how it breaks across two lines when <code>nowrap</code> 
+      is <em>not</em> applied to it: <code>&lt;br /&gt;</code>.</p>
+        
+   <p class="nowrap">Be aware that nowrapped text can overflow its container. This
+      does not affect the width of other elements, but it may cause a browser to 
+      display a horizontal scrollbar requiring users to scroll to see the text.</p>
+ </div>
+
+
+ </body>
+</html>

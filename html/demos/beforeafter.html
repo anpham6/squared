@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        q::before { 
+            content: '«';
+            color: blue;
+        }
+        q::after { 
+            content: "»";
+            color: red;
+        }
+        .ribbon {
+            background-color: #5BC8F7;
+        }
+        .ribbon::before {
+            content: "Look at this orange box.";
+            background-color: #FFBA10;
+            border-color: black;
+            border-style: dotted;
+        }
+        #floatme {
+            width: 50%;
+            float: left;
+        }
+        .example::before {
+            content: "Floated Before";
+            width: 25%;
+            float: left;
+        }
+        .example::after {
+            content: "Floated After";
+            width: 25%;
+            float: right;
+        }
+        .example::before, .example::after {
+            background: yellow;
+            color: red;
+        }
+        div.ribbon {
+            clear: both;
+        }
+        div.ribbon::before {
+            content: attr(class);
+        }
+        .image::before {
+            content: url(images/android-ldpi.png);
+        }
+        ul.counter {
+            counter-reset: index;
+        }
+        ul.counter li::before {
+            counter-increment: index;
+            content: counter(index) " ";
+        }
+        ol li::before {
+            counter-increment: section 2;
+            content: counters(section, ".") " ";
+        }
+        .mozimage a {
+            text-decoration: none;
+            border-bottom: 3px dotted navy;
+        }
+        .mozimage a::after {
+            content: " (" attr(id) ")";
+        }
+        #moz::before {
+            content: url("https://mdn.mozillademos.org/files/7691/mdn-favicon16.png");
+        }
+        #mdn::before {
+            content: url("https://mdn.mozillademos.org/files/7691/mdn-favicon16.png");
+        }
+        .mozimage li {
+            margin: 1em;
+        }
+        .reset {
+            counter-reset: section -1;
+        }
+        .increment {
+            counter-increment: section;
+        }
+        #squared_ui {
+            counter-reset: section;
+        }
+        #squared_ui::before {
+            counter-increment: section 2;
+            content: counters(section, ".") " ";
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/demos/common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/android-framework/src/main.js').then(result => {
+                    android = result.default;
+                    squared.setFramework(android);
+                    squared.parseDocument('squared_ui').then(function() {
+                        squared.close();
+
+                        var views = squared.system.writeLayoutAllXml();
+                        document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                        var resource = squared.system.writeResourceAllXml();
+                        document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui" style="width: 400px;">
+        <div class="reset">
+            <ol class="reset increment">
+                <li>item</li>
+                <li>item
+            </ol>
+            <div class="reset">
+                <ol class="reset">
+                    <li>item</li>
+                    <li>item
+                        <ol class="reset">
+                            <li>item</li>
+                            <li>item</li>
+                            <li>item
+                                <ol>
+                                    <li>item</li>
+                                    <li>item</li>
+                                </ol>
+                                <ol class="reset">
+                                    <li>item</li>
+                                    <li>item</li>
+                                    <li>item
+                                        <ol class="reset">
+                                            <li>item</li>
+                                            <li>item</li>
+                                        </ol>
+                                    </li>
+                                </ol>
+                            </li>
+                            <li>item</li>
+                        </ol>
+                    </li>
+                    <li>item</li>
+                    <li>item</li>
+                </ol>
+            </div>
+        </div>
+        <q>Some quotes,</q> he said, <q>are better than none.</q>
+        <br /><br />
+        <span class="ribbon">Notice where the orange box is.</span>
+        <br /><br />
+        <div class="example">
+            <span id="floatme">"Floated Before" should be generated on the left of the 
+            viewport and not allow overflow in this line to flow under it. Likewise 
+            should "Floated After" appear on the right of the viewport and not allow this 
+            line to flow under it.</span>
+        </div>
+        <div class="ribbon">attribute</div>
+        <div class="image">image</div>
+        <ul class="mozimage">
+            <li><a id="moz" href="http://www.mozilla.org/">Mozilla Home Page</a></li>
+            <li><a id="mdn" href="https://developer.mozilla.org/">Mozilla Developer Network</a></li>
+        </ul>
+        <ul class="counter">
+            <li>A</li>
+            <li>B</li>
+            <li>C</li>
+        </ul>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
+                <button onclick="squared.saveToArchive();">Save All</button>
+                <button onclick="squared.copyToDisk('C:/Users/An/git/flexbox');">Copy All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.saveResourceAllXml();">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

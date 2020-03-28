@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Float grid with gutters – broken</title>
+  <!-- the base styles and "housekeeping" styles are in here: -->
+  <link rel="stylesheet" href="css/grid-base.css">
+ <style>
+  /* grid styling */
+  .row {
+    margin: 0 -.9%;
+    padding: 0;
+    list-style: none;
+  }
+  .row:after {
+    content: '';
+    display: block;
+    clear: both;
+  }
+  .row-quartet > * {
+    width: 25%;
+  }
+  .row-trio > * {
+    width: 33.3333%;
+  }
+  .col {
+    float: left;
+    -moz-box-sizing: border-box;
+         box-sizing: border-box;
+    margin: 0 .9% 1.375em;
+  }
+
+  /* content styling */
+
+  .subcategory {
+    margin-top: 1.5em;
+    border-bottom: 1px solid #8e3339;
+  }
+  .subcategory-featured {
+    width: 50%;
+  }
+  .subcategory-content {
+    width: 80%;
+  }
+  .subcategory-header {
+    width: 20%;
+  }
+
+  .story {
+    padding: .6875em;
+    background-color: #eee;
+  }
+  .story + .story {
+    margin-top: 1.375em;
+  }
+  .story img {
+    width: 100%;
+  }
+
+</style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="wrapper">
+      <h1>Important News</h1>
+      
+    </div>
+  </header>
+
+  <nav role="navigation" class="navbar">
+    <div class="wrapper">
+      <ul class="navlist">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">World</a></li>
+        <li><a href="#">Local</a></li>
+        <li><a href="#">Sports</a></li>
+      </ul>
+    </div>
+  </nav>
+  <main class="wrapper">
+    
+    <section class="subcategory">
+      <div class="row">
+        <header class="col subcategory-header">
+          <h2>Lorem ipsum</h2>
+        </header>
+        <div class="col subcategory-content">
+          <div class="row row-quartet">
+            <div class="col subcategory-featured">
+              <article class="story">
+                <img src="img/600x300.png" alt="Dummy image">
+                <h3><a href="#">Cras suscipit nec leo id.</a></h3>
+                <p>Autem repudiandae aliquid tempora quos reprehenderit architecto, sequi repellat.</p>
+              </article>
+            </div>
+            <div class="col">
+              <article class="story">
+                <img src="img/600x300.png" alt="Dummy image">
+                <h3><a href="#">Perferendis, ipsam!</a></h3>
+                <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
+              </article>
+            </div>
+            <div class="col">
+              <article class="story">
+                <img src="img/600x300.png" alt="Dummy image">
+                <h3><a href="#">Curabitur mattis purus nec velit.</a></h3>
+                <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
+              </article>
+            </div>
+          </div>
+          <div class="row row-quartet">
+            <div class="col">
+              <article class="story">
+                <h3><a href="#">Perferendis, ipsam!</a></h3>
+                <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
+              </article>
+            </div>
+            <div class="col">
+              <article class="story">
+                <h3><a href="#">Aliquam mattis eros id posuere.</a></h3>
+                <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
+              </article>
+            </div>
+            <div class="col">
+              <article class="story">
+                <h3><a href="#">Proin leo felis, semper nec</a></h3>
+                <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
+              </article>
+            </div>
+            <div class="col">
+              <article class="story">
+                <h3><a href="#">Aliquam vitae risus tortor. Sed!</a></h3>
+                <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="subcategory">
+      <div class="row">
+        <header class="col subcategory-header">
+          <h2>Dolor sit amet</h2>
+        </header>
+        <div class="col subcategory-content">
+          <div class="row row-trio">
+            <div class="col">
+              <article class="story">
+                <img src="img/600x300.png" alt="Dummy image">
+                <h3><a href="#">Ut sit amet mi massa</a></h3>
+                <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
+              </article>
+            </div>
+            <div class="col">
+              <article class="story">
+                <h3><a href="#">Nunc mollis sit amet nunc</a></h3>
+                <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
+              </article>
+              <article class="story">
+                <h3><a href="#">Duis sed ante enim. Cras</a></h3>
+                <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
+              </article>
+            </div>
+            <div class="col">
+              <article class="story">
+                <img src="img/600x300.png" alt="Dummy image">
+                <h3><a href="#">Animi, explicabo, ipsum</a></h3>
+                <p>Neque magnam vero obcaecati facere nobis sint dolore accusamus vitae consequuntur ad necessitatibus, laborum molestiae.</p>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

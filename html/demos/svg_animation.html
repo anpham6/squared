@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        #squared_ui {
+            padding: 10px;
+        }
+        #animate {
+            animation-name: zorro1, zorro2, zorro1, zorro2, zorro2;
+            animation-delay: 4s, 2s, 1s;
+            animation-duration: 7s, 10s, 5s;
+            animation-iteration-count: 3, 2, 3;
+            animation-direction: reverse, normal, alternate-reverse;
+            animation-timing-function: linear, linear, linear;
+            animation-fill-mode: none, none, none, none;
+        }
+        #rotate {
+            animation-name: rotate2;
+            animation-delay: 6s, 2s, 3s;
+            animation-duration: 3s, 5s, 5s;
+            animation-iteration-count: 2, 1, 1;
+            animation-direction: alternate-reverse, reverse, normal;
+            animation-timing-function: ease-in, ease-out, linear;
+            animation-fill-mode: none, forwards, none;
+        }
+        #opacity-step {
+            animation: opacity 5s steps(5, start) forwards;
+        }
+        #translate-step {
+            animation: translate 5s steps(5, end) forwards;
+        }
+        @keyframes zorro1 {
+            from {
+                x: 150;
+            }
+            to {
+                x: 0;
+                y: 150;
+            }
+        }
+        @keyframes zorro2 {
+            from {
+                x: 50%;
+                y: 75;
+            }
+            33% {
+                x: calc(50% + 100px);
+            }
+            66% {
+                x: 0%;
+            }
+            to {
+                x: 50%;
+                y: 75;
+            }
+        }
+        @keyframes rotate1 {
+            from {
+                transform: rotate(10deg);
+            }
+            33% {
+                transform: rotate(20deg);
+            }
+            66% {
+                transform: rotate(30deg);
+            }
+            to {
+                transform: rotate(40deg);
+            }
+        }
+        @keyframes rotate2 {
+            from {
+                transform: scale(1);
+                transform-origin: 10px center;
+            }
+            33% {
+                transform: scale(1.5);
+                transform-origin: 10% bottom;
+            }
+            66% {
+                transform: scale(2);
+                transform-origin: center 10%;
+            }
+            to {
+                transform: scale(2.5);
+                transform-origin: center;
+            }
+        }
+        @keyframes rotate3 {
+            from {
+                transform: translate(0px, 0px);
+            }
+            33% {
+                transform: translate(25px, 25px);
+            }
+            66% {
+                transform: translate(50px, 50px);
+            }
+            to {
+                transform: translate(100px, 100px);
+            }
+        }
+        :root {
+            --transparency1: a;
+            --transparency2: 0.1;
+            --color1: blue1;
+            --color2: blue2;
+            --color3: yellow;
+        }
+        @keyframes opacity {
+            from {
+                fill: var(--color1, var(--color2, rgb(100, 0, 0)));
+                fill-opacity: calc(var(--transparency1, var(--transparency2)) + 0.2);
+            }
+            25% {
+                fill-opacity: calc(var(--transparency1, var(--transparency2)) + 0.4);
+            }
+            50% {
+                fill-opacity: calc(var(--transparency1, var(--transparency2)) + 0.6);
+            }
+            75% {
+                fill-opacity: calc(var(--transparency1, var(--transparency2)) + 0.8);
+            }
+            to {
+                fill: var(--color3);
+                fill-opacity: 1;
+            }
+        }
+        @keyframes translate {
+            to {
+                transform: translate(100px, 100px);
+            }
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/demos/common/dev.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var time = Date.now();
+            function runTimer() {
+                setTimeout(function() {
+                    document.getElementById('time').innerHTML = (Date.now() - time) / 1000;
+                    runTimer();
+                }, 100);
+            }
+            runTimer();
+        });
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/src/svg/main.js').then(result => {
+                    squared.svg = result;
+                    System.import('/build/android-framework/src/main.js').then(result => {
+                        android = result.default;
+                        squared.setFramework(android);
+                        squared.parseDocument('squared_ui');
+                        squared.close();
+
+                        var views = squared.system.writeLayoutAllXml();
+                        document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                        var resource = squared.system.writeResourceAllXml();
+                        document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui" style="width: 300px;">
+        <svg viewBox="0 0 200 200">
+            <rect id="animate" x="10" y="10" width="30" height="20" fill="purple" data-base-value='{ "x": 10, "y": 10, "width": 30, "height": 20 }'>
+                <animate attributeName="y" values="0; 100;" keyTimes="0; 1" begin="1s" dur="3s" repeatCount="indefinite" />
+                <animate attributeName="y" values="0; 50;" keyTimes="0; 1" begin="0s" dur="10s" repeatCount="1" />
+                <animate attributeName="y" values="100; 0;" keyTimes="0; 1" begin="2s" dur="5s" repeatCount="1" />
+                <animate attributeName="width" from="1" to="5" begin="2s" dur="5s" additive="sum" accumulate="sum" repeatCount="10" />
+                <animate attributeName="height" from="1" to="5" begin="4s" dur="5s" additive="sum" accumulate="sum" repeatCount="10" />
+                <animate attributeName="x" values="0; 50;" keyTimes="0; 1" begin="0s" dur="10s" repeatCount="indefinite" />
+                <animate attributeName="x" values="0; 50;" keyTimes="0; 1" begin="10s" dur="10s" repeatCount="5" />
+            </rect>
+            <rect id="rotate" x="50" y="50" width="30" height="20" fill="red" />
+            <rect id="opacity-step" x="25" y="25" width="30" height="20" fill="blue" style="fill-opacity: 0;" />
+            <rect id="translate-step" x="50" y="50" width="30" height="20" fill="green" />
+       </svg>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div id="time"></div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
+                <button onclick="squared.saveToArchive();">Save All</button>
+                <button onclick="squared.copyToDisk('C:/Users/An/git/flexbox');">Copy All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.saveResourceAllXml();">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

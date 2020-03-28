@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Image Transparency on Gradient Background</title>
+  <style>
+  html {
+    overflow: hidden;
+  }
+
+  body {
+    background-color: #c00; /* fallback for older browsers that don't support gradients */
+    background-image: -webkit-gradient(linear, left top, left bottom, from(#000), to(#c00)); /* Chrome, Safari 4+ */
+    background-image: -webkit-linear-gradient(#000, #c00); /* Chrome 10-25, iOS 5+, Safari 5.1+ */
+    background-image:    -moz-linear-gradient(#000, #c00); /* Firefox 3.6-15 */
+    background-image:      -o-linear-gradient(#000, #c00); /* Opera 11.10-12.00 */
+    background-image:         linear-gradient(#000, #c00); /* Chrome 26, Firefox 16+, IE 10+, Opera 12.10+ */
+  }
+  </style>
+	    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../squared.js"></script>
+</head>
+<body>
+
+<img src="stars.png" width="500" height="500" alt="" />
+
+</body>
+</html>

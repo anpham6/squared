@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 10-3</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+.rgba {
+    background-color: #EFEFEF;
+    background-image: url('images/monkey-bw.svg');
+	background-size: 20%;
+    min-height: 145px;
+}
+.holder { margin: 10px; }
+.shadow .holder, .border .holder { background-color: white; }
+.shadow .holder {
+    -moz-box-shadow: 10px 15px 1px rgba(0,0,0,0.7);
+    -webkit-box-shadow: 15px 10px 1px rgba(0,0,0,0.7);
+    box-shadow: 10px 15px 1px rgba(0,0,0,0.7);
+	margin: 30px 20px 20px 10px;
+}
+.border {
+	border-right: none;
+	margin-right: 0;
+	padding-right: 0;
+}
+.border .holder {
+	background-clip: padding-box;
+    border: 20px solid rgba(0,0,0,0.5);
+    margin: 10px;
+}
+p {
+    font-size: 120%;
+    font-weight: bold;
+    margin-bottom: 0;
+    padding: 10px;
+}
+div[class*='text'] p {
+    font-family: impact, sans-serif;
+    font-size: 480%;
+    line-height: 0.9;
+    text-align: center;
+}
+.text-shadow p {
+    color: #EFEFEF;
+    text-shadow: 10px 10px 0 rgba(0,0,0,0.6);
+}
+.text-semi p { color: rgba(0,0,0,0.6); }
+</style>
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/squared.svg.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="span-4">&thinsp;</div>
+  <div class="span-8 rgba shadow">
+    <div class="holder">
+      <p>Call me Ishmael. Some years ago - never mind how long precisely...</p>
+    </div>
+  </div>
+  <div class="span-8 rgba border">
+    <div class="holder">
+      <p>Call me Ishmael. Some years ago - never mind how long precisely...</p>
+    </div>
+  </div>
+<div class="span-4 last">&thinsp;</div>
+</div>
+<div class="container">
+  <div class="span-4">&thinsp;</div>
+  <div class="span-8 rgba text-shadow">
+    <div class="holder">
+      <p>Call me Ishmael</p>
+    </div>
+  </div>
+  <div class="span-8 rgba text-semi">
+    <div class="holder">
+      <p>Call me Ishmael</p>
+    </div>
+  </div>
+  <div class="span-4 last"></div>
+</div>
+
+</body>
+</html>

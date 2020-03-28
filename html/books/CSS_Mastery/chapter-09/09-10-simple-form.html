@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simple Form</title>
+  <style>
+    body {
+      font-family: Avenir Next, Avenir, SegoeUI, Franklin Gothic, arial, sans-serif;
+      background-color: #edf5f8;
+      padding: 20px;
+    }
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    textarea {
+      height: 10em;
+      resize: vertical;
+    }
+
+    input[type="radio"] {
+      margin-right: .75em;
+    }
+
+    ::-webkit-input-placeholder {
+      font-style: italic;
+    }
+    :-ms-input-placeholder {  
+      font-style: italic; 
+    }
+    ::-moz-placeholder {
+      font-style: italic;  
+    }
+
+    button {
+      box-sizing: border-box;
+      cursor: pointer;
+      border: 0;
+      padding: .5em 1em;
+      color: #fff;
+      border-radius: .25em;
+      font-size: 1em;
+      background-color: #173b6d;
+      background-image: -webkit-linear-gradient(top, #1a4a8e, #173b6d);
+      background-image: -moz-linear-gradient(top, #1a4a8e, #173b6d);
+      background-image: -o-linear-gradient(top, #1a4a8e, #173b6d);
+      background-image: linear-gradient(to bottom, #1a4a8e, #173b6d);
+      box-shadow: 0 .25em 0 rgba(23, 59, 109, 0.3), inset 0 1px 0 rgba(0, 0, 0, 0.3);
+    }
+    button:focus {
+      outline: 0;
+      background-color: #2158a9;
+      background-image: -webkit-linear-gradient(top, #2063c0, #1d4d90);
+      background-image: -moz-linear-gradient(top, #2063c0, #1d4d90);
+      background-image: -o-linear-gradient(top, #2063c0, #1d4d90);
+      background-image: linear-gradient(to bottom, #2063c0, #1d4d90);
+      box-shadow: 0 .25em 0 rgba(23, 59, 109, 0.3),
+      inset 0 1px 0 rgba(0, 0, 0, 0.3);
+    }
+
+      /**
+      * Since fieldsets are notoriously hard to style, we'll just
+      * remove default styles from the fieldset and style a wrapper element
+      * instead.
+      * 1. Bug: Safari has a weird thing where the top margin from elements after 
+      * the <legend> get shifted to the top of the fieldset. Setting a tiny
+      * amount of padding on the <fieldset> element counters this.
+      * 2. WebKit- and Blink-based browsers have a minimum width set to respect
+      * the default width of input fields. We override it with min-width here.
+      */
+      fieldset {
+        border: 0;
+        padding: 0.01em 0 0 0; /* 1 */
+        margin: 0;
+        min-width: 0; /* 2 */
+      }
+      /**
+      * Firefox browsers have a minimum width for fieldsets. The only way to
+      * override it is to change the display mode to table-*.
+      * The @-moz-document url-prefix() bit is a Mozilla-specific mechanism
+      * to allow users to override site-specific styles in user stylesheets.
+      * It works for author styles as well, so we might as well use it, even
+      * if it's an ugly hack. Leaving the url-prefix()-bit empty applies
+      * the rule for any URL.
+      * Note: this adds a couple of pixels of extra white-space after the 
+      * fieldset.
+      */
+      @-moz-document url-prefix() {
+        fieldset {
+          display: table-cell;
+        }
+      }
+
+      legend {
+        padding: 0 0 .5em 0;
+        font-weight: bold;
+        color: #777;
+        display: table;
+      }
+      label {
+        cursor: pointer;
+      }
+
+      .fieldset-wrapper {
+        padding: 1em;
+        margin-bottom: 1em;
+        border: 1px solid #eee; /* 1 */
+        background-color: #fff;
+        box-shadow: 0 0 .25em rgba(0, 0, 0, 0.25);
+      }
+      /**
+      * No border for more modern browsers.
+      */
+      :root .fieldset-wrapper {
+        border: 0;
+      }
+
+      
+      .field-text label {
+        display: block;
+      }
+      .field-text label,
+      .field-text input,
+      .field-text .form-help,
+      .field-text textarea {
+        width: 100%;
+        max-width: 20em;
+        -moz-box-sizing: border-box;
+             box-sizing: border-box;
+      }
+      .field-text input,
+      .field-text textarea {
+        padding: .375em .3125em .3125em;
+        border: 1px solid #ccc;
+        border-radius: .25em;
+        line-height: 30px;
+        border: solid 10px;
+      }
+      .field-text :focus {
+        outline: 0;
+        box-shadow: 0 0 .5em rgba(93, 162, 248, 0.5);
+        border-color: #5da2f8;
+      }
+      .field-text :invalid {
+        border-color: #e72633;
+        box-shadow: 0 0 .5em rgba(229, 43, 37, 0.5);
+      }
+
+
+      .form-help {
+        display: block;
+        /* hide the help by default, 
+        without hiding it from screen readers */
+        position: absolute;
+        overflow: hidden;
+        width: 1px;
+        height: 1px;
+        clip: rect(0, 0, 0, 0);
+      }
+
+      input:focus + .form-help {
+        padding: .5em;
+        margin-top: .5em;
+        border: 1px solid #e1de8a;
+        border-radius: .25em;
+        font-style: italic;
+        color: #737373;
+        background-color: #fff;
+        position: static;
+        width: auto;
+        height: auto;
+        /* crop: none; */
+      }
+
+      .field-submit {
+        padding: 1em;
+      }
+    </style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+  <body>
+    <h1>Leave a comment</h1>
+    <form id="comments_form" action="/comments/" method="post">
+      <div class="fieldset-wrapper">
+        <fieldset>
+          <legend>Your contact details</legend>
+
+          <p class="field field-text">
+            <label for="comment-author">Name:</label>
+            <input name="comment-author" id="comment-author" type="text" />
+          </p>
+
+          <p class="field field-text">
+            <label for="comment-email">Email Address:</label>
+            <input name="comment-email" id="comment-email" type="email" />
+          </p>
+
+          <p class="field field-text">
+            <label for="comment-url">Web Address:</label>
+            <input name="comment-url" aria-describedby="comment-url-help" id="comment-url" type="url" placeholder="http://example.com" />
+
+            <span id="comment-url-help" role="tooltip" class="form-help">Fill in your URL if you have one. Make sure to include the ”http://”-part.</span>
+          </p>
+        </fieldset>
+      </div>
+
+      <div class="fieldset-wrapper">
+        <fieldset>
+          <legend>Comments</legend>
+          <p class="field field-text">
+            <label for="comment-text">Message:</label>
+            <textarea name="comment-text" id="comment-text" cols="20" rows="10"></textarea>
+          </p>
+        </fieldset>
+      </div>
+
+      <div class="fieldset-wrapper">
+        <fieldset>
+          <legend>Remember Me</legend>
+          <p class="field">
+            <label><input name="remember" type="radio" value="yes" />Yes</label>
+          </p>
+
+          <p class="field">
+            <label>
+              <input name="remember" type="radio" value="no" checked="checked" />No</label>
+            </p>
+          </fieldset>
+        </div>
+
+
+        <p class="field-submit">
+          <button id="submit" class="submit" name="submit" type="submit">Post comment</button>
+        </p>
+      </form>
+
+    </body>
+    </html>

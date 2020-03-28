@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 9-6</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+    .radius {
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+      border-radius: 50%;
+      height: 150px;
+    }
+  </style>
+  		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-7">&nbsp;</div>
+    <div class="span-4">
+        <div class="radius"></div>
+    </div>
+    <div class="span-6">
+        <div class="radius"></div>
+    </div>
+    <div class="span-7 last">&nbsp;</div>
+</div>
+
+</body>
+</html>

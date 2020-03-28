@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>Example 5</title>
+    <style>
+        body {
+            margin: 40px;
+        }
+        
+        .wrapper {
+            display: grid;
+            grid-gap: 10px;
+            grid-template-columns: 100px 100px 100px;
+            background-color: #fff;
+            color: #444;
+        }
+
+        .wrapper2 {
+            display: grid;
+            grid-gap: 10px;
+            grid-template-columns: [col1-start] 100px [col2-start] 100px [col3-start] 100px [col3-end];
+            grid-template-rows: [row1-start] auto [row2-start] auto [row2-end];
+            background-color: #fff;
+            color: #444;
+        }
+        
+        .box {
+            background-color: #444;
+            color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            font-size: 150%;
+        }
+        
+        .a {
+            grid-column: 1 / 3;
+            grid-row: 1;
+        }
+        
+        .b {
+            grid-column: 3;
+            grid-row: 1 / 3;
+        }
+        
+        .c {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        .d {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .sub1 .a {
+            grid-column: 1 / span 2;
+        }
+        
+        .sub1 .b {
+            grid-column: 3;
+            grid-row: 1 / span 2;
+        }
+        
+        .sub1 .c {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        .sub1 .d {
+            grid-column: 2;
+            grid-row: 2;
+        }
+
+        .sub2 .a {
+            grid-column: col1-start / col3-start;
+            grid-row: row1-start;
+        }
+        
+        .sub2 .b {
+            grid-column: col3-start;
+            grid-row: row1-start / row2-end;
+        }
+        
+        .sub2 .c {
+            grid-column: col1-start;
+            grid-row: row2-start;
+        }
+        
+        .sub2 .d {
+            grid-column: col2-start;
+            grid-row: row2-start;
+        }
+    </style>
+        <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../squared.js"></script>
+</head>
+<body>
+
+    <div class="wrapper">
+        <div class="box a">A</div>
+        <div class="box b">B</div>
+        <div class="box c">C</div>
+        <div class="box d">D</div>
+    </div>
+    <br />
+    <div class="wrapper sub1">
+        <div class="box a">A</div>
+        <div class="box b">B</div>
+        <div class="box c">C</div>
+        <div class="box d">D</div>
+    </div>
+    <br />
+    <div class="wrapper2 sub2">
+        <div class="box a">A</div>
+        <div class="box b">B</div>
+        <div class="box c">C</div>
+        <div class="box d">D</div>
+    </div>
+</body>
+</html>

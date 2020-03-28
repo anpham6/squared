@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>New background-position syntax</title>
+  <style>
+    .text-with-icon {
+      display: inline-block;
+      padding-right: 4em;
+      background-image: url(img/hearts.png);
+      background-repeat: no-repeat;
+      background-position: right 1em top 50%;
+    }
+  </style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <p class="text-with-icon">Activate flux capacitor</p>
+</body>
+</html>

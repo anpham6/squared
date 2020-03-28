@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 3-1</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+<style>
+p {
+    font-size: 2.4em;
+    text-align: center;
+}
+@media (min-width: 481px) {
+  p { font-size: 3.2em; }
+}
+a[href^='http'] {
+    background: url('images/icons/external.svg') no-repeat left center;
+    background-size: 1em;
+    display: inline-block;
+    padding-left: 1.2em;
+}
+</style>
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/squared.svg.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-24 last">
+      <p>This is a <a href="http://example.com/">hyperlink</a>.</p>
+    </div>
+</div>
+
+</body>
+</html>

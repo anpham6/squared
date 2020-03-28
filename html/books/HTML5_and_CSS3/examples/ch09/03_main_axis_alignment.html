@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>How to align flex items horizontally</title>
+    <style>
+
+		/* GENERIC STYLES */
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body { font-family: sans-serif; }
+        h1 { margin: .5em 0 .25em 0; }
+		a {
+            text-decoration: none;
+            color: #000; }
+        ul {
+            list-style-type: none;
+            background-color: silver;
+        }
+		li {
+            background: #999;
+            margin-left: 15px;
+            padding: 10px;
+            text-align: center; }
+        
+		/* FLEXIBLE BOX STYLES */
+		ul 	{display: flex;}
+		#ul1 	{ justify-content: flex-start; }
+        #ul1 li {
+            margin-left: 0;
+            margin-right: 15px;
+        }
+		#ul2 	{ justify-content: center; }
+        #ul2 li {
+            margin-left: 7.5px;
+            margin-right: 7.5px;}
+		#ul3 	{ justify-content: flex-end; }
+        #ul3 li {
+            margin-left: 15px;
+            margin-right: 0;
+        }
+		#ul4 	{ justify-content: space-between; }
+		#ul5 	{ justify-content: space-around; }
+		#ul6 	{ justify-content: space-evenly; }
+        #ul4 li, #ul5 li, #ul6 li { margin-left: 0; }
+    </style>
+        <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../../squared.js"></script>
+</head>
+<body>
+<h1>justify-content: flex-start (default)</h1>
+<nav>
+   <ul id="ul1">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>
+    </ul>
+</nav>
+<h1>justify-content: center</h1>
+<nav>
+   <ul id="ul2">
+    <li><a href="index.html" class="home">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>       
+   </ul>
+</nav>
+<h1>justify-content: flex-end</h1>
+<nav>
+   <ul id="ul3">
+    <li><a href="index.html" class="home">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>        
+   </ul>
+</nav>
+<h1>justify-content: space-between</h1>
+<nav>
+   <ul id="ul4">
+    <li><a href="index.html" class="home">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>        
+   </ul>
+</nav>
+<h1>justify-content: space-around</h1>
+<nav>
+   <ul id="ul5">
+    <li><a href="index.html" class="home">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>        
+   </ul>
+</nav>
+<h1>justify-content: space-evenly</h1>
+<nav>
+   <ul id="ul6">
+    <li><a href="index.html" class="home">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>      
+   </ul>
+</nav>
+</body>
+</html>

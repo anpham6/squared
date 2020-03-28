@@ -22,7 +22,8 @@ app.use('/temp', express.static(path.join(__dirname, 'temp')));
 
 if (env === 'development') {
     app.use('/build', express.static(path.join(__dirname, 'build')));
-    app.use('/demos-dev', express.static(path.join(__dirname, 'html/demos-dev')));
+    app.use('/books', express.static(path.join(__dirname, 'html/books')));
+    app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
 }
 
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));

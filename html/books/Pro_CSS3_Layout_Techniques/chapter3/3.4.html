@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Example of Relative and Absolute Positioning</title>		
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+	</head>
+	<body>
+<style>
+.relative {
+ position: relative;
+ width: 300px;
+ background: grey;
+ margin: 10px;
+ padding: 10px;
+} 
+.floater {
+ float: right;
+ width: 160px;
+ height: 160px;
+ padding: 10px;
+ margin: 10px;
+ background: green;
+}
+</style>
+<div class="relative">
+  <div class="floater">Floating element 1</div>
+  <div class="floater">Floating element 2</div>
+  <div class="floater">Floating element 3</div>
+  <div class="floater">Floating element 4</div>
+  <p>Cras justo odio, dapibus ac facilisis in, egestas eget quam. Etiam porta sem malesuada magna mollis euismod.</p>
+  <p>Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+  <div class="floater" style="clear: right;">Floating element 5</div>
+  <p>Cras justo odio, dapibus ac facilisis in, egestas eget quam. Etiam porta sem malesuada magna mollis euismod.</p>
+</div>
+	</body>
+</html>

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Profile with border radius</title>
+
+  <style>
+    body {
+      padding: 0;
+      margin: 0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background-color: #ddd;
+    }
+    .profile-box {
+      position: relative;
+      height: 600px;
+      background-image: url(img/big-cat.jpg);
+      background-size: cover;
+      background-position: 50% 30%;
+      border-bottom: 1px solid #666;
+    }
+
+    .profile-photo {
+      width: 160px;
+      min-height: 200px;
+      position: absolute;
+      bottom: -60px;
+      left: 5%;
+      padding: .5em;
+      -webkit-border-radius: .5em;
+              border-radius: .5em;
+      background-color: #fff;
+    }
+    .profile-photo img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+    .username {
+      font-size: 20px;
+      color: #666;
+      margin: .35em 0 0;
+    }
+  </style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <header class="profile-box" role="banner">
+    <div class="profile-photo">
+      <img src="img/profile.jpg" alt="Charles the Cat">
+      <h1 class="username">@CharlesTheCat</h1>
+    </div>
+  </header>
+</body>
+</html>

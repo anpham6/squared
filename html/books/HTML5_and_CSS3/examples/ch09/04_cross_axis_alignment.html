@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>How to align flex items vertically</title>
+    <style>
+		/* GENERIC STYLES */
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        body { font-family: sans-serif; }
+        h1 { margin: .5em 0 .25em 0; }
+		a {
+            text-decoration: none;
+            color: #000;
+        }
+		li {
+            background: #999;
+            width: 150px;
+            margin: 0 15px 0 0;
+            padding: 5px;
+            text-align: center; }
+        
+		/* FLEXIBLE BOX STYLES */
+		ul { 
+            display: flex;
+            list-style-type: none;
+            background: silver;
+            height: 90px; }
+		#ul1 						{align-items: flex-start;}
+		#ul2 						{align-items: center;}
+        #home { align-self: flex-start; }
+		#ul3 						{align-items: flex-end;}
+		#ul4 						{align-items: stretch;}
+		#ul5 li:nth-of-type(1) 	{padding-top:20px;height:40px;}
+		#ul5 li:nth-of-type(2) 	{padding-top:10px;height:50px;}
+		#ul5 li:nth-of-type(3) 	{padding-top:15px;height:60px;}
+		#ul5 li:nth-of-type(4) 	{padding-top:5px;height:45px;}
+		#ul5 li:nth-of-type(5) 	{padding-top:0px;height:32px;}        
+		#ul5 						{align-items: baseline;}
+    </style>
+        <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../../../squared.js"></script>
+</head>
+<body>
+<h1>align-items: flex-start</h1>
+<nav>
+   <ul id="ul1">
+    <li><a href="index.html" class="home">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>       
+   </ul>
+</nav>
+<h1>align-items: center</h1>
+<nav>
+   <ul id="ul2">
+    <li id="home"><a href="index.html" class="home">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>      
+   </ul>
+</nav>
+<h1>align-items: flex-end</h1>
+<nav>
+   <ul id="ul3">
+    <li><a href="index.html" class="home">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>        
+   </ul>
+</nav>
+<h1>align-items: stretch (default)</h1>
+<nav>
+   <ul id="ul4">
+    <li><a href="index.html" class="home">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>       
+   </ul>
+</nav>
+<h1>align-items: baseline</h1>
+<nav>
+   <ul id="ul5">
+    <li><a href="index.html" class="home">Home</a></li>
+    <li><a href="aboutus.html">Speakers</a></li>
+    <li><a href="solutions.html">Get Tickets</a></li>
+    <li><a href="support.html">Become a Member</a></li>
+    <li><a href="contactus.html">About Us</a></li>      
+   </ul>
+</nav>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Example of Relative and Absolute Positioning</title>		
+		<style>
+			body {
+				font-family:	arial, helvetica, sans-serif;
+				font-size:		80%;
+			}
+		</style>
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+	</head>
+	<body>
+<style>
+ .table {
+  display: table;
+  border: 1px solid red;
+  background: #eee;
+  margin: 2px;
+  padding: 2px;
+ }
+ .tr {
+  display: table-row;
+  border: 1px solid red;
+  background: #ddd;  
+  margin: 2px;
+  padding: 2px;
+ }
+ .td {
+  display: table-cell;
+  border: 1px solid red;
+  width: 200px;
+  background: #ccc;
+  margin: 2px;
+  padding: 2px;
+ }
+</style>
+<div class="table">
+ <div class="tr">
+  <div class="td"><p>This is a normal div, but displays like a cell in a table!</p></div>
+  <div class="td"><p>This is another table cell</p></div>
+ </div>
+ <div class="tr">
+  <div class="td"><p>Here is a third cell, in a second row</p></div>
+  <div class="td"><p>And a final cell.</p></div>
+ </div>
+</div>
+
+	</body>
+</html>

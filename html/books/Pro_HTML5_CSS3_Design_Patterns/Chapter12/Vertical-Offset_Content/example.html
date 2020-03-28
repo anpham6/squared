@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en"> 
+	<head>
+		<title>Vertical-offset Content</title>
+  		<meta charset="utf-8" />
+  		<link rel="stylesheet" href="site.css"   media="all" />
+  		<link rel="stylesheet" href="page.css"   media="all" />
+		      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		 <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+	</head>
+
+<body>
+
+ <h1>Vertical-offset Content</h1>
+
+ <div>
+   _baseline__
+ 
+   <span class="raised">raised 1em </span>
+   <img class="raised" src="star.gif" alt="star" />
+ 
+   __baseline__
+ 
+   <span class="lowered">lowered 1em </span>
+   <img class="lowered" src="star.gif" alt="star" />
+ 
+   __baseline_
+ </div>
+
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en"> 
+	<head>
+		<title>Blocked</title>
+  		<meta charset="utf-8" />
+  		<link rel="stylesheet" href="site.css"   media="all" />
+  		<link rel="stylesheet" href="page.css"   media="all" />
+              <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+	</head>
+ 
+	<body>
+ 
+<h1>Blocked</h1>
+
+<p>The Blocked design pattern displays an inline element as a block element 
+   that can be styled in every way as a block element
+   <span class="blocked" >This is an inline element displayed as a block. 
+   Its first line is indented and it has collapsing vertical margins.</span></p>
+
+<div class="vcard">
+  <span class="fn org">Name</span>
+  <p class="adr">
+    <span class="street-address">Street</span>
+    <span class="locality">City</span>,
+    <span class="region">State</span>,
+    <span class="postal-code">Zip Code</span>
+    <span class="country-name">Country</span>
+  </p>
+  <a class="email" href="mailto:thisisafakeemail@email.com">email@email.com</a>
+</div>
+
+ </body>
+</html>

@@ -1,0 +1,578 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>thenews - an example of CSS Multi-Column Layout</title>
+		<style>
+		body {
+			margin:			0;
+			padding:		0;
+			background:		#DDDDDD;
+			font-family: 	Georgia, Times, serif;
+			font-size:		62.5%;
+		}
+		
+		
+		/*
+			Green: 			#297C21;
+			Blue:			#3F48A0;
+			Purple:			#9F2FA5;
+		
+		*/
+		
+		#container {
+			max-width:		920px;
+			padding:		0 20px;
+			margin:			auto;
+			background:		#fff;
+		}
+		
+		#container > header {
+			width:			100%;
+			min-height:		120px;
+		}
+		
+		#container > header hgroup {
+			padding:		20px 0px;
+		}
+		
+		#container > header hgroup h1 {
+			margin:			0;
+			padding:		0;
+			color:			#297C21;
+			font-size:		5em;
+		}
+		
+		#container > header hgroup h1 span {
+			color:			#AFCEB5;
+		}
+		
+		#container > header hgroup h2 {
+			display:		none;
+		}
+		
+		
+		/* Navigation */
+		
+		nav#primarynav {
+			margin-bottom:	10px;
+		}
+		
+		nav#primarynav ul {
+			margin:			0;
+			padding:		0;
+		}
+		
+		nav#primarynav ul li {
+			margin:			0;
+			padding:		0;
+			font-size:		1.8em;
+			line-height:	1.2em;
+			list-style:		none;
+			display:		inline-block;
+			border-right:	1px solid #eee;
+			padding:		0 0.5em;
+		}
+		
+		nav#primarynav ul li:nth-child(1) {
+			color:			#297C21;
+		}
+		nav#primarynav ul li:nth-child(2) {
+			color:			#3F48A0;
+		}
+		nav#primarynav ul li:nth-child(3) {
+			color:			#9F2FA5;
+		}
+		nav#primarynav ul li:nth-child(4) {
+			color:			#A57F2D;
+		}
+		nav#primarynav ul li:nth-child(5) {
+			color:			#BA4A31;
+		}
+		nav#primarynav ul li:nth-child(6) {
+			color:			#424242;
+		}
+		nav#primarynav ul li:nth-child(7) {
+			color:			#0CAD0C;
+		}
+		nav#primarynav ul li:nth-child(8) {
+			color:			#24B3BA;
+		}
+		nav#primarynav ul li:nth-child(9) {
+			color:			#BC3166;
+		}
+		nav#primarynav ul li:nth-child(10) {
+			color:			#DB8D0F;
+			border-right:	none;
+		}
+		
+		
+		/* End Navigation */
+		
+		
+		/* Section Navigation */
+		
+		nav#sectionnav {
+			background:		#DDDDDD;
+			margin-bottom:	10px;
+		}
+
+		nav#sectionnav ul {
+			margin:			0;
+			padding:		0;
+		}
+		
+		nav#sectionnav ul li {
+			margin:			0;
+			padding:		0;
+			font-size:		1.8em;
+			line-height:	1.2em;
+			list-style:		none;
+			display:		inline-block;
+			border-right:	1px solid #eee;
+			padding:		0.25em 0.5em;
+			color:			#297C21;
+		}				
+		
+		nav#sectionnav ul li:nth-child(1) {
+			position:		relative;
+			background:		#297C21;
+			color:			#fff;
+			padding-right:	1em;
+			margin-right: 1em;
+		}
+		
+		nav#sectionnav ul li:nth-child(1)::after {
+			content: ' ';
+			position:	absolute;
+			top:		0;
+			right:		-0.5em;
+			width: 5px;
+			height:		100%;
+			background: #ddd url(images/rightarrow.png) no-repeat center right;
+		}
+		
+		
+		/* End Section Navigation */
+		
+		
+		#pagelayout {
+			position:			relative;
+			display: 			-webkit-flex;
+			display: 			flex;
+			-webkit-flex-flow: 	row wrap;
+			flex-flow: 			row wrap;					
+			-webkit-flex: 		4 10px 2;
+			flex:  				4 10px 2; 
+			-webkit-align-items: stretch;
+			align-items: 		stretch;	
+		}
+		
+		#mainlayout {
+			-webkit-order: 		-1;  
+			order: 				-1;
+			max-width:			560px;
+			-webkit-columns:	2 250px;
+			columns:			2 250px;
+			-webkit-column-rule:		1px solid #999;
+			-webkit-column-gap:			20px;
+			column-rule:		1px solid #999;
+			column-gap:			20px;
+		}
+		
+		#pagelayout > aside {
+			-webkit-order: 		3;  
+			order: 				3;
+			max-width:			350px;
+			margin-left:		10px;
+		}
+		
+		#pagelayout > aside img {
+			width:				100%;
+		}
+		
+		#pagelayout > aside ul {
+			margin:				0;
+			padding:			0;
+		}
+		
+		#pagelayout > aside ul li {
+			margin:				0;
+			padding:			0;
+			list-style:			none;
+		}
+		
+		#mainlayout article {
+			max-width:			560px;
+			-webkit-columns:	2 250px;
+			columns:			2 250px;
+			-webkit-column-rule:		1px solid #999;
+			-webkit-column-gap:			20px;
+			column-rule:		1px solid #999;
+			column-gap:			20px;
+		}
+
+		#mainlayout article p {
+			font-size:			1.1em;
+			line-height:		1.7em;
+		}
+		
+		#mainlayout article figure {
+			width:				100%;
+			margin:				0;
+			padding:			0;
+		}
+		
+		#mainlayout article figcaption {
+			font-style:			italic;
+			font-size:			0.8em;
+		}
+			
+		#mainlayout article figure img {
+			width:				100%;
+			border:				1px solid #297C21;
+		}
+		
+		#mainlayout article h2 {
+			color:				#297C21;
+			-webkit-column-span:all;
+			column-span:		all;
+			font-size:			2.2em;
+			font-weight:		normal;
+		}
+		
+		#mainlayout article h3 {
+			-webkit-column-span:all;
+			column-span:		all;
+			padding:			10px 0px;
+			border-top:			1px solid #999;
+			border-bottom:		1px solid #999;
+			font-weight:		normal;
+			color:				#333;
+			font-size:			1.5em;
+			line-height:		1.5em;
+		}	
+		
+		#callouts {
+			-webkit-column-span:all;
+			column-span:		all;
+			-webkit-columns:	3 180px;
+			columns:			3 180px;
+		}
+		
+		#callouts > div {
+			margin-bottom:		10px;
+		}
+		
+		#callouts h2 {
+			margin:				0;
+			padding:			0.3em 0.5em;
+			min-height:			1.6em;
+			font-weight:		normal;
+			font-size:			1.4em;
+			line-height:		1.5em;
+			margin-top:			-1em;
+			z-index:			5;
+			position:			relative;
+		}
+		
+		#callouts .callout1 h2 {
+			background: 		#297C21;
+			color:				#fff;
+		}
+
+
+		#callouts .callout2 h2 {
+			background: 		#3F48A0;
+			color:				#fff;
+		}
+		
+		#callouts .callout3 h2 {
+			background: 		#9F2FA5;
+			color:				#fff;
+		}
+		
+		#callouts img {
+			position:			relative;
+			width:				100%;
+			margin:				0;
+			padding:			0;
+			z-index:			1;
+		}
+		
+		#promoted article {
+			position:			relative;
+			margin:				0;
+			padding:			0;
+			margin-bottom:		10px;
+		}
+		
+		#promoted article h3 {
+			background:			#5B5A5F;
+			color:				#fff;
+			position:			absolute;
+			top:				0;
+			left:				0;
+			padding:			0.5em;
+			margin:				0;
+			width:				100%;
+			font-weight:		normal;
+			font-size:			1.6em;
+		}
+		
+		#promoted article:nth-child(1) {
+			border-top:			4px solid #DB8D0F;
+		}
+
+		#promoted article:nth-child(2) {
+			border-top:			4px solid #24B3BA;
+		}
+		
+		#promoted article p {
+			min-height:			4em;
+			background:			rgba(0,0,0,0.4);
+			color:				#fff;
+			position:			absolute;
+			bottom:				0;
+			left:				0;
+			margin:				0;
+			padding:			0.5em;
+			line-height:		1.4em;
+			font-size:			1em;
+		}
+		
+		#features {
+			display:			block;
+			position:			relative;
+			background:			#DDDDDD;
+			padding:			0.5em;
+			break-before:		column;
+			-webkit-column-break-before: always
+		}
+		
+		#features h4 {
+			color:				#808080;
+			font-weight:		normal;
+			font-size:			1.5em;
+			margin:				0;
+			padding:			0;
+			margin-bottom:		10px;
+		}
+		
+		#features ul {
+			height: 500px;
+			overflow-y: scroll;
+		}
+
+		#features ul li {
+			min-height:			6em;
+		}
+		
+		#features ul li img {
+			clear:				right;
+			width:				35%;
+			float:				right;
+			margin-right:		10px;
+			margin-bottom:		10px;
+		}
+		
+		#features ul li h5 {
+			color:				#297C21;
+			margin:				0;
+			padding:			0;
+		}
+		
+		#features ul li p {
+			margin:				0;
+			padding:			0;
+		}
+		
+		
+		.multicol {
+			position:			relative;
+			margin:				auto;
+			max-width:			960px;
+			-webkit-columns:	4 12em;		
+			columns:			4 12em;
+			-webkit-column-gap:	2em;
+			column-gap:			2em;
+			-webkit-column-rule:1px solid red;
+			column-rule:		1px solid red;
+		}
+		.multicol p {
+			padding:			0.25em;
+		}		
+		.multicol figure {
+			margin:				0;
+			padding:			0;
+			width:				100%;
+		}
+		.multicol figcaption {
+			color:				#999;
+			font-size:			0.7em;	
+		}
+		
+		.multicol img {
+			width:				100%;
+		}
+		.multicol h1 {
+			-webkit-column-span:all;
+			column-span:		all;
+			margin:				0.25em 0;
+			padding:			0;
+			text-transform:		uppercase;
+			font-size:			2em;
+		}
+		.multicol h2 {
+			margin:				0.25em 0;
+			padding:			0;
+			text-transform:		uppercase;
+			font-weight:		normal;
+			font-size:			1.2em;
+		}
+		</style>		
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+	</head>
+	<body>
+		<div id="container">
+			<header>
+				<hgroup>
+					<h1><span>the</span>news</h1>
+					<h2>Your daily news</h2>
+				</hgroup>
+				<nav id="primarynav">
+					<ul>
+						<li>News</li>
+						<li>Sport</li>
+						<li>Culture</li>
+						<li>The Arts</li>
+						<li>Business</li>
+						<li>Economy</li>
+						<li>Lifestyle</li>
+						<li>Travel</li>
+						<li>Technology</li>
+						<li>Comment</li>
+					</ul>
+				</nav>
+			</header>
+			<section id="news">		
+				<nav id="sectionnav">
+					<ul>
+						<li>News</li>
+						<li>US & Canada</li>
+						<li>World</li>
+						<li>Politics</li>
+						<li>Media</li>
+						<li>Education</li>
+						<li>Science</li>
+						<li>Entertainment</li>
+						<li>Weather</li> 
+					</ul>
+				</nav>	
+				<div id="pagelayout">
+					<div id="mainlayout">
+						<div id="callouts">
+							<div class="callout1">
+								<img src="images/callout1.jpg" />
+								<h2>Banks in Recovery</h2>
+							</div>
+							<div class="callout2">
+								<img src="images/callout2.jpg" />
+								<h2>Weekend ideas</h2>
+							</div>
+							<div class="callout3">
+								<img src="images/callout3.jpg" />
+								<h2>New museum set to open</h2>
+							</div>
+							<div class="callout3">
+								<img src="images/callout3.jpg" />
+								<h2>New museum set to open</h2>
+							</div>
+						</div> <!-- End Callouts -->
+						<article>
+							<h2>Island boat service due to stop in September</h2>
+							<figure>
+								<img src="images/article.jpg" />
+								<figcaption>Above: The service provides a lifeline to the local island community</figcaption>
+							</figure>
+							<p>Etiam porta sem malesuada magna mollis euismod. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Donec id elit non mi porta gravida at eget metus. Donec ullamcorper nulla non metus auctor fringilla. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+							<h3>Nullam id dolor id nibh ultricies vehicula ut id elit. Nullam id dolor id nibh ultricies vehicula ut id elit. Nullam id dolor id nibh ultricies vehicula ut id elit.</h3>
+							<p>Etiam porta sem malesuada magna mollis euismod. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Donec id elit non mi porta gravida at eget metus. Donec ullamcorper nulla non metus auctor fringilla. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+							<p>Etiam porta sem malesuada magna mollis euismod. Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Donec id elit non mi porta gravida at eget metus. Donec ullamcorper nulla non metus auctor fringilla. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+						</article>					
+					</div> <!-- End Main Layout -->
+					<aside>
+						<div id="promoted">
+							<article>
+								<img src="images/promoted1.jpg" />
+								<h3>Jobs of the future</h3>
+								<p>Susan Hill explains why the jobs market our children will face bears no relation to today’s workplace</p>
+							</article>
+							<article>
+								<img src="images/promoted2.jpg" />
+								<h3>10 amazing getaways</h3>
+								<p>Our top pick of summer breaks on a budget, that offer a lot of bang for your bucks</p>
+							</article>						
+						</div> <!-- End Promoted -->
+						<div id="features">
+							<h4>Features</h4>
+							<ul>
+								<li>
+									<img src="images/featured1.jpg" />
+									<h5>Rise of the cupcake</h5>
+									<p>Inceptos Aenean Dolor Sit Commodo</p>
+								</li>
+								<li>
+									<img src="images/featured2.jpg" />
+									<h5>Making sounds</h5>
+									<p>Pellentesque Parturient Tristique Ullamcorper Justo</p>
+								</li>
+								<li>
+									<img src="images/featured3.jpg" />
+									<h5>Abandoned kingdoms</h5>
+									<p>Magna Vulputate Mollis Commodo Aenean</p>
+								</li>
+								<li>
+									<img src="images/featured4.jpg" />
+									<h5>Printing revolution</h5>
+									<p>Mollis Egestas Cras Ullamcorper Porta</p>
+								</li>
+								<li>
+									<img src="images/featured5.jpg" />
+									<h5>The love machine</h5>
+									<p>Elit Fusce Malesuada Adipiscing Aenean</p>
+								</li>
+								<li>
+									<img src="images/featured6.jpg" />
+									<h5>Back to school</h5>
+									<p>Cras Mollis Consectetur Nullam Porta</p>
+								</li>
+								<li>
+									<img src="images/featured7.jpg" />
+									<h5>The tipping point</h5>
+									<p>Vehicula Dapibus Pellentesque Malesuada Consectetur</p>
+								</li>
+								<li>
+									<img src="images/featured8.jpg" />
+									<h5>The killing diet</h5>
+									<p>Amet Ornare Commodo Sollicitudin Elit</p>
+								</li>
+								<li>
+									<img src="images/featured9.jpg" />
+									<h5>Riding bareback</h5>
+									<p>Cursus Risus Euismod Tortor Adipiscing</p>
+								</li>
+							</ul>
+						</div> <!-- End Features -->
+					</aside>
+				</div> <!-- End Page Layout -->			
+			</section>
+		</div>
+	</body>
+</html>

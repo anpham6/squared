@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head><title>Visibility</title>
+ <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+ <link rel="stylesheet" href="site.css"   media="all"    type="text/css" />
+ <link rel="stylesheet" href="page.css"   media="all"    type="text/css" />
+     <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+ <script src="/dist/squared.js"></script>
+ <script src="/dist/squared.base.js"></script>
+ <script src="/dist/android.framework.js"></script>
+ <script src="../../../squared.js"></script>
+</head>
+
+<body>
+
+ <h1>Visibility</h1>
+ 
+ <p>There is hidden content here: <span class="hidden">CAN YOU SEE ME NOW?</span> 
+    You can't see it, because it is styled with <code>visibility:hidden</code>, 
+    but you can see where it would have been rendered. </p> 
+  
+ <p>There is visible content here: <span class="visible">CAN YOU SEE ME NOW?</span> 
+    You can see it, because it is styled with <code>visibility:visible</code>.</p>
+
+</body>
+</html>

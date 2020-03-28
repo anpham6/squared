@@ -1,0 +1,46 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+	<title>Absolute and fixed positioning</title>
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" href="../../normalize.css">
+	<style>
+		p { margin: 0;}
+		body {
+			width: 550px;
+			padding: 0 25px 20px;
+			border: 1px solid black;
+			position: relative; }
+		aside {
+			width: 80px;
+			padding: 1em;
+			border: 1px solid black;
+			position: absolute;
+			right: 30px;
+			top: 50px; }
+	</style>
+	    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+	<script src="/dist/squared.js"></script>
+	<script src="/dist/squared.base.js"></script>
+	<script src="/dist/android.framework.js"></script>
+	<script src="../../../squared.js"></script>
+</head>
+	<body>
+		<main>
+			<h1>Our speakers this season</h1>
+			<ul>
+			  	<li>October: <a class="date_passed" href="speakers/toobin.html">Jeffrey Toobin</a></li>
+				<li>November: <a class="date_passed" href="speakers/sorkin.html">Andrew Ross Sorkin</a></li>
+				<li>January: <a href="speakers/chua.html">Amy Chua</a></li>
+			</ul>
+			<p>Please contact us for tickets.</p>
+		</main>
+		<aside>
+			<p><a href="raffle/html">Enter to win a free ticket!</a></p>
+		</aside>	
+	</body>
+</html>

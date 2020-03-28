@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 3-3</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+<style>
+li { font-size: 3.2em; }
+a {
+    background-position: left center;
+    background-repeat: no-repeat;
+    background-size: 1em;
+    display: inline-block;
+    padding-left: 1.2em;
+}
+a[href$='.pdf'] { background-image: url('images/icons/pdf.svg'); }
+a[href$='.doc'] { background-image: url('images/icons/word.svg'); }
+a[href$='.rss'] { background-image: url('images/icons/feed.svg'); }
+</style>
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/squared.svg.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-4">&nbsp;</div>
+    <div class="span-16">
+    <ul>
+    <li>A <a href="/example.pdf">PDF</a>.</li>
+    <li>An <a href="/example.doc">MS Word</a> doc.</li>
+    <li>An <a href="/example.rss">RSS Feed</a>.</li>
+    </ul>
+    </div>
+    <div class="span-4 last">&nbsp;</div>
+</div>
+
+</body>
+</html>

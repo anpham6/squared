@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Circular and oval elements using border-radius</title>
+  <style>
+  div {
+    display: inline-block;
+    margin-right: 1em;
+  }
+  .round {
+    width: 300px;
+    height: 300px;
+    -webkit-border-radius: 50%;
+            border-radius: 50%;
+    background-color: #59f;
+  }
+  .oval {
+    width: 600px;
+  }
+
+  </style>
+      <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+  <script src="/dist/squared.js"></script>
+  <script src="/dist/squared.base.js"></script>
+  <script src="/dist/android.framework.js"></script>
+  <script src="../../squared.js"></script>
+</head>
+<body>
+  <div class="round"></div>
+  <div class="round oval"></div>
+</body>
+</html>

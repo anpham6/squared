@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 9-10</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+    .bimage div {
+      background-color: white;
+      -webkit-border-image: url('images/frame.png') 34 fill stretch;
+      border-image: url('images/frame.png') 34 fill stretch;
+      -moz-box-sizing: border-box;
+      box-sizing: border-box;
+      height: 100%;
+    }
+    .bimage h2 {
+      color: #999;
+      font-family: ChunkFiveRegular, sans-serif;
+      -moz-hyphens: auto;
+      hyphens: auto;
+      margin-bottom: 0;
+      text-align: justify;
+    }
+    div.bimage-1 { border-width: 34px; }
+    div.bimage-2 {
+      border-width: 1px;
+      border-image-width: 34px;
+    }
+  </style>
+  		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+      <script src="/dist/squared.js"></script>
+      <script src="/dist/squared.base.js"></script>
+      <script src="/dist/android.framework.js"></script>
+      <script src="../../squared.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="span-2">&thinsp;</div>
+    <div class="span-10 bimage">
+      <div class="bimage-1">
+        <h2>I had called upon my friend Sherlock Holmes upon the second morning after Christmas, with the intention of wishing him the compliments of the season.</h2>
+      </div>
+    </div>
+    <!-- example of the shorthand property -->
+    <div class="span-10 bimage">
+      <div class="bimage-2">
+        <h2>I had called upon my friend Sherlock Holmes upon the second morning after Christmas, with the intention of wishing him the compliments of the season.</h2>
+      </div>
+    </div>
+    <div class="span-2 last">&thinsp;</div>
+</div>
+
+</body>
+</html>

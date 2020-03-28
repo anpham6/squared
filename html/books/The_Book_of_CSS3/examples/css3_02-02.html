@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf8">
+  <meta name="viewport" content="width=device-width">
+  <title>Example 2-2</title>
+  <link rel="stylesheet" href="css/blueprint/screen.css">
+  <link rel="stylesheet" href="css/persistent.css">
+  <style>
+.ch_02 .container { padding: 0 0 1.5em; }
+.container div { padding: 0.75em 0.75em 0; }
+.ch_02 h1 { margin-bottom: 0; }
+.ch_02 h2 { margin-bottom: 0.41667em; }
+@media screen and (min-width: 481px) {
+    .ch_02 h1 {
+        background: black url('images/landscape-600.jpg') no-repeat 50% 50%;
+        box-sizing: border-box;
+        color: white;
+        font-size: 3em;
+        line-height: 1;
+        height: 229px;
+        text-align: left;
+    }
+    .ch_02 h2 {
+      font-size: 2.25em;
+      line-height: 1.25;
+    }
+    .ch_02 p { line-height: 1.375; }
+}
+</style>
+		    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/demos/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+		<script src="/dist/squared.js"></script>
+		<script src="/dist/squared.base.js"></script>
+		<script src="/dist/android.framework.js"></script>
+		<script src="../../squared.js"></script>
+</head>
+<body class="ch_02">
+<div class="container">
+  <h1>The Page Title</h1>
+  <div>
+    <h2>The Carpet-Bag (One)</h2>
+    <p>I stuffed a shirt or two into my old carpet-bag, tucked it under my arm, and started for Cape Horn and the Pacific. It was on a Saturday night in December.</p>
+  </div>
+  <div class="last">
+    <h2>The Carpet-Bag (Two)</h2>
+    <p>Much was I disappointed upon learning that the little packet for Nantucket had already sailed, and that no way of reaching that place would offer, till the following...</p>
+  </div>
+</div>
+
+</body>
+</html>
