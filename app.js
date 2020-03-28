@@ -18,7 +18,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 app.use('/dist', express.static(path.join(__dirname, 'dist')));
-app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
 app.use('/temp', express.static(path.join(__dirname, 'temp')));
 
 if (env === 'development') {

@@ -6,11 +6,6 @@
     <title>https://github.com/anpham6/squared</title>
     <link rel="stylesheet" type="text/css" href="common/dev.css">
     <style>
-        body > div > nav, ul {
-            list-style-type: none;
-            padding: 0;
-            border: solid 1px #aaa;
-        }
         #squared_ui {
             width: 200px;
         }
@@ -21,6 +16,11 @@
         }
         #menu_demo_sub > ul {
             margin: 10px 20px 0 20px;
+        }
+        body > div > nav, ul {
+            list-style-type: none;
+            padding: 0;
+            border: solid 1px #aaa;
         }
         nav {
             display: none;
@@ -90,7 +90,7 @@
 </head>
 <body>
     <!-- START: DEMO -->
-    <div id="squared_ui" style="width: 200px;">
+    <div id="squared_ui">
         <button onclick="document.getElementById('menu_demo').style.display = 'block';">Show Menu</button>
         <button onclick="document.getElementById('menu_demo').style.display = 'none';">Hide Menu</button>
         <nav id="menu_demo" data-use="android.widget.menu">

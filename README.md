@@ -532,17 +532,17 @@ Most of the Android support library extensions can be configured using the same 
 - android.widget.toolbar
 - android.widget.drawer
 
-<img src="html/demos/android/custom.viewpager.tablayout.png" alt="custom: viewpager + tablayout" />
+<img src="html/demos-dev/images/android/custom.viewpager.tablayout.png" alt="custom: viewpager + tablayout" />
 
-<img src="html/demos/android/drawer.png" alt="drawer: floating action button" />
+<img src="html/demos-dev/images/android/drawer.png" alt="drawer: floating action button" />
 
-<img src="html/demos/android/coordinator.scrolling.png" alt="coordinator: scrolling" />
+<img src="html/demos-dev/images/android/coordinator.scrolling.png" alt="coordinator: scrolling" />
 
-<img src="html/demos/android/bottomnavigation.png" alt="bottom navigation" />
+<img src="html/demos-dev/images/android/bottomnavigation.png" alt="bottom navigation" />
 
-<img src="html/demos/android/drawer.navigationview.png" alt="drawer: actionbar" />
+<img src="html/demos-dev/images/android/drawer.navigationview.png" alt="drawer: actionbar" />
 
-<img src="html/demos/android/menu.png" alt="toolbar: menu" />
+<img src="html/demos-dev/images/android/menu.png" alt="toolbar: menu" />
 
 ### ALL: User Written HTML
 
