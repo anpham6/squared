@@ -7,16 +7,21 @@ type View = android.base.View;
 
 export default class Brotli<T extends View> extends Extension<T> {
     public readonly options: CompressOptions = {
-        quality: 11,
+        level: 11,
         fileExtensions: ['js', 'css', 'json', 'svg']
     };
 
     public processFile(data: ChromeAsset) {
         const extension = data.extension;
         if (extension) {
-            const options = this.options;
-            if (options.fileExtensions.includes(extension)) {
-                data.brotliQuality = Math.min(options.quality, 11);
+            const { level, fileExtensions  } = this.options;
+            if (fileExtensions === "*" || fileExtensions.includes(extension)) {
+                let compress = data.compress;
+                if (compress === undefined)  {
+                    compress = [];
+                    data.compress = compress;
+                }
+                compress.push({ format: 'br', level });
                 return true;
             }
         }

@@ -44,11 +44,14 @@ function getQueryData(req, directory) {
 
 function getFileData(file, directory) {
     const pathname = replaceSeparator(appendFilePart(directory, file.pathname));
+    const compress = file.compress;
+    const gz = getCompressFormat(compress, 'gz');
+    const br = getCompressFormat(compress, 'br');
     return {
         pathname,
         filename: appendFilePart(pathname, file.filename),
-        gzipQuality: file.gzipQuality !== undefined ? Math.min(file.gzipQuality, 9) : -1,
-        brotliQuality: file.brotliQuality !== undefined ? Math.min(file.brotliQuality, 11) : -1
+        gzipLevel: gz ? (!isNaN(gz.level) ? gz.level : 9) : -1,
+        brotliLevel: br ? (!isNaN(br.level) ? br.level : 11) : -1
     };
 }
 
@@ -92,6 +95,7 @@ function checkVersion(major, minor, patch = 0) {
     return true;
 }
 
+const getCompressFormat = (compress, format) => compress && compress.find(item => item.format === format);
 const appendFilePart = (value, append) => value + (value && append && !value.endsWith(SEPARATOR) && !append.startsWith(SEPARATOR) ? SEPARATOR : '') + append;
 const replaceSeparator = value => value.replace(SEPARATOR === '/' ? '\\' : '/', SEPARATOR);
 const isRemoteFile = value => /^[A-Za-z]{3,}:\/\//.test(value);
@@ -131,17 +135,17 @@ app.post('/api/assets/copy', (req, res) => {
                 if (delayed === Number.POSITIVE_INFINITY) {
                     break;
                 }
-                const { pathname, filename, gzipQuality, brotliQuality } = getFileData(file, directory);
+                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file, directory);
                 const { content, base64, uri } = file;
                 const writeBuffer = () => {
-                    if (gzipQuality !== -1) {
+                    if (gzipLevel !== -1) {
                         delayed++;
-                        createGzipWriteStream(filename, `${filename}.gz`, gzipQuality)
+                        createGzipWriteStream(filename, `${filename}.gz`, gzipLevel)
                             .on('finish', () => finalize(true));
                     }
-                    if (brotliQuality !== -1 && checkVersion(11, 7)) {
+                    if (brotliLevel !== -1 && checkVersion(11, 7)) {
                         delayed++;
-                        createBrotliWriteStream(filename, `${filename}.br`, brotliQuality, file.mimeType)
+                        createBrotliWriteStream(filename, `${filename}.br`, brotliLevel, file.mimeType)
                             .on('finish', () => finalize(true));
                     }
                 };
@@ -312,15 +316,15 @@ app.post('/api/assets/archive', (req, res) => {
                 if (delayed === Number.POSITIVE_INFINITY) {
                     break;
                 }
-                const { pathname, filename, gzipQuality, brotliQuality } = getFileData(file, directory);
+                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file, directory);
                 const { content, base64, uri } = file;
                 const data = { name: appendFilePart(queryDirectory, appendFilePart(file.pathname, file.filename)) };
                 const writeBuffer = () => {
                     if (delayed !== Number.POSITIVE_INFINITY) {
-                        if (gzipQuality !== -1) {
+                        if (gzipLevel !== -1) {
                             delayed++;
                             const filename_gz = `${filename}.gz`;
-                            createGzipWriteStream(filename, filename_gz, gzipQuality)
+                            createGzipWriteStream(filename, filename_gz, gzipLevel)
                                 .on('finish', () => {
                                     if (delayed !== Number.POSITIVE_INFINITY) {
                                         archive.file(filename_gz, { name: `${data.name}.gz` });
@@ -328,10 +332,10 @@ app.post('/api/assets/archive', (req, res) => {
                                     }
                                 });
                         }
-                        if (brotliQuality !== -1 && checkVersion(11, 7)) {
+                        if (brotliLevel !== -1 && checkVersion(11, 7)) {
                             delayed++;
                             const filename_br = `${filename}.br`;
-                            createBrotliWriteStream(filename, filename_br, brotliQuality, file.mimeType)
+                            createBrotliWriteStream(filename, filename_br, brotliLevel, file.mimeType)
                                 .on('finish', () => {
                                     if (delayed !== Number.POSITIVE_INFINITY) {
                                         archive.file(filename_br, { name: `${data.name}.br` });

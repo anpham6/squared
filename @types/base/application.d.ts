@@ -184,6 +184,7 @@ export interface FileAsset extends Asset {
     pathname: string;
     filename: string;
     content: string;
+    compress?: { format: string; level?: number; }[]
 }
 
 export interface ImageAsset extends Asset, Dimension {}

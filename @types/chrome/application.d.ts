@@ -18,8 +18,6 @@ interface UserSettingsChrome extends UserSettings {
 interface ChromeAsset extends Omit<RawAsset, keyof Dimension | 'content'> {
     content?: string;
     extension?: string;
-    gzipQuality?: number;
-    brotliQuality?: number;
 }
 
 interface ChromeNodeOptions {

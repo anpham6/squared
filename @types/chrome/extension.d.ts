@@ -1,4 +1,4 @@
 export interface CompressOptions {
-    quality: number;
-    fileExtensions: string[];
+    level?: number;
+    fileExtensions: string[] | "*";
 }

@@ -7,16 +7,21 @@ type View = android.base.View;
 
 export default class Gzip<T extends View> extends Extension<T> {
     public readonly options: CompressOptions = {
-        quality: 9,
+        level: 9,
         fileExtensions: ['js', 'css', 'json', 'svg']
     };
 
     public processFile(data: ChromeAsset) {
         const extension = data.extension;
         if (extension) {
-            const options = this.options;
-            if (options.fileExtensions.includes(extension)) {
-                data.gzipQuality = Math.min(options.quality, 9);
+            const { level, fileExtensions  } = this.options;
+            if (fileExtensions === '*' || fileExtensions.includes(extension)) {
+                let compress = data.compress;
+                if (compress === undefined)  {
+                    compress = [];
+                    data.compress = compress;
+                }
+                compress.push({ format: 'gz', level });
                 return true;
             }
         }
