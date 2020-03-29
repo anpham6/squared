@@ -29,19 +29,6 @@ if (env === 'development') {
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
 const SEPARATOR = process.platform === 'win32' ? '\\' : '/';
 
-function getQueryData(req, directory) {
-    const query = req.query;
-    const timeout = Math.max(parseInt(query.timeout) || 60, 1) * 1000;
-    if (query.directory) {
-        directory = appendFilePart(directory, replaceSeparator(query.directory));
-    }
-    return {
-        directory,
-        timeout,
-        finalizeTime: Date.now() + timeout
-    };
-}
-
 function getFileData(file, directory) {
     const pathname = replaceSeparator(appendFilePart(directory, file.pathname));
     const compress = file.compress;
@@ -115,7 +102,7 @@ app.post('/api/assets/copy', (req, res) => {
             res.json({ application: `DIRECTORY: ${dirname}`, system: err });
             return;
         }
-        const { directory, timeout, finalizeTime } = getQueryData(req, dirname);
+        const directory = appendFilePart(dirname, replaceSeparator(query.directory || ''));
         const empty = req.query.empty === '1';
         let delayed = 0;
         let cleared = false;
@@ -123,7 +110,7 @@ app.post('/api/assets/copy', (req, res) => {
             if (delayed === Number.POSITIVE_INFINITY) {
                 return;
             }
-            if (!running || running && --delayed === 0 && cleared || Date.now() >= finalizeTime) {
+            if (!running || running && --delayed === 0 && cleared) {
                 delayed = Number.POSITIVE_INFINITY;
                 res.json({ success: delayed === 0, directory: dirname });
             }
@@ -229,10 +216,7 @@ app.post('/api/assets/copy', (req, res) => {
             }
             cleared = true;
             if (delayed === 0) {
-                finalize();
-            }
-            else {
-                setTimeout(finalize, timeout);
+                finalize(false);
             }
         }
         catch (err) {
@@ -271,7 +255,7 @@ app.post('/api/assets/archive', (req, res) => {
     let cleared = false;
     let zipname = '';
     const resume = (unzip_to = '') => {
-        const { directory, timeout, finalizeTime } = getQueryData(req, unzip_to || dirname);
+        const directory = appendFilePart(unzip_to || dirname, queryDirectory);
         try {
             fs.mkdirpSync(directory);
         }
@@ -288,9 +272,9 @@ app.post('/api/assets/archive', (req, res) => {
             const bytes = archive.pointer();
             console.log(`WRITE: ${zipname} (${bytes} bytes)`);
             if (gzip) {
-                const filename_gz = query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
-                createGzipWriteStream(zipname, filename_gz, 9)
-                    .on('finish', () => res.json({ success, directory: dirname, zipname: filename_gz, bytes }));
+                const gz = query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
+                createGzipWriteStream(zipname, gz, 9)
+                    .on('finish', () => res.json({ success, directory: dirname, zipname: gz, bytes }));
             }
             else {
                 res.json({ success, directory: dirname, zipname, bytes });
@@ -301,7 +285,7 @@ app.post('/api/assets/archive', (req, res) => {
             if (delayed === Number.POSITIVE_INFINITY) {
                 return;
             }
-            if (!running || running && --delayed === 0 && cleared || Date.now() >= finalizeTime) {
+            if (!running || running && --delayed === 0 && cleared) {
                 success = delayed === 0;
                 delayed = Number.POSITIVE_INFINITY;
                 archive.finalize();
@@ -323,22 +307,22 @@ app.post('/api/assets/archive', (req, res) => {
                     if (delayed !== Number.POSITIVE_INFINITY) {
                         if (gzipLevel !== -1) {
                             delayed++;
-                            const filename_gz = `${filename}.gz`;
-                            createGzipWriteStream(filename, filename_gz, gzipLevel)
+                            const gz = `${filename}.gz`;
+                            createGzipWriteStream(filename, gz, gzipLevel)
                                 .on('finish', () => {
                                     if (delayed !== Number.POSITIVE_INFINITY) {
-                                        archive.file(filename_gz, { name: `${data.name}.gz` });
+                                        archive.file(gz, { name: `${data.name}.gz` });
                                         finalize(true);
                                     }
                                 });
                         }
                         if (brotliLevel !== -1 && checkVersion(11, 7)) {
                             delayed++;
-                            const filename_br = `${filename}.br`;
-                            createBrotliWriteStream(filename, filename_br, brotliLevel, file.mimeType)
+                            const br = `${filename}.br`;
+                            createBrotliWriteStream(filename, br, brotliLevel, file.mimeType)
                                 .on('finish', () => {
                                     if (delayed !== Number.POSITIVE_INFINITY) {
-                                        archive.file(filename_br, { name: `${data.name}.br` });
+                                        archive.file(br, { name: `${data.name}.br` });
                                         finalize(true);
                                     }
                                 });
@@ -413,10 +397,7 @@ app.post('/api/assets/archive', (req, res) => {
             }
             cleared = true;
             if (delayed === 0) {
-                finalize();
-            }
-            else {
-                setTimeout(finalize, timeout);
+                finalize(false);
             }
         }
         catch (err) {

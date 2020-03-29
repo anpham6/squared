@@ -493,15 +493,15 @@ export function hasValue<T>(value: any): value is T {
     return value !== undefined && value !== null && value !== '';
 }
 
-export function withinRange(a: number, b: number, offset = 0.99) {
+export function withinRange(a: number, b: number, offset = 1) {
     return b >= (a - offset) && b <= (a + offset);
 }
 
-export function aboveRange(a: number, b: number, offset = 0.99) {
+export function aboveRange(a: number, b: number, offset = 1) {
     return a + offset > b;
 }
 
-export function belowRange(a: number, b: number, offset = 0.99) {
+export function belowRange(a: number, b: number, offset = 1) {
     return a - offset < b;
 }
 
@@ -515,12 +515,13 @@ export function assignEmptyProperty(dest: {}, source: {}) {
 }
 
 export function assignEmptyValue(dest: {}, ...attrs: string[]) {
-    if (attrs.length > 1) {
+    const length = attrs.length;
+    if (length > 1) {
         let current = dest;
         for (let i = 0; ; i++) {
             const name = attrs[i];
             const value = current[name];
-            if (i === attrs.length - 2) {
+            if (i === length - 2) {
                 if (!hasValue(value)) {
                     current[name] = attrs[i + 1];
                 }

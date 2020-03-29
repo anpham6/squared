@@ -234,13 +234,12 @@ export default abstract class File<T extends squared.base.Node> implements squar
             if (isString(directory)) {
                 const assets = resolvePathAssets(options.assets).concat(this.assets);
                 if (assets.length) {
-                    const { outputDirectory, outputEmptyCopyDirectory, outputArchiveTimeout } = this.userSettings;
+                    const { outputDirectory, outputEmptyCopyDirectory } = this.userSettings;
                     fetch(
                         '/api/assets/copy' +
                         '?to=' + encodeURIComponent(directory.trim()) +
                         '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
-                        '&empty=' + (outputEmptyCopyDirectory ? '1' : '0') +
-                        '&timeout=' + outputArchiveTimeout, {
+                        '&empty=' + (outputEmptyCopyDirectory ? '1' : '0'), {
                             method: 'POST',
                             headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                             body: JSON.stringify(assets)
@@ -280,14 +279,13 @@ export default abstract class File<T extends squared.base.Node> implements squar
             if (isString(filename)) {
                 const assets = resolvePathAssets(options.assets).concat(this.assets);
                 if (assets.length) {
-                    const { outputDirectory, outputArchiveFormat, outputArchiveTimeout } = this.userSettings;
+                    const { outputDirectory, outputArchiveFormat } = this.userSettings;
                     fetch(
                         '/api/assets/archive' +
                         '?filename=' + encodeURIComponent(filename.trim()) +
                         '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
                         '&format=' + (options.format || outputArchiveFormat).trim().toLowerCase() +
-                        '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
-                        '&timeout=' + outputArchiveTimeout, {
+                        '&append_to=' + encodeURIComponent((options.appendTo || '').trim()), {
                             method: 'POST',
                             headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                             body: JSON.stringify(assets)

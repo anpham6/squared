@@ -11,7 +11,6 @@ export interface UserSettings {
     outputEmptyCopyDirectory: boolean;
     outputArchiveFormat: string;
     outputArchiveName: string;
-    outputArchiveTimeout: number;
 }
 
 export interface UserUISettings extends UserSettings {

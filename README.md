@@ -152,7 +152,6 @@ squared.settings = {
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'android-xml',
     outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
-    outputArchiveTimeout: 30 // seconds
 };
 ```
 #### Example: chrome
@@ -174,7 +173,6 @@ squared.settings = {
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
-    outputArchiveTimeout: 60 // seconds
 };
 ```
 
