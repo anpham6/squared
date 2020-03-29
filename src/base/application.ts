@@ -115,6 +115,14 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, options);
     }
 
+    public createFrom(format: string, options: FileActionOptions) {
+        this.fileHandler?.createFrom(format, options);
+    }
+
+    public appendFromArchive(filename: string, options: FileActionOptions) {
+        this.fileHandler?.appendFromArchive(filename, options);
+    }
+
     public reset() {
         const processing = this.processing;
         processing.cache.reset();

@@ -1,6 +1,16 @@
-import type { FileActionOptions, FileCopyingOptions, FileArchivingOptions, RawAsset, UserSettings } from '../../@types/base/application';
+import type { FileArchivingOptions, FileAsset, FileCopyingOptions, RawAsset, UserSettings } from '../../@types/base/application';
 
-const { fromLastIndexOf, isString, trimString } = squared.lib.util;
+const { fromLastIndexOf, isString, resolvePath, trimString } = squared.lib.util;
+
+function resolvePathAssets(assets: FileAsset[] = []) {
+    for (const item of assets) {
+        const uri = item.uri;
+        if (uri) {
+            item.uri = resolvePath(uri);
+        }
+    }
+    return assets;
+}
 
 const isHttpProtocol = () => /^http/.test(location.protocol);
 
@@ -177,11 +187,28 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public readonly assets: RawAsset[] = [];
     public abstract resource: squared.base.Resource<T>;
 
-    public abstract copyToDisk(directory: string, options?: FileActionOptions): void;
-    public abstract appendToArchive(pathname: string, options?: FileActionOptions): void;
-    public abstract saveToArchive(filename: string, options?: FileActionOptions): void;
+    public abstract copyToDisk(directory: string, options?: FileCopyingOptions): void;
+    public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): void;
+    public abstract saveToArchive(filename: string, options?: FileArchivingOptions): void;
 
     public abstract get userSettings(): UserSettings;
+
+    public createFrom(format: string, options: FileArchivingOptions) {
+        this.archiving({
+            filename: this.userSettings.outputArchiveName,
+            ...options,
+            format
+        });
+    }
+
+    public appendFromArchive(filename: string, options: FileArchivingOptions) {
+        this.archiving({
+            filename: this.userSettings.outputArchiveName,
+            ...options,
+            appendTo: filename,
+            format: filename.substring(filename.lastIndexOf('.') + 1)
+        });
+    }
 
     public addAsset(data: Optional<RawAsset>) {
         if (data.content || data.uri || data.base64) {
@@ -205,8 +232,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (isHttpProtocol()) {
             const directory = options.directory;
             if (isString(directory)) {
-                let assets = options.assets || [];
-                assets = assets.concat(this.assets);
+                const assets = resolvePathAssets(options.assets).concat(this.assets);
                 if (assets.length) {
                     const { outputDirectory, outputEmptyCopyDirectory, outputArchiveTimeout } = this.userSettings;
                     fetch(
@@ -252,15 +278,14 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (isHttpProtocol()) {
             const filename = options.filename;
             if (isString(filename)) {
-                let assets = options.assets || [];
-                assets = assets.concat(this.assets);
+                const assets = resolvePathAssets(options.assets).concat(this.assets);
                 if (assets.length) {
                     const { outputDirectory, outputArchiveFormat, outputArchiveTimeout } = this.userSettings;
                     fetch(
                         '/api/assets/archive' +
                         '?filename=' + encodeURIComponent(filename.trim()) +
                         '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
-                        '&format=' + outputArchiveFormat.trim().toLowerCase() +
+                        '&format=' + (options.format || outputArchiveFormat).trim().toLowerCase() +
                         '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
                         '&timeout=' + outputArchiveTimeout, {
                             method: 'POST',

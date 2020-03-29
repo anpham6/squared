@@ -18,18 +18,58 @@
     <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
     <script src="/demos/common/dev.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-    <script src="/dist/squared.js"></script>
-    <script src="/dist/squared.base.js"></script>
     <script>
-        System.import('/build/chrome-framework/src/main.js').then(result => {
-            chrome = result.default;
-            squared.setFramework(chrome);
-            squared.settings.preloadImages = true;
-            squared.parseDocument('squared_ui').then(function() {
-                squared.system.saveHtmlPage();
-                squared.system.saveImageAssets();
-                squared.system.saveScriptAssets();
-                squared.system.saveLinkAssets();
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/chrome-framework/src/main.js').then(result => {
+                    chrome = result.default;
+                    squared.setFramework(chrome);
+                    squared.settings.preloadImages = true;
+                    squared.parseDocument('squared_ui').then(function() {
+                        squared.system.saveHtmlPage();
+                        squared.system.saveImageAssets();
+                        squared.system.saveScriptAssets();
+                        squared.system.saveLinkAssets();
+                        const options = {
+                            assets: [
+                                {
+                                    pathname: 'images',
+                                    filename: 'android.png',
+                                    uri: 'images/android.png'
+                                },
+                                {
+                                    pathname: 'images',
+                                    filename: 'android-ldpi.png',
+                                    uri: 'images/android-ldpi.png'
+                                },
+                                {
+                                    pathname: 'images',
+                                    filename: 'android-hdpi.png',
+                                    uri: 'images/android-hdpi.png'
+                                },
+                                {
+                                    pathname: 'images',
+                                    filename: 'android-xhdpi.png',
+                                    uri: 'images/android-xhdpi.png'
+                                },
+                                {
+                                    pathname: 'images',
+                                    filename: 'android-xxhdpi.png',
+                                    uri: 'images/android-xxhdpi.png'
+                                },
+                                {
+                                    pathname: 'images',
+                                    filename: 'android-xxxhdpi.png',
+                                    uri: 'images/android-xxxhdpi.png'
+                                }
+                            ]
+                        };
+                        squared.createFrom('gz', options);
+                        squared.appendFromArchive('C:/Users/An/git/squared/html/demos/base_project.zip', options);
+                    });
+                });
             });
         });
     </script>

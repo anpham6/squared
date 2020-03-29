@@ -70,7 +70,7 @@ export const CHAR = {
 };
 
 export const COMPONENT = {
-    PROTOCOL: /^([A-Za-z]+:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/.*)?$/
+    PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/.*)?$/
 };
 
 export const ESCAPE = {

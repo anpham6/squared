@@ -151,7 +151,7 @@ squared.settings = {
     outputDirectory: 'app/src/main',
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'android-xml',
-    outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | bz2
+    outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | jar | xz | bz2 | lzma
     outputArchiveTimeout: 30 // seconds
 };
 ```
@@ -173,7 +173,7 @@ squared.settings = {
     outputDirectory: '',
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
-    outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | bz2
+    outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | jar | xz | bz2 | lzma
     outputArchiveTimeout: 60 // seconds
 };
 ```
@@ -194,11 +194,14 @@ ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
 
+// Required: NodeJS Express / squared-apache
 // NOTE: options: { assets?: FileAsset[], callback?: () => void }
 
-copyToDisk(directory: string, options?: {}) // copy entire project to local directory (Express required)
-appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting zip archive (Express required)
-saveToArchive(filename?: string, options?: {}) // save entire project as zip archive (Express required)
+copyToDisk(directory: string, options?: {}) // copy entire project to local directory
+appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting zip archive
+saveToArchive(filename?: string, options?: {}) // save entire project as zip archive
+createFrom(format: string, options: {}) // create new archive from only FileAsset[]
+appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only FileAsset[]
 
 toString() // main layout file contents
 

@@ -216,6 +216,18 @@ export function saveToArchive(value?: string, options?: FileActionOptions) {
     }
 }
 
+export function createFrom(value: string, options: FileActionOptions) {
+    if (checkMain() && util.isString(value) && util.isPlainObject(options) && options.assets?.length) {
+        main.createFrom(value, options);
+    }
+}
+
+export function appendFromArchive(value: string, options: FileActionOptions) {
+    if (checkMain() && util.isString(value) && util.isPlainObject(options) && options.assets?.length) {
+        main.appendFromArchive(value, options);
+    }
+}
+
 export function toString() {
     return main?.toString() || '';
 }

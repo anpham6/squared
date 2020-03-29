@@ -92,7 +92,7 @@ function checkVersion(major, minor, patch = 0) {
     return true;
 }
 
-const appendFilePart = (value, append) => value + (value.endsWith(SEPARATOR) || value === '' ? '' : SEPARATOR) + append;
+const appendFilePart = (value, append) => value + (value && append && !value.endsWith(SEPARATOR) && !append.startsWith(SEPARATOR) ? SEPARATOR : '') + append;
 const replaceSeparator = value => value.replace(SEPARATOR === '/' ? '\\' : '/', SEPARATOR);
 const isRemoteFile = value => /^[A-Za-z]{3,}:\/\//.test(value);
 
@@ -248,7 +248,7 @@ app.post('/api/assets/archive', (req, res) => {
     }
     const query = req.query;
     const append_to = query.append_to;
-    const queryDirectory = replaceSeparator(query.directory);
+    const queryDirectory = replaceSeparator(query.directory || '');
     let format;
     let gzip = false;
     switch (query.format) {
@@ -314,7 +314,7 @@ app.post('/api/assets/archive', (req, res) => {
                 }
                 const { pathname, filename, gzipQuality, brotliQuality } = getFileData(file, directory);
                 const { content, base64, uri } = file;
-                const data = { name: (queryDirectory ? appendFilePart(queryDirectory, '') : '') + appendFilePart(file.pathname, file.filename) };
+                const data = { name: appendFilePart(queryDirectory, appendFilePart(file.pathname, file.filename)) };
                 const writeBuffer = () => {
                     if (delayed !== Number.POSITIVE_INFINITY) {
                         if (gzipQuality !== -1) {

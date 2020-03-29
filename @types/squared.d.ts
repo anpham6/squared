@@ -26,13 +26,24 @@ declare function reset(): void;
 declare function copyToDisk(value: string, options?: FileActionOptions): void;
 declare function appendToArchive(value: string, options?: FileActionOptions): void;
 declare function saveToArchive(value?: string, options?: FileActionOptions): void;
+declare function createFrom(value: string, options: FileActionOptions): void;
+declare function appendFromArchive(value: string, options: FileActionOptions): void;
+
 declare function toString(): string;
 
 declare function apply(value: {} | string, options: {}): boolean;
 declare function saveAllToDisk(): void;
 
 declare namespace base {
-    interface Application<T extends Node> {
+    interface FileAction {
+        copyToDisk(directory: string, options?: FileCopyingOptions): void;
+        appendToArchive(pathname: string, options?: FileCopyingOptions): void;
+        saveToArchive(filename?: string, options?: FileArchivingOptions): void;
+        createFrom(format: string, options: FileArchivingOptions): void;
+        appendFromArchive(filename: string, options: FileArchivingOptions): void;
+    }
+
+    interface Application<T extends Node> extends FileAction {
         framework: number;
         userSettings: UserSettings;
         initializing: boolean;
@@ -57,9 +68,6 @@ declare namespace base {
         insertNode(element: Element, parent?: T, pseudoElt?: string): Undef<T>;
         afterCreateCache(element: HTMLElement): void;
         finalize(): void;
-        copyToDisk(directory: string, options?: FileActionOptions): void;
-        appendToArchive(pathname: string, options?: FileActionOptions): void;
-        saveToArchive(filename?: string, options?: FileActionOptions): void;
         toString(): string;
     }
 
@@ -266,13 +274,11 @@ declare namespace base {
 
     class ExtensionManager<T extends Node> implements ExtensionManager<T> {}
 
-    interface File<T extends Node> {
+    interface File<T extends Node> extends FileAction {
         resource: Resource<T>;
         readonly userSettings: UserSettings;
         readonly assets: FileAsset[];
-        copyToDisk(directory: string, options?: FileActionOptions): void;
-        appendToArchive(pathname: string, options?: FileActionOptions): void;
-        saveToArchive(filename: string, options?: FileActionOptions): void;
+        saveToArchive(filename: string, options?: FileArchivingOptions): void;
         addAsset(data: Optional<RawAsset>): void;
         reset(): void;
         copying(options: FileCopyingOptions): void;

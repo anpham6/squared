@@ -1,4 +1,4 @@
-import type { FileActionOptions, FileAsset } from '../../@types/base/application';
+import type { FileArchivingOptions, FileAsset, FileCopyingOptions } from '../../@types/base/application';
 import type { FileOutputOptions, ResourceStoredMapAndroid } from '../../@types/android/application';
 
 import Resource from './resource';
@@ -66,7 +66,7 @@ const caseInsensitive = (a: string | string[], b: string | string[]) => a.toStri
 export default class File<T extends View> extends squared.base.FileUI<T> implements android.base.File<T> {
     public resource!: android.base.Resource<T>;
 
-    public copyToDisk(directory: string, options?: FileActionOptions) {
+    public copyToDisk(directory: string, options?: FileCopyingOptions) {
         this.copying({
             ...options,
             assets: this._getAssetsAll(options?.assets),
@@ -74,16 +74,16 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         });
     }
 
-    public appendToArchive(pathname: string, options?: FileActionOptions) {
+    public appendToArchive(pathname: string, options?: FileArchivingOptions) {
         this.archiving({
+            filename: this.userSettings.outputArchiveName,
             ...options,
             assets: this._getAssetsAll(options?.assets),
-            filename: this.userSettings.outputArchiveName,
             appendTo: pathname
         });
     }
 
-    public saveToArchive(filename: string, options?: FileActionOptions) {
+    public saveToArchive(filename: string, options?: FileArchivingOptions) {
         this.archiving({
             ...options,
             assets: this._getAssetsAll(options?.assets),

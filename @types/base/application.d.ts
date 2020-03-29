@@ -219,6 +219,7 @@ export interface FileCopyingOptions extends FileActionOptions {
 export interface FileArchivingOptions extends FileActionOptions {
     filename?: string;
     appendTo?: string;
+    format?: string;
 }
 
 export interface NodeUIOptions<T> {

@@ -1,4 +1,4 @@
-import type { FileAsset, FileActionOptions } from '../../@types/base/application';
+import type { FileAsset, FileArchivingOptions, FileCopyingOptions } from '../../@types/base/application';
 import type { ChromeAsset } from '../../@types/chrome/application';
 
 import Resource from './resource';
@@ -61,7 +61,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         this._outputFileExclusions = undefined;
     }
 
-    public copyToDisk(directory: string, options?: FileActionOptions) {
+    public copyToDisk(directory: string, options?: FileCopyingOptions) {
         this.copying({
             ...options,
             assets: <FileAsset[]> this._getAssetsAll().concat(options?.assets || []),
@@ -69,16 +69,16 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         });
     }
 
-    public appendToArchive(pathname: string, options?: FileActionOptions) {
+    public appendToArchive(pathname: string, options?: FileArchivingOptions) {
         this.archiving({
+            filename: this.userSettings.outputArchiveName,
             ...options,
             assets: <FileAsset[]> this._getAssetsAll().concat(options?.assets || []),
-            filename: this.userSettings.outputArchiveName,
             appendTo: pathname
         });
     }
 
-    public saveToArchive(filename: string, options?: FileActionOptions) {
+    public saveToArchive(filename: string, options?: FileArchivingOptions) {
         this.archiving({
             ...options,
             assets: <FileAsset[]> this._getAssetsAll().concat(options?.assets || []),
