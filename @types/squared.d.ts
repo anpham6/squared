@@ -1085,6 +1085,7 @@ declare namespace lib {
         function trimString(value: string, char: string): string;
         function trimStart(value: string, char: string): string;
         function trimEnd(value: string, char: string): string;
+        function appendSeparator(preceding: string, value: string, separator?: string): string;
         function fromLastIndexOf(value: string, ...char: string[]): string;
         function searchObject(obj: StringMap, value: string | StringMap): any[][];
         function hasValue<T>(value: any): value is T;

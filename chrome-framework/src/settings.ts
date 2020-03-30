@@ -12,7 +12,6 @@ const settings: UserSettingsChrome = {
     cacheQuerySelectorResultSet: true,
     excludePlainText: true,
     outputFileExclusions: ['squared.*', 'chrome.framework.*'],
-    outputDirectory: '',
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip'

@@ -13,12 +13,12 @@ System.import('/build/src/main.js').then(result => {
                 squared.copyToDisk('C:/Users/An/git/flexbox', {
                     assets: [
                         {
-                            pathname: 'res/drawable',
+                            pathname: 'app/src/main/res/drawable',
                             filename: 'ic_launcher_background.xml',
                             uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_background.xml'
                         },
                         {
-                            pathname: 'res/drawable-v24',
+                            pathname: 'app/src/main/res/drawable-v24',
                             filename: 'ic_launcher_foreground.xml',
                             uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_foreground.xml'
                         }
@@ -45,12 +45,12 @@ System.import('/build/src/main.js').then(result => {
                     squared.copyToDisk('C:/Users/An/git/flexbox', {
                         assets: [
                             {
-                                pathname: 'res/drawable',
+                                pathname: 'app/src/main/res/drawable',
                                 filename: 'ic_launcher_background.xml',
                                 uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_background.xml'
                             },
                             {
-                                pathname: 'res/drawable-v24',
+                                pathname: 'app/src/main/res/drawable-v24',
                                 filename: 'ic_launcher_foreground.xml',
                                 uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_foreground.xml'
                             }
@@ -71,12 +71,12 @@ document.addEventListener('DOMContentLoaded', function() {
         squared.copyToDisk('C:/Users/An/git/flexbox', {
             assets: [
                 {
-                    pathname: 'res/drawable',
+                    pathname: 'app/src/main/res/drawable',
                     filename: 'ic_launcher_background.xml',
                     uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_background.xml'
                 },
                 {
-                    pathname: 'res/drawable-v24',
+                    pathname: 'app/src/main/res/drawable-v24',
                     filename: 'ic_launcher_foreground.xml',
                     uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_foreground.xml'
                 }

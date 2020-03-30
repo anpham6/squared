@@ -16,7 +16,7 @@ const $lib = squared.lib;
 const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = $lib.css;
 const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
 const { maxArray } = $lib.math;
-const { convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = $lib.util;
+const { appendSeparator, convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = $lib.util;
 const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -327,7 +327,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
         if (isString(content)) {
             const layout: FileAsset = {
-                pathname: pathname ? trimString(pathname, '/') : this._localSettings.layout.pathName,
+                pathname: pathname ? trimString(pathname, '/') : appendSeparator(this.userSettings.outputDirectory, this._localSettings.layout.pathName),
                 filename,
                 content,
                 index

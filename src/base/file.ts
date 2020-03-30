@@ -1,6 +1,6 @@
 import type { FileArchivingOptions, FileAsset, FileCopyingOptions, RawAsset, UserSettings } from '../../@types/base/application';
 
-const { fromLastIndexOf, isString, resolvePath, trimString } = squared.lib.util;
+const { fromLastIndexOf, isString, resolvePath } = squared.lib.util;
 
 function resolvePathAssets(assets: FileAsset[] = []) {
     for (const item of assets) {
@@ -234,12 +234,10 @@ export default abstract class File<T extends squared.base.Node> implements squar
             if (isString(directory)) {
                 const assets = resolvePathAssets(options.assets).concat(this.assets);
                 if (assets.length) {
-                    const { outputDirectory, outputEmptyCopyDirectory } = this.userSettings;
                     fetch(
                         '/api/assets/copy' +
                         '?to=' + encodeURIComponent(directory.trim()) +
-                        '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
-                        '&empty=' + (outputEmptyCopyDirectory ? '1' : '0'), {
+                        '&empty=' + (this.userSettings.outputEmptyCopyDirectory === true ? '1' : '0'), {
                             method: 'POST',
                             headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
                             body: JSON.stringify(assets)
@@ -279,12 +277,10 @@ export default abstract class File<T extends squared.base.Node> implements squar
             if (isString(filename)) {
                 const assets = resolvePathAssets(options.assets).concat(this.assets);
                 if (assets.length) {
-                    const { outputDirectory, outputArchiveFormat } = this.userSettings;
                     fetch(
                         '/api/assets/archive' +
                         '?filename=' + encodeURIComponent(filename.trim()) +
-                        '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
-                        '&format=' + (options.format || outputArchiveFormat).trim().toLowerCase() +
+                        '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
                         '&append_to=' + encodeURIComponent((options.appendTo || '').trim()), {
                             method: 'POST',
                             headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),

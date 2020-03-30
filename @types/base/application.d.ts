@@ -7,7 +7,6 @@ export interface UserSettings {
     handleExtensionsAsync: boolean;
     showErrorMessages: boolean;
     createQuerySelectorMap: boolean;
-    outputDirectory: string;
     outputEmptyCopyDirectory: boolean;
     outputArchiveFormat: string;
     outputArchiveName: string;
@@ -20,6 +19,7 @@ export interface UserUISettings extends UserSettings {
     showAttributes: boolean;
     insertSpaces: number;
     autoCloseOnWrite: boolean;
+    outputDirectory: string;
     resolutionScreenWidth?: number;
     resolutionScreenHeight?: number;
 }

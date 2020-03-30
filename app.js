@@ -29,14 +29,14 @@ if (env === 'development') {
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
 const SEPARATOR = process.platform === 'win32' ? '\\' : '/';
 
-function getFileData(file, directory) {
-    const pathname = replaceSeparator(appendFilePart(directory, file.pathname));
+function getFileData(file) {
+    const pathname = replaceSeparator(file.pathname);
     const compress = file.compress;
     const gz = getCompressFormat(compress, 'gz');
     const br = getCompressFormat(compress, 'br');
     return {
         pathname,
-        filename: appendFilePart(pathname, file.filename),
+        filename: appendSeparator(pathname, file.filename),
         gzipLevel: gz ? (!isNaN(gz.level) ? gz.level : 9) : -1,
         brotliLevel: br ? (!isNaN(br.level) ? br.level : 11) : -1
     };
@@ -83,7 +83,7 @@ function checkVersion(major, minor, patch = 0) {
 }
 
 const getCompressFormat = (compress, format) => compress && compress.find(item => item.format === format);
-const appendFilePart = (value, append) => value + (value && append && !value.endsWith(SEPARATOR) && !append.startsWith(SEPARATOR) ? SEPARATOR : '') + append;
+const appendSeparator = (value, append) => value + (value && append && !value.endsWith(SEPARATOR) && !append.startsWith(SEPARATOR) ? SEPARATOR : '') + append;
 const replaceSeparator = value => value.replace(SEPARATOR === '/' ? '\\' : '/', SEPARATOR);
 const isRemoteFile = value => /^[A-Za-z]{3,}:\/\//.test(value);
 
@@ -102,7 +102,6 @@ app.post('/api/assets/copy', (req, res) => {
             res.json({ application: `DIRECTORY: ${dirname}`, system: err });
             return;
         }
-        const directory = appendFilePart(dirname, replaceSeparator(query.directory || ''));
         const empty = req.query.empty === '1';
         let delayed = 0;
         let cleared = false;
@@ -122,7 +121,7 @@ app.post('/api/assets/copy', (req, res) => {
                 if (delayed === Number.POSITIVE_INFINITY) {
                     break;
                 }
-                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file, directory);
+                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file);
                 const { content, base64, uri } = file;
                 const writeBuffer = () => {
                     if (gzipLevel !== -1) {
@@ -226,7 +225,7 @@ app.post('/api/assets/copy', (req, res) => {
 });
 
 app.post('/api/assets/archive', (req, res) => {
-    const dirname = appendFilePart(__dirname, 'temp' + SEPARATOR + uuidv4());
+    const dirname = appendSeparator(__dirname, 'temp' + SEPARATOR + uuidv4());
     try {
         fs.mkdirpSync(dirname);
     }
@@ -236,7 +235,6 @@ app.post('/api/assets/archive', (req, res) => {
     }
     const query = req.query;
     const append_to = query.append_to;
-    const queryDirectory = replaceSeparator(query.directory || '');
     let format;
     let gzip = false;
     switch (query.format) {
@@ -254,8 +252,8 @@ app.post('/api/assets/archive', (req, res) => {
     let delayed = 0;
     let cleared = false;
     let zipname = '';
-    const resume = (unzip_to = '') => {
-        const directory = appendFilePart(unzip_to || dirname, queryDirectory);
+    const resume = (unzip_to) => {
+        const directory = unzip_to || dirname;
         try {
             fs.mkdirpSync(directory);
         }
@@ -265,7 +263,7 @@ app.post('/api/assets/archive', (req, res) => {
         }
         const archive = archiver(format, { zlib: { level: 9 } });
         if (!zipname) {
-            zipname = appendFilePart(dirname, (query.filename || 'squared') + '.' + format);
+            zipname = appendSeparator(dirname, (query.filename || 'squared') + '.' + format);
         }
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
@@ -300,9 +298,9 @@ app.post('/api/assets/archive', (req, res) => {
                 if (delayed === Number.POSITIVE_INFINITY) {
                     break;
                 }
-                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file, directory);
+                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file);
                 const { content, base64, uri } = file;
-                const data = { name: appendFilePart(queryDirectory, appendFilePart(file.pathname, file.filename)) };
+                const data = { name: appendSeparator(file.pathname, file.filename) };
                 const writeBuffer = () => {
                     if (delayed !== Number.POSITIVE_INFINITY) {
                         if (gzipLevel !== -1) {
@@ -412,11 +410,11 @@ app.post('/api/assets/archive', (req, res) => {
         };
         const match = /([^/\\]+)\.(zip|tar)$/i.exec(append_to);
         if (match) {
-            zipname = appendFilePart(dirname, replaceSeparator(match[0]));
+            zipname = appendSeparator(dirname, replaceSeparator(match[0]));
             try {
                 const copied = () => {
                     format = match[2].toLowerCase();
-                    const unzip_to = appendFilePart(dirname, match[1]);
+                    const unzip_to = appendSeparator(dirname, match[1]);
                     decompress(zipname, unzip_to)
                         .then(() => resume(unzip_to));
                 };

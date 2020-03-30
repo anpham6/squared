@@ -454,6 +454,12 @@ export function trimEnd(value: string, char: string) {
     return value.replace(new RegExp(`${char}+$`), '');
 }
 
+export function appendSeparator(preceding: string, value: string, separator = '/') {
+    preceding = preceding.trim();
+    value = value.trim();
+    return preceding + (preceding !== '' && value !== '' && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
+}
+
 export function fromLastIndexOf(value: string, ...char: string[]) {
     for (const ch of char) {
         const index = value.lastIndexOf(ch);

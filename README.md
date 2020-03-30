@@ -169,7 +169,6 @@ squared.settings = {
     cacheQuerySelectorResultSet: true,
     excludePlainText: true,
     outputFileExclusions: ['squared.*', 'chrome.framework.*'],
-    outputDirectory: '',
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd

@@ -31,12 +31,12 @@ const REGEX_FILENAME = /^(.+)\/(.+?\.\w+)$/;
 const REGEX_DRAWABLE_UNIT = /"(-?[\d.]+)px"/g;
 const REGEX_THEME_UNIT = />(-?[\d.]+)px</g;
 
-function getFileAssets(items: string[]) {
+function getFileAssets(directory: string, items: string[]) {
     const length = items.length;
     const result: FileAsset[] = new Array(length / 3);
     for (let i = 0, j = 0; i < length; i += 3, j++) {
         result[j] = {
-            pathname: items[i + 1],
+            pathname: directory + items[i + 1],
             filename: items[i + 2],
             content: items[i]
         };
@@ -44,18 +44,23 @@ function getFileAssets(items: string[]) {
     return result;
 }
 
-function getImageAssets(items: string[]) {
+function getImageAssets(directory: string, items: string[]) {
     const length = items.length;
     const result: FileAsset[] = new Array(length / 3);
     for (let i = 0, j = 0; i < length; i += 3, j++) {
         result[j] = {
-            pathname: items[i + 1],
+            pathname: directory + items[i + 1],
             filename: items[i + 2].split('?')[0],
             content: '',
             uri: items[i]
         };
     }
     return result;
+}
+
+function getOutputDirectory(value: string) {
+    value = value.trim();
+    return !value.endsWith('/') && !value.endsWith('\\') ? value + '/' : value;
 }
 
 const createFileAsset = (pathname: string, filename: string, content: string): FileAsset => ({ pathname, filename, content });
@@ -110,9 +115,10 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             }
         }
         if (directory || filename) {
+            const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
             let assets: FileAsset[] = [];
             for (const name in result) {
-                assets = assets.concat(name === 'image' ? getImageAssets(result[name]) : getFileAssets(result[name]));
+                assets = assets.concat(name === 'image' ? getImageAssets(outputDirectory, result[name]) : getFileAssets(outputDirectory, result[name]));
             }
             options.assets = assets.concat(options.assets || []);
             if (directory) {
@@ -369,7 +375,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 }
             }
             if (directory || filename) {
-                options.assets = getImageAssets(result).concat(options.assets || []);
+                options.assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result).concat(options.assets || []);
                 if (directory) {
                     this.copying(options);
                 }
@@ -444,23 +450,24 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             }
             result = result.concat(assets);
         }
+        const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
         return result.concat(
-            getFileAssets(this.resourceStringToXml()),
-            getFileAssets(this.resourceStringArrayToXml()),
-            getFileAssets(this.resourceFontToXml()),
-            getFileAssets(this.resourceColorToXml()),
-            getFileAssets(this.resourceDimenToXml()),
-            getFileAssets(this.resourceStyleToXml()),
-            getFileAssets(this.resourceDrawableToXml()),
-            getImageAssets(this.resourceDrawableImageToXml()),
-            getFileAssets(this.resourceAnimToXml())
+            getFileAssets(outputDirectory, this.resourceStringToXml()),
+            getFileAssets(outputDirectory, this.resourceStringArrayToXml()),
+            getFileAssets(outputDirectory, this.resourceFontToXml()),
+            getFileAssets(outputDirectory, this.resourceColorToXml()),
+            getFileAssets(outputDirectory, this.resourceDimenToXml()),
+            getFileAssets(outputDirectory, this.resourceStyleToXml()),
+            getFileAssets(outputDirectory, this.resourceDrawableToXml()),
+            getImageAssets(outputDirectory, this.resourceDrawableImageToXml()),
+            getFileAssets(outputDirectory, this.resourceAnimToXml())
         );
     }
 
     private _checkFileAssets(content: string[], options: FileOutputOptions) {
         const { directory, filename } = options;
         if (directory || filename) {
-            options.assets = getFileAssets(content).concat(options.assets || []);
+            options.assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content).concat(options.assets || []);
             if (directory) {
                 this.copying(options);
             }
