@@ -130,6 +130,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         processing.sessionId = '';
         this.session.active.length = 0;
         this.controllerHandler.reset();
+        this.resourceHandler.reset();
+        this.fileHandler?.reset();
         for (const ext of this.extensions) {
             ext.subscribers.clear();
         }

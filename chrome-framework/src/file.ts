@@ -5,8 +5,8 @@ import Resource from './resource';
 
 const $lib = squared.lib;
 
-const { COMPONENT } = $lib.regex;
-const { convertWord, fromLastIndexOf, resolvePath, spliceString, trimEnd } = $lib.util;
+const { COMPONENT, FILE } = $lib.regex;
+const { appendSeparator, convertWord, fromLastIndexOf, resolvePath, spliceString, trimEnd } = $lib.util;
 
 const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
@@ -96,8 +96,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             else {
                 const filename = data.filename;
-                if (!filename.includes('.')) {
-                    data.pathname += '/' + filename;
+                if (!FILE.NAME.test(filename)) {
+                    data.pathname = appendSeparator(data.pathname, filename);
                     data.filename = 'index.html';
                 }
             }

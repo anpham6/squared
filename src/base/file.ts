@@ -234,6 +234,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
             if (isString(directory)) {
                 const assets = resolvePathAssets(options.assets).concat(this.assets);
                 if (assets.length) {
+                    assets[0].exclusions = options.exclusions;
                     fetch(
                         '/api/assets/copy' +
                         '?to=' + encodeURIComponent(directory.trim()) +
@@ -277,6 +278,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
             if (isString(filename)) {
                 const assets = resolvePathAssets(options.assets).concat(this.assets);
                 if (assets.length) {
+                    assets[0].exclusions = options.exclusions;
                     fetch(
                         '/api/assets/archive' +
                         '?filename=' + encodeURIComponent(filename.trim()) +
@@ -295,7 +297,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                                 callback(result);
                             }
                             const zipname = result.zipname;
-                            if (zipname) {
+                            if (isString(zipname)) {
                                 fetch('/api/browser/download?filename=' + encodeURIComponent(zipname))
                                     .then((response: Response) => response.blob())
                                     .then((blob: Blob) => File.downloadFile(blob, fromLastIndexOf(zipname, '/', '\\')));

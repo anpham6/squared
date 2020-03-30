@@ -9,27 +9,28 @@ interface ChromeFramework<T extends View> extends AppFramework<T> {
     querySelectorAll: (value: string) => Promise<Null<View[]>>;
 }
 
+interface ChromeAsset extends Omit<RawAsset, keyof Dimension | 'content'> {
+    content?: string;
+    extension?: string;
+}
+
 interface UserSettingsChrome extends UserSettings {
     cacheQuerySelectorResultSet: boolean;
     excludePlainText: boolean;
     outputFileExclusions: string[];
 }
 
-interface ChromeAsset extends Omit<RawAsset, keyof Dimension | 'content'> {
-    content?: string;
-    extension?: string;
-}
-
-interface ChromeNodeOptions {
+interface NodeOptionsChrome {
     element: Element;
 }
 
-interface FileCopyingOptionsChrome extends FileCopyingOptions {
+interface FileActionAttributeChrome {
     name?: string;
     rel?: string;
 }
 
-interface FileArchivingOptionsChrome extends FileArchivingOptions {
-    name?: string;
-    rel?: string;
+interface FileCopyingOptionsChrome extends FileCopyingOptions, FileActionAttributeChrome {
+}
+
+interface FileArchivingOptionsChrome extends FileArchivingOptions, FileActionAttributeChrome {
 }

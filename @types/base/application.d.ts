@@ -179,11 +179,24 @@ export interface Asset {
     mimeType?: string;
 }
 
+export interface CompressionFormat {
+    format: string;
+    level?: number;
+}
+
+export interface FileAssetExclusions {
+    pathname?: string[];
+    filename?: string[];
+    extension?: string[];
+    pattern?: string[];
+}
+
 export interface FileAsset extends Asset {
     pathname: string;
     filename: string;
     content: string;
-    compress?: { format: string; level?: number; }[]
+    compress?: CompressionFormat[];
+    exclusions?: FileAssetExclusions;
 }
 
 export interface ImageAsset extends Asset, Dimension {}
@@ -209,6 +222,7 @@ export interface NodeIncludeTemplate<T> extends NodeTemplate<T> {
 
 export interface FileActionOptions {
     assets?: FileAsset[];
+    exclusions?: FileAssetExclusions;
     callback?: CallbackResult;
 }
 

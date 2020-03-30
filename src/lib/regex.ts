@@ -18,6 +18,7 @@ export const STRING = {
 };
 
 export const FILE = {
+    NAME: /[/\\]?(([^/\\]+?)\.([^/\\]+?))$/,
     SVG: /\.svg$/i
 };
 

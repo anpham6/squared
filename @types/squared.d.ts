@@ -861,7 +861,7 @@ declare namespace lib {
             supportPercent?: boolean;
             errorString?: RegExp;
         }
-        interface CalculateVarOptions extends CalculateVarAsStringOptions {
+        interface CalculateVarOptions extends Omit<CalculateVarAsStringOptions, "orderedSize" | "checkUnit" | "separator"> {
             dimension?: DimensionAttr;
         }
 
@@ -985,6 +985,7 @@ declare namespace lib {
             PERCENT: RegExp;
         };
         const FILE: {
+            NAME: RegExp;
             SVG: RegExp;
         };
         const CSS: {

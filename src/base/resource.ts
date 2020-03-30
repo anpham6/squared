@@ -30,7 +30,6 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         for (const name in ASSETS) {
             ASSETS[name].clear();
         }
-        this.fileHandler?.reset();
     }
 
     public addImage(element: Undef<HTMLImageElement>) {

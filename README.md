@@ -192,7 +192,7 @@ close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
 
 // Required: NodeJS Express / squared-apache
-// NOTE: options: { assets?: FileAsset[], callback?: () => void }
+// NOTE: options: { assets?: FileAsset[], exclusions?: FileAssetExclusions, callback?: () => void }
 
 copyToDisk(directory: string, options?: {}) // copy entire project to local directory
 appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting zip archive
@@ -267,6 +267,25 @@ squared.system.writeResourceStyleXml()
         android: {
             minWidth: '35px',
             minHeight: '25px'
+        }
+    });
+
+    // NOTE: "exclusions" attribute and some compression formats are only available when using squared-apache
+    squared.settings.outputArchiveFormat = '7z';
+    squared.saveToArchive('archive1', {
+        assets: [
+            {
+                pathname: 'app/src/main/res/drawable',
+                filename: 'ic_launcher_background.xml',
+                uri: 'http://localhost:3000/examples/common/ic_launcher_background.xml',
+                compress: [{ format: 'gz', level: 9 }, { format: 'br' }, { format: 'bz2' }, { format: 'lzma' }, { format: 'zstd' }, { format: 'lz4' }]
+            }
+        ],
+        exclusions: { // All attributes are optional
+            pathname: ['app/build', 'app/libs'],
+            filename: ['ic_launcher_foreground.xml'],
+            extension: ['iml', 'pro'],
+            pattern: ['outputs', 'grad.+\\.', '\\.git']
         }
     });
 </script>
