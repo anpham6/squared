@@ -144,8 +144,12 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return flatMap(this._children, predicate);
     }
 
-    public find(predicate: IteratorPredicate<T, boolean>, options: squared.lib.base.ContainerFindOptions<T> = {}) {
-        const { cascade, error } = options;
+    public find(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerFindOptions<T>) {
+        let cascade: Undef<boolean>;
+        let error: Undef<IteratorPredicate<T, boolean>>;
+        if (options) {
+            ({ cascade, error } = options);
+        }
         let invalid = false;
         const recurse = (container: Container<T>): Undef<T> => {
             const children = container.children;
@@ -159,7 +163,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                 if (predicate(item, i, children)) {
                     return item;
                 }
-                if (cascade && item instanceof Container && item.length) {
+                if (cascade && item instanceof Container && !item.isEmpty) {
                     const result = recurse(item);
                     if (result) {
                         return result;
@@ -174,12 +178,15 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return recurse(this);
     }
 
-    public some(predicate: IteratorPredicate<T, boolean>, options: squared.lib.base.ContainerSomeOptions<T> = {}) {
+    public some(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerSomeOptions<T>) {
         return this.find(predicate, options) !== undefined;
     }
 
-    public cascade(predicate?: (item: T) => boolean, options: squared.lib.base.ContainerCascadeOptions<T> = {}) {
-        const { error } = options;
+    public cascade(predicate?: (item: T) => boolean, options?: squared.lib.base.ContainerCascadeOptions<T>) {
+        let error: Undef<IteratorPredicate<T, boolean>>;
+        if (options) {
+            error = options.error;
+        }
         let invalid = false;
         const recurse = (container: Container<T>) => {
             let result: T[] = [];
@@ -194,7 +201,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                 if (predicate === undefined || predicate(item)) {
                     result.push(item);
                 }
-                if (item instanceof Container && item.length) {
+                if (item instanceof Container && !item.isEmpty) {
                     result = result.concat(recurse(item));
                     if (invalid) {
                         break;
@@ -208,6 +215,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     get children() {
         return this._children;
+    }
+
+    get isEmpty() {
+        return this._children.length === 0;
     }
 
     get length() {

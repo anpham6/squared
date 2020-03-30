@@ -745,6 +745,7 @@ declare namespace lib {
 
         interface Container<T> extends Iterable<T> {
             readonly children: T[];
+            readonly isEmpty: boolean;
             readonly length: number;
             [Symbol.iterator](): Iterator<T>;
             item(index?: number, value?: T): Undef<T>;

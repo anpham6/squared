@@ -155,7 +155,7 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
             if (singleRow && node.is(CONTAINER_NODE.BUTTON)) {
                 node.anchor('centerVertical', 'true');
             }
-            else if (node.naturalChild && node.length === 0) {
+            else if (node.naturalChild && node.isEmpty) {
                 node.anchor('baseline', baseline.documentId);
             }
             else if (node.baselineElement) {
@@ -969,7 +969,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 return (<View> layout.item(0)).floating && (
                     layout.linearY ||
                     layout.length > 2 && !layout.singleRowAligned && !layout.every(item => item.inlineFlow) ||
-                    layout.every(item => item.floating || item.block && (item.length > 0 || !(item.textElement || item.inputElement || item.imageElement || item.svgElement || item.controlElement)))
+                    layout.every(item => item.floating || item.block && (!item.isEmpty || !(item.textElement || item.inputElement || item.imageElement || item.svgElement || item.controlElement)))
                 );
             case 2:
                 return true;
@@ -1030,7 +1030,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const boxWidth = layout.parent.actualBoxWidth();
             let contentWidth = 0;
             for (const node of layout) {
-                if (!(node.naturalChild && node.length === 0 && !node.inputElement && !node.controlElement && !node.positionRelative && node.baseline && !node.blockVertical && node.zIndex === 0 && node.lineHeight === lineHeight && node.fontSize === fontSize)) {
+                if (!(node.naturalChild && node.isEmpty && !node.inputElement && !node.controlElement && !node.positionRelative && node.baseline && !node.blockVertical && node.zIndex === 0 && node.lineHeight === lineHeight && node.fontSize === fontSize)) {
                     return false;
                 }
                 else {
@@ -1154,7 +1154,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 valid = true;
                 break;
             default:
-                if (layout.length === 0) {
+                if (layout.isEmpty) {
                     return this.renderNode(layout);
                 }
                 break;
