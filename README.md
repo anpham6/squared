@@ -24,8 +24,13 @@ GitHub
 &nbsp;&nbsp;&nbsp;&gt; npm install  
 &nbsp;&nbsp;&nbsp;&gt; npm run prod  
 &nbsp;&nbsp;&nbsp;&gt; node app.js  
-  
-* Open Browser: http://localhost:3000/demos/index.html
+
+* Open Browser: http://localhost:3000
+
+*** OR ***
+
+* Install squared-apache: https://github.com/anpham6/squared-apache
+* Open Browser: http://localhost:8080
 
 ```javascript
 <script src="/dist/squared.min.js"></script>
@@ -197,11 +202,11 @@ reset() // clear cached layouts and reopen new session
 saveToArchive(filename?: string, options?: {}) // save entire project as a new archive
 createFrom(format: string, options: {}) // create new archive from only FileAsset[]
 
-// Required (local archives): --disk-read (command-line: argv)
+// Required (local archives): --disk-read | --unc-read | --access-all (command-line)
 appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive
 appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only FileAsset[]
 
-// Required (all): --disk-write (command-line: argv)
+// Required (all): --disk-write | --unc-write | --access-all (command-line)
 copyToDisk(directory: string, options?: {}) // copy entire project to local directory
 
 toString() // main layout file contents

@@ -5,9 +5,9 @@
   "main": "dist/squared.js",
   "scripts": {
     "express": "node app.js",
-    "express-r": "node app.js --disk-read",
-    "express-w": "node app.js --disk-write",
-    "express-rw": "node app.js --disk-read --disk-write",
+    "express-r": "node app.js --disk-read --unc-read",
+    "express-w": "node app.js --disk-write --unc-write",
+    "express-rw": "node app.js --access-all",
     "watch": "tsc -w -p tsconfig.json",
     "lint": "eslint **/*.ts --no-ignore",
     "dev-base": "tsc --inlineSourceMap false && rollup -c rollup.config.dev-base.js && cd ./android-framework && rollup -c rollup.config.dev.js",

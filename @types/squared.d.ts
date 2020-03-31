@@ -983,6 +983,7 @@ declare namespace lib {
         };
         const FILE: {
             NAME: RegExp;
+            UNC: RegExp;
             SVG: RegExp;
         };
         const CSS: {

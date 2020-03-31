@@ -19,6 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 app.use('/dist', express.static(path.join(__dirname, 'dist')));
 app.use('/temp', express.static(path.join(__dirname, 'temp')));
+app.use('/', express.static(path.join(__dirname, 'html')));
 
 if (env === 'development') {
     app.use('/build', express.static(path.join(__dirname, 'build')));
@@ -27,8 +28,13 @@ if (env === 'development') {
 }
 
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
-const DISK_READ = process.argv.includes('--disk-read');
-const DISK_WRITE = process.argv.includes('--disk-write');
+
+const argv = process.argv;
+const ACCESS_ALL = argv.includes('--access-all');
+const DISK_READ = ACCESS_ALL || argv.includes('--disk-read') || argv.includes('--access-disk');
+const DISK_WRITE = ACCESS_ALL || argv.includes('--disk-write') || argv.includes('--access-disk');
+const UNC_READ = ACCESS_ALL || argv.includes('--unc-read') || argv.includes('--access-unc');
+const UNC_WRITE = ACCESS_ALL || argv.includes('--unc-write') || argv.includes('--access-unc');
 const SEPARATOR = path.sep;
 
 function getFileData(file, dirname) {
@@ -85,15 +91,23 @@ function checkVersion(major, minor, patch = 0) {
 }
 
 const getCompressFormat = (compress, format) => compress && compress.find(item => item.format === format);
-const isRemoteFile = value => /^[A-Za-z]{3,}:\/\//.test(value);
+const isURIFile = value => /^[A-Za-z]{3,}:\/\//.test(value);
+const isUNCDirectory = value => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
+const isUNCFile = value => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
 
 app.post('/api/assets/copy', (req, res) => {
-    if (!DISK_WRITE) {
-        res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
-        return;
-    }
     const dirname = path.normalize(req.query.to);
     if (dirname) {
+        if (isUNCDirectory(dirname)) {
+            if (!UNC_WRITE) {
+                res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
+                return;
+            }
+        }
+        else if (!DISK_WRITE) {
+            res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
+            return;
+        }
         try {
             if (!fs.existsSync(dirname)) {
                 fs.mkdirpSync(dirname);
@@ -114,9 +128,8 @@ app.post('/api/assets/copy', (req, res) => {
                 return;
             }
             if (!running || running && --delayed === 0 && cleared) {
-                const success = delayed === 0;
+                res.json({ success: delayed === 0, directory: dirname });
                 delayed = Number.POSITIVE_INFINITY;
-                res.json({ success, directory: dirname });
             }
         };
         try {
@@ -176,7 +189,7 @@ app.post('/api/assets/copy', (req, res) => {
                         }
                     };
                     try {
-                        if (isRemoteFile(uri)) {
+                        if (isURIFile(uri)) {
                             delayed++;
                             const stream = fs.createWriteStream(filename);
                             stream.on('finish', () => {
@@ -196,18 +209,28 @@ app.post('/api/assets/copy', (req, res) => {
                                 .on('error', errorRequest)
                                 .pipe(stream);
                         }
-                        else if (DISK_READ && path.isAbsolute(uri)) {
-                            delayed++;
-                            fs.copyFile(
-                                uri,
-                                filename,
-                                err => {
-                                    if (!err) {
-                                        writeBuffer();
+                        else {
+                            const copyUri = () => {
+                                delayed++;
+                                fs.copyFile(
+                                    uri,
+                                    filename,
+                                    err => {
+                                        if (!err) {
+                                            writeBuffer();
+                                        }
+                                        finalize(true);
                                     }
-                                    finalize(true);
+                                );
+                            };
+                            if (isUNCFile(uri)) {
+                                if (UNC_READ) {
+                                    copyUri();
                                 }
-                            );
+                            }
+                            else if (DISK_READ && path.isAbsolute(uri)) {
+                                copyUri();
+                            }
                         }
                     }
                     catch (err) {
@@ -239,7 +262,10 @@ app.post('/api/assets/archive', (req, res) => {
         return;
     }
     const query = req.query;
-    const append_to = query.append_to;
+    let append_to = query.append_to;
+    if (path.isAbsolute(append_to)) {
+        append_to = path.normalize(append_to);
+    }
     let format;
     let gzip = false;
     switch (query.format) {
@@ -356,7 +382,7 @@ app.post('/api/assets/archive', (req, res) => {
                         }
                     };
                     try {
-                        if (isRemoteFile(uri)) {
+                        if (isURIFile(uri)) {
                             delayed++;
                             const stream = fs.createWriteStream(filename);
                             stream.on('finish', () => {
@@ -376,18 +402,28 @@ app.post('/api/assets/archive', (req, res) => {
                                 .on('error', errorRequest)
                                 .pipe(stream);
                         }
-                        else if (DISK_READ && path.isAbsolute(uri)) {
-                            delayed++;
-                            fs.copyFile(
-                                uri,
-                                filename,
-                                err => {
-                                    if (!err) {
-                                        writeBuffer();
+                        else {
+                            const copyUri = () => {
+                                delayed++;
+                                fs.copyFile(
+                                    uri,
+                                    filename,
+                                    err => {
+                                        if (!err) {
+                                            writeBuffer();
+                                        }
+                                        finalize(true);
                                     }
-                                    finalize(true);
+                                );
+                            };
+                            if (isUNCFile(uri)) {
+                                if (UNC_READ) {
+                                    copyUri();
                                 }
-                            );
+                            }
+                            else if (DISK_READ && path.isAbsolute(uri)) {
+                                copyUri();
+                            }
                         }
                     }
                     catch (err) {
@@ -437,7 +473,13 @@ app.post('/api/assets/archive', (req, res) => {
                         .pipe(stream);
                 }
                 else if (fs.existsSync(append_to)) {
-                    if (!DISK_READ) {
+                    if (isUNCFile(append_to)) {
+                        if (!UNC_READ) {
+                            res.json({ application: 'OPTION: --unc-read', system: 'Reading from UNC shares is not enabled.' });
+                            return;
+                        }
+                    }
+                    else if (!DISK_READ && path.isAbsolute(append_to)) {
                         res.json({ application: 'OPTION: --disk-read', system: 'Reading from disk is not enabled.' });
                         return;
                     }
