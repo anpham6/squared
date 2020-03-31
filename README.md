@@ -194,11 +194,15 @@ reset() // clear cached layouts and reopen new session
 // Required: NodeJS Express / squared-apache
 // NOTE: options: { assets?: FileAsset[], exclusions?: FileAssetExclusions, callback?: () => void }
 
-copyToDisk(directory: string, options?: {}) // copy entire project to local directory
-appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive
 saveToArchive(filename?: string, options?: {}) // save entire project as a new archive
 createFrom(format: string, options: {}) // create new archive from only FileAsset[]
+
+// Required (local archives): --disk-read (command-line: argv)
+appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive
 appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only FileAsset[]
+
+// Required (all): --disk-write (command-line: argv)
+copyToDisk(directory: string, options?: {}) // copy entire project to local directory
 
 toString() // main layout file contents
 

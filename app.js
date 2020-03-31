@@ -27,6 +27,8 @@ if (env === 'development') {
 }
 
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
+const DISK_READ = process.argv.includes('--disk-read');
+const DISK_WRITE = process.argv.includes('--disk-write');
 const SEPARATOR = path.sep;
 
 function getFileData(file, dirname) {
@@ -86,6 +88,10 @@ const getCompressFormat = (compress, format) => compress && compress.find(item =
 const isRemoteFile = value => /^[A-Za-z]{3,}:\/\//.test(value);
 
 app.post('/api/assets/copy', (req, res) => {
+    if (!DISK_WRITE) {
+        res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
+        return;
+    }
     const dirname = path.normalize(req.query.to);
     if (dirname) {
         try {
@@ -170,8 +176,8 @@ app.post('/api/assets/copy', (req, res) => {
                         }
                     };
                     try {
-                        delayed++;
                         if (isRemoteFile(uri)) {
+                            delayed++;
                             const stream = fs.createWriteStream(filename);
                             stream.on('finish', () => {
                                 if (!notFound[uri]) {
@@ -190,7 +196,8 @@ app.post('/api/assets/copy', (req, res) => {
                                 .on('error', errorRequest)
                                 .pipe(stream);
                         }
-                        else if (path.isAbsolute(uri)) {
+                        else if (DISK_READ && path.isAbsolute(uri)) {
+                            delayed++;
                             fs.copyFile(
                                 uri,
                                 filename,
@@ -349,8 +356,8 @@ app.post('/api/assets/archive', (req, res) => {
                         }
                     };
                     try {
-                        delayed++;
                         if (isRemoteFile(uri)) {
+                            delayed++;
                             const stream = fs.createWriteStream(filename);
                             stream.on('finish', () => {
                                 if (!notFound[uri]) {
@@ -369,7 +376,8 @@ app.post('/api/assets/archive', (req, res) => {
                                 .on('error', errorRequest)
                                 .pipe(stream);
                         }
-                        else if (path.isAbsolute(uri)) {
+                        else if (DISK_READ && path.isAbsolute(uri)) {
+                            delayed++;
                             fs.copyFile(
                                 uri,
                                 filename,
@@ -429,6 +437,10 @@ app.post('/api/assets/archive', (req, res) => {
                         .pipe(stream);
                 }
                 else if (fs.existsSync(append_to)) {
+                    if (!DISK_READ) {
+                        res.json({ application: 'OPTION: --disk-read', system: 'Reading from disk is not enabled.' });
+                        return;
+                    }
                     fs.copyFileSync(append_to, zipname);
                     copied();
                 }
