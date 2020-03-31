@@ -24,7 +24,7 @@ const REGEX_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
 const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
-const REGEX_EM = /em$/;
+const REGEX_EM = /\dem$/;
 const REGEX_GRID = /grid$/;
 const REGEX_FLEX = /flex$/;
 
@@ -66,33 +66,33 @@ function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Nod
     return fallback;
 }
 
-function validateQuerySelector(this: T, node: T, selector: QueryData, index: number, last: boolean, adjacent?: string) {
+function validateQuerySelector(this: T, child: T, selector: QueryData, index: number, last: boolean, adjacent?: string) {
     if (selector.all) {
         return true;
     }
     let tagName = selector.tagName;
-    if (tagName && tagName !== node.tagName.toUpperCase()) {
+    if (tagName && tagName !== child.tagName.toUpperCase()) {
         return false;
     }
     const id = selector.id;
-    if (id && id !== node.elementId) {
+    if (id && id !== child.elementId) {
         return false;
     }
     const { attrList, classList, notList, pseudoList } = selector;
     if (pseudoList) {
-        const parent = node.actualParent as T;
-        tagName = node.tagName;
+        const parent = child.actualParent as T;
+        tagName = child.tagName;
         for (const pseudo of pseudoList) {
             switch (pseudo) {
                 case ':first-child':
                 case ':nth-child(1)':
-                    if (node !== parent.firstChild) {
+                    if (child !== parent.firstChild) {
                         return false;
                     }
                     break;
                 case ':last-child':
                 case ':nth-last-child(1)':
-                    if (node !== parent.lastChild) {
+                    if (child !== parent.lastChild) {
                         return false;
                     }
                     break;
@@ -113,7 +113,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                 case ':first-of-type': {
                     for (const item of parent.naturalElements) {
                         if (item.tagName === tagName) {
-                            if (item !== node) {
+                            if (item !== child) {
                                 return false;
                             }
                             break;
@@ -125,19 +125,19 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                 case ':nth-last-child(n)':
                     break;
                 case ':empty':
-                    if ((<HTMLElement> node.element).childNodes.length) {
+                    if ((<HTMLElement> child.element).childNodes.length) {
                         return false;
                     }
                     break;
                 case ':checked':
                     switch (tagName) {
                         case 'INPUT':
-                            if (!node.toElementBoolean('checked')) {
+                            if (!child.toElementBoolean('checked')) {
                                 return false;
                             }
                             break;
                         case 'OPTION':
-                            if (!node.toElementBoolean('selected')) {
+                            if (!child.toElementBoolean('selected')) {
                                 return false;
                             }
                             break;
@@ -146,41 +146,41 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                     }
                     break;
                 case ':enabled':
-                    if (!node.inputElement || node.toElementBoolean('disabled')) {
+                    if (!child.inputElement || child.toElementBoolean('disabled')) {
                         return false;
                     }
                     break;
                 case ':disabled':
-                    if (!node.inputElement || !node.toElementBoolean('disabled')) {
+                    if (!child.inputElement || !child.toElementBoolean('disabled')) {
                         return false;
                     }
                     break;
                 case ':read-only': {
-                    const element = <HTMLInputElement | HTMLTextAreaElement> node.element;
+                    const element = <HTMLInputElement | HTMLTextAreaElement> child.element;
                     if (element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && !element.readOnly) {
                         return false;
                     }
                     break;
                 }
                 case ':read-write': {
-                    const element = <HTMLInputElement | HTMLTextAreaElement> node.element;
+                    const element = <HTMLInputElement | HTMLTextAreaElement> child.element;
                     if (!element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && element.readOnly) {
                         return false;
                     }
                     break;
                 }
                 case ':required':
-                    if (!node.inputElement || tagName === 'BUTTON' || !node.toElementBoolean('required')) {
+                    if (!child.inputElement || tagName === 'BUTTON' || !child.toElementBoolean('required')) {
                         return false;
                     }
                     break;
                 case ':optional':
-                    if (!node.inputElement || tagName === 'BUTTON' || node.toElementBoolean('required')) {
+                    if (!child.inputElement || tagName === 'BUTTON' || child.toElementBoolean('required')) {
                         return false;
                     }
                     break;
                 case ':placeholder-shown': {
-                    if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && node.toElementString('placeholder') !== '')) {
+                    if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && child.toElementString('placeholder') !== '')) {
                         return false;
                     }
                     break;
@@ -188,7 +188,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                 case ':default': {
                     switch (tagName) {
                         case 'INPUT': {
-                            const element = <HTMLInputElement> node.element;
+                            const element = <HTMLInputElement> child.element;
                             switch (element.type) {
                                 case 'radio':
                                 case 'checkbox':
@@ -202,15 +202,15 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                             break;
                         }
                         case 'OPTION':
-                            if ((<HTMLOptionElement> node.element).attributes['selected'] === undefined) {
+                            if ((<HTMLOptionElement> child.element).attributes['selected'] === undefined) {
                                 return false;
                             }
                             break;
                         case 'BUTTON': {
-                            const form = node.ascend({ condition: item => item.tagName === 'FORM' })[0];
+                            const form = child.ascend({ condition: item => item.tagName === 'FORM' })[0];
                             if (form) {
                                 let valid = false;
-                                const element = <HTMLElement> node.element;
+                                const element = <HTMLElement> child.element;
                                 iterateArray((<Element> form.element).querySelectorAll('*'), (item: HTMLInputElement) => {
                                     switch (item.tagName) {
                                         case 'BUTTON':
@@ -241,7 +241,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                 case ':in-range':
                 case ':out-of-range': {
                     if (tagName === 'INPUT') {
-                        const element = <HTMLInputElement> node.element;
+                        const element = <HTMLInputElement> child.element;
                         const value = parseFloat(element.value);
                         if (!isNaN(value)) {
                             const min = parseFloat(element.min);
@@ -266,7 +266,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                 }
                 case ':indeterminate':
                     if (tagName === 'INPUT') {
-                        const element = <HTMLInputElement> node.element;
+                        const element = <HTMLInputElement> child.element;
                         switch (element.type) {
                             case 'checkbox':
                                 if (!element.indeterminate) {
@@ -278,7 +278,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                                     return false;
                                 }
                                 else if (element.name) {
-                                    if (iterateArray((node.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item: HTMLInputElement) => item.checked) === Number.POSITIVE_INFINITY) {
+                                    if (iterateArray((child.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item: HTMLInputElement) => item.checked) === Number.POSITIVE_INFINITY) {
                                         return false;
                                     }
                                 }
@@ -288,7 +288,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                         }
                     }
                     else if (tagName === 'PROGRESS') {
-                        if (node.toElementInt('value', -1) !== -1) {
+                        if (child.toElementInt('value', -1) !== -1) {
                             return false;
                         }
                     }
@@ -301,7 +301,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                         return false;
                     }
                     else {
-                        const element = <HTMLAnchorElement> node.element;
+                        const element = <HTMLAnchorElement> child.element;
                         if (!(location.hash === `#${element.id}` || tagName === 'A' && location.hash === `#${element.name}`)) {
                             return false;
                         }
@@ -309,7 +309,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                     break;
                 }
                 case ':scope':
-                    if (!last || adjacent === '>' && node !== this) {
+                    if (!last || adjacent === '>' && child !== this) {
                         return false;
                     }
                     break;
@@ -326,7 +326,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                 case ':focus-within':
                 case ':valid':
                 case ':invalid': {
-                    const element = node.element;
+                    const element = child.element;
                     if (iterateArray((<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo), item => item === element) !== Number.POSITIVE_INFINITY) {
                         return false;
                     }
@@ -340,7 +340,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                         if (match[1]) {
                             children = children.slice(0).reverse();
                         }
-                        const i = (match[2] === 'child' ? children.indexOf(node) : children.filter(item => item.tagName === tagName).indexOf(node)) + 1;
+                        const i = (match[2] === 'child' ? children.indexOf(child) : children.filter(item => item.tagName === tagName).indexOf(child)) + 1;
                         if (i > 0) {
                             if (isNumber(placement)) {
                                 if (parseInt(placement) !== i) {
@@ -411,7 +411,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                     else {
                         match = REGEX_QUERY_LANG.exec(pseudo);
                         if (match) {
-                            if (node.attributes['lang']?.trim().toLowerCase() === match[1].toLowerCase()) {
+                            if (child.attributes['lang']?.trim().toLowerCase() === match[1].toLowerCase()) {
                                 continue;
                             }
                         }
@@ -423,7 +423,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
     }
     if (notList) {
         for (const not of notList) {
-            const notData: QueryData = { all: false };
+            const notData: QueryData = {};
             switch (not.charAt(0)) {
                 case '.':
                     notData.classList = [not];
@@ -463,13 +463,13 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
                         return false;
                     }
             }
-            if (validateQuerySelector.call(this, node, notData, index, last)) {
+            if (validateQuerySelector.call(this, child, notData, index, last)) {
                 return false;
             }
         }
     }
     if (classList) {
-        const elementList = (<HTMLElement> node.element).classList;
+        const elementList = (<HTMLElement> child.element).classList;
         for (const className of classList) {
             if (!elementList.contains(className)) {
                 return false;
@@ -477,7 +477,7 @@ function validateQuerySelector(this: T, node: T, selector: QueryData, index: num
         }
     }
     if (attrList) {
-        const attributes = node.attributes;
+        const attributes = child.attributes;
         for (const attr of attrList) {
             let value = attributes[attr.key];
             if (value === undefined) {
@@ -555,6 +555,7 @@ function deleteStyleCache(element: HTMLElement, attr: string, sessionId: string)
 
 const canTextAlign = (node: T) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
+const soryById = (a: T, b: T) => a.id < b.id ? -1 : 1;
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public documentRoot = false;
@@ -1170,146 +1171,162 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public querySelector(value: string) {
-        return this.naturalElement && this.querySelectorAll(value, 1)[0] || null;
+        return this.querySelectorAll(value, 1)[0] || null;
     }
 
     public querySelectorAll(value: string, resultCount = -1) {
         let result: T[] = [];
         const queryMap = this.queryMap;
-        if (queryMap) {
+        if (queryMap && resultCount !== 0) {
             const queries = parseSelectorText(value);
             for (let i = 0; i < queries.length; i++) {
                 const query = queries[i];
                 const selectors: QueryData[] = [];
                 let offset = -1;
                 invalid: {
-                    let adjacent: Undef<string>;
-                    SELECTOR_G.lastIndex = 0;
-                    let match: Null<RegExpExecArray>;
-                    while ((match = SELECTOR_G.exec(query)) !== null) {
-                        let segment = match[1];
-                        let all = false;
-                        let tagName: Undef<string>;
-                        let id: Undef<string>;
-                        let classList: Undef<string[]>;
-                        let attrList: Undef<QueryAttribute[]>;
-                        let pseudoList: Undef<string[]>;
-                        let notList: Undef<string[]>;
-                        if (segment.length === 1) {
-                            const ch = segment.charAt(0);
-                            switch (ch) {
-                                case '+':
-                                case '~':
-                                    offset--;
-                                case '>':
-                                    if (adjacent || selectors.length === 0) {
-                                        selectors.length = 0;
-                                        break invalid;
-                                    }
-                                    adjacent = ch;
-                                    continue;
-                                case '*':
-                                    all = true;
-                                    break;
-                            }
-                        }
-                        else if (segment.endsWith('|*')) {
-                            all = segment === '*|*';
-                        }
-                        else if (segment.charAt(0) === '*') {
-                            segment = segment.substring(1);
-                        }
-                        else if (/^::/.test(segment)) {
-                            selectors.length = 0;
-                            break invalid;
-                        }
-                        if (!all) {
-                            let subMatch: Null<RegExpExecArray>;
-                            while ((subMatch = SELECTOR_ATTR.exec(segment)) !== null) {
-                                if (attrList === undefined) {
-                                    attrList = [];
+                    if (query === '*') {
+                        selectors.push({ all: true });
+                        offset++;
+                    }
+                    else {
+                        let adjacent: Undef<string>;
+                        SELECTOR_G.lastIndex = 0;
+                        let match: Null<RegExpExecArray>;
+                        while ((match = SELECTOR_G.exec(query)) !== null) {
+                            let segment = match[1];
+                            let all = false;
+                            if (segment.length === 1) {
+                                const ch = segment.charAt(0);
+                                switch (ch) {
+                                    case '+':
+                                    case '~':
+                                        offset--;
+                                    case '>':
+                                        if (adjacent || selectors.length === 0) {
+                                            selectors.length = 0;
+                                            break invalid;
+                                        }
+                                        adjacent = ch;
+                                        continue;
+                                    case '*':
+                                        all = true;
+                                        break;
                                 }
-                                const caseInsensitive = subMatch[6] === 'i';
-                                let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
-                                if (caseInsensitive) {
-                                    attrValue = attrValue.toLowerCase();
-                                }
-                                attrList.push({
-                                    key: subMatch[1],
-                                    symbol: subMatch[2],
-                                    value: attrValue,
-                                    caseInsensitive
-                                });
-                                segment = spliceString(segment, subMatch.index, subMatch[0].length);
                             }
-                            if (segment.includes('::')) {
+                            else if (segment.endsWith('|*')) {
+                                all = segment === '*|*';
+                            }
+                            else if (segment.charAt(0) === '*') {
+                                segment = segment.substring(1);
+                            }
+                            else if (/^::/.test(segment)) {
                                 selectors.length = 0;
                                 break invalid;
                             }
-                            while ((subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
-                                if (/^:not\(/.test(subMatch[0])) {
-                                    if (subMatch[1]) {
-                                        if (notList === undefined) {
-                                            notList = [];
-                                        }
-                                        notList.push(subMatch[1]);
-                                    }
-                                }
-                                else {
-                                    if (pseudoList === undefined) {
-                                        pseudoList = [];
-                                    }
-                                    pseudoList.push(subMatch[0]);
-                                }
-                                segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                            if (all) {
+                                selectors.push({ all: true });
                             }
-                            while ((subMatch = SELECTOR_LABEL.exec(segment)) !== null) {
-                                const label = subMatch[0];
-                                switch (label.charAt(0)) {
-                                    case '#':
-                                        id = label.substring(1);
-                                        break;
-                                    case '.':
-                                        if (classList === undefined) {
-                                            classList = [];
-                                        }
-                                        classList.push(label.substring(1));
-                                        break;
-                                    default:
-                                        tagName = label.toUpperCase();
-                                        break;
+                            else {
+                                let tagName: Undef<string>;
+                                let id: Undef<string>;
+                                let classList: Undef<string[]>;
+                                let attrList: Undef<QueryAttribute[]>;
+                                let pseudoList: Undef<string[]>;
+                                let notList: Undef<string[]>;
+                                let subMatch: Null<RegExpExecArray>;
+                                while ((subMatch = SELECTOR_ATTR.exec(segment)) !== null) {
+                                    if (attrList === undefined) {
+                                        attrList = [];
+                                    }
+                                    const caseInsensitive = subMatch[6] === 'i';
+                                    let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
+                                    if (caseInsensitive) {
+                                        attrValue = attrValue.toLowerCase();
+                                    }
+                                    attrList.push({
+                                        key: subMatch[1],
+                                        symbol: subMatch[2],
+                                        value: attrValue,
+                                        caseInsensitive
+                                    });
+                                    segment = spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
-                                segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                                if (segment.includes('::')) {
+                                    selectors.length = 0;
+                                    break invalid;
+                                }
+                                while ((subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
+                                    const pseudoClass = subMatch[0];
+                                    if (/^:not\(/.test(pseudoClass)) {
+                                        if (subMatch[1]) {
+                                            if (notList === undefined) {
+                                                notList = [];
+                                            }
+                                            notList.push(subMatch[1]);
+                                        }
+                                    }
+                                    else {
+                                        if (pseudoList === undefined) {
+                                            pseudoList = [];
+                                        }
+                                        pseudoList.push(pseudoClass);
+                                    }
+                                    segment = spliceString(segment, subMatch.index, pseudoClass.length);
+                                }
+                                while ((subMatch = SELECTOR_LABEL.exec(segment)) !== null) {
+                                    const label = subMatch[0];
+                                    switch (label.charAt(0)) {
+                                        case '#':
+                                            id = label.substring(1);
+                                            break;
+                                        case '.':
+                                            if (classList === undefined) {
+                                                classList = [];
+                                            }
+                                            classList.push(label.substring(1));
+                                            break;
+                                        default:
+                                            tagName = label.toUpperCase();
+                                            break;
+                                    }
+                                    segment = spliceString(segment, subMatch.index, label.length);
+                                }
+                                selectors.push({
+                                    tagName,
+                                    id,
+                                    adjacent,
+                                    classList,
+                                    pseudoList,
+                                    notList,
+                                    attrList
+                                });
                             }
+                            offset++;
+                            adjacent = undefined;
                         }
-                        selectors.push({
-                            all,
-                            tagName,
-                            id,
-                            adjacent,
-                            classList,
-                            pseudoList,
-                            notList,
-                            attrList
-                        });
-                        offset++;
-                        adjacent = undefined;
                     }
                 }
                 let length = queryMap.length;
                 if (selectors.length && offset !== -1 && offset < length) {
                     const dataEnd = <QueryData> selectors.pop();
                     const lastEnd = selectors.length === 0;
-                    let pending: T[] = [];
-                    for (let j = offset; j < length; j++) {
-                        const dataMap = queryMap[j];
-                        if (dataEnd.all) {
-                            pending = pending.concat(dataMap);
-                        }
-                        else {
-                            for (const node of dataMap) {
-                                if (validateQuerySelector.call(this, node, dataEnd, i, lastEnd)) {
-                                    pending.push(node);
+                    const currentCount = result.length;
+                    let pending: T[];
+                    if (dataEnd.all && length - offset === 1) {
+                        pending = queryMap[offset];
+                    }
+                    else {
+                        pending = [];
+                        for (let j = offset; j < length; j++) {
+                            const dataMap = queryMap[j];
+                            if (dataEnd.all) {
+                                pending = pending.concat(dataMap);
+                            }
+                            else {
+                                for (const node of dataMap) {
+                                    if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector.call(this, node, dataEnd, i, lastEnd)) {
+                                        pending.push(node);
+                                    }
                                 }
                             }
                         }
@@ -1378,32 +1395,49 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             }
                             return false;
                         };
+                        let j = currentCount;
                         for (const node of pending) {
-                            if (ascendQuerySelector(0, dataEnd.adjacent, [node])) {
+                            if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(0, dataEnd.adjacent, [node])) {
                                 result.push(node);
-                                if (result.length === resultCount) {
-                                    return result;
+                                if (++j === resultCount) {
+                                    return result.sort(soryById);
                                 }
                             }
                         }
                     }
-                    else if (result.length === 0 && (i === queries.length - 1 || resultCount >= 0 && resultCount <= pending.length)) {
-                        if (resultCount >= 0 && pending.length > resultCount) {
-                            pending.length = resultCount;
+                    else if (currentCount === 0) {
+                        if (i === queries.length - 1 || resultCount > 0 && resultCount <= pending.length) {
+                            if (resultCount > 0 && pending.length > resultCount) {
+                                pending.length = resultCount;
+                            }
+                            return pending.sort(soryById);
                         }
-                        return pending;
+                        else {
+                            result = pending;
+                        }
+                    }
+                    else if (resultCount > 0) {
+                        let j = currentCount;
+                        for (const item of pending) {
+                            if (!result.includes(item)) {
+                                result.push(item);
+                                if (++j === resultCount) {
+                                    return result.sort(soryById);
+                                }
+                            }
+                        }
                     }
                     else {
-                        result = result.concat(pending);
-                        if (resultCount >= 0 && result.length >= resultCount) {
-                            result.length = resultCount;
-                            return result;
+                        for (const item of pending) {
+                            if (!result.includes(item)) {
+                                result.push(item);
+                            }
                         }
                     }
                 }
             }
         }
-        return result;
+        return result.sort(soryById);
     }
 
     private _setDimension(attr: DimensionAttr, attrMin: string, attrMax: string) {
@@ -2850,25 +2884,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const element = this.element;
                 if (element && hasComputedStyle(element)) {
                     const node = getElementAsNode<T>(element, this.sessionId);
-                    if (node) {
-                        result = node.fontSize;
-                    }
-                    else {
-                        result = getFontSize(getStyle(element));
-                    }
+                    result = node?.fontSize || getFontSize(getStyle(element));
                 }
                 else {
-                    do {
-                        const parent = this.actualParent;
-                        if (parent) {
-                            result = getFontSize(parent.style);
-                        }
-                        else {
-                            result = getFontSize(getStyle(document.body));
-                            break;
-                        }
-                    }
-                    while (result === 0);
+                    result = this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize || getFontSize(getStyle(document.body));
                 }
             }
             this._fontSize = result;

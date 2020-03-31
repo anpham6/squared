@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <style>
+    </style>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/squared.svg.js"></script>
+    <script src="/dist/chrome.framework.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            squared.setFramework(chrome);
+            const result = squared.system.getElement(document.body).querySelectorAll('ul * a, * * * li');
+            console.log(result);
+            console.log(document.body.querySelectorAll('ul * a, * * * li'));
+        });
+    </script>
+</head>
+<body>
+    <ul>
+        <li><a href="https://github.com/anpham6/squared">squared</a></li>
+        <li><a href="https://github.com/anpham6/squared-apache">squared-apache</a></li>
+    </ul>
+</body>
+</html>

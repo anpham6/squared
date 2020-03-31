@@ -21,7 +21,7 @@ const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
 
-const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z-]+))?\)|"([^"]+)")\s*/g;
+const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
 const STRING_PSEUDOPREFIX = '__squared_';
 
 function createPseudoElement(parent: Element, tagName = 'span', index = -1) {

@@ -5,7 +5,8 @@ android-framework/
 android-widget/
 build/
 chrome-framework/
-html/
+html/books/
+html/demos/
 node_modules/
 src/
 temp/

@@ -607,7 +607,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     important[attr] = true;
                 }
-                for (const selectorText of parseSelectorText(item.selectorText)) {
+                for (const selectorText of parseSelectorText(item.selectorText, true)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');
                     const targetElt = target ? '::' + target : '';

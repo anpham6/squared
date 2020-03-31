@@ -135,7 +135,7 @@ export interface BoxOptions {
 }
 
 export interface QueryData {
-    all: boolean;
+    all?: boolean;
     tagName?: string;
     id?: string;
     adjacent?: string;

@@ -18,6 +18,8 @@ const REGEX_SRCSET = /^(.*?)\s+(?:([\d.]+)([xw]))?$/;
 const REGEX_OPERATOR = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEX_INTEGER = /^\s*-?\d+\s*$/;
 const REGEX_DIVIDER = /\s*\/\s*/;
+const REGEX_SELECTORALL = /^\*(\s+\*){0,2}$/;
+const REGEX_SELECTORTRIM = /^(\*\s+){1,2}/;
 const REGEX_CALC = new RegExp(STRING.CSS_CALC);
 const REGEX_LENGTH = new RegExp(`(${STRING.UNIT_LENGTH}|%)`);
 const REGEX_SOURCESIZES = new RegExp(`\\s*(?:(\\(\\s*)?${STRING_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${STRING_SIZES}(\\s*\\))?)?\\s*(.+)`);
@@ -262,6 +264,7 @@ const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
 const trimEnclosing = (value: string) => value.substring(1, value.length - 1);
+const trimSelector = (value: string) => REGEX_SELECTORALL.test(value) ? '*' : value.replace(REGEX_SELECTORTRIM, '');
 
 export const enum CSS_UNIT {
     NONE = 0,
@@ -309,38 +312,38 @@ export function hasComputedStyle(element: Element): element is HTMLElement {
     return element.nodeName.charAt(0) !== '#' && (element instanceof HTMLElement || element instanceof SVGElement);
 }
 
-export function parseSelectorText(value: string) {
-    value = value.trim();
+export function parseSelectorText(value: string, document?: boolean) {
+    value = document ? value.trim() : trimSelector(value.trim());
     if (value.includes(',')) {
-        let separatorValue = value;
+        let normalized = value;
         let found = false;
         let match: Null<RegExpExecArray>;
-        while ((match = CSS.SELECTOR_ATTR.exec(separatorValue)) !== null) {
+        while ((match = CSS.SELECTOR_ATTR.exec(normalized)) !== null) {
             const index = match.index;
             const length = match[0].length;
-            separatorValue = (index > 0 ? separatorValue.substring(0, index) : '') + '_'.repeat(length) + separatorValue.substring(index + length);
+            normalized = (index > 0 ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
             found = true;
         }
         if (found) {
-            const result: string[] = [];
-            let index: number;
+            const result = [];
             let position = 0;
             while (true) {
-                index = separatorValue.indexOf(',', position);
+                const index = normalized.indexOf(',', position);
                 if (index !== -1) {
-                    result.push(value.substring(position, index).trim());
+                    const segment = value.substring(position, index).trim();
+                    result.push(position === 0 ? segment : trimSelector(segment));
                     position = index + 1;
                 }
                 else {
                     if (position > 0) {
-                        result.push(value.substring(position).trim());
+                        result.push(trimSelector(value.substring(position).trim()));
                     }
                     break;
                 }
             }
             return result;
         }
-        return value.split(XML.SEPARATOR);
+        return replaceMap(value.split(XML.SEPARATOR), (selector: string) => trimSelector(selector));
     }
     return [value];
 }
