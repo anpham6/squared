@@ -1,16 +1,6 @@
-import type { FileArchivingOptions, FileAsset, FileCopyingOptions, RawAsset, UserSettings } from '../../@types/base/application';
+import type { FileArchivingOptions, FileCopyingOptions, RawAsset, UserSettings } from '../../@types/base/application';
 
-const { fromLastIndexOf, isString, resolvePath } = squared.lib.util;
-
-function resolvePathAssets(assets: FileAsset[] = []) {
-    for (const item of assets) {
-        const uri = item.uri;
-        if (uri) {
-            item.uri = resolvePath(uri);
-        }
-    }
-    return assets;
-}
+const { fromLastIndexOf, isString } = squared.lib.util;
 
 const isHttpProtocol = () => /^http/.test(location.protocol);
 
@@ -232,7 +222,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (isHttpProtocol()) {
             const directory = options.directory;
             if (isString(directory)) {
-                const assets = resolvePathAssets(options.assets).concat(this.assets);
+                const assets = options.assets ? options.assets.concat(this.assets) : this.assets;
                 if (assets.length) {
                     assets[0].exclusions = options.exclusions;
                     fetch(
@@ -276,7 +266,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (isHttpProtocol()) {
             const filename = options.filename;
             if (isString(filename)) {
-                const assets = resolvePathAssets(options.assets).concat(this.assets);
+                const assets = options.assets ? options.assets.concat(this.assets) : this.assets;
                 if (assets.length) {
                     assets[0].exclusions = options.exclusions;
                     fetch(

@@ -2431,9 +2431,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get verticalAlign() {
         let result = this._cached.verticalAlign;
         if (result === undefined) {
-            result = this.css('verticalAlign');
-            if (isLength(result, true)) {
-                result = this.parseUnit(result, 'height') + 'px';
+            if (this.pageFlow) {
+                result = this.css('verticalAlign');
+                if (isLength(result, true)) {
+                    result = this.parseUnit(result, 'height') + 'px';
+                }
+            }
+            else {
+                result = '0px';
             }
             this._cached.verticalAlign = result;
         }

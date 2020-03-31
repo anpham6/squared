@@ -33,29 +33,35 @@ const REGEX_THEME_UNIT = />(-?[\d.]+)px</g;
 
 function getFileAssets(directory: string, items: string[]) {
     const length = items.length;
-    const result: FileAsset[] = new Array(length / 3);
-    for (let i = 0, j = 0; i < length; i += 3, j++) {
-        result[j] = {
-            pathname: directory + items[i + 1],
-            filename: items[i + 2],
-            content: items[i]
-        };
+    if (length) {
+        const result: FileAsset[] = new Array(length / 3);
+        for (let i = 0, j = 0; i < length; i += 3, j++) {
+            result[j] = {
+                pathname: directory + items[i + 1],
+                filename: items[i + 2],
+                content: items[i]
+            };
+        }
+        return result;
     }
-    return result;
+    return items as any[];
 }
 
 function getImageAssets(directory: string, items: string[]) {
     const length = items.length;
-    const result: FileAsset[] = new Array(length / 3);
-    for (let i = 0, j = 0; i < length; i += 3, j++) {
-        result[j] = {
-            pathname: directory + items[i + 1],
-            filename: items[i + 2].split('?')[0],
-            content: '',
-            uri: items[i]
-        };
+    if (length) {
+        const result: FileAsset[] = new Array(length / 3);
+        for (let i = 0, j = 0; i < length; i += 3, j++) {
+            result[j] = {
+                pathname: directory + items[i + 1],
+                filename: items[i + 2].split('?')[0],
+                content: '',
+                uri: items[i]
+            };
+        }
+        return result;
     }
-    return result;
+    return items as any[];
 }
 
 function getOutputDirectory(value: string) {

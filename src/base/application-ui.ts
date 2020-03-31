@@ -550,9 +550,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const dataset = element.dataset;
         const { filename, iteration } = dataset;
         const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
-        const suffix = (iteration ? parseInt(iteration) : -1) + 1;
-        const layoutName = convertWord(suffix > 1 ? `${prefix}_${suffix}` : prefix, true);
-        dataset.iteration = suffix.toString();
+        const postfix = (iteration ? parseInt(iteration) : -1) + 1;
+        const layoutName = convertWord(postfix > 1 ? `${prefix}_${postfix}` : prefix, true);
+        dataset.iteration = postfix.toString();
         dataset.layoutName = layoutName;
         this.setBaseLayout();
         this.setConstraints();
@@ -576,7 +576,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public toString() {
-        return this._layouts[0]?.content || '';
+        return this.layouts[0]?.content || '';
     }
 
     protected cascadeParentNode(parentElement: HTMLElement, depth: number, extensions?: ExtensionUI<T>[]) {

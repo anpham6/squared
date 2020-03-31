@@ -1179,8 +1179,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const { containerType, node } = layout;
         const dataset = node.dataset;
         let controlName = View.getControlName(containerType, node.api);
-        node.setControlType(controlName, containerType);
-        node.addAlign(layout.alignmentType);
         let parent = layout.parent;
         let target = !dataset.use && dataset.target;
         switch (node.tagName) {
@@ -1542,7 +1540,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 if ((<HTMLInputElement> node.element).list?.children.length) {
                     controlName = CONTAINER_ANDROID.EDIT_LIST;
-                    node.controlName = controlName;
                 }
                 else if (node.api >= BUILD_ANDROID.OREO) {
                     node.android('importantForAutofill', 'no');
@@ -1559,16 +1556,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 break;
         }
-        if (node.inlineVertical && (!parent.layoutHorizontal || parent.layoutLinear)) {
-            switch (node.verticalAlign) {
-                case 'sub':
-                    node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.floor(node.baselineHeight * this.localSettings.deviations.subscriptBottomOffset) * -1);
-                    break;
-                case 'super':
-                    node.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.floor(node.baselineHeight * this.localSettings.deviations.superscriptTopOffset) * -1);
-                    break;
-            }
-        }
+        node.setControlType(controlName, containerType);
+        node.addAlign(layout.alignmentType);
         node.render(target ? this.application.resolveTarget(target) : parent);
         return <NodeXmlTemplate<T>> {
             type: NODE_TEMPLATE.XML,
@@ -2472,7 +2461,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (item === baseline || item === textBottom) {
                             continue;
                         }
-                        else if (item.controlElement) {
+                        const verticalAlign = item.inlineVertical ? item.css('verticalAlign') : '';
+                        if (item.controlElement) {
                             let adjustment = item.bounds.top;
                             if (previousBaseline) {
                                 adjustment -= previousBaseline.linear.bottom;
@@ -2494,8 +2484,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 baselineAlign.push(item);
                             }
                         }
-                        else if (item.inlineVertical) {
-                            switch (item.css('verticalAlign')) {
+                        else {
+                            switch (verticalAlign) {
                                 case 'text-top':
                                     if (textBaseline === null) {
                                         textBaseline = NodeUI.baseline(items, true);
@@ -2570,10 +2560,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     break;
                             }
                         }
-                        else {
-                            alignTop = true;
-                        }
-                        if (alignTop && i === 0) {
+                        if (i === 0 && alignTop) {
                             item.anchor('top', 'true');
                         }
                     }
@@ -2867,28 +2854,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     case 'text-bottom':
                         baseline.anchor('bottom', tallest.documentId);
                         break;
-                    case 'sub':
-                        if (!tallest.textElement) {
-                            baseline.anchor('bottom', tallest.documentId);
-                            baseline.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.floor(baseline.baselineHeight * this.localSettings.deviations.subscriptBottomOffset) * -1);
-                        }
-                        break;
-                    case 'super':
-                        if (!tallest.textElement) {
-                            baseline.anchor('bottom', tallest.documentId);
-                            baseline.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.floor(baseline.baselineHeight * this.localSettings.deviations.superscriptTopOffset) * -1);
-                        }
+                    default:
+                        setAlignTop(baseline);
                         break;
                 }
             }
+            else if (valid && baseline.baselineElement && !baseline.imageOrSvgElement && node.ascend({ condition: (item: T) => item.layoutHorizontal, error: (item: T) => item.naturalChild && item.layoutVertical || item.layoutGrid, attr: 'renderParent' }).length) {
+                baseline.anchorParent('vertical');
+                baseline.anchor('baseline', 'parent');
+            }
             else {
-                if (valid && baseline.baselineElement && !baseline.imageOrSvgElement && node.ascend({ condition: (item: T) => item.layoutHorizontal, error: (item: T) => item.naturalChild && item.layoutVertical || item.layoutGrid, attr: 'renderParent' }).length) {
-                    baseline.anchorParent('vertical');
-                    baseline.anchor('baseline', 'parent');
-                }
-                else {
-                    setAlignTop(baseline);
-                }
+                setAlignTop(baseline);
             }
             baseline.baselineActive = baselineCount > 0;
             baseline.anchored = true;

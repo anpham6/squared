@@ -29,8 +29,8 @@ if (env === 'development') {
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
 const SEPARATOR = process.platform === 'win32' ? '\\' : '/';
 
-function getFileData(file) {
-    const pathname = replaceSeparator(file.pathname);
+function getFileData(file, dirname) {
+    const pathname = appendSeparator(dirname, replaceSeparator(file.pathname));
     const compress = file.compress;
     const gz = getCompressFormat(compress, 'gz');
     const br = getCompressFormat(compress, 'br');
@@ -84,7 +84,7 @@ function checkVersion(major, minor, patch = 0) {
 
 const getCompressFormat = (compress, format) => compress && compress.find(item => item.format === format);
 const appendSeparator = (value, append) => value + (value && append && !value.endsWith(SEPARATOR) && !append.startsWith(SEPARATOR) ? SEPARATOR : '') + append;
-const replaceSeparator = value => value.replace(SEPARATOR === '/' ? '\\' : '/', SEPARATOR);
+const replaceSeparator = value => value.replace(SEPARATOR === '/' ? /\\\\/g : /\//g, SEPARATOR);
 const isRemoteFile = value => /^[A-Za-z]{3,}:\/\//.test(value);
 
 app.post('/api/assets/copy', (req, res) => {
@@ -110,18 +110,16 @@ app.post('/api/assets/copy', (req, res) => {
                 return;
             }
             if (!running || running && --delayed === 0 && cleared) {
+                const success = delayed === 0;
                 delayed = Number.POSITIVE_INFINITY;
-                res.json({ success: delayed === 0, directory: dirname });
+                res.json({ success, directory: dirname });
             }
         };
         try {
             const notFound = {};
             const emptyDir = {};
             for (const file of req.body) {
-                if (delayed === Number.POSITIVE_INFINITY) {
-                    break;
-                }
-                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file);
+                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file, dirname);
                 const { content, base64, uri } = file;
                 const writeBuffer = () => {
                     if (gzipLevel !== -1) {
@@ -213,9 +211,11 @@ app.post('/api/assets/copy', (req, res) => {
                     }
                 }
             }
-            cleared = true;
             if (delayed === 0) {
                 finalize(false);
+            }
+            else {
+                cleared = true;
             }
         }
         catch (err) {
@@ -295,10 +295,7 @@ app.post('/api/assets/archive', (req, res) => {
             }
             const notFound = {};
             for (const file of req.body) {
-                if (delayed === Number.POSITIVE_INFINITY) {
-                    break;
-                }
-                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file);
+                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file, dirname);
                 const { content, base64, uri } = file;
                 const data = { name: appendSeparator(file.pathname, file.filename) };
                 const writeBuffer = () => {
@@ -393,9 +390,11 @@ app.post('/api/assets/archive', (req, res) => {
                     }
                 }
             }
-            cleared = true;
             if (delayed === 0) {
                 finalize(false);
+            }
+            else {
+                cleared = true;
             }
         }
         catch (err) {

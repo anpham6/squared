@@ -653,11 +653,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const attr = REGEX_FONTFACE.exec(cssText)?.[1];
                 if (attr) {
                     const fontFamily = (REGEX_FONTFAMILY.exec(attr)?.[1] || '').trim();
-                    const srcMatch = (REGEX_FONTSRC.exec(attr)?.[1] || '').split(XML.SEPARATOR);
-                    if (fontFamily !== '' && srcMatch.length) {
+                    const match = (REGEX_FONTSRC.exec(attr)?.[1] || '').split(XML.SEPARATOR);
+                    if (fontFamily !== '' && match.length) {
                         const fontStyle = REGEX_FONTSTYLE.exec(attr)?.[1].toLowerCase() || 'normal';
                         const fontWeight = parseInt(REGEX_FONTWEIGHT.exec(attr)?.[1] || '400');
-                        for (const value of srcMatch) {
+                        for (const value of match) {
                             const urlMatch = REGEX_URL.exec(value);
                             if (urlMatch) {
                                 let srcUrl: Undef<string>;

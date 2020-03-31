@@ -28,11 +28,7 @@ declare function appendToArchive(value: string, options?: FileActionOptions): vo
 declare function saveToArchive(value?: string, options?: FileActionOptions): void;
 declare function createFrom(value: string, options: FileActionOptions): void;
 declare function appendFromArchive(value: string, options: FileActionOptions): void;
-
 declare function toString(): string;
-
-declare function apply(value: {} | string, options: {}): boolean;
-declare function saveAllToDisk(): void;
 
 declare namespace base {
     interface FileAction {

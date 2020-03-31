@@ -26,7 +26,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
 
     public postOptimize(node: T) {
         const renderParent = node.renderParent as T;
-        const verticalAlign = convertFloat(node.verticalAlign);
+        const verticalAlign = !node.baselineAltered ? convertFloat(node.verticalAlign) : 0;
         let top = 0;
         let right = 0;
         let bottom = 0;

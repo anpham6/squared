@@ -195,8 +195,8 @@ reset() // clear cached layouts and reopen new session
 // NOTE: options: { assets?: FileAsset[], exclusions?: FileAssetExclusions, callback?: () => void }
 
 copyToDisk(directory: string, options?: {}) // copy entire project to local directory
-appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting zip archive
-saveToArchive(filename?: string, options?: {}) // save entire project as zip archive
+appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive
+saveToArchive(filename?: string, options?: {}) // save entire project as a new archive
 createFrom(format: string, options: {}) // create new archive from only FileAsset[]
 appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only FileAsset[]
 
@@ -206,11 +206,6 @@ include(extension: string | squared.base.Extension, options?: {}) // see extensi
 retrieve(name: string) // retrieve an extension by namespace or control
 configure(name: string, options: {}) // see extension configuration section
 exclude(name: string) // remove an extension by namespace or control
-
-// DEPRECATIONS
-
-apply() // replacement: include() | configure()
-saveAllToDisk() // replacement: saveToArchive()
 ```
 
 ### ANDROID: Public System Methods

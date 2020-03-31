@@ -232,14 +232,6 @@ export function toString() {
     return main?.toString() || '';
 }
 
-export function apply(value: any, options: {}) {
-    return include(value, options);
-}
-
-export function saveAllToDisk() {
-    saveToArchive();
-}
-
 const lib = {
     base: {
         Container
