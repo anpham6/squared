@@ -50,7 +50,6 @@ const REGEX_CELL_UNIT = new RegExp('[\\d.]+[a-z%]+|auto|max-content|min-content'
 const REGEX_CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
 const REGEX_CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
 const REGEX_CELL_NAMED = new RegExp('\\[([\\w\\-\\s]+)\\]');
-const REGEX_SPAN = /^span/;
 
 function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const repeat = data.repeat;
@@ -190,7 +189,7 @@ function getOpenRowIndex(cells: number[][]) {
     return Math.max(0, length - 1);
 }
 
-const isFr = (value: string) => /fr$/.test(value);
+const isFr = (value: string) => value.endsWith('fr');
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, index !== 0 ? 'width' : 'height')) : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
@@ -289,12 +288,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     switch (index) {
                         case 0:
                         case 1:
-                            if (command.charAt(0) === '[') {
+                            if (command.startsWith('[')) {
                                 for (const attr of match[4].split(CHAR.SPACE)) {
                                     safeNestedArray(name, attr).push(i);
                                 }
                             }
-                            else if (/^repeat/.test(command)) {
+                            else if (command.startsWith('repeat')) {
                                 let iterations = 1;
                                 switch (match[2]) {
                                     case 'auto-fit':
@@ -349,13 +348,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     }
                                 }
                             }
-                            else if (/^minmax/.test(command)) {
+                            else if (command.startsWith('minmax')) {
                                 unit.push(convertLength(node, match[6], index));
                                 unitMin.push(convertLength(node, match[5], index));
                                 repeat.push(false);
                                 i++;
                             }
-                            else if (/^fit-content/.test(command)) {
+                            else if (command.startsWith('fit-content')) {
                                 unit.push(convertLength(node, match[7], index));
                                 unitMin.push('0px');
                                 repeat.push(false);
@@ -427,13 +426,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 const { gridRowEnd, gridColumnEnd } = item.cssAsObject('gridRowEnd', 'gridColumnEnd');
                 let rowSpan = 1;
                 let columnSpan = 1;
-                if (REGEX_SPAN.test(gridRowEnd)) {
+                if (gridRowEnd.startsWith('span')) {
                     rowSpan = parseInt(gridRowEnd.split(' ')[1]);
                 }
                 else if (isNumber(gridRowEnd)) {
                     rowSpan = parseInt(gridRowEnd) - rowIndex;
                 }
-                if (REGEX_SPAN.test(gridColumnEnd)) {
+                if (gridColumnEnd.startsWith('span')) {
                     columnSpan = parseInt(gridColumnEnd.split(' ')[1]);
                 }
                 else if (isNumber(gridColumnEnd)) {
@@ -592,7 +591,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 return true;
                             }
                         }
-                        else if (REGEX_SPAN.test(value)) {
+                        else if (value.startsWith('span')) {
                             const span = parseInt(value.split(' ')[1]);
                             if (span === length && previousPlacement) {
                                 if (horizontal) {

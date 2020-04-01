@@ -36,7 +36,6 @@ const ANIMATION_DEFAULT = {
 };
 const KEYFRAME_MAP = getKeyframeRules();
 const REGEX_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
-const REGEX_AUTO = /^auto/;
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
@@ -308,8 +307,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         previous.value = previousValue;
                                         item.value = itemValue;
                                         if (previousValue.split(' ').pop() !== itemValue.split(' ').pop()) {
-                                            const previousAuto = REGEX_AUTO.test(previousValue);
-                                            const auto = REGEX_AUTO.test(itemValue);
+                                            const previousAuto =  previousValue.startsWith('auto');
+                                            const auto = itemValue.startsWith('auto');
                                             if (previousAuto && !auto || !previousAuto && auto) {
                                                 const key = (previous.key + item.key) / 2;
                                                 offsetRotate.splice(j++, 0, { key, value: previousValue });
@@ -327,7 +326,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         for (const item of offsetRotate) {
                                             const value = item.value;
                                             let angle = parseAngle(value.split(' ').pop() as string);
-                                            if (REGEX_AUTO.test(value)) {
+                                            if (value.startsWith('auto')) {
                                                 angle += 90;
                                             }
                                             item.value = angle + ' 0 0';
@@ -413,7 +412,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                             const value = values[j];
                                             if (j < r - 1) {
                                                 const keySpline = keySplines[j];
-                                                if (value !== '' && /^step/.test(keySpline)) {
+                                                if (value !== '' && keySpline.startsWith('step')) {
                                                     const steps = SvgAnimate.convertStepTimingFunction(name, keySpline, keyTimes, values, j, getFontSize(element));
                                                     if (steps) {
                                                         const [stepTime, stepValue] = steps;
@@ -457,8 +456,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 animate.iterationCount = iterationCount !== 'infinite' ? parseFloat(iterationCount) : -1;
                                 animate.fillForwards = fillMode === 'forwards' || fillMode === 'both';
                                 animate.fillBackwards = fillMode === 'backwards' || fillMode === 'both';
-                                animate.reverse = /reverse$/.test(direction);
-                                animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && /^alternate/.test(direction);
+                                animate.reverse = direction.endsWith('reverse');
+                                animate.alternate = (animate.iterationCount === -1 || animate.iterationCount > 1) && direction.startsWith('alternate');
                                 groupName.push(animate);
                             }
                         }

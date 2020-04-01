@@ -19,7 +19,6 @@ const { cloneObject, convertWord, hasBit, isArray, iterateArray, safeNestedMap, 
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
-const REGEX_INLINEDASH = /^inline-/;
 
 function cascadeActualPadding(children: T[], attr: string, value: number) {
     let valid = false;
@@ -854,7 +853,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             if (floating && !horizontal && previous.blockStatic) {
                                 return NODE_TRAVERSE.HORIZONTAL;
                             }
-                            else if (!REGEX_INLINEDASH.test(this.display)) {
+                            else if (!this.display.startsWith('inline-')) {
                                 let { top, bottom } = this.bounds;
                                 if (this.textElement && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
                                     return NODE_TRAVERSE.FLOAT_INTERSECT;

@@ -18,7 +18,7 @@ function hasPercentHeight(node: View) {
     return value > 0 && value < 1;
 }
 
-const isFlexible = (node: View) => !node.documentParent.layoutElement && !/^table/.test(node.display);
+const isFlexible = (node: View) => !node.documentParent.layoutElement && !node.display.startsWith('table');
 
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {

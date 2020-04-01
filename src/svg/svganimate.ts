@@ -32,7 +32,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         else if (REGEX_BEZIER.test(value)) {
             return value;
         }
-        else if (/^step/.test(value)) {
+        else if (value.startsWith('step')) {
             return KEYSPLINE_NAME.linear;
         }
         else {

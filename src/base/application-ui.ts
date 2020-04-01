@@ -24,7 +24,7 @@ const { isPlainText } = $lib.xml;
 const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
 const STRING_PSEUDOPREFIX = '__squared_';
 
-function createPseudoElement(parent: Element, tagName = 'span', index = -1) {
+function createPseudoElement(parent: HTMLElement, tagName = 'span', index = -1) {
     const element = document.createElement(tagName);
     element.className = '__squared.pseudo';
     element.style.setProperty('display', 'none');
@@ -759,7 +759,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 content = getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
                 styleMap.content = content;
             }
-            if (/-quote$/.test(content)) {
+            if (content.endsWith('-quote')) {
                 let parent = element.parentElement;
                 while (parent?.tagName === 'Q') {
                     nested++;
@@ -794,7 +794,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 if (/(padding|Width|Height)/.test(attr) && convertFloat(styleMap[attr]) > 0) {
                                     return true;
                                 }
-                                else if (!absolute && /^margin/.test(attr) && convertFloat(styleMap[attr]) !== 0) {
+                                else if (!absolute && attr.startsWith('margin') && convertFloat(styleMap[attr]) !== 0) {
                                     return true;
                                 }
                             }
@@ -910,7 +910,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
                                     const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
                                     const subcounter: number[] = [];
-                                    let current: Null<Element> = element;
+                                    let current: Null<HTMLElement> = element;
                                     let counter = initialValue;
                                     let ascending = false;
                                     let lastResetElement: Undef<Element>;
@@ -946,11 +946,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             });
                                         }
                                     };
-                                    do {
+                                    while (current) {
                                         ascending = false;
                                         if (current.previousElementSibling) {
-                                            current = current.previousElementSibling;
-                                            cascadeCounterSibling(current);
+                                            current = <Null<HTMLElement>> current.previousElementSibling;
+                                            if (current) {
+                                                cascadeCounterSibling(current);
+                                            }
                                         }
                                         else if (current.parentElement) {
                                             current = current.parentElement;
@@ -959,7 +961,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         else {
                                             break;
                                         }
-                                        if (current.className !== '__squared.pseudo') {
+                                        if (current && current.className !== '__squared.pseudo') {
                                             const pesudoIncrement = getCounterIncrementValue(current, counterName, pseudoElt, sessionId);
                                             if (pesudoIncrement) {
                                                 incrementCounter(pesudoIncrement, true);
@@ -984,7 +986,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                         }
                                     }
-                                    while (true);
                                     if (lastResetElement) {
                                         if (!counterType && subcounter.length > 1) {
                                             subcounter.reverse();

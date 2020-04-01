@@ -155,7 +155,7 @@ export interface LayoutResult<T extends NodeUI> {
 
 export interface LayoutRoot<T extends NodeUI> {
     node: T;
-    layoutName: string
+    layoutName: string;
 }
 
 export interface ResourceAssetMap {

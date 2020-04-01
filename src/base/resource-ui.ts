@@ -20,7 +20,6 @@ const { convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, i
 const { STRING_SPACE, STRING_TABSPACE } = $lib.xml;
 
 const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+, \\d+%?, \\d+%?(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
-const REGEX_URL = /^url/;
 const REGEX_NOBREAKSPACE = /\u00A0/g;
 const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
@@ -413,7 +412,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             let match: Null<RegExpExecArray>;
             while ((match = REGEX_BACKGROUNDIMAGE.exec(backgroundImage)) !== null) {
                 const value = match[0];
-                if (REGEX_URL.test(value) || value === 'initial') {
+                if (value.startsWith('url(') || value === 'initial') {
                     images.push(value);
                 }
                 else {
@@ -513,7 +512,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             if (position) {
                                 const name = position[1]?.trim();
                                 if (name) {
-                                    if (/^circle/.test(name)) {
+                                    if (name.startsWith('circle')) {
                                         shape = 'circle';
                                     }
                                     else {
@@ -652,7 +651,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             if (trim) {
                 value = value.trim();
             }
-            return value.includes('\n') && (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap') || /^pre/.test(node.css('whiteSpace')));
+            return value.includes('\n') && (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap') || node.css('whiteSpace').startsWith('pre'));
         }
         return false;
     }

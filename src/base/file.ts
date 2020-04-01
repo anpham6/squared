@@ -2,7 +2,7 @@ import type { FileArchivingOptions, FileCopyingOptions, RawAsset, UserSettings }
 
 const { fromLastIndexOf, isString } = squared.lib.util;
 
-const isHttpProtocol = () => /^http/.test(location.protocol);
+const isHttpProtocol = () => location.protocol.startsWith('http');
 
 export interface ExpressResult {
     success: boolean;

@@ -898,7 +898,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     togetherTargets.push(togetherData);
                 }
                 for (const [keyName, item] of sequentialMap.entries()) {
-                    if (/^sequentially_companion/.test(keyName)) {
+                    if (keyName.startsWith('sequentially_companion')) {
                         togetherTargets.push(item);
                     }
                     else {
@@ -1021,10 +1021,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                             }
                                         }
                                         if (transformOrigin) {
-                                            if (/X$/.test(propertyName)) {
+                                            if (propertyName.endsWith('X')) {
                                                 afterAnimator.push(this._createPropertyValue('translateX', '0', '1', valueType));
                                             }
-                                            else if (/Y$/.test(propertyName)) {
+                                            else if (propertyName.endsWith('Y')) {
                                                 afterAnimator.push(this._createPropertyValue('translateY', '0', '1', valueType));
                                             }
                                         }
@@ -1262,11 +1262,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                             if (origin) {
                                                                 let direction: Undef<string>;
                                                                 let translateTo = 0;
-                                                                if (/X$/.test(propertyName)) {
+                                                                if (propertyName.endsWith('X')) {
                                                                     direction = 'translateX';
                                                                     translateTo = origin.x;
                                                                 }
-                                                                else if (/Y$/.test(propertyName)) {
+                                                                else if (propertyName.endsWith('Y')) {
                                                                     direction = 'translateY';
                                                                     translateTo = origin.y;
                                                                 }
@@ -1501,7 +1501,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         const pathArray: PathData[] = [];
                         if (parseFloat(itemPath.strokeWidth) > 0 && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                             const animateData = this._animateData.get(item.name);
-                            if (animateData === undefined || animateData.animate.every(animate => /^stroke-dash/.test(animate.attributeName))) {
+                            if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
                                 const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData?.animate, floatPrecisionValue);
                                 if (strokeDash) {
                                     if (animateData) {

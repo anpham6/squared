@@ -27,8 +27,6 @@ interface DashGroup {
     duration: number;
 }
 
-const REGEXP_STROKEDASH = /^stroke-dash/;
-
 function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?: number) {
     const commandA = path[0];
     const commandB = path[path.length - 1];
@@ -656,7 +654,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 result = createDashGroup(valueArray, valueOffset, 0);
                 if (animations) {
                     const sorted = animations.slice(0).sort((a, b) => {
-                        if (REGEXP_STROKEDASH.test(a.attributeName) && REGEXP_STROKEDASH.test(b.attributeName)) {
+                        if (a.attributeName.startsWith('stroke-dash') && b.attributeName.startsWith('stroke-dash')) {
                             if (a.delay !== b.delay) {
                                 return a.delay < b.delay ? -1 : 1;
                             }

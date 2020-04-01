@@ -15,18 +15,11 @@ const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasB
 
 const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
-const REGEX_INLINE = /^inline/;
-const REGEX_INLINEDASH = /^inline-/;
-const REGEX_MARGIN = /^margin/;
-const REGEX_PADDING = /^padding/;
-const REGEX_BORDER = /^border/;
 const REGEX_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
 const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
 const REGEX_EM = /\dem$/;
-const REGEX_GRID = /grid$/;
-const REGEX_FLEX = /flex$/;
 
 function setNaturalChildren(node: T) {
     let children: T[];
@@ -530,7 +523,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
 
 function hasTextAlign(node: T, value: string, localizedValue?: string) {
     const textAlign = node.cssAscend('textAlign', node.textElement && node.blockStatic && !node.hasPX('width'));
-    return (textAlign === value || textAlign === localizedValue) && (node.blockStatic ? node.textElement && !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true) : REGEX_INLINE.test(node.display));
+    return (textAlign === value || textAlign === localizedValue) && (node.blockStatic ? node.textElement && !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true) : node.display.startsWith('inline'));
 }
 
 function setStyleCache(element: HTMLElement, attr: string, sessionId: string, value: string, current: string) {
@@ -731,16 +724,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         cached.overflow = undefined;
                         break;
                     default:
-                        if (REGEX_MARGIN.test(attr)) {
+                        if (attr.startsWith('margin')) {
                             cached.autoMargin = undefined;
                             cached.rightAligned = undefined;
                             cached.centerAligned = undefined;
                         }
-                        else if (REGEX_PADDING.test(attr)) {
+                        else if (attr.startsWith('padding')) {
                             cached.contentBoxWidth = undefined;
                             cached.contentBoxHeight = undefined;
                         }
-                        else if (REGEX_BORDER.test(attr)) {
+                        else if (attr.startsWith('border')) {
                             cached.visibleStyle = undefined;
                             cached.contentBoxWidth = undefined;
                             cached.contentBoxHeight = undefined;
@@ -1219,7 +1212,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             else if (segment.charAt(0) === '*') {
                                 segment = segment.substring(1);
                             }
-                            else if (/^::/.test(segment)) {
+                            else if (segment.startsWith('::')) {
                                 selectors.length = 0;
                                 break invalid;
                             }
@@ -1257,7 +1250,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 }
                                 while ((subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
                                     const pseudoClass = subMatch[0];
-                                    if (/^:not\(/.test(pseudoClass)) {
+                                    if (pseudoClass.startsWith(':not(')) {
                                         if (subMatch[1]) {
                                             if (notList === undefined) {
                                                 notList = [];
@@ -1665,7 +1658,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get flexElement() {
         let result = this._cached.flexElement;
         if (result === undefined) {
-            result = REGEX_FLEX.test(this.display);
+            result = this.display.endsWith('flex');
             this._cached.flexElement = result;
         }
         return result;
@@ -1674,7 +1667,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get gridElement() {
         let result = this._cached.gridElement;
         if (result === undefined) {
-            result = REGEX_GRID.test(this.display);
+            result = this.display.endsWith('grid');
             this._cached.gridElement = result;
         }
         return result;
@@ -1820,12 +1813,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             if (this.flexElement) {
                 const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
-                const row = /^row/.test(flexDirection);
+                const row = flexDirection.startsWith('row');
                 result = {
                     row,
                     column: !row,
-                    reverse: /reverse$/.test(flexDirection),
-                    wrap: /^wrap/.test(flexWrap),
+                    reverse: flexDirection.endsWith('reverse'),
+                    wrap: flexWrap.startsWith('wrap'),
                     wrapReverse: flexWrap === 'wrap-reverse',
                     alignContent,
                     justifyContent
@@ -1894,17 +1887,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         return result;
     }
-    get hasHeight() {
+    get hasHeight(): boolean {
         let result = this._cached.hasHeight;
         if (result === undefined) {
             const value = this.css('height');
             if (isPercent(value)) {
-                if (this.pageFlow && (this.actualParent?.hasHeight || this.documentBody)) {
-                    result = parseFloat(value) > 0;
-                }
-                else {
-                    result = this.css('position') === 'fixed';
-                }
+                result = this.pageFlow && (this.actualParent?.hasHeight || this.documentBody) ? parseFloat(value) > 0 : this.css('position') === 'fixed';
             }
             else {
                 result = this.height > 0;
@@ -2190,7 +2178,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             if (this.naturalElement && !this.floating) {
                 const value = this.display;
-                result = REGEX_INLINE.test(value) || value === 'table-cell';
+                result = value.startsWith('inline') || value === 'table-cell';
             }
             else {
                 result = false;
@@ -2203,7 +2191,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get inlineDimension() {
         let result = this._cached.inlineDimension;
         if (result === undefined) {
-            result = this.naturalElement && (REGEX_INLINEDASH.test(this.display) || this.floating);
+            result = this.naturalElement && (this.display.startsWith('inline-') || this.floating);
             this._cached.inlineDimension = result;
         }
         return result;
@@ -2279,7 +2267,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             else {
                 const value = this.display;
-                result = REGEX_INLINEDASH.test(value) || value === 'table';
+                result = value.startsWith('inline-') || value === 'table';
             }
             this._cached.blockDimension = result;
         }

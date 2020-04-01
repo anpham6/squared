@@ -978,7 +978,7 @@ declare namespace lib {
         const UNIT: {
             DECIMAL: RegExp;
             LENGTH: RegExp;
-            LENGTH_PERCENTAGE: RegExp; 
+            LENGTH_PERCENTAGE: RegExp;
             PERCENT: RegExp;
         };
         const FILE: {

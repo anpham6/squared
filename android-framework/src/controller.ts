@@ -229,7 +229,7 @@ function causesLineBreak(element: Element) {
                 case 'grid':
                     return !floating || hasWidth();
             }
-            return (/^inline-/.test(display) || display === 'table') && hasWidth();
+            return (display.startsWith('inline-') || display === 'table') && hasWidth();
         }
     }
     return false;
@@ -2079,7 +2079,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (node.documentParent.layoutElement) {
             const android = node.namespace('android');
             for (const attr in android) {
-                if (/^layout_/.test(attr)) {
+                if (attr.startsWith('layout_')) {
                     container.android(attr, android[attr]);
                     delete android[attr];
                 }

@@ -124,7 +124,7 @@ function calculateColor(element: CSSElement, value: string) {
                     const component = trimEnclosing(seg).split(XML.SEPARATOR);
                     const q = component.length;
                     if (q >= 3) {
-                        const hsl = /^hsl/.test(name);
+                        const hsl = name.startsWith('hsl');
                         for (let j = 0; j < q; j++) {
                             const rgb = component[j];
                             if (isCalc(rgb)) {
@@ -380,7 +380,7 @@ export function getSpecificity(value: string) {
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
         while ((subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
-            if (/^:not\(/.test(subMatch[0])) {
+            if (subMatch[0].startsWith(':not(')) {
                 const attr = subMatch[1];
                 if (attr) {
                     const lastIndex = CSS.SELECTOR_G.lastIndex;
@@ -969,7 +969,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                         const prefix = timingFunction[i - 1].trim();
                         seg = trimEnclosing(seg);
                         let calc: Undef<string>;
-                        if (/cubic-bezier$/.test(prefix)) {
+                        if (prefix.endsWith('cubic-bezier')) {
                             const cubic = seg.split(XML.SEPARATOR);
                             const q = cubic.length;
                             if (q === 4) {
@@ -998,7 +998,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                                 }
                             }
                         }
-                        else if (/steps$/.test(prefix)) {
+                        else if (prefix.endsWith('steps')) {
                             calc = calculateVarAsString(element, seg, { unitType: CSS_UNIT.INTEGER, min: 1 });
                         }
                         if (calc) {
@@ -1213,7 +1213,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'gridTemplate':
             break;
         default:
-            if (/Color$/.test(attr)) {
+            if (attr.endsWith('Color')) {
                 return calculateColor(element, value.trim());
             }
             else {
@@ -1339,10 +1339,10 @@ export function validMediaRule(value: string, fontSize?: number) {
                     const attr = condition[1];
                     let operation = condition[2];
                     const rule = condition[3];
-                    if (/^min/.test(attr)) {
+                    if (attr.startsWith('min')) {
                         operation = '>=';
                     }
-                    else if (/^max/.test(attr)) {
+                    else if (attr.startsWith('max')) {
                         operation = '<=';
                     }
                     switch (attr) {
@@ -1363,7 +1363,7 @@ export function validMediaRule(value: string, fontSize?: number) {
                         case 'height':
                         case 'min-height':
                         case 'max-height':
-                            valid = compareRange(operation, /width$/.test(attr) ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
+                            valid = compareRange(operation, attr.endsWith('width') ? window.innerWidth : window.innerHeight, parseUnit(rule, fontSize));
                             break;
                         case 'orientation':
                             valid = rule === 'portrait' && window.innerWidth <= window.innerHeight || rule === 'landscape' && window.innerWidth > window.innerHeight;
@@ -1373,10 +1373,10 @@ export function validMediaRule(value: string, fontSize?: number) {
                         case 'max-resolution':
                             if (rule) {
                                 let resolution = parseFloat(rule);
-                                if (/dpcm$/.test(rule)) {
+                                if (rule.endsWith('dpcm')) {
                                     resolution *= 2.54;
                                 }
-                                else if (/dppx$/.test(rule)) {
+                                else if (rule.endsWith('dppx')) {
                                     resolution *= 96;
                                 }
                                 valid = compareRange(operation, getDeviceDPI(), resolution);

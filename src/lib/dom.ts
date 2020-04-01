@@ -179,7 +179,7 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
             if (startIndex !== -1 && endIndex !== -1) {
                 iterateArray(parent.childNodes, (element: Element) => {
                     const nodeName = element.nodeName;
-                    if (nodeName.charAt(0) !== '#' || nodeName === '#text') {
+                    if (nodeName[0] !== '#' || nodeName === '#text') {
                         result.push(element);
                     }
                 }, Math.min(startIndex, endIndex), Math.max(startIndex, endIndex) + 1);

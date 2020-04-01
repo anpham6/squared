@@ -30,7 +30,6 @@ const REGEX_JUSTIFYLEFT = /(start|left|baseline)$/;
 const REGEX_JUSTIFYRIGHT = /(right|end)$/;
 const REGEX_ALIGNSELF = /start|end|center|baseline/;
 const REGEX_ALIGNTOP = /(start|baseline)$/;
-const REGEX_ALIGNBOTTOM = /end$/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
@@ -99,7 +98,7 @@ function getMarginSize(value: number, gridSize: number) {
 
 function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: string, horizontal: boolean, dimension: string, wrapped: boolean, MARGIN_START: number, MARGIN_END: number, maxScreenWidth: number, maxScreenHeight: number) {
     const data = horizontal ? mainData.column : mainData.row;
-    if (/^space/.test(alignment)) {
+    if (alignment.startsWith('space')) {
         const gridSize = getGridSize(node, mainData, horizontal, maxScreenWidth, maxScreenHeight);
         if (gridSize > 0) {
             const rowData = getRowData(mainData, horizontal);
@@ -345,7 +344,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     return 0;
 }
 
-const isFr = (value: string) => /fr$/.test(value);
+const isFr = (value: string) => value.endsWith('fr');
 const isPx = (value: string) => CSS.PX.test(value);
 
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
@@ -672,7 +671,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 if (REGEX_ALIGNTOP.test(alignSelf)) {
                     node.mergeGravity('layout_gravity', 'top');
                 }
-                else if (REGEX_ALIGNBOTTOM.test(alignSelf)) {
+                else if (alignSelf.endsWith('end')) {
                     node.mergeGravity('layout_gravity', 'bottom');
                 }
                 else if (alignSelf === 'center') {
@@ -706,7 +705,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (<BoxRectDimension> node.data(CSS_GRID, 'boundsData'))?.height && checkRowSpan(node, mainData, rowSpan, rowStart)) {
                 target.css('minHeight', formatPX(node.box.height));
             }
-            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && /^space/.test(alignContent)) && !REGEX_ALIGNSELF.test(mainData.alignItems)) {
+            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && alignContent.startsWith('space') && !REGEX_ALIGNSELF.test(mainData.alignItems))) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
         }
