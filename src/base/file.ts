@@ -288,7 +288,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                             }
                             const zipname = result.zipname;
                             if (isString(zipname)) {
-                                fetch('/api/browser/download?filename=' + encodeURIComponent(zipname))
+                                fetch('/api/browser/download?filepath=' + encodeURIComponent(zipname))
                                     .then((response: Response) => response.blob())
                                     .then((blob: Blob) => File.downloadFile(blob, fromLastIndexOf(zipname, '/', '\\')));
                             }

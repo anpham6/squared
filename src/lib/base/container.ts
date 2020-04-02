@@ -1,4 +1,4 @@
-import { flatMap, iterateArray, objectMap, partitionArray, sameArray, spliceArray } from '../util';
+import { iterateArray, objectMap, partitionArray, sameArray, spliceArray } from '../util';
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[];
@@ -94,6 +94,14 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this;
     }
 
+    public indexOf(item: T) {
+        return this._children.indexOf(item);
+    }
+
+    public findIndex(predicate: IteratorPredicate<T, boolean>, thisArg?: any) {
+        return this._children.findIndex(predicate, thisArg);
+    }
+
     public concat(list: T[]) {
         this._children = this._children.concat(list);
         return this;
@@ -138,10 +146,6 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public map<U>(predicate: IteratorPredicate<T, U>): U[] {
         return objectMap(this._children, predicate);
-    }
-
-    public flatMap<U>(predicate: IteratorPredicate<T, U>): U[] {
-        return flatMap(this._children, predicate);
     }
 
     public find(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerFindOptions<T>) {

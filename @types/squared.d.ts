@@ -755,6 +755,8 @@ declare namespace lib {
             iterate(predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
             sort(predicate: (a: T, b: T) => number): this;
             concat(list: T[]): this;
+            indexOf(item: T): number;
+            findIndex(predicate: IteratorPredicate<T, boolean>, thisArg?: any): number;
             join(...other: Container<T>[]): this;
             every(predicate: IteratorPredicate<T, boolean>): boolean;
             same(predicate: IteratorPredicate<T, any>): boolean;
@@ -762,7 +764,6 @@ declare namespace lib {
             splice(predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[];
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             map<U>(predicate: IteratorPredicate<T, U>): U[];
-            flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
             some(predicate: IteratorPredicate<T, boolean>, options?: ContainerSomeOptions<T>): boolean;
             cascade(predicate?: (item: T) => boolean, options?: ContainerCascadeOptions<T>): T[];
