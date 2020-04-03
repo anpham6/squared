@@ -1,0 +1,8 @@
+{
+  "version": "1.5.1",
+  "disk_read": false,
+  "disk_write": false,
+  "unc_read": false,
+  "unc_write": false,
+  "tinypng_api_key": ""
+}

@@ -295,6 +295,19 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return Resource.addImage(images, prefix, this._imageFormat);
     }
 
+    public writeRawImage(filename: string, base64: string) {
+        const asset = super.writeRawImage(filename, base64);
+        if (asset && this.userSettings.compressImages && Resource.canCompressImage(filename)) {
+            let compress = asset.compress;
+            if (compress === undefined) {
+                compress = [];
+                asset.compress = compress;
+            }
+            compress.push({ format: 'png' });
+        }
+        return asset;
+    }
+
     get userSettings() {
         return this.application.userSettings;
     }

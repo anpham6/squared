@@ -182,15 +182,12 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return recurse(this);
     }
 
-    public some(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerSomeOptions<T>) {
+    public some(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerFindOptions<T>) {
         return this.find(predicate, options) !== undefined;
     }
 
     public cascade(predicate?: (item: T) => boolean, options?: squared.lib.base.ContainerCascadeOptions<T>) {
-        let error: Undef<IteratorPredicate<T, boolean>>;
-        if (options) {
-            error = options.error;
-        }
+        const error = options?.error;
         let invalid = false;
         const recurse = (container: Container<T>) => {
             let result: T[] = [];

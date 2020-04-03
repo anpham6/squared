@@ -37,6 +37,7 @@ const settings: UserSettingsAndroid = {
     framesPerSecond: 60,
     supportRTL: true,
     preloadImages: true,
+    compressImages: false,
     supportNegativeLeftTop: true,
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,

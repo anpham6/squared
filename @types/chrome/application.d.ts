@@ -15,6 +15,7 @@ interface ChromeAsset extends Omit<RawAsset, keyof Dimension | 'content'> {
 }
 
 interface UserSettingsChrome extends UserSettings {
+    compressImages: boolean;
     cacheQuerySelectorResultSet: boolean;
     excludePlainText: boolean;
     outputFileExclusions: string[];

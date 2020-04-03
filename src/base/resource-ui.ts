@@ -1,4 +1,4 @@
-import type { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings } from '../../@types/base/application';
+import type { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings, RawAsset } from '../../@types/base/application';
 
 import NodeUI from './node-ui';
 import Resource from './resource';
@@ -696,7 +696,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public writeRawImage(filename: string, base64: string) {
-        this.fileHandler?.addAsset({ pathname: this.controllerSettings.directory.image, filename, base64 });
+        const fileHandler = this.fileHandler;
+        if (fileHandler) {
+            const asset = <Optional<RawAsset>> { pathname: this.controllerSettings.directory.image, filename, base64 };
+            fileHandler.addAsset(asset);
+            return asset;
+        }
+        return undefined;
     }
 
     public setBoxStyle(node: T) {

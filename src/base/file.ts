@@ -205,7 +205,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
             const assets = this.assets;
             const { pathname, filename } = data;
             const asset = assets.find(item => item.pathname === pathname && item.filename === filename);
-            if (asset) {
+             if (asset) {
                 Object.assign(asset, data);
             }
             else {

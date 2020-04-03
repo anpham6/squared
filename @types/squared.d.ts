@@ -180,13 +180,14 @@ declare namespace base {
 
     class Resource<T extends Node> implements Resource<T> {
         public static ASSETS: ResourceAssetMap;
+        public static canCompressImage(filename: string): boolean;
     }
 
     interface ResourceUI<T extends NodeUI> extends Resource<T> {
         controllerSettings: ControllerUISettings;
         readonly userSettings: UserUISettings;
         finalize(layouts: FileAsset[]): void;
-        writeRawImage(filename: string, base64: string): void;
+        writeRawImage(filename: string, base64: string): Undef<Optional<RawAsset>>;
         setBoxStyle(node: T): void;
         setFontStyle(node: T): void;
         setValueString(node: T): void;
@@ -195,6 +196,7 @@ declare namespace base {
     class ResourceUI<T extends NodeUI> implements ResourceUI<T> {
         public static KEY_NAME: string;
         public static STORED: ResourceStoredMap;
+        public static canCompressImage(filename: string): boolean;
         public static generateId(section: string, name: string, start?: number): string;
         public static insertStoredAsset(asset: string, name: string, value: any): string;
         public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
@@ -736,8 +738,6 @@ declare namespace lib {
         interface ContainerFindOptions<T> extends ContainerCascadeOptions<T> {
             cascade?: boolean;
         }
-        interface ContainerSomeOptions<T> extends ContainerFindOptions<T> {
-        }
 
         interface Container<T> extends Iterable<T> {
             readonly children: T[];
@@ -765,7 +765,7 @@ declare namespace lib {
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             map<U>(predicate: IteratorPredicate<T, U>): U[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
-            some(predicate: IteratorPredicate<T, boolean>, options?: ContainerSomeOptions<T>): boolean;
+            some(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): boolean;
             cascade(predicate?: (item: T) => boolean, options?: ContainerCascadeOptions<T>): T[];
         }
 

@@ -6,6 +6,7 @@ const settings: UserSettingsChrome = {
         'chrome.compress.gzip'
     ],
     preloadImages: false,
+    compressImages: false,
     handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,

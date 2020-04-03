@@ -205,6 +205,18 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
             }
         });
+        if (this.userSettings.compressImages) {
+            for (const asset of result) {
+                if (Resource.canCompressImage(asset.filename)) {
+                    let compress = asset.compress;
+                    if (compress === undefined) {
+                        compress = [];
+                        asset.compress = compress;
+                    }
+                    compress.push({ format: 'png' });
+                }
+            }
+        }
         return result;
     }
 

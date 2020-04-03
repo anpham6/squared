@@ -1,3 +1,5 @@
+const squared = require('./squared.json');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
@@ -7,6 +9,43 @@ const decompress = require('decompress');
 const zlib = require('zlib');
 const request = require('request');
 const { v4: uuidv4 } = require('uuid');
+let tinify = null;
+
+let DISK_READ = false;
+let DISK_WRITE = false;
+let UNC_READ = false;
+let UNC_WRITE = false;
+if (squared) {
+    DISK_READ = squared.disk_read === true;
+    DISK_WRITE = squared.disk_write === true;
+    UNC_READ = squared.unc_read === true;
+    UNC_WRITE = squared.unc_write === true;
+    if (squared.tinypng_api_key) {
+        tinify = require('tinify');
+        tinify.key = squared.tinypng_api_key;
+        tinify.validate(err => {
+            if (err) {
+                tinify = null;
+            }
+        });
+    }
+}
+{
+    const argv = process.argv;
+    const ACCESS_ALL = argv.includes('--access-all');
+    if (ACCESS_ALL || argv.includes('--disk-read') || argv.includes('--access-disk')) {
+        DISK_READ = true;
+    }
+    if (ACCESS_ALL || argv.includes('--disk-write') || argv.includes('--access-disk')) {
+        DISK_WRITE = true;
+    }
+    if (ACCESS_ALL || argv.includes('--unc-read') || argv.includes('--access-unc')) {
+        UNC_READ = true;
+    }
+    if (ACCESS_ALL || argv.includes('--unc-write') || argv.includes('--access-unc')) {
+        UNC_WRITE = true;
+    }
+}
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -28,13 +67,6 @@ if (env === 'development') {
 }
 
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
-
-const argv = process.argv;
-const ACCESS_ALL = argv.includes('--access-all');
-const DISK_READ = ACCESS_ALL || argv.includes('--disk-read') || argv.includes('--access-disk');
-const DISK_WRITE = ACCESS_ALL || argv.includes('--disk-write') || argv.includes('--access-disk');
-const UNC_READ = ACCESS_ALL || argv.includes('--unc-read') || argv.includes('--access-unc');
-const UNC_WRITE = ACCESS_ALL || argv.includes('--unc-write') || argv.includes('--access-unc');
 const SEPARATOR = path.sep;
 
 function getFileData(file, dirname) {
@@ -42,9 +74,11 @@ function getFileData(file, dirname) {
     const compress = file.compress;
     const gz = getCompressFormat(compress, 'gz');
     const br = getCompressFormat(compress, 'br');
+    const png = tinify && getCompressFormat(compress, 'png');
     return {
         pathname,
         filename: path.join(pathname, file.filename),
+        pngLevel: png ? 1 : -1,
         gzipLevel: gz ? (!isNaN(gz.level) ? gz.level : 9) : -1,
         brotliLevel: br ? (!isNaN(br.level) ? br.level : 11) : -1
     };
@@ -88,6 +122,26 @@ function checkVersion(major, minor, patch = 0) {
         return true;
     }
     return true;
+}
+
+function writeBuffer(filename, level, callback) {
+    if (tinify && level !== -1) {
+        try {
+            tinify.fromBuffer(fs.readFileSync(filename)).toBuffer((err, resultData) => {
+                if (!err) {
+                    fs.writeFileSync(filename, resultData);
+                }
+                callback();
+            });
+        }
+        catch (err) {
+            callback();
+            console.log(`FAIL: ${filename} (${err})`);
+        }
+    }
+    else {
+        callback();
+    }
 }
 
 const getCompressFormat = (compress, format) => compress && compress.find(item => item.format === format);
@@ -136,9 +190,9 @@ app.post('/api/assets/copy', (req, res) => {
             const notFound = {};
             const emptyDir = {};
             for (const file of req.body) {
-                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file, dirname);
+                const { pathname, filename, pngLevel, gzipLevel, brotliLevel } = getFileData(file, dirname);
                 const { content, base64, uri } = file;
-                const writeBuffer = () => {
+                const compressFile = () => {
                     if (gzipLevel !== -1) {
                         delayed++;
                         createGzipWriteStream(filename, `${filename}.gz`, gzipLevel)
@@ -149,6 +203,7 @@ app.post('/api/assets/copy', (req, res) => {
                         createBrotliWriteStream(filename, `${filename}.br`, brotliLevel, file.mimeType)
                             .on('finish', () => finalize(true));
                     }
+                    finalize(true);
                 };
                 if (!emptyDir[pathname]) {
                     if (empty) {
@@ -172,9 +227,11 @@ app.post('/api/assets/copy', (req, res) => {
                         base64 ? 'base64' : 'utf8',
                         err => {
                             if (!err) {
-                                writeBuffer();
+                                writeBuffer(filename, pngLevel, compressFile);
                             }
-                            finalize(true);
+                            else {
+                                finalize(true);
+                            }
                         }
                     );
                 }
@@ -194,8 +251,7 @@ app.post('/api/assets/copy', (req, res) => {
                             const stream = fs.createWriteStream(filename);
                             stream.on('finish', () => {
                                 if (!notFound[uri]) {
-                                    writeBuffer();
-                                    finalize(true);
+                                    writeBuffer(filename, pngLevel, compressFile);
                                 }
                             });
                             request(uri)
@@ -217,9 +273,11 @@ app.post('/api/assets/copy', (req, res) => {
                                     filename,
                                     err => {
                                         if (!err) {
-                                            writeBuffer();
+                                            writeBuffer(filename, pngLevel, compressFile);
                                         }
-                                        finalize(true);
+                                        else {
+                                            finalize(true);
+                                        }
                                     }
                                 );
                             };
@@ -326,10 +384,10 @@ app.post('/api/assets/archive', (req, res) => {
             }
             const notFound = {};
             for (const file of req.body) {
-                const { pathname, filename, gzipLevel, brotliLevel } = getFileData(file, dirname);
+                const { pathname, filename, pngLevel, gzipLevel, brotliLevel } = getFileData(file, dirname);
                 const { content, base64, uri } = file;
                 const data = { name: path.join(file.pathname, file.filename) };
-                const writeBuffer = () => {
+                const compressFile = () => {
                     if (delayed !== Number.POSITIVE_INFINITY) {
                         if (gzipLevel !== -1) {
                             delayed++;
@@ -354,6 +412,7 @@ app.post('/api/assets/archive', (req, res) => {
                                 });
                         }
                         archive.file(filename, data);
+                        finalize(true);
                     }
                 };
                 fs.mkdirpSync(pathname);
@@ -365,9 +424,11 @@ app.post('/api/assets/archive', (req, res) => {
                         base64 ? 'base64' : 'utf8',
                         err => {
                             if (!err) {
-                                writeBuffer();
+                                writeBuffer(filename, pngLevel, compressFile);
                             }
-                            finalize(true);
+                            else {
+                                finalize(true);
+                            }
                         }
                     );
                 }
@@ -387,8 +448,7 @@ app.post('/api/assets/archive', (req, res) => {
                             const stream = fs.createWriteStream(filename);
                             stream.on('finish', () => {
                                 if (!notFound[uri]) {
-                                    writeBuffer();
-                                    finalize(true);
+                                    writeBuffer(filename, pngLevel, compressFile);
                                 }
                             });
                             request(uri)
@@ -410,9 +470,11 @@ app.post('/api/assets/archive', (req, res) => {
                                     filename,
                                     err => {
                                         if (!err) {
-                                            writeBuffer();
+                                            writeBuffer(filename, pngLevel, compressFile);
                                         }
-                                        finalize(true);
+                                        else {
+                                            finalize(true);
+                                        }
                                     }
                                 );
                             };
@@ -504,11 +566,11 @@ app.post('/api/assets/archive', (req, res) => {
 });
 
 app.get('/api/browser/download', (req, res) => {
-    const filename = req.query.filename;
-    if (filename) {
-        res.sendFile(filename, err => {
+    const filepath = req.query.filepath;
+    if (filepath) {
+        res.sendFile(filepath, err => {
             if (err) {
-                console.log(`FAIL: ${filename} (${err})`);
+                console.log(`FAIL: ${filepath} (${err})`);
             }
         });
     }

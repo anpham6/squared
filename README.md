@@ -139,6 +139,7 @@ squared.settings = {
     framesPerSecond: 60,
     supportRTL: true,
     preloadImages: true,
+    compressImages: false, // Required: TinyPNG API Key (https://tinypng.com/developers)
     supportNegativeLeftTop: true,
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
@@ -168,6 +169,7 @@ squared.settings = {
         'chrome.compress.gzip'
     ],
     preloadImages: false,
+    compressImages: false, // Required: TinyPNG API Key (https://tinypng.com/developers)
     handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,

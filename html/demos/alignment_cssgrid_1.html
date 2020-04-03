@@ -158,6 +158,7 @@
                 squared.base = result;
                 System.import('/build/android-framework/src/main.js').then(result => {
                     android = result.default;
+                    squared.settings.compressImages = false;
                     squared.setFramework(android);
                     squared.parseDocument().then(() => {
                         squared.saveToArchive();

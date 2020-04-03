@@ -47,15 +47,17 @@ function getFileAssets(directory: string, items: string[]) {
     return items as any[];
 }
 
-function getImageAssets(directory: string, items: string[]) {
+function getImageAssets(directory: string, items: string[], compression: boolean) {
     const length = items.length;
     if (length) {
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3, j++) {
+            const filename = items[i + 2].split('?')[0];
             result[j] = {
                 pathname: directory + items[i + 1],
-                filename: items[i + 2].split('?')[0],
+                filename,
                 content: '',
+                compress: compression && Resource.canCompressImage(filename) ? [{ format: 'png' }] : undefined,
                 uri: items[i]
             };
         }
@@ -122,9 +124,10 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         }
         if (directory || filename) {
             const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
+            const compressImages = this.userSettings.compressImages;
             let assets: FileAsset[] = [];
             for (const name in result) {
-                assets = assets.concat(name === 'image' ? getImageAssets(outputDirectory, result[name]) : getFileAssets(outputDirectory, result[name]));
+                assets = assets.concat(name === 'image' ? getImageAssets(outputDirectory, result[name], compressImages) : getFileAssets(outputDirectory, result[name]));
             }
             options.assets = assets.concat(options.assets || []);
             if (directory) {
@@ -381,7 +384,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 }
             }
             if (directory || filename) {
-                options.assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result).concat(options.assets || []);
+                options.assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.compressImages).concat(options.assets || []);
                 if (directory) {
                     this.copying(options);
                 }
@@ -465,7 +468,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             getFileAssets(outputDirectory, this.resourceDimenToXml()),
             getFileAssets(outputDirectory, this.resourceStyleToXml()),
             getFileAssets(outputDirectory, this.resourceDrawableToXml()),
-            getImageAssets(outputDirectory, this.resourceDrawableImageToXml()),
+            getImageAssets(outputDirectory, this.resourceDrawableImageToXml(), this.userSettings.compressImages),
             getFileAssets(outputDirectory, this.resourceAnimToXml())
         );
     }
