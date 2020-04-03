@@ -20,8 +20,11 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     public setBounds() {
         if (this.length) {
-            this._bounds = NodeUI.outerRegion(this);
+            const bounds = NodeUI.outerRegion(this);
+            this._bounds = bounds;
+            return bounds;
         }
+        return undefined;
     }
 
     public previousSiblings(options?: SiblingOptions) {

@@ -455,6 +455,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                     else {
                         return false;
                     }
+                    break;
             }
             if (validateQuerySelector.call(this, child, notData, index, last)) {
                 return false;
@@ -574,6 +575,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected abstract _naturalElements?: T[];
 
     private _data = {};
+    private _documentBody = false;
     private _inlineText = false;
     private _parent?: T;
     private _dataset?: {};
@@ -587,6 +589,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         super();
         if (element) {
             this._element = element;
+            this._documentBody = element === document.body;
         }
         else {
             this.style = <CSSStyleDeclaration> {};
@@ -1142,25 +1145,25 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public setBounds(cache = true) {
+        let bounds: Undef<BoxRectDimension>;
         if (this.styleElement) {
-            this._bounds = assignRect(actualClientRect(<Element> this._element, cache ? this.sessionId : undefined));
-            if (this.documentBody && this.marginTop === 0) {
-                this._bounds.top = 0;
-            }
+            bounds = assignRect(actualClientRect(<Element> this._element, cache ? this.sessionId : undefined));
+            this._bounds = bounds;
         }
         else if (this.plainText) {
             const rect = getRangeClientRect(<Element> this._element);
-            const bounds = assignRect(rect);
+            bounds = assignRect(rect);
             const lines = rect.numberOfLines as number;
             bounds.numberOfLines = lines;
             this._bounds = bounds;
             this._textBounds = bounds;
             this._cached.multiline = lines > 1;
         }
-        if (!cache) {
+        if (!cache && bounds) {
             this._box = undefined;
             this._linear = undefined;
         }
+        return bounds;
     }
 
     public querySelector(value: string) {
@@ -1506,15 +1509,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             const width = this.css(BOX_BORDER[index][1]);
             let result: number;
-            switch (width) {
-                case 'thin':
-                case 'medium':
-                case 'thick':
-                    result = convertFloat(this.style[BOX_BORDER[index][1]]);
-                    break;
-                default:
-                    result = this.parseUnit(width, index === 1 || index === 3 ? 'width' : 'height');
-                    break;
+            if (isLength(width, true)) {
+                result = this.parseUnit(width, index === 1 || index === 3 ? 'width' : 'height');
+            }
+            else {
+                result = convertFloat(this.style[BOX_BORDER[index][1]]);
             }
             if (result > 0) {
                 return Math.max(Math.round(result), 1);
@@ -1732,7 +1731,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get documentBody() {
-        return this._element === document.body;
+        return this._documentBody;
     }
 
     get initial() {
@@ -1740,12 +1739,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get bounds() {
-        return this._bounds || assignRect(this.boundingClientRect);
+        return this._bounds || this.setBounds() || assignRect(this.boundingClientRect);
     }
 
     get linear() {
         const setDimension = () => {
-            const bounds = this._bounds;
+            const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement) {
                     const { marginBottom, marginRight } = this;
@@ -1772,7 +1771,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get box() {
         const setDimension = () => {
-            const bounds = this._bounds;
+            const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement) {
                     this._box = {

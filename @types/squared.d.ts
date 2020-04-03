@@ -476,7 +476,7 @@ declare namespace base {
         has(attr: string, options?: HasOptions): boolean;
         hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
         hasFlex(direction: "row" | "column"): boolean;
-        setBounds(cache?: boolean): void;
+        setBounds(cache?: boolean): Undef<BoxRectDimension>;
         querySelector(value: string): Null<Node>;
         querySelectorAll(value: string, resultCount?: number): Node[];
     }

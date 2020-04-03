@@ -319,10 +319,6 @@ export default abstract class Application<T extends Node> implements squared.bas
     public createCache(documentRoot: HTMLElement) {
         const node = this.createRootNode(documentRoot);
         if (node) {
-            (node.parent as T).setBounds();
-            for (const item of this._cache) {
-                item.setBounds();
-            }
             this.controllerHandler.sortInitialCache();
             return true;
         }

@@ -471,7 +471,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     item.cssTry('display', 'none');
                 }
             }
-            parent.setBounds();
             for (const item of cache) {
                 if (!item.pseudoElement) {
                     item.setBounds(preAlignment[item.id] === undefined && !resetBounds);
