@@ -168,6 +168,7 @@ declare namespace base {
         readonly application: Application<T>;
         readonly cache: NodeList<T>;
         readonly userSettings: UserSettings;
+        readonly fileSeparator?: string;
         reset(): void;
         addImage(element: Undef<HTMLImageElement>): void;
         getImage(src: string): Undef<ImageAsset>;
@@ -284,7 +285,6 @@ declare namespace base {
     }
 
     class File<T extends Node> implements File<T> {
-        public static getMimeType(value: string): string;
         public static downloadFile(data: Blob, filename: string, mimeType?: string): void;
     }
 
@@ -1053,6 +1053,7 @@ declare namespace lib {
             not?: string[];
         }
 
+        function parseMimeType(value: string): string;
         function capitalize(value: string, upper?: boolean): string;
         function capitalizeString(value: string): string;
         function lowerCaseString(value: string): string;
@@ -1065,7 +1066,7 @@ declare namespace lib {
         function convertAlpha(value: number): string;
         function convertRoman(value: number): string;
         function convertEnum(value: number, base: {}, derived: {}): string;
-        function buildAlphaString(length: number): string;
+        function randomUUID(separator?: string): string;
         function formatString(value: string, ...params: string[]): string;
         function delimitString(options: DelimitStringOptions, ...appending: string[]): string;
         function splitEnclosing(value: string, prefix?: string, separator?: string, opening?: string, closing?: string): string[];

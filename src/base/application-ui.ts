@@ -58,7 +58,7 @@ function getCounterValue(name: string, counterName: string, fallback = 1) {
 }
 
 function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) {
-    const counterIncrement: string | undefined = getElementCache(parent, 'styleMap' + pseudoElt, sessionId)?.counterIncrement;
+    const counterIncrement: string | undefined = getElementCache(parent, `styleMap${pseudoElt}`, sessionId)?.counterIncrement;
     return counterIncrement ? getCounterValue(counterIncrement, counterName, fallback) : undefined;
 }
 
@@ -746,12 +746,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
-        let styleMap: StringMap = getElementCache(element, 'styleMap' + pseudoElt, sessionId);
+        let styleMap: StringMap = getElementCache(element, `styleMap${pseudoElt}`, sessionId);
         let nested = 0;
         if (element.tagName === 'Q') {
             if (styleMap === undefined) {
                 styleMap = {};
-                setElementCache(element, 'styleMap' + pseudoElt, sessionId, styleMap);
+                setElementCache(element, `styleMap${pseudoElt}`, sessionId, styleMap);
             }
             let content = styleMap.content;
             if (typeof content !== 'string' || content === '') {

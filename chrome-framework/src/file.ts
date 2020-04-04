@@ -6,7 +6,7 @@ import Resource from './resource';
 const $lib = squared.lib;
 
 const { COMPONENT, FILE } = $lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, resolvePath, spliceString, trimEnd } = $lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, parseMimeType, resolvePath, spliceString, trimEnd } = $lib.util;
 
 const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
@@ -38,7 +38,7 @@ function parseUri(value: string): Undef<ChromeAsset> {
             pathname,
             filename,
             extension,
-            mimeType: extension && File.getMimeType(extension)
+            mimeType: extension && parseMimeType(extension)
         };
     }
     return undefined;
@@ -103,7 +103,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             if (this._validFile(data)) {
                 data.uri = href;
-                data.mimeType = File.getMimeType('html');
+                data.mimeType = parseMimeType('html');
                 this._processExtensions(data);
                 result.push(data);
             }

@@ -16,7 +16,7 @@ const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, ge
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = $lib.math;
 const { CHAR, ESCAPE, STRING, XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, trimEnd, trimStart } = $lib.util;
+const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, trimEnd, trimStart } = $lib.util;
 const { STRING_SPACE, STRING_TABSPACE } = $lib.xml;
 
 const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+, \\d+%?, \\d+%?(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
@@ -698,7 +698,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public writeRawImage(filename: string, base64: string) {
         const fileHandler = this.fileHandler;
         if (fileHandler) {
-            const asset = <Optional<RawAsset>> { pathname: this.controllerSettings.directory.image, filename, base64 };
+            const asset = <Optional<RawAsset>> { pathname: appendSeparator(this.userSettings.outputDirectory, this.controllerSettings.directory.image), filename, base64 };
             fileHandler.addAsset(asset);
             return asset;
         }

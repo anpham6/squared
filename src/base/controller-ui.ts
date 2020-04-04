@@ -272,7 +272,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             else {
                                 const value = styleMap[opposing];
                                 if (value && isLength(value)) {
-                                    const attrMax = 'max' + capitalize(attr);
+                                    const attrMax = `max${capitalize(attr)}`;
                                     if (styleMap[attrMax] === undefined || !isPercent(attrMax)) {
                                         const image = this.application.resourceHandler.getImage((<HTMLImageElement> element).src);
                                         if (image && image.width > 0 && image.height > 0) {

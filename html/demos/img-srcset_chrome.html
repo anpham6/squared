@@ -27,6 +27,7 @@
                     chrome = result.default;
                     squared.setFramework(chrome);
                     squared.settings.preloadImages = true;
+                    squared.settings.compressImages = false;
                     squared.parseDocument('squared_ui').then(function() {
                         squared.system.saveHtmlPage();
                         squared.system.saveImageAssets();
@@ -37,32 +38,34 @@
                                 {
                                     pathname: 'images',
                                     filename: 'android.png',
-                                    uri: 'images/android.png'
+                                    uri: 'http://localhost:3000/demos/images/android.png',
+                                    compress: [{ format: 'png' }]
                                 },
                                 {
                                     pathname: 'images',
                                     filename: 'android-ldpi.png',
-                                    uri: 'images/android-ldpi.png'
+                                    uri: 'http://localhost:3000/demos/images/android-ldpi.png',
+                                    compress: [{ format: 'png' }]
                                 },
                                 {
                                     pathname: 'images',
                                     filename: 'android-hdpi.png',
-                                    uri: 'images/android-hdpi.png'
+                                    uri: 'http://localhost:3000/demos/images/android-hdpi.png'
                                 },
                                 {
                                     pathname: 'images',
                                     filename: 'android-xhdpi.png',
-                                    uri: 'images/android-xhdpi.png'
+                                    uri: 'http://localhost:3000/demos/images/android-xhdpi.png'
                                 },
                                 {
                                     pathname: 'images',
                                     filename: 'android-xxhdpi.png',
-                                    uri: 'images/android-xxhdpi.png'
+                                    uri: 'http://localhost:3000/demos/images/android-xxhdpi.png'
                                 },
                                 {
                                     pathname: 'images',
                                     filename: 'android-xxxhdpi.png',
-                                    uri: 'images/android-xxxhdpi.png'
+                                    uri: 'http://localhost:3000/demos/images/android-xxxhdpi.png'
                                 }
                             ]
                         };

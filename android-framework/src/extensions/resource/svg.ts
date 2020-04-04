@@ -213,7 +213,7 @@ function createPathInterpolator(value: string) {
         return interpolator;
     }
     else {
-        const name = 'path_interpolator_' + convertWord(value);
+        const name = `path_interpolator_${convertWord(value)}`;
         if (!STORED.animators.has(name)) {
             STORED.animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(CHAR.SPACE)));
         }

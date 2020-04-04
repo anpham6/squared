@@ -295,7 +295,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     error = <HTMLImageElement> error.target;
                 }
                 const message = error instanceof HTMLImageElement ? error.src : '';
-                if (!this.userSettings.showErrorMessages || !isString(message) || confirm('FAIL: ' + message)) {
+                if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
                     resume();
                 }
             });
@@ -608,8 +608,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const [selector, target] = selectorText.split('::');
                     const targetElt = target ? '::' + target : '';
                     document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
-                        const attrStyle = 'styleMap' + targetElt;
-                        const attrSpecificity = 'styleSpecificity' + targetElt;
+                        const attrStyle = `styleMap${targetElt}`;
+                        const attrSpecificity = `styleSpecificity${targetElt}`;
                         const styleData: StringMap = getElementCache(element, attrStyle, sessionId);
                         if (styleData) {
                             const specificityData: ObjectMap<number> = getElementCache(element, attrSpecificity, sessionId) || {};
@@ -636,7 +636,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             for (const attr in styleMap) {
                                 specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                             }
-                            setElementCache(element, 'style' + targetElt, '0', getStyle(element, targetElt));
+                            setElementCache(element, `style${targetElt}`, '0', getStyle(element, targetElt));
                             setElementCache(element, 'sessionId', '0', sessionId);
                             setElementCache(element, attrStyle, sessionId, styleMap);
                             setElementCache(element, attrSpecificity, sessionId, specificityData);

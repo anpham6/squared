@@ -6,9 +6,7 @@ const $lib = squared.lib;
 
 const { STRING, XML } = $lib.regex;
 const { extractURL } = $lib.css;
-const { buildAlphaString, fromLastIndexOf } = $lib.util;
-
-const getFileName = () => buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
+const { fromLastIndexOf, randomUUID } = $lib.util;
 
 export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
     public static ASSETS: ResourceAssetMap = {
@@ -25,6 +23,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public fileHandler?: squared.base.File<T>;
     public readonly abstract application: squared.base.Application<T>;
     public readonly abstract cache: squared.base.NodeList<T>;
+    public readonly abstract fileSeparator: string;
     public abstract controllerSettings: ControllerSettings;
 
     public abstract get userSettings(): UserSettings;
@@ -94,7 +93,6 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         const imageFormat = this.controllerSettings.supported.imageFormat;
         const origin = location.origin;
         const valid = uri.startsWith(origin);
-        const pathname = valid ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '';
         let filename: Undef<string>;
         if (imageFormat === '*') {
             if (valid) {
@@ -105,21 +103,21 @@ export default abstract class Resource<T extends squared.base.Node> implements s
                 if (extension === 'svg+xml') {
                     extension = 'svg';
                 }
-                filename = getFileName() + '.' + extension;
+                filename = randomUUID(this.fileSeparator) + '.' + extension;
             }
         }
         else {
             for (const extension of imageFormat) {
                 if (mimeType.includes(extension)) {
                     const ext = '.' + extension;
-                    filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/') : getFileName() + ext;
+                    filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/') : randomUUID(this.fileSeparator) + ext;
                     break;
                 }
             }
         }
         if (filename) {
             Resource.ASSETS.rawData.set(uri, {
-                pathname,
+                pathname: valid ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '',
                 filename,
                 content,
                 base64,

@@ -199,7 +199,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                     invalid = true;
                     break;
                 }
-                if (predicate === undefined || predicate(item)) {
+                if (!predicate || predicate(item)) {
                     result.push(item);
                 }
                 if (item instanceof Container && !item.isEmpty) {

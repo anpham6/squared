@@ -74,7 +74,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 while ((match = REGEX_UNIT_ATTR.exec(content)) !== null) {
                     const [original, name, value] = match;
                     if (name !== 'text') {
-                        const key = getResourceName(dimens, 'custom_' + convertUnderscore(name), value);
+                        const key = getResourceName(dimens, `custom_${convertUnderscore(name)}`, value);
                         content = content.replace(original, original.replace(value, `@dimen/${key}`));
                         dimens.set(key, value);
                     }

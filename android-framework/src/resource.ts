@@ -151,10 +151,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 }
                 name = name.toLowerCase();
                 if (numeric || CHAR.LEADINGNUMBER.test(name) || RESERVED_JAVA.includes(name)) {
-                    name = '__' + name;
+                    name = `__${name}`;
                 }
                 else if (name === '') {
-                    name = '__symbol' + Math.ceil(Math.random() * 100000);
+                    name = `__symbol${Math.ceil(Math.random() * 100000)}`;
                 }
                 if (strings.has(name)) {
                     name = Resource.generateId('string', name);
@@ -282,9 +282,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     if (FILE.SVG.test(filename)) {
                         return '';
                     }
-                    const pathname = prefix + filename;
-                    resource.writeRawImage(pathname, base64);
-                    return pathname.substring(0, pathname.lastIndexOf('.'));
+                    resource.writeRawImage(prefix + filename, base64);
+                    return filename.substring(0, filename.lastIndexOf('.'));
                 }
             }
         }
@@ -306,6 +305,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             compress.push({ format: 'png' });
         }
         return asset;
+    }
+
+    get fileSeparator() {
+        return '_';
     }
 
     get userSettings() {

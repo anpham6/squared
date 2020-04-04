@@ -950,7 +950,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.pseudoElement) {
                 const element = <Element> this._element;
                 const sessionId = this.sessionId;
-                result = getElementCache(<Element> element.parentElement, 'styleSpecificity' + getPseudoElt(element, sessionId), sessionId)?.[attr] as number;
+                result = getElementCache(<Element> element.parentElement, `styleSpecificity${getPseudoElt(element, sessionId)}`, sessionId)?.[attr] as number;
             }
             else {
                 result = getElementCache(<Element> this._element, 'styleSpecificity', this.sessionId)?.[attr] as number;
