@@ -280,12 +280,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 switch (getStyle(element).position) {
                     case 'absolute':
                     case 'fixed':
-                        return this._isUseElement(element);
+                        return this.isUseElement(element);
                 }
                 let current = element.parentElement;
                 while (current) {
                     if (getStyle(current).display === 'none') {
-                        return this._isUseElement(element);
+                        return this.isUseElement(element);
                     }
                     current = current.parentElement;
                 }
@@ -293,7 +293,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (iterateArray(element.children, (item: HTMLElement) => controllerHandler.visibleElement(item)) === Number.POSITIVE_INFINITY) {
                     return true;
                 }
-                return this._isUseElement(element);
+                return this.isUseElement(element);
             }
         }
         return false;
@@ -572,6 +572,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         return undefined;
+    }
+
+    public isUseElement(element: HTMLElement) {
+        const use = element.dataset.use;
+        return isString(use) && use.split(XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
     }
 
     public toString() {
@@ -1387,7 +1392,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
-                        let layout = this._createLayoutControl(parentY, nodeY);
+                        let layout = this.createLayoutControl(parentY, nodeY);
                         if (layout.containerType === 0) {
                             const result: LayoutResult<T> = nodeY.length ? controllerHandler.processUnknownParent(layout) : controllerHandler.processUnknownChild(layout);
                             if (result.next) {
@@ -1636,7 +1641,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 this.addLayout(group);
                 if (seg === inlineAbove) {
-                    this._setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
+                    this.setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
                 }
             }
         }
@@ -1762,7 +1767,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         if (pageFlow.length && floating.length) {
                             const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
-                            this._setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
+                            this.setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
                         }
                     }
                 }
@@ -1782,7 +1787,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return { ...options, assets };
     }
 
-    private _setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
+    protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
         let paddingNodes: T[] = [];
         for (const child of inlineAbove) {
             if (requirePadding(child) || child.centerAligned) {
@@ -1860,7 +1865,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
     }
 
-    private _createLayoutControl(parent: T, node: T) {
+    protected createLayoutControl(parent: T, node: T) {
         return new LayoutUI(
             parent,
             node,
@@ -1868,11 +1873,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.alignmentType,
             node.children as T[]
         );
-    }
-
-    private _isUseElement(element: HTMLElement) {
-        const use = element.dataset.use;
-        return isString(use) && use.split(XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
     }
 
     get layouts() {

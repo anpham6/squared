@@ -84,6 +84,7 @@ const lib = {
 
 const appBase: AppFramework<View> = {
     base: {
+        ExtensionManager,
         Controller,
         File,
         Resource,
@@ -111,8 +112,8 @@ const appBase: AppFramework<View> = {
             CssGrid: DelegateCssGrid,
             MaxWidthHeight: DelegateMaxWidthHeight,
             NegativeX: DelegateNegativeX,
-            PositiveX: DelegatePositiveX,
             Percent: DelegatePercent,
+            PositiveX: DelegatePositiveX,
             RadioGroup: DelegateRadioGroup,
             ScrollBar: DelegateScrollBar
         },
@@ -256,70 +257,37 @@ const appBase: AppFramework<View> = {
             }
         },
         writeLayoutAllXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.layoutAllToXml(application.layouts, options);
-            }
-            return {};
+            return checkApplication(application) ? file.layoutAllToXml(application.layouts, options) : {};
         },
         writeResourceAllXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.resourceAllToXml(options);
-            }
-            return {};
+            return checkApplication(application) ? file.resourceAllToXml(options) : {};
         },
         writeResourceStringXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.resourceStringToXml(options);
-            }
-            return [];
+            return checkApplication(application) ? file.resourceStringToXml(options) : [];
         },
         writeResourceArrayXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.resourceStringArrayToXml(options);
-            }
-            return [];
+            return checkApplication(application) ? file.resourceStringArrayToXml(options) : [];
         },
         writeResourceFontXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.resourceFontToXml(options);
-            }
-            return [];
+            return checkApplication(application) ? file.resourceFontToXml(options) : [];
         },
         writeResourceColorXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.resourceColorToXml(options);
-            }
-            return [];
+            return checkApplication(application) ? file.resourceColorToXml(options) : [];
         },
         writeResourceStyleXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.resourceStyleToXml(options);
-            }
-            return [];
+            return checkApplication(application) ? file.resourceStyleToXml(options) : [];
         },
         writeResourceDimenXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.resourceDimenToXml(options);
-            }
-            return [];
+            return checkApplication(application) ? file.resourceDimenToXml(options) : [];
         },
         writeResourceDrawableXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.resourceDrawableToXml(options);
-            }
-            return [];
+            return checkApplication(application) ? file.resourceDrawableToXml(options) : [];
         },
         writeResourceDrawableImageXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.resourceDrawableImageToXml(options);
-            }
-            return [];
+            return checkApplication(application) ? file.resourceDrawableImageToXml(options) : [];
         },
         writeResourceAnimXml(options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                return file.resourceAnimToXml(options);
-            }
-            return [];
+            return checkApplication(application) ? file.resourceAnimToXml(options) : [];
         }
     },
     create() {

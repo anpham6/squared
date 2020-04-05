@@ -337,7 +337,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                             for (const attr in combined) {
                                 const attrs = Array.from(combined[attr]).sort().join(';');
-                                const ids = objectMap<string, number>(attr.split(XML.SEPARATOR), value => parseInt(value));
+                                const ids = objectMap(attr.split(XML.SEPARATOR), value => parseInt(value));
                                 deleteStyleAttribute(sorted, attrs, ids);
                                 styleTag[attrs] = ids;
                             }

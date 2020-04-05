@@ -263,7 +263,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         if (imageElements.length) {
             this.initializing = true;
-            Promise.all(objectMap<PreloadImage, Promise<PreloadImage>>(imageElements, image => {
+            Promise.all(objectMap(imageElements, image => {
                 return new Promise((resolve, reject) => {
                     if (typeof image === 'string') {
                         resolve(getImageSvgAsync(image));
@@ -482,13 +482,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    protected applyCSSRuleList(rules: CSSRuleList) {
-        const length = rules.length;
-        for (let i = 0; i < length; i++) {
-            this.applyStyleRule(<CSSStyleRule> rules[i]);
-        }
-    }
-
     protected applyStyleRule(item: CSSStyleRule) {
         const resourceHandler = this.resourceHandler;
         const sessionId = this.processing.sessionId;
@@ -679,6 +672,13 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 break;
             }
+        }
+    }
+
+    protected applyCSSRuleList(rules: CSSRuleList) {
+        const length = rules.length;
+        for (let i = 0; i < length; i++) {
+            this.applyStyleRule(<CSSStyleRule> rules[i]);
         }
     }
 

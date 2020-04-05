@@ -778,7 +778,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             return undefined;
                         }
                     }
-                    layout.node = this._createLayoutNodeGroup(layout);
+                    layout.node = this.createLayoutGroup(layout);
                     layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN);
                 }
             }
@@ -790,12 +790,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     return undefined;
                 }
                 else {
-                    layout.node = this._createLayoutNodeGroup(layout);
+                    layout.node = this.createLayoutGroup(layout);
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
                 }
             }
             else if (hasCleared(layout, clearMap) || this.checkFrameHorizontal(layout)) {
-                layout.node = this._createLayoutNodeGroup(layout);
+                layout.node = this.createLayoutGroup(layout);
                 layout.addRender(NODE_ALIGNMENT.FLOAT);
                 layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
             }
@@ -812,19 +812,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             return undefined;
                         }
                     }
-                    layout.node = this._createLayoutNodeGroup(layout);
+                    layout.node = this.createLayoutGroup(layout);
                     layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL);
                 }
             }
         }
         else if (floatSize) {
             if (hasCleared(layout, clearMap)) {
-                layout.node = this._createLayoutNodeGroup(layout);
+                layout.node = this.createLayoutGroup(layout);
                 layout.addRender(NODE_ALIGNMENT.FLOAT);
                 layout.addRender(NODE_ALIGNMENT.VERTICAL);
             }
             else if ((layout.item(0) as T).floating) {
-                layout.node = this._createLayoutNodeGroup(layout);
+                layout.node = this.createLayoutGroup(layout);
                 layout.addRender(NODE_ALIGNMENT.FLOAT);
                 layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
             }
@@ -842,7 +842,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         return undefined;
                     }
                 }
-                layout.node = this._createLayoutNodeGroup(layout);
+                layout.node = this.createLayoutGroup(layout);
                 layout.setContainerType(containerType, NODE_ALIGNMENT.VERTICAL);
             }
         }
@@ -3065,7 +3065,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         node.horizontalRows = horizontal;
     }
 
-    private _createLayoutNodeGroup(layout: squared.base.LayoutUI<T>) {
+    protected createLayoutGroup(layout: squared.base.LayoutUI<T>) {
         return this.createNodeGroup(layout.node, layout.children, { parent: layout.parent });
     }
 

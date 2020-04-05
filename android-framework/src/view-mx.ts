@@ -391,6 +391,98 @@ function ascendFlexibleHeight(node: T) {
 const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
 const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
 
+function setLineHeight(node: T, renderParent: T) {
+    const lineHeight = node.lineHeight;
+    if (lineHeight > 0) {
+        const hasOwnStyle = node.has('lineHeight', { map: 'initial' });
+        if (node.multiline) {
+            setMultiline(node, lineHeight, hasOwnStyle);
+        }
+        else if (node.renderChildren.length) {
+            if (!hasOwnStyle && node.layoutHorizontal && node.alignSibling('baseline')) {
+                return;
+            }
+            else if (node.layoutVertical || node.layoutFrame) {
+                for (const item of node.renderChildren as T[]) {
+                    if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
+                        setMarginOffset(item, lineHeight, true, true, true);
+                    }
+                }
+            }
+            else {
+                const horizontalRows = node.horizontalRows || [node.renderChildren];
+                let previousMultiline = false;
+                const length = horizontalRows.length;
+                for (let i = 0; i < length; i++) {
+                    const row = horizontalRows[i];
+                    const q = row.length;
+                    const nextRow = horizontalRows[i + 1];
+                    const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < length - 1 && !!nextRow.find(item => item.baselineActive)?.has('lineHeight'));
+                    const first = row[0];
+                    const singleItem = q === 1;
+                    const singleLine = singleItem && !first.multiline;
+                    const baseline = !singleItem && row.find(item => item.baselineActive && item.renderChildren.length === 0);
+                    const top = singleLine || !previousMultiline && (i > 0 || length === 1) || first.lineBreakLeading;
+                    const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
+                    if (baseline && q > 1) {
+                        if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
+                            setMarginOffset(baseline as T, lineHeight, false, top, bottom);
+                        }
+                        else {
+                            previousMultiline = true;
+                            continue;
+                        }
+                    }
+                    else {
+                        for (const item of row) {
+                            if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
+                                setMarginOffset(item as T, lineHeight, singleItem, top, bottom);
+                            }
+                        }
+                    }
+                    previousMultiline = singleItem && first.multiline;
+                }
+            }
+        }
+        else if (hasOwnStyle || renderParent.lineHeight === 0) {
+            setMarginOffset(node, lineHeight, hasOwnStyle, true, true);
+        }
+    }
+}
+
+function finalizeGravity(node: T, attr: string) {
+    const direction = getGravityValues(node, attr);
+    if (direction.size > 1) {
+        checkMergableGravity('center', direction);
+        checkMergableGravity('fill', direction);
+    }
+    let result = '';
+    let x = '';
+    let y = '';
+    let z = '';
+    for (const value of direction.values()) {
+        if (isHorizontalAlign(value)) {
+            x = value;
+        }
+        else if (isVerticalAlign(value)) {
+            y = value;
+        }
+        else {
+            z += (z !== '' ? '|' : '') + value;
+        }
+    }
+    result = x !== '' && y !== '' ? x + '|' + y : x || y;
+    if (z !== '') {
+        result += (result !== '' ? '|' : '') + z;
+    }
+    if (result !== '') {
+        node.android(attr, result);
+    }
+    else {
+        node.delete('android', attr);
+    }
+}
+
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
         public static setConstraintDimension<T extends View>(node: T, percentWidth = NaN) {
@@ -2070,10 +2162,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public applyOptimizations() {
             const renderParent = this.renderParent;
             if (renderParent) {
-                this._alignLayout(renderParent);
-                this._setLineHeight(renderParent);
-                this._finalizeGravity('layout_gravity');
-                this._finalizeGravity('gravity');
+                this.alignLayout(renderParent);
+                setLineHeight(this, renderParent);
+                finalizeGravity(this, 'layout_gravity');
+                finalizeGravity(this, 'gravity');
                 if (this.imageElement) {
                     const layoutWidth = this.layoutWidth;
                     const layoutHeight = this.layoutHeight;
@@ -2133,7 +2225,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             this.android('layout_height', value, overwrite);
         }
 
-        private _alignLayout(renderParent: T) {
+        protected alignLayout(renderParent: T) {
             if (this.layoutLinear) {
                 const children = this.renderChildren;
                 if (this.layoutVertical) {
@@ -2157,98 +2249,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-            }
-        }
-
-        private _setLineHeight(renderParent: T) {
-            const lineHeight = this.lineHeight;
-            if (lineHeight > 0) {
-                const hasOwnStyle = this.has('lineHeight', { map: 'initial' });
-                if (this.multiline) {
-                    setMultiline(this, lineHeight, hasOwnStyle);
-                }
-                else if (this.renderChildren.length) {
-                    if (!hasOwnStyle && this.layoutHorizontal && this.alignSibling('baseline')) {
-                        return;
-                    }
-                    else if (this.layoutVertical || this.layoutFrame) {
-                        for (const node of this.renderChildren) {
-                            if (node.length === 0 && !node.multiline && !isNaN(node.lineHeight) && !node.has('lineHeight')) {
-                                setMarginOffset(node, lineHeight, true, true, true);
-                            }
-                        }
-                    }
-                    else {
-                        const horizontalRows = this.horizontalRows || [this.renderChildren];
-                        let previousMultiline = false;
-                        const length = horizontalRows.length;
-                        for (let i = 0; i < length; i++) {
-                            const row = horizontalRows[i];
-                            const q = row.length;
-                            const nextRow = horizontalRows[i + 1];
-                            const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < length - 1 && !!nextRow.find(node => node.baselineActive)?.has('lineHeight'));
-                            const first = row[0];
-                            const singleItem = q === 1;
-                            const singleLine = singleItem && !first.multiline;
-                            const baseline = !singleItem && row.find(node => node.baselineActive && node.renderChildren.length === 0);
-                            const top = singleLine || !previousMultiline && (i > 0 || length === 1) || first.lineBreakLeading;
-                            const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
-                            if (baseline && q > 1) {
-                                if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
-                                    setMarginOffset(baseline, lineHeight, false, top, bottom);
-                                }
-                                else {
-                                    previousMultiline = true;
-                                    continue;
-                                }
-                            }
-                            else {
-                                for (const node of row) {
-                                    if (node.length === 0 && !node.multiline && !isNaN(node.lineHeight) && !node.has('lineHeight')) {
-                                        setMarginOffset(node, lineHeight, singleItem, top, bottom);
-                                    }
-                                }
-                            }
-                            previousMultiline = singleItem && first.multiline;
-                        }
-                    }
-                }
-                else if (hasOwnStyle || renderParent.lineHeight === 0) {
-                    setMarginOffset(this, lineHeight, hasOwnStyle, true, true);
-                }
-            }
-        }
-
-        private _finalizeGravity(attr: string) {
-            const direction = getGravityValues(this, attr);
-            if (direction.size > 1) {
-                checkMergableGravity('center', direction);
-                checkMergableGravity('fill', direction);
-            }
-            let result = '';
-            let x = '';
-            let y = '';
-            let z = '';
-            for (const value of direction.values()) {
-                if (isHorizontalAlign(value)) {
-                    x = value;
-                }
-                else if (isVerticalAlign(value)) {
-                    y = value;
-                }
-                else {
-                    z += (z !== '' ? '|' : '') + value;
-                }
-            }
-            result = x !== '' && y !== '' ? x + '|' + y : x || y;
-            if (z !== '') {
-                result += (result !== '' ? '|' : '') + z;
-            }
-            if (result !== '') {
-                this.android(attr, result);
-            }
-            else {
-                this.delete('android', attr);
             }
         }
 

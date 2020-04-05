@@ -1,4 +1,4 @@
-import { iterateArray, objectMap, partitionArray, sameArray, spliceArray } from '../util';
+import { flatMap, iterateArray, objectMap, partitionArray, sameArray, spliceArray } from '../util';
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[];
@@ -45,15 +45,20 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this;
     }
 
-    public remove(item: T) {
+    public remove(...items: T[]) {
+        const result: T[] = [];
         const children = this._children;
-        const length = children.length;
-        for (let i = 0; i < length; i++) {
-            if (children[i] === item) {
-                return children.splice(i, 1);
+        for (const item of items) {
+            const length = children.length;
+            for (let i = 0; i < length; i++) {
+                if (children[i] === item) {
+                    children.splice(i, 1);
+                    result.push(item);
+                    break;
+                }
             }
         }
-        return [];
+        return result;
     }
 
     public contains(item: T) {
@@ -146,6 +151,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public map<U>(predicate: IteratorPredicate<T, U>): U[] {
         return objectMap(this._children, predicate);
+    }
+
+    public flatMap<U>(predicate: IteratorPredicate<T, U>): U[] {
+        return flatMap(this._children, predicate);
     }
 
     public find(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerFindOptions<T>) {

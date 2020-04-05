@@ -727,9 +727,24 @@ function refitTransformPoints(data: TimelineValue, parent?: SvgContainer) {
     return parent ? parent.refitX(x) + ' ' + parent.refitX(y) : x + ' ' + y;
 }
 
+function insertAnimate(animations: SvgAnimation[], item: SvgAnimate, repeating: boolean) {
+    if (!repeating) {
+        item.iterationCount = -1;
+    }
+    item.from = item.valueFrom;
+    item.to = item.valueTo;
+    animations.push(item);
+}
+
+function removeAnimations(animations: SvgAnimation[], values: SvgAnimation[]) {
+    if (values.length) {
+        spliceArray(animations, (item: SvgAnimation) => values.includes(item));
+    }
+}
+
 const getItemTime = (delay: number, duration: number, keyTimes: number[], iteration: number, index: number) => Math.round(delay + (keyTimes[index] + iteration) * duration);
 const getEllipsePoints = (values: number[]): SvgPoint[] => [{ x: values[0], y: values[1], rx: values[2], ry: values[values.length - 1] }];
-const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? objectMap<Point, string>(value, pt => pt.x + ',' + pt.y).join(' ') : value?.toString() || '';
+const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? objectMap(value, pt => pt.x + ',' + pt.y).join(' ') : value?.toString() || '';
 const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE);
 const isFromToFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE);
 const playableAnimation = (item: SvgAnimate) => item.playable || item.animationElement && item.duration !== -1;
@@ -825,6 +840,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                 }
                 precision = options.precision;
             }
+            const animationsBase = <SvgAnimation[]> this.animations;
             [animations, transforms].forEach(mergeable => {
                 const transforming = mergeable === transforms;
                 if (!mergeable || mergeable.length === 0 || !transforming && hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_ANIMATE) || transforming && hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_TRANSFORM)) {
@@ -887,7 +903,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             groupActive.add(item.group.name);
                         }
                     }
-                    this._removeAnimations(removeable);
+                    removeAnimations(animationsBase, removeable);
                 }
                 if (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || staggered[0].end !== undefined)) {
                     for (const item of staggered) {
@@ -1916,7 +1932,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         infiniteResult = createKeyTimeMap(timelineMap, keyTimes, forwardMap);
                     }
                     if (repeatingResult || infiniteResult) {
-                        this._removeAnimations(staggered);
+                        removeAnimations(animationsBase, staggered);
                         const timeRange = Array.from(animateTimeRangeMap.entries());
                         const synchronizedName = joinMap(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-', false);
                         const parent = this.parent;
@@ -2011,7 +2027,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                             animate.keySplines = keySplines;
                                             animate.synchronized = { key: i, value: '' };
                                             previousEndTime = endTime;
-                                            this._insertAnimate(animate, repeating);
+                                            insertAnimate(animationsBase, animate, repeating);
                                         }
                                     }
                                     else {
@@ -2050,7 +2066,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         object.delay = delay;
                                         object.keySplines = keySplines;
                                         object.duration = entries[entries.length - 1][0];
-                                        this._insertAnimate(object, repeating);
+                                        insertAnimate(animationsBase, object, repeating);
                                     }
                                 }
                                 else if (isFromToFormat(transforming, keyTimeMode)) {
@@ -2121,7 +2137,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         if (interpolator) {
                                             object.keySplines = [interpolator];
                                         }
-                                        this._insertAnimate(object, repeating);
+                                        insertAnimate(animationsBase, object, repeating);
                                     }
                                 }
                             }
@@ -2129,21 +2145,6 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                     }
                 }
             });
-        }
-
-        private _removeAnimations(values: SvgAnimation[]) {
-            if (values.length) {
-                spliceArray(this.animations, (item: SvgAnimation) => values.includes(item));
-            }
-        }
-
-        private _insertAnimate(item: SvgAnimate, repeating: boolean) {
-            if (!repeating) {
-                item.iterationCount = -1;
-            }
-            item.from = item.valueFrom;
-            item.to = item.valueTo;
-            this.animations.push(item);
         }
     };
 };

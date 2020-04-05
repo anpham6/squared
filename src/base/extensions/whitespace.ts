@@ -8,7 +8,7 @@ const $lib = squared.lib;
 const { formatPX } = $lib.css;
 const { maxArray } = $lib.math;
 const { getElementCache } = $lib.session;
-const { hasBit, iterateReverseArray } = $lib.util;
+const { iterateReverseArray } = $lib.util;
 
 const DOCTYPE_HTML = document.doctype?.name === 'html';
 const COLLAPSE_TOP: [string, string, string, number] = ['marginTop', 'borderTopWidth', 'paddingTop', BOX_STANDARD.MARGIN_TOP];
@@ -269,6 +269,16 @@ function getBottomChild(node: NodeUI) {
     return bottomChild;
 }
 
+function isVerticalOverflow(node: NodeUI) {
+    switch (node.css('overflowY')) {
+        case 'auto':
+        case 'hidden':
+        case 'overlay':
+            return true;
+    }
+    return false;
+}
+
 const resetBox = (node: NodeUI, region: number) => node.setBox(region, { reset: 1 });
 const setMinHeight = (node: NodeUI, offset: number) => node.css('minHeight', formatPX(Math.max(offset, node.hasPX('minHeight', false) ? node.parseHeight(node.css('minHeight')) : 0)));
 const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && node.length > 0 && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
@@ -436,25 +446,21 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         if (marginBottom > 0) {
                                             if (marginTop > 0) {
                                                 if (marginTop <= marginBottom) {
-                                                    if (!inheritedTop || !hasBit(current.overflow, NODE_ALIGNMENT.BLOCK)) {
-                                                        if (inheritedTop) {
-                                                            inheritedTop = false;
-                                                        }
+                                                    if (!inheritedTop || !isVerticalOverflow(current)) {
                                                         resetBox(current, BOX_STANDARD.MARGIN_TOP);
                                                         if (current.bounds.height === 0 && marginBottom >= current.marginBottom) {
                                                             resetBox(current, BOX_STANDARD.MARGIN_BOTTOM);
                                                         }
+                                                        inheritedTop = false;
                                                     }
                                                 }
                                                 else {
-                                                    if (!inheritedBottom || !hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
-                                                        if (inheritedBottom) {
-                                                            inheritedBottom = false;
-                                                        }
+                                                    if (!inheritedBottom || !isVerticalOverflow(previous)) {
                                                         resetBox(previous, BOX_STANDARD.MARGIN_BOTTOM);
                                                         if (previous.bounds.height === 0 && marginTop >= previous.marginTop) {
                                                             resetBox(previous, BOX_STANDARD.MARGIN_TOP);
                                                         }
+                                                        inheritedBottom = false;
                                                     }
                                                 }
                                             }
@@ -466,7 +472,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 }
                                             }
                                         }
-                                        if (marginTop > 0 && previous.floatContainer && current.getBox(BOX_STANDARD.MARGIN_TOP)[1] === 0 && !hasBit(previous.overflow, NODE_ALIGNMENT.BLOCK)) {
+                                        if (marginTop > 0 && previous.floatContainer && current.getBox(BOX_STANDARD.MARGIN_TOP)[1] === 0 && !isVerticalOverflow(previous)) {
                                             let valid = false;
                                             if (previous.bounds.height === 0) {
                                                 valid = true;
@@ -552,7 +558,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                 }
-                if (pageFlow && !hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) && node.tagName !== 'FIELDSET') {
+                if (pageFlow && !isVerticalOverflow(node) && node.tagName !== 'FIELDSET') {
                     if (firstChild?.naturalElement) {
                         applyMarginCollapse(node, firstChild, true);
                     }
@@ -830,8 +836,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         if (top <= Math.floor(previous.bounds.top)) {
                                             let floatingRenderParent = previous.outerMostWrapper.renderParent;
                                             if (floatingRenderParent) {
-                                                renderParent = renderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() as NodeUI || renderParent;
-                                                floatingRenderParent = floatingRenderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() as NodeUI || floatingRenderParent;
+                                                renderParent = <NodeUI> renderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() || renderParent;
+                                                floatingRenderParent = <NodeUI> floatingRenderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() || floatingRenderParent;
                                                 if (renderParent !== floatingRenderParent) {
                                                     outerWrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, (floatingRenderParent !== node ? floatingRenderParent : previous).linear.height * -1, false);
                                                 }

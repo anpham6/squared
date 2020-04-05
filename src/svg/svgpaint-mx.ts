@@ -113,7 +113,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     break;
                                 }
                                 case 'polygon': {
-                                    const points = objectMap<string, Point>(match[1].split(XML.SEPARATOR), values => {
+                                    const points = objectMap(match[1].split(XML.SEPARATOR), values => {
                                         let x = left;
                                         let y = top;
                                         values.trim().split(' ').forEach((value, index) => {

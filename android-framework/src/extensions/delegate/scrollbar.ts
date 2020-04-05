@@ -8,9 +8,8 @@ type View = android.base.View;
 const $lib = squared.lib;
 
 const { formatPX } = $lib.css;
-const { hasBit } = $lib.util;
 
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+const { BOX_STANDARD, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -143,7 +142,6 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     item.innerWrapped = parent;
                 }
             }
-            node.setCacheValue('overflow', hasBit(node.overflow, NODE_ALIGNMENT.BLOCK) ? NODE_ALIGNMENT.BLOCK : 0);
             node.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
             node.resetBox(BOX_STANDARD.MARGIN, scrollView[0]);
             node.parent = parent;

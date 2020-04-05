@@ -37,6 +37,7 @@ declare namespace base {
         resource: Resource<T>;
         application: Application<T>;
         readonly userSettings: UserSettingsChrome;
+        readonly outputFileExclusions: RegExp[];
         getHtmlPage(name?: string): ChromeAsset[];
         getScriptAssets(): ChromeAsset[];
         getLinkAssets(): ChromeAsset[];

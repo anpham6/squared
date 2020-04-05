@@ -21,6 +21,18 @@ const REGEX_MIN = /-?\d+min$/;
 const REGEX_H = /-?\d+(.\d+)?h$/;
 const REGEX_CLOCK = /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/;
 
+function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
+    const valid = hasBit(this.fillMode, value);
+    if (mode) {
+        if (!valid) {
+            this.fillMode |= value;
+        }
+    }
+    else if (valid) {
+        this.fillMode ^= value;
+    }
+}
+
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static convertClockTime(value: string) {
         let s = 0;
@@ -151,18 +163,6 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return values.some(value => hasBit(this.synchronizeState, value));
     }
 
-    private _setFillMode(mode: boolean, value: number) {
-        const valid = hasBit(this.fillMode, value);
-        if (mode) {
-            if (!valid) {
-                this.fillMode |= value;
-            }
-        }
-        else if (valid) {
-            this.fillMode ^= value;
-        }
-    }
-
     set attributeName(value) {
         if (value !== 'transform' && !isString(this.baseValue)) {
             let baseValue: Undef<string> = this._dataset.baseValue?.[value]?.toString().trim();
@@ -226,21 +226,21 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set fillBackwards(value) {
-        this._setFillMode(value, FILL_MODE.BACKWARDS);
+        setFillMode.bind(this, value, FILL_MODE.BACKWARDS);
     }
     get fillBackwards() {
         return hasBit(this.fillMode, FILL_MODE.BACKWARDS);
     }
 
     set fillForwards(value) {
-        this._setFillMode(value, FILL_MODE.FORWARDS);
+        setFillMode.bind(this, value, FILL_MODE.FORWARDS);
     }
     get fillForwards() {
         return hasBit(this.fillMode, FILL_MODE.FORWARDS);
     }
 
     set fillFreeze(value) {
-        this._setFillMode(value, FILL_MODE.FREEZE);
+        setFillMode.bind(this, value, FILL_MODE.FREEZE);
     }
     get fillFreeze() {
         return hasBit(this.fillMode, FILL_MODE.FREEZE);

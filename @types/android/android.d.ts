@@ -59,17 +59,18 @@ declare namespace base {
 
     interface File<T extends View> extends squared.base.FileUI<T> {
         resource: Resource<T>;
-        resourceAllToXml(options: FileOutputOptions): {};
-        resourceStringToXml(options: FileOutputOptions): string[];
-        resourceStringArrayToXml(options: FileOutputOptions): string[];
-        resourceFontToXml(options: FileOutputOptions): string[];
-        resourceColorToXml(options: FileOutputOptions): string[];
-        resourceStyleToXml(options: FileOutputOptions): string[];
-        resourceDimenToXml(options: FileOutputOptions): string[];
-        resourceDrawableToXml(options: FileOutputOptions): string[];
-        resourceDrawableImageToXml(options: FileOutputOptions): string[];
-        resourceAnimToXml(options: FileOutputOptions): string[];
-        layoutAllToXml(layouts: FileAsset[], options: FileOutputOptions): {};
+        readonly userSettings: UserSettingsAndroid;
+        resourceAllToXml(options?: FileOutputOptions): {};
+        resourceStringToXml(options?: FileOutputOptions): string[];
+        resourceStringArrayToXml(options?: FileOutputOptions): string[];
+        resourceFontToXml(options?: FileOutputOptions): string[];
+        resourceColorToXml(options?: FileOutputOptions): string[];
+        resourceStyleToXml(options?: FileOutputOptions): string[];
+        resourceDimenToXml(options?: FileOutputOptions): string[];
+        resourceDrawableToXml(options?: FileOutputOptions): string[];
+        resourceDrawableImageToXml(options?: FileOutputOptions): string[];
+        resourceAnimToXml(options?: FileOutputOptions): string[];
+        layoutAllToXml(layouts: FileAsset[], options?: FileOutputOptions): {};
     }
 
     class File<T extends View> implements File<T> {}

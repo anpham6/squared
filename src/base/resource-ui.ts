@@ -921,7 +921,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                     else if (node.inlineText) {
                         key = textContent.trim();
-                        [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(NODE_ALIGNMENT.INLINE) ? replaceAmpersand(textContent) : this._removeExcludedFromText(node, element));
+                        [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(NODE_ALIGNMENT.INLINE) ? replaceAmpersand(textContent) : this.removeExcludedFromText(node, element));
                     }
                     else if (node.naturalChildren.length === 0 && textContent?.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                         value = textContent;
@@ -989,7 +989,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         }
     }
 
-    private _removeExcludedFromText(node: T, element: Element) {
+    protected removeExcludedFromText(node: T, element: Element) {
         const styled = element.children.length > 0 || element.tagName === 'CODE';
         const preserveWhitespace = node.preserveWhiteSpace;
         const attr = styled ? 'innerHTML' : 'textContent';

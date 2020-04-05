@@ -56,7 +56,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         const options = createViewAttribute(this.options.self);
         if (Drawer.findNestedElement(node.element, WIDGET_NAME.MENU)) {
             assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
-            this._setStyleTheme(node.api);
+            this.setStyleTheme(node.api);
         }
         else {
             const navigationViewOptions = createViewAttribute(this.options.navigationView);
@@ -130,7 +130,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         }
     }
 
-    private _setStyleTheme(api: number) {
+    public setStyleTheme(api: number) {
         const settings = <UserSettingsAndroid> this.application.userSettings;
         const options = createStyleAttribute(this.options.resource);
         assignEmptyValue(options, 'name', settings.manifestThemeName);

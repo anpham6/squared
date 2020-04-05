@@ -154,7 +154,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             else {
                 assignEmptyValue(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
             }
-            appBarNode = this._createPlaceholder(node, appBarChildren, target);
+            appBarNode = this.createPlaceholder(node, appBarChildren, target);
             appBarNode.parent = parent;
             let id = android.id;
             if (isString(id)) {
@@ -171,7 +171,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                 }
                 assignEmptyValue(app, 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
                 assignEmptyValue(app, 'toolbarId', node.documentId);
-                collapsingToolbarNode = this._createPlaceholder(node, collapsingToolbarChildren, target);
+                collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
                 if (collapsingToolbarNode) {
                     collapsingToolbarNode.parent = appBarNode;
                     android = collapsingToolbarOptions.android;
@@ -337,7 +337,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         }
     }
 
-    private _createPlaceholder(node: T, children: T[], target?: string) {
+    public createPlaceholder(node: T, children: T[], target?: string) {
         const delegate = children.length > 0;
         const placeholder = this.application.createNode({ parent: node, children, delegate, cascade: true });
         placeholder.inherit(node, 'base');

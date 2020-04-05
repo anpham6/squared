@@ -96,6 +96,7 @@ declare namespace base {
         addLayout(layout: LayoutUI<T>): void;
         addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
+        isUseElement(element: HTMLElement): boolean;
     }
 
     class ApplicationUI<T extends NodeUI> implements ApplicationUI<T> {
@@ -746,7 +747,7 @@ declare namespace lib {
             [Symbol.iterator](): Iterator<T>;
             item(index?: number, value?: T): Undef<T>;
             append(item: T): this;
-            remove(item: T): T[];
+            remove(...items: T[]): T[];
             retain(list: T[]): this;
             contains(item: T): boolean;
             duplicate(): T[];
@@ -764,6 +765,7 @@ declare namespace lib {
             splice(predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[];
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             map<U>(predicate: IteratorPredicate<T, U>): U[];
+            flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
             some(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): boolean;
             cascade(predicate?: (item: T) => boolean, options?: ContainerCascadeOptions<T>): T[];

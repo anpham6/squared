@@ -83,11 +83,11 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
                 }
             });
         }
-        this._setDefinitions(element);
-        element.querySelectorAll('defs').forEach(def => this._setDefinitions(def));
+        this.setDefinitions(element);
+        element.querySelectorAll('defs').forEach(def => this.setDefinitions(def));
     }
 
-    private _setDefinitions(item: SVGElement) {
+    protected setDefinitions(item: SVGElement) {
         const definitions = this.definitions;
         item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element: SVGElement) => {
             let id = element.id;

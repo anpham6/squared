@@ -4,6 +4,7 @@ import type { ViewAttribute } from '../../@types/android/node';
 import { RESERVED_JAVA } from './lib/constant';
 
 type View = android.base.View;
+type ColorData = squared.lib.color.ColorData;
 
 const $lib = squared.lib;
 
@@ -186,7 +187,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    public static addColor(color: Undef<squared.lib.color.ColorData | string>, transparency = false) {
+    public static addColor(color: Undef<ColorData | string>, transparency = false) {
         if (typeof color === 'string') {
             color = parseColor(color, 1, transparency);
         }
@@ -302,7 +303,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 compress = [];
                 asset.compress = compress;
             }
-            compress.push({ format: 'png' });
+            compress.unshift({ format: 'png' });
         }
         return asset;
     }
