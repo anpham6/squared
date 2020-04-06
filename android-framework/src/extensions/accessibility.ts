@@ -62,7 +62,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                         break;
                     case 'BUTTON':
                         if (node.length) {
-                            const extracted = node.filter((item: T) => !item.textElement) as T[];
+                            const extracted = node.children.filter((item: T) => !item.textElement) as T[];
                             if (extracted.length) {
                                 node.extracted = extracted;
                             }

@@ -735,6 +735,7 @@ declare namespace base {
 declare namespace lib {
     namespace base {
         interface ContainerOptions<T> {
+            also?: BindGeneric<T, void>;
             error?: IteratorPredicate<T, boolean>;
         }
         interface ContainerFindOptions<T> extends ContainerOptions<T> {
@@ -758,18 +759,16 @@ declare namespace lib {
             join(...other: Container<T>[]): this;
             every(predicate: IteratorPredicate<T, boolean>): boolean;
             same(predicate: IteratorPredicate<T, any>): boolean;
-            filter(predicate: IteratorPredicate<T, void>): T[];
-            splice(predicate: IteratorPredicate<T, boolean>, callback?: (item: T) => void): T[];
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             map<U>(predicate: IteratorPredicate<T, U>): U[];
             flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
             findIndex(predicate: IteratorPredicate<T, boolean>): number;
+            extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerOptions<T>): T[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
             some(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): boolean;
             cascade(predicate?: (item: T) => boolean, options?: ContainerOptions<T>): T[];
             sort(predicate: (a: T, b: T) => number): this;
             concat(list: T[]): this;
-            indexOf(item: T): number;
         }
 
         class Container<T> implements Container<T> {

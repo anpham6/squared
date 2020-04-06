@@ -356,7 +356,7 @@ function isConstraintLayout(layout: LayoutUI, vertical: boolean) {
         return false;
     }
     const multiple = layout.length > 1;
-    return layout.some(item => multiple && (item.rightAligned || item.centerAligned) || (item.percentWidth > 0 && item.percentWidth < 1) || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
+    return layout.some(item => multiple && (item.rightAligned || item.centerAligned) && layout.singleRowAligned || (item.percentWidth > 0 && item.percentWidth < 1) || item.hasPX('maxWidth')) && (!vertical || layout.every(item => item.marginTop >= 0));
 }
 
 function adjustBodyMargin(node: View, position: string) {
@@ -2252,7 +2252,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (anchored) {
                         const autoMargin = item.autoMargin;
                         if (autoMargin.leftRight) {
-                            item.anchor('centerHorizontal', 'true');
+                            item.anchorParent('horizontal');
                         }
                         else if (autoMargin.left) {
                             item.anchor('right', 'true');
@@ -2608,9 +2608,62 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             last = false;
                         }
                     }
+                    if (node.cssInitial('textAlign') === 'center') {
+                        const application = this.application;
+                        const group = this.createNodeGroup(items[0], items, { parent: node });
+                        group.setControlType(CONTAINER_ANDROID.RELATIVE, CONTAINER_NODE.RELATIVE);
+                        group.render(node);
+                        group.anchorParent('horizontal');
+                        group.setLayoutWidth('wrap_content');
+                        group.setLayoutHeight('wrap_content');
+                        let renderIndex = -1;
+                        items.forEach(item => {
+                            const index = children.indexOf(item);
+                            if (index !== -1) {
+                                if (renderIndex === -1) {
+                                    renderIndex = index;
+                                }
+                                else {
+                                    renderIndex = Math.min(index, renderIndex);
+                                }
+                            }
+                            item.removeTry();
+                            item.render(group);
+                            application.addLayoutTemplate(
+                                group,
+                                item,
+                                <NodeXmlTemplate<T>> {
+                                    type: NODE_TEMPLATE.XML,
+                                    node: item,
+                                    controlName: item.controlName
+                                }
+                            );
+                        });
+                        application.addLayoutTemplate(
+                            node,
+                            group,
+                            <NodeXmlTemplate<T>> {
+                                type: NODE_TEMPLATE.XML,
+                                node: group,
+                                controlName: group.controlName
+                            },
+                            renderIndex
+                        );
+                        if (previousBaseline) {
+                            group.anchor('topBottom', previousBaseline.documentId);
+                        }
+                        else {
+                            previousBaseline = group;
+                        }
+                        continue;
+                    }
                 }
                 else {
                     baseline = items[0];
+                    if (baseline.centerAligned) {
+                        baseline.anchorParent('horizontal');
+                        baseline.anchorDelete('left', 'right');
+                    }
                 }
                 let requireBottom = false;
                 if (baseline === null) {
