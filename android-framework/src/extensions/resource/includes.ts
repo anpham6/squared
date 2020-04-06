@@ -17,7 +17,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
     public readonly eventOnly = true;
 
     public beforeCascade() {
-        for (const node of this.cache) {
+        this.cache.each((node: T) => {
             const renderTemplates = node.renderTemplates;
             if (renderTemplates) {
                 let open: Undef<NodeRenderIndex[]>;
@@ -90,6 +90,6 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                     }
                 }
             }
-        }
+        });
     }
 }

@@ -31,14 +31,14 @@ function getColorStop(element: SVGGradientElement) {
 
 function getBaseValue(element: SVGElement, ...attrs: string[]) {
     const result: ObjectMap<any> = {};
-    for (const attr of attrs) {
+    attrs.forEach(attr => {
         const item = element[attr];
         if (item) {
             const { value, valueAsString } = item.baseVal;
             result[attr] = value;
             result[attr + 'AsString'] = valueAsString;
         }
-    }
+    });
     return result;
 }
 

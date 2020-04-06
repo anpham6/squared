@@ -8,7 +8,7 @@ type View = chrome.base.View;
 const $lib = squared.lib;
 
 const { COMPONENT, FILE } = $lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, parseMimeType, resolvePath, spliceString, trimEnd } = $lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, objectMap, parseMimeType, resolvePath, spliceString, trimEnd } = $lib.util;
 
 const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
@@ -54,9 +54,7 @@ function convertFileMatch(value: string) {
 }
 
 function processExtensions(this: chrome.base.File<View>, data: ChromeAsset) {
-    for (const ext of this.application.extensions) {
-        ext.processFile(data);
-    }
+    this.application.extensions.forEach(ext => ext.processFile(data));
 }
 
 export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
@@ -203,7 +201,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             if (srcset !== '') {
                 images.push(resolvePath(srcset.replace(REGEX_SRCSET_SPECIFIER, '')));
             }
-            for (const src of images) {
+            images.forEach(src => {
                 if (COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
                     const data = parseUri(src);
                     if (this.validFile(data)) {
@@ -211,10 +209,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                         result.push(data);
                     }
                 }
-            }
+            });
         });
         if (this.userSettings.compressImages) {
-            for (const asset of result) {
+            result.forEach(asset => {
                 if (Resource.canCompressImage(asset.filename)) {
                     let compress = asset.compress;
                     if (compress === undefined) {
@@ -223,7 +221,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     }
                     compress.unshift({ format: 'png' });
                 }
-            }
+            });
         }
         return result;
     }
@@ -231,7 +229,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public getFontAssets() {
         const result: ChromeAsset[] = [];
         for (const fonts of ASSETS.fonts.values()) {
-            for (const font of fonts) {
+            fonts.forEach(font => {
                 const url = font.srcUrl;
                 if (url) {
                     const data = parseUri(url);
@@ -241,7 +239,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                         result.push(data);
                     }
                 }
-            }
+            });
         }
         return result;
     }
@@ -265,11 +263,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     get outputFileExclusions() {
         let result = this._outputFileExclusions;
         if (result === undefined) {
-            const exclusions: RegExp[] = [];
-            for (const value of this.userSettings.outputFileExclusions) {
-                exclusions.push(convertFileMatch(value));
-            }
-            result = exclusions;
+            result = objectMap(this.userSettings.outputFileExclusions, value => convertFileMatch(value));
             this._outputFileExclusions = result;
         }
         return result;

@@ -31,19 +31,18 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             return a.delay < b.delay ? -1 : 1;
         });
         attrs.length = 0;
-        for (const item of animations as SvgAnimate[]) {
+        animations.forEach((item: SvgAnimate) => {
             const value = SvgAnimationIntervalMap.getKeyName(item);
             if (!attrs.includes(value)) {
                 attrs.push(value);
             }
-        }
+        });
         const map: SvgAnimationIntervalAttributeMap = {};
         const intervalMap: ObjectMap<ObjectIndex<SvgAnimationIntervalValue[]>> = {};
         const intervalTimes: ObjectMap<Set<number>> = {};
         const insertIntervalValue = (keyName: string, time: number, value: string, endTime = 0, animation?: SvgAnimation, start = false, end = false, fillMode = 0, infinite = false, valueFrom?: string) => {
             if (value) {
-                const mapA = intervalMap[keyName];
-                safeNestedArray(mapA, time).push({
+                safeNestedArray(intervalMap[keyName], time).push({
                     time,
                     value,
                     animation,
@@ -57,7 +56,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 intervalTimes[keyName].add(time);
             }
         };
-        for (const keyName of attrs) {
+        attrs.forEach(keyName => {
             map[keyName] = new Map<number, SvgAnimationIntervalValue[]>();
             intervalMap[keyName] = {};
             intervalTimes[keyName] = new Set<number>();
@@ -67,8 +66,8 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 const delay = backwards.delay;
                 insertIntervalValue(keyName, 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
             }
-        }
-        for (const item of animations) {
+        });
+        animations.forEach(item => {
             const keyName = SvgAnimationIntervalMap.getKeyName(item);
             if (item.baseValue && intervalMap[keyName][-1] === undefined) {
                 insertIntervalValue(keyName, -1, item.baseValue);
@@ -89,9 +88,9 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     insertIntervalValue(keyName, timeEnd, item.valueTo, 0, item, false, true, item.fillForwards ? FILL_MODE.FORWARDS : FILL_MODE.FREEZE);
                 }
             }
-        }
+        });
         for (const keyName in intervalMap) {
-            for (const time of sortNumber(Array.from(intervalTimes[keyName]))) {
+            sortNumber(Array.from(intervalTimes[keyName])).forEach(time => {
                 const values = intervalMap[keyName][time];
                 for (let i = 0; i < values.length; i++) {
                     const interval = values[i];
@@ -99,7 +98,9 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     if (interval.value === '' || animation && interval.start && SvgBuild.isAnimate(animation) && animation.from === '') {
                         let value: Undef<string>;
                         for (const group of map[keyName].values()) {
-                            for (const previous of group) {
+                            const length = group.length;
+                            for (let j = 0; j < length; j++) {
+                                const previous = group[j];
                                 if (interval.animation !== previous.animation && previous.value !== '' && (previous.time === -1 || previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) {
                                     value = previous.value;
                                     break;
@@ -126,38 +127,35 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     });
                     map[keyName].set(time, values);
                 }
-            }
+            });
         }
         for (const keyName in map) {
             for (const [timeA, dataA] of map[keyName].entries()) {
-                for (const itemA of dataA) {
+                dataA.forEach(itemA => {
                     const animationA = itemA.animation;
                     if (animationA) {
                         if (itemA.fillMode === FILL_MODE.FREEZE) {
                             const previous: SvgAnimation[] = [];
                             for (const [timeB, dataB] of map[keyName].entries()) {
                                 if (timeB < timeA) {
-                                    for (const itemB of dataB) {
+                                    dataB.forEach(itemB => {
                                         if (itemB.start) {
                                             const animation = itemB.animation;
                                             if (animation?.animationElement) {
                                                 previous.push(animation);
                                             }
                                         }
-                                    }
-                                }
-                                else if (timeB > timeA) {
-                                    for (let i = 0; i < dataB.length; i++) {
-                                        const itemB = dataB[i];
-                                        if (itemB.end && previous.includes(<SvgAnimation> itemB.animation)) {
-                                            dataB.splice(i--, 1);
-                                        }
-                                    }
+                                    });
                                 }
                                 else {
                                     for (let i = 0; i < dataB.length; i++) {
                                         const itemB = dataB[i];
-                                        if (itemB.end) {
+                                        if (timeB > timeA) {
+                                            if (itemB.end && previous.includes(<SvgAnimation> itemB.animation)) {
+                                                dataB.splice(i--, 1);
+                                            }
+                                        }
+                                        else if (itemB.end) {
                                             const animation = itemB.animation;
                                             if (animation?.animationElement && animation.group.id < animationA.group.id) {
                                                 dataB.splice(i--, 1);
@@ -168,12 +166,15 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                             }
                         }
                         else if (itemA.fillMode === FILL_MODE.FORWARDS || itemA.infinite) {
-                            const group = animationA.group;
                             let forwarded = false;
-                            if (group.ordering) {
+                            const group = animationA.group;
+                            const ordering = group.ordering;
+                            if (ordering) {
                                 const duration = (<SvgAnimate> animationA).getTotalDuration();
                                 const name = group.name;
-                                for (const sibling of group.ordering) {
+                                const length = ordering.length;
+                                for (let i = 0; i < length; i++) {
+                                    const sibling = ordering[i];
                                     if (sibling.name === name) {
                                         forwarded = true;
                                     }
@@ -185,28 +186,25 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                             const previous: SvgAnimation[] = [];
                             for (const [timeB, dataB] of map[keyName].entries()) {
                                 if (!forwarded && timeB < timeA) {
-                                    for (const itemB of dataB) {
+                                    dataB.forEach(itemB => {
                                         if (itemB.start) {
                                             const animationB = itemB.animation;
                                             if (animationB) {
                                                 previous.push(animationB);
                                             }
                                         }
-                                    }
-                                }
-                                else if (timeB > timeA) {
-                                    for (let i = 0; i < dataB.length; i++) {
-                                        const itemB = dataB[i];
-                                        const animationB = itemB.animation;
-                                        if (forwarded || animationB && (itemB.end && previous.includes(animationB) || animationA.animationElement === null && animationB.group.id < animationA.group.id)) {
-                                            dataB.splice(i--, 1);
-                                        }
-                                    }
+                                    });
                                 }
                                 else {
                                     for (let i = 0; i < dataB.length; i++) {
                                         const itemB = dataB[i];
-                                        if (itemB.end) {
+                                        if (timeB > timeA) {
+                                            const animationB = itemB.animation;
+                                            if (forwarded || animationB && (itemB.end && previous.includes(animationB) || animationA.animationElement === null && animationB.group.id < animationA.group.id)) {
+                                                dataB.splice(i--, 1);
+                                            }
+                                        }
+                                        else if (itemB.end) {
                                             const id = itemB.animation?.group.id || NaN;
                                             if (id < animationA.group.id) {
                                                 dataB.splice(i--, 1);
@@ -217,12 +215,12 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                             }
                         }
                     }
-                }
+                });
             }
         }
         for (const keyName in map) {
             const data = map[keyName];
-            for (const [time, entry] of Array.from(data.entries())) {
+            for (const [time, entry] of data.entries()) {
                 if (entry.length === 0) {
                     data.delete(time);
                 }
@@ -251,7 +249,9 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         if (map) {
             for (const [interval, data] of map.entries()) {
                 if (interval <= time) {
-                    for (const previous of data) {
+                    const length = data.length;
+                    for (let i = 0; i < length; i++) {
+                        const previous = data[i];
                         if (previous.value !== '' && (previous.time === -1 || previous.end && (previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) || playing && previous.start && time !== interval) {
                             value = previous.value;
                             break;
@@ -272,7 +272,9 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         if (map) {
             for (const [interval, entry] of map.entries()) {
                 if (interval <= time) {
-                    for (const previous of entry) {
+                    const length = entry.length;
+                    for (let i = 0; i < length; i++) {
+                        const previous = entry[i];
                         if (previous.start && (previous.infinite || previous.fillMode === 0 && previous.endTime > time)) {
                             if (previous.animation) {
                                 value = 2;

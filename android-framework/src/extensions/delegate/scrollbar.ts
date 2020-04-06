@@ -63,11 +63,11 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 overflow.shift();
             }
             if (overflow.length) {
-                for (const child of children) {
+                children.forEach(child => {
                     if (child.textElement) {
                         child.css('maxWidth', formatPX(boxWidth));
                     }
-                }
+                });
             }
         }
         const length = overflow.length;

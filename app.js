@@ -189,7 +189,7 @@ app.post('/api/assets/copy', (req, res) => {
         try {
             const notFound = {};
             const emptyDir = {};
-            for (const file of req.body) {
+            req.body.forEach(file => {
                 const { pathname, filename, pngLevel, gzipLevel, brotliLevel } = getFileData(file, dirname);
                 const { content, base64, uri } = file;
                 const compressFile = () => {
@@ -237,7 +237,7 @@ app.post('/api/assets/copy', (req, res) => {
                 }
                 else if (uri) {
                     if (notFound[uri]) {
-                        continue;
+                        return;
                     }
                     const errorRequest = () => {
                         if (!notFound[uri]) {
@@ -296,7 +296,7 @@ app.post('/api/assets/copy', (req, res) => {
                         console.log(`FAIL: ${uri} (${err})`);
                     }
                 }
-            }
+            });
             if (delayed === 0) {
                 finalize(false);
             }
@@ -383,7 +383,7 @@ app.post('/api/assets/archive', (req, res) => {
                 archive.directory(unzip_to, false);
             }
             const notFound = {};
-            for (const file of req.body) {
+            req.body.forEach(file => {
                 const { pathname, filename, pngLevel, gzipLevel, brotliLevel } = getFileData(file, dirname);
                 const { content, base64, uri } = file;
                 const data = { name: path.join(file.pathname, file.filename) };
@@ -434,7 +434,7 @@ app.post('/api/assets/archive', (req, res) => {
                 }
                 else if (uri) {
                     if (notFound[uri]) {
-                        continue;
+                        return;
                     }
                     const errorRequest = () => {
                         if (!notFound[uri]) {
@@ -493,7 +493,7 @@ app.post('/api/assets/archive', (req, res) => {
                         console.log(`FAIL: ${uri} (${err})`);
                     }
                 }
-            }
+            });
             if (delayed === 0) {
                 finalize(false);
             }
@@ -521,7 +521,7 @@ app.post('/api/assets/archive', (req, res) => {
                     decompress(zipname, unzip_to)
                         .then(() => resume(unzip_to));
                 };
-                if (isRemoteFile(append_to)) {
+                if (isURIFile(append_to)) {
                     const stream = fs.createWriteStream(zipname);
                     stream.on('finish', copied);
                     request(append_to)

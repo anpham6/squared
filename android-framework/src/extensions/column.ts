@@ -159,14 +159,14 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     const above: T[] = new Array(r);
                     for (let j = 0; j < r; j++) {
                         const data = columns[j];
-                        for (const item of data) {
+                        data.forEach(item => {
                             item.app('layout_constraintWidth_percent', truncate((1 / columnMin) - percentGap, node.localSettings.floatPrecision));
                             item.setLayoutWidth('0px');
-                            item.setBox(BOX_STANDARD.MARGIN_RIGHT, { reset: 1});
+                            item.setBox(BOX_STANDARD.MARGIN_RIGHT, { reset: 1 });
                             item.exclude({ section: APP_SECTION.EXTENSION });
                             item.anchored = true;
                             item.positioned = true;
-                        }
+                        });
                         above[j] = data[0];
                     }
                     for (let j = 0; j < r; j++) {
@@ -210,9 +210,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                         if (elements.length) {
                             const container = createElement(document.body, 'div', { width: formatPX(columnWidth || node.box.width / columnMin), visibility: 'hidden' });
-                            for (const element of elements) {
-                                container.appendChild(element);
-                            }
+                            elements.forEach(element => container.appendChild(element));
                             height += container.getBoundingClientRect().height;
                             document.body.removeChild(container);
                         }
@@ -293,9 +291,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                     }
                     const documentId = i < length - 1 ? anchorBottom.documentId : 'parent';
-                    for (const item of dividers) {
-                        item.anchor('bottom', documentId);
-                    }
+                    dividers.forEach(item => item.anchor('bottom', documentId));
                     previousRow = anchorBottom;
                 }
             }

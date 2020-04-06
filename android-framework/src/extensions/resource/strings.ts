@@ -31,7 +31,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 node.android(attr, numberResourceValue || !isNumber(name) ? `@string/${name}` : name, false);
             }
         };
-        for (const node of this.cacheProcessing) {
+        this.cacheProcessing.each(node => {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
                     case 'SELECT': {
@@ -99,7 +99,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 value = replaceCharacterData(value, node.preserveWhiteSpace || tagName === 'CODE');
                                 const textDecorationLine = node.css('textDecorationLine');
                                 if (textDecorationLine !== 'none') {
-                                    for (const style of textDecorationLine.split(' ')) {
+                                    textDecorationLine.split(' ').forEach(style => {
                                         switch (style) {
                                             case 'underline':
                                                 value = `<u>${value}</u>`;
@@ -108,7 +108,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                                 value = `<strike>${value}</strike>`;
                                                 break;
                                         }
-                                    }
+                                    });
                                 }
                                 if (tagName === 'INS' && !textDecorationLine.includes('line-through')) {
                                     value = `<strike>${value}</strike>`;
@@ -161,7 +161,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     }
                 }
             }
-        }
+        });
     }
 
     public createOptionArray(element: HTMLSelectElement, controlId: string) {
@@ -175,12 +175,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
             const resourceArray = stringArray || numberArray;
             if (resourceArray) {
                 result = [];
-                for (let value of resourceArray) {
+                resourceArray.forEach(value => {
                     value = Resource.addString(replaceCharacterData(value), '', numberResourceValue);
                     if (value !== '') {
-                        result.push(`@string/${value}`);
+                        (result as string[]).push(`@string/${value}`);
                     }
-                }
+                });
             }
         }
         return result?.length ? Resource.insertStoredAsset('arrays', `${controlId}_array`, result) : '';

@@ -43,23 +43,20 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public beforeCascade() {
         const dimens = STORED.dimens;
         const groups: ObjectMapNested<T[]> = {};
-        for (const node of this.cache) {
+        this.cache.each(node => {
             if (node.visible) {
                 const containerName = node.containerName.toLowerCase();
                 const group = safeNestedMap(groups, containerName);
                 createNamespaceData('android', node, group);
                 createNamespaceData('app', node, group);
             }
-        }
+        });
         for (const containerName in groups) {
-            const group = groups[containerName];
+            const group = <ObjectMap<T[]>> groups[containerName];
             for (const name in group) {
                 const [namespace, attr, value] = name.split(XML.SEPARATOR);
                 const key = getResourceName(dimens, getDisplayName(containerName) + '_' + convertUnderscore(attr), value);
-                const data = group[name];
-                for (const node of data) {
-                    node[namespace](attr, `@dimen/${key}`);
-                }
+                group[name].forEach(node => node[namespace](attr, `@dimen/${key}`));
                 dimens.set(key, value);
             }
         }
@@ -68,7 +65,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public afterFinalize() {
         if (this.controller.hasAppendProcessing()) {
             const dimens = STORED.dimens;
-            for (const layout of this.application.layouts) {
+            this.application.layouts.forEach(layout => {
                 let content = layout.content;
                 let match: Null<RegExpExecArray>;
                 while ((match = REGEX_UNIT_ATTR.exec(content)) !== null) {
@@ -80,7 +77,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                     }
                 }
                 layout.content = content;
-            }
+            });
         }
     }
 }

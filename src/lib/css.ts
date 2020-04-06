@@ -40,16 +40,15 @@ function compareRange(operation: string, unit: number, range: number) {
 }
 
 function calculatePosition(element: CSSElement, value: string, boundingBox?: Dimension) {
-    const component = replaceMap(splitEnclosing(value.trim(), 'calc'), (seg: string) => seg.trim());
     const alignment: string[] = [];
-    for (const seg of component) {
+    replaceMap(splitEnclosing(value.trim(), 'calc'), (seg: string) => seg.trim()).forEach(seg => {
         if (seg.includes(' ') && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR.SPACE));
         }
         else {
             alignment.push(seg);
         }
-    }
+    });
     const length = alignment.length;
     switch (length) {
         case 1:
@@ -1295,7 +1294,7 @@ export function parseKeyframeRule(rules: CSSRuleList) {
         const item = rules[i];
         const match = REGEX_KEYFRAME.exec(item.cssText);
         if (match) {
-            for (let percent of (item['keyText'] || match[1]).trim().split(XML.SEPARATOR)) {
+            (item['keyText'] as string || match[1]).trim().split(XML.SEPARATOR).forEach(percent => {
                 switch (percent) {
                     case 'from':
                         percent = '0%';
@@ -1305,7 +1304,7 @@ export function parseKeyframeRule(rules: CSSRuleList) {
                         break;
                 }
                 const keyframe: StringMap = {};
-                for (const property of match[2].split(XML.DELIMITER)) {
+                match[2].split(XML.DELIMITER).forEach(property => {
                     const index = property.indexOf(':');
                     if (index !== -1) {
                         const value = property.substring(index + 1).trim();
@@ -1314,9 +1313,9 @@ export function parseKeyframeRule(rules: CSSRuleList) {
                             keyframe[attr] = value;
                         }
                     }
-                }
+                });
                 result[percent] = keyframe;
-            }
+            });
         }
     }
     return result;
@@ -1511,8 +1510,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
             break;
     }
     const result: string[] = [];
-    const segments = separator ? value.split(separator) : [value];
-    for (let seg of segments) {
+    for (let seg of (separator ? value.split(separator) : [value])) {
         seg = seg.trim();
         if (seg !== '') {
             const calc = splitEnclosing(seg, 'calc');
@@ -1979,7 +1977,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         });
     }
     if (srcset !== '') {
-        for (const value of srcset.trim().split(XML.SEPARATOR)) {
+        srcset.trim().split(XML.SEPARATOR).forEach(value => {
             const match = REGEX_SRCSET.exec(value);
             if (match) {
                 let width = 0;
@@ -1997,7 +1995,13 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                 }
                 result.push({ src: resolvePath(match[1].split(CHAR.SPACE)[0]), pixelRatio, width });
             }
-        }
+        });
+    }
+    const length = result.length;
+    if (length === 0) {
+        result.push({ src: element.src, pixelRatio: 1, width: 0 });
+    }
+    else if (length > 1) {
         result.sort((a, b) => {
             const pxA = a.pixelRatio;
             const pxB = b.pixelRatio;
@@ -2015,82 +2019,78 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
             }
             return 0;
         });
-    }
-    if (result.length === 0) {
-        result.push({ src: element.src, pixelRatio: 1, width: 0 });
-    }
-    else if (result.length > 1 && isString(sizes)) {
-        let width = NaN;
-        for (const value of sizes.trim().split(XML.SEPARATOR)) {
-            let match = REGEX_SOURCESIZES.exec(value);
-            if (match) {
-                const ruleA = match[2] ? validMediaRule(match[2]) : undefined;
-                const ruleB = match[6] ? validMediaRule(match[6]) : undefined;
-                switch (match[5]) {
-                    case 'and':
-                        if (!ruleA || !ruleB) {
-                            continue;
-                        }
-                        break;
-                    case 'or':
-                        if (!ruleA && !ruleB) {
-                            continue;
-                        }
-                        break;
-                    case 'not':
-                        if (ruleA !== undefined || ruleB) {
-                            continue;
-                        }
-                        break;
-                    default:
-                        if (ruleA === false || ruleB !== undefined) {
-                            continue;
-                        }
-                        break;
-                }
-                const unit = match[9];
-                if (unit) {
-                    match = CSS.CALC.exec(unit);
-                    if (match) {
-                        width = calculate(match[1], match[1].includes('%') ? { boundingSize: getParentBoxDimension(element).width } : undefined);
+        if (isString(sizes)) {
+            let width = NaN;
+            for (const value of sizes.trim().split(XML.SEPARATOR)) {
+                let match = REGEX_SOURCESIZES.exec(value);
+                if (match) {
+                    const ruleA = match[2] ? validMediaRule(match[2]) : undefined;
+                    const ruleB = match[6] ? validMediaRule(match[6]) : undefined;
+                    switch (match[5]) {
+                        case 'and':
+                            if (!ruleA || !ruleB) {
+                                continue;
+                            }
+                            break;
+                        case 'or':
+                            if (!ruleA && !ruleB) {
+                                continue;
+                            }
+                            break;
+                        case 'not':
+                            if (ruleA !== undefined || ruleB) {
+                                continue;
+                            }
+                            break;
+                        default:
+                            if (ruleA === false || ruleB !== undefined) {
+                                continue;
+                            }
+                            break;
                     }
-                    else if (isPercent(unit)) {
-                        width = parseFloat(unit) / 100 * getParentBoxDimension(element).width;
+                    const unit = match[9];
+                    if (unit) {
+                        match = CSS.CALC.exec(unit);
+                        if (match) {
+                            width = calculate(match[1], match[1].includes('%') ? { boundingSize: getParentBoxDimension(element).width } : undefined);
+                        }
+                        else if (isPercent(unit)) {
+                            width = parseFloat(unit) / 100 * getParentBoxDimension(element).width;
+                        }
+                        else if (isLength(unit)) {
+                            width = parseUnit(unit);
+                        }
                     }
-                    else if (isLength(unit)) {
-                        width = parseUnit(unit);
+                    if (!isNaN(width)) {
+                        break;
                     }
                 }
-                if (!isNaN(width)) {
-                    break;
+            }
+            if (!isNaN(width)) {
+                const resolution = width * window.devicePixelRatio;
+                let index = -1;
+                for (let i = 0; i < length; i++) {
+                    const imageWidth = result[i].width;
+                    if (imageWidth > 0 && imageWidth <= resolution && (index === -1 || result[index].width < imageWidth)) {
+                        index = i;
+                    }
                 }
-            }
-        }
-        if (!isNaN(width)) {
-            const resolution = width * window.devicePixelRatio;
-            let index = -1;
-            const length = result.length;
-            for (let i = 0; i < length; i++) {
-                const imageWidth = result[i].width;
-                if (imageWidth > 0 && imageWidth <= resolution && (index === -1 || result[index].width < imageWidth)) {
-                    index = i;
+                if (index === 0) {
+                    const item = result[0];
+                    item.pixelRatio = 1;
+                    item.actualWidth = width;
                 }
-            }
-            if (index === 0) {
-                const item = result[0];
-                item.pixelRatio = 1;
-                item.actualWidth = width;
-            }
-            else if (index > 0) {
-                const selected = result.splice(index, 1)[0];
-                selected.pixelRatio = 1;
-                selected.actualWidth = width;
-                result.unshift(selected);
-            }
-            for (let i = 1; i < length; i++) {
-                const item = result[i];
-                if (item.pixelRatio === 0) {
-                    item.pixelRatio = item.width / width;
+                else if (index > 0) {
+                    const selected = result.splice(index, 1)[0];
+                    selected.pixelRatio = 1;
+                    selected.actualWidth = width;
+                    result.unshift(selected);
+                }
+                for (let i = 1; i < length; i++) {
+                    const item = result[i];
+                    if (item.pixelRatio === 0) {
+                        item.pixelRatio = item.width / width;
+                    }
                 }
             }
         }
@@ -2245,11 +2245,13 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                         }
                         return true;
                     };
+                    let found = false;
                     const seg: number[] = [];
                     const evaluate: string[] = [];
-                    let found = false;
-                    for (let partial of value.substring(j + 1, closing[i]).split(REGEX_OPERATOR)) {
-                        partial = partial.trim();
+                    const operation = value.substring(j + 1, closing[i]).split(REGEX_OPERATOR);
+                    const q = operation.length;
+                    for (let k = 0; k < q; k++) {
+                        const partial = operation[k].trim();
                         switch (partial) {
                             case '+':
                             case '-':

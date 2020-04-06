@@ -529,7 +529,7 @@ export function cloneInstance<T>(value: T): T {
 }
 
 export function cloneArray(data: any[], result: any[] = [], object = false) {
-    for (const value of data) {
+    data.forEach(value => {
         if (Array.isArray(value)) {
             result.push(cloneArray(value, [], object));
         }
@@ -539,7 +539,7 @@ export function cloneArray(data: any[], result: any[] = [], object = false) {
         else {
             result.push(value);
         }
-    }
+    });
     return result;
 }
 
@@ -570,14 +570,14 @@ export function resolvePath(value: string, href?: string) {
         else if (value.startsWith('../')) {
             const segments: string[] = [];
             let levels = 0;
-            for (const dir of value.split('/')) {
+            value.split('/').forEach(dir => {
                 if (dir === '..') {
                     levels++;
                 }
                 else {
                     segments.push(dir);
                 }
-            }
+            });
             pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
             value = origin + pathname.join('/');
         }
@@ -737,10 +737,9 @@ export function safeNestedMap<T>(map: ObjectMapNested<T>, index: number | string
 export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
     return list.sort((a, b) => {
         for (const attr of attrs) {
-            const namespaces = attr.split('.');
             let valueA: any = a;
             let valueB: any = b;
-            for (const name of namespaces) {
+            for (const name of attr.split('.')) {
                 const vA = valueA[name];
                 const vB = valueB[name];
                 if (vA !== undefined && vB !== undefined) {
@@ -848,6 +847,14 @@ export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
         return true;
     }
     return false;
+}
+
+export function eachArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void>) {
+    const length = list.length;
+    for (let i = 0; i < length; i++) {
+        predicate(list[i], i, list);
+    }
+    return length;
 }
 
 export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Number.POSITIVE_INFINITY) {

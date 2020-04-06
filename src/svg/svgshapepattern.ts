@@ -83,7 +83,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                     const x = boundingX + i * tileWidth - offsetX;
                     const pattern = new SvgPattern(element, patternElement);
                     pattern.build({ ...options });
-                    for (const item of pattern.cascade()) {
+                    pattern.cascade(item => {
                         if (SvgBuild.isShape(item)) {
                             item.setPath();
                             const patternPath = item.path;
@@ -100,7 +100,8 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                                 patternPath.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (patternPath.clipPath !== '' ? ';' + patternPath.clipPath : '');
                             }
                         }
-                    }
+                        return false;
+                    });
                     this.append(pattern);
                     remainingWidth -= tileWidth;
                     i++;
@@ -133,7 +134,9 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         if (this.drawRegion) {
             const x = this.patternWidth;
             const y = this.patternHeight;
-            for (const pt of values) {
+            const length = values.length;
+            for (let i = 0; i < length; i++) {
+                const pt = values[i];
                 pt.x *= x;
                 pt.y *= y;
                 if (pt.rx !== undefined && pt.ry !== undefined) {
@@ -166,11 +169,13 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
         if (!this.__get_transforms) {
             const patternElement = this.patternElement;
             const transforms = SvgBuild.convertTransforms(patternElement.patternTransform.baseVal);
-            if (transforms.length) {
+            const length = transforms.length;
+            if (length) {
                 const rotateOrigin = TRANSFORM.rotateOrigin(patternElement, 'patternTransform');
                 const x = this.patternWidth / 2;
                 const y = this.patternHeight / 2;
-                for (const item of transforms) {
+                for (let i = 0; i < length; i++) {
+                    const item = transforms[i];
                     switch (item.type) {
                         case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                             break;

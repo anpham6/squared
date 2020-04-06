@@ -83,7 +83,7 @@ function prioritizeExtensions<T extends NodeUI>(value: Undef<string>, extensions
         const included = value.split(XML.SEPARATOR);
         const result: ExtensionUI<T>[] = [];
         const untagged: ExtensionUI<T>[] = [];
-        for (const ext of extensions) {
+        extensions.forEach(ext => {
             const index = included.indexOf(ext.name);
             if (index !== -1) {
                 result[index] = ext;
@@ -91,7 +91,7 @@ function prioritizeExtensions<T extends NodeUI>(value: Undef<string>, extensions
             else {
                 untagged.push(ext);
             }
-        }
+        });
         if (result.length) {
             return flatArray<ExtensionUI<T>>(result).concat(untagged);
         }
@@ -198,20 +198,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         rendered.length = j;
         controllerHandler.optimize(rendered);
-        for (const ext of extensions) {
+        extensions.forEach(ext => {
             for (const node of ext.subscribers) {
                 ext.postOptimize(node);
             }
-        }
+        });
         const documentRoot: LayoutRoot<T>[] = [];
-        for (const node of rendered) {
+        for (let i = 0; i < j; i++) {
+            const node = rendered[i];
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
             if (node.documentRoot) {
                 if (node.renderChildren.length === 0 && !node.inlineText) {
                     const naturalElement = node.naturalElements;
-                    if (naturalElement.length && node.naturalElements.every(item => item.documentRoot)) {
+                    if (naturalElement.length && naturalElement.every(item => item.documentRoot)) {
                         continue;
                     }
                 }
@@ -221,11 +222,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        for (const ext of extensions) {
-            ext.beforeCascade(documentRoot);
-        }
+        extensions.forEach(ext => ext.beforeCascade(documentRoot));
         const baseTemplate = this._localSettings.layout.baseTemplate;
-        for (const layout of documentRoot) {
+        documentRoot.forEach(layout => {
             const node = layout.node;
             const renderTemplates = (node.renderParent as T).renderTemplates;
             if (renderTemplates) {
@@ -236,12 +235,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
                 );
             }
-        }
+        });
         this.resourceHandler.finalize(layouts);
         controllerHandler.finalize(layouts);
-        for (const ext of extensions) {
-            ext.afterFinalize();
-        }
+        extensions.forEach(ext => ext.afterFinalize());
         removeElementsByClassName('__squared.pseudo');
         this.closed = true;
     }
@@ -407,11 +404,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 node.innerWrapped = replace;
             }
         }
-        if (children) {
-            for (const item of children) {
-                item.parent = node;
-            }
-        }
+        children?.forEach(item => item.parent = node);
         if (options.append !== false) {
             processing.cache.append(node, options.delegate === true, options.cascade === true);
         }
@@ -436,7 +429,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             node.originalRoot = true;
             node.documentParent = parent;
-            for (const item of cache) {
+            cache.each(item => {
                 if (item.styleElement) {
                     const element = <HTMLElement> item.element;
                     if (item.length) {
@@ -450,38 +443,38 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (item.positionRelative) {
-                        for (const attr of BOX_POSITION) {
+                        BOX_POSITION.forEach(attr => {
                             if (item.hasPX(attr)) {
                                 saveAlignment(preAlignment, element, item.id, attr, 'auto', item.css(attr));
                                 resetBounds = true;
                             }
-                        }
+                        });
                     }
                     if (item.dir === 'rtl') {
                         element.dir = 'ltr';
                         direction.add(element);
                     }
                 }
-            }
+            });
             if (!resetBounds && direction.size) {
                 resetBounds = true;
             }
-            for (const item of this.processing.excluded) {
+            this.processing.excluded.each(item => {
                 if (!item.pageFlow) {
                     item.cssTry('display', 'none');
                 }
-            }
-            for (const item of cache) {
+            });
+            cache.each(item => {
                 if (!item.pseudoElement) {
                     item.setBounds(preAlignment[item.id] === undefined && !resetBounds);
                 }
                 else {
                     pseudoElements.push(item);
                 }
-            }
+            });
             if (pseudoElements.length) {
                 const pseudoMap: { item: T; id: string; parentElement: Element; styleElement?: HTMLStyleElement }[] = [];
-                for (const item of pseudoElements) {
+                pseudoElements.forEach((item: T) => {
                     const parentElement = <HTMLElement> (item.actualParent as T).element;
                     let id = parentElement.id;
                     let styleElement: Undef<HTMLStyleElement>;
@@ -495,11 +488,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (item.cssTry('display', item.display)) {
                         pseudoMap.push({ item, id, parentElement, styleElement });
                     }
-                }
-                for (const data of pseudoMap) {
-                    data.item.setBounds(false);
-                }
-                for (const data of pseudoMap) {
+                });
+                pseudoMap.forEach(data => data.item.setBounds(false));
+                pseudoMap.forEach(data => {
                     const styleElement = data.styleElement;
                     if (data.id.startsWith(STRING_PSEUDOPREFIX)) {
                         data.parentElement.id = '';
@@ -512,9 +503,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     data.item.cssFinally('display');
-                }
+                });
             }
-            for (const item of this.processing.excluded) {
+            this.processing.excluded.each(item => {
                 if (!item.lineBreak) {
                     item.setBounds();
                     item.saveAsInitial();
@@ -522,8 +513,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (!item.pageFlow) {
                     item.cssFinally('display');
                 }
-            }
-            for (const item of cache) {
+            });
+            cache.each(item => {
                 if (item.styleElement) {
                     const element = <HTMLElement> item.element;
                     const reset = preAlignment[item.id];
@@ -537,7 +528,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 item.saveAsInitial();
-            }
+            });
             controllerHandler.evaluateNonStatic(node, cache);
             controllerHandler.sortInitialCache();
             return true;
@@ -589,9 +580,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.depth = depth;
             if (depth === 0) {
                 this._cache.append(node);
-                const extensionManager = this.extensionManager;
                 for (const name of node.extensions) {
-                    if ((<ExtensionUI<T>> extensionManager.retrieve(name))?.cascadeAll) {
+                    if ((<ExtensionUI<T>> this.extensionManager.retrieve(name))?.cascadeAll) {
                         this._cascadeAll = true;
                         break;
                     }
@@ -860,11 +850,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     while (current);
                 }
                 const style = getStyle(element);
-                for (const attr of TEXT_STYLE) {
+                TEXT_STYLE.forEach(attr => {
                     if (styleMap[attr] === undefined) {
                         styleMap[attr] = style[attr];
                     }
-                }
+                });
                 let tagName = '';
                 let content = '';
                 switch (value) {
@@ -992,11 +982,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     }
                                     if (lastResetElement) {
                                         if (!counterType && subcounter.length > 1) {
-                                            subcounter.reverse();
-                                            subcounter.splice(1, 1);
-                                            for (const leading of subcounter) {
-                                                content += convertListStyle(styleName, leading, true) + match[7];
-                                            }
+                                            subcounter.reverse().splice(1, 1);
+                                            const textValue = match[7];
+                                            subcounter.forEach(leading => content += convertListStyle(styleName, leading, true) + textValue);
                                         }
                                     }
                                     else {
@@ -1065,7 +1053,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const setMap = (depth: number, id: number, node: T) => mapY.get(depth)?.set(id, node) || mapY.set(depth, new Map<number, T>([[id, node]]));
             const getIndex = (value: number) => (value * -1) - 2;
             setMap(-1, 0, documentRoot.parent as T);
-            for (const node of cache) {
+            cache.each(node => {
                 if (node.length) {
                     const depth = node.depth;
                     setMap(depth, node.id, node);
@@ -1073,7 +1061,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (node.floatContainer) {
                         const floated = new Set<string>();
                         const clearable: ObjectMap<Undef<T>> = {};
-                        for (const item of node.naturalChildren as T[]) {
+                        node.naturalChildren.forEach((item: T) => {
                             if (item.pageFlow) {
                                 const floating = item.floating;
                                 if (floated.size) {
@@ -1092,17 +1080,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                     previousFloat = [clearable.left, clearable.right];
                                                     break;
                                             }
-                                            if (previousFloat) {
-                                                for (const previous of previousFloat) {
-                                                    if (previous) {
-                                                        const float = previous.float;
-                                                        if (floated.has(float) && Math.ceil(item.bounds.top) >= previous.bounds.bottom) {
-                                                            floated.delete(float);
-                                                            clearable[float] = undefined;
-                                                        }
+                                            previousFloat?.forEach(previous => {
+                                                if (previous) {
+                                                    const float = previous.float;
+                                                    if (floated.has(float) && Math.ceil(item.bounds.top) >= previous.bounds.bottom) {
+                                                        floated.delete(float);
+                                                        clearable[float] = undefined;
                                                     }
                                                 }
-                                            }
+                                            });
                                         }
                                         if (floated.has(clear) || clear === 'both') {
                                             clearMap.set(item, floated.size === 2 ? 'both' : clear);
@@ -1121,29 +1107,28 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     clearable[float] = item;
                                 }
                             }
-                        }
+                        });
                     }
                 }
-            }
+            });
             for (let i = 0; i < maxDepth; i++) {
                 mapY.set(getIndex(i), new Map<number, T>());
             }
             cache.afterAppend = (node: T, cascade = false) => {
                 setMap(getIndex(node.depth), node.id, node);
                 if (cascade && node.length) {
-                    for (const item of node.cascade() as T[]) {
+                    node.cascade((item: T) => {
                         if (item.length) {
                             const depth = item.depth;
                             mapY.get(depth)?.delete(item.id);
                             setMap(getIndex(depth), item.id, item);
                         }
-                    }
+                        return false;
+                    });
                 }
             };
         }
-        for (const ext of this.extensions) {
-            ext.beforeBaseLayout();
-        }
+        this.extensions.forEach(ext => ext.beforeBaseLayout());
         for (const depth of mapY.values()) {
             for (const parent of depth.values()) {
                 if (parent.length === 0) {
@@ -1153,16 +1138,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const renderExtension = <Undef<ExtensionUI<T>[]>> parent.renderExtension;
                 const axisY = parent.duplicate() as T[];
                 const length = axisY.length;
-                for (let k = 0; k < length; k++) {
-                    let nodeY = axisY[k];
+                for (let i = 0; i < length; i++) {
+                    let nodeY = axisY[i];
                     if (nodeY.rendered || !nodeY.visible) {
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    if (length > 1 && k < length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && !nodeY.nodeGroup && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (length > 1 && i < length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && !nodeY.nodeGroup && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
-                        let l = k;
+                        let l = i;
                         let m = 0;
                         if (parentY.layoutVertical && nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
                             horizontal.push(nodeY);
@@ -1212,11 +1197,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                          if (!item.floating || previous.floating && item.bounds.top < Math.floor(previous.bounds.bottom)) {
                                                             let floatBottom = Number.NEGATIVE_INFINITY;
                                                             if (!item.floating) {
-                                                                for (const node of horizontal) {
+                                                                horizontal.forEach(node => {
                                                                     if (node.floating) {
                                                                         floatBottom = Math.max(floatBottom, node.bounds.bottom);
                                                                     }
-                                                                }
+                                                                });
                                                             }
                                                             if (!item.floating && item.bounds.top < Math.floor(floatBottom) || floatActive) {
                                                                 horizontal.push(item);
@@ -1310,7 +1295,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     nodeY.removeAlign(NODE_ALIGNMENT.EXTENDABLE);
-                    if (k === length - 1) {
+                    if (i === length - 1) {
                         parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                     }
                     if (nodeY.renderAs && parentY.appendTry(nodeY, nodeY.renderAs, false)) {
@@ -1322,10 +1307,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
                         const descendant = <ExtensionUI<T>[]> extensionMap.get(nodeY.id);
-                        const combined = descendant ? (renderExtension ? renderExtension.concat(descendant) : descendant) : renderExtension;
+                        let combined = descendant ? (renderExtension ? renderExtension.concat(descendant) : descendant) : renderExtension;
+                        let next = false;
                         if (combined) {
-                            let next = false;
-                            for (const ext of combined) {
+                            const q = combined.length;
+                            for (let j = 0; j < q; j++) {
+                                const ext = combined[j];
                                 const result = ext.processChild(nodeY, parentY);
                                 if (result) {
                                     const { output, renderAs, outputAs } = result;
@@ -1350,8 +1337,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (nodeY.styleElement) {
-                            let next = false;
-                            for (const ext of prioritizeExtensions(nodeY.dataset.use, extensions)) {
+                            combined = prioritizeExtensions(nodeY.dataset.use, extensions);
+                            const q = combined.length;
+                            for (let j = 0; j < q; j++) {
+                                const ext = combined[j];
                                 if (ext.is(nodeY)) {
                                     if (ext.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(ext))) {
                                         const result = ext.processNode(nodeY, parentY);
@@ -1438,14 +1427,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return a.depth < b.depth ? -1 : 1;
         });
-        for (const ext of this.extensions) {
+        this.extensions.forEach(ext => {
             for (const node of ext.subscribers) {
                 if (cache.contains(node)) {
                     ext.postBaseLayout(node);
                 }
             }
             ext.afterBaseLayout();
-        }
+        });
         session.cache.join(cache);
         session.excluded.join(processing.excluded);
     }
@@ -1453,28 +1442,26 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected setConstraints() {
         const cache = this._cache;
         this.controllerHandler.setConstraints();
-        for (const ext of this.extensions) {
+        this.extensions.forEach(ext => {
             for (const node of ext.subscribers) {
                 if (cache.contains(node)) {
                     ext.postConstraints(node);
                 }
             }
             ext.afterConstraints();
-        }
+        });
     }
 
     protected setResources() {
         const resourceHandler = this.resourceHandler;
-        for (const node of this._cache) {
+        this._cache.each(node => {
             resourceHandler.setBoxStyle(node);
             if (!node.imageElement && !node.svgElement && node.visible) {
                 resourceHandler.setFontStyle(node);
                 resourceHandler.setValueString(node);
             }
-        }
-        for (const ext of this.extensions) {
-            ext.afterResources();
-        }
+        });
+        this.extensions.forEach(ext => ext.afterResources());
     }
 
     protected processFloatHorizontal(layout: LayoutUI<T>) {
@@ -1583,9 +1570,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             layerIndex.push(rightSub);
         }
         layout.type = controllerHandler.containerTypeVerticalMargin;
-        layout.add(NODE_ALIGNMENT.BLOCK);
         layout.itemCount = layerIndex.length;
-        for (const item of layerIndex) {
+        layout.add(NODE_ALIGNMENT.BLOCK);
+        layerIndex.forEach(item => {
             let segments: T[][];
             let floatgroup: Undef<T>;
             if (Array.isArray(item[0])) {
@@ -1613,7 +1600,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             else {
                 segments = [item as T[]];
             }
-            for (const seg of segments) {
+            segments.forEach(seg => {
                 const first = seg[0];
                 const node = floatgroup || layout.node;
                 const target = controllerHandler.createNodeGroup(first, seg, { parent: node, delegate: true });
@@ -1643,8 +1630,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (seg === inlineAbove) {
                     this.setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
                 }
-            }
-        }
+            });
+        });
         return layout;
     }
 
@@ -1674,7 +1661,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let clearReset = false;
         let blockArea = false;
         let layoutVertical = true;
-        for (const node of layout) {
+        layout.each(node => {
             if (node.blockStatic && floated.length === 0) {
                 current.push(node);
                 blockArea = true;
@@ -1709,7 +1696,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     current.push(node);
                 }
             }
-        }
+        });
         if (floated.length) {
             floatedRows.push(floated);
         }
@@ -1753,7 +1740,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         group.itemCount = children.length;
                         this.addLayout(group);
-                        for (let item of children) {
+                        children.forEach(item => {
                             if (!item.nodeGroup) {
                                 item = controllerHandler.createNodeGroup(item, [item], { parent: basegroup, delegate: true });
                             }
@@ -1764,7 +1751,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
                                 item.children as T[]
                             ));
-                        }
+                        });
                         if (pageFlow.length && floating.length) {
                             const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
                             this.setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
@@ -1789,14 +1776,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
         let paddingNodes: T[] = [];
-        for (const child of inlineAbove) {
+        inlineAbove.forEach(child => {
             if (requirePadding(child) || child.centerAligned) {
                 paddingNodes.push(child);
             }
             if (child.blockStatic) {
                 paddingNodes = paddingNodes.concat(child.cascade((item: T) => requirePadding(item)) as T[]);
             }
-        }
+        });
         const bottom = target.bounds.bottom;
         const boxWidth = parent.actualBoxWidth();
         if (leftAbove.length) {
@@ -1804,7 +1791,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let marginLeft = 0;
             let invalid = false;
             let spacing = false;
-            for (const child of leftAbove) {
+            leftAbove.forEach(child => {
                 if (child.bounds.top < bottom) {
                     const right = child.linear.right + getRelativeOffset(child, false);
                     if (right > floatPosition) {
@@ -1815,14 +1802,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         spacing = false;
                     }
                 }
-            }
+            });
             if (floatPosition !== Number.NEGATIVE_INFINITY) {
-                for (const child of paddingNodes) {
+                paddingNodes.forEach(child => {
                     if (Math.floor(child.linear.left) <= floatPosition || child.centerAligned) {
                         marginLeft = Math.max(marginLeft, child.marginLeft);
                         invalid = true;
                     }
-                }
+                });
                 if (invalid) {
                     const offset = floatPosition - parent.box.left - marginLeft - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0));
                     if (offset > 0 && offset < boxWidth) {
@@ -1836,7 +1823,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let marginRight = 0;
             let invalid = false;
             let spacing = false;
-            for (const child of rightAbove) {
+            rightAbove.forEach(child => {
                 if (child.bounds.top < bottom) {
                     const left = child.linear.left + getRelativeOffset(child, true);
                     if (left < floatPosition) {
@@ -1847,14 +1834,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         spacing = false;
                     }
                 }
-            }
+            });
             if (floatPosition !== Number.POSITIVE_INFINITY) {
-                for (const child of paddingNodes) {
+                paddingNodes.forEach(child => {
                     if (child.multiline || Math.ceil(child.linear.right) >= floatPosition) {
                         marginRight = Math.max(marginRight, child.marginRight);
                         invalid = true;
                     }
-                }
+                });
                 if (invalid) {
                     const offset = parent.box.right - floatPosition - marginRight - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0));
                     if (offset > 0 && offset < boxWidth) {

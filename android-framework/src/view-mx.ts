@@ -21,7 +21,7 @@ const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, isNu
 const { EXT_NAME } = $base.lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = $base.lib.enumeration;
 
-const ResourceUI = squared.base.ResourceUI;
+const ResourceUI = $base.ResourceUI;
 
 const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_ANDROID;
 const DEPRECATED = DEPRECATED_ANDROID.android;
@@ -45,17 +45,6 @@ function checkTextAlign(value: string, ignoreStart: boolean) {
             return '';
     }
     return value;
-}
-
-function getGravityValues(node: T, attr: string) {
-    const result = new Set<string>();
-    const gravity = node.android(attr);
-    if (gravity !== '') {
-        for (const value of gravity.split('|')) {
-            result.add(value);
-        }
-    }
-    return result;
 }
 
 function setAutoMargin(node: T, autoMargin: AutoMargin) {
@@ -403,11 +392,11 @@ function setLineHeight(node: T, renderParent: T) {
                 return;
             }
             else if (node.layoutVertical || node.layoutFrame) {
-                for (const item of node.renderChildren as T[]) {
+                node.renderChildren.forEach((item: T) => {
                     if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
                         setMarginOffset(item, lineHeight, true, true, true);
                     }
-                }
+                });
             }
             else {
                 const horizontalRows = node.horizontalRows || [node.renderChildren];
@@ -434,11 +423,11 @@ function setLineHeight(node: T, renderParent: T) {
                         }
                     }
                     else {
-                        for (const item of row) {
+                        row.forEach((item: T) => {
                             if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
-                                setMarginOffset(item as T, lineHeight, singleItem, top, bottom);
+                                setMarginOffset(item, lineHeight, singleItem, top, bottom);
                             }
-                        }
+                        });
                     }
                     previousMultiline = singleItem && first.multiline;
                 }
@@ -482,6 +471,8 @@ function finalizeGravity(node: T, attr: string) {
         node.delete('android', attr);
     }
 }
+
+const getGravityValues = (node: T, attr: string) => new Set<string>(node.android(attr).split('|'));
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
@@ -561,7 +552,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const horizontal = dimension === 'width';
             let percent = 1;
             let i = 0;
-            for (let sibling of nodes) {
+            nodes.forEach(sibling => {
                 sibling = sibling.innerMostWrapped as T;
                 if (sibling.pageFlow) {
                     i++;
@@ -569,7 +560,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         const value = sibling.cssInitial(dimension);
                         if (isPercent(value)) {
                             percent -= parseFloat(value) / 100;
-                            continue;
+                            return;
                         }
                         else if (isLength(value)) {
                             if (horizontal) {
@@ -578,12 +569,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             else {
                                 percent -= (Math.max(sibling.actualHeight + sibling.marginTop + sibling.marginBottom, 0)) / boxSize;
                             }
-                            continue;
+                            return;
                         }
                     }
                     percent -= sibling.linear[dimension] / boxSize;
                 }
-            }
+            });
             return i > 0 ? Math.max(0, percent) : 1;
         }
 
@@ -782,11 +773,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             });
                             if (maxWidth > 0 && nodes.length) {
                                 const width = formatPX(maxWidth);
-                                for (const node of nodes) {
+                                nodes.forEach(node => {
                                     if (!node.hasPX('maxWidth')) {
                                         node.css('maxWidth', width);
                                     }
-                                }
+                                });
                             }
                             layoutWidth = 'wrap_content';
                             break;
@@ -1190,11 +1181,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 }
                                 else if (this.floatContainer) {
                                     let maxBottom = Number.NEGATIVE_INFINITY;
-                                    for (const item of this.naturalChildren) {
+                                    this.naturalChildren.forEach(item => {
                                         if (item.floating) {
                                             maxBottom = Math.max(item.bounds.bottom, maxBottom);
                                         }
-                                    }
+                                    });
                                     value = clamp(this.bounds.bottom - maxBottom, 0, value);
                                 }
                                 else {
@@ -1284,9 +1275,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         else if (this.blockDimension && !this.inputElement && this.translateY(top)) {
-                            for (const item of this.anchorChain('bottom')) {
-                                item.translateY(top);
-                            }
+                            this.anchorChain('bottom').forEach(item => item.translateY(top));
                             top = 0;
                         }
                     }
@@ -1297,9 +1286,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         else if (this.blockDimension && !this.inputElement && renderParent.layoutConstraint) {
-                            for (const item of this.anchorChain('bottom')) {
-                                item.translateY(-bottom);
-                            }
+                            this.anchorChain('bottom').forEach(item => item.translateY(-bottom));
                             bottom = 0;
                         }
                     }
@@ -1312,15 +1299,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else if (this.float === 'right') {
                             const siblings = this.anchorChain('left');
                             left = Math.min(-left, -this.bounds.width);
-                            for (const item of siblings) {
-                                item.translateX(-left);
-                            }
+                            siblings.forEach(item => item.translateX(-left));
                             left = 0;
                         }
                         else if (this.blockDimension && this.translateX(left)) {
-                            for (const item of this.anchorChain('right')) {
-                                item.translateX(left);
-                            }
+                            this.anchorChain('right').forEach(item => item.translateX(left));
                             left = 0;
                         }
                     }
@@ -1336,9 +1319,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         else if (this.blockDimension && renderParent.layoutConstraint) {
-                            for (const item of this.anchorChain('right')) {
-                                item.translateX(right);
-                            }
+                            this.anchorChain('right').forEach(item => item.translateX(right));
                             right = 0;
                         }
                     }
@@ -1429,14 +1410,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (attributes) {
                 Object.assign(node.unsafe('boxReset'), this._boxReset);
                 Object.assign(node.unsafe('boxAdjustment'), this._boxAdjustment);
-                for (const name of this._namespaces) {
+                this._namespaces.forEach(name => {
                     const obj: StringMap = this['__' + name];
-                    if (obj) {
-                        for (const attr in obj) {
-                            node.attr(name, attr, attr === 'id' && name === 'android' ? node.documentId : obj[attr]);
-                        }
+                    for (const attr in obj) {
+                        node.attr(name, attr, attr === 'id' && name === 'android' ? node.documentId : obj[attr]);
                     }
-                }
+                });
             }
             if (position) {
                 node.anchorClear();
@@ -1467,12 +1446,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     for (const namespace in dataset) {
                         const name = namespace === 'attr' ? 'android' : (REGEX_DATASETATTR.test(namespace) ? capitalize(namespace.substring(4), false) : '');
                         if (name !== '') {
-                            for (const values of dataset[namespace].split(';')) {
+                            dataset[namespace].split(';').forEach(values => {
                                 const [key, value] = values.split('::');
                                 if (value) {
                                     this.attr(name, key, value);
                                 }
-                            }
+                            });
                         }
                     }
                 }
@@ -1485,9 +1464,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             const indent = '\n' + '\t'.repeat(depth);
             let output = '';
-            for (const value of this.combine()) {
-                output += indent + value;
-            }
+            this.combine().forEach(value => output += indent + value);
             return output;
         }
 
@@ -1936,7 +1913,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else if (renderParent.layoutRelative) {
                     const layout: string[] = [];
-                    for (const value of position) {
+                    position.forEach(value => {
                         let attr: Undef<string> = LAYOUT_RELATIVE[value];
                         if (attr) {
                             layout.push(this.localizeString(attr));
@@ -1945,7 +1922,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (attr) {
                             layout.push(this.localizeString(attr));
                         }
-                    }
+                    });
                     node.delete('android', ...layout);
                 }
             }
@@ -1986,12 +1963,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public combine(...objs: string[]) {
-            const namespaces = this._namespaces;
             const all = objs.length === 0;
             const result: string[] = [];
             let requireId = false;
             let id = '';
-            for (const name of namespaces) {
+            this._namespaces.forEach(name => {
                 if (all || objs.includes(name)) {
                     const obj: StringMap = this['__' + name];
                     if (obj) {
@@ -2043,7 +2019,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-            }
+            });
             result.sort((a, b) => a > b ? 1 : -1);
             if (requireId) {
                 result.unshift('android:id="' + (id || `@+id/${this.controlId}`) + '"');

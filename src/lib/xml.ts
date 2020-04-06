@@ -110,18 +110,16 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
         const item = children[i];
         const include: Undef<string> = tag['#'] && item[tag['#']];
         const closed = !nested && !include;
-        let valid = false;
+        const attrs: Undef<string[]> = tag['@'];
+        const descend: Undef<StringMap> = tag['>'];
         output += indent + '<' + tagName;
-        const attrs = tag['@'];
-        const descend = tag['>'];
-        if (attrs) {
-            for (const attr of attrs) {
-                const value = item[attr];
-                if (value) {
-                    output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${value}"`;
-                }
+        let valid = false;
+        attrs?.forEach(attr => {
+            const value = item[attr];
+            if (value) {
+                output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${value}"`;
             }
-        }
+        });
         if (descend) {
             let innerText = '';
             const childDepth = depth + (nested ? i : 0) + 1;
@@ -218,11 +216,11 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
                 }
             }
             let firstLine = true;
-            for (const partial of line.tag.trim().split('\n')) {
+            line.tag.trim().split('\n').forEach(partial => {
                 const depth = previous + (firstLine ? 0 : 1);
                 output += (depth > 0 ? char.repeat(depth) : '') + partial.trim() + '\n';
                 firstLine = false;
-            }
+            });
         }
         else {
             output += (startIndent > 0 ? char.repeat(startIndent) : '') + line.tag + '\n';

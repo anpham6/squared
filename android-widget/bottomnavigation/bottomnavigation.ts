@@ -33,9 +33,10 @@ export default class BottomNavigation<T extends View> extends squared.base.Exten
         assignEmptyValue(options, 'android', 'background', '?android:attr/windowBackground');
         iterateArray(node.children, (item: T) => {
             item.hide();
-            for (const child of item.cascade() as T[]) {
+            item.cascade((child: T) => {
                 child.hide();
-            }
+                return false;
+            });
         }, 5);
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
         node.setControlType(controlName, CONTAINER_NODE.BLOCK);
@@ -44,9 +45,10 @@ export default class BottomNavigation<T extends View> extends squared.base.Exten
         node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
         node.setLayoutWidth('match_parent');
         node.setLayoutHeight('wrap_content');
-        for (const item of node.cascade()) {
-            this.addDescendant(item as T);
-        }
+        node.cascade((item: T) => {
+            this.addDescendant(item);
+            return false;
+        });
         this.setStyleTheme();
         return {
             output: <NodeXmlTemplate<T>> {

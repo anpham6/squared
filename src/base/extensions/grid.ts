@@ -8,14 +8,15 @@ import { BOX_STANDARD } from '../lib/enumeration';
 
 const $lib = squared.lib;
 
-const { aboveRange, belowRange, safeNestedArray, withinRange } = $lib.util;
+const { aboveRange, belowRange, objectMap, safeNestedArray, withinRange } = $lib.util;
 
 const GRID = EXT_NAME.GRID;
 
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     const topA = target.bounds.top;
-    for (const column of columns) {
-        const index = column.findIndex(item => {
+    const length = columns.length;
+    for (let i = 0; i < length; i++) {
+        const index = columns[i].findIndex(item => {
             const top = item.bounds.top;
             return withinRange(topA, top) || Math.ceil(topA) >= top && topA < Math.floor(item.bounds.bottom);
         });
@@ -44,7 +45,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             if (node.display === 'table') {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }
-            else if (node.percentWidth === 0 || node.find(item => item.percentWidth > 0, { cascade: true }) === undefined) {
+            else if (node.percentWidth === 0 || !node.find(item => item.percentWidth > 0, { cascade: true })) {
                 let minLength = false;
                 let itemCount = 0;
                 for (const item of node) {
@@ -68,15 +69,15 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
 
     public processNode(node: T) {
         const columnEnd: number[] = [];
-        const columns: T[][] = [];
         const nextMapX: ObjectIndex<T[]> = {};
-        for (const row of node) {
-            for (const column of row) {
-                if ((column as T).visible) {
-                    safeNestedArray(nextMapX, Math.floor(column.linear.left)).push(column as T);
+        let columns: T[][] = [];
+        node.each(row => {
+            row.each((column: T) => {
+                if (column.visible) {
+                    safeNestedArray(nextMapX, Math.floor(column.linear.left)).push(column);
                 }
-            }
-        }
+            });
+        });
         const nextCoordsX = Object.keys(nextMapX);
         const length = nextCoordsX.length;
         if (length) {
@@ -92,9 +93,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (columnLength !== -1) {
-                for (const value of nextCoordsX) {
-                    columns.push(nextMapX[value]);
-                }
+                columns = objectMap(nextCoordsX, value => nextMapX[value]);
             }
             else {
                 const columnRight: number[] = [];
@@ -128,11 +127,11 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             if (columnLast) {
                                 let minLeft = Number.POSITIVE_INFINITY;
                                 let maxRight = Number.NEGATIVE_INFINITY;
-                                for (const item of columnLast) {
+                                columnLast.forEach(item => {
                                     const linear = item.linear;
                                     minLeft = Math.min(linear.left, minLeft);
                                     maxRight = Math.max(linear.right, maxRight);
-                                }
+                                });
                                 if (Math.floor(left) > Math.ceil(minLeft) && Math.floor(right) > Math.ceil(maxRight)) {
                                     const index = getRowIndex(columns, nextX);
                                     if (index !== -1) {
@@ -227,14 +226,14 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (columnEnd.length) {
                             const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
-                            for (const sibling of (item.actualParent as T).naturalChildren as T[]) {
+                            (item.actualParent as T).naturalChildren.forEach((sibling: T) => {
                                 if (!assigned.has(sibling) && sibling.visible && !sibling.rendered) {
                                     const { left, right } = sibling.linear;
                                     if (aboveRange(left, item.linear.right) && belowRange(right, columnEnd[l])) {
                                         safeNestedArray(data, 'siblings').push(sibling);
                                     }
                                 }
-                            }
+                            });
                         }
                         data.rowSpan = rowSpan;
                         data.columnSpan = columnSpan;
@@ -255,11 +254,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             }
             node.each((item: T) => item.hide());
             node.clear();
-            for (const group of children) {
-                for (const item of group) {
-                    item.parent = node;
-                }
-            }
+            children.forEach(group => group.forEach(item => item.parent = node));
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {
                 node.resetBox(BOX_STANDARD.PADDING);
             }

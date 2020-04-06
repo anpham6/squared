@@ -149,9 +149,7 @@ export function getRangeClientRect(element: Element) {
 }
 
 export function removeElementsByClassName(className: string) {
-    for (const element of Array.from(document.getElementsByClassName(className))) {
-        element.parentElement?.removeChild(element);
-    }
+    Array.from(document.getElementsByClassName(className)).forEach(element => element.parentElement?.removeChild(element));
 }
 
 export function getElementsBetweenSiblings(elementStart: Null<Element>, elementEnd: Element) {

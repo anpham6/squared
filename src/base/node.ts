@@ -741,9 +741,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 style = getStyle(element);
                 if (styleElement) {
                     const items = Array.from(element.style);
-                    if (items.length) {
+                    const length = items.length;
+                    if (length) {
                         const inline = element.style;
-                        for (const attr of items) {
+                        for (let i = 0; i < length; i++) {
+                            const attr = items[i];
                             styleMap[convertCamelCase(attr)] = inline.getPropertyValue(attr);
                         }
                     }
@@ -816,7 +818,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public unsetCache(...attrs: string[]) {
         if (attrs.length) {
             const cached = this._cached;
-            for (const attr of attrs) {
+            attrs.forEach(attr => {
                 switch (attr) {
                     case 'position':
                     case 'display':
@@ -876,7 +878,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         break;
                 }
                 cached[attr] = undefined;
-            }
+            });
         }
         else {
             this._cached = {};
@@ -1125,9 +1127,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     valid.push(attr);
                 }
                 else {
-                    for (const value of valid) {
-                        this.cssFinally(value);
-                    }
+                    valid.forEach(value => this.cssFinally(value));
                     return undefined;
                 }
             }
@@ -1142,18 +1142,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssCopy(node: T, ...attrs: string[]) {
         const styleMap = this._styleMap;
-        for (const attr of attrs) {
-            styleMap[attr] = node.css(attr);
-        }
+        attrs.forEach(attr => styleMap[attr] = node.css(attr));
     }
 
     public cssCopyIfEmpty(node: T, ...attrs: string[]) {
         const styleMap = this._styleMap;
-        for (const attr of attrs) {
+        attrs.forEach(attr => {
             if (!hasValue(styleMap[attr])) {
                 styleMap[attr] = node.css(attr);
             }
-        }
+        });
     }
 
     public cssAsTuple(...attrs: string[]) {
@@ -1167,9 +1165,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssAsObject(...attrs: string[]) {
         const result: StringMap = {};
-        for (const attr of attrs) {
-            result[attr] = this.css(attr);
-        }
+        attrs.forEach(attr => result[attr] = this.css(attr));
         return result;
     }
 
@@ -1451,7 +1447,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 pending = pending.concat(dataMap);
                             }
                             else {
-                                for (const node of dataMap) {
+                                const q = dataMap.length;
+                                for (let k = 0; k < q; k++) {
+                                    const node = dataMap[k];
                                     if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector.call(this, node, dataEnd, i, lastEnd)) {
                                         pending.push(node);
                                     }
@@ -1467,7 +1465,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             const selector = selectors[index];
                             const last = index === length - 1;
                             const next: T[] = [];
-                            for (const node of nodes) {
+                            const q = nodes.length;
+                            for (let j = 0; j < q; j++) {
+                                const node = nodes[j];
                                 if (adjacent) {
                                     const parent = node.actualParent as T;
                                     if (adjacent === '>') {
@@ -1489,8 +1489,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                                 break;
                                             }
                                             case '~': {
-                                                const q = children.length;
-                                                for (let k = 0; k < q; k++) {
+                                                const r = children.length;
+                                                for (let k = 0; k < r; k++) {
                                                     const sibling = children[k];
                                                     if (sibling === node) {
                                                         break;
@@ -1523,11 +1523,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             }
                             return false;
                         };
-                        let j = currentCount;
-                        for (const node of pending) {
+                        let count = currentCount;
+                        const r = pending.length;
+                        for (let j = 0; j < r; j++) {
+                            const node = pending[j];
                             if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(0, dataEnd.adjacent, [node])) {
                                 result.push(node);
-                                if (++j === resultCount) {
+                                if (++count === resultCount) {
                                     return result.sort(soryById);
                                 }
                             }
@@ -1544,21 +1546,26 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             result = pending;
                         }
                     }
-                    else if (resultCount > 0) {
-                        let j = currentCount;
-                        for (const item of pending) {
-                            if (!result.includes(item)) {
-                                result.push(item);
-                                if (++j === resultCount) {
-                                    return result.sort(soryById);
+                    else {
+                        const q = pending.length;
+                        if (resultCount > 0) {
+                            let count = currentCount;
+                            for (let j = 0; j < q; j++) {
+                                const node = pending[j];
+                                if (!result.includes(node)) {
+                                    result.push(node);
+                                    if (++count === resultCount) {
+                                        return result.sort(soryById);
+                                    }
                                 }
                             }
                         }
-                    }
-                    else {
-                        for (const item of pending) {
-                            if (!result.includes(item)) {
-                                result.push(item);
+                        else {
+                            for (let j = 0; j < q; j++) {
+                                const node = pending[j];
+                                if (!result.includes(node)) {
+                                    result.push(node);
+                                }
                             }
                         }
                     }
@@ -2476,13 +2483,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 else {
                     const children = this.naturalChildren;
-                    if (children.length) {
+                    const length = children.length;
+                    if (length) {
                         let top = Number.POSITIVE_INFINITY;
                         let right = Number.NEGATIVE_INFINITY;
                         let left = Number.POSITIVE_INFINITY;
                         let bottom = Number.NEGATIVE_INFINITY;
                         let numberOfLines = 0;
-                        for (const node of children) {
+                        for (let i = 0; i < length; i++) {
+                            const node = children[i];
                             if (node.textElement) {
                                 const rect = actualTextRangeRect(<Element> node.element, node.sessionId);
                                 top = Math.min(rect.top, top);
@@ -2629,15 +2638,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 let backgroundRepeatX = false;
                 let backgroundRepeatY = false;
                 if (backgroundImage) {
-                    for (const repeat of this.css('backgroundRepeat').split(XML.SEPARATOR)) {
-                        const [repeatX, repeatY] = repeat.split(' ');
+                    this.css('backgroundRepeat').split(XML.SEPARATOR).forEach(repeat => {
+                        const [repeatX, repeatY] = repeat.split(CHAR.SPACE);
                         if (!backgroundRepeatX) {
                             backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x';
                         }
                         if (!backgroundRepeatY) {
                             backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
                         }
-                    }
+                    });
                 }
                 result = {
                     background: borderWidth || backgroundImage || backgroundColor,

@@ -72,7 +72,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         let thead: Undef<T>;
         const inheritStyles = (parent: Undef<T>) => {
             if (parent) {
-                for (const item of parent.cascade() as T[]) {
+                parent.cascade((item: T) => {
                     switch (item.tagName) {
                         case 'TH':
                         case 'TD':
@@ -80,7 +80,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             item.unsetCache('visibleStyle');
                             break;
                     }
-                }
+                    return false;
+                });
                 table = table.concat(parent.children as T[]);
                 hideCell(parent);
             }
@@ -109,10 +110,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             }
         });
         inheritStyles(thead);
-        for (const section of tbody) {
+        tbody.forEach(section => {
             table = table.concat(section.children as T[]);
             hideCell(section);
-        }
+        });
         inheritStyles(tfoot);
         const hasWidth = node.hasWidth;
         const borderCollapse = mainData.borderCollapse;
@@ -312,9 +313,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 else if (width > node.width) {
                     node.css('width', 'auto');
                     if (!mainData.layoutFixed) {
-                        for (const item of node.cascade()) {
+                        node.cascade((item: T) => {
                             item.css('width', 'auto');
-                        }
+                            return false;
+                        });
                     }
                 }
             }

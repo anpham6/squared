@@ -33,13 +33,16 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     public extract(exclude?: number[]) {
         const transforms = exclude ? SvgBuild.filterTransforms(this.transforms, exclude) : this.transforms;
         let { x, y, width, height } = this;
-        if (transforms.length) {
+        const length = transforms.length;
+        if (length) {
             transforms.reverse();
-            for (const item of transforms) {
+            for (let i = 0; i < length; i++) {
+                const item = transforms[i];
                 const m = item.matrix;
                 const localX = x;
                 x = MATRIX.applyX(m, localX, y);
                 y = MATRIX.applyY(m, localX, y);
+                let angle = this.rotateAngle;
                 switch (item.type) {
                     case SVGTransform.SVG_TRANSFORM_SCALE:
                         width *= m.a;
@@ -59,15 +62,16 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
                             if (m.d < 0) {
                                 y += m.d * height;
                             }
-                            if (this.rotateAngle) {
-                                this.rotateAngle += item.angle;
+                            if (angle) {
+                                angle += item.angle;
                             }
                             else {
-                                this.rotateAngle = item.angle;
+                                angle = item.angle;
                             }
                         }
                         break;
                 }
+                this.rotateAngle = angle;
             }
             this.transformed = transforms;
         }

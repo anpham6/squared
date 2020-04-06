@@ -142,7 +142,9 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
                 result = true;
                 if (length > 1) {
                     let previousBottom = Number.POSITIVE_INFINITY;
-                    for (const node of this.children) {
+                    const children = this.children;
+                    for (let i = 0; i < length; i++) {
+                        const node = children[i];
                         if (node.blockStatic || node.multiline || Math.ceil(node.bounds.top) >= previousBottom) {
                             result = false;
                             break;

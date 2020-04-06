@@ -218,9 +218,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
     let rowWeight: Undef<string>;
     if (section.every(value => isPx(value))) {
         let px = insideGap;
-        for (const value of section) {
-            px += parseFloat(value);
-        }
+        section.forEach(value => px += parseFloat(value));
         const dimension = formatPX(px);
         if (horizontal) {
             width = dimension;
@@ -231,9 +229,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
     }
     else if (section.every(value => isFr(value))) {
         let fr = 0;
-        for (const value of section) {
-            fr += parseFloat(value);
-        }
+        section.forEach(value => fr += parseFloat(value));
         const weight = truncate(fr, node.localSettings.floatPrecision);
         if (horizontal) {
             width = '0px';

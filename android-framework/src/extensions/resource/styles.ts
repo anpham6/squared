@@ -20,7 +20,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
     public beforeCascade() {
         const styles: ObjectMap<string[]> = {};
         const styleCache: StringMap = {};
-        for (const node of this.cache) {
+        this.cache.each(node => {
             if (node.controlId && node.visible) {
                 const renderChildren = node.renderChildren;
                 const length = renderChildren.length;
@@ -31,7 +31,10 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     for (let i = 0; i < length; i++) {
                         const item = renderChildren[i] as T;
                         let found = false;
-                        for (const value of item.combine('_', 'android')) {
+                        const combined = item.combine('_', 'android');
+                        const q = combined.length;
+                        for (let j = 0; j < q; j++) {
+                            const value = combined[j];
                             if (!found && value.startsWith('style=')) {
                                 if (i === 0) {
                                     style = value;
@@ -65,9 +68,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                             for (const attr of attrMap.keys()) {
                                 const match = REGEX_ATTRIBUTE.exec(attr);
                                 if (match) {
-                                    for (const item of renderChildren) {
-                                        item.delete(match[1], match[2]);
-                                    }
+                                    renderChildren.forEach(item => item.delete(match[1], match[2]));
                                     common.push(match[0]);
                                 }
                             }
@@ -85,22 +86,20 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 styles[name] = common;
                                 styleCache[name] = commonString;
                             }
-                            for (const item of renderChildren) {
-                                item.attr('_', 'style', `@style/${name}`);
-                            }
+                            renderChildren.forEach(item => item.attr('_', 'style', `@style/${name}`));
                         }
                     }
                 }
             }
-        }
+        });
         for (const name in styles) {
             const items: StringValue[] = [];
-            for (const style of styles[name]) {
+            styles[name].forEach(style => {
                 const match = XML.ATTRIBUTE.exec(style);
                 if (match) {
                     items.push({ key: match[1], value: match[2] });
                 }
-            }
+            });
             STORED.styles.set(name, { ...createStyleAttribute(), name, items });
         }
     }

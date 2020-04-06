@@ -7,7 +7,9 @@ type SvgElement = squared.svg.SvgElement;
 const { getNamedItem } = squared.lib.dom;
 
 function adjustPoints(values: SvgPoint[], x: number, y: number, scaleX: number, scaleY: number) {
-    for (const pt of values) {
+    const length = values.length;
+    for (let i = 0; i < length; i++) {
+        const pt = values[i];
         pt.x += x;
         pt.y += y;
         if (pt.rx !== undefined && pt.ry !== undefined) {

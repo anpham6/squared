@@ -145,10 +145,11 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     if (repeat) {
         if (percent < 100) {
             complete: {
-                const original = result.slice(0);
                 let basePercent = percent;
+                const original = result.slice(0);
                 while (percent < 100) {
-                    for (const data of original) {
+                    for (let i = 0; i < length; i++) {
+                        const data = original[i];
                         percent = Math.min(basePercent + data.offset, 1);
                         result.push({ ...data, offset: percent });
                         if (percent === 1) {
@@ -530,15 +531,15 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     }
                                 }
                             }
-                            for (const corner of [[0, 0], [width, 0], [width, height], [0, height]]) {
+                            [[0, 0], [width, 0], [width, height], [0, height]].forEach(corner => {
                                 const length = Math.round(hypotenuse(Math.abs(corner[0] - left), Math.abs(corner[1] - top)));
                                 closestCorner = Math.min(length, closestCorner);
                                 farthestCorner = Math.max(length, farthestCorner);
-                            }
-                            for (const side of [width - left, height - top, left]) {
+                            });
+                            [width - left, height - top, left].forEach(side => {
                                 closestSide = Math.min(side, closestSide);
                                 farthestSide = Math.max(side, farthestSide);
-                            }
+                            });
                             const radial = <RadialGradient> {
                                 type,
                                 repeating,

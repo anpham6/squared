@@ -93,9 +93,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 container.setCacheValue('baseline', false);
                 container.setCacheValue('verticalAlign', 'middle');
             }
-            for (const item of removeable) {
-                item.hide({ remove: true });
-            }
+            removeable.forEach(item => item.hide({ remove: true }));
             this.subscribers.add(container);
             return {
                 renderAs: container,
@@ -122,12 +120,11 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             if (length > 1 && radiogroup.includes(node)) {
                 const controlName = CONTAINER_ANDROID.RADIOGROUP;
                 const data = new Map<T, number>();
-                for (const radio of radiogroup) {
+                for (let i = 0; i < length; i++) {
+                    const radio = radiogroup[i];
                     const parents = radio.ascend({ condition: (item: T) => item.layoutLinear, error: (item: T) => item.controlName === controlName, every: true }) as T[];
                     if (parents.length) {
-                        for (const item of parents) {
-                            data.set(item, (data.get(item) || 0) + 1);
-                        }
+                        parents.forEach(item => data.set(item, (data.get(item) || 0) + 1));
                     }
                     else {
                         data.clear();

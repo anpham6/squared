@@ -39,11 +39,11 @@ function addImageSrc(uri: string, width = 0, height = 0) {
 
 function parseSrcSet(value: string) {
     if (value !== '') {
-        for (const uri of value.split(XML.SEPARATOR)) {
+        value.split(XML.SEPARATOR).forEach(uri => {
             if (uri !== '') {
                 addImageSrc(resolvePath(uri.split(CHAR.SPACE)[0].trim()));
             }
-        }
+        });
     }
 }
 
@@ -132,9 +132,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.controllerHandler.reset();
         this.resourceHandler.reset();
         this.fileHandler?.reset();
-        for (const ext of this.extensions) {
-            ext.subscribers.clear();
-        }
+        this.extensions.forEach(ext => ext.subscribers.clear());
         this.closed = false;
     }
 
@@ -155,23 +153,19 @@ export default abstract class Application<T extends Node> implements squared.bas
         let THEN: Undef<() => void>;
         const resume = () => {
             this.initializing = false;
-            for (const image of preloaded) {
+            preloaded.forEach(image => {
                 if (image.parentElement) {
                     documentRoot.removeChild(image);
                 }
-            }
+            });
             preloaded.length = 0;
-            for (const ext of this.extensions) {
-                ext.beforeParseDocument();
-            }
+            this.extensions.forEach(ext => ext.beforeParseDocument());
             for (const element of this.rootElements) {
                 if (this.createCache(element)) {
                     this.afterCreateCache(element);
                 }
             }
-            for (const ext of this.extensions) {
-                ext.afterParseDocument();
-            }
+            this.extensions.forEach(ext => ext.afterParseDocument());
             try {
                 document.head.removeChild(styleElement);
             }
@@ -184,7 +178,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (elements.length === 0) {
             elements.push(document.body);
         }
-        for (const value of elements) {
+        elements.forEach(value => {
             let element: Null<HTMLElement>;
             if (typeof value === 'string') {
                 element = document.getElementById(value);
@@ -193,12 +187,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                 element = value;
             }
             else {
-                continue;
+                return;
             }
             if (element) {
                 this.rootElements.add(element);
             }
-        }
+        });
         const documentRoot = this.rootElements.values().next().value;
         if (preloadImages) {
             for (const element of this.rootElements) {
@@ -412,7 +406,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected createQueryMap(elements: T[]) {
         const result: T[][] = [elements];
-        for (const item of elements) {
+        elements.forEach(item => {
             const childMap = item.queryMap as T[][];
             if (childMap) {
                 const length = childMap.length;
@@ -421,7 +415,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     result[j] = result[j]?.concat(childMap[i]) || childMap[i];
                 }
             }
-        }
+        });
         return result;
     }
 
@@ -519,9 +513,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         styleMap[attr] = result;
                     }
                 };
-                for (const attr of Array.from(cssStyle)) {
-                    baseMap[convertCamelCase(attr)] = cssStyle[attr];
-                }
+                Array.from(cssStyle).forEach(attr => baseMap[convertCamelCase(attr)] = cssStyle[attr]);
                 parseImageUrl(baseMap, 'backgroundImage');
                 parseImageUrl(baseMap, 'listStyleImage');
                 parseImageUrl(baseMap, 'content');
@@ -596,7 +588,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     important[attr] = true;
                 }
-                for (const selectorText of parseSelectorText(item.selectorText, true)) {
+                parseSelectorText(item.selectorText, true).forEach(selectorText => {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');
                     const targetElt = target ? '::' + target : '';
@@ -635,7 +627,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             setElementCache(element, attrSpecificity, sessionId, specificityData);
                         }
                     });
-                }
+                });
                 break;
             }
             case CSSRule.FONT_FACE_RULE: {
@@ -646,7 +638,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (fontFamily !== '' && match.length) {
                         const fontStyle = REGEX_FONTSTYLE.exec(attr)?.[1].toLowerCase() || 'normal';
                         const fontWeight = parseInt(REGEX_FONTWEIGHT.exec(attr)?.[1] || '400');
-                        for (const value of match) {
+                        match.forEach(value => {
                             const urlMatch = REGEX_URL.exec(value);
                             if (urlMatch) {
                                 let srcUrl: Undef<string>;
@@ -667,7 +659,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     srcFormat: urlMatch[4]?.toLowerCase().trim() || 'truetype'
                                 });
                             }
-                        }
+                        });
                     }
                 }
                 break;

@@ -23,9 +23,8 @@ export function actualTextRangeRect(element: Element, sessionId?: string) {
             return rect;
         }
     }
-    const length = element.childElementCount;
     let hidden: Undef<[HTMLElement, string][]>;
-    if (length) {
+    if (element.childElementCount) {
         iterateArray(element.children, (item: HTMLElement) => {
             const style = getStyle(item);
             if (style.getPropertyValue('visibility') !== 'visible') {
@@ -44,11 +43,7 @@ export function actualTextRangeRect(element: Element, sessionId?: string) {
         });
     }
     const bounds = getRangeClientRect(element);
-    if (hidden) {
-        for (const item of hidden) {
-            item[0].style.display = item[1];
-        }
-    }
+    hidden?.forEach(item => item[0].style.display = item[1]);
     if (sessionId) {
         setElementCache(element, 'textRangeRect', sessionId, bounds);
     }

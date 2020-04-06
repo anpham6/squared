@@ -48,20 +48,22 @@ export default class Coordinator<T extends View> extends squared.base.ExtensionU
     public postOptimize(node: T) {
         if (node.documentRoot) {
             if (node.inlineWidth) {
-                for (const item of node) {
+                node.some(item => {
                     if (item.rightAligned) {
                         node.setLayoutWidth('match_parent', true);
-                        break;
+                        return true;
                     }
-                }
+                    return false;
+                });
             }
             if (node.inlineHeight) {
-                for (const item of node) {
+                node.some(item => {
                     if (item.bottomAligned) {
                         node.setLayoutHeight('match_parent', true);
-                        break;
+                        return true;
                     }
-                }
+                    return false;
+                });
             }
         }
     }

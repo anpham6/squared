@@ -39,7 +39,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         let left = NaN;
         let right = NaN;
         let firstChild: Undef<T>;
-        for (const item of children) {
+        children.forEach(item => {
             const linear = item.linear;
             if (item.pageFlow) {
                 if (isNaN(left) || linear.left < left) {
@@ -57,7 +57,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                     right = linear.right;
                 }
             }
-        }
+        });
         if (!node.pageFlow) {
             if (!isNaN(left) && !node.has('left')) {
                 const offset = node.linear.left - left;
@@ -110,9 +110,9 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 View.setConstraintDimension(firstChild);
                 firstChild.positioned = true;
             }
-            for (const item of mainData.children) {
+            mainData.children.forEach(item => {
                 if (item === firstChild) {
-                    continue;
+                    return;
                 }
                 if (item.hasPX('left')) {
                     item.translateX(item.left);
@@ -124,7 +124,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                     item.alignSibling('right', node.documentId);
                     item.constraint.horizontal = true;
                 }
-            }
+            });
             node.anchorParent('horizontal', 0);
             node.anchorParent('vertical', 0);
             View.setConstraintDimension(node);
@@ -141,14 +141,14 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 if (translateX !== '' || translateY !== '') {
                     const x = parseInt(translateX);
                     const y = parseInt(translateY);
-                    for (const child of mainData.children) {
+                    mainData.children.forEach(child => {
                         if (!isNaN(x)) {
                             child.translateX(x);
                         }
                         if (!isNaN(y)) {
                             child.translateY(y);
                         }
-                    }
+                    });
                 }
             }
         }

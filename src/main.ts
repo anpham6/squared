@@ -45,7 +45,7 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
         main.userSettings = settings;
         const { builtInExtensions, extensions } = main;
         extensions.length = 0;
-        for (let namespace of settings.builtInExtensions) {
+        settings.builtInExtensions.forEach(namespace => {
             const ext = builtInExtensions[namespace];
             if (ext) {
                 includeExtension(extensions, ext);
@@ -58,12 +58,10 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
                     }
                 }
             }
-        }
+        });
         framework = value;
         if (reloading) {
-            for (const attr of Object.keys(system)) {
-                delete system[attr];
-            }
+            Object.keys(system).forEach(attr => delete system[attr]);
         }
         Object.assign(system, value.system);
     }

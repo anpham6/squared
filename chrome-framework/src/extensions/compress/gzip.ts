@@ -3,6 +3,8 @@ import type { CompressOptions } from '../../../../@types/chrome/extension';
 
 import Extension from '../../extension';
 
+const { safeNestedArray } = squared.lib.util;
+
 type View = android.base.View;
 
 export default class Gzip<T extends View> extends Extension<T> {
@@ -16,12 +18,7 @@ export default class Gzip<T extends View> extends Extension<T> {
         if (extension) {
             const { level, fileExtensions  } = this.options;
             if (fileExtensions === '*' || fileExtensions.includes(extension)) {
-                let compress = data.compress;
-                if (compress === undefined)  {
-                    compress = [];
-                    data.compress = compress;
-                }
-                compress.push({ format: 'gz', level });
+                safeNestedArray(data, 'compress').push({ format: 'gz', level });
                 return true;
             }
         }

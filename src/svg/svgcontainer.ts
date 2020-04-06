@@ -329,7 +329,9 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
 
     public refitPoints(values: SvgPoint[]) {
         const { unit, meetOrSlice } = this.aspectRatio;
-        for (const pt of values) {
+        const length = values.length;
+        for (let i = 0; i < length; i++) {
+            const pt = values[i];
             pt.x = this.refitX(pt.x);
             pt.y = this.refitY(pt.y);
             if (pt.rx !== undefined && pt.ry !== undefined) {
@@ -430,7 +432,8 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                     }
                     break;
             }
-            for (const pt of values) {
+            for (let i = 0; i < length; i++) {
+                const pt = values[i];
                 pt.x += x;
                 pt.y += y;
             }
@@ -440,14 +443,14 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
 
     public getPathAll(cascade = true) {
         const result: string[] = [];
-        for (const item of (cascade ? this.cascade() : this)) {
+        (cascade ? this.cascade() : this.children).forEach(item => {
             if (SvgBuild.isShape(item)) {
                 const value = item.path?.value;
                 if (value) {
                     result.push(value);
                 }
             }
-        }
+        });
         return result;
     }
 

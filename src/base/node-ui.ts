@@ -22,7 +22,9 @@ const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'cle
 
 function cascadeActualPadding(children: T[], attr: string, value: number) {
     let valid = false;
-    for (const item of children) {
+    const length = children.length;
+    for (let i = 0; i < length; i++) {
+        const item = children[i];
         if (item.blockStatic) {
             return false;
         }
@@ -151,7 +153,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static baseline<T extends NodeUI>(list: T[], text = false): Null<T> {
         const result: T[] = [];
-        for (const item of list) {
+        const length = list.length;
+        for (let i = 0; i < length; i++) {
+            const item = list[i];
             if (item.baseline && (!text || item.textElement) && !item.baselineAltered) {
                 if (item.naturalElements.length) {
                     if (item.baselineElement) {
@@ -258,7 +262,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     let boxRight = Number.NEGATIVE_INFINITY;
                     let floatLeft = Number.NEGATIVE_INFINITY;
                     let floatRight = Number.POSITIVE_INFINITY;
-                    for (const node of nodes) {
+                    for (let i = 0; i < q; i++) {
+                        const node = nodes[i];
                         const { left, right } = node.linear;
                         boxLeft = Math.min(boxLeft, left);
                         boxRight = Math.max(boxRight, right);
@@ -480,7 +485,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public delete(name: string, ...attrs: string[]) {
         const obj = this['__' + name];
         if (obj) {
-            for (const attr of attrs) {
+            attrs.forEach(attr => {
                 if (attr.includes('*')) {
                     for (const [key] of searchObject(obj, attr)) {
                         delete obj[key];
@@ -489,7 +494,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else {
                     delete obj[attr];
                 }
-            }
+            });
         }
     }
 
@@ -552,7 +557,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public inherit(node: T, ...modules: string[]) {
-        for (const name of modules) {
+        modules.forEach(name => {
             switch (name) {
                 case 'base': {
                     this._documentParent = node.documentParent;
@@ -574,15 +579,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 case 'alignment': {
                     const styleMap = this._styleMap;
-                    for (const attr of INHERIT_ALIGNMENT) {
-                        styleMap[attr] = node.css(attr);
-                    }
+                    INHERIT_ALIGNMENT.forEach(attr => styleMap[attr] = node.css(attr));
                     if (!this.positionStatic) {
-                        for (const attr of BOX_POSITION) {
+                        BOX_POSITION.forEach(attr => {
                             if (node.hasPX(attr)) {
                                 styleMap[attr] = node.css(attr);
                             }
-                        }
+                        });
                     }
                     Object.assign(this.autoMargin, node.autoMargin);
                     this.autoPosition = node.autoPosition;
@@ -648,7 +651,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
             }
-        }
+        });
     }
 
     public addAlign(value: number) {
@@ -705,12 +708,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         exclude += (exclude !== '' ? '|' : '') + value;
                     }
                     if (exclude !== '') {
-                        for (const name of exclude.split(/\s*\|\s*/)) {
+                        exclude.split(/\s*\|\s*/).forEach(name => {
                             const i: number = enumeration[name.toUpperCase()] || 0;
                             if (i > 0 && !hasBit(offset, i)) {
                                 offset |= i;
                             }
-                        }
+                        });
                     }
                     return offset;
                 };
@@ -771,6 +774,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                             replacement.documentRoot = true;
                                             this.documentRoot = false;
                                         }
+                                        replacement.depth = this.depth;
                                         this.renderParent = undefined;
                                         return true;
                                     }
@@ -831,9 +835,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         if (length === siblings.length + 1) {
                                             const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
                                             let width = actualParent.box.width - getLayoutWidth(this);
-                                            for (const item of siblings) {
-                                                width -= getLayoutWidth(item);
-                                            }
+                                            siblings.forEach(item => width -= getLayoutWidth(item));
                                             if (width >= 0) {
                                                 return NODE_TRAVERSE.HORIZONTAL;
                                             }
@@ -863,14 +865,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         const float = siblings[0].float;
                                         let maxBottom = Number.NEGATIVE_INFINITY;
                                         let contentWidth = 0;
-                                        for (const item of siblings) {
+                                        siblings.forEach(item => {
                                             if (item.floating) {
                                                 if (item.float === float) {
                                                     maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
                                                 }
                                                 contentWidth += item.linear.width;
                                             }
-                                        }
+                                        });
                                         if (Math.ceil(contentWidth) >= (this.actualParent as T).box.width) {
                                             return NODE_TRAVERSE.FLOAT_BLOCK;
                                         }
@@ -1208,7 +1210,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public unsetCache(...attrs: string[]) {
         if (attrs.length) {
             const cached = this._cached;
-            for (const attr of attrs) {
+            attrs.forEach(attr => {
                 switch (attr) {
                     case 'top':
                     case 'right':
@@ -1220,9 +1222,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         cached.baselineHeight = undefined;
                         break;
                 }
-            }
+            });
+            super.unsetCache(...attrs);
         }
-        super.unsetCache(...attrs);
     }
 
     public css(attr: string, value?: string, cache = false): string {

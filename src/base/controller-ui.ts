@@ -4,6 +4,7 @@ import Controller from './controller';
 
 import { NODE_TEMPLATE } from './lib/enumeration';
 
+type LayoutUI = squared.base.LayoutUI<NodeUI>;
 type NodeUI = squared.base.NodeUI;
 
 const $lib = squared.lib;
@@ -37,14 +38,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     private _unsupportedCascade!: Set<string>;
     private _unsupportedTagName!: Set<string>;
 
-    public abstract processUnknownParent(layout: squared.base.LayoutUI<T>): LayoutResult<T>;
-    public abstract processUnknownChild(layout: squared.base.LayoutUI<T>): LayoutResult<T>;
-    public abstract processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]): squared.base.LayoutUI<T>;
-    public abstract processTraverseVertical(layout: squared.base.LayoutUI<T>, siblings: T[]): squared.base.LayoutUI<T>;
-    public abstract processLayoutHorizontal(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
+    public abstract processUnknownParent(layout: LayoutUI): LayoutResult<T>;
+    public abstract processUnknownChild(layout: LayoutUI): LayoutResult<T>;
+    public abstract processTraverseHorizontal(layout: LayoutUI, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
+    public abstract processTraverseVertical(layout: LayoutUI, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
+    public abstract processLayoutHorizontal(layout: LayoutUI): squared.base.LayoutUI<T>;
     public abstract createNodeGroup(node: T, children: T[], options?: NodeGroupUIOptions<T>): T;
-    public abstract renderNode(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
-    public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
+    public abstract renderNode(layout: LayoutUI): Undef<NodeTemplate<T>>;
+    public abstract renderNodeGroup(layout: LayoutUI): Undef<NodeTemplate<T>>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     public abstract setConstraints(): void;
     public abstract optimize(nodes: T[]): void;
@@ -419,7 +420,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public evaluateNonStatic(documentRoot: T, cache: squared.base.NodeList<T>) {
         const altered = new Set<T>();
         const removed = new Set<T>();
-        for (const node of cache) {
+        cache.each(node => {
             if (!node.documentRoot && !node.pageFlow) {
                 const actualParent = node.parent as T;
                 let parent: Undef<T>;
@@ -534,11 +535,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 }
                 node.documentParent = parent;
             }
-        }
+        });
         for (const node of removed) {
-            node.each((item: T, index) => {
-                item.containerIndex = index;
-            });
+            node.each((item: T, index) => item.containerIndex = index);
         }
         for (const node of altered) {
             const layers: Array<T[]> = [];
@@ -577,10 +576,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                 return zA < zB ? -1 : 1;
                             }
                             return 0;
-                        });
-                        for (const item of order) {
-                            item.containerIndex = maxIndex + k++;
-                        }
+                        })
+                        .forEach(item => item.containerIndex = maxIndex + k++);
                         const q = children.length;
                         for (let l = 0; l < q; l++) {
                             if (order.includes(children[l])) {
@@ -624,7 +621,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         const showAttributes = this.userSettings.showAttributes;
         const indent = '\t'.repeat(depth);
         let output = '';
-        for (const item of templates) {
+        const length = templates.length;
+        for (let i = 0; i < length; i++) {
+            const item = templates[i];
             const node = item.node;
             switch (item.type) {
                 case NODE_TEMPLATE.XML: {

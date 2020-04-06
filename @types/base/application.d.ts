@@ -173,22 +173,10 @@ export interface ResourceStoredMap {
     images: Map<string, StringMap>;
 }
 
-export interface Asset {
+export interface Asset extends StandardMap {
     uri?: string;
     index?: number;
     mimeType?: string;
-}
-
-export interface CompressionFormat {
-    format: string;
-    level?: number;
-}
-
-export interface FileAssetExclusions {
-    pathname?: string[];
-    filename?: string[];
-    extension?: string[];
-    pattern?: string[];
 }
 
 export interface FileAsset extends Asset {
@@ -203,6 +191,18 @@ export interface ImageAsset extends Asset, Dimension {}
 
 export interface RawAsset extends FileAsset, ImageAsset {
     base64?: string;
+}
+
+export interface FileAssetExclusions {
+    pathname?: string[];
+    filename?: string[];
+    extension?: string[];
+    pattern?: string[];
+}
+
+export interface CompressionFormat {
+    format: string;
+    level?: number;
 }
 
 export interface NodeTemplate<T> {

@@ -15,6 +15,7 @@ import VECTOR_TMPL from '../../template/vector';
 type ColorData = squared.lib.color.ColorData;
 
 const $lib = squared.lib;
+const $base = squared.base;
 
 const { reduceRGBA } = $lib.color;
 const { extractURL, formatPercent, formatPX, getBackgroundPosition } = $lib.css;
@@ -23,9 +24,9 @@ const { CHAR, XML } = $lib.regex;
 const { delimitString, flatArray, isEqual, objectMap, resolvePath } = $lib.util;
 const { applyTemplate } = $lib.xml;
 
-const { BOX_STANDARD, NODE_RESOURCE } = squared.base.lib.enumeration;
+const { BOX_STANDARD, NODE_RESOURCE } = $base.lib.enumeration;
 
-const NodeUI = squared.base.NodeUI;
+const NodeUI = $base.NodeUI;
 
 interface PositionAttribute {
     top?: string;
@@ -379,15 +380,10 @@ function createLayerList(boxStyle: BoxStyle, images?: BackgroundImageData[], bor
         item.push({ shape: { 'android:shape': 'rectangle', solid } });
     }
     if (images) {
-        for (const image of images) {
+        images.forEach(image => {
             const gradient = image.gradient;
-            if (gradient) {
-                item.push({ shape: { 'android:shape': 'rectangle', gradient } });
-            }
-            else {
-                item.push(image);
-            }
-        }
+            item.push(gradient ? { shape: { 'android:shape': 'rectangle', gradient } } : image);
+        });
     }
     return result;
 }
@@ -520,11 +516,15 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         };
         const deleteBodyWrapper = (body: T, wrapper: T) => {
             if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
-                const maxWidth = body.cssInitial('maxWidth');
-                if (maxWidth === '' || maxWidth === 'auto' || maxWidth === '100%') {
-                    const children = wrapper.renderChildren;
-                    if (children.length === 1) {
-                        wrapper.removeTry(children[0]);
+                switch (body.cssInitial('maxWidth')) {
+                    case '':
+                    case 'auto':
+                    case '100%': {
+                        const children = wrapper.renderChildren;
+                        if (children.length === 1) {
+                            wrapper.removeTry(children[0]);
+                        }
+                        break;
                     }
                 }
             }
@@ -549,7 +549,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 node.android('background', drawable, false);
             }
         };
-        for (const node of this.cacheProcessing) {
+        this.cacheProcessing.each(node => {
             const stored: BoxStyle = node.data(Resource.KEY_NAME, 'boxStyle');
             if (stored) {
                 if (node.inputElement) {
@@ -595,14 +595,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             if (!themeBackground) {
                                 if (node.tagName === 'HTML') {
                                     setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
-                                    continue;
+                                    return;
                                 }
                                 else {
                                     const innerWrapped = node.innerMostWrapped as T;
                                     if (innerWrapped.documentBody) {
                                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, color);
                                         deleteBodyWrapper(innerWrapped, node);
-                                        continue;
+                                        return;
                                     }
                                 }
                             }
@@ -617,7 +617,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
             }
-        }
+        });
     }
 
     public getDrawableBorder(data: BoxStyle, outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false) {
@@ -860,8 +860,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundRepeat.length = 0;
                     backgroundSize.length = 0;
                 }
-                const embedded = node.extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'));
-                for (const image of embedded) {
+                node.extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE')).forEach(image => {
                     const element = <HTMLImageElement> image.element;
                     const src = resource.addImageSrc(element);
                     if (src !== '') {
@@ -889,7 +888,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         backgroundPosition[length] = position;
                         length++;
                     }
-                }
+                });
             }
             const { backgroundClip, backgroundOrigin } = data;
             const documentBody = node.innerMostWrapped.documentBody;

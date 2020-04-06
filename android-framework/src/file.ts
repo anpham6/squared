@@ -254,20 +254,16 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         if (STORED.styles.size) {
             const item: ObjectMap<any[]> = { style: [] };
             const itemArray = item.style;
-            for (const style of Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
+            Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1).forEach(style => {
                 const styleArray = style.items;
                 if (Array.isArray(styleArray)) {
-                    const itemStyle: ItemValue[] = [];
-                    for (const obj of styleArray.sort((a, b) => a.key >= b.key ? 1 : -1)) {
-                        itemStyle.push({ name: obj.key, innerText: obj.value });
-                    }
                     itemArray.push({
                         name: style.name,
                         parent: style.parent,
-                        item: itemStyle
+                        item: objectMap(styleArray.sort((a, b) => a.key >= b.key ? 1 : -1), obj => (<ItemValue> { name: obj.key, innerText: obj.value }))
                     });
                 }
-            }
+            });
             result.push(
                 replaceTab(
                     applyTemplate('resources', STYLE_TMPL, [item]),

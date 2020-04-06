@@ -17,7 +17,10 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
         let valid = false;
         let inlineVertical = 0;
         let sameValue = 0;
-        for (const item of node) {
+        const children = node.children;
+        const length = children.length;
+        for (let i = 0; i < length; i++) {
+            const item = children[i];
             if (!(item.positionStatic || item.positionRelative && item.length)) {
                 return false;
             }
@@ -58,7 +61,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                 const aboveBaseline: T[] = [];
                 let minTop = Number.POSITIVE_INFINITY;
                 let baseline: Undef<T>;
-                for (const item of children) {
+                children.forEach(item => {
                     const top = item.linear.top;
                     if (item.inlineVertical && top <= minTop) {
                         if (top < minTop) {
@@ -70,11 +73,11 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                     if (item.baselineActive) {
                         baseline = item;
                     }
-                }
+                });
                 if (aboveBaseline.length) {
                     const above = aboveBaseline[0];
                     const top = above.linear.top;
-                    for (const item of children) {
+                    children.forEach(item => {
                         if (item !== baseline) {
                             if (item.inlineVertical) {
                                 if (!aboveBaseline.includes(item)) {
@@ -91,7 +94,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                                 item.setCacheValue('verticalAlign', '0px');
                             }
                         }
-                    }
+                    });
                     if (baseline) {
                         baseline.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: baseline.linear.top - top + Math.min(0, above.parseHeight(above.cssInitial('verticalAlign'))) });
                         baseline.baselineAltered = true;

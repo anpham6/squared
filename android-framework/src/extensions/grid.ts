@@ -16,11 +16,13 @@ const { withinRange } = $lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 
+const Grid = squared.base.extensions.Grid;
+
 const GRID = $base_lib.constant.EXT_NAME.GRID;
 
 function transferData(parent: View, siblings: View[])  {
-    const data = squared.base.extensions.Grid.createDataCellAttribute();
-    for (const item of siblings) {
+    const data = Grid.createDataCellAttribute();
+    siblings.forEach(item => {
         const source: GridCellData<View> = item.data(GRID, 'cellData');
         if (source) {
             if (source.cellStart) {
@@ -37,7 +39,7 @@ function transferData(parent: View, siblings: View[])  {
             }
             item.data(GRID, 'cellData', null);
         }
-    }
+    });
     parent.data(GRID, 'cellData', data);
 }
 

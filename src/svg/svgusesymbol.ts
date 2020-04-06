@@ -25,9 +25,10 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
         const y = this.getBaseValue('y', 0);
         if (x !== 0 || y !== 0) {
             const pt = { x, y };
-            for (const item of this.cascade()) {
+            this.cascade(item => {
                 item.translationOffset = pt;
-            }
+                return false;
+            });
         }
         this.setPaint(this.getPathAll(), options?.precision);
     }

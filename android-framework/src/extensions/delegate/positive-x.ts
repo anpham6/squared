@@ -180,7 +180,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
         if (mainData) {
             const documentId = node.documentId;
-            for (const item of mainData.children) {
+            mainData.children.forEach(item => {
                 const nested = !item.pageFlow && (item.absoluteParent !== item.documentParent || item.css('position') === 'fixed' || node.documentBody);
                 const wrapper = item.outerMostWrapper as T;
                 if (item.hasPX('left')) {
@@ -229,7 +229,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     wrapper.constraint.vertical = true;
                     item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                 }
-            }
+            });
         }
     }
 }

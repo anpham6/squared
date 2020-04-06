@@ -120,11 +120,11 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                         resetBox(target, region);
                         if (!direction && target.floating) {
                             const bounds = target.bounds;
-                            for (const item of (target.actualParent as NodeUI).naturalChildren) {
+                            (<NodeUI> target.actualParent).naturalChildren.forEach(item => {
                                 if (item.floating && item !== target && item.intersectY(bounds, 'bounds')) {
                                     resetBox(<NodeUI> item, region);
                                 }
-                            }
+                            });
                         }
                         if (height === 0 && !target.every(item => item.floating || !item.pageFlow)) {
                             resetBox(target, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
@@ -202,7 +202,7 @@ function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
 function getMarginOffset<T extends NodeUI>(below: T, above: T, lineHeight: number, aboveLineBreak?: T): [number, T] {
     let top = Number.POSITIVE_INFINITY;
     if (below.nodeGroup && below.some(item => item.floating)) {
-        for (const item of below.renderChildren as T[]) {
+        below.renderChildren.forEach((item: T) => {
             if (!item.floating) {
                 const topA = item.linear.top;
                 if (topA < top) {
@@ -210,7 +210,7 @@ function getMarginOffset<T extends NodeUI>(below: T, above: T, lineHeight: numbe
                     below = item;
                 }
             }
-        }
+        });
     }
     if (top === Number.POSITIVE_INFINITY) {
         top = below.linear.top;
@@ -290,12 +290,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
         const application = this.application;
         const processed = new Set<number>();
         const clearMap = application.session.clearMap;
-        for (const node of this.cacheProcessing) {
+        this.cacheProcessing.each(node => {
             if (node.naturalElement && !node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                 const children = node.naturalChildren;
                 const length = children.length;
                 if (length === 0 || node.id === 0) {
-                    continue;
+                    return;
                 }
                 const pageFlow = node.pageFlow;
                 const collapseMargin = pageFlow && isBlockElement(node, true) && !(node.actualParent as T).layoutElement;
@@ -573,8 +573,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     }
                 }
             }
-        }
-        for (const node of application.processing.excluded) {
+        });
+        application.processing.excluded.each(node => {
             if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node.id)) {
                 let valid = false;
                 const previousSiblings = node.previousSiblings({ floating: false });
@@ -591,7 +591,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             const inline = above.inlineStatic && below.inlineStatic;
                             if (inline && previousSiblings.length === 0) {
                                 processed.add(node.id);
-                                continue;
+                                return;
                             }
                             if (!above.multiline && above.has('lineHeight')) {
                                 const aboveOffset = Math.floor((above.lineHeight - above.bounds.height) / 2);
@@ -679,20 +679,16 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         valid = true;
                     }
                     if (valid) {
-                        for (const item of previousSiblings) {
-                            processed.add(item.id);
-                        }
-                        for (const item of nextSiblings) {
-                            processed.add(item.id);
-                        }
+                        previousSiblings.forEach(item => processed.add(item.id));
+                        nextSiblings.forEach(item => processed.add(item.id));
                     }
                 }
             }
-        }
+        });
     }
 
     public afterConstraints() {
-        for (const node of this.cacheProcessing) {
+        this.cacheProcessing.each(node => {
             if (node.naturalChild && node.styleElement && node.inlineVertical && node.pageFlow && !node.positioned && !(node.actualParent as T).layoutElement) {
                 const outerWrapper = node.outerMostWrapper;
                 const renderParent = outerWrapper.renderParent;
@@ -738,12 +734,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 break found;
                                             }
                                         }
-                                        for (const item of row) {
+                                        row.forEach((item: T) => {
                                             const innerWrapped = item.innerMostWrapped as T;
                                             if (validSibling(innerWrapped)) {
                                                 maxBottom = Math.max(innerWrapped.actualRect('bottom'), maxBottom);
                                             }
-                                        }
+                                        });
                                         if (maxBottom === Number.NEGATIVE_INFINITY) {
                                             break;
                                         }
@@ -755,7 +751,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                             if (horizontal) {
                                 let actualChildren: T[] = [];
-                                for (const item of horizontal) {
+                                horizontal.forEach(item => {
                                     if (item.nodeGroup) {
                                         actualChildren = actualChildren.concat(item.cascade(child => child.naturalChild) as T[]);
                                     }
@@ -765,11 +761,14 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     else {
                                         actualChildren.push(item);
                                     }
-                                }
+                                });
+                                let maxBottom = Number.NEGATIVE_INFINITY;
                                 const parent = node.actualParent as T;
                                 const top = node.actualRect('top');
-                                let maxBottom = Number.NEGATIVE_INFINITY;
-                                for (const item of parent.naturalChildren as T[]) {
+                                const naturalChildren = parent.naturalChildren;
+                                const length = naturalChildren.length;
+                                for (let i = 0; i < length; i++) {
+                                    const item = naturalChildren[i] as T;
                                     if (actualChildren.includes(item)) {
                                         break;
                                     }
@@ -819,9 +818,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
             }
             if (node.floatContainer && node.layoutVertical) {
                 const floating: T[] = [];
-                for (const item of node.naturalChildren as T[]) {
+                node.naturalChildren.forEach((item: T) => {
                     if (!item.pageFlow) {
-                        continue;
+                        return;
                     }
                     if (!item.floating) {
                         if (floating.length) {
@@ -832,7 +831,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 const marginTop = (reset === 0 ? item.marginTop : 0) + adjustment;
                                 if (marginTop > 0) {
                                     const top = Math.floor(node.bounds.top);
-                                    for (const previous of floating) {
+                                    const length = floating.length;
+                                    for (let i = 0; i < length; i++) {
+                                        const previous = floating[i];
                                         if (top <= Math.floor(previous.bounds.top)) {
                                             let floatingRenderParent = previous.outerMostWrapper.renderParent;
                                             if (floatingRenderParent) {
@@ -853,8 +854,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     else {
                         floating.push(item);
                     }
-                }
+                });
             }
-        }
+        });
     }
 }

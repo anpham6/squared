@@ -239,10 +239,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         }
         else {
             if (element.srcset) {
-                if (imageSet === undefined) {
-                    imageSet = getSrcSet(element, this._imageFormat);
-                }
-                for (const image of imageSet) {
+                (imageSet || getSrcSet(element, this._imageFormat)).forEach(image => {
                     const pixelRatio = image.pixelRatio;
                     if (pixelRatio > 0) {
                         const src = image.src;
@@ -267,7 +264,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                             result.xxxhdpi = src;
                         }
                     }
-                }
+                });
             }
             if (!mdpi) {
                 mdpi = element.src;

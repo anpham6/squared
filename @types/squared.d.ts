@@ -262,6 +262,7 @@ declare namespace base {
 
     interface ExtensionManager<T extends Node> {
         readonly application: Application<T>;
+        readonly extensions: Extension<T>[];
         include(ext: Extension<T>): boolean;
         exclude(ext: Extension<T>): boolean;
         retrieve(name: string): Null<Extension<T>>;
@@ -886,7 +887,7 @@ declare namespace lib {
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkWritingMode(attr: string, value: string): string;
         function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
-        function parseSelectorText(value: string, document?: boolean): string;
+        function parseSelectorText(value: string, document?: boolean): string[];
         function getSpecificity(value: string): number;
         function getKeyframeRules(): ObjectMap<KeyframesData>;
         function parseKeyframeRule(rules: CSSRuleList): KeyframesData;
@@ -1109,6 +1110,7 @@ declare namespace lib {
         function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
+        function eachArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void>): number;
         function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
         function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
         function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];

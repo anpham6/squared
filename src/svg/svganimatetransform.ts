@@ -12,7 +12,9 @@ const { replaceMap } = $lib.util;
 export default class SvgAnimateTransform extends SvgAnimate implements squared.svg.SvgAnimateTransform {
     public static toRotateList(values: string[]) {
         const result: number[][] = [];
-        for (const value of values) {
+        const length = values.length;
+        for (let i = 0; i < length; i++) {
+            const value = values[i];
             if (value === '') {
                 result.push([0, 0, 0]);
             }
@@ -34,7 +36,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
 
     public static toScaleList(values: string[]) {
         const result: number[][] = [];
-        for (const value of values) {
+        const length = values.length;
+        for (let i = 0; i < length; i++) {
+            const value = values[i];
             if (value === '') {
                 result.push([1, 1, 0, 0]);
             }
@@ -60,7 +64,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
 
     public static toTranslateList(values: string[]) {
         const result: number[][] = [];
-        for (const value of values) {
+        const length = values.length;
+        for (let i = 0; i < length; i++) {
+            const value = values[i];
             if (value === '') {
                 result.push([0, 0]);
             }
@@ -82,7 +88,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
 
     public static toSkewList(values: string[]) {
         const result: number[][] = [];
-        for (const value of values) {
+        const length = values.length;
+        for (let i = 0; i < length; i++) {
+            const value = values[i];
             if (value === '') {
                 result.push([0]);
             }

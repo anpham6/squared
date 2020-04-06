@@ -16,7 +16,7 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
         else {
             const framework = ext.framework;
             if (framework > 0) {
-                for (const item of ext.dependencies) {
+                ext.dependencies.forEach(item => {
                     if (item.preload) {
                         name = item.name;
                         if (this.retrieve(name) === null) {
@@ -26,7 +26,7 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
                             }
                         }
                     }
-                }
+                });
             }
             if ((framework === 0 || hasBit(framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
                 ext.application = application;
@@ -38,7 +38,7 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
     }
 
     public exclude(ext: squared.base.Extension<T>) {
-        const extensions = this.application.extensions;
+        const extensions = this.extensions;
         const length = extensions.length;
         for (let i = 0; i < length; i++) {
             if (extensions[i] === ext) {
@@ -50,7 +50,10 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
     }
 
     public retrieve(name: string) {
-        for (const ext of this.application.extensions) {
+        const extensions = this.extensions;
+        const length = extensions.length;
+        for (let i = 0; i < length; i++) {
+            const ext = extensions[i];
             if (ext.name === name) {
                 return ext;
             }
@@ -81,5 +84,9 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
     public optionValueAsBoolean(name: string, attr: string) {
         const value = this.optionValue(name, attr);
         return typeof value === 'boolean' ? value : false;
+    }
+
+    get extensions() {
+        return this.application.extensions;
     }
 }

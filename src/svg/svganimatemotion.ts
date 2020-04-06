@@ -301,15 +301,11 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         if (fromValue === toValue || angleFrom === angleTo) {
                             if (autoValue) {
                                 if (angleFrom !== 0) {
-                                    for (const item of timeRange) {
-                                        item.rotate += angleFrom;
-                                    }
+                                    timeRange.forEach(item => item.rotate += angleFrom);
                                 }
                             }
                             else {
-                                for (const item of timeRange) {
-                                    item.rotate = angleFrom;
-                                }
+                                timeRange.forEach(item => item.rotate = angleFrom);
                             }
                         }
                         else {
@@ -341,13 +337,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         let keyTimes: Undef<number[]>;
         let keyPoints: Undef<number[]>;
         if (this.validKeyPoints()) {
-            keyPoints = this._keyPoints.slice(0);
-            keyPoints.reverse();
-            keyTimes = [];
-            for (const keyTime of super.keyTimes) {
-                keyTimes.push(1 - keyTime);
-            }
-            keyTimes.reverse();
+            keyPoints = this._keyPoints.slice(0).reverse();
+            keyTimes = objectMap(super.keyTimes, value => 1 - value).reverse();
         }
         return { keyTimes, keyPoints };
     }

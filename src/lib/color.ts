@@ -896,7 +896,9 @@ const parseOpacity = (value: number) => clamp(value) * 255;
 
 export function findColorName(value: string) {
     value = value.toLowerCase();
-    for (const color of COLOR_CSS3) {
+    const length = COLOR_CSS3.length;
+    for (let i = 0; i < length; i++) {
+        const color = COLOR_CSS3[i];
         if (color.key === value) {
             return color;
         }
@@ -910,7 +912,9 @@ export function findColorShade(value: string) {
         const hsl = convertHSLA(rgba);
         const result: ColorResult[] = [];
         let baseline = -1;
-        for (const color of COLOR_CSS3) {
+        const length = COLOR_CSS3.length;
+        for (let i = 0; i < length; i++) {
+            const color = COLOR_CSS3[i];
             if (color.value === value) {
                 return color;
             }
@@ -924,15 +928,15 @@ export function findColorShade(value: string) {
                 baseline = color.hsl.h;
             }
         }
-        const length = result.length;
-        if (length === 1) {
+        const q = result.length;
+        if (q === 1) {
             return result[0];
         }
-        else if (length > 1) {
+        else if (q > 1) {
             const total = hsl.l + hsl.s;
             let nearest = Number.POSITIVE_INFINITY;
             let index = -1;
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < q; i++) {
                 const { l, s } = result[i].hsl;
                 const offset = Math.abs(total - (l + s));
                 if (offset < nearest) {
@@ -1069,10 +1073,10 @@ export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
 
 export function getHexCode(...values: number[]) {
     let output = '';
-    for (const value of values) {
+    values.forEach(value => {
         const rgb = Math.max(0, Math.min(value, 255));
         output += isNaN(rgb) ? '00' : STRING_HEX.charAt((rgb - (rgb % 16)) / 16) + STRING_HEX.charAt(rgb % 16);
-    }
+    });
     return output;
 }
 

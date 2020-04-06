@@ -19,8 +19,6 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 const NodeUI = $base.NodeUI;
 const FLEXBOX = $base_lib.constant.EXT_NAME.FLEXBOX;
 
-type WH = DimensionAttr;
-
 type FlexBasis = {
     item: View;
     basis: number;
@@ -61,7 +59,9 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
     let percent: boolean = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseWidth(parent.css('maxWidth')), parent.box.width);
     let result = 0;
     let growShrinkType = 0;
-    for (const item of items) {
+    const length = items.length;
+    for (let i = 0; i < length; i++) {
+        const item = items[i];
         if (percent) {
             if (horizontal) {
                 if (item.innerMostWrapped.autoMargin.horizontal) {
@@ -78,14 +78,15 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
         }
         result += item.flexbox.grow;
     }
-    if (items.length > 1 && (horizontal || percent)) {
+    if (length > 1 && (horizontal || percent)) {
         const groupBasis: FlexBasis[] = [];
         const percentage: View[] = [];
         let maxBasis: Undef<View>;
         let maxBasisUnit = 0;
         let maxDimension = 0;
         let maxRatio = NaN;
-        for (const item of items) {
+        for (let i = 0; i < length; i++) {
+            const item = items[i];
             const { alignSelf, basis, shrink, grow } = item.flexbox;
             const dimension = item.bounds[attr];
             let growPercent = false;
@@ -142,7 +143,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
         }
         if (growShrinkType) {
             if (groupBasis.length > 1) {
-                for (const data of groupBasis) {
+                groupBasis.forEach(data => {
                     const { basis, item } = data;
                     if (item === maxBasis || basis === maxBasisUnit && (growShrinkType === 1 && maxRatio === data.shrink || growShrinkType === 2 && maxRatio === data.grow)) {
                         item.flexbox.grow = 1;
@@ -150,24 +151,17 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
                     else if (basis > 0) {
                         item.flexbox.grow = ((data.dimension / basis) / (maxDimension / maxBasisUnit)) * basis / maxBasisUnit;
                     }
-                }
+                });
             }
-            for (const item of percentage) {
-                setPercentage(item);
-            }
+            percentage.forEach(item => setPercentage(item));
         }
     }
     if (horizontal && growShrinkType === 0) {
-        let valid = false;
-        for (const item of items) {
+        for (let i = 0; i < length; i++) {
+            const item = items[i];
             if (item.find(child => child.multiline && child.ascend({ condition: above => above[hasDimension], including: parent }).length === 0, { cascade: true })) {
-                valid = true;
+                items.forEach(child => setPercentage(child));
                 break;
-            }
-        }
-        if (valid) {
-            for (const item of items) {
-                setPercentage(item);
             }
         }
     }
@@ -175,7 +169,9 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
 }
 
 function getBaseline(nodes: View[]) {
-    for (const node of nodes) {
+    const length = nodes.length;
+    for (let i = 0; i < length; i++) {
+        const node = nodes[i];
         if (node.textElement && node.baseline) {
             return node;
         }
@@ -428,10 +424,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                     else {
                         growAll = horizontal || dimensionInverse;
-                        growAvailable = 1 - adjustGrowRatio(node, seg, <WH> WHL);
+                        growAvailable = 1 - adjustGrowRatio(node, seg, <DimensionAttr> WHL);
                         if (q > 1) {
                             let sizeCount = 0;
-                            for (const chain of seg) {
+                            seg.forEach(chain => {
                                 const value = (<BoxRectDimension> chain.data(FLEXBOX, 'boundsData') || chain.bounds)[HWL];
                                 if (sizeCount === 0) {
                                     maxSize = value;
@@ -444,7 +440,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     maxSize = value;
                                     sizeCount = 1;
                                 }
-                            }
+                            });
                             if (sizeCount === q) {
                                 maxSize = NaN;
                             }
@@ -638,7 +634,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 }
                             }
-                            View.setFlexDimension(chain, <WH> WHL);
+                            View.setFlexDimension(chain, <DimensionAttr> WHL);
                             if (!chain.innerMostWrapped.has('flexGrow')) {
                                 growAll = false;
                             }
@@ -657,12 +653,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         continue;
                     }
                     if (growAll) {
-                        for (const item of seg) {
-                            setLayoutWeight(item, item.flexbox.grow);
-                        }
+                        seg.forEach(item => setLayoutWeight(item, item.flexbox.grow));
                     }
                     else if (growAvailable > 0) {
-                        for (const item of layoutWeight) {
+                        layoutWeight.forEach(item => {
                             const autoMargin = item.innerMostWrapped.autoMargin;
                             let ratio = 1;
                             if (horizontal) {
@@ -674,7 +668,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 ratio = 2;
                             }
                             setLayoutWeight(item, Math.max(item.flexbox.grow, (growAvailable * ratio) / layoutWeight.length));
-                        }
+                        });
                     }
                     if (marginBottom > 0) {
                         node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, marginBottom);

@@ -9,9 +9,7 @@ const { isLength } = squared.lib.css;
 export default abstract class NodeGroupUI extends NodeUI {
     public init() {
         if (this.length) {
-            for (const item of this.children) {
-                item.parent = this;
-            }
+            this.each(item => item.parent = this);
             this.setBounds();
             this.saveAsInitial();
             this.dir = this.actualParent?.dir || '';
@@ -20,9 +18,8 @@ export default abstract class NodeGroupUI extends NodeUI {
 
     public setBounds() {
         if (this.length) {
-            const bounds = NodeUI.outerRegion(this);
-            this._bounds = bounds;
-            return bounds;
+            this._bounds = NodeUI.outerRegion(this);
+            return this._bounds;
         }
         return undefined;
     }
@@ -206,9 +203,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     get childIndex() {
         let result = super.childIndex;
         if (result === Number.POSITIVE_INFINITY) {
-            for (const node of this) {
-                result = Math.min(node.childIndex, result);
-            }
+            this.each(node => result = Math.min(node.childIndex, result));
             super.childIndex = result;
         }
         return result;
@@ -220,9 +215,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     get containerIndex() {
         let result = super.containerIndex;
         if (result === Number.POSITIVE_INFINITY) {
-            for (const node of this) {
-                result = Math.min((<NodeUI> node).containerIndex, result);
-            }
+            this.each(node => result = Math.min((<NodeUI> node).containerIndex, result));
             super.containerIndex = result;
         }
         return result;
