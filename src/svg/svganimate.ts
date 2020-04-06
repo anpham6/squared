@@ -254,7 +254,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     public setCalcMode(attributeName?: string, mode?: string) {
         const animationElement = this.animationElement;
         if (animationElement) {
-            if (mode === undefined) {
+            if (!mode) {
                 mode = getNamedItem(animationElement, 'calcMode') || 'linear';
             }
             const keyTimesBase = this.keyTimes;

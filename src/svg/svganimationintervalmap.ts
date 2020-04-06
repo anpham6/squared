@@ -233,7 +233,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
         const map = this.map[attr];
         if (time !== undefined) {
             if (map && map.has(time)) {
-                if (animation === undefined) {
+                if (!animation) {
                     return true;
                 }
                 return (<SvgAnimationIntervalValue[]> map.get(time)).findIndex(item => item.animation === animation) !== -1;

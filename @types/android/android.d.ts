@@ -53,7 +53,7 @@ declare namespace base {
         public static formatName(value: string): string;
         public static addTheme(theme: StyleAttribute, path?: string, file?: string): boolean;
         public static addString(value: string, name?: string, numberAlias?: boolean): string;
-        public static addImage(images: StringMap, prefix?: string, imageFormat?: string[]): string;
+        public static addImage(images: StringMap, prefix?: string, imageFormat?: "*" | string[]): string;
         public static addColor(value: Undef<squared.lib.color.ColorData | string>, transparency?: boolean): string;
     }
 

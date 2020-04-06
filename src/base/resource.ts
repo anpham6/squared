@@ -72,7 +72,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
         if (font) {
             const fontFormat = this.controllerSettings.supported.fontFormat;
-            return font.find(item => item.fontStyle === fontStyle && (fontWeight === undefined || item.fontWeight === parseInt(fontWeight)) && (fontFormat === '*' || fontFormat.includes(item.srcFormat)));
+            return font.find(item => item.fontStyle === fontStyle && (!fontWeight || item.fontWeight === parseInt(fontWeight)) && (fontFormat === '*' || fontFormat.includes(item.srcFormat)));
         }
         return undefined;
     }

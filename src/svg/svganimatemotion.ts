@@ -104,7 +104,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     public addKeyPoint(item: NumberValue) {
-        if (this._offsetPath === undefined) {
+        if (!this._offsetPath) {
             const key = item.key;
             if (key >= 0 && key <= 1) {
                 const keyTimes = super.keyTimes;
@@ -136,7 +136,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     protected setOffsetPath() {
-        if (this._offsetPath === undefined && isString(this.path)) {
+        if (!this._offsetPath && isString(this.path)) {
             const { duration, rotateData } = this;
             let offsetPath = SvgBuild.getOffsetPath(this.path, this.rotate);
             let distance = offsetPath.length;

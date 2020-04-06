@@ -416,7 +416,7 @@ function getIntermediateSplitValue(subTime: number, splitTime: number, item: Svg
 
 function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: ForwardMap, baseValueMap: ObjectMap<AnimateValue>, interval: number, item: SvgAnimate, keyTimes: number[], values: string[], keySplines: Undef<string[]>, baseValue: AnimateValue, queued: SvgAnimate[], evaluateStart: boolean): [number[], string[], string[]] {
     const length = values.length;
-    if (keySplines === undefined) {
+    if (!keySplines) {
         keySplines = new Array(length - 1).fill('');
     }
     const { delay, duration } = item;
@@ -815,7 +815,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
         }
 
         public getAnimateViewRect(animations?: SvgAnimation[]) {
-            if (animations === undefined) {
+            if (!animations) {
                 animations = <SvgAnimation[]> this.animations;
             }
             const result: SvgAnimate[] = [];
@@ -917,7 +917,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         }
                         const attr = item.attributeName;
                         let groupData = groupName[attr];
-                        if (groupData === undefined) {
+                        if (!groupData) {
                             groupData = new Map<number, SvgAnimate[]>();
                             groupName[attr] = groupData;
                             groupAttributeMap[attr] = [];
@@ -1088,7 +1088,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                 value = convertToAnimateValue(value);
                             }
                             const forwardItem = getForwardItem(forwardMap, attr);
-                            if (value !== '' && (forwardItem === undefined || time >= forwardItem.time)) {
+                            if (value !== '' && (!forwardItem || time >= forwardItem.time)) {
                                 safeNestedArray(forwardMap, attr).push({ key: type, value, time });
                             }
                             if (item && SvgBuild.isAnimate(item) && !item.fillReplace) {
@@ -1184,7 +1184,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         }
                         if (!transforming) {
                             const value = baseValueMap[attr];
-                            if (forwardMap[attr] === undefined && value !== undefined) {
+                            if (!forwardMap[attr] && value !== undefined) {
                                 setFreezeValue(0, value, 0);
                             }
                             if (baseValue === undefined) {
@@ -1200,13 +1200,13 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                 set => {
                                     const fillForwards = SvgBuild.isAnimate(set) && set.fillForwards;
                                     const delay = set.delay;
-                                    if (delay < groupDelay[0] && (backwards === undefined || fillForwards)) {
+                                    if (delay < groupDelay[0] && (!backwards || fillForwards)) {
                                         if (backwards && fillForwards) {
                                             setFreezeValue(delay, set.to, (<SvgAnimate> set).type);
                                         }
                                         else {
                                             const previousTime = delay - 1;
-                                            if (previous === undefined) {
+                                            if (!previous) {
                                                 if (!baseMap.has(0)) {
                                                     const value: Undef<AnimateValue> = transforming && SvgBuild.isAnimateTransform(set) ? TRANSFORM.typeAsValue(set.type) : baseValueMap[attr];
                                                     if (value !== undefined) {
@@ -1509,7 +1509,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                         }
                                                     }
                                                     if (time > maxTime) {
-                                                        if (l === length - 1 && !item.accumulateSum && (k < iterationTotal - 1 || item.fillReplace && (forwardItem === undefined || value !== forwardItem.value))) {
+                                                        if (l === length - 1 && !item.accumulateSum && (k < iterationTotal - 1 || item.fillReplace && (!forwardItem || value !== forwardItem.value))) {
                                                             time--;
                                                         }
                                                         maxTime = setTimelineValue(baseMap, time, value);
@@ -1556,7 +1556,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     );
                                     if (infinite) {
                                         if (complete) {
-                                            if (setterInterrupt === undefined) {
+                                            if (!setterInterrupt) {
                                                 infiniteMap[attr] = item;
                                                 break attributeEnd;
                                             }

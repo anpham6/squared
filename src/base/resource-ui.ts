@@ -935,7 +935,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const previousSibling = node.siblingsLeading[0];
                     let previousSpaceEnd = false;
                     if (value.length > 1) {
-                        if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
+                        if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
                             value = value.replace(CHAR.LEADINGSPACE, '');
                         }
                         else if (previousSibling.naturalElement) {

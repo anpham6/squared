@@ -317,7 +317,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                     const index = joinMap[attrA];
                                     if (attrA !== attrB && index === joinMap[attrB]) {
                                         let data = combined[index];
-                                        if (data === undefined) {
+                                        if (!data) {
                                             data = new Set(attrA.split(';'));
                                             combined[index] = data;
                                         }

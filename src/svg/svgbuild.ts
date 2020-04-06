@@ -678,7 +678,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const result: SvgTransform[] = [];
         transforms.forEach(item => {
             const type = item.type;
-            if (exclude === undefined || !exclude.includes(type)) {
+            if (!exclude || !exclude.includes(type)) {
                 switch (type) {
                     case SVGTransform.SVG_TRANSFORM_ROTATE:
                     case SVGTransform.SVG_TRANSFORM_SKEWX:

@@ -442,7 +442,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public attr(name: string, attr: string, value?: string, overwrite = true): string {
         let obj: StringMap = this['__' + name];
         if (value) {
-            if (obj === undefined) {
+            if (!obj) {
                 if (!this._namespaces.includes(name)) {
                     this._namespaces.push(name);
                 }
@@ -1440,7 +1440,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     set controlName(value) {
-        if (!this.rendered || this._controlName === undefined) {
+        if (!this.rendered || !this._controlName) {
             this._controlName = value;
         }
     }

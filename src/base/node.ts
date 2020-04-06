@@ -53,7 +53,7 @@ function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Nod
     if (isNumber(value)) {
         return parseFloat(value);
     }
-    else if (value === 'inherit' && parent === undefined) {
+    else if (value === 'inherit' && !parent) {
         return getFlexValue(node, attr, fallback, node.actualParent);
     }
     return fallback;
@@ -798,7 +798,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public data(name: string, attr: string, value?: any, overwrite = true) {
         const data = this._data;
         if (hasValue(value)) {
-            let obj = data[name];
+            let obj: {} = data[name];
             if (!isObject(obj)) {
                 obj = {};
                 data[name] = obj;
@@ -2548,7 +2548,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = '';
                     break;
                 default:
-                    if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (this._initial === undefined || this.cssInitial('backgroundColor') === result)) {
+                    if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || this.cssInitial('backgroundColor') === result)) {
                         let parent = this.actualParent;
                         while (parent) {
                             const color = parent.cssInitial('backgroundColor', true);

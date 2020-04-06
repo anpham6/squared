@@ -281,7 +281,7 @@ export const TRANSFORM = {
         return undefined;
     },
     origin(element: SVGElement, value?: string) {
-        if (value === undefined) {
+        if (!isString(value)) {
             value = getAttribute(element, 'transform-origin');
         }
         const result: Point = { x: 0, y: 0 };

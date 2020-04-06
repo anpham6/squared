@@ -11,7 +11,7 @@ const $lib = squared.lib;
 const { findColorShade, parseColor } = $lib.color;
 const { extractURL, getSrcSet } = $lib.css;
 const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
-const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, spliceArray, trimString } = $lib.util;
+const { fromLastIndexOf, isNumber, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> squared.base.ResourceUI.STORED;
 const REGEX_NONWORD = /[^\w+]/g;
@@ -167,7 +167,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    public static addImage(images: StringMap, prefix = '', imageFormat?: string[]) {
+    public static addImage(images: StringMap, prefix = '', imageFormat?: "*" | string[]) {
         const mdpi = images.mdpi;
         if (mdpi) {
             if (Object.keys(images).length === 1) {
@@ -178,7 +178,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             }
             const src = fromLastIndexOf(mdpi, '/');
             const format = fromLastIndexOf(src, '.').toLowerCase();
-            if (imageFormat === undefined || imageFormat.includes(format)) {
+            if (!imageFormat || imageFormat === '*' || imageFormat.includes(format)) {
                 const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - format.length - 1)), images);
                 CACHE_IMAGE[mdpi] = asset;
                 return asset;
@@ -207,7 +207,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    private readonly _imageFormat: string[];
+    private readonly _imageFormat?: string[];
 
     constructor(
         public application: android.base.Application<T>,
@@ -220,7 +220,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         STORED.drawables = new Map();
         STORED.animators = new Map();
         this.controllerSettings = application.controllerHandler.localSettings;
-        this._imageFormat = spliceArray(this.controllerSettings.supported.imageFormat.slice(0) as string[], value => value === 'svg');
+        const imageFormat = this.controllerSettings.supported.imageFormat;
+        if (imageFormat !== '*') {
+            this._imageFormat = spliceArray(imageFormat.slice(0), value => value === 'svg');
+        }
     }
 
     public reset() {
@@ -295,12 +298,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public writeRawImage(filename: string, base64: string) {
         const asset = super.writeRawImage(filename, base64);
         if (asset && this.userSettings.compressImages && Resource.canCompressImage(filename)) {
-            let compress = asset.compress;
-            if (compress === undefined) {
-                compress = [];
-                asset.compress = compress;
-            }
-            compress.unshift({ format: 'png' });
+            safeNestedArray(asset, 'compress').unshift({ format: 'png' });
         }
         return asset;
     }

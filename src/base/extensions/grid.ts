@@ -138,7 +138,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                                         for (let k = columns.length - 1; k >= 0; k--) {
                                             const row = columns[k];
                                             if (row) {
-                                                if (row[index] === undefined) {
+                                                if (!row[index]) {
                                                     columnLast.length = 0;
                                                 }
                                                 break;
@@ -153,7 +153,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 const r = columnRight.length;
                 for (let i = 0, j = -1; i < r; i++) {
-                    if (columns[i] === undefined) {
+                    if (!columns[i]) {
                         if (j === -1) {
                             j = i - 1;
                         }
@@ -179,7 +179,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     const s = columns.length;
                     for (let m = 0; m < s; m++) {
                         const row = columns[m];
-                        if (row[l] === undefined) {
+                        if (!row[l]) {
                             row[l] = { spacer: 1 } as any;
                         }
                     }

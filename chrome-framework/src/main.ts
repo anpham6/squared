@@ -72,9 +72,13 @@ async function findElementAllAsync(query: NodeListOf<Element>, cache: boolean) {
 }
 
 function createAssetsOptions(assets: FileAsset[], options?: FileOptions, directory?: string, filename?: string): FileOptions {
+    const items = options?.assets;
+    if (items) {
+        assets = assets.concat(items);
+    }
     return {
         ...options,
-        assets: assets.concat(options?.assets || []),
+        assets,
         directory,
         filename
     };

@@ -246,7 +246,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     const data = safeNestedArray(rowData, i);
                     let cell = openCells[i];
                     let j = placement[colA] - 1;
-                    if (cell === undefined) {
+                    if (!cell) {
                         cell = new Array(length).fill(0);
                         if (!dense) {
                             for (let k = 0; k < j; k++) {
@@ -303,7 +303,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         let namedMatch: Null<RegExpMatchArray>;
                                         if ((namedMatch = REGEX_CELL_NAMED.exec(subPattern)) !== null) {
                                             const subName = namedMatch[1];
-                                            if (name[subName] === undefined) {
+                                            if (!name[subName]) {
                                                 name[subName] = [];
                                             }
                                             repeating.push({ name: subName });
@@ -406,7 +406,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 autoHeight = setAutoFill(row, node.actualHeight);
             }
             node.each((item: T, index) => {
-                if (previous === undefined || item.linear[directionA] >= previous.linear[directionB] || columnIndex > 0 && columnIndex === columnMax) {
+                if (!previous || item.linear[directionA] >= previous.linear[directionB] || columnIndex > 0 && columnIndex === columnMax) {
                     columnMax = Math.max(columnIndex, columnMax);
                     rowIndex++;
                     columnIndex = 1;
@@ -680,7 +680,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                 }
-                if (previousPlacement === undefined) {
+                if (!previousPlacement) {
                     if (placement[0] === 0) {
                         placement[0] = 1;
                     }
@@ -839,7 +839,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     const m = PLACEMENT[rowB] - 1;
                     for (let i = l; i < m; i++) {
                         const data = rowData[i];
-                        if (data === undefined) {
+                        if (!data) {
                             available.push([[0, -1]] as [number, number][]);
                         }
                         else if (data.reduce((a, b) => a + (b ? 1 : 0), 0) + COLUMN_SPAN <= ITERATION) {
@@ -847,7 +847,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             let span = 0;
                             for (let j = 0, k = -1; j < ITERATION; j++) {
                                 const rowItem = data[j];
-                                if (rowItem === undefined) {
+                                if (!rowItem) {
                                     if (k === -1) {
                                         k = j;
                                     }

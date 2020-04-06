@@ -121,7 +121,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
             }
             else if (pathData) {
-                if (commands === undefined) {
+                if (!commands) {
                     commands = SvgBuild.getPathCommands(pathData);
                 }
                 const value = parseFloat(values[i]);
@@ -658,10 +658,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             if (a.delay !== b.delay) {
                                 return a.delay < b.delay ? -1 : 1;
                             }
-                            else if (SvgBuild.asSet(a) && SvgBuild.asAnimate(b) || a.animationElement === undefined && b.animationElement) {
+                            else if (SvgBuild.asSet(a) && SvgBuild.asAnimate(b) || !a.animationElement && b.animationElement) {
                                 return -1;
                             }
-                            else if (SvgBuild.asAnimate(a) && SvgBuild.asSet(b) || a.animationElement && b.animationElement === undefined) {
+                            else if (SvgBuild.asAnimate(a) && SvgBuild.asSet(b) || a.animationElement && !b.animationElement) {
                                 return 1;
                             }
                         }

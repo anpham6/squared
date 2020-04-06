@@ -1828,7 +1828,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
             else {
                 let horizontal = 0;
                 let vertical = 0;
-                const checkPosition = (position: string, nextPosition: string) => {
+                const checkPosition = (position: string, nextPosition?: string) => {
                     switch (position) {
                         case 'left':
                         case 'right':
@@ -1967,7 +1967,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
             if (item.tagName === 'SOURCE') {
                 const { media, type, srcset: srcsetA } = item;
-                if (isString(srcsetA) && !(isString(media) && !validMediaRule(media)) && (!isString(type) || mimeType === undefined || mimeType.includes((type.split('/').pop() as string).trim().toLowerCase()))) {
+                if (isString(srcsetA) && !(isString(media) && !validMediaRule(media)) && (!isString(type) || !mimeType || mimeType.includes((type.split('/').pop() as string).trim().toLowerCase()))) {
                     srcset = srcsetA;
                     sizes = item.sizes;
                     return true;

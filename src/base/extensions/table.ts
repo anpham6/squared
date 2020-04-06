@@ -89,7 +89,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         node.each((item: T) => {
             switch (item.tagName) {
                 case 'THEAD':
-                    if (thead === undefined) {
+                    if (!thead) {
                         thead = item;
                     }
                     else {
@@ -100,7 +100,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     tbody.push(item);
                     break;
                 case 'TFOOT':
-                    if (tfoot === undefined) {
+                    if (!tfoot) {
                         tfoot = item;
                     }
                     else {
@@ -140,14 +140,14 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 let colSpan = element.colSpan;
                 let j = -1;
                 for (let k = 0; j === -1; k++) {
-                    if (row[k] === undefined) {
+                    if (!row[k]) {
                         j = k;
                     }
                 }
                 for (let k = i; k < i + rowSpan; k++) {
                     const item = safeNestedArray(tableFilled, k);
                     for (let l = j, m = 0; l < j + colSpan; l++) {
-                        if (item[l] === undefined) {
+                        if (!item[l]) {
                             item[l] = td;
                             m++;
                         }

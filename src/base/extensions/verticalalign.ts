@@ -81,7 +81,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                         if (item !== baseline) {
                             if (item.inlineVertical) {
                                 if (!aboveBaseline.includes(item)) {
-                                    if (isLength(item.verticalAlign) || baseline === undefined) {
+                                    if (isLength(item.verticalAlign) || !baseline) {
                                         item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: item.linear.top - top });
                                         item.baselineAltered = true;
                                     }

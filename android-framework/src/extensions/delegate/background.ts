@@ -124,7 +124,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             visibleStyle.backgroundRepeatY = false;
         }
         if (isParentTransfer(parent)) {
-            if (container === undefined) {
+            if (!container) {
                 container = controller.createNodeWrapper(node, renderParent);
             }
             container.unsafe('excludeResource', NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING);

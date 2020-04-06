@@ -238,7 +238,7 @@ function getBottomChild(node: NodeUI) {
         for (let j = children.length - 1; j >= 0; j--) {
             const item = <NodeUI> children[j];
             if (item.floating) {
-                if (bottomChild === undefined) {
+                if (!bottomChild) {
                     const bottom = item.linear.bottom;
                     if (bottomFloatChild) {
                         if (bottom > bottomFloatChild.linear.bottom) {
@@ -254,7 +254,7 @@ function getBottomChild(node: NodeUI) {
                     break;
                 }
             }
-            else if (bottomChild === undefined) {
+            else if (!bottomChild) {
                 if (bottomFloatChild && bottomFloatChild.linear.bottom > item.linear.bottom) {
                     bottomChild = bottomFloatChild;
                     break;
@@ -262,7 +262,7 @@ function getBottomChild(node: NodeUI) {
                 bottomChild = item;
             }
         }
-        if (bottomChild === undefined) {
+        if (!bottomChild) {
             bottomChild = bottomFloatChild;
         }
     }
@@ -270,7 +270,7 @@ function getBottomChild(node: NodeUI) {
 }
 
 function isVerticalOverflow(node: NodeUI) {
-    switch (node.css('overflowY')) {
+    switch (node.cssInitial('overflowY')) {
         case 'auto':
         case 'hidden':
         case 'overlay':
@@ -294,7 +294,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
             if (node.naturalElement && !node.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
                 const children = node.naturalChildren;
                 const length = children.length;
-                if (length === 0 || node.id === 0) {
+                if (length === 0) {
                     return;
                 }
                 const pageFlow = node.pageFlow;
@@ -306,7 +306,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     if (current.pageFlow) {
                         if (collapseMargin) {
                             if (!current.floating) {
-                                if (firstChild === undefined) {
+                                if (!firstChild) {
                                     firstChild = current;
                                 }
                                 lastChild = current;

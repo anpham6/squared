@@ -591,7 +591,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             break;
                                         default: {
                                             chain.anchorParent(orientationInverse);
-                                            if (innerWrapped === undefined || !chain.innerMostWrapped.autoMargin[orientationInverse]) {
+                                            if (!innerWrapped || !chain.innerMostWrapped.autoMargin[orientationInverse]) {
                                                 chain.anchorStyle(orientationInverse, wrapReverse ? 1 : 0);
                                             }
                                             if (chain[HWL] === 0) {

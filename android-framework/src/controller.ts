@@ -134,7 +134,7 @@ function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTo
                 if (node.imageOrSvgElement || imageElements.length) {
                     imageElements.forEach(image => height = Math.max(image.baselineHeight, height));
                     if (height > baselineHeight) {
-                        if (imageBaseline === undefined || height >= imageHeight) {
+                        if (!imageBaseline || height >= imageHeight) {
                             imageBaseline?.anchor(getBaselineAnchor(node), node.documentId);
                             imageHeight = height;
                             imageBaseline = node;
@@ -1512,7 +1512,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 setReadOnly(node);
                 break;
             case CONTAINER_ANDROID.EDIT:
-                if (node.companion === undefined && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
+                if (!node.companion && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
                         if (sibling?.visible && sibling.pageFlow) {
                             const element = <HTMLInputElement> node.element;
@@ -1780,7 +1780,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    if (nearest === undefined) {
+                    if (!nearest) {
                         nearest = adjacent;
                     }
                     if (nearest) {
@@ -1888,7 +1888,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const unbound: T[] = [];
         nodes.forEach(node => {
             const barrier = node.constraint.barrier;
-            if (barrier === undefined) {
+            if (!barrier) {
                 node.constraint.barrier = {};
             }
             else if (barrier[barrierDirection]) {
@@ -1960,7 +1960,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             else {
                                 const barrier = current.constraint.barrier;
-                                const documentId = barrier === undefined || !isString(barrier.bottom) ? this.addBarrier([current], 'bottom') : barrier.bottom;
+                                const documentId = !barrier || !isString(barrier.bottom) ? this.addBarrier([current], 'bottom') : barrier.bottom;
                                 if (documentId) {
                                     current.anchor('bottomTop', documentId);
                                 }
@@ -2284,7 +2284,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             if (previousRowLeft && !items.includes(previousRowLeft)) {
                                 baseWidth += previousRowLeft.linear.width;
                             }
-                            if (previousRowLeft === undefined || !item.plainText || multiline || !items.includes(previousRowLeft) || clearMap.has(item)) {
+                            if (!previousRowLeft || !item.plainText || multiline || !items.includes(previousRowLeft) || clearMap.has(item)) {
                                 baseWidth += bounds.width;
                             }
                             if (item.marginRight < 0) {
@@ -2343,7 +2343,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             previous.autoMargin.horizontal ||
                             Resource.checkPreIndent(previous))
                         {
-                            if (cleared && previousRowLeft === undefined) {
+                            if (cleared && !previousRowLeft) {
                                 item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1 });
                             }
                             if (leftForward) {
@@ -2751,7 +2751,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         setAlignTop(item);
                     }
                     else if (item.inlineVertical) {
-                        if (tallest === undefined || getMaxHeight(item) > getMaxHeight(tallest)) {
+                        if (!tallest || getMaxHeight(item) > getMaxHeight(tallest)) {
                             tallest = item;
                         }
                         switch (item.css('verticalAlign')) {
@@ -2788,9 +2788,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     break;
                                 }
                             case 'bottom':
-                                if (bottom === undefined) {
+                                if (!bottom) {
                                     children.forEach(child => {
-                                        if (!child.baseline && (bottom === undefined || child.linear.bottom > bottom.linear.bottom)) {
+                                        if (!child.baseline && (!bottom || child.linear.bottom > bottom.linear.bottom)) {
                                             bottom = child;
                                         }
                                     });
@@ -2923,7 +2923,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             chain.anchorStyle('vertical', 0, 'packed');
                         }
                     }
-                    else if (i === length - 1 && currentRowTop === undefined) {
+                    else if (i === length - 1 && !currentRowTop) {
                         chain.anchor('bottom', 'parent');
                     }
                     if (chain.autoMargin.leftRight) {
@@ -2991,7 +2991,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                         rowStart.delete('app', 'layout_constraintHorizontal_chainStyle', 'layout_constraintHorizontal_bias');
                                         rowStart.anchorDelete(chainEnd);
                                         rowEnd.anchorDelete(anchorEnd);
-                                        if (currentRowTop === undefined) {
+                                        if (!currentRowTop) {
                                             currentRowTop = chain;
                                         }
                                         break;
@@ -3000,7 +3000,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                         }
                     }
-                    if (tallest === undefined || chain.linear.height > tallest.linear.height) {
+                    if (!tallest || chain.linear.height > tallest.linear.height) {
                         tallest = chain;
                     }
                 }
@@ -3022,7 +3022,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         current.app('layout_constraintVertical_bias', '0');
                     }
                     else  {
-                        if (aboveRowEnd === undefined || currentRowTop === undefined) {
+                        if (!aboveRowEnd || !currentRowTop) {
                             aboveRowEnd = previousRow[0];
                             for (let k = 1; k < q; k++) {
                                 const item = previousRow[k];
@@ -3031,7 +3031,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                         }
-                        if (currentRowTop === undefined) {
+                        if (!currentRowTop) {
                             currentRowTop = partition[0];
                             let currentTop = currentRowTop.linear.top;
                             for (let k = 1; k < r; k++) {

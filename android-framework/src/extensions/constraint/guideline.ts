@@ -76,7 +76,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
             item.positioned = true;
         });
         if (circlePosition) {
-            if (anchor === undefined) {
+            if (!anchor) {
                 anchor = node.item(0) as T;
             }
             if (!anchor.anchored) {

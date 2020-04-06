@@ -8,7 +8,7 @@ type View = chrome.base.View;
 const $lib = squared.lib;
 
 const { COMPONENT, FILE } = $lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, objectMap, parseMimeType, resolvePath, spliceString, trimEnd } = $lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, objectMap, parseMimeType, resolvePath, safeNestedArray, spliceString, trimEnd } = $lib.util;
 
 const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
@@ -214,12 +214,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         if (this.userSettings.compressImages) {
             result.forEach(asset => {
                 if (Resource.canCompressImage(asset.filename)) {
-                    let compress = asset.compress;
-                    if (compress === undefined) {
-                        compress = [];
-                        asset.compress = compress;
-                    }
-                    compress.unshift({ format: 'png' });
+                    safeNestedArray(asset, 'compress').unshift({ format: 'png' });
                 }
             });
         }

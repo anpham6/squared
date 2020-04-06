@@ -718,7 +718,7 @@ export function sortNumber(values: number[], ascending = true) {
 
 export function safeNestedArray<T>(list: T[][] | ObjectMap<T[]>, index: number | string) {
     let result: T[] = list[index];
-    if (result === undefined) {
+    if (result === undefined || result === null) {
         result = [];
         list[index] = result;
     }
@@ -727,7 +727,7 @@ export function safeNestedArray<T>(list: T[][] | ObjectMap<T[]>, index: number |
 
 export function safeNestedMap<T>(map: ObjectMapNested<T>, index: number | string) {
     let result: ObjectMap<T> = map[index];
-    if (result === undefined) {
+    if (result === undefined || result === null) {
         result = {};
         map[index] = result;
     }

@@ -12,7 +12,7 @@ const $lib = squared.lib;
 const { USER_AGENT, isUserAgent, isWinEdge } = $lib.client;
 const { BOX_BORDER, BOX_PADDING, formatPX, getStyle, isLength, isPercent } = $lib.css;
 const { isTextNode, withinViewport } = $lib.dom;
-const { capitalize, convertFloat, flatArray, iterateArray, safeNestedArray } = $lib.util;
+const { capitalize, convertFloat, flatArray, isString, iterateArray, safeNestedArray } = $lib.util;
 const { actualClientRect, getElementCache, setElementCache } = $lib.session;
 const { pushIndent, pushIndentArray } = $lib.xml;
 
@@ -91,7 +91,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         else {
             styleMap = getElementCache(element, 'styleMap', sessionId) || {};
             const setBorderStyle = () => {
-                if (styleMap.border === undefined && checkBorderAttribute()) {
+                if (!isString(styleMap.border) && checkBorderAttribute()) {
                     const inputBorderColor = this.localSettings.style.inputBorderColor;
                     styleMap.border = `outset 1px ${inputBorderColor}`;
                     for (let i = 0; i < 4; i++) {
@@ -107,14 +107,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const setButtonStyle = (applied: boolean) => {
                 if (applied) {
                     const backgroundColor = styleMap.backgroundColor;
-                    if (backgroundColor === undefined || backgroundColor === 'initial') {
+                    if (!isString(backgroundColor) || backgroundColor === 'initial') {
                         styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
                     }
                 }
-                if (styleMap.textAlign === undefined) {
+                if (!isString(styleMap.textAlign)) {
                     styleMap.textAlign = 'center';
                 }
-                if (styleMap.padding === undefined && !BOX_PADDING.some(attr => !!styleMap[attr])) {
+                if (!isString(styleMap.padding) && !BOX_PADDING.some(attr => !!styleMap[attr])) {
                     styleMap.paddingTop = '2px';
                     styleMap.paddingRight = '6px';
                     styleMap.paddingBottom = '3px';
@@ -134,12 +134,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     case 'SELECT':
                     case 'BUTTON':
                     case 'TEXTAREA':
-                        if (styleMap.display === undefined) {
+                        if (!isString(styleMap.display)) {
                             styleMap.display = 'inline-block';
                         }
                         break;
                     case 'FIELDSET':
-                        if (styleMap.display === undefined) {
+                        if (!isString(styleMap.display)) {
                             styleMap.display = 'block';
                         }
                         break;
@@ -166,20 +166,20 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             case 'search':
                             case 'number':
                             case 'tel':
-                                if (styleMap.fontSize === undefined) {
+                                if (!isString(styleMap.fontSize)) {
                                     styleMap.fontSize = '13.3333px';
                                 }
                                 break;
                         }
                         break;
                     case 'CODE':
-                        if (styleMap.fontFamily === undefined) {
+                        if (!isString(styleMap.fontFamily)) {
                             styleMap.fontFamily = 'monospace';
                         }
                         break;
                     case 'LEGEND':
                     case 'RT':
-                        if (styleMap.display === undefined) {
+                        if (!isString(styleMap.display)) {
                             styleMap.display = 'block';
                         }
                         break;
@@ -227,31 +227,31 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 case 'BODY': {
                     const backgroundColor = styleMap.backgroundColor;
-                    if (backgroundColor === undefined || backgroundColor === 'initial') {
+                    if (!isString(backgroundColor) || backgroundColor === 'initial') {
                         styleMap.backgroundColor = 'rgb(255, 255, 255)';
                     }
                     break;
                 }
                 case 'FORM':
-                    if (styleMap.marginTop === undefined) {
+                    if (!isString(styleMap.marginTop)) {
                         styleMap.marginTop = '0px';
                     }
                     break;
                 case 'LI':
-                    if (styleMap.listStyleImage === undefined) {
+                    if (!isString(styleMap.listStyleImage)) {
                         const style = getStyle(element);
                         styleMap.listStyleImage = style.getPropertyValue('list-style-image');
                     }
                     break;
                 case 'IFRAME':
-                    if (styleMap.display === undefined) {
+                    if (!isString(styleMap.display)) {
                         styleMap.display = 'block';
                     }
                 case 'svg':
                 case 'IMG': {
                     const setDimension = (attr: string, opposing: string) => {
                         const dimension = styleMap[attr];
-                        if (dimension === undefined || dimension === 'auto') {
+                        if (!isString(dimension) || dimension === 'auto') {
                             const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                             if (match) {
                                 const value = match[1];
@@ -274,7 +274,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                                 const value = styleMap[opposing];
                                 if (value && isLength(value)) {
                                     const attrMax = `max${capitalize(attr)}`;
-                                    if (styleMap[attrMax] === undefined || !isPercent(attrMax)) {
+                                    if (!isString(styleMap[attrMax]) || !isPercent(attrMax)) {
                                         const image = this.application.resourceHandler.getImage((<HTMLImageElement> element).src);
                                         if (image && image.width > 0 && image.height > 0) {
                                             styleMap[attr] = formatPX(image[attr] * parseFloat(value) / image[opposing]);
@@ -493,7 +493,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         break;
                     }
                 }
-                if (parent === undefined) {
+                if (!parent) {
                     parent = documentRoot;
                 }
                 if (parent !== actualParent) {

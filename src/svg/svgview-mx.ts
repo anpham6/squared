@@ -95,7 +95,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         private _name?: string;
 
         public getTransforms(element?: SVGGraphicsElement) {
-            if (element === undefined) {
+            if (!element) {
                 element = this.element;
             }
             return SvgBuild.filterTransforms(TRANSFORM.parse(element) || SvgBuild.convertTransforms(element.transform.baseVal));
@@ -104,7 +104,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public getAnimations(element?: SVGGraphicsElement) {
             const result: SvgAnimation[] = [];
             if (!isWinEdge()) {
-                if (element === undefined) {
+                if (!element) {
                     element = this.element;
                 }
                 let id = 0;
@@ -281,7 +281,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             }
                             else if (attrMap['offset-rotate']) {
                                 const offsetRotate = attrMap['offset-rotate'];
-                                if (attrMap['offset-distance'] || attrMap['rotate'] === undefined) {
+                                if (attrMap['offset-distance'] || !attrMap['rotate']) {
                                     let rotate = getAttribute(element, 'offset-rotate');
                                     if (rotate === '' || rotate === 'auto') {
                                         rotate = 'auto 0deg';
@@ -312,7 +312,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                             }
                                         }
                                     }
-                                    if (attrMap['offset-distance'] === undefined) {
+                                    if (!attrMap['offset-distance']) {
                                         const animate = new SvgAnimateMotion(element);
                                         animate.duration = 0;
                                         animate.iterationCount = 1;

@@ -50,7 +50,7 @@ function checkTextAlign(value: string, ignoreStart: boolean) {
 function setAutoMargin(node: T, autoMargin: AutoMargin) {
     if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerMostWrapped.has('width', { type: CSS_UNIT.PERCENT, not: '100%' }))) {
         node.mergeGravity(
-            (node.blockWidth || !node.pageFlow) && node.outerWrapper === undefined ? 'gravity' : 'layout_gravity',
+            (node.blockWidth || !node.pageFlow) && !node.outerWrapper ? 'gravity' : 'layout_gravity',
             autoMargin.leftRight ? 'center_horizontal' : (autoMargin.left ? 'right' : 'left')
         );
         return true;
@@ -1067,7 +1067,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (renderParent.layoutFrame) {
                     if (!setAutoMargin(this, autoMargin)) {
-                        if (this.innerWrapped === undefined) {
+                        if (!this.innerWrapped) {
                             if (this.floating) {
                                 floating = this.float;
                             }
@@ -1149,7 +1149,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let left = 0;
                 for (let i = 0; i < 4; i++) {
                     const attr = attrs[i];
-                    let value: number = boxReset === undefined || boxReset[attr] === 0 ? this[attr] : 0;
+                    let value: number = boxReset[attr] === 0 ? this[attr] : 0;
                     if (value !== 0) {
                         switch (attr) {
                             case 'marginRight':
@@ -1669,7 +1669,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public removeTry(replacement?: T, beforeReplace?: () => void) {
-            if (beforeReplace === undefined && replacement) {
+            if (!beforeReplace && replacement) {
                 beforeReplace = () => replacement.anchorClear();
             }
             return super.removeTry(replacement, beforeReplace);

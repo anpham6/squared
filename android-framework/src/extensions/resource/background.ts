@@ -568,7 +568,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 if (outline && (drawOutline || emptyBackground)) {
                     const [outlineShapeData, outlineLayerListData] = this.getDrawableBorder(stored, outline, emptyBackground ? images : undefined, undefined, !emptyBackground);
                     if (outlineShapeData) {
-                        if (shapeData === undefined) {
+                        if (!shapeData) {
                             shapeData = outlineShapeData;
                         }
                     }
@@ -664,7 +664,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (borderAll) {
             border = borderData;
         }
-        if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || borderData === undefined && (corners || images?.length)) {
+        if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images?.length)) {
             const stroke = border ? getBorderStroke(border) : false;
             if (images?.length || indentWidth > 0 || borderOnly) {
                 layerListData = createLayerList(data, images, borderOnly);

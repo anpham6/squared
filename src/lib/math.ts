@@ -2,7 +2,7 @@ import { CHAR } from './regex';
 
 const REGEX_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
 const REGEX_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
-const REGEX_TRUNCATECACHE = {};
+const REGEX_TRUNCATECACHE: ObjectMap<RegExp> = {};
 
 function convertDecimalNotation(value: number) {
     const match = REGEX_DECIMALNOTATION.exec(value.toString());
@@ -71,7 +71,7 @@ export function truncateTrailingZero(value: string) {
 
 export function truncateString(value: string, precision = 3) {
     let pattern = REGEX_TRUNCATECACHE[precision];
-    if (pattern === undefined) {
+    if (!pattern) {
         pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
         REGEX_TRUNCATECACHE[precision] = pattern;
     }

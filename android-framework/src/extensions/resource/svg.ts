@@ -16,7 +16,7 @@ import LAYERLIST_TMPL from '../../template/layer-list';
 import SET_TMPL from '../../template/set';
 import VECTOR_TMPL from '../../template/vector';
 
-if (squared.svg === undefined) {
+if (!squared.svg) {
     Object.assign(squared, { svg: { lib: { constant: {}, util: {} } } });
 }
 
@@ -363,7 +363,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
                             break;
                         }
                     }
-                    if (item.origin === undefined && current.length === 1 && current[0].type === SVGTransform.SVG_TRANSFORM_SCALE) {
+                    if (!item.origin && current.length === 1 && current[0].type === SVGTransform.SVG_TRANSFORM_SCALE) {
                         current.push(item);
                         return;
                     }
@@ -447,7 +447,7 @@ function createAnimateFromTo(attributeName: string, delay: number, to: string, f
 
 function getAttributePropertyName(value: string, checkTransform = true) {
     let result: Undef<string[]> = ATTRIBUTE_ANDROID[value];
-    if (result === undefined && checkTransform && getTransformInitialValue(value)) {
+    if (!result && checkTransform && getTransformInitialValue(value)) {
         result = [value];
     }
     return result;
@@ -1054,13 +1054,13 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                     const companion = item.companion;
                                                     if (companion) {
                                                         if (companion.key <= 0) {
-                                                            if (companionBefore === undefined) {
+                                                            if (!companionBefore) {
                                                                 companionBefore = [];
                                                             }
                                                             companionBefore.push(propertyValue);
                                                         }
                                                         else if (companion.key > 0) {
-                                                            if (companionAfter === undefined) {
+                                                            if (!companionAfter) {
                                                                 companionAfter = [];
                                                             }
                                                             companionAfter.push(propertyValue);
@@ -1180,7 +1180,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 break;
                                         }
                                     }
-                                    if (item.keySplines === undefined) {
+                                    if (!item.keySplines) {
                                         const timingFunction = item.timingFunction;
                                         options.interpolator = isString(timingFunction) ? createPathInterpolator(timingFunction) : this.options.animateInterpolator;
                                     }
@@ -1395,7 +1395,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             for (const [name, target] of this._animateTarget.entries()) {
                 let objectAnimator: Undef<PropertyValue[]>;
                 const insertResetValue = (propertyName: string, valueTo: string, valueType: string, valueFrom?: string, startOffset?: string) => {
-                    if (objectAnimator === undefined) {
+                    if (!objectAnimator) {
                         objectAnimator = [];
                     }
                     objectAnimator.push(this.createPropertyValue(propertyName, valueTo, '0', valueType, valueFrom, startOffset));
@@ -1511,7 +1511,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         const pathArray: PathData[] = [];
                         if (parseFloat(itemPath.strokeWidth) > 0 && (itemPath.strokeDasharray || itemPath.strokeDashoffset)) {
                             const animateData = this._animateData.get(item.name);
-                            if (animateData === undefined || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
+                            if (!animateData || animateData.animate.every(animate => animate.attributeName.startsWith('stroke-dash'))) {
                                 const [animations, strokeDash, pathData, clipPathData] = itemPath.extractStrokeDash(animateData?.animate, floatPrecisionValue);
                                 if (strokeDash) {
                                     if (animateData) {
@@ -1673,7 +1673,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         break;
                     case 'fill':
                         attr = 'fillColor';
-                        if (value !== 'none' && result['aapt:attr'] === undefined) {
+                        if (value !== 'none' && !result['aapt:attr']) {
                             const colorName = Resource.addColor(value);
                             if (colorName !== '') {
                                 value = `@color/${colorName}`;

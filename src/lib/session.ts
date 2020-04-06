@@ -33,7 +33,7 @@ export function actualTextRangeRect(element: Element, sessionId?: string) {
                     const display = style.getPropertyValue('display');
                     if (display !== 'none') {
                         item.style.display = 'none';
-                        if (hidden === undefined) {
+                        if (!hidden) {
                             hidden = [];
                         }
                         hidden.push([item, display]);

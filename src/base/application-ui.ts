@@ -176,7 +176,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 node.render(parent);
                 this.addLayoutTemplate(parent, node, template);
             }
-            else if (node.renderParent === undefined) {
+            else if (!node.renderParent) {
                 cache.remove(node);
             }
         }
@@ -423,7 +423,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let resetBounds = false;
             if (node.documentBody) {
                 parent.naturalChild = true;
+                parent.setCacheValue('naturalElement', true);
                 parent.visible = false;
+                parent.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                 parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
                 cache.append(parent);
             }
@@ -744,7 +746,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let styleMap: StringMap = getElementCache(element, `styleMap${pseudoElt}`, sessionId);
         let nested = 0;
         if (element.tagName === 'Q') {
-            if (styleMap === undefined) {
+            if (!styleMap) {
                 styleMap = {};
                 setElementCache(element, `styleMap${pseudoElt}`, sessionId, styleMap);
             }
@@ -851,7 +853,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 const style = getStyle(element);
                 TEXT_STYLE.forEach(attr => {
-                    if (styleMap[attr] === undefined) {
+                    if (!isString(styleMap[attr])) {
                         styleMap[attr] = style[attr];
                     }
                 });
@@ -967,7 +969,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                             const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'), counterName);
                                             if (counterReset !== undefined) {
-                                                if (lastResetElement === undefined) {
+                                                if (!lastResetElement) {
                                                     counter += counterReset;
                                                 }
                                                 lastResetElement = current;
@@ -1004,7 +1006,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     }
                 }
-                if (styleMap.display === undefined) {
+                if (!isString(styleMap.display)) {
                     styleMap.display = 'inline';
                 }
                 if (content || value === '""') {
@@ -1016,10 +1018,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         (<HTMLImageElement> pseudoElement).src = content;
                         const image = this.resourceHandler.getImage(content);
                         if (image) {
-                            if (styleMap.width === undefined && image.width > 0) {
+                            if (!isString(styleMap.width) && image.width > 0) {
                                 styleMap.width = formatPX(image.width);
                             }
-                            if (styleMap.height === undefined && image.height > 0) {
+                            if (!isString(styleMap.height) && image.height > 0) {
                                 styleMap.height = formatPX(image.height);
                             }
                         }
@@ -1342,7 +1344,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             for (let j = 0; j < q; j++) {
                                 const ext = combined[j];
                                 if (ext.is(nodeY)) {
-                                    if (ext.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(ext))) {
+                                    if (ext.condition(nodeY, parentY) && (!descendant || !descendant.includes(ext))) {
                                         const result = ext.processNode(nodeY, parentY);
                                         if (result) {
                                             const { output, renderAs, outputAs } = result;
@@ -1406,10 +1408,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 const outerA = a.outerWrapper;
                 const outerB = b.outerWrapper;
-                if (a === outerB || outerA === undefined && outerB) {
+                if (a === outerB || !outerA && outerB) {
                     return -1;
                 }
-                else if (b === outerA || outerB === undefined && outerA) {
+                else if (b === outerA || !outerB && outerA) {
                     return 1;
                 }
                 const groupA = a.nodeGroup;
@@ -1514,13 +1516,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             else if (float === 'left') {
-                if (leftBelow === undefined) {
+                if (!leftBelow) {
                     leftBelow = [];
                 }
                 leftBelow.push(node);
             }
             else if (float === 'right') {
-                if (rightBelow === undefined) {
+                if (!rightBelow) {
                     rightBelow = [];
                 }
                 rightBelow.push(node);

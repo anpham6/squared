@@ -32,7 +32,7 @@ const REGEX_DATAURI = new RegExp(`(url\\("(${STRING.DATAURI})"\\)),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
     const image = images.get(uri);
-    if (image === undefined || width > 0 && height > 0 || image.width === 0 || image.height === 0) {
+    if (width > 0 && height > 0 || !image || image.width === 0 || image.height === 0) {
         images.set(uri, { width, height, uri });
     }
 }
@@ -503,7 +503,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             else if (this.userSettings.preloadImages) {
                                 const uri = resolvePath(match[4], styleSheetHref);
                                 if (uri !== '') {
-                                    if (resourceHandler.getImage(uri) === undefined) {
+                                    if (!resourceHandler.getImage(uri)) {
                                         addImageSrc(uri);
                                     }
                                     result = result.replace(match[1], `url("${uri}")`);

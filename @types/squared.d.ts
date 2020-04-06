@@ -734,10 +734,10 @@ declare namespace base {
 
 declare namespace lib {
     namespace base {
-        interface ContainerCascadeOptions<T> {
+        interface ContainerOptions<T> {
             error?: IteratorPredicate<T, boolean>;
         }
-        interface ContainerFindOptions<T> extends ContainerCascadeOptions<T> {
+        interface ContainerFindOptions<T> extends ContainerOptions<T> {
             cascade?: boolean;
         }
 
@@ -755,10 +755,6 @@ declare namespace lib {
             clear(): this;
             each(predicate: IteratorPredicate<T, void>): this;
             iterate(predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
-            sort(predicate: (a: T, b: T) => number): this;
-            concat(list: T[]): this;
-            indexOf(item: T): number;
-            findIndex(predicate: IteratorPredicate<T, boolean>, thisArg?: any): number;
             join(...other: Container<T>[]): this;
             every(predicate: IteratorPredicate<T, boolean>): boolean;
             same(predicate: IteratorPredicate<T, any>): boolean;
@@ -767,9 +763,13 @@ declare namespace lib {
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             map<U>(predicate: IteratorPredicate<T, U>): U[];
             flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
+            findIndex(predicate: IteratorPredicate<T, boolean>): number;
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
             some(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): boolean;
-            cascade(predicate?: (item: T) => boolean, options?: ContainerCascadeOptions<T>): T[];
+            cascade(predicate?: (item: T) => boolean, options?: ContainerOptions<T>): T[];
+            sort(predicate: (a: T, b: T) => number): this;
+            concat(list: T[]): this;
+            indexOf(item: T): number;
         }
 
         class Container<T> implements Container<T> {
@@ -987,7 +987,6 @@ declare namespace lib {
         };
         const FILE: {
             NAME: RegExp;
-            UNC: RegExp;
             SVG: RegExp;
         };
         const CSS: {
