@@ -178,10 +178,7 @@ module.exports = {
         }],
         "prefer-arrow-callback": "error",
         "object-shorthand": "error",
-        "one-var": [
-            "error",
-            "never"
-        ],
+        "one-var": "off",
         "use-isnan": "error",
         "id-match": "error",
         "new-parens": "error",

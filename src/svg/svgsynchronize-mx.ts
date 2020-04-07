@@ -79,17 +79,20 @@ function convertToFraction(values: TimelineEntries) {
     const previous = new Set<number>();
     const length = values.length;
     const timeTotal = values[length - 1][0];
-    for (let i = 0; i < length; i++) {
-        const item = values[i];
+    let i = 0;
+    while (i < length) {
+        const item = values[i++];
         let fraction = item[0] / timeTotal;
         if (fraction > 0) {
-            for (let j = 7; ; j++) {
+            let j = 7;
+            do {
                 const value = parseFloat(fraction.toString().substring(0, j));
                 if (!previous.has(value)) {
                     fraction = value;
                     break;
                 }
             }
+            while (++j);
         }
         item[0] = fraction;
         previous.add(fraction);
@@ -153,12 +156,14 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Undef<SvgC
     }
     const transformOrigin = TRANSFORM.origin(path.element);
     const length = entries.length;
-    for (let i = 0; i < length; i++) {
-        const [key, data] = entries[i];
+    let i = 0;
+    while (i < length) {
+        const [key, data] = entries[i++];
         const values: AnimateValue[] = [];
         const q = baseVal.length;
-        for (let j = 0; j < q; j++) {
-            const attr = baseVal[j];
+        let j = 0;
+        while (j < q) {
+            const attr = baseVal[j++];
             let value = data.get(attr);
             if (value === undefined) {
                 value = getForwardValue(forwardMap[attr], key) ?? path.getBaseValue(attr);
@@ -237,8 +242,9 @@ function getRectPoints(values: number[]): Point[] {
 function createKeyTimeMap(map: TimelineMap, keyTimes: number[], forwardMap: ForwardMap) {
     const result = new Map<number, Map<string, AnimateValue>>();
     const length = keyTimes.length;
-    for (let i = 0; i < length; i++) {
-        const keyTime = keyTimes[i];
+    let i = 0;
+    while (i < length) {
+        const keyTime = keyTimes[i++];
         const values = new Map<string, AnimateValue>();
         for (const attr in map) {
             let value: Undef<AnimateValue> = map[attr].get(keyTime);
@@ -278,11 +284,12 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
                     if (!item.accumulateSum) {
                         iteration = 0;
                     }
-                    for (let i = 0; i < length; i++) {
-                        result[i] += baseArray[i];
+                    let i = 0;
+                    while (i < length) {
+                        result[i] += baseArray[i++];
                     }
                     const q = valuesArray.length;
-                    for (let i = 0; i < iteration; i++) {
+                    for (i = 0; i < iteration; i++) {
                         for (let j = 0; j < q; j++) {
                             const value = valuesArray[j];
                             const r = value.length;
@@ -332,17 +339,20 @@ function getItemSplitValue(fraction: number, previousFraction: number, previousV
             const length = previousArray.length;
             if (length === nextArray.length) {
                 const result: number[] = [];
-                for (let i = 0; i < length; i++) {
-                    result.push(getItemSplitValue(fraction, previousFraction, previousArray[i], nextFraction, nextArray[i]) as number);
+                let i = 0;
+                while (i < length) {
+                    result.push(getItemSplitValue(fraction, previousFraction, previousArray[i], nextFraction, nextArray[i++]) as number);
                 }
                 return result.join(' ');
             }
         }
         else if (Array.isArray(previousValue) && Array.isArray(nextValue)) {
             const result: Point[] = [];
-            for (let i = 0; i < Math.min(previousValue.length, nextValue.length); i++) {
+            const length = Math.min(previousValue.length, nextValue.length);
+            let i = 0;
+            while (i < length) {
                 const previous = previousValue[i];
-                const next = nextValue[i];
+                const next = nextValue[i++];
                 result.push({
                     x: getItemSplitValue(fraction, previousFraction, previous.x, nextFraction, next.x) as number,
                     y: getItemSplitValue(fraction, previousFraction, previous.y, nextFraction, next.y) as number
@@ -415,7 +425,7 @@ function getIntermediateSplitValue(subTime: number, splitTime: number, item: Svg
 }
 
 function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: ForwardMap, baseValueMap: ObjectMap<AnimateValue>, interval: number, item: SvgAnimate, keyTimes: number[], values: string[], keySplines: Undef<string[]>, baseValue: AnimateValue, queued: SvgAnimate[], evaluateStart: boolean): [number[], string[], string[]] {
-    const length = values.length;
+    let length = values.length;
     if (!keySplines) {
         keySplines = new Array(length - 1).fill('');
     }
@@ -426,82 +436,86 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
     const finalValue = parseFloat(values[evaluateStart ? 0 : length - 1]);
     let maxTime = startTime;
     complete: {
-        for (let i = 0; i < queued.length; i++) {
+        length = queued.length;
+        for (let i = 0; i < length; i++) {
             const sub = queued[i];
             if (sub !== item) {
                 const totalDuration = sub.getTotalDuration();
                 sub.addState(SYNCHRONIZE_STATE.INTERRUPTED);
                 if (totalDuration > maxTime) {
+                    const { delay: subDelay, duration: subDuration } = sub;
+                    const [subKeyTimes, subValues, subKeySplines] = cloneKeyTimes(sub);
+                    setStartItemValues(map, forwardMap, baseValueMap, sub, baseValue, subKeyTimes, subValues, subKeySplines);
+                    let nextStartTime = intervalEndTime;
                     partialEnd: {
-                        const { delay: subDelay, duration: subDuration } = sub;
-                        const [subKeyTimes, subValues, subKeySplines] = cloneKeyTimes(sub);
-                        setStartItemValues(map, forwardMap, baseValueMap, sub, baseValue, subKeyTimes, subValues, subKeySplines);
-                        let nextStartTime = intervalEndTime;
-                        for (let j = getStartIteration(maxTime, subDelay, subDuration), joined = false; ; j++) {
-                            const insertSubstituteTimeValue = (subTime: number, splitTime: number, index: number) => {
-                                let resultTime: number;
-                                let splitValue: Undef<string>;
-                                if (evaluateStart) {
-                                    resultTime = !joined && maxTime === startTime ? 0 : (subTime % duration) / duration;
-                                }
-                                else {
-                                    resultTime = splitTime === intervalEndTime ? 1 : (splitTime % duration) / duration;
-                                }
-                                if (subTime === splitTime) {
-                                    splitValue = convertToString(getItemValue(sub, subValues, j, index, baseValue));
-                                }
-                                else {
-                                    splitValue = getIntermediateSplitValue(subTime, splitTime, sub, subKeyTimes, subValues, subDuration, j, baseValue);
-                                }
-                                if (splitValue) {
-                                    if (resultTime > 0) {
-                                        splitValue = Math.round((parseFloat(splitValue) + finalValue) / 2).toString();
-                                    }
-                                    const q = keyTimes.length;
-                                    if (!(resultTime === keyTimes[q - 1] && splitValue === values[q - 1])) {
-                                        const keySpline = joined || resultTime === 0 ? subKeySplines?.[index] || sub.timingFunction : '';
-                                        if (evaluateStart) {
-                                            if (!joined && resultTime > 0 && subTime === maxTime) {
-                                                resultTime += 1 / 1000;
-                                            }
-                                            for (let l = 0; l < q; l++) {
-                                                if (resultTime <= keyTimes[l]) {
-                                                    if (l === 0 || resultTime === 0) {
-                                                        keyTimes.unshift(resultTime);
-                                                        values.unshift(splitValue);
-                                                        (keySplines as string[]).unshift(keySpline);
-                                                    }
-                                                    else {
-                                                        keyTimes.splice(l, 0, resultTime);
-                                                        values.splice(l, 0, splitValue);
-                                                        (keySplines as string[]).splice(l, 0, keySpline);
-                                                    }
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                        else {
-                                            if ((splitTime === totalDuration || splitTime === intervalEndTime) && splitTime < itemEndTime) {
-                                                resultTime -= 1 / 1000;
-                                            }
-                                            keyTimes.push(resultTime);
-                                            values.push(splitValue);
-                                            (keySplines as string[]).push(keySpline);
-                                        }
-                                    }
-                                }
-                            };
-                            const subLength = subKeyTimes.length;
+                        let joined = false;
+                        let j = getStartIteration(maxTime, subDelay, subDuration) - 1;
+                        const insertSubstituteTimeValue = (subTime: number, splitTime: number, index: number) => {
+                            let resultTime: number;
+                            let splitValue: Undef<string>;
                             if (evaluateStart) {
-                                for (let k = i + 1; k < queued.length; k++) {
-                                    const next = queued[k];
+                                resultTime = !joined && maxTime === startTime ? 0 : (subTime % duration) / duration;
+                            }
+                            else {
+                                resultTime = splitTime === intervalEndTime ? 1 : (splitTime % duration) / duration;
+                            }
+                            if (subTime === splitTime) {
+                                splitValue = convertToString(getItemValue(sub, subValues, j, index, baseValue));
+                            }
+                            else {
+                                splitValue = getIntermediateSplitValue(subTime, splitTime, sub, subKeyTimes, subValues, subDuration, j, baseValue);
+                            }
+                            if (splitValue) {
+                                if (resultTime > 0) {
+                                    splitValue = Math.round((parseFloat(splitValue) + finalValue) / 2).toString();
+                                }
+                                const q = keyTimes.length;
+                                if (!(resultTime === keyTimes[q - 1] && splitValue === values[q - 1])) {
+                                    const keySpline = joined || resultTime === 0 ? subKeySplines?.[index] || sub.timingFunction : '';
+                                    if (evaluateStart) {
+                                        if (!joined && resultTime > 0 && subTime === maxTime) {
+                                            resultTime += 1 / 1000;
+                                        }
+                                        for (let l = 0; l < q; l++) {
+                                            if (resultTime <= keyTimes[l]) {
+                                                if (l === 0 || resultTime === 0) {
+                                                    keyTimes.unshift(resultTime);
+                                                    values.unshift(splitValue);
+                                                    (keySplines as string[]).unshift(keySpline);
+                                                }
+                                                else {
+                                                    keyTimes.splice(l, 0, resultTime);
+                                                    values.splice(l, 0, splitValue);
+                                                    (keySplines as string[]).splice(l, 0, keySpline);
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    else {
+                                        if ((splitTime === totalDuration || splitTime === intervalEndTime) && splitTime < itemEndTime) {
+                                            resultTime -= 1 / 1000;
+                                        }
+                                        keyTimes.push(resultTime);
+                                        values.push(splitValue);
+                                        (keySplines as string[]).push(keySpline);
+                                    }
+                                }
+                            }
+                        };
+                        do {
+                            if (evaluateStart) {
+                                let k = i + 1;
+                                while (k < length) {
+                                    const next = queued[k++];
                                     if (next.delay > maxTime) {
                                         nextStartTime = next.delay;
                                         break;
                                     }
                                 }
                             }
-                            for (let l = 0; l < subLength; l++) {
+                            const q = subKeyTimes.length;
+                            for (let l = 0; l < q; l++) {
                                 const time = getItemTime(subDelay, subDuration, subKeyTimes, j, l);
                                 if (time >= maxTime) {
                                     if (!joined) {
@@ -532,6 +546,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                                 }
                             }
                         }
+                        while (++j);
                     }
                 }
             }
@@ -888,9 +903,10 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         }
                     }
                     const removeable: SvgAnimation[] = [];
-                    for (let i = 0; i < length; i++) {
+                    let i = 0;
+                    while (i < length) {
                         const item = <SvgAnimate> mergeable[i];
-                        if (excluded[i]) {
+                        if (excluded[i++]) {
                             if (!item.fillReplace) {
                                 item.setterType = true;
                                 insertSetter(item);
@@ -931,7 +947,8 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                     for (const attr in groupName) {
                         const groupDelay = new Map<number, SvgAnimate[]>();
                         const groupData = groupName[attr];
-                        for (const [delay, group] of groupData.entries()) {
+                        for (const delay of sortNumber(Array.from(groupData.keys()))) {
+                            const group = <SvgAnimate[]> groupData.get(delay);
                             group.forEach(item => repeatingDuration = Math.max(repeatingDuration, item.getTotalDuration(true)));
                             groupDelay.set(delay, group.reverse());
                         }
@@ -1064,14 +1081,16 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                             setFreezeValue(previous.getTotalDuration(), previous.valueTo, previous.type, previous);
                                             if (delayIndex !== undefined && itemIndex !== undefined) {
                                                 const length = groupDelay.length;
-                                                for (let i = delayIndex; i < length; i++) {
+                                                let i = delayIndex;
+                                                while (i < length) {
                                                     if (i !== delayIndex) {
                                                         itemIndex = -1;
                                                     }
-                                                    const data = groupData[i];
+                                                    const data = groupData[i++];
                                                     const q = data.length;
-                                                    for (let j = itemIndex + 1; j < q; j++) {
-                                                        const next = data[j];
+                                                    let j = itemIndex + 1;
+                                                    while (j < q) {
+                                                        const next = data[j++];
                                                         if (previous.group.id > next.group.id) {
                                                             next.addState(SYNCHRONIZE_STATE.COMPLETE);
                                                         }
@@ -1400,8 +1419,9 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                     if (evaluateEnd) {
                                                         if (item.getIntervalEndTime(actualMaxTime) < maxThreadTime && (incomplete.length || j < r - 1)) {
                                                             const pending = incomplete.filter(previous => !!previous.animationElement);
-                                                            for (let l = j + 1; l < r; l++) {
-                                                                const previous = data[l];
+                                                            let l = j + 1;
+                                                            while (l < r) {
+                                                                const previous = data[l++];
                                                                 if (previous.animationElement) {
                                                                     if (!pending.includes(previous)) {
                                                                         pending.push(previous);
@@ -1828,8 +1848,9 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                 const startTime: number = baseMap.keys().next().value;
                                 const startValue: AnimateValue = baseMap.values().next().value;
                                 const length = keyTimes.length;
-                                for (let i = 0; i < length; i++) {
-                                    const keyTime = keyTimes[i];
+                                let i = 0;
+                                while (i < length) {
+                                    const keyTime = keyTimes[i++];
                                     if (keyTime <= repeatingMaxTime[attr]) {
                                         if (!baseMap.has(keyTime)) {
                                             if (intervalMap.paused(attr, keyTime)) {
@@ -2040,8 +2061,9 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                 object = new SvgAnimate();
                                                 object.attributeName = 'd';
                                                 const q = pathData.length;
-                                                for (let j = 0; j < q; j++) {
-                                                    const item = pathData[j];
+                                                let j = 0;
+                                                while (j < q) {
+                                                    const item = pathData[j++];
                                                     object.keyTimes.push(item.key);
                                                     object.values.push(item.value.toString());
                                                 }

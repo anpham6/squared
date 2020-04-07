@@ -19,7 +19,7 @@ const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
 const REGEX_CACHE: ObjectMap<RegExp> = {
     polygon: /polygon\(([^)]+)\)/,
     inset: new RegExp(`inset\\(${PERCENTAGE}\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\)`),
-    circle: new RegExp(`circle\\(${PERCENTAGE}(?:\\s+at\\s+PERCENTAGE}\\s+${PERCENTAGE})?\\)`),
+    circle: new RegExp(`circle\\(${PERCENTAGE}(?:\\s+at\\s+${PERCENTAGE}\\s+${PERCENTAGE})?\\)`),
     ellipse: new RegExp(`ellipse\\(${PERCENTAGE}\\s+${PERCENTAGE}(?:\\s+at\\s+${PERCENTAGE}\\s+${PERCENTAGE})?\\)`)
 };
 

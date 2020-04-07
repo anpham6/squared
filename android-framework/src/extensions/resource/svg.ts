@@ -313,7 +313,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
             host.push(current.slice(0));
             current.length = 0;
         };
-        for (let i = 1; i < items.length; i++) {
+        for (let i = 1; i < items.length; ++i) {
             const itemA = items[i];
             const itemB = items[i - 1];
             if (itemA.type === itemB.type) {
@@ -814,8 +814,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const [companions, animations] = partitionArray(group.animate, child => 'companion' in child);
                 const targetSetTemplate: SetTemplate = { set: [], objectAnimator: [] };
                 const length = animations.length;
-                for (let i = 0; i < length; i++) {
-                    const item = animations[i];
+                let i = 0;
+                while (i < length) {
+                    const item = animations[i++];
                     if (item.setterType) {
                         if (ATTRIBUTE_ANDROID[item.attributeName] && isString(item.to)) {
                             if (item.fillReplace && item.duration > 0) {
@@ -832,8 +833,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             children.sort((a, b) => (<AnimateCompanion> a.companion).key >= (<AnimateCompanion> b.companion).key ? 1 : 0);
                             const sequentially: SvgAnimation[] = [];
                             const after: SvgAnimation[] = [];
-                            const r = children.length;
-                            for (let j = 0; j < r; j++) {
+                            const q = children.length;
+                            for (let j = 0; j < q; ++j) {
                                 const child = children[j];
                                 if ((<AnimateCompanion> child.companion).key <= 0) {
                                     sequentially.push(child);
@@ -1034,21 +1035,21 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         if (values.length === q && !values.some(value => value === '')) {
                                             let companionBefore: Undef<PropertyValue[]>;
                                             let companionAfter: Undef<PropertyValue[]>;
-                                            for (let i = 0; i < q; i++) {
+                                            for (let j = 0; j < q; ++j) {
                                                 let valueFrom: Undef<string>;
                                                 if (valueType === 'pathType') {
-                                                    valueFrom = values[i];
+                                                    valueFrom = values[j];
                                                 }
                                                 else if (requireBefore) {
                                                     const baseValue = item.baseValue;
                                                     if (baseValue) {
-                                                        valueFrom = convertValueType(item, baseValue.trim().split(' ')[i]);
+                                                        valueFrom = convertValueType(item, baseValue.trim().split(' ')[j]);
                                                     }
                                                 }
-                                                const propertyValue = this.createPropertyValue(propertyNames[i], values[i], '1', valueType, valueFrom, item.delay > 0 ? item.delay.toString() : '');
+                                                const propertyValue = this.createPropertyValue(propertyNames[j], values[j], '1', valueType, valueFrom, item.delay > 0 ? item.delay.toString() : '');
                                                 if (index > 1) {
                                                     customAnimator.push(propertyValue);
-                                                    insertFillAfter(propertyNames[i], undefined, index > 1 ? item.duration : 0);
+                                                    insertFillAfter(propertyNames[j], undefined, index > 1 ? item.duration : 0);
                                                 }
                                                 else {
                                                     const companion = item.companion;
@@ -1128,8 +1129,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                             const q = values.length;
                                             if (rotateValues?.length === q) {
                                                 propertyNames.push('rotation');
-                                                for (let i = 0; i < q; i++) {
-                                                    values[i].push(rotateValues[i]);
+                                                let j = 0;
+                                                while (j < q) {
+                                                    values[j].push(rotateValues[j++]);
                                                 }
                                             }
                                         }
@@ -1171,9 +1173,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                         }
                                                     }
                                                     const q = values.length;
-                                                    for (let i = 0; i < q; i++) {
-                                                        if (values[i] !== '') {
-                                                            values[i] = getColorValue(values[i]);
+                                                    for (let j = 0; j < q; ++j) {
+                                                        if (values[j] !== '') {
+                                                            values[j] = getColorValue(values[j]);
                                                         }
                                                     }
                                                 }
@@ -1189,26 +1191,26 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         const q = propertyNames.length;
                                         const r = keyTimes.length;
                                         const keyName = syncData ? syncData.key + syncData.value : (index !== 0 || q > 1 ? JSON.stringify(options) : '');
-                                        for (let i = 0; i < q; i++) {
-                                            const propertyName = propertyNames[i];
+                                        for (let j = 0; j < q; ++j) {
+                                            const propertyName = propertyNames[j];
                                             if (resetBefore && beforeValues) {
-                                                resetBeforeValue(propertyName, beforeValues[i]);
+                                                resetBeforeValue(propertyName, beforeValues[j]);
                                             }
                                             if (useKeyFrames && r > 1) {
                                                 if (supportedKeyFrames && valueType !== 'pathType') {
                                                     if (!resetBefore && requireBefore && beforeValues) {
-                                                        resetBeforeValue(propertyName, beforeValues[i]);
+                                                        resetBeforeValue(propertyName, beforeValues[j]);
                                                     }
                                                     const propertyValuesHolder = animatorMap.get(keyName) || [];
                                                     const keyframe: KeyFrame[] = [];
-                                                    for (let j = 0; j < r; j++) {
-                                                        let value = getPropertyValue(values, j, i, true);
+                                                    for (let k = 0; k < r; ++k) {
+                                                        let value = getPropertyValue(values, k, j, true);
                                                         if (value && valueType === 'floatType') {
                                                             value = truncate(value, precision);
                                                         }
                                                         keyframe.push({
-                                                            interpolator: j > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, j - 1) : '',
-                                                            fraction: keyTimes[j] === 0 && value === '' ? '' : truncate(keyTimes[j], floatPrecisionKeyTime),
+                                                            interpolator: k > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, k - 1) : '',
+                                                            fraction: keyTimes[k] === 0 && value === '' ? '' : truncate(keyTimes[k], floatPrecisionKeyTime),
                                                             value
                                                         });
                                                     }
@@ -1224,20 +1226,20 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 else {
                                                     ordering = 'sequentially';
                                                     const translateData = getFillData('sequentially');
-                                                    for (let j = 0; j < r; j++) {
-                                                        const keyTime = keyTimes[j];
+                                                    for (let k = 0; k < r; ++k) {
+                                                        const keyTime = keyTimes[k];
                                                         const propertyOptions: PropertyValue = {
                                                             ...options,
                                                             propertyName,
-                                                            startOffset: j === 0 ? (item.delay + (keyTime > 0 ? Math.floor(keyTime * item.duration) : 0)).toString() : '',
+                                                            startOffset: k === 0 ? (item.delay + (keyTime > 0 ? Math.floor(keyTime * item.duration) : 0)).toString() : '',
                                                             propertyValuesHolder: false
                                                         };
-                                                        let valueTo = getPropertyValue(values, j, i, false, valueType === 'pathType' ? group.pathData : item.baseValue);
+                                                        let valueTo = getPropertyValue(values, k, j, false, valueType === 'pathType' ? group.pathData : item.baseValue);
                                                         if (valueTo) {
                                                             let duration: number;
-                                                            if (j === 0) {
+                                                            if (k === 0) {
                                                                 if (!checkBefore && requireBefore && beforeValues) {
-                                                                    propertyOptions.valueFrom = beforeValues[i];
+                                                                    propertyOptions.valueFrom = beforeValues[j];
                                                                 }
                                                                 else if (valueType === 'pathType') {
                                                                     propertyOptions.valueFrom = group.pathData || values[0].toString();
@@ -1248,13 +1250,13 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                 duration = 0;
                                                             }
                                                             else {
-                                                                propertyOptions.valueFrom = getPropertyValue(values, j - 1, i).toString();
-                                                                duration = Math.floor((keyTime - keyTimes[j - 1]) * item.duration);
+                                                                propertyOptions.valueFrom = getPropertyValue(values, k - 1, j).toString();
+                                                                duration = Math.floor((keyTime - keyTimes[k - 1]) * item.duration);
                                                             }
                                                             if (valueType === 'floatType') {
                                                                 valueTo = truncate(valueTo, precision);
                                                             }
-                                                            const origin = transformOrigin?.[j];
+                                                            const origin = transformOrigin?.[k];
                                                             if (origin) {
                                                                 let direction: Undef<string>;
                                                                 let translateTo = 0;
@@ -1272,8 +1274,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                                     translateData.objectAnimator.push(valueData);
                                                                 }
                                                             }
-                                                            if (j > 0) {
-                                                                propertyOptions.interpolator = getPathInterpolator(item.keySplines, j - 1);
+                                                            if (k > 0) {
+                                                                propertyOptions.interpolator = getPathInterpolator(item.keySplines, k - 1);
                                                             }
                                                             propertyOptions.duration = duration.toString();
                                                             propertyOptions.valueTo = valueTo;
@@ -1294,9 +1296,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 };
                                                 const s = values.length;
                                                 if (Array.isArray(values[0])) {
-                                                    const valueTo = values[s - 1][i];
+                                                    const valueTo = values[s - 1][j];
                                                     if (s > 1) {
-                                                        const from = values[0][i];
+                                                        const from = values[0][j];
                                                         if (from !== valueTo) {
                                                             propertyOptions.valueFrom = from.toString();
                                                         }
@@ -1310,7 +1312,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                         propertyOptions.valueTo = values[s - 1].toString();
                                                     }
                                                     else {
-                                                        valueFrom = item.from || (!checkBefore && requireBefore && beforeValues ? beforeValues[i] : '');
+                                                        valueFrom = item.from || (!checkBefore && requireBefore && beforeValues ? beforeValues[j] : '');
                                                         propertyOptions.valueTo = item.to;
                                                     }
                                                     if (valueType === 'pathType') {
@@ -1529,7 +1531,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         strokeData['clip-path'] = [{ pathData: clipPathData }];
                                     }
                                     const q = strokeDash.length;
-                                    for (let i = 0; i < q; i++) {
+                                    for (let i = 0; i < q; ++i) {
                                         const strokePath = i === 0 ? path : { ...path };
                                         const dash = strokeDash[i];
                                         strokePath.name = `${name}_${i}`;
@@ -1814,18 +1816,20 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             }
         });
         const replaceData = Array.from(fillReplaceMap.values()).sort((a, b) => a.time < b.time ? -1 : 1);
-        const q = replaceData.length;
-        for (let i = 0; i < q; i++) {
+        const length = replaceData.length;
+        for (let i = 0; i < length; ++i) {
             const item = replaceData[i];
             if (!item.reset || item.to !== previousPathData) {
                 let valid = true;
                 if (item.reset) {
                     invalid: {
-                        for (let j = 0; j < i; j++) {
-                            const previous = replaceData[j];
+                        let j = 0;
+                        while (j < i) {
+                            const previous = replaceData[j++];
                             if (!previous.reset) {
-                                for (let k = i + 1; k < q; k++) {
-                                    switch (replaceData[k].index) {
+                                let k = i + 1;
+                                while (k < length) {
+                                    switch (replaceData[k++].index) {
                                         case previous.index:
                                             valid = false;
                                         case item.index:
@@ -1839,12 +1843,13 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 else {
                     const itemTotal: number[] = [];
                     const previousType = new Set<number>();
-                    for (let j = 0; j < i; j++) {
-                        const previous = replaceData[j];
+                    let j = 0;
+                    while (j < i) {
+                        const previous = replaceData[j++];
                         itemTotal[previous.index] = itemTotal[previous.index] ? 2 : 1;
                     }
-                    const r = itemTotal.length;
-                    for (let j = 0; j < r; j++) {
+                    const q = itemTotal.length;
+                    for (j = 0; j < q; ++j) {
                         if (itemTotal[j] === 1) {
                             const animate = replaceData.find(data => data.index === j && 'animate' in data)?.animate;
                             if (animate) {
@@ -1856,9 +1861,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         const propertyName = getTransformPropertyName(type);
                         if (propertyName) {
                             const initialValue = TRANSFORM.typeAsValue(type).split(' ');
-                            const s = initialValue.length;
-                            for (let j = 0; j < s; j++) {
-                                transformResult.push(createAnimateFromTo(propertyName[j], item.time, initialValue[j], ''));
+                            const r = initialValue.length;
+                            j = 0;
+                            while (j < r) {
+                                transformResult.push(createAnimateFromTo(propertyName[j], item.time, initialValue[j++], ''));
                             }
                         }
                     });

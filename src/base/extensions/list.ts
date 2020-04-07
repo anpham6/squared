@@ -34,7 +34,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
             let blockAlternate = true;
             let bulletVisible = false;
             const children = node.children;
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < length; ++i) {
                 const item = children[i] as T;
                 const type = item.css('listStyleType');
                 if (item.display === 'list-item' && (type !== 'none' || item.innerBefore) || item.marginLeft < 0 && type === 'none' && hasSingleImage(item.visibleStyle)) {
@@ -120,7 +120,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     mainData.ordinal = ordinal;
                 }
                 if (enabled) {
-                    i++;
+                    ++i;
                 }
             }
             item.data(EXT_NAME.LIST, 'mainData', mainData);

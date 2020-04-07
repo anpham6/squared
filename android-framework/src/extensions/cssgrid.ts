@@ -37,12 +37,14 @@ function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
         const length = mainData.column.length;
         const q = mainData.row.length;
         const result: Undef<View[]>[][] = new Array(length);
-        for (let i = 0; i < length; i++) {
+        let i = 0;
+        while (i < length) {
             const data = new Array(q);
-            for (let j = 0; j < q; j++) {
-                data[j] = rowData[j][i];
+            let j = 0;
+            while (j < q) {
+                data[j] = rowData[j++][i];
             }
-            result[i] = data;
+            result[i++] = data;
         }
         return result;
     }
@@ -58,7 +60,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
     let value = 0;
     if (length) {
         const dimension = horizontal ? 'width' : 'height';
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
             const unitPX = unit[i];
             if (isPx(unitPX)) {
                 value += parseFloat(unitPX);
@@ -107,7 +109,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
             switch (alignment) {
                 case 'space-around': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount * 2, gridSize);
-                    for (let i = 0; i < itemCount; i++) {
+                    for (let i = 0; i < itemCount; ++i) {
                         for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
                             const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
                             if (!adjusted.has(item)) {
@@ -125,7 +127,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                 case 'space-between': {
                     if (itemCount > 1) {
                         const [marginSize, marginExcess] = getMarginSize(itemCount - 1, gridSize);
-                        for (let i = 0; i < itemCount; i++) {
+                        for (let i = 0; i < itemCount; ++i) {
                             for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
                                 if (i < itemCount - 1) {
                                     const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
@@ -157,7 +159,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                 }
                 case 'space-evenly': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount + 1, gridSize);
-                    for (let i = 0; i < itemCount; i++) {
+                    for (let i = 0; i < itemCount; ++i) {
                         for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
                             let marginEnd = marginSize + (i < marginExcess ? 1 : 0);
                             if (!adjusted.has(item)) {
@@ -294,8 +296,9 @@ function checkFlexibleParent(node: View) {
                 const unit = mainData.column.unit;
                 const { columnStart, columnSpan } = cellData;
                 let valid = false;
-                for (let i = 0; i < columnSpan; i++) {
-                    const value = unit[columnStart + i];
+                let i = 0;
+                while (i < columnSpan) {
+                    const value = unit[columnStart + i++];
                     if (isFr(value) || isPercent(value)) {
                         valid = true;
                     }
@@ -365,12 +368,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const constraintData: T[][] = new Array(rowCount);
                 let valid = true;
                 invalid: {
-                    for (let i = 0; i < rowCount; i++) {
+                    let i = 0;
+                    while (i < rowCount) {
                         const nodes: T[] = [];
                         const data = rowData[i];
                         const length = data.length;
-                        for (let j = 0; j < length; j++) {
-                            const cell = data[j];
+                        let j = 0;
+                        while (j < length) {
+                            const cell = data[j++];
                             if (cell?.length === 1) {
                                 nodes.push(cell[0]);
                             }
@@ -379,7 +384,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 break invalid;
                             }
                         }
-                        constraintData[i] = nodes;
+                        constraintData[i++] = nodes;
                     }
                 }
                 if (valid) {
@@ -427,8 +432,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 let sizeWeight = 0;
                 let fitContent = false;
                 let autoSize = false;
-                for (let i = 0, j = 0; i < cellSpan; i++) {
-                    const k = cellStart + i;
+                let i = 0, j = 0;
+                while (i < cellSpan) {
+                    const k = cellStart + i++;
                     const min = unitMin[k];
                     if (min !== '') {
                         minUnitSize += parent.parseUnit(min, horizontal ? 'width' : 'height');
@@ -439,7 +445,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                         if (auto[j]) {
                             value = auto[j];
                             if (auto[j + 1]) {
-                                j++;
+                                ++j;
                             }
                         }
                         else {
@@ -836,15 +842,16 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const { gap, length } = column;
                 const rowCount = constraintData.length;
                 const barrierIds: string[] = new Array(rowCount - 1);
-                for (let i = 1, j = 0; i < rowCount; i++) {
-                    barrierIds[j++] = controller.addBarrier(constraintData[i], 'top');
+                let i = 1, j = 0;
+                while (i < rowCount) {
+                    barrierIds[j++] = controller.addBarrier(constraintData[i++], 'top');
                 }
-                for (let i = 0; i < rowCount; i++) {
+                for (i = 0; i < rowCount; ++i) {
                     const nodes = constraintData[i];
                     const previousBarrierId = barrierIds[i - 1];
                     const barrierId = barrierIds[i];
                     let previousItem: Undef<T>;
-                    for (let j = 0; j < length; j++) {
+                    for (j = 0; j < length; ++j) {
                         const item = nodes[j];
                         if (item) {
                             if (i === 0) {
@@ -985,10 +992,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     l = 0;
                 };
                 let length = Math.max(rowData.length, 1);
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     if (emptyRows[i] === undefined) {
                         const data = rowData[i];
-                        for (let j = 0; j < unitSpan; j++) {
+                        for (let j = 0; j < unitSpan; ++j) {
                             if (data[j]) {
                                 createSpacer(i, rowDirection, unit, gap);
                             }
@@ -996,18 +1003,18 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 if (k === -1) {
                                     k = j;
                                 }
-                                l++;
+                                ++l;
                             }
                         }
                         createSpacer(i, rowDirection, unit, gap);
                     }
                 }
                 length = emptyRows.length;
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const emptyRow = emptyRows[i];
                     if (emptyRow) {
                         const q = emptyRow.length;
-                        for (let j = 0; j < q; j++) {
+                        for (let j = 0; j < q; ++j) {
                             const value = emptyRow[j];
                             if (value > 0) {
                                 k = j;

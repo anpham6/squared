@@ -12,8 +12,9 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
         if (element && hasComputedStyle(element)) {
             const children = element.children;
             const length = children.length;
-            for (let i = 0; i < length; i++) {
-                const item = <HTMLElement> children[i];
+            let i = 0;
+            while (i < length) {
+                const item = <HTMLElement> children[i++];
                 if (includes(item.dataset.use, name)) {
                     return item;
                 }

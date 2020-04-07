@@ -172,7 +172,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         values.length = length;
                         cssData[name] = values;
                     }
-                    for (let i = 0; i < length; i++) {
+                    for (let i = 0; i < length; ++i) {
                         const keyframes = KEYFRAME_MAP[animationName[i]];
                         const duration = SvgAnimation.convertClockTime(cssData['animation-duration'][i]);
                         if (keyframes && duration > 0) {
@@ -214,8 +214,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             if (attrMap['transform']) {
                                 const transforms = sortAttribute(attrMap['transform']);
                                 const q = transforms.length;
-                                for (let j = 0; j < q; j++) {
-                                    const transform = transforms[i];
+                                let j = 0;
+                                while (j < q) {
+                                    const transform = transforms[j++];
                                     const key = transform.key;
                                     const origin = getKeyframeOrigin(attrMap, element, key);
                                     TRANSFORM.parse(element, transform.value)?.forEach(item => {
@@ -295,7 +296,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     if (to.key !== 1) {
                                         offsetRotate.push({ key: 1, value: rotate });
                                     }
-                                    for (let j = 1; j < offsetRotate.length; j++) {
+                                    let j = 0;
+                                    while (++j < offsetRotate.length) {
                                         const previous = offsetRotate[j - 1];
                                         const item = offsetRotate[j];
                                         const previousValue = convertRotate(previous.value);
@@ -381,8 +383,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     const keyTimes: number[] = [];
                                     const values: string[] = [];
                                     const keySplines: string[] = [];
-                                    const q = animation.length;
-                                    for (let j = 0; j < q; j++) {
+                                    let q = animation.length;
+                                    for (let j = 0; j < q; ++j) {
                                         const item = animation[j];
                                         const { key, value } = item;
                                         keyTimes.push(key);
@@ -400,26 +402,26 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         const keyTimesData: number[] = [];
                                         const valuesData: string[] = [];
                                         const keySplinesData: string[] = [];
-                                        const r = keyTimes.length;
-                                        for (let j = 0; j < r; j++) {
+                                        q = keyTimes.length;
+                                        for (let j = 0; j < q; ++j) {
                                             const time = keyTimes[j];
                                             const value = values[j];
-                                            if (j < r - 1) {
+                                            if (j < q - 1) {
                                                 const keySpline = keySplines[j];
                                                 if (value !== '' && keySpline.startsWith('step')) {
                                                     const steps = SvgAnimate.convertStepTimingFunction(name, keySpline, keyTimes, values, j, getFontSize(element));
                                                     if (steps) {
                                                         const [stepTime, stepValue] = steps;
                                                         const stepDuration = (keyTimes[j + 1] - time) * duration;
-                                                        const offset = keyTimes[j + 1] === 1 ? 1 : 0;
-                                                        const s = stepTime.length;
-                                                        for (let k = 0; k < s - offset; k++) {
+                                                        const s = stepTime.length - (keyTimes[j + 1] === 1 ? 1 : 0);
+                                                        let k = 0;
+                                                        while (k < s) {
                                                             let keyTime = (time + stepTime[k] * stepDuration) / duration;
                                                             if (keyTimesData.includes(keyTime)) {
                                                                 keyTime += 1 / 1000;
                                                             }
                                                             keyTimesData.push(keyTime);
-                                                            valuesData.push(stepValue[k]);
+                                                            valuesData.push(stepValue[k++]);
                                                             keySplinesData.push(KEYSPLINE_NAME[keySpline.includes('start') ? 'step-start' : 'step-end']);
                                                         }
                                                         continue;

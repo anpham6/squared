@@ -129,7 +129,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const mapWidth: string[] = [];
         const rowCount = table.length;
         let columnCount = 0;
-        for (let i = 0; i < rowCount; i++) {
+        for (let i = 0; i < rowCount; ++i) {
             const tr = table[i];
             rowWidth[i] = horizontal;
             const row: T[] = tableFilled[i] || [];
@@ -138,15 +138,16 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const element = <HTMLTableCellElement> td.element;
                 const rowSpan = element.rowSpan;
                 let colSpan = element.colSpan;
-                let j = -1;
-                for (let k = 0; j === -1; k++) {
-                    if (!row[k]) {
-                        j = k;
-                    }
+                let j = 0;
+                while (row[j]) {
+                    j++;
                 }
-                for (let k = i; k < i + rowSpan; k++) {
-                    const item = safeNestedArray(tableFilled, k);
-                    for (let l = j, m = 0; l < j + colSpan; l++) {
+                const q = i + rowSpan;
+                let k = i;
+                while (k < q) {
+                    const item = safeNestedArray(tableFilled, k++);
+                    const r = j + colSpan;
+                    for (let l = j, m = 0; l < r; ++l) {
                         if (!item[l]) {
                             item[l] = td;
                             m++;
@@ -381,14 +382,16 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 caption.parent = node;
             }
         }
-        for (let i = 0; i < rowCount; i++) {
-            const tr = tableFilled[i];
+        let i = 0;
+        while (i < rowCount) {
+            const tr = tableFilled[i++];
             const length = tr.length;
-            for (let j = 0; j < length; ) {
+            let j = 0;
+            while (j < length) {
                 const td = tr[j];
                 const data: TableCellData = td.data(TABLE, 'cellData');
+                j += data.colSpan;
                 if (data.placed) {
-                    j += data.colSpan;
                     continue;
                 }
                 const columnWidth = mapWidth[j];
@@ -466,7 +469,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 data.placed = true;
                 td.parent = node;
-                j += data.colSpan;
             }
             if (length < columnCount) {
                 const data: StandardMap = tr[length - 1].data(TABLE, 'cellData');
@@ -491,9 +493,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             let hideRight = false;
             let hideBottom = false;
             let hideLeft = false;
-            for (let i = 0; i < rowCount; i++) {
+            for (i = 0; i < rowCount; ++i) {
                 const tr = tableFilled[i];
-                for (let j = 0; j < columnCount; j++) {
+                for (let j = 0; j < columnCount; ++j) {
                     const td = tr[j];
                     if (td?.css('visibility') === 'visible') {
                         if (i === 0) {

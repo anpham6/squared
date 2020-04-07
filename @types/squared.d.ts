@@ -1108,7 +1108,6 @@ declare namespace lib {
         function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
-        function eachArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void>): number;
         function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
         function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
         function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];

@@ -633,7 +633,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         let layerListData: Undef<StandardMap[]>;
         if (outline) {
             borderData = outline;
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 4; ++i) {
                 borders[i] = outline;
                 borderVisible[i] = true;
             }
@@ -643,7 +643,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             borders[1] = data.borderRight;
             borders[2] = data.borderBottom;
             borders[3] = data.borderLeft;
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 4; ++i) {
                 const item = borders[i];
                 if (item) {
                     if (borderStyle && borderData) {
@@ -751,7 +751,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 backgroundRepeat = fillBackgroundAttribute(backgroundRepeat, q);
                 backgroundSize = fillBackgroundAttribute(backgroundSize, q);
                 let modified = false;
-                for (let i = 0; i < q; i++) {
+                for (let i = 0; i < q; ++i) {
                     let value = backgroundImage[i];
                     let valid = false;
                     if (typeof value === 'string') {
@@ -892,7 +892,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             }
             const { backgroundClip, backgroundOrigin } = data;
             const documentBody = node.innerMostWrapped.documentBody;
-            for (let i = length - 1, j = 0; i >= 0; i--) {
+            for (let i = length - 1, j = 0; i >= 0; --i) {
                 const value = images[i];
                 const imageData: BackgroundImageData = { order: Number.POSITIVE_INFINITY };
                 if (typeof value === 'object' && !value.positioning) {

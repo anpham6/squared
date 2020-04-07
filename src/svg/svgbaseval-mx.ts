@@ -8,8 +8,9 @@ const { getNamedItem } = squared.lib.dom;
 
 function adjustPoints(values: SvgPoint[], x: number, y: number, scaleX: number, scaleY: number) {
     const length = values.length;
-    for (let i = 0; i < length; i++) {
-        const pt = values[i];
+    let i = 0;
+    while (i < length) {
+        const pt = values[i++];
         pt.x += x;
         pt.y += y;
         if (pt.rx !== undefined && pt.ry !== undefined) {

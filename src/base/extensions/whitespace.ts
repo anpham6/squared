@@ -235,8 +235,9 @@ function getBottomChild(node: NodeUI) {
     else {
         let bottomFloatChild: Undef<NodeUI>;
         const children = node.naturalChildren;
-        for (let j = children.length - 1; j >= 0; j--) {
-            const item = <NodeUI> children[j];
+        let j = children.length - 1;
+        while (j >= 0) {
+            const item = <NodeUI> children[j--];
             if (item.floating) {
                 if (!bottomChild) {
                     const bottom = item.linear.bottom;
@@ -301,7 +302,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 const collapseMargin = pageFlow && isBlockElement(node, true) && !(node.actualParent as T).layoutElement;
                 let firstChild: Undef<T>;
                 let lastChild: Undef<T>;
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const current = children[i] as T;
                     if (current.pageFlow) {
                         if (collapseMargin) {
@@ -719,12 +720,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             if (horizontalRows && horizontalRows.length > 1) {
                                 found: {
                                     let maxBottom = Number.NEGATIVE_INFINITY;
-                                    const q = horizontalRows.length;
-                                    for (let i = 0; i < q; i++) {
+                                    const length = horizontalRows.length;
+                                    for (let i = 0; i < length; ++i) {
                                         const row = horizontalRows[i] as T[];
-                                        const r = row.length;
-                                        for (let j = 0; j < r; j++) {
-                                            if (outerWrapper === row[j]) {
+                                        const q = row.length;
+                                        let j = 0;
+                                        while (j < q) {
+                                            if (outerWrapper === row[j++]) {
                                                 if (i > 0) {
                                                     setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, maxBottom);
                                                 }
@@ -767,8 +769,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 const top = node.actualRect('top');
                                 const naturalChildren = parent.naturalChildren;
                                 const length = naturalChildren.length;
-                                for (let i = 0; i < length; i++) {
-                                    const item = naturalChildren[i] as T;
+                                let i = 0;
+                                while (i < length) {
+                                    const item = naturalChildren[i++] as T;
                                     if (actualChildren.includes(item)) {
                                         break;
                                     }
@@ -832,8 +835,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 if (marginTop > 0) {
                                     const top = Math.floor(node.bounds.top);
                                     const length = floating.length;
-                                    for (let i = 0; i < length; i++) {
-                                        const previous = floating[i];
+                                    let i = 0;
+                                    while (i < length) {
+                                        const previous = floating[i++];
                                         if (top <= Math.floor(previous.bounds.top)) {
                                             let floatingRenderParent = previous.outerMostWrapper.renderParent;
                                             if (floatingRenderParent) {

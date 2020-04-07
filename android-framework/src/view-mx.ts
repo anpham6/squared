@@ -402,7 +402,7 @@ function setLineHeight(node: T, renderParent: T) {
                 const horizontalRows = node.horizontalRows || [node.renderChildren];
                 let previousMultiline = false;
                 const length = horizontalRows.length;
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const row = horizontalRows[i];
                     const q = row.length;
                     const nextRow = horizontalRows[i + 1];
@@ -555,7 +555,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             nodes.forEach(sibling => {
                 sibling = sibling.innerMostWrapped as T;
                 if (sibling.pageFlow) {
-                    i++;
+                    ++i;
                     if (sibling.hasPX(dimension, true, true)) {
                         const value = sibling.cssInitial(dimension);
                         if (isPercent(value)) {
@@ -1147,7 +1147,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 let right = 0;
                 let bottom = 0;
                 let left = 0;
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < 4; ++i) {
                     const attr = attrs[i];
                     let value: number = boxReset[attr] === 0 ? this[attr] : 0;
                     if (value !== 0) {
@@ -1950,8 +1950,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return valid;
                 }
             }
-            for (let i = this.api; i <= BUILD_ANDROID.LATEST; i++) {
-                const callback = API_ANDROID[i]?.android[attr];
+            let i = this.api;
+            while (i <= BUILD_ANDROID.LATEST) {
+                const callback = API_ANDROID[i++]?.android[attr];
                 switch (typeof callback) {
                     case 'boolean':
                         return callback;
@@ -2216,7 +2217,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         baseline = false;
                     }
                     const length = children.length;
-                    for (let i = 0; i < length; i++) {
+                    for (let i = 0; i < length; ++i) {
                         const item = children[i];
                         item.setSingleLine(i === length - 1);
                         if (baseline && item.baselineElement) {

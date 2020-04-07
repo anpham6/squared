@@ -108,8 +108,9 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         }
         else {
             const length = imageFormat.length;
-            for (let i = 0; i < length; i++) {
-                const extension = imageFormat[i];
+            let i = 0;
+            while (i < length) {
+                const extension = imageFormat[i++];
                 if (mimeType.includes(extension)) {
                     const ext = '.' + extension;
                     filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/') : randomUUID(this.fileSeparator) + ext;

@@ -84,14 +84,15 @@ const FONT_STYLE = {
     'color': 'android:textColor="@color/',
     'backgroundColor': 'android:background="@color/'
 };
+const FONT_STYLEKEYS = Object.keys(FONT_STYLE);
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
     const length = sorted.length;
     attrs.split(';').forEach(value => {
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
+            let data = sorted[i];
             let index = -1;
             let key = '';
-            let data = sorted[i];
             for (const j in data) {
                 if (j === value) {
                     index = i;
@@ -121,11 +122,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
 
     public afterParseDocument() {
         const resource = <android.base.Resource<T>> this.resource;
-        const settings = resource.userSettings;
         const disableFontAlias = this.options.disableFontAlias;
-        const convertPixels = settings.convertPixels === 'dp';
+        const convertPixels = resource.userSettings.convertPixels === 'dp';
         const { fonts, styles } = STORED;
-        const styleKeys = Object.keys(FONT_STYLE);
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         let cache: T[] = [];
@@ -139,8 +138,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const data = nameMap[tag];
             cache = cache.concat(data);
             data.forEach(node => {
-                const { id, companion } = node;
-                const targetAPI = node.api;
+                const { id, companion, api } = node;
                 const stored: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
                 let { fontFamily, fontStyle, fontWeight } = stored;
                 if (companion?.tagName === 'LABEL' && !companion.visible) {
@@ -153,7 +151,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     if (!disableFontAlias && FONTREPLACE_ANDROID[fontName]) {
                         fontName = this.options.systemDefaultFont;
                     }
-                    if (targetAPI >= FONT_ANDROID[fontName] || !disableFontAlias && targetAPI >= FONT_ANDROID[FONTALIAS_ANDROID[fontName]]) {
+                    if (api >= FONT_ANDROID[fontName] || !disableFontAlias && api >= FONT_ANDROID[FONTALIAS_ANDROID[fontName]]) {
                         fontFamily = fontName;
                     }
                     else if (fontStyle && fontWeight) {
@@ -208,8 +206,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     color: Resource.addColor(stored.color),
                     backgroundColor: Resource.addColor(stored.backgroundColor)
                 };
-                for (let i = 0; i < 6; i++) {
-                    const key = styleKeys[i];
+                for (let i = 0; i < 6; ++i) {
+                    const key = FONT_STYLEKEYS[i];
                     let value: Undef<string> = fontData[key];
                     if (value) {
                         if (i === 3 && convertPixels) {
@@ -260,11 +258,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             styleTag[attr] = item;
                         }
                     }
-                    sorted.length = 0;
+                    break;
                 }
                 else {
                     const styleKey: AttributeMap = {};
-                    for (let i = 0; i < sorted.length; i++) {
+                    for (let i = 0; i < sorted.length; ++i) {
                         const filtered: AttributeMap = {};
                         const dataA = sorted[i];
                         for (const attrA in dataA) {
@@ -279,7 +277,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                             const found: AttributeMap = {};
                             let merged = false;
-                            for (let j = 0; j < sorted.length; j++) {
+                            for (let j = 0; j < sorted.length; ++j) {
                                 if (i !== j) {
                                     const dataB = sorted[j];
                                     for (const attr in dataB) {
@@ -382,10 +380,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 let c: number | string = (a.ids as []).length;
                 let d: number | string = (b.ids as []).length;
                 if (c === d) {
-                    const itemA = <StringValue[]> a.items;
-                    const itemB = <StringValue[]> b.items;
-                    c = (itemA as []).length;
-                    d = (itemB as []).length;
+                    c = (<StringValue[]> a.items).length;
+                    d = (<StringValue[]> b.items).length;
                     if (c === d) {
                         c = a.name;
                         d = b.name;
@@ -393,8 +389,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
                 return c <= d ? 1 : -1;
             });
-            const q = styleData.length;
-            for (let i = 0; i < q; i++) {
+            const length = styleData.length;
+            for (let i = 0; i < length; ++i) {
                 styleData[i].name = capitalize(tag) + (i > 0 ? '_' + i : '');
             }
             resourceMap[tag] = styleData;

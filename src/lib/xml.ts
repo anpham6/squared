@@ -23,8 +23,9 @@ export const STRING_TABSPACE = STRING_SPACE.repeat(8);
 
 export function isPlainText(value: string) {
     const length = value.length;
-    for (let i = 0; i < length; i++) {
-        switch (value.charCodeAt(i)) {
+    let i = 0;
+    while (i < length) {
+        switch (value.charCodeAt(i++)) {
             case 9:
             case 10:
             case 13:
@@ -51,8 +52,9 @@ export function pushIndentArray(values: string[], depth: number, char = '\t', se
     if (depth > 0) {
         const indent = char.repeat(depth);
         const length = values.length;
-        for (let i = 0; i < length; i++) {
-            values[i] = pushIndent(values[i], depth, char, indent);
+        let i = 0;
+        while (i < length) {
+            values[i] = pushIndent(values[i++], depth, char, indent);
         }
     }
     return values.join(separator);
@@ -105,15 +107,16 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
     else {
         indent += '\t'.repeat(depth);
     }
-    const length = children.length;
-    for (let i = 0; i < length; i++) {
+    let length = children.length;
+    let i = -1;
+    while (++i < length) {
         const item = children[i];
         const include: Undef<string> = tag['#'] && item[tag['#']];
         const closed = !nested && !include;
         const attrs: Undef<string[]> = tag['@'];
         const descend: Undef<StringMap> = tag['>'];
-        output += indent + '<' + tagName;
         let valid = false;
+        output += indent + '<' + tagName;
         attrs?.forEach(attr => {
             const value = item[attr];
             if (value) {
@@ -168,7 +171,7 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
         }
     }
     if (nested) {
-        for (let i = 0; i < length; i++) {
+        while (--length >= 0) {
             indent = indent.substring(1);
             output += indent + `</${tagName}>\n`;
         }
@@ -190,28 +193,29 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
     let output = '';
     let indent = startIndent;
     const length = lines.length;
-    for (let i = 0; i < length; i++) {
+    let i = -1;
+    while (++i < length) {
         const line = lines[i];
         let previous = indent;
         if (i > 0) {
             if (line.closing) {
-                indent--;
+                --indent;
             }
             else {
-                previous++;
+                ++previous;
                 if (!REGEX_FORMAT.CLOSETAG.exec(line.tag)) {
                     if (closeEmpty && line.value.trim() === '') {
                         const next = lines[i + 1];
                         if (next?.closing && next.tagName === line.tagName) {
                             line.tag = line.tag.replace(REGEX_FORMAT.OPENTAG, ' />');
-                            i++;
+                            ++i;
                         }
                         else {
-                            indent++;
+                            ++indent;
                         }
                     }
                     else {
-                        indent++;
+                        ++indent;
                     }
                 }
             }
@@ -234,49 +238,47 @@ export function replaceCharacterData(value: string, tab = false) {
     value = value
         .replace(REGEX_FORMAT.NBSP, '&#160;')
         .replace(ESCAPE.NONENTITY, '&amp;');
-    const length = value.length;
-    const char = new Array(length);
-    let valid = false;
-    for (let i = 0; i < length; i++) {
+    const char: { i: number; text: string }[] = [];
+    let length = value.length;
+    let i = -1;
+    while (++i < length) {
         const ch = value.charAt(i);
         switch (ch) {
             case "'":
-                char[i] = "\\'";
-                valid = true;
+                char.push({ i, text: "\\'" });
                 break;
             case '"':
-                char[i] = '&quot;';
-                valid = true;
+                char.push({ i, text: '&quot;' });
                 break;
             case '<':
-                char[i] = '&lt;';
-                valid = true;
+                char.push({ i, text: '&lt;' });
                 break;
             case '>':
-                char[i] = '&gt;';
-                valid = true;
+                char.push({ i, text: '&gt;' });
                 break;
             case '\t':
                 if (tab) {
-                    char[i] = STRING_TABSPACE;
-                    valid = true;
-                }
-                else {
-                    char[i] = ch;
+                    char.push({ i, text: STRING_TABSPACE });
                 }
                 break;
             case '\u0003':
-                char[i] = ' ';
-                valid = true;
+                char.push({ i, text: ' ' });
                 break;
             case '\u00A0':
-                char[i] = '&#160;';
-                valid = true;
-                break;
-            default:
-                char[i] = ch;
+                char.push({ i, text: '&#160;' });
                 break;
         }
     }
-    return valid ? char.join('') : value;
+    length = char.length;
+    if (length) {
+        const parts = value.split('');
+        let text: string;
+        let j = 0;
+        while (j < length) {
+            ({ i, text } = char[j++]);
+            parts[i] = text;
+        }
+        return parts.join('');
+    }
+    return value;
 }

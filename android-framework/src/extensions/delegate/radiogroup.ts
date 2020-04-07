@@ -16,8 +16,9 @@ const NodeUI = $base.NodeUI;
 function setBaselineIndex(children: View[], container: View) {
     let valid = false;
     const length = children.length;
-    for (let i = 0; i < length; i++) {
-        const item = children[i];
+    let i = 0;
+    while (i < length) {
+        const item = children[i++];
         if (item.toElementBoolean('checked')) {
             item.android('checked', 'true');
         }
@@ -120,8 +121,9 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             if (length > 1 && radiogroup.includes(node)) {
                 const controlName = CONTAINER_ANDROID.RADIOGROUP;
                 const data = new Map<T, number>();
-                for (let i = 0; i < length; i++) {
-                    const radio = radiogroup[i];
+                let i = 0;
+                while (i < length) {
+                    const radio = radiogroup[i++];
                     const parents = radio.ascend({ condition: (item: T) => item.layoutLinear, error: (item: T) => item.controlName === controlName, every: true }) as T[];
                     if (parents.length) {
                         parents.forEach(item => data.set(item, (data.get(item) || 0) + 1));

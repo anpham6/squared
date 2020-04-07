@@ -54,14 +54,15 @@ const MAP_vertical = {
 
 function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
     const horizontal = attr === 'width';
-    const hasDimension = `has${capitalize(attr)}`;
+    const hasDimension = horizontal ? 'hasWidth' : 'hasHeight';
     const setPercentage = (item: View) => item.flexbox.basis = (item.bounds[attr] / parent.box[attr] * 100) + '%';
-    let percent: boolean = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseWidth(parent.css('maxWidth')), parent.box.width);
+    let percent = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseWidth(parent.css('maxWidth')), parent.box.width);
     let result = 0;
     let growShrinkType = 0;
     const length = items.length;
-    for (let i = 0; i < length; i++) {
-        const item = items[i];
+    let i = 0;
+    while (i < length) {
+        const item = items[i++];
         if (percent) {
             if (horizontal) {
                 if (item.innerMostWrapped.autoMargin.horizontal) {
@@ -85,8 +86,9 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
         let maxBasisUnit = 0;
         let maxDimension = 0;
         let maxRatio = NaN;
-        for (let i = 0; i < length; i++) {
-            const item = items[i];
+        i = 0;
+        while (i < length) {
+            const item = items[i++];
             const { alignSelf, basis, shrink, grow } = item.flexbox;
             const dimension = item.bounds[attr];
             let growPercent = false;
@@ -157,9 +159,11 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
         }
     }
     if (horizontal && growShrinkType === 0) {
-        for (let i = 0; i < length; i++) {
-            const item = items[i];
-            if (item.find(child => child.multiline && child.ascend({ condition: above => above[hasDimension], including: parent }).length === 0, { cascade: true, also: () => items.forEach(child => setPercentage(child)) })) {
+        i = 0;
+        while (i < length) {
+            const item = items[i++];
+            if (item.find(child => child.multiline && child.ascend({ condition: above => above[hasDimension], including: parent }).length === 0, { cascade: true })) {
+                items.forEach(child => setPercentage(child));
                 break;
             }
         }
@@ -169,8 +173,9 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
 
 function getBaseline(nodes: View[]) {
     const length = nodes.length;
-    for (let i = 0; i < length; i++) {
-        const node = nodes[i];
+    let i = 0;
+    while (i < length) {
+        const node = nodes[i++];
         if (node.textElement && node.baseline) {
             return node;
         }
@@ -313,8 +318,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 if (previous) {
                                     const length = previous.length;
                                     let largest = previous[0];
-                                    for (let j = 1; j < length; j++) {
-                                        const sibling = previous[j];
+                                    let j = 1;
+                                    while (j < length) {
+                                        const sibling = previous[j++];
                                         if (sibling.linear.right > largest.linear.right) {
                                             largest = sibling;
                                         }
@@ -381,7 +387,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                 };
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const seg = partition[i];
                     const q = seg.length;
                     const segStart = seg[0];
@@ -445,7 +451,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             }
                         }
                     }
-                    for (let j = 0; j < q; j++) {
+                    for (let j = 0; j < q; ++j) {
                         const chain = seg[j];
                         const previous = seg[j - 1];
                         const next = seg[j + 1];

@@ -23,8 +23,9 @@ const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'cle
 function cascadeActualPadding(children: T[], attr: string, value: number) {
     let valid = false;
     const length = children.length;
-    for (let i = 0; i < length; i++) {
-        const item = children[i];
+    let i = 0;
+    while (i < length) {
+        const item = children[i++];
         if (item.blockStatic) {
             return false;
         }
@@ -154,8 +155,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public static baseline<T extends NodeUI>(list: T[], text = false): Null<T> {
         const result: T[] = [];
         const length = list.length;
-        for (let i = 0; i < length; i++) {
-            const item = list[i];
+        let i = 0;
+        while (i < length) {
+            const item = list[i++];
             if (item.baseline && (!text || item.textElement) && !item.baselineAltered) {
                 if (item.naturalElements.length) {
                     if (item.baselineElement) {
@@ -224,26 +226,27 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         const length = list.length;
         if (length > 1) {
             const nodes: T[] = new Array(length);
-            let q = 0;
-            for (let i = 0; i < length; i++) {
-                const item = list[i];
+            let i = 0, n = 0;
+            while (i < length) {
+                const item = list[i++];
                 if (item.pageFlow) {
                     if (item.floating) {
                         floated.add(item.float);
                     }
-                    nodes[q++] = item;
+                    nodes[n++] = item;
                 }
                 else if (item.autoPosition) {
-                    nodes[q++] = item;
+                    nodes[n++] = item;
                 }
             }
-            if (q) {
-                nodes.length = q;
+            if (n) {
+                nodes.length = n;
                 const siblings = [nodes[0]];
                 let x = 1;
                 let y = 1;
-                for (let i = 1; i < q; i++) {
-                    const node = nodes[i];
+                i = 1;
+                while (i < n) {
+                    const node = nodes[i++];
                     if (node.alignedVertically(siblings, cleared) > 0) {
                         y++;
                     }
@@ -255,15 +258,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                     siblings.push(node);
                 }
-                linearX = x === q;
-                linearY = y === q;
+                linearX = x === n;
+                linearY = y === n;
                 if (linearX && floated.size) {
                     let boxLeft = Number.POSITIVE_INFINITY;
                     let boxRight = Number.NEGATIVE_INFINITY;
                     let floatLeft = Number.NEGATIVE_INFINITY;
                     let floatRight = Number.POSITIVE_INFINITY;
-                    for (let i = 0; i < q; i++) {
-                        const node = nodes[i];
+                    i = 0;
+                    while (i < n) {
+                        const node = nodes[i++];
                         const { left, right } = node.linear;
                         boxLeft = Math.min(boxLeft, left);
                         boxRight = Math.max(boxRight, right);
@@ -276,21 +280,22 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 break;
                         }
                     }
-                    for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < q; i++) {
+                    let j = 0, k = 0, l = 0, m = 0;
+                    for (i = 0; i < n; ++i) {
                         const node = nodes[i];
                         const { left, right } = node.linear;
                         if (Math.floor(left) <= boxLeft) {
-                            j++;
+                            ++j;
                         }
                         if (Math.ceil(right) >= boxRight) {
-                            k++;
+                            ++k;
                         }
                         if (!node.floating) {
                             if (left === floatLeft) {
-                                l++;
+                                ++l;
                             }
                             if (right === floatRight) {
-                                m++;
+                                ++m;
                             }
                         }
                         if (i === 0) {
@@ -321,8 +326,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         let row: T[] = [];
         let siblings: T[] = [];
         const length = list.length;
-        for (let i = 0; i < length; i++) {
-            const node = list[i];
+        let i = 0;
+        while (i < length) {
+            const node = list[i++];
             let active = node;
             if (!node.naturalChild) {
                 if (node.nodeGroup) {
@@ -534,11 +540,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public renderEach(predicate: IteratorPredicate<T, void>) {
         const children = this.renderChildren;
         const length = children.length;
-        for (let i = 0; i < length; i++) {
-            const item = children[i];
-            if (item.visible) {
-                predicate(item, i, children);
-            }
+        let i = 0;
+        while (i < length) {
+            predicate(children[i], i++, children);
         }
         return this;
     }
@@ -729,7 +733,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public appendTry(node: T, replacement: T, append = true) {
         const children = this.children as T[];
         const length = children.length;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
             const item = children[i];
             if (item === node || item === node.innerMostWrapped || item === node.outerMostWrapper) {
                 children[i] = replacement;
@@ -1041,7 +1045,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public resetBox(region: number, node?: T) {
         const boxReset = this._boxReset;
         const applyReset = (attrs: string[], start: number) => {
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 4; ++i) {
                 const key = CSS_SPACING_KEYS[i + start];
                 if (hasBit(region, key)) {
                     const name = attrs[i];
@@ -1075,7 +1079,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public transferBox(region: number, node: T) {
         const boxAdjustment = this._boxAdjustment;
         const applyReset = (attrs: string[], start: number) => {
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 4; ++i) {
                 const key = CSS_SPACING_KEYS[i + start];
                 if (hasBit(region, key)) {
                     const previous = this.registerBox(key);
@@ -1223,8 +1227,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         break;
                 }
             });
-            super.unsetCache(...attrs);
         }
+        super.unsetCache(...attrs);
     }
 
     public css(attr: string, value?: string, cache = false): string {
@@ -1483,8 +1487,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const children = <NodeUI[]> parent.naturalChildren;
             const index = children.indexOf(this);
             if (index !== -1) {
-                for (let i = index - 1; i >= 0; i--) {
-                    const node = children[i];
+                let i = index - 1;
+                while (i >= 0) {
+                    const node = children[i--];
                     if (node && (!node.excluded || node.lineBreak)) {
                         return node;
                     }
@@ -1501,8 +1506,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const index = children.indexOf(this);
             if (index !== -1) {
                 const length = children.length;
-                for (let i = index + 1; i < length; i++) {
-                    const node = children[i];
+                let i = index + 1;
+                while (i < length) {
+                    const node = children[i++];
                     if (node && (!node.excluded || node.lineBreak)) {
                         return node;
                     }

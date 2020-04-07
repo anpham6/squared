@@ -94,7 +94,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 if (!isString(styleMap.border) && checkBorderAttribute()) {
                     const inputBorderColor = this.localSettings.style.inputBorderColor;
                     styleMap.border = `outset 1px ${inputBorderColor}`;
-                    for (let i = 0; i < 4; i++) {
+                    for (let i = 0; i < 4; ++i) {
                         const border = BOX_BORDER[i];
                         styleMap[border[0]] = 'outset';
                         styleMap[border[1]] = '1px';
@@ -563,7 +563,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const length = layers.length;
             if (length) {
                 const children = node.children as T[];
-                for (let i = 0, j = 0, k = 1; i < length; i++, j++) {
+                for (let i = 0, j = 0, k = 1; i < length; ++i, ++j) {
                     const order = layers[i];
                     if (order) {
                         order.sort((a, b) => {
@@ -579,7 +579,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         })
                         .forEach(item => item.containerIndex = maxIndex + k++);
                         const q = children.length;
-                        for (let l = 0; l < q; l++) {
+                        for (let l = 0; l < q; ++l) {
                             if (order.includes(children[l])) {
                                 children[l] = undefined as any;
                             }
@@ -622,8 +622,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         const indent = '\t'.repeat(depth);
         let output = '';
         const length = templates.length;
-        for (let i = 0; i < length; i++) {
-            const item = templates[i];
+        let i = 0;
+        while (i < length) {
+            const item = templates[i++];
             const node = item.node;
             switch (item.type) {
                 case NODE_TEMPLATE.XML: {

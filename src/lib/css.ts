@@ -58,7 +58,7 @@ function calculatePosition(element: CSSElement, value: string, boundingBox?: Dim
         case 4: {
             let horizontal = 0;
             let vertical = 0;
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < length; ++i) {
                 const position = alignment[i];
                 switch (position) {
                     case 'top':
@@ -115,7 +115,7 @@ function calculateColor(element: CSSElement, value: string) {
     const color = splitEnclosing(value);
     const length = color.length;
     if (length > 1) {
-        for (let i = 1; i < length; i++) {
+        for (let i = 1; i < length; ++i) {
             const seg = color[i].trim();
             if (hasCalc(seg)) {
                 const name = color[i - 1].trim();
@@ -124,7 +124,7 @@ function calculateColor(element: CSSElement, value: string) {
                     const q = component.length;
                     if (q >= 3) {
                         const hsl = name.startsWith('hsl');
-                        for (let j = 0; j < q; j++) {
+                        for (let j = 0; j < q; ++j) {
                             const rgb = component[j];
                             if (isCalc(rgb)) {
                                 if (hsl && (j === 1 || j === 2)) {
@@ -175,7 +175,7 @@ function calculateColor(element: CSSElement, value: string) {
 function calculateGeneric(element: CSSElement, value: string, unitType: number, min: number, boundingBox?: Dimension, dimension: DimensionAttr = 'width') {
     const segments = splitEnclosing(value, 'calc');
     const length = segments.length;
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < length; ++i) {
         const seg = segments[i];
         if (isCalc(seg)) {
             const px = REGEX_LENGTH.test(seg);
@@ -745,7 +745,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             const transform = splitEnclosing(value);
             const length = transform.length;
             if (length > 1) {
-                for (let i = 1; i < length; i++) {
+                for (let i = 1; i < length; ++i) {
                     let seg = transform[i];
                     if (hasCalc(seg)) {
                         seg = trimEnclosing(seg);
@@ -802,7 +802,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                                 const q = component.length;
                                 if (q === 3 || q === 4) {
                                     calc = '';
-                                    for (let j = 0; j < q; j++) {
+                                    for (let j = 0; j < q; ++j) {
                                         let rotate = component[j];
                                         if (isCalc(rotate)) {
                                             const result = calculateVar(element, rotate, { unitType: j === 3 ? CSS_UNIT.ANGLE : CSS_UNIT.DECIMAL, supportPercent: false });
@@ -838,12 +838,12 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             const image = splitEnclosing(value);
             const length = image.length;
             if (length > 1) {
-                for (let i = 1; i < length; i++) {
+                for (let i = 1; i < length; ++i) {
                     const color = image[i];
                     if (isColor(color) && hasCalc(color)) {
                         const component = splitEnclosing(trimEnclosing(color));
                         const q = component.length;
-                        for (let j = 1; j < q; j++) {
+                        for (let j = 1; j < q; ++j) {
                             if (hasCalc(component[j])) {
                                 const previous = component[j - 1];
                                 if (isColor(previous)) {
@@ -870,7 +870,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             const color = splitEnclosing(value);
             const length = color.length;
             if (length > 1) {
-                for (let i = 1; i < length; i++) {
+                for (let i = 1; i < length; ++i) {
                     const previous = color[i - 1];
                     if (isColor(previous) && hasCalc(color[i])) {
                         const prefix = previous.split(CHAR.SPACE).pop() as string;
@@ -931,7 +931,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             const border = splitEnclosing(value);
             const length = border.length;
             if (length > 1) {
-                for (let i = 1; i < length; i++) {
+                for (let i = 1; i < length; ++i) {
                     const previous = border[i - 1];
                     const prefix = previous.split(CHAR.SPACE).pop() as string;
                     let result: string;
@@ -962,7 +962,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             const timingFunction = splitEnclosing(value);
             const length = timingFunction.length;
             if (length > 1) {
-                for (let i = 1; i < length; i++) {
+                for (let i = 1; i < length; ++i) {
                     let seg = timingFunction[i];
                     if (hasCalc(seg)) {
                         const prefix = timingFunction[i - 1].trim();
@@ -974,7 +974,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             if (q === 4) {
                                 calc = '';
                                 const options: CalculateVarOptions = { unitType: CSS_UNIT.DECIMAL, supportPercent: false };
-                                for (let j = 0; j < q; j++) {
+                                for (let j = 0; j < q; ++j) {
                                     let bezier = cubic[j];
                                     if (isCalc(bezier)) {
                                         if (j % 2 === 0) {
@@ -1257,12 +1257,12 @@ export function getKeyframeRules(): ObjectMap<KeyframesData> {
     violation: {
         const styleSheets = document.styleSheets;
         const length = styleSheets.length;
-        for (let i = 0; i < length; i++) {
-            const styleSheet = <CSSStyleSheet> styleSheets[i];
-            const cssRules = styleSheet.cssRules;
+        let i = 0;
+        while (i < length) {
+            const cssRules = (<CSSStyleSheet> styleSheets[i++]).cssRules;
             if (cssRules) {
                 const q = cssRules.length;
-                for (let j = 0; j < q; j++) {
+                for (let j = 0; j < q; ++j) {
                     try {
                         const item = <CSSKeyframesRule> cssRules[j];
                         if (item.type === CSSRule.KEYFRAMES_RULE) {
@@ -1290,8 +1290,10 @@ export function getKeyframeRules(): ObjectMap<KeyframesData> {
 
 export function parseKeyframeRule(rules: CSSRuleList) {
     const result: KeyframesData = {};
-    for (let i = 0; i < length; i++) {
-        const item = rules[i];
+    const length = rules.length;
+    let i = 0;
+    while (i < length) {
+        const item = rules[i++];
         const match = REGEX_KEYFRAME.exec(item.cssText);
         if (match) {
             (item['keyText'] as string || match[1]).trim().split(XML.SEPARATOR).forEach(percent => {
@@ -1517,8 +1519,9 @@ export function calculateVarAsString(element: CSSElement, value: string, options
             const length = calc.length;
             if (length) {
                 let partial = '';
-                for (let i = 0, j = 0; i < length; i++) {
-                    let output = calc[i];
+                let i = 0, j = 0;
+                while (i < length) {
+                    let output = calc[i++];
                     if (isCalc(output)) {
                         if (orderedSize?.[j] !== undefined) {
                             optionsVar.boundingSize = orderedSize[j++];
@@ -1543,7 +1546,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
                         if (dimension) {
                             output = output.trim();
                             if (output !== '' && (!checkUnit || unitType === CSS_UNIT.LENGTH && (isLength(output, true) || output === 'auto'))) {
-                                j++;
+                                ++j;
                             }
                         }
                     }
@@ -1565,8 +1568,9 @@ export function calculateVarAsString(element: CSSElement, value: string, options
             const segment = match[0];
             let optional = segment;
             const length = match.length;
-            for (let i = length - 1; i >= 1; i--) {
-                optional = optional.replace(new RegExp(match[i] + '$'), '');
+            let i = length - 1;
+            while (i >= 1) {
+                optional = optional.replace(new RegExp(match[i--] + '$'), '');
             }
             if (optional === segment) {
                 return '';
@@ -1774,7 +1778,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                     }
                     return 0;
                 });
-                for (let i = 0; i < 2; i++) {
+                for (let i = 0; i < 2; ++i) {
                     let position = orientation[i];
                     const horizontal = i === 0;
                     const [direction, offsetParent] = horizontal ? ['left', width] : ['top', height];
@@ -1888,7 +1892,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                     }
                     return horizontal < 2 && vertical < 2;
                 };
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const position = orientation[i];
                     if (isLength(position, true)) {
                         const alignment = orientation[i - 1];
@@ -2069,7 +2073,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
             if (!isNaN(width)) {
                 const resolution = width * window.devicePixelRatio;
                 let index = -1;
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const imageWidth = result[i].width;
                     if (imageWidth > 0 && imageWidth <= resolution && (index === -1 || result[index].width < imageWidth)) {
                         index = i;
@@ -2086,8 +2090,9 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                     selected.actualWidth = width;
                     result.unshift(selected);
                 }
-                for (let i = 1; i < length; i++) {
-                    const item = result[i];
+                let i = 1;
+                while (i < length) {
+                    const item = result[i++];
                     if (item.pixelRatio === 0) {
                         item.pixelRatio = item.width / width;
                     }
@@ -2185,7 +2190,7 @@ export function calculate(value: string, options: CalculateOptions = {}) {
     let opened = 0;
     const opening: boolean[] = [];
     const closing: number[] = [];
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < length; ++i) {
         switch (value.charAt(i)) {
             case '(':
                 opened++;
@@ -2200,7 +2205,7 @@ export function calculate(value: string, options: CalculateOptions = {}) {
         const equated: number[] = [];
         let index = 0;
         while (true) {
-            for (let i = 0; i < closing.length; i++) {
+            for (let i = 0; i < closing.length; ++i) {
                 let j = closing[i] - 1;
                 let valid = false;
                 for ( ; j >= 0; j--) {
@@ -2250,8 +2255,9 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                     const evaluate: string[] = [];
                     const operation = value.substring(j + 1, closing[i]).split(REGEX_OPERATOR);
                     const q = operation.length;
-                    for (let k = 0; k < q; k++) {
-                        const partial = operation[k].trim();
+                    let k = 0;
+                    while (k < q) {
+                        const partial = operation[k++].trim();
                         switch (partial) {
                             case '+':
                             case '-':
@@ -2390,7 +2396,7 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                     if (!found || seg.length !== evaluate.length + 1) {
                         return NaN;
                     }
-                    for (let k = 0; k < evaluate.length; k++) {
+                    for (k = 0; k < evaluate.length; ++k) {
                         if (evaluate[k] === '/') {
                             if (Math.abs(seg[k + 1]) !== 0) {
                                 seg.splice(k, 2, seg[k] / seg[k + 1]);
@@ -2401,13 +2407,13 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                             }
                         }
                     }
-                    for (let k = 0; k < evaluate.length; k++) {
+                    for (k = 0; k < evaluate.length; ++k) {
                         if (evaluate[k] === '*') {
                             seg.splice(k, 2, seg[k] * seg[k + 1]);
                             evaluate.splice(k--, 1);
                         }
                     }
-                    for (let k = 0; k < evaluate.length; k++) {
+                    for (k = 0; k < evaluate.length; ++k) {
                         seg.splice(k, 2, seg[k] + seg[k + 1] * (evaluate[k] === '-' ? -1 : 1));
                         evaluate.splice(k--, 1);
                     }

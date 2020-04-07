@@ -58,8 +58,9 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     let leadingSpace = 0;
                                     const textContent = node.textContent;
                                     const length = textContent.length;
-                                    for (let i = 0; i < length; i++) {
-                                        switch (textContent.charCodeAt(i)) {
+                                    let i = 0;
+                                    while (i < length) {
+                                        switch (textContent.charCodeAt(i++)) {
                                             case 160:
                                                 leadingSpace++;
                                             case 32:

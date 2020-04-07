@@ -203,8 +203,9 @@ export function convertUnderscore(value: string) {
     let result = value[0].toLowerCase();
     let lower = true;
     const length = value.length;
-    for (let i = 1; i < length; i++) {
-        const ch = value[i];
+    let i = 1;
+    while (i < length) {
+        const ch = value.charAt(i++);
         const upper = ch === ch.toUpperCase();
         if (lower && upper && ch !== '_') {
             result += '_' + ch.toLowerCase();
@@ -230,8 +231,8 @@ export function convertCamelCase(value: string, char = '-') {
     let result = value.substring(0, i);
     let previous = '';
     const length = value.length;
-    for ( ; i < length; i++) {
-        const ch = value.charAt(i);
+    while (i < length) {
+        const ch = value.charAt(i++);
         if (ch !== char) {
             if (previous === char) {
                 result += ch.toUpperCase();
@@ -247,11 +248,12 @@ export function convertCamelCase(value: string, char = '-') {
 }
 
 export function convertWord(value: string, dash?: boolean) {
-    const pattern = dash ? CHAR.WORDDASH : CHAR.WORD;
     let result = '';
+    const pattern = dash ? CHAR.WORDDASH : CHAR.WORD;
     const length = value.length;
-    for (let i = 0; i < length; i++) {
-        const ch = value.charAt(i);
+    let i = 0;
+    while (i < length) {
+        const ch = value.charAt(i++);
         result += pattern.test(ch) ? ch : '_';
     }
     return result;
@@ -295,7 +297,7 @@ export function convertRoman(value: number) {
     let result = '';
     let i = 3;
     while (i--) {
-        result = (NUMERALS[parseInt(digits.pop() || '') + (i * 10)] || '') + result;
+        result = (NUMERALS[parseInt(digits.pop() as string) + (i * 10)] || '') + result;
     }
     return 'M'.repeat(parseInt(digits.join(''))) + result;
 }
@@ -311,11 +313,12 @@ export function convertEnum(value: number, base: {}, derived: {}): string {
 
 export function randomUUID(separator = '-') {
     let result = '';
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 5; ++i) {
         if (i > 0) {
             result += separator;
         }
-        for (let j = 0; j < UUID_SEGMENT[i]; j++) {
+        const length = UUID_SEGMENT[i];
+        for (let j = 0; j < length; ++j) {
             result += UUID_ALPHA.charAt(Math.floor(Math.random() * 16));
         }
     }
@@ -324,8 +327,9 @@ export function randomUUID(separator = '-') {
 
 export function formatString(value: string, ...params: string[]) {
     const length = params.length;
-    for (let i = 0; i < length; i++) {
-        value = value.replace(`{${i}}`, params[i]);
+    let i = 0;
+    while (i < length) {
+        value = value.replace(`{${i}}`, params[i++]);
     }
     return value;
 }
@@ -340,7 +344,8 @@ export function delimitString(options: DelimitStringOptions, ...appending: strin
     const remove = options.remove || false;
     const values = value !== '' ? value.split(delimiter) : [];
     const length = appending.length;
-    for (let i = 0; i < length; i++) {
+    let i = -1;
+    while (++i < length) {
         const append = appending[i];
         if (append !== '') {
             if (values.includes(not[i])) {
@@ -403,31 +408,28 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
                 result.push(segment);
             }
         }
-        let i = 1;
-        let j = 0;
-        let k = index + (prefixed ? prefix.length : 0) + 1;
         let found = false;
-        for ( ; k < length; k++) {
-            switch (value.charAt(k)) {
+        for (let i = index + (prefixed ? prefix.length : 0) + 1, open = 1, close = 0; i < length; ++i) {
+            switch (value.charAt(i)) {
                 case opening:
-                    i++;
+                    ++open;
                     break;
                 case closing:
-                    j++;
+                    ++close;
                     break;
             }
-            if (i === j) {
+            if (open === close) {
                 if (separator) {
-                    for ( ; k < length; k++) {
-                        if (value.charAt(k) === separator) {
+                    for ( ; i < length; ++i) {
+                        if (value.charAt(i) === separator) {
                             break;
                         }
                     }
-                    position = k + 1;
-                    result.push(preceding + value.substring(index, k).trim());
+                    position = i + 1;
+                    result.push(preceding + value.substring(index, i).trim());
                 }
                 else {
-                    position = k + 1;
+                    position = i + 1;
                     result.push(value.substring(index, position));
                 }
                 if (position === length) {
@@ -487,8 +489,9 @@ export function isEqual(source: any, other: any) {
     else if (Array.isArray(source) && Array.isArray(other)) {
         const length = source.length;
         if (length === other.length) {
-            for (let i = 0; i < length; i++) {
-                if (source[i] !== other[i]) {
+            let i = 0;
+            while (i < length) {
+                if (source[i] !== other[i++]) {
                     return false;
                 }
             }
@@ -674,7 +677,8 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
     const length = attrs.length;
     if (length > 1) {
         let current = dest;
-        for (let i = 0; ; i++) {
+        let i = 0;
+        do {
             const name = attrs[i];
             const value = current[name];
             if (i === length - 2) {
@@ -699,6 +703,7 @@ export function assignEmptyValue(dest: {}, ...attrs: string[]) {
                 break;
             }
         }
+        while (++i);
     }
 }
 
@@ -771,7 +776,8 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
 
 export function flatArray<T>(list: any[]): T[] {
     let length = list.length;
-    for (let i = 0; i < length; i++) {
+    let i = -1;
+    while (++i < length) {
         const item = list[i];
         if (item === undefined || item === null) {
             list.splice(i--, 1);
@@ -784,8 +790,9 @@ export function flatArray<T>(list: any[]): T[] {
 export function flatMultiArray<T>(list: any[]): T[] {
     let result: T[] = [];
     const length = list.length;
-    for (let i = 0; i < length; i++) {
-        const item = list[i];
+    let i = 0;
+    while (i < length) {
+        const item = list[i++];
         if (Array.isArray(item)) {
             if (item.length) {
                 result = result.concat(flatMultiArray<T>(item));
@@ -799,13 +806,16 @@ export function flatMultiArray<T>(list: any[]): T[] {
 }
 
 export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>) {
-    for (let i = 0; i < list.length; i++) {
+    let length = list.length;
+    let i = -1;
+    while (++i < length) {
         const item = list[i];
         if (predicate(item, i, list)) {
             if (callback) {
                 callback(item, i, list);
             }
             list.splice(i--, 1);
+            length--;
         }
     }
     return list;
@@ -815,11 +825,10 @@ export function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredica
     const length = list.length;
     const valid: T[] = new Array(length);
     const invalid: T[] = new Array(length);
-    let j = 0;
-    let k = 0;
-    for (let i = 0; i < length; i++) {
+    let i = 0, j = 0, k = 0;
+    while (i < length) {
         const item = list[i];
-        if (predicate(item, i, list)) {
+        if (predicate(item, i++, list)) {
             valid[j++] = item;
         }
         else {
@@ -835,9 +844,10 @@ export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
     const length = list.length;
     if (length) {
         let baseValue!: any;
-        for (let i = 0; i < length; i++) {
+        let i = 0;
+        while (i < length) {
             const value = predicate(list[i], i, list);
-            if (i === 0) {
+            if (i++ === 0) {
                 baseValue = value;
             }
             else if (value !== baseValue) {
@@ -849,20 +859,13 @@ export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
     return false;
 }
 
-export function eachArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void>) {
-    const length = list.length;
-    for (let i = 0; i < length; i++) {
-        predicate(list[i], i, list);
-    }
-    return length;
-}
-
 export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Number.POSITIVE_INFINITY) {
     start = Math.max(start, 0);
     const length = Math.min(list.length, end);
-    for (let i = start; i < length; i++) {
+    let i = start;
+    while (i < length) {
         const item = list[i];
-        const result = predicate(item, i, list);
+        const result = predicate(item, i++, list);
         if (result === true) {
             return Number.POSITIVE_INFINITY;
         }
@@ -873,9 +876,10 @@ export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate
 export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Number.POSITIVE_INFINITY) {
     start = Math.max(start, 0);
     const length = Math.min(list.length, end);
-    for (let i = length - 1; i >= start; i--) {
+    let i = length - 1;
+    while (i >= start) {
         const item = list[i];
-        const result = predicate(item, i, list);
+        const result = predicate(item, i--, list);
         if (result === true) {
             return Number.POSITIVE_INFINITY;
         }
@@ -886,9 +890,9 @@ export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPr
 export function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = new Array(length);
-    let j = 0;
-    for (let i = 0; i < length; i++) {
-        const item = predicate(list[i], i, list);
+    let i = 0, j = 0;
+    while (i < length) {
+        const item = predicate(list[i], i++, list);
         if (hasValue(item)) {
             result[j++] = item;
         }
@@ -900,8 +904,8 @@ export function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T
 export function filterMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = new Array(length);
-    let j = 0;
-    for (let i = 0; i < length; i++) {
+    let i = -1, j = 0;
+    while (++i < length) {
         const item = list[i];
         if (predicate(item, i, list)) {
             result[j++] = callback(item, i, list);
@@ -913,8 +917,9 @@ export function filterMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate
 
 export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
-    for (let i = 0; i < length; i++) {
-        list[i] = predicate(list[i], i, list);
+    let i = 0;
+    while (i < length) {
+        list[i] = predicate(list[i], i++, list);
     }
     return list;
 }
@@ -922,8 +927,9 @@ export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>
 export function objectMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = new Array(length);
-    for (let i = 0; i < length; i++) {
-        result[i] = predicate(list[i], i, list);
+    let i = 0;
+    while (i < length) {
+        result[i] = predicate(list[i], i++, list);
     }
     return result;
 }
@@ -931,8 +937,9 @@ export function objectMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate
 export function joinMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char = '\n', trailing = true): string {
     let result = '';
     const length = list.length;
-    for (let i = 0; i < length; i++) {
-        const value = predicate(list[i], i, list);
+    let i = 0;
+    while (i < length) {
+        const value = predicate(list[i], i++, list);
         if (value !== '') {
             result += value + char;
         }
@@ -942,7 +949,8 @@ export function joinMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, s
 
 export function captureMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
     const length = list.length;
-    for (let i = 0; i < length; i++) {
+    let i = -1;
+    while (++i < length) {
         const item = list[i];
         if (predicate(item, i, list)) {
             const value = callback(item, i, list);

@@ -19,8 +19,9 @@ function getColorStop(element: SVGGradientElement) {
     const result: squared.lib.color.ColorStop[] = [];
     const stops = element.getElementsByTagName('stop');
     const length = stops.length;
-    for (let i = 0; i < length; i++) {
-        const item = stops[i];
+    let i = 0;
+    while (i < length) {
+        const item = stops[i++];
         const color = parseColor(getNamedItem(item, 'stop-color'), parseFloat(getNamedItem(item, 'stop-opacity') || '1'));
         if (color) {
             result.push({ color, offset: parseFloat(getNamedItem(item, 'offset')) / 100 });

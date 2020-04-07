@@ -40,7 +40,7 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
     public exclude(ext: squared.base.Extension<T>) {
         const extensions = this.extensions;
         const length = extensions.length;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
             if (extensions[i] === ext) {
                 extensions.splice(i, 1);
                 return true;
@@ -52,8 +52,9 @@ export default abstract class ExtensionManager<T extends squared.base.Node> impl
     public retrieve(name: string) {
         const extensions = this.extensions;
         const length = extensions.length;
-        for (let i = 0; i < length; i++) {
-            const ext = extensions[i];
+        let i = 0;
+        while (i < length) {
+            const ext = extensions[i++];
             if (ext.name === name) {
                 return ext;
             }

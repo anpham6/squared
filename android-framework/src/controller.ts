@@ -1682,8 +1682,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const bounds = node.innerMostWrapped.bounds;
                     const renderChildren = parent.renderChildren;
                     const length = renderChildren.length;
-                    for (let i = 0; i < length; i++) {
-                        const item = renderChildren[i] as T;
+                    let i = 0;
+                    while (i < length) {
+                        const item = renderChildren[i++] as T;
                         if (item === node || item.plainText || item.pseudoElement || item.originalRoot) {
                             continue;
                         }
@@ -1757,8 +1758,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
                         node.constraint[value] = true;
                     };
-                    for (let i = 0; i < length; i++) {
-                        const item = renderChildren[i] as T;
+                    i = 0;
+                    while (i < length) {
+                        const item = renderChildren[i++] as T;
                         if (item === node || item.pageFlow || item.originalRoot || !item.constraint[value]) {
                             continue;
                         }
@@ -1972,9 +1974,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 while (true);
             }
         });
-        let i = -1;
-        while (++i < nodes.length) {
-            const node = nodes[i];
+        const length = nodes.length;
+        let i = 0;
+        while (i < length) {
+            const node = nodes[i++];
             const constraint = node.constraint;
             const current = constraint.current;
             if (!constraint.horizontal) {
@@ -1983,7 +1986,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (horizontal && horizontalAligned.some(item => item.documentId === documentId)) {
                         constraint.horizontal = true;
                         horizontalAligned.push(node);
-                        i = -1;
+                        i = 0;
                         break;
                     }
                 }
@@ -1994,7 +1997,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (!horizontal && verticalAligned.some(item => item.documentId === documentId)) {
                         constraint.vertical = true;
                         verticalAligned.push(node);
-                        i = -1;
+                        i = 0;
                         break;
                     }
                 }
@@ -2206,7 +2209,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 let previous!: T;
                 let items!: T[];
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const item = seg[i];
                     let alignSibling: string;
                     if (leftAlign && leftForward) {
@@ -2431,7 +2434,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             let previousBaseline: Null<T> = null;
             const length = rows.length;
             const singleRow = length === 1 && !node.hasHeight;
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < length; ++i) {
                 const items = rows[i];
                 let baseline: Null<T>;
                 const q = items.length;
@@ -2452,8 +2455,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     let documentId = i === 0 ? 'true' : baseline?.documentId;
                     let maxCenterHeight = 0;
                     let textBaseline: Null<T> = null;
-                    for (let j = 0; j < q; j++) {
-                        const item = items[j];
+                    let j = 0;
+                    while (j < q) {
+                        const item = items[j++];
                         if (item === baseline || item === textBottom) {
                             continue;
                         }
@@ -2577,8 +2581,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             else if (baseline.multiline) {
                                 const { left, height } = baseline.bounds;
-                                for (let j = 0; j < q; j++) {
-                                    const item = items[j];
+                                let k = 0;
+                                while (k < q) {
+                                    const item = items[k++];
                                     if (item === baseline) {
                                         break;
                                     }
@@ -2593,16 +2598,19 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else if (r > 0 && r < q) {
                         textBottom = getTextBottom(items)[0] as T;
                         if (textBottom) {
-                            for (let j = 0; j < r; j++) {
-                                const item = baselineAlign[j];
+                            let k = 0;
+                            while (k < r) {
+                                const item = baselineAlign[k++];
                                 if (item.baseline && !item.multiline && textBottom.bounds.height > item.bounds.height) {
                                     item.anchor('bottom', textBottom.documentId);
                                 }
                             }
                         }
                     }
-                    for (let j = q - 1, last = true; j >= 0; j--) {
-                        const previous = items[j];
+                    let last = true;
+                    let k = q - 1;
+                    while (k >= 0) {
+                        const previous = items[k--];
                         if (previous.textElement) {
                             previous.setSingleLine(last && !previous.rightAligned && !previous.centerAligned);
                             last = false;
@@ -2690,8 +2698,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const renderChildren = node.renderChildren;
             const renderTemplates = <NodeTemplate<T>[]> node.renderTemplates;
             const templates: NodeTemplate<T>[] = [];
-            for (let i = 0; i < renderChildren.length; i++) {
-                if (!renderChildren[i].pageFlow) {
+            for (let i = 0; i < renderChildren.length; ++i) {
+               if (!renderChildren[i].pageFlow) {
                     templates.push(renderTemplates[i]);
                     renderChildren.splice(i, 1);
                     renderTemplates.splice(i--, 1);
@@ -2770,7 +2778,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const documentId = baseline?.documentId;
         let percentWidth = View.availablePercent(children, 'width', node.box.width);
         const length = children.length;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
             const item = children[i];
             if (previous) {
                 if (item.pageFlow) {
@@ -2933,7 +2941,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         let previousSiblings: T[] = [];
         let previousRow: Undef<T[]>;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
             const partition = horizontal[i];
             const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || item.autoMargin.left === true);
             let aboveRowEnd: Undef<T>;
@@ -2964,7 +2972,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let percentWidth = View.availablePercent(partition, 'width', node.box.width);
                 alignParent = i === 1 && !rowStart.floating && previousRow?.every(item => item.floating) === true && (clearMap.size === 0 || !partition.some((item: T) => checkClearMap(item, clearMap))) || !rowStart.pageFlow && (!rowStart.autoPosition || q === 1);
                 tallest = undefined;
-                for (let j = 0; j < q; j++) {
+                for (let j = 0; j < q; ++j) {
                     const chain = seg[j];
                     if (i === 0 || alignParent) {
                         if (length === 1) {
@@ -2988,8 +2996,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (previous) {
                             if (!previous.pageFlow && previous.autoPosition) {
                                 let found: Undef<T>;
-                                for (let k = j - 2; k >= 0; k--) {
-                                    found = seg[k];
+                                let k = j - 2;
+                                while (k >= 0) {
+                                    found = seg[k--];
                                     if (found.pageFlow) {
                                         break;
                                     }
@@ -3027,8 +3036,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             }
                             if (checkBottom) {
                                 aboveRowEnd = previousRow[previousRow.length - 1];
-                                for (let k = previousSiblings.length - 2; k >= 0; k--) {
-                                    const aboveBefore = previousSiblings[k];
+                                let k = previousSiblings.length - 2;
+                                while (k >= 0) {
+                                    const aboveBefore = previousSiblings[k--];
                                     if (aboveBefore.linear.bottom > aboveRowEnd.linear.bottom) {
                                         if (reverse && Math.ceil(aboveBefore.linear[anchorEnd]) - Math.floor(parent.box[anchorEnd]) < chain.linear.width) {
                                             continue;
@@ -3077,8 +3087,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else  {
                         if (!aboveRowEnd || !currentRowTop) {
                             aboveRowEnd = previousRow[0];
-                            for (let k = 1; k < q; k++) {
-                                const item = previousRow[k];
+                            let k = 1;
+                            while (k < q) {
+                                const item = previousRow[k++];
                                 if (item.linear.bottom > aboveRowEnd.linear.bottom) {
                                     aboveRowEnd = item;
                                 }
@@ -3087,8 +3098,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (!currentRowTop) {
                             currentRowTop = partition[0];
                             let currentTop = currentRowTop.linear.top;
-                            for (let k = 1; k < r; k++) {
-                                const item = partition[k];
+                            let k = 1;
+                            while (k < r) {
+                                const item = partition[k++];
                                 const top = item.linear.top;
                                 if (top < currentTop || top === currentTop && item.linear.height > currentRowTop.linear.height) {
                                     currentRowTop = item;

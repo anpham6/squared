@@ -50,7 +50,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         const children = this._children;
         items.forEach(item => {
             const length = children.length;
-            for (let i = 0; i < length; i++) {
+            let i = -1;
+            while (++i < length) {
                 if (children[i] === item) {
                     children.splice(i, 1);
                     result.push(item);
@@ -82,8 +83,9 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     public each(predicate: IteratorPredicate<T, void>) {
         const children = this._children;
         const length = children.length;
-        for (let i = 0; i < length; i++) {
-            predicate(children[i], i, children);
+        let i = 0;
+        while (i < length) {
+            predicate(children[i], i++, children);
         }
         return this;
     }
@@ -103,8 +105,9 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         const children = this._children;
         const length = children.length;
         if (length) {
-            for (let i = 0; i < length; i++) {
-                if (!predicate(children[i], i, children)) {
+            let i = 0;
+            while (i < length) {
+                if (!predicate(children[i], i++, children)) {
                     return false;
                 }
             }
@@ -122,14 +125,16 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public extract(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerOptions<T>): T[] {
-        let error: Undef<IteratorPredicate<T, boolean>>;
         let also: Undef<BindGeneric<T, void>>;
+        let error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ also, error } = options);
         }
         const result: T[] = [];
         const children = this._children;
-        for (let i = 0; i < children.length; i++) {
+        let length = children.length;
+        let i = -1;
+        while (++i < length) {
             const item = children[i];
             if (error && error(item, i, children)) {
                 break;
@@ -138,6 +143,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                 also?.bind(item, item)();
                 result.push(item);
                 children.splice(i--, 1);
+                length--;
             }
         }
         return result;
@@ -152,14 +158,15 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public findIndex(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerOptions<T>) {
-        let error: Undef<IteratorPredicate<T, boolean>>;
         let also: Undef<BindGeneric<T, void>>;
+        let error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ also, error } = options);
         }
         const children = this._children;
         const length = children.length;
-        for (let i = 0; i < length; i++) {
+        let i = -1;
+        while (++i < length) {
             const item = children[i];
             if (error && error(item, i, children)) {
                 return -1;
@@ -183,7 +190,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         const recurse = (container: Container<T>): Undef<T> => {
             const children = container.children;
             const length = children.length;
-            for (let i = 0; i < length; i++) {
+            let i = -1;
+            while (++i < length) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
                     invalid = true;
@@ -224,7 +232,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
             let result: T[] = [];
             const children = container.children;
             const length = children.length;
-            for (let i = 0; i < length; i++) {
+            let i = -1;
+            while (++i < length) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
                     invalid = true;

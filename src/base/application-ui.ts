@@ -104,8 +104,9 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
     let floating = true;
     let right = true;
     const length = nodes.length;
-    for (let i = 0; i < length; i++) {
-        const item = nodes[i];
+    let i = 0;
+    while (i < length) {
+        const item = nodes[i++];
         if (!item.floating) {
             floating = false;
         }
@@ -183,9 +184,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const children = cache.children;
         const length = children.length;
         const rendered: T[] = new Array(length);
-        let j = 0;
-        for (let i = 0; i < length; i++) {
-            const node = children[i];
+        let i = 0, j = 0;
+        while (i < length) {
+            const node = children[i++];
             if (node.renderParent && node.visible) {
                 if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
                     node.setLayout();
@@ -204,8 +205,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         });
         const documentRoot: LayoutRoot<T>[] = [];
-        for (let i = 0; i < j; i++) {
-            const node = rendered[i];
+        i = 0;
+        while (i < j) {
+            const node = rendered[i++];
             if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                 node.setBoxSpacing();
             }
@@ -601,10 +603,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const children: T[] = new Array(length);
             const elements: T[] = new Array(parentElement.childElementCount);
             let inlineText = true;
-            let j = 0;
-            let k = 0;
-            for (let i = 0; i < length; i++) {
-                const element = <HTMLElement> childNodes[i];
+            let i = 0, j = 0, k = 0;
+            while (i < length) {
+                const element = <HTMLElement> childNodes[i++];
                 let child: Undef<T>;
                 if (element === beforeElement) {
                     child = this.insertNode(beforeElement, undefined, '::before');
@@ -681,7 +682,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (length > 1) {
                 let trailing = children[0];
                 let floating = false;
-                for (let i = 0, j = 0; i < length; i++) {
+                for (let i = 0, j = 0; i < length; ++i) {
                     const child = children[i];
                     if (child.excluded) {
                         this.processing.excluded.append(child);
@@ -806,8 +807,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     else {
                         const childNodes = element.childNodes;
                         const length = childNodes.length;
-                        for (let i = 0; i < length; i++) {
-                            const child = <Element> childNodes[i];
+                        let i = 0;
+                        while (i < length) {
+                            const child = <Element> childNodes[i++];
                             if (isTextNode(child)) {
                                 if ((child.textContent as string).trim() !== '') {
                                     break;
@@ -1113,8 +1115,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             });
-            for (let i = 0; i < maxDepth; i++) {
-                mapY.set(getIndex(i), new Map<number, T>());
+            let i = 0;
+            while (i < maxDepth) {
+                mapY.set(getIndex(i++), new Map<number, T>());
             }
             cache.afterAppend = (node: T, cascade = false) => {
                 setMap(getIndex(node.depth), node.id, node);
@@ -1140,7 +1143,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 const renderExtension = <Undef<ExtensionUI<T>[]>> parent.renderExtension;
                 const axisY = parent.duplicate() as T[];
                 const length = axisY.length;
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     let nodeY = axisY[i];
                     if (nodeY.rendered || !nodeY.visible) {
                         continue;
@@ -1153,12 +1156,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         let m = 0;
                         if (parentY.layoutVertical && nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
                             horizontal.push(nodeY);
-                            l++;
-                            m++;
+                            ++l;
+                            ++m;
                         }
                         traverse: {
                             let floatActive = false;
-                            for ( ; l < length; l++, m++) {
+                            for ( ; l < length; ++l, ++m) {
                                 const item = axisY[l];
                                 if (item.pageFlow) {
                                     if (item.labelFor && !item.visible) {
@@ -1313,8 +1316,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         let next = false;
                         if (combined) {
                             const q = combined.length;
-                            for (let j = 0; j < q; j++) {
-                                const ext = combined[j];
+                            let j = 0;
+                            while (j < q) {
+                                const ext = combined[j++];
                                 const result = ext.processChild(nodeY, parentY);
                                 if (result) {
                                     const { output, renderAs, outputAs } = result;
@@ -1341,8 +1345,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         if (nodeY.styleElement) {
                             combined = prioritizeExtensions(nodeY.dataset.use, extensions);
                             const q = combined.length;
-                            for (let j = 0; j < q; j++) {
-                                const ext = combined[j];
+                            let j = 0;
+                            while (j < q) {
+                                const ext = combined[j++];
                                 if (ext.is(nodeY)) {
                                     if (ext.condition(nodeY, parentY) && (!descendant || !descendant.includes(ext))) {
                                         const result = ext.processNode(nodeY, parentY);
@@ -1579,9 +1584,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let floatgroup: Undef<T>;
             if (Array.isArray(item[0])) {
                 segments = item as T[][];
+                const itemCount = segments.length;
                 let grouping: T[] = segments[0];
-                for (let i = 1; i < segments.length; i++) {
-                    grouping = grouping.concat(segments[i]);
+                let i = 1;
+                while (i < itemCount) {
+                    grouping = grouping.concat(segments[i++]);
                 }
                 grouping.sort((a: T, b: T) => a.childIndex < b.childIndex ? -1 : 1);
                 const node = layout.node;
@@ -1595,7 +1602,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         node: floatgroup,
                         containerType,
                         alignmentType: alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? NODE_ALIGNMENT.RIGHT : 0),
-                        itemCount: segments.length
+                        itemCount
                     }));
                 }
             }
@@ -1708,7 +1715,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (!layoutVertical) {
             const node = layout.node;
             const length = Math.max(floatedRows.length, staticRows.length);
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < length; ++i) {
                 const pageFlow = staticRows[i] || [];
                 if (floatedRows[i] === null && pageFlow.length) {
                     const layoutType = controllerHandler.containerTypeVertical;

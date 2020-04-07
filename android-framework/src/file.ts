@@ -35,8 +35,8 @@ function getFileAssets(directory: string, items: string[]) {
     const length = items.length;
     if (length) {
         const result: FileAsset[] = new Array(length / 3);
-        for (let i = 0, j = 0; i < length; i += 3, j++) {
-            result[j] = {
+        for (let i = 0, j = 0; i < length; i += 3) {
+            result[j++] = {
                 pathname: directory + items[i + 1],
                 filename: items[i + 2],
                 content: items[i]
@@ -51,9 +51,9 @@ function getImageAssets(directory: string, items: string[], compression: boolean
     const length = items.length;
     if (length) {
         const result: FileAsset[] = new Array(length / 3);
-        for (let i = 0, j = 0; i < length; i += 3, j++) {
+        for (let i = 0, j = 0; i < length; i += 3) {
             const filename = items[i + 2].split('?')[0];
-            result[j] = {
+            result[j++] = {
                 pathname: directory + items[i + 1],
                 filename,
                 content: '',
@@ -415,7 +415,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         const result = {};
         const assets: FileAsset[] = [];
         const length = layouts.length;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
             const { content, filename: filenameA, pathname } = layouts[i];
             result[filenameA] = [content];
             if (actionable) {
@@ -438,12 +438,14 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         let result: FileAsset[] = [];
         if (assets) {
             const length = assets.length;
-            for (let i = 0, j = 0; i < length; i++) {
-                const item = assets[i];
+            let first = true;
+            let i = 0;
+            while (i < length) {
+                const item = assets[i++];
                 if (!item.uri) {
-                    if (j === 0) {
+                    if (first) {
                         item.filename = this.userSettings.outputMainFileName;
-                        j++;
+                        first = false;
                     }
                     else {
                         const filename = item.filename;

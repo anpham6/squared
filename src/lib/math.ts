@@ -139,8 +139,9 @@ export function multipleOf(values: number[], min = 0, offset?: number[]) {
     if (length > 1) {
         const increment = minArray(values);
         if (offset?.length === length) {
-            for (let i = 0; i < offset.length; i++) {
-                min = Math.max(min, offset[i] + values[i]);
+            let i = 0;
+            while (i < length) {
+                min = Math.max(min, offset[i] + values[i++]);
             }
         }
         else {
@@ -155,8 +156,9 @@ export function multipleOf(values: number[], min = 0, offset?: number[]) {
         let valid = false;
         while (!valid) {
             const total = start + value;
-            for (let i = 1; i < length; i++) {
-                const multiple = values[i] + (offset ? offset[i] : 0);
+            let i = 1;
+            while (i < length) {
+                const multiple = (offset ? offset[i] : 0) + values[i++];
                 if (total % multiple === 0) {
                     valid = true;
                 }
@@ -175,8 +177,8 @@ export function multipleOf(values: number[], min = 0, offset?: number[]) {
 export function sin(value: number, accuracy = 11) {
     value = convertRadian(value);
     let result = value;
-    for (let i = 3, j = 0; i <= accuracy; i += 2, j++) {
-        result += Math.pow(value, i) / factorial(i) * (j % 2 === 0 ? -1 : 1);
+    for (let i = 3, j = 0; i <= accuracy; i += 2) {
+        result += Math.pow(value, i) / factorial(i) * (j++ % 2 === 0 ? -1 : 1);
     }
     return result;
 }
@@ -184,8 +186,8 @@ export function sin(value: number, accuracy = 11) {
 export function cos(value: number, accuracy = 10) {
     value = convertRadian(value);
     let result = 1;
-    for (let i = 2, j = 0; i <= accuracy; i += 2, j++) {
-        result += Math.pow(value, i) / factorial(i) * (j % 2 === 0 ? -1 : 1);
+    for (let i = 2, j = 0; i <= accuracy; i += 2) {
+        result += Math.pow(value, i) / factorial(i) * (j++ % 2 === 0 ? -1 : 1);
     }
     return result;
 }
@@ -196,8 +198,9 @@ export function tan(value: number, accuracy = 11) {
 
 export function factorial(value: number) {
     let result = 2;
-    for (let i = 3; i <= value; i++) {
-        result *= i;
+    let i = 3;
+    while (i <= value) {
+        result *= i++;
     }
     return result;
 }

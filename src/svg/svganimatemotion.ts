@@ -104,7 +104,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     public addKeyPoint(item: NumberValue) {
-        if (!this._offsetPath) {
+        if (this._offsetPath === undefined) {
             const key = item.key;
             if (key >= 0 && key <= 1) {
                 const keyTimes = super.keyTimes;
@@ -136,7 +136,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     protected setOffsetPath() {
-        if (!this._offsetPath && isString(this.path)) {
+        if (this._offsetPath === undefined && isString(this.path)) {
             const { duration, rotateData } = this;
             let offsetPath = SvgBuild.getOffsetPath(this.path, this.rotate);
             let distance = offsetPath.length;
@@ -144,21 +144,25 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 let increment = 1;
                 if (duration >= distance) {
                     increment = duration / distance;
-                    for (let i = 1; i < distance - 1; i++) {
-                        offsetPath[i].key *= increment;
+                    const length = distance - 1;
+                    let i = 1;
+                    while (i < length) {
+                        offsetPath[i++].key *= increment;
                     }
-                    offsetPath[distance - 1].key = duration;
+                    offsetPath[length].key = duration;
                 }
                 else if (duration > 0) {
                     const result: SvgOffsetPath[] = new Array(duration);
                     const j = distance / duration;
-                    for (let i = 0; i < duration; i++) {
-                        const item = offsetPath[Math.floor(i * j)];
+                    let item!: SvgOffsetPath;
+                    let i = 0;
+                    while (i < duration) {
+                        item = offsetPath[Math.floor(i * j)];
                         item.key = i;
-                        result[i] = item;
+                        result[i++] = item;
                     }
                     const end = <SvgOffsetPath> offsetPath.pop();
-                    if (result[result.length - 1].value !== end.value) {
+                    if (item.value !== end.value) {
                         end.key = duration;
                         result.push(end);
                     }
@@ -174,8 +178,9 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     if (keyPoints.length > 1) {
                         let previous: Undef<SvgOffsetPath>;
                         const equalPoint = (time: number, point: DOMPoint, rotate: number) => previous?.key === time && previous.rotate === rotate && isEqual(previous.value, point);
-                        const q = keyTimes.length;
-                        for (let i = 0; i < q - 1; i++) {
+                        const q = keyTimes.length - 1;
+                        let i = -1;
+                        while (++i < q) {
                             const keyTime = keyTimes[i];
                             const baseTime = truncateFraction(keyTime * duration);
                             const offsetDuration = truncateFraction((keyTimes[i + 1] - keyTime) * duration);
@@ -215,8 +220,9 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                     const minTime = Math.floor(Math.min(from, to) * length);
                                     const maxTime = Math.floor(Math.max(from, to) * length);
                                     const partial: SvgOffsetPath[] = [];
-                                    for (let k = minTime; k <= maxTime; k++) {
-                                        partial.push(offsetPath[k]);
+                                    let k = minTime;
+                                    while (k <= maxTime) {
+                                        partial.push(offsetPath[k++]);
                                     }
                                     if (from > to) {
                                         partial.reverse();
@@ -225,10 +231,10 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                     const offsetInterval = offsetDuration / r;
                                     const item = partial[0];
                                     if (equalPoint(baseTime, item.value, item.rotate)) {
-                                        j++;
+                                        ++j;
                                         nextFrame += fps;
                                     }
-                                    for ( ; j < r; j++) {
+                                    for ( ; j < r; ++j) {
                                         const key = baseTime + (j * offsetInterval);
                                         if (key >= nextFrame) {
                                             const next = partial[j];
@@ -261,7 +267,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         result.push(offsetPath[Math.floor(i)]);
                     }
                     const end = <SvgOffsetPath> offsetPath.pop();
-                    if (end !== result[result.length - 1]) {
+                    if (result[result.length - 1] !== end) {
                         result.push(end);
                     }
                     this._offsetPath = result;
@@ -272,7 +278,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 if (rotateData) {
                     offsetPath = this._offsetPath;
                     const q = rotateData.length - 1;
-                    for (let i = 0, j = 0; i < q; i++) {
+                    for (let i = 0, j = 0; i < q; ++i) {
                         const from = rotateData[i];
                         const to = rotateData[i + 1];
                         const toKey = to.key;
@@ -310,19 +316,20 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         }
                         else {
                             const offset = angleTo - angleFrom;
-                            const length = timeRange.length;
+                            const length = timeRange.length - 1;
                             const l = offset / length;
+                            let k = 0;
                             if (autoValue) {
-                                for (let k = 0; k < length - 1; k++) {
-                                    timeRange[k].rotate += angleFrom + (k * l);
+                                while (k < length) {
+                                    timeRange[k].rotate += angleFrom + (k++ * l);
                                 }
-                                timeRange[length - 1].rotate += angleFrom + offset;
+                                timeRange[length].rotate += angleFrom + offset;
                             }
                             else {
-                                for (let k = 0; k < length - 1; k++) {
-                                    timeRange[k].rotate = angleFrom + (k * l);
+                                while (k < length) {
+                                    timeRange[k].rotate = angleFrom + (k++ * l);
                                 }
-                                timeRange[length - 1].rotate = angleFrom + offset;
+                                timeRange[length].rotate = angleFrom + offset;
                             }
                         }
                     }
@@ -422,9 +429,10 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 let keyPointsBase = this.keyPoints;
                 const length = keyTimesBase.length;
                 if (iterationCount === -1) {
-                    for (let i = 0; i < length; i++) {
+                    let i = 0;
+                    while (i < length) {
                         keyTimesBase[i] /= 2;
-                        keyTimes[i] = 0.5 + keyTimes[i] / 2;
+                        keyTimes[i] = 0.5 + keyTimes[i++] / 2;
                     }
                     keyTimesBase = keyTimesBase.concat(keyTimes);
                     keyPointsBase = keyPointsBase.concat(keyPoints);
@@ -433,17 +441,20 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 else {
                     const keyTimesStatic = keyTimesBase.slice(0);
                     const keyPointsStatic = keyPointsBase.slice(0);
-                    for (let i = 0; i < iterationCount; i++) {
+                    let i = -1;
+                    while (++i < iterationCount) {
                         if (i === 0) {
-                            for (let j = 0; j < length; j++) {
-                                keyTimesBase[j] /= iterationCount;
+                            let j = 0;
+                            while (j < length) {
+                                keyTimesBase[j++] /= iterationCount;
                             }
                         }
                         else {
                             const baseTime = i * (1 / iterationCount);
                             const keyTimesAppend = i % 2 === 0 ? keyTimesStatic.slice(0) : keyTimes.slice(0);
-                            for (let j = 0; j < length; j++) {
-                                keyTimesAppend[j] = truncateFraction(baseTime + keyTimesAppend[j] / iterationCount);
+                            let j = 0;
+                            while (j < length) {
+                                keyTimesAppend[j] = truncateFraction(baseTime + keyTimesAppend[j++] / iterationCount);
                             }
                             keyTimesBase = keyTimesBase.concat(keyTimesAppend);
                             keyPointsBase = keyPointsBase.concat(i % 2 === 0 ? keyPointsStatic : keyPoints);

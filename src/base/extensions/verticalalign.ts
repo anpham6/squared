@@ -19,8 +19,9 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
         let sameValue = 0;
         const children = node.children;
         const length = children.length;
-        for (let i = 0; i < length; i++) {
-            const item = children[i];
+        let i = 0;
+        while (i < length) {
+            const item = children[i++];
             if (!(item.positionStatic || item.positionRelative && item.length)) {
                 return false;
             }

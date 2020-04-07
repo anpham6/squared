@@ -58,14 +58,16 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                     if (excess > 0) {
                         close.splice(0, excess);
                     }
-                    for (let i = length - 1; i >= 0; i--) {
-                        const { index, include, item, name } = open[i];
-                        for (let j = 0; j < close.length; j++) {
+                    let i = length - 1;
+                    while (i >= 0) {
+                        const { index, include, item, name } = open[i--];
+                        for (let j = 0; j < close.length; ++j) {
                             const q = close[j].index;
                             if (q >= index) {
                                 const templates: NodeTemplate<T>[] = [];
-                                for (let k = index; k <= q; k++) {
-                                    templates.push(<NodeTemplate<T>> renderTemplates[k]);
+                                let k = index;
+                                while (k <= q) {
+                                    templates.push(<NodeTemplate<T>> renderTemplates[k++]);
                                 }
                                 const merge = !include || templates.length > 1;
                                 const depth = merge ? 1 : 0;

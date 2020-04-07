@@ -897,8 +897,9 @@ const parseOpacity = (value: number) => clamp(value) * 255;
 export function findColorName(value: string) {
     value = value.toLowerCase();
     const length = COLOR_CSS3.length;
-    for (let i = 0; i < length; i++) {
-        const color = COLOR_CSS3[i];
+    let i = 0;
+    while (i < length) {
+        const color = COLOR_CSS3[i++];
         if (color.key === value) {
             return color;
         }
@@ -913,8 +914,9 @@ export function findColorShade(value: string) {
         const result: ColorResult[] = [];
         let baseline = -1;
         const length = COLOR_CSS3.length;
-        for (let i = 0; i < length; i++) {
-            const color = COLOR_CSS3[i];
+        let i = 0;
+        while (i < length) {
+            const color = COLOR_CSS3[i++];
             if (color.value === value) {
                 return color;
             }
@@ -936,7 +938,7 @@ export function findColorShade(value: string) {
             const total = hsl.l + hsl.s;
             let nearest = Number.POSITIVE_INFINITY;
             let index = -1;
-            for (let i = 0; i < q; i++) {
+            for (i = 0; i < q; ++i) {
                 const { l, s } = result[i].hsl;
                 const offset = Math.abs(total - (l + s));
                 if (offset < nearest) {

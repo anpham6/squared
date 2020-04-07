@@ -13,8 +13,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     public static toRotateList(values: string[]) {
         const result: number[][] = [];
         const length = values.length;
-        for (let i = 0; i < length; i++) {
-            const value = values[i];
+        let i = 0;
+        while (i < length) {
+            const value = values[i++];
             if (value === '') {
                 result.push([0, 0, 0]);
             }
@@ -37,8 +38,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     public static toScaleList(values: string[]) {
         const result: number[][] = [];
         const length = values.length;
-        for (let i = 0; i < length; i++) {
-            const value = values[i];
+        let i = 0;
+        while (i < length) {
+            const value = values[i++];
             if (value === '') {
                 result.push([1, 1, 0, 0]);
             }
@@ -65,8 +67,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     public static toTranslateList(values: string[]) {
         const result: number[][] = [];
         const length = values.length;
-        for (let i = 0; i < length; i++) {
-            const value = values[i];
+        let i = 0;
+        while (i < length) {
+            const value = values[i++];
             if (value === '') {
                 result.push([0, 0]);
             }
@@ -89,8 +92,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     public static toSkewList(values: string[]) {
         const result: number[][] = [];
         const length = values.length;
-        for (let i = 0; i < length; i++) {
-            const value = values[i];
+        let i = 0;
+        while (i < length) {
+            const value = values[i++];
             if (value === '') {
                 result.push([0]);
             }
@@ -132,11 +136,11 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     const keySplines: string[] = [];
                     let previousValues: Undef<number[]>;
                     const length = keyTimesBase.length;
-                    for (let i = 0; i < iterationCount; i++) {
+                    for (let i = 0; i < iterationCount; ++i) {
                         if (i > 0 && keySplinesBase) {
                             keySplines.push('');
                         }
-                        for (let j = 0; j < length; j++) {
+                        for (let j = 0; j < length; ++j) {
                             const coordinates = SvgBuild.parseCoordinates(valuesBase[j]);
                             const q = coordinates.length;
                             if (q) {
@@ -177,8 +181,9 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                                     let time = (keyTimesBase[j] + i) * duration;
                                     if (previousValues) {
                                         const r = currentValues.length;
-                                        for (let k = 0; k < r; k++) {
-                                            currentValues[k] += previousValues[k];
+                                        let k = 0;
+                                        while (k < r) {
+                                            currentValues[k] += previousValues[k++];
                                         }
                                     }
                                     if (i < iterationCount - 1 && j === length - 1) {

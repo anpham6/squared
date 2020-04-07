@@ -270,7 +270,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }))
             .then((result: PreloadImage[]) => {
                 const length = result.length;
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const value = result[i];
                     if (typeof value === 'string') {
                         const uri = imageElements[i];
@@ -360,10 +360,9 @@ export default abstract class Application<T extends Node> implements squared.bas
             const children: T[] = new Array(length);
             const elements: T[] = new Array(childElementCount);
             let inlineText = true;
-            let j = 0;
-            let k = 0;
-            for (let i = 0; i < length; i++) {
-                const element = <HTMLElement> childNodes[i];
+            let i = 0, j = 0, k = 0;
+            while (i < length) {
+                const element = <HTMLElement> childNodes[i++];
                 let child: Undef<T>;
                 if (element.nodeName.charAt(0) === '#') {
                     if (isTextNode(element)) {
@@ -410,7 +409,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             const childMap = item.queryMap as T[][];
             if (childMap) {
                 const length = childMap.length;
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const j = i + 1;
                     result[j] = result[j]?.concat(childMap[i]) || childMap[i];
                 }
@@ -426,8 +425,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const cssRules = item.cssRules;
                 if (cssRules) {
                     const length = cssRules.length;
-                    for (let i = 0; i < length; i++) {
-                        const rule = cssRules[i];
+                    let i = 0;
+                    while (i < length) {
+                        const rule = cssRules[i++];
                         switch (rule.type) {
                             case CSSRule.STYLE_RULE:
                             case CSSRule.FONT_FACE_RULE:
@@ -462,8 +462,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         };
         const styleSheets = document.styleSheets;
         const length = styleSheets.length;
-        for (let i = 0; i < length; i++) {
-            const styleSheet = styleSheets[i];
+        let i = 0;
+        while (i < length) {
+            const styleSheet = styleSheets[i++];
             let mediaText: Undef<string>;
             try {
                 mediaText = styleSheet.media.mediaText;
@@ -669,8 +670,9 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     protected applyCSSRuleList(rules: CSSRuleList) {
         const length = rules.length;
-        for (let i = 0; i < length; i++) {
-            this.applyStyleRule(<CSSStyleRule> rules[i]);
+        let i = 0;
+        while (i < length) {
+            this.applyStyleRule(<CSSStyleRule> rules[i++]);
         }
     }
 

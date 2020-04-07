@@ -80,7 +80,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
             };
             let previousRow!: T;
             const length = rows.length;
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < length; ++i) {
                 const row = rows[i];
                 const q = row.length;
                 if (q === 1) {
@@ -113,12 +113,12 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         let rowReduce = multiline || perRowCount > 1 && (q % perRowCount !== 0 || !isNaN(columnCount) && perRowCount * columnCount % q > 1);
                         let excessCount = rowReduce && q % columnMin !== 0 ? q - columnMin : Number.POSITIVE_INFINITY;
                         let totalGap = 0;
-                        for (let j = 0, k = 0, l = 0; j < q; j++, l++) {
+                        for (let j = 0, k = 0, l = 0; j < q; ++j, ++l) {
                             const item = row[j];
                             const iteration = l % perRowCount === 0;
                             if (k < columnMin - 1 && (iteration || excessCount <= 0 || j > 0 && (row[j - 1].bounds.height >= maxHeight || columns[k].length && j < q - 2 && (q - j + 1 === columnMin - k) && row[j - 1].bounds.height > row[j + 1].bounds.height))) {
                                 if (j > 0) {
-                                    k++;
+                                    ++k;
                                     if (iteration) {
                                         excessCount--;
                                     }
@@ -157,7 +157,8 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     }
                     const r = columns.length;
                     const above: T[] = new Array(r);
-                    for (let j = 0; j < r; j++) {
+                    let j = 0;
+                    while (j < r) {
                         const data = columns[j];
                         data.forEach(item => {
                             item.app('layout_constraintWidth_percent', truncate((1 / columnMin) - percentGap, node.localSettings.floatPrecision));
@@ -167,9 +168,9 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             item.anchored = true;
                             item.positioned = true;
                         });
-                        above[j] = data[0];
+                        above[j++] = data[0];
                     }
-                    for (let j = 0; j < r; j++) {
+                    for (j = 0; j < r; ++j) {
                         const item = columns[j];
                         if (j < r - 1 && item.length > 1) {
                             const columnEnd = item[item.length - 1];
@@ -182,13 +183,15 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                     }
                     const columnHeight: number[] = new Array(r);
-                    for (let j = 0; j < r; j++) {
+                    j = 0;
+                    while (j < r) {
                         const seg = columns[j];
                         const elements: Element[] = [];
                         let height = 0;
                         const s = seg.length;
-                        for (let k = 0; k < s; k++) {
-                            const column = seg[k];
+                        let k = 0;
+                        while (k < s) {
+                            const column = seg[k++];
                             if (column.naturalChild) {
                                 const element = <HTMLElement> (<Element> column.element).cloneNode(true);
                                 if (column.styleElement) {
@@ -214,12 +217,12 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             height += container.getBoundingClientRect().height;
                             document.body.removeChild(container);
                         }
-                        columnHeight[j] = height;
+                        columnHeight[j++] = height;
                     }
                     let anchorTop!: T;
                     let anchorBottom!: T;
                     let maxHeight = 0;
-                    for (let j = 0; j < r; j++) {
+                    for (j = 0; j < r; ++j) {
                         const value = columnHeight[j];
                         if (value >= maxHeight) {
                             const column = columns[j];
@@ -228,7 +231,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             maxHeight = value;
                         }
                     }
-                    for (let j = 0; j < r; j++) {
+                    for (j = 0; j < r; ++j) {
                         const item = above[j];
                         if (j === 0) {
                             item.anchor('left', 'parent');
@@ -247,10 +250,10 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                     }
                     const dividers: T[] = [];
-                    for (let j = 0; j < r; j++) {
+                    for (j = 0; j < r; ++j) {
                         const seg = columns[j];
                         const s = seg.length;
-                        for (let k = 0; k < s; k++) {
+                        for (let k = 0; k < s; ++k) {
                             const item = seg[k];
                             if (k === 0) {
                                 if (j > 0) {

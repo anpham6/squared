@@ -70,8 +70,9 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             let row: T[] = [rowStart];
             const rows: T[][] = [row];
             let length = children.length;
-            for (let i = 1; i < length; i++) {
-                const item = children[i];
+            let i = 1;
+            while (i < length) {
+                const item = children[i++];
                 if (rowStart[method](item.bounds, 'bounds')) {
                     row.push(item);
                 }
@@ -85,13 +86,14 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             let maxCount = 0;
             let offset: number;
             length = rows.length;
+            i = 0;
             if (length > 1) {
                 const boxSize: number = node.box[size];
-                for (let i = 0; i < length; i++) {
+                while (i < length) {
                     const seg = rows[i];
                     const group = controller.createNodeGroup(seg[0], seg, { parent: node, delegate: true, cascade: true });
                     group.addAlign(NODE_ALIGNMENT.SEGMENTED);
-                    group.containerIndex = i;
+                    group.containerIndex = i++;
                     group.box[size] = boxSize;
                     maxCount = Math.max(seg.length, maxCount);
                 }
@@ -100,14 +102,16 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             else {
                 const item = rows[0];
                 node.retain(item);
-                for (let i = 0; i < item.length; i++) {
-                    item[i].containerIndex = i;
-                }
                 maxCount = item.length;
+                while (i < maxCount) {
+                    item[i].containerIndex = i++;
+                }
                 offset = maxCount;
             }
-            for (let i = 0; i < absolute.length; i++) {
-                absolute[i].containerIndex = offset + i;
+            const q = absolute.length;
+            i = 0;
+            while (i < q) {
+                absolute[i].containerIndex = offset + i++;
             }
             node.concat(absolute);
             node.sort();

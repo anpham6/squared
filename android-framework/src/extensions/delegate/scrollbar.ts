@@ -72,7 +72,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         }
         const length = overflow.length;
         if (length) {
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < length; ++i) {
                 const container = this.application.createNode({ parent });
                 if (i === 0) {
                     container.inherit(node, 'base', 'initial', 'styleMap');
@@ -88,7 +88,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 container.childIndex = node.childIndex;
                 scrollView.push(container);
             }
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < length; ++i) {
                 const item = scrollView[i];
                 switch (item.controlName) {
                     case verticalScroll:
@@ -132,18 +132,22 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     }
                 );
             }
-            for (let i = length - 1, j = 0; i >= 0; i--, j++) {
-                const item = scrollView[i];
-                if (j === 0) {
+            let first = true;
+            let item: T;
+            do {
+                item = scrollView.pop() as T;
+                if (first) {
                     parent = item;
                     item.innerWrapped = node;
+                    first = false;
                 }
                 else {
                     item.innerWrapped = parent;
                 }
             }
+            while (scrollView.length);
             node.exclude({ resource: NODE_RESOURCE.BOX_STYLE });
-            node.resetBox(BOX_STANDARD.MARGIN, scrollView[0]);
+            node.resetBox(BOX_STANDARD.MARGIN, item);
             node.parent = parent;
             return { parent };
         }

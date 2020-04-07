@@ -107,10 +107,13 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                     }
                                     return topA < topB ? -1 : 1;
                                 });
-                                for (let i = 0; i < length; i++) {
-                                    const item = unaligned[i];
-                                    if (i === 0) {
+                                let first = true;
+                                let i = 0;
+                                while (i < length) {
+                                    const item = unaligned[i++];
+                                    if (first) {
                                         node.modifyBox(BOX_STANDARD.MARGIN_TOP, convertFloat(item.verticalAlign));
+                                        first = false;
                                     }
                                     else {
                                         item.modifyBox(BOX_STANDARD.MARGIN_TOP, item.linear.top - unaligned[0].linear.top);
@@ -131,8 +134,9 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 let previous: Undef<T>;
                 const children = (node.actualParent as T).naturalChildren as T[];
                 const length = children.length;
-                for (let i = 0; i < length; i++) {
-                    const item = children[i];
+                let i = 0;
+                while (i < length) {
+                    const item = children[i++];
                     if (item === node) {
                         if (preceding) {
                             if (hasVertical && renderParent.layoutVertical) {

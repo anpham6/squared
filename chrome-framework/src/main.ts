@@ -53,10 +53,10 @@ async function findElementAsync(element: HTMLElement, cache: boolean) {
 }
 
 async function findElementAllAsync(query: NodeListOf<Element>, cache: boolean) {
+    let incomplete = false;
     const length = query.length;
     const result: View[] = new Array(length);
-    let incomplete = false;
-    for (let i = 0; i < length; i++) {
+    for (let i = 0; i < length; ++i) {
         const item = await findElementAsync(<HTMLElement> query[i], cache);
         if (item) {
             result[i] = item;

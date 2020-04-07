@@ -97,13 +97,14 @@ export function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scroll
 }
 
 export function getRangeClientRect(element: Element) {
+    const domRect: ClientRect[] = [];
     const range = document.createRange();
     range.selectNodeContents(element);
     const clientRects = range.getClientRects();
     let length = clientRects.length;
-    const domRect: ClientRect[] = [];
-    for (let i = 0; i < length; i++) {
-        const item = <ClientRect> clientRects.item(i);
+    let i = 0;
+    while (i < length) {
+        const item = <ClientRect> clientRects.item(i++);
         if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
             domRect.push(item);
         }
@@ -114,7 +115,8 @@ export function getRangeClientRect(element: Element) {
         bounds = assignRect(domRect[0]);
         let numberOfLines = 1;
         let overflow = false;
-        for (let i = 1; i < length; i++) {
+        i = 0;
+        while (++i < length) {
             const { left, right, top, bottom, width } = domRect[i];
             if (left < bounds.left) {
                 bounds.left = left;
