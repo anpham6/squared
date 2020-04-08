@@ -1,6 +1,8 @@
-import type { FileAsset } from '../base/application';
-import type { AppViewModelAndroid, CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
-import type { Constraint, LocalSettingsAndroidUI, RenderSpaceAttribute, SupportAndroid, ViewAttribute, WrapperOptions } from './node';
+import { FileAsset } from '../base/application';
+import { AppViewModelAndroid, CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
+import { Constraint, LocalSettingsAndroidUI, RenderSpaceAttribute, SupportAndroid, ViewAttribute, WrapperOptions } from './node';
+
+import * as squared from '../squared';
 
 import LayoutUI = squared.base.LayoutUI;
 

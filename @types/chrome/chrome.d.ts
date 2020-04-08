@@ -1,4 +1,6 @@
-import type { ChromeAsset, UserSettingsChrome } from './application';
+import { ChromeAsset, UserSettingsChrome } from './application';
+
+import * as squared from '../squared';
 
 type View = chrome.base.View;
 
@@ -69,8 +71,8 @@ declare namespace base {
 
 declare namespace extensions {
     namespace compress {
-        class Brotli<T extends View> extends chrome.base.Extension<T> {}
-        class Gzip<T extends View> extends chrome.base.Extension<T> {}
+        class Brotli<T extends View> extends base.Extension<T> {}
+        class Gzip<T extends View> extends base.Extension<T> {}
     }
 }
 

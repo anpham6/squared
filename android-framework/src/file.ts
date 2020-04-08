@@ -1,5 +1,5 @@
-import type { FileArchivingOptions, FileAsset, FileCopyingOptions } from '../../@types/base/application';
-import type { FileOutputOptions, ResourceStoredMapAndroid } from '../../@types/android/application';
+import { FileArchivingOptions, FileAsset, FileCopyingOptions } from '../../@types/base/application';
+import { FileOutputOptions, ResourceStoredMapAndroid } from '../../@types/android/application';
 
 import Resource from './resource';
 

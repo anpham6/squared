@@ -1,4 +1,4 @@
-import type { FlexboxData } from '../../../@types/base/extension';
+import { FlexboxData } from '../../../@types/base/extension';
 
 import View from '../view';
 

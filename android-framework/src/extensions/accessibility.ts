@@ -1,4 +1,4 @@
-import type { AccessibilityOptions } from '../../../@types/android/extension';
+import { AccessibilityOptions } from '../../../@types/android/extension';
 
 import Resource from '../resource';
 

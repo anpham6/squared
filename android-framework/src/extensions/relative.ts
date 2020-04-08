@@ -1,4 +1,4 @@
-import type { ControllerSettingsAndroid } from '../../../@types/android/application';
+import { ControllerSettingsAndroid } from '../../../@types/android/application';
 
 type View = android.base.View;
 

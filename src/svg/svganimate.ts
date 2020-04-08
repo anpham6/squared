@@ -1,4 +1,4 @@
-import type { SvgAnimationAttribute } from '../../@types/svg/object';
+import { SvgAnimationAttribute } from '../../@types/svg/object';
 
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';

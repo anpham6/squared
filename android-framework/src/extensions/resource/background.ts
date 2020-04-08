@@ -1,5 +1,5 @@
-import type { ResourceBackgroundOptions } from '../../../../@types/android/extension';
-import type { GradientTemplate } from '../../../../@types/android/resource';
+import { ResourceBackgroundOptions } from '../../../../@types/android/extension';
+import { GradientTemplate } from '../../../../@types/android/resource';
 
 import Resource from '../../resource';
 import ResourceSvg from './svg';

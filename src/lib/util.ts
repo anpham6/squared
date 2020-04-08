@@ -377,12 +377,12 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
     const combined = prefixed ? prefix + opening : opening;
     const result: string[] = [];
     const appendValues = (segment: string) => {
-        for (let seg of segment.split(separator)) {
+        segment.split(separator).forEach(seg => {
             seg = seg.trim();
             if (seg !== '') {
                 result.push(seg);
             }
-        }
+        });
     };
     let position = 0;
     let index = -1;

@@ -1,4 +1,4 @@
-import type { CachedValue } from '../../@types/base/node';
+import { CachedValue } from '../../@types/base/node';
 
 export default class View extends squared.base.Node implements chrome.base.View {
     public queryMap?: View[][];

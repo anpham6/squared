@@ -1,4 +1,4 @@
-import type { ConstraintGuidelineOptions } from '../../../../@types/android/extension';
+import { ConstraintGuidelineOptions } from '../../../../@types/android/extension';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
 

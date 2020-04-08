@@ -1,4 +1,4 @@
-import type { AppViewModel, ControllerUISettings, FileCopyingOptions, FileArchivingOptions, ResourceStoredMap, UserUISettings } from '../base/application';
+import { AppViewModel, ControllerUISettings, FileCopyingOptions, FileArchivingOptions, ResourceStoredMap, UserUISettings } from '../base/application';
 
 type View = android.base.View;
 

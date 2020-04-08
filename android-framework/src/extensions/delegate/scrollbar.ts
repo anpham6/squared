@@ -1,4 +1,4 @@
-import type { NodeXmlTemplate } from '../../../../@types/base/application';
+import { NodeXmlTemplate } from '../../../../@types/base/application';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';

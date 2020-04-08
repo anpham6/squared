@@ -1,5 +1,5 @@
-import type { AppFramework } from '../../@types/base/application';
-import type { FileOutputOptions, UserSettingsAndroid } from '../../@types/android/application';
+import { AppFramework } from '../../@types/base/application';
+import { FileOutputOptions, UserSettingsAndroid } from '../../@types/android/application';
 
 import Application from './application';
 import Controller from './controller';

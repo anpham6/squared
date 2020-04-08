@@ -1,4 +1,4 @@
-import type { CachedValueUI, ExcludeUIOptions, LocalSettingsUI, SupportUI } from '../base/node';
+import { CachedValueUI, ExcludeUIOptions, LocalSettingsUI, SupportUI } from '../base/node';
 
 export interface LocalSettingsAndroidUI extends LocalSettingsUI {
     supportRTL: boolean;

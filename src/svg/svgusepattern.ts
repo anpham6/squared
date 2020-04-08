@@ -1,4 +1,4 @@
-import type { SvgBuildOptions, SvgSynchronizeOptions } from '../../@types/svg/object';
+import { SvgBuildOptions, SvgSynchronizeOptions } from '../../@types/svg/object';
 
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgViewRect$MX from './svgviewrect-mx';

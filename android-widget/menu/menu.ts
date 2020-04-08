@@ -1,5 +1,5 @@
-import type { ExtensionResult, NodeXmlTemplate } from '../../@types/base/application';
-import type { ViewAttribute } from '../../@types/android/node';
+import { ExtensionResult, NodeXmlTemplate } from '../../@types/base/application';
+import { ViewAttribute } from '../../@types/android/node';
 
 type View = android.base.View;
 

@@ -1,4 +1,4 @@
-import type { ResourceStoredMapAndroid } from '../../../../@types/android/application';
+import { ResourceStoredMapAndroid } from '../../../../@types/android/application';
 
 import Resource from '../../resource';
 
@@ -14,13 +14,15 @@ const REGEX_UNIT = /\dpx$/;
 const REGEX_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/;
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
+    if (map.get(name) === value) {
+        return name;
+    }
     for (const [storedName, storedValue] of map.entries()) {
-        if (storedName.startsWith(name) && value === storedValue) {
+        if (value === storedValue && storedName.startsWith(name)) {
             return storedName;
         }
     }
-    const previous = map.get(name);
-    return !!previous && previous !== value ? Resource.generateId('dimen', name) : name;
+    return Resource.generateId('dimen', name);
 }
 
 function createNamespaceData(namespace: string, node: View, group: ObjectMap<View[]>) {

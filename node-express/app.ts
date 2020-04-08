@@ -406,32 +406,30 @@ app.post('/api/assets/archive', (req, res) => {
                 const { content, base64, uri } = file;
                 const data = { name: path.join(file.pathname, file.filename) };
                 const compressFile = () => {
-                    if (delayed !== Number.POSITIVE_INFINITY) {
-                        if (gzipLevel !== -1) {
-                            delayed++;
-                            const gz = `${filename}.gz`;
-                            createGzipWriteStream(filename, gz, gzipLevel)
-                                .on('finish', () => {
-                                    if (delayed !== Number.POSITIVE_INFINITY) {
-                                        archive.file(gz, { name: `${data.name}.gz` });
-                                        finalize(true);
-                                    }
-                                });
-                        }
-                        if (brotliQuality !== -1 && checkVersion(11, 7)) {
-                            delayed++;
-                            const br = `${filename}.br`;
-                            createBrotliWriteStream(filename, br, brotliQuality, file.mimeType)
-                                .on('finish', () => {
-                                    if (delayed !== Number.POSITIVE_INFINITY) {
-                                        archive.file(br, { name: `${data.name}.br` });
-                                        finalize(true);
-                                    }
-                                });
-                        }
-                        archive.file(filename, data);
-                        finalize(true);
+                    if (gzipLevel !== -1) {
+                        delayed++;
+                        const gz = `${filename}.gz`;
+                        createGzipWriteStream(filename, gz, gzipLevel)
+                            .on('finish', () => {
+                                if (delayed !== Number.POSITIVE_INFINITY) {
+                                    archive.file(gz, { name: `${data.name}.gz` });
+                                    finalize(true);
+                                }
+                            });
                     }
+                    if (brotliQuality !== -1 && checkVersion(11, 7)) {
+                        delayed++;
+                        const br = `${filename}.br`;
+                        createBrotliWriteStream(filename, br, brotliQuality, file.mimeType)
+                            .on('finish', () => {
+                                if (delayed !== Number.POSITIVE_INFINITY) {
+                                    archive.file(br, { name: `${data.name}.br` });
+                                    finalize(true);
+                                }
+                            });
+                    }
+                    archive.file(filename, data);
+                    finalize(true);
                 };
                 fs.mkdirpSync(pathname);
                 if (content || base64) {

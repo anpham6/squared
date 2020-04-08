@@ -1,5 +1,5 @@
-import type { VisibleStyle } from '../../../@types/base/node';
-import type { ListData } from '../../../@types/base/extension';
+import { VisibleStyle } from '../../../@types/base/node';
+import { ListData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
 

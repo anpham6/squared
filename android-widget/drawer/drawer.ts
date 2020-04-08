@@ -1,5 +1,5 @@
-import type { NodeXmlTemplate } from '../../@types/base/application';
-import type { UserSettingsAndroid } from '../../@types/android/application';
+import { NodeXmlTemplate } from '../../@types/base/application';
+import { UserSettingsAndroid } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 

@@ -1,4 +1,4 @@
-import type { SvgPoint, SvgSynchronizeOptions } from '../../@types/svg/object';
+import { SvgPoint, SvgSynchronizeOptions } from '../../@types/svg/object';
 
 import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';

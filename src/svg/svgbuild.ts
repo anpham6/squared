@@ -1,4 +1,4 @@
-import type { SvgOffsetPath, SvgPathCommand, SvgPoint, SvgTransform } from '../../@types/svg/object';
+import { SvgOffsetPath, SvgPathCommand, SvgPoint, SvgTransform } from '../../@types/svg/object';
 
 import { INSTANCE_TYPE } from './lib/constant';
 import { MATRIX, SVG, TRANSFORM, createPath } from './lib/util';

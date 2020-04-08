@@ -1,4 +1,4 @@
-import type { ControllerSettings, ResourceAssetMap, UserSettings } from '../../@types/base/application';
+import { ControllerSettings, ResourceAssetMap, UserSettings } from '../../@types/base/application';
 
 type FontFaceData = squared.lib.css.FontFaceData;
 

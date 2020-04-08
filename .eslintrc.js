@@ -10,7 +10,7 @@ module.exports = {
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
         ".eslint-config"
     ],
-    "ignorePatterns": [],
+    "ignorePatterns": ["index.d.ts"],
     "globals": {
         "squared": "readonly"
     }

@@ -1,6 +1,6 @@
-import type { NodeXmlTemplate } from '../../../@types/base/application';
-import type { RenderSpaceAttribute } from '../../../@types/android/node';
-import type { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@types/base/extension';
+import { NodeXmlTemplate } from '../../../@types/base/application';
+import { RenderSpaceAttribute } from '../../../@types/android/node';
+import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@types/base/extension';
 
 import Resource from '../resource';
 

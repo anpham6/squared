@@ -1,4 +1,4 @@
-import type { ExtensionResult, LayoutRoot } from '../../@types/base/application';
+import { ExtensionResult, LayoutRoot } from '../../@types/base/application';
 
 import Extension from './extension';
 

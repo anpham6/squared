@@ -1,4 +1,4 @@
-import type { ResourceStringsOptions } from '../../../../@types/android/extension';
+import { ResourceStringsOptions } from '../../../../@types/android/extension';
 
 import Resource from '../../resource';
 
@@ -52,9 +52,9 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         if (!node.layoutFrame) {
                             const valueString: StringValue = node.data(Resource.KEY_NAME, 'valueString');
                             if (valueString) {
-                                const name = valueString.key || valueString.value;
                                 let value = valueString.value;
-                                if (node.naturalChild && node.alignParent('left') && node.pageFlow && !(!node.plainText && node.preserveWhiteSpace || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
+                                const name = valueString.key || value;
+                                if (node.naturalChild && node.alignParent('left') && node.pageFlow && !(node.preserveWhiteSpace && !node.plainText || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
                                     let leadingSpace = 0;
                                     const textContent = node.textContent;
                                     const length = textContent.length;

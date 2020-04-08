@@ -1,4 +1,4 @@
-import type { NodeTemplate, NodeIncludeTemplate } from '../../../../@types/base/application';
+import { NodeTemplate, NodeIncludeTemplate } from '../../../../@types/base/application';
 
 import { getRootNs } from '../../lib/util';
 

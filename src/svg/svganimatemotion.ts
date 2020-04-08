@@ -1,4 +1,4 @@
-import type { SvgOffsetPath } from '../../@types/svg/object';
+import { SvgOffsetPath } from '../../@types/svg/object';
 
 import SvgAnimateTransform from './svganimatetransform';
 import SvgBuild from './svgbuild';
@@ -179,8 +179,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         let previous: Undef<SvgOffsetPath>;
                         const equalPoint = (time: number, point: DOMPoint, rotate: number) => previous?.key === time && previous.rotate === rotate && isEqual(previous.value, point);
                         const q = keyTimes.length - 1;
-                        let i = -1;
-                        while (++i < q) {
+                        for (let i = 0; i < q; ++i) {
                             const keyTime = keyTimes[i];
                             const baseTime = truncateFraction(keyTime * duration);
                             const offsetDuration = truncateFraction((keyTimes[i + 1] - keyTime) * duration);
@@ -441,8 +440,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 else {
                     const keyTimesStatic = keyTimesBase.slice(0);
                     const keyPointsStatic = keyPointsBase.slice(0);
-                    let i = -1;
-                    while (++i < iterationCount) {
+                    for (let i = 0; i < iterationCount; ++i) {
                         if (i === 0) {
                             let j = 0;
                             while (j < length) {

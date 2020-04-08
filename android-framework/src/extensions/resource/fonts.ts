@@ -1,5 +1,5 @@
-import type { ResourceStoredMapAndroid, StyleAttribute } from '../../../../@types/android/application';
-import type { ResourceFontsOptions } from '../../../../@types/android/extension';
+import { ResourceStoredMapAndroid, StyleAttribute } from '../../../../@types/android/application';
+import { ResourceFontsOptions } from '../../../../@types/android/extension';
 
 import Resource from '../../resource';
 

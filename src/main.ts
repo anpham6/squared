@@ -1,4 +1,4 @@
-import type { AppFramework, FileActionOptions, UserSettings } from '../@types/base/application';
+import { AppFramework, FileActionOptions, UserSettings } from '../@types/base/application';
 
 import Container from './lib/base/container';
 

@@ -1,4 +1,4 @@
-import type { FileArchivingOptions, FileCopyingOptions, RawAsset, UserSettings } from '../../@types/base/application';
+import { FileArchivingOptions, FileCopyingOptions, RawAsset, UserSettings } from '../../@types/base/application';
 
 const { fromLastIndexOf, isString } = squared.lib.util;
 

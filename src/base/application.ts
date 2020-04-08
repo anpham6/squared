@@ -1,4 +1,4 @@
-import type { AppProcessing, AppSession, AppViewModel, FileActionOptions, UserSettings } from '../../@types/base/application';
+import { AppProcessing, AppSession, AppViewModel, FileActionOptions, UserSettings } from '../../@types/base/application';
 
 import Controller from './controller';
 import Extension from './extension';

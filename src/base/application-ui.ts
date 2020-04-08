@@ -1,4 +1,4 @@
-import type { NodeUIOptions, AppSessionUI, ControllerUISettings, FileActionOptions, FileAsset, LayoutResult, LayoutRoot, NodeTemplate, UserUISettings } from '../../@types/base/application';
+import { NodeUIOptions, AppSessionUI, ControllerUISettings, FileActionOptions, FileAsset, LayoutResult, LayoutRoot, NodeTemplate, UserUISettings } from '../../@types/base/application';
 
 import Application from './application';
 import ControllerUI from './controller-ui';

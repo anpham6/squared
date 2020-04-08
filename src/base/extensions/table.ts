@@ -1,4 +1,4 @@
-import type { TableData, TableCellData } from '../../../@types/base/extension';
+import { TableData, TableCellData } from '../../../@types/base/extension';
 
 import ExtensionUI from '../extension-ui';
 

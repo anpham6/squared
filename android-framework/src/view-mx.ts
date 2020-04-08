@@ -1,6 +1,6 @@
-import type { NodeTemplate } from '../../@types/base/application';
-import type { AutoMargin, BoxType, HideUIOptions, TranslateUIOptions } from '../../@types/base/node';
-import type { CachedValueAndroidUI, Constraint, LocalSettingsAndroidUI, SupportAndroid } from '../../@types/android/node';
+import { NodeTemplate } from '../../@types/base/application';
+import { AutoMargin, BoxType, HideUIOptions, TranslateUIOptions } from '../../@types/base/node';
+import { CachedValueAndroidUI, Constraint, LocalSettingsAndroidUI, SupportAndroid } from '../../@types/android/node';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
