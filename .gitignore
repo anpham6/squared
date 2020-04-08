@@ -7,3 +7,4 @@ temp/
 .DS_Store
 *.code-workspace
 package-lock.json
+app.js

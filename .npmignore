@@ -10,6 +10,8 @@ html/demos/
 node_modules/
 src/
 temp/
-rollup.config.*
+rollup.*
 tsconfig.*
-.eslintrc.js
+*.ts
+.git*
+.eslint*
