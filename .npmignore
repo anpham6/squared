@@ -8,6 +8,7 @@ chrome-framework/
 html/books/
 html/demos/
 node_modules/
+node-express/
 src/
 temp/
 rollup.*
@@ -15,3 +16,4 @@ tsconfig.*
 *.ts
 .git*
 .eslint*
+!app.js
