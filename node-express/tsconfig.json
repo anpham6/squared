@@ -4,7 +4,7 @@
     "module": "CommonJS",
     "outDir": "../build",
     "moduleResolution": "node",
-    "inlineSourceMap": true,
+    "inlineSourceMap": false,
     "lib": ["ES5"],
     "noUnusedLocals": true,
     "alwaysStrict": true,

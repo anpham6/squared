@@ -22,7 +22,7 @@ GitHub
 &nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared  
 &nbsp;&nbsp;&nbsp;&gt; cd squared  
 &nbsp;&nbsp;&nbsp;&gt; npm install  
-&nbsp;&nbsp;&nbsp;&gt; npm run prod  
+&nbsp;&nbsp;&nbsp;&gt; npm run prod -OR- npm run dev
 &nbsp;&nbsp;&nbsp;&gt; node app.js  
 
 * Open Browser: http://localhost:3000
@@ -51,9 +51,7 @@ GitHub
         squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview' */, /* etc... */);
         squared.close();
 
-        // NOTE: options: { assets?: FileAsset[], callback?: () => void }
-
-        // Optional: NodeJS Express / squared-apache
+        // Optional: node-express / squared-apache
         squared.saveToArchive(/* optional: archive name */, /* options */);
         // OR
         squared.copyToDisk(/* required: local directory */, /* options */);
@@ -139,7 +137,7 @@ squared.settings = {
     framesPerSecond: 60,
     supportRTL: true,
     preloadImages: true,
-    compressImages: false, // Required: TinyPNG API Key (https://tinypng.com/developers)
+    compressImages: false, // Required: TinyPNG API Key <https://tinypng.com/developers>
     supportNegativeLeftTop: true,
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
@@ -169,7 +167,7 @@ squared.settings = {
         'chrome.compress.gzip'
     ],
     preloadImages: false,
-    compressImages: false, // Required: TinyPNG API Key (https://tinypng.com/developers)
+    compressImages: false, // Required: TinyPNG API Key <https://tinypng.com/developers>
     handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,
@@ -198,7 +196,7 @@ ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
 
-// Required: NodeJS Express / squared-apache
+// Required: node-express / squared-apache
 // NOTE: options: { assets?: FileAsset[], exclusions?: {}, callback?: () => void }
 
 saveToArchive(filename?: string, options?: {}) // save entire project as a new archive
@@ -543,7 +541,7 @@ Only the XML based layout and resource files are generated with squared which ca
 
 ### ANDROID: Extension Widgets
 
-Most of the Android support library extensions can be configured using the same attribute name in the Android documentation. See /demo/*.html for usage instructions.
+Most of the Android support library extensions can be configured using the same attribute name in the Android documentation. See /android/widget/*.html for usage instructions in the squared-apache <https://github.com/anpham6/squared-apache> project.
 
 - android.external
 - android.substitute
