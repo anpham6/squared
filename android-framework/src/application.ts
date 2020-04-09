@@ -1,4 +1,5 @@
-import { AppViewModelAndroid, UserSettingsAndroid } from '../../@types/android/application';
+import { AppViewModelAndroid } from '../../@types/android/internal';
+import { UserSettingsAndroid } from '../../@types/android/application';
 
 type View = android.base.View;
 

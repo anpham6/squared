@@ -1,15 +1,15 @@
-import { FileAsset } from '../base/application';
-import { AppViewModelAndroid, CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
+import { FileAsset } from '../base/file';
+import { AppViewModelAndroid } from './internal';
+import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
 import { Constraint, LocalSettingsAndroidUI, RenderSpaceAttribute, SupportAndroid, ViewAttribute, WrapperOptions } from './node';
 
 import * as squared from '../squared';
-
 import LayoutUI = squared.base.LayoutUI;
 
 type View = base.View;
 
 declare namespace base {
-    interface Application<T extends View> extends squared.base.ApplicationUI<T> {
+    class Application<T extends View>  extends squared.base.ApplicationUI<T> {
         viewModel: Undef<AppViewModelAndroid>;
         readonly userSettings: UserSettingsAndroid;
         readonly controllerHandler: Controller<T>;
@@ -17,9 +17,9 @@ declare namespace base {
         readonly fileHandler: File<T>;
     }
 
-    class Application<T extends View> implements Application<T> {}
-
-    interface Controller<T extends View> extends squared.base.ControllerUI<T> {
+    class Controller<T extends View> extends squared.base.ControllerUI<T> {
+        public static setConstraintDimension<T extends View>(node: T, percentWidth?: number): number;
+        public static setFlexDimension<T extends View>(node: T, horizontal: boolean): void;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
         readonly userSettings: UserSettingsAndroid;
@@ -36,12 +36,14 @@ declare namespace base {
         createNodeWrapper(node: T, parent: T, options?: WrapperOptions<T>): T;
     }
 
-    class Controller<T extends View> implements Controller<T> {
-        public static setConstraintDimension<T extends View>(node: T, percentWidth?: number): number;
-        public static setFlexDimension<T extends View>(node: T, horizontal: boolean): void;
-    }
-
-    interface Resource<T extends View> extends squared.base.ResourceUI<T> {
+    class Resource<T extends View> extends squared.base.ResourceUI<T> {
+        public static STORED: ResourceStoredMapAndroid;
+        public static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
+        public static formatName(value: string): string;
+        public static addTheme(theme: StyleAttribute, path?: string, file?: string): boolean;
+        public static addString(value: string, name?: string, numberAlias?: boolean): string;
+        public static addImage(images: StringMap, prefix?: string, imageFormat?: "*" | string[]): string;
+        public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
         readonly userSettings: UserSettingsAndroid;
@@ -49,17 +51,7 @@ declare namespace base {
         addImageSet(images: StringMap, prefix?: string): string;
     }
 
-    class Resource<T extends View> implements Resource<T> {
-        public static STORED: ResourceStoredMapAndroid;
-        public static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
-        public static formatName(value: string): string;
-        public static addTheme(theme: StyleAttribute, path?: string, file?: string): boolean;
-        public static addString(value: string, name?: string, numberAlias?: boolean): string;
-        public static addImage(images: StringMap, prefix?: string, imageFormat?: "*" | string[]): string;
-        public static addColor(value: Undef<squared.lib.color.ColorData | string>, transparency?: boolean): string;
-    }
-
-    interface File<T extends View> extends squared.base.FileUI<T> {
+    class File<T extends View> extends squared.base.FileUI<T> {
         resource: Resource<T>;
         readonly userSettings: UserSettingsAndroid;
         resourceAllToXml(options?: FileOutputOptions): {};
@@ -75,9 +67,9 @@ declare namespace base {
         layoutAllToXml(layouts: FileAsset[], options?: FileOutputOptions): {};
     }
 
-    class File<T extends View> implements File<T> {}
-
-    interface View extends squared.base.NodeUI {
+    class View extends squared.base.NodeUI {
+        public static getControlName(containerType: number, api?: number): string;
+        public static availablePercent(nodes: View[], dimension: DimensionAttr, boxSize: number): number;
         tagName: string;
         anchored: boolean;
         api: number;
@@ -117,11 +109,6 @@ declare namespace base {
         setLayoutWidth(value: string, overwrite?: boolean): void;
         setLayoutHeight(value: string, overwrite?: boolean): void;
         setSingleLine(ellipsize?: boolean): void;
-    }
-
-    class View implements View {
-        public static getControlName(containerType: number, api?: number): string;
-        public static availablePercent(nodes: View[], dimension: DimensionAttr, boxSize: number): number;
     }
 
     class ViewGroup extends View {}

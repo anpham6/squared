@@ -150,3 +150,19 @@ export interface SvgPathExtendData {
     path?: string;
     leadingOffset?: number;
 }
+
+export interface SvgAnimationIntervalAttributeMap {
+    [key: string]: Map<number, SvgAnimationIntervalValue[]>;
+}
+
+export interface SvgAnimationIntervalValue {
+    time: number;
+    value: string;
+    endTime: number;
+    start: boolean;
+    end: boolean;
+    fillMode: number;
+    infinite: boolean;
+    valueFrom?: string;
+    animation?: squared.svg.SvgAnimation;
+}

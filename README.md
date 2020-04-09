@@ -199,7 +199,7 @@ close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
 
 // Required: NodeJS Express / squared-apache
-// NOTE: options: { assets?: FileAsset[], exclusions?: FileAssetExclusions, callback?: () => void }
+// NOTE: options: { assets?: FileAsset[], exclusions?: {}, callback?: () => void }
 
 saveToArchive(filename?: string, options?: {}) // save entire project as a new archive
 createFrom(format: string, options: {}) // create new archive from only FileAsset[]

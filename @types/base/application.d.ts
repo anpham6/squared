@@ -1,5 +1,5 @@
-type Node = squared.base.Node;
-type NodeUI = squared.base.NodeUI;
+import { LayoutUI, NodeUI } from './squared';
+import { FileAsset, FileAssetExclude } from './file';
 
 export interface UserSettings {
     builtInExtensions: string[];
@@ -67,50 +67,6 @@ export interface ControllerUISettings extends ControllerSettings {
     };
 }
 
-export interface AppFramework<T extends Node> {
-    base: {};
-    extensions: {};
-    lib: {};
-    system: FunctionMap<any>;
-    create(): AppBase<T>;
-    cached(): AppBase<T>;
-}
-
-export interface AppBase<T extends Node> {
-    application: squared.base.Application<T>;
-    framework: number;
-    userSettings: UserSettings;
-}
-
-export interface AppHandler<T extends Node> {
-    application: squared.base.Application<T>;
-    cache: squared.base.NodeList<T>;
-    readonly userSettings: UserSettings;
-}
-
-export interface AppSession<T> {
-    active: string[];
-}
-
-export interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
-    cache: squared.base.NodeList<T>;
-    excluded: squared.base.NodeList<T>;
-    extensionMap: Map<number, squared.base.Extension<T>[]>;
-    clearMap: Map<T, string>;
-    targetQueue: Map<T, NodeTemplate<T>>;
-}
-
-export interface AppProcessing<T extends Node> {
-    cache: squared.base.NodeList<T>;
-    excluded: squared.base.NodeList<T>;
-    sessionId: string;
-    node?: T;
-}
-
-export interface AppProcessingUI<T extends Node> extends AppProcessing<T> {}
-
-export interface AppViewModel extends StandardMap {}
-
 export interface ExtensionDependency {
     name: string;
     preload: boolean;
@@ -136,7 +92,7 @@ export interface LayoutType {
     renderType?: number;
 }
 
-export interface LayoutOptions<T> extends Optional<LayoutType> {
+export interface LayoutOptions<T> extends Partial<LayoutType> {
     parent: T;
     node: T;
     containerType?: number;
@@ -148,7 +104,7 @@ export interface LayoutOptions<T> extends Optional<LayoutType> {
 }
 
 export interface LayoutResult<T extends NodeUI> {
-    layout: squared.base.LayoutUI<T>;
+    layout: LayoutUI<T>;
     next?: boolean;
     renderAs?: T;
 }
@@ -156,53 +112,6 @@ export interface LayoutResult<T extends NodeUI> {
 export interface LayoutRoot<T extends NodeUI> {
     node: T;
     layoutName: string;
-}
-
-export interface ResourceAssetMap {
-    ids: Map<string, string[]>;
-    images: Map<string, ImageAsset>;
-    fonts: Map<string, squared.lib.css.FontFaceData[]>;
-    rawData: Map<string, RawAsset>;
-}
-
-export interface ResourceStoredMap {
-    strings: Map<string, string>;
-    arrays: Map<string, string[]>;
-    fonts: Map<string, ObjectMap<string>>;
-    colors: Map<string, string>;
-    images: Map<string, StringMap>;
-}
-
-export interface Asset extends StandardMap {
-    uri?: string;
-    index?: number;
-    mimeType?: string;
-}
-
-export interface FileAsset extends Asset {
-    pathname: string;
-    filename: string;
-    content: string;
-    compress?: CompressionFormat[];
-    exclusions?: FileAssetExclusions;
-}
-
-export interface ImageAsset extends Asset, Dimension {}
-
-export interface RawAsset extends FileAsset, ImageAsset {
-    base64?: string;
-}
-
-export interface FileAssetExclusions {
-    pathname?: string[];
-    filename?: string[];
-    extension?: string[];
-    pattern?: string[];
-}
-
-export interface CompressionFormat {
-    format: string;
-    level?: number;
 }
 
 export interface NodeTemplate<T> {
@@ -220,22 +129,6 @@ export interface NodeIncludeTemplate<T> extends NodeTemplate<T> {
     content: string;
 }
 
-export interface FileActionOptions {
-    assets?: FileAsset[];
-    exclusions?: FileAssetExclusions;
-    callback?: CallbackResult;
-}
-
-export interface FileCopyingOptions extends FileActionOptions {
-    directory?: string;
-}
-
-export interface FileArchivingOptions extends FileActionOptions {
-    filename?: string;
-    appendTo?: string;
-    format?: string;
-}
-
 export interface NodeUIOptions<T> {
     parent?: T;
     element?: Null<Element>;
@@ -250,4 +143,20 @@ export interface NodeGroupUIOptions<T> {
     parent?: T;
     delegate?: boolean;
     cascade?: boolean;
+}
+
+export interface FileActionOptions {
+    assets?: FileAsset[];
+    exclusions?: FileAssetExclude;
+    callback?: CallbackResult;
+}
+
+export interface FileCopyingOptions extends FileActionOptions {
+    directory?: string;
+}
+
+export interface FileArchivingOptions extends FileActionOptions {
+    filename?: string;
+    appendTo?: string;
+    format?: string;
 }

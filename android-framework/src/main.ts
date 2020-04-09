@@ -1,4 +1,4 @@
-import { AppFramework } from '../../@types/base/application';
+import { AppFramework } from '../../@types/base/internal';
 import { FileOutputOptions, UserSettingsAndroid } from '../../@types/android/application';
 
 import Application from './application';

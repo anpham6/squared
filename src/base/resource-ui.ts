@@ -1,12 +1,11 @@
-import { ControllerUISettings, FileAsset, ResourceStoredMap, UserUISettings, RawAsset } from '../../@types/base/application';
+import { ControllerUISettings, UserUISettings } from '../../@types/base/application';
+import { ResourceStoredMap } from '../../@types/base/resource';
+import { FileAsset, RawAsset } from '../../@types/base/file';
 
 import NodeUI from './node-ui';
 import Resource from './resource';
 
 import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
-
-type ColorData = squared.lib.color.ColorData;
-type ColorStop = squared.lib.color.ColorStop;
 
 const $lib = squared.lib;
 
@@ -701,7 +700,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public writeRawImage(filename: string, base64: string) {
         const fileHandler = this.fileHandler;
         if (fileHandler) {
-            const asset = <Optional<RawAsset>> { pathname: appendSeparator(this.userSettings.outputDirectory, this.controllerSettings.directory.image), filename, base64 };
+            const asset = <Partial<RawAsset>> { pathname: appendSeparator(this.userSettings.outputDirectory, this.controllerSettings.directory.image), filename, base64 };
             fileHandler.addAsset(asset);
             return asset;
         }

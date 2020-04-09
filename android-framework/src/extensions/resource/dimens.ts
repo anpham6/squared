@@ -68,7 +68,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
         if (this.controller.hasAppendProcessing()) {
             const dimens = STORED.dimens;
             this.application.layouts.forEach(layout => {
-                let content = layout.content;
+                let content = layout.content!;
                 let match: Null<RegExpExecArray>;
                 while ((match = REGEX_UNIT_ATTR.exec(content)) !== null) {
                     const [original, name, value] = match;

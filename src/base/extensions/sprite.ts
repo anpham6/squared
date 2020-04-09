@@ -1,4 +1,4 @@
-import { ImageAsset } from '../../../@types/base/application';
+import { ImageAsset } from '../../../@types/base/file';
 
 import ExtensionUI from '../extension-ui';
 

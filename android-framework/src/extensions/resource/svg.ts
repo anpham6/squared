@@ -739,7 +739,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             const fileAsset = this.resource.getRawData(src);
             if (fileAsset) {
                 const parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;
-                parentElement.insertAdjacentHTML('beforeend', fileAsset.content);
+                parentElement.insertAdjacentHTML('beforeend', fileAsset.content!);
                 const lastElementChild = parentElement.lastElementChild;
                 if (lastElementChild instanceof SVGSVGElement) {
                     const element = lastElementChild;

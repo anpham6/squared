@@ -1,4 +1,4 @@
-import { SvgAnimationAttribute } from '../../@types/svg/object';
+import { SvgAnimationAttribute, SvgAnimationIntervalAttributeMap, SvgAnimationIntervalValue } from '../../@types/svg/object';
 
 import SvgBuild from './svgbuild';
 
@@ -7,8 +7,6 @@ import { TRANSFORM } from './lib/util';
 
 type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimation = squared.svg.SvgAnimation;
-type SvgAnimationIntervalValue = squared.svg.SvgAnimationIntervalValue;
-type SvgAnimationIntervalAttributeMap = squared.svg.SvgAnimationIntervalAttributeMap;
 
 const { hasValue, safeNestedArray, sortNumber } = squared.lib.util;
 

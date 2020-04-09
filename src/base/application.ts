@@ -1,4 +1,5 @@
-import { AppProcessing, AppSession, AppViewModel, FileActionOptions, UserSettings } from '../../@types/base/application';
+import { AppProcessing, AppSession, AppViewModel } from '../../@types/base/internal';
+import { FileActionOptions, UserSettings } from '../../@types/base/application';
 
 import Controller from './controller';
 import Extension from './extension';
@@ -136,7 +137,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.closed = false;
     }
 
-    public parseDocument(...elements: any[]): squared.PromiseResult {
+    public parseDocument(...elements: any[]): PromiseResult {
         const { controllerHandler: controller, resourceHandler: resource } = this;
         this.initializing = false;
         this.rootElements.clear();

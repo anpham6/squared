@@ -1,5 +1,5 @@
-import { FileAsset, FileArchivingOptions, FileCopyingOptions } from '../../@types/base/application';
-import { ChromeAsset } from '../../@types/chrome/application';
+import { FileAsset } from '../../@types/base/file';
+import { ChromeAsset, FileArchivingOptionsChrome, FileCopyingOptionsChrome } from '../../@types/chrome/file';
 
 import Resource from './resource';
 
@@ -67,7 +67,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         this._outputFileExclusions = undefined;
     }
 
-    public copyToDisk(directory: string, options?: FileCopyingOptions) {
+    public copyToDisk(directory: string, options?: FileCopyingOptionsChrome) {
         this.copying({
             ...options,
             assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
@@ -75,7 +75,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         });
     }
 
-    public appendToArchive(pathname: string, options?: FileArchivingOptions) {
+    public appendToArchive(pathname: string, options?: FileArchivingOptionsChrome) {
         this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
@@ -84,7 +84,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         });
     }
 
-    public saveToArchive(filename: string, options?: FileArchivingOptions) {
+    public saveToArchive(filename: string, options?: FileArchivingOptionsChrome) {
         this.archiving({
             ...options,
             assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
@@ -214,7 +214,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         if (this.userSettings.compressImages) {
             result.forEach(asset => {
                 if (Resource.canCompressImage(asset.filename)) {
-                    safeNestedArray(asset, 'compress').unshift({ format: 'png' });
+                    safeNestedArray(<StandardMap> asset, 'compress').unshift({ format: 'png' });
                 }
             });
         }

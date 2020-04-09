@@ -1,4 +1,5 @@
-import { FileArchivingOptions, FileCopyingOptions, RawAsset, UserSettings } from '../../@types/base/application';
+import { FileArchivingOptions, FileCopyingOptions, UserSettings } from '../../@types/base/application';
+import { RawAsset } from '../../@types/base/file';
 
 const { fromLastIndexOf, isString } = squared.lib.util;
 
@@ -56,7 +57,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         });
     }
 
-    public addAsset(data: Optional<RawAsset>) {
+    public addAsset(data: Partial<RawAsset>) {
         if (data.content || data.uri || data.base64) {
             const assets = this.assets;
             const { pathname, filename } = data;

@@ -1,9 +1,6 @@
 import { clamp } from './math';
 import { CSS } from './regex';
 
-type ColorData = squared.lib.color.ColorData;
-type ColorResult = squared.lib.color.ColorResult;
-
 const STRING_HEX = '0123456789ABCDEF';
 const COLOR_CSS3: ColorResult[] = [
     {

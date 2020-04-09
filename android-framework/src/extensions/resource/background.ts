@@ -12,8 +12,6 @@ import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';
 import VECTOR_TMPL from '../../template/vector';
 
-type ColorData = squared.lib.color.ColorData;
-
 const $lib = squared.lib;
 const $base = squared.base;
 
@@ -468,7 +466,7 @@ const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColor
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 
-export function convertColorStops(list: squared.lib.color.ColorStop[], precision?: number) {
+export function convertColorStops(list: ColorStop[], precision?: number) {
     return objectMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
 }
 
@@ -806,7 +804,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             const { base64, filename } = rawData;
                                             if (base64) {
                                                 images[length] = filename.substring(0, filename.lastIndexOf('.'));
-                                                imageDimensions[length] = rawData;
+                                                imageDimensions[length] = rawData.width && rawData.height ? { width: rawData.width, height: rawData.height } : undefined;
                                                 resource.writeRawImage(filename, base64);
                                                 valid = true;
                                             }
@@ -1501,10 +1499,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 else if (value.item) {
                     if (width === 0) {
-                        width = (dimension || NodeUI.refitScreen(node, node.actualDimension)).width;
+                        width = dimension?.width || NodeUI.refitScreen(node, node.actualDimension).width;
                     }
                     if (height === 0) {
-                        height = (dimension || NodeUI.refitScreen(node, node.actualDimension)).height;
+                        height = dimension?.height || NodeUI.refitScreen(node, node.actualDimension).height;
                     }
                     const gradient = Resource.insertStoredAsset(
                         'drawables',

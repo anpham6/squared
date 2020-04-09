@@ -1,4 +1,5 @@
-import { ControllerUISettings, FileAsset, LayoutResult, LayoutType, NodeGroupUIOptions, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserUISettings } from '../../@types/base/application';
+import { ControllerUISettings, LayoutResult, LayoutType, NodeGroupUIOptions, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserUISettings } from '../../@types/base/application';
+import { FileAsset } from '../../@types/base/file';
 
 import Controller from './controller';
 

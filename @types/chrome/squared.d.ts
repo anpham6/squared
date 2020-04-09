@@ -1,8 +1,9 @@
-import { ChromeAsset, UserSettingsChrome } from './application';
+import { UserSettingsChrome } from './application';
+import { ChromeAsset } from './file';
 
 import * as squared from '../squared';
 
-type View = chrome.base.View;
+type View = base.View;
 
 declare function getElement(element: HTMLElement, cache?: boolean): Promise<Null<View>>;
 declare function getElementById(value: string, cache?: boolean): Promise<Null<View>>;
@@ -10,15 +11,13 @@ declare function querySelector(value: string): Promise<Null<View>>;
 declare function querySelectorAll(value: string): Promise<Null<View>>;
 
 declare namespace base {
-    interface Application<T extends View> extends squared.base.Application<T> {
+    class Application<T extends View> extends squared.base.Application<T> {
         userSettings: UserSettingsChrome;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
     }
 
-    class Application<T extends View> implements Application<T> {}
-
-    interface Controller<T extends View> extends squared.base.Controller<T> {
+    class Controller<T extends View> extends squared.base.Controller<T> {
         application: Application<T>;
         readonly elementMap: Map<Element, T>;
         readonly userSettings: UserSettingsChrome;
@@ -26,16 +25,12 @@ declare namespace base {
         cacheElementList(list: squared.base.NodeList<T>): void;
     }
 
-    class Controller<T extends View> implements Controller<T> {}
-
-    interface Resource<T extends View> extends squared.base.Resource<T> {
+    class Resource<T extends View> extends squared.base.Resource<T> {
         application: Application<T>;
         readonly userSettings: UserSettingsChrome;
     }
 
-    class Resource<T extends View> implements Resource<T> {}
-
-    interface File<T extends View> extends squared.base.File<T> {
+    class File<T extends View> extends squared.base.File<T> {
         resource: Resource<T>;
         application: Application<T>;
         readonly userSettings: UserSettingsChrome;
@@ -47,32 +42,22 @@ declare namespace base {
         getFontAssets(): ChromeAsset[];
     }
 
-    class File<T extends View> implements File<T> {}
-
-    interface Extension<T extends View> extends squared.base.Extension<T> {
+    class Extension<T extends View> extends squared.base.Extension<T> {
         application: Application<T>;
         processFile(data: ChromeAsset): boolean;
     }
 
-    class Extension<T extends View> implements Extension<T> {
-        constructor(name: string, framework: number, options?: StandardMap);
-    }
+    class ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {}
 
-    interface ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {}
-
-    class ExtensionManager<T extends View> implements ExtensionManager<T> {}
-
-    interface View extends squared.base.Node {}
-
-    class View implements View {
+    class View extends squared.base.Node {
         constructor(id: number, sessionId: string, element: Element, afterInit?: BindGeneric<View, void>);
     }
 }
 
 declare namespace extensions {
     namespace compress {
-        class Brotli<T extends View> extends base.Extension<T> {}
-        class Gzip<T extends View> extends base.Extension<T> {}
+        class Brotli<T extends View> extends squared.base.Extension<T> {}
+        class Gzip<T extends View> extends squared.base.Extension<T> {}
     }
 }
 

@@ -1,4 +1,4 @@
-import { CompressionFormat, FileAsset, Settings } from './index';
+import { CompressionFormat, RawAsset, Settings } from '../@types/node-express/node';
 
 import express = require('express');
 import bodyParser = require('body-parser');
@@ -89,7 +89,7 @@ if (env === 'development') {
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
 const SEPARATOR = path.sep;
 
-function getFileData(file: FileAsset, dirname: string) {
+function getFileData(file: RawAsset, dirname: string) {
     const pathname = path.join(dirname, file.pathname);
     const compress = file.compress;
     const gz = getCompressFormat(compress, 'gz');
@@ -98,8 +98,8 @@ function getFileData(file: FileAsset, dirname: string) {
         pathname,
         filename: path.join(pathname, file.filename),
         pngCompress: getCompressFormat(compress, 'png') ? 1 : -1,
-        gzipLevel: gz ? (!isNaN(gz.level) ? gz.level : undefined) : -1,
-        brotliQuality: br ? (!isNaN(br.level) ? br.level : undefined) : -1
+        gzipLevel: gz ? (!isNaN(gz.level as number) ? gz.level : undefined) : -1,
+        brotliQuality: br ? (!isNaN(br.level as number) ? br.level : undefined) : -1
     };
 }
 
@@ -208,7 +208,7 @@ app.post('/api/assets/copy', (req, res) => {
         try {
             const notFound = {};
             const emptyDir = {};
-            req.body.forEach((file: FileAsset) => {
+            (req.body as RawAsset[]).forEach(file => {
                 const { pathname, filename, pngCompress, gzipLevel, brotliQuality } = getFileData(file, dirname);
                 const { content, base64, uri } = file;
                 const compressFile = () => {
@@ -401,7 +401,7 @@ app.post('/api/assets/archive', (req, res) => {
                 archive.directory(unzip_to, false);
             }
             const notFound = {};
-            req.body.forEach((file: FileAsset) => {
+            (req.body as RawAsset[]).forEach(file => {
                 const { pathname, filename, pngCompress, gzipLevel, brotliQuality } = getFileData(file, dirname);
                 const { content, base64, uri } = file;
                 const data = { name: path.join(file.pathname, file.filename) };

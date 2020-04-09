@@ -19,6 +19,6 @@
     "esModuleInterop": true 
   },
   "include": [
-    "*.ts"
+    "app.ts"
   ]
 }

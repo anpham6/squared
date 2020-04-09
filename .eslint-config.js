@@ -189,9 +189,10 @@ module.exports = {
         "explicit-function-return-type": "off",
         "quote-props": "off",
         "radix": "off",
+        "no-var": "warn",
+        "no-shadow": "warn",
         "no-unused-expressions": "off",
         "no-constant-condition": "off",
-        "no-shadow": "warn",
         "no-empty": "off",
         "no-fallthrough": "off",
         "no-undef": "off",
@@ -209,6 +210,7 @@ module.exports = {
                 "private-method"
             ]
         }],
+        "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/array-type": "off",
         "@typescript-eslint/consistent-type-assertions": "off",
         "@typescript-eslint/consistent-type-definitions": "off",

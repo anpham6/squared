@@ -1,6 +1,6 @@
-import { ControllerSettings, ResourceAssetMap, UserSettings } from '../../@types/base/application';
-
-type FontFaceData = squared.lib.css.FontFaceData;
+import { ControllerSettings, UserSettings } from '../../@types/base/application';
+import { ResourceAssetMap } from '../../@types/base/resource';
+import { FontFaceData } from '../../@types/lib/squared';
 
 const $lib = squared.lib;
 

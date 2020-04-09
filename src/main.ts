@@ -1,4 +1,5 @@
-import { AppFramework, FileActionOptions, UserSettings } from '../@types/base/application';
+import { AppFramework } from '../@types/base/internal';
+import { FileActionOptions, UserSettings } from '../@types/base/application';
 
 import Container from './lib/base/container';
 
@@ -76,7 +77,7 @@ export function setViewModel(data?: {}) {
     }
 }
 
-export function parseDocument(...elements: (HTMLElement | string)[]): squared.PromiseResult {
+export function parseDocument(...elements: (HTMLElement | string)[]): PromiseResult {
     if (main) {
         if (settings.handleExtensionsAsync) {
             const extensionManager = main.extensionManager;

@@ -7,12 +7,8 @@ export interface LocalSettingsAndroidUI extends LocalSettingsUI {
 
 export interface CachedValueAndroidUI<T> extends CachedValueUI<T> {}
 
-export interface Constraint {
-    current: ObjectMap<{ documentId: string; horizontal: boolean }>;
-    horizontal: boolean;
-    vertical: boolean;
-    barrier?: ObjectMap<string>;
-    guideline?: ObjectMapNested<ObjectMapNested<number>>;
+export interface SupportAndroid extends SupportUI {
+    maxDimension: boolean;
 }
 
 export interface ViewAttribute extends ObjectMap<any> {
@@ -30,6 +26,14 @@ export interface RenderSpaceAttribute extends ViewAttribute {
     rowSpan?: number;
 }
 
+export interface Constraint {
+    current: ObjectMap<{ documentId: string; horizontal: boolean }>;
+    horizontal: boolean;
+    vertical: boolean;
+    barrier?: ObjectMap<string>;
+    guideline?: ObjectMapNested<ObjectMapNested<number>>;
+}
+
 export interface WrapperOptions<T> extends ExcludeUIOptions {
     children?: T[];
     containerType?: number;
@@ -38,8 +42,4 @@ export interface WrapperOptions<T> extends ExcludeUIOptions {
     resetMargin?: boolean;
     inheritDataset?: boolean;
     inheritContentBox?: boolean;
-}
-
-export interface SupportAndroid extends SupportUI {
-    maxDimension: boolean;
 }

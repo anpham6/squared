@@ -4,7 +4,6 @@ import { ViewAttribute } from '../../@types/android/node';
 import { RESERVED_JAVA } from './lib/constant';
 
 type View = android.base.View;
-type ColorData = squared.lib.color.ColorData;
 
 const $lib = squared.lib;
 
@@ -298,7 +297,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public writeRawImage(filename: string, base64: string) {
         const asset = super.writeRawImage(filename, base64);
         if (asset && this.userSettings.compressImages && Resource.canCompressImage(filename)) {
-            safeNestedArray(asset, 'compress').unshift({ format: 'png' });
+            safeNestedArray(<StandardMap> asset, 'compress').unshift({ format: 'png' });
         }
         return asset;
     }

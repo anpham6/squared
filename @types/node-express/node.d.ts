@@ -1,3 +1,5 @@
+import * as file from '../base/file';
+
 declare namespace node {
     interface Settings {
         version?: string;
@@ -11,20 +13,9 @@ declare namespace node {
         tinypng_api_key?: string;
     }
 
-    interface CompressionFormat {
-        format: string;
-        level: number;
-    }
+    interface CompressionFormat extends file.CompressionFormat {}
 
-    interface FileAsset {
-        pathname: string;
-        filename: string;
-        content: string;
-        mimeType?: string;
-        uri?: string;
-        base64?: string;
-        compress?: CompressionFormat[];
-    }
+    interface RawAsset extends Omit<file.RawAsset, "width" | "height" | "index" | "exclusions"> {}
 }
 
 export = node;

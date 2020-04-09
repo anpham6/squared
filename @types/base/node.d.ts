@@ -1,4 +1,4 @@
-type Node = squared.base.Node;
+import { Node } from './squared';
 
 export type BoxType = "bounds" | "box" | "linear";
 
@@ -104,36 +104,6 @@ export interface AutoMargin {
     topBottom?: boolean;
 }
 
-export interface SiblingOptions {
-    floating?: boolean;
-    pageFlow?: boolean;
-    lineBreak?: boolean;
-    excluded?: boolean;
-}
-
-export interface AscendOptions {
-    condition?: (item: Node) => boolean;
-    error?: (item: Node) => boolean;
-    including?: Node;
-    excluding?: Node;
-    attr?: string;
-    startSelf?: boolean;
-    every?: boolean;
-}
-
-export interface HasOptions {
-    map?: string;
-    not?: string | string[];
-    type?: number;
-}
-
-export interface BoxOptions {
-    reset?: 0 | 1;
-    adjustment?: number;
-    accumulate?: boolean;
-    negative?: boolean;
-}
-
 export interface QueryData {
     all?: boolean;
     tagName?: string;
@@ -175,6 +145,36 @@ export interface LinearDataUI<T> {
     linearY: boolean;
     floated: Set<string>;
     cleared?: Map<T, string>;
+}
+
+export interface SiblingOptions {
+    floating?: boolean;
+    pageFlow?: boolean;
+    lineBreak?: boolean;
+    excluded?: boolean;
+}
+
+export interface AscendOptions {
+    condition?: (item: Node) => boolean;
+    error?: (item: Node) => boolean;
+    including?: Node;
+    excluding?: Node;
+    attr?: string;
+    startSelf?: boolean;
+    every?: boolean;
+}
+
+export interface HasOptions {
+    map?: string;
+    not?: string | string[];
+    type?: number;
+}
+
+export interface BoxOptions {
+    reset?: 0 | 1;
+    adjustment?: number;
+    accumulate?: boolean;
+    negative?: boolean;
 }
 
 export interface ExcludeUIOptions {

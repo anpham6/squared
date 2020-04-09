@@ -1,4 +1,4 @@
-import { ChromeAsset } from '../../../../@types/chrome/application';
+import { ChromeAsset } from '../../../../@types/chrome/file';
 import { CompressOptions } from '../../../../@types/chrome/extension';
 
 import Extension from '../../extension';
@@ -18,7 +18,7 @@ export default class Gzip<T extends View> extends Extension<T> {
         if (extension) {
             const { level, fileExtensions  } = this.options;
             if (fileExtensions === '*' || fileExtensions.includes(extension)) {
-                safeNestedArray(data, 'compress').push({ format: 'gz', level });
+                safeNestedArray(<StandardMap> data, 'compress').push({ format: 'gz', level });
                 return true;
             }
         }

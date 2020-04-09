@@ -1,4 +1,5 @@
-import { FileAsset, ImageAsset, LayoutType, NodeGroupUIOptions, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
+import { LayoutType, NodeGroupUIOptions, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
+import { FileAsset, ImageAsset } from '../../@types/base/file';
 import { ControllerSettingsAndroid, GuidelineOptions, RenderNodeStaticAttribute } from '../../@types/android/application';
 import { LocalSettingsAndroidUI, RenderSpaceAttribute, ViewAttribute, WrapperOptions } from '../../@types/android/node';
 
@@ -569,7 +570,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public finalize(layouts: FileAsset[]) {
         const insertSpaces = this.userSettings.insertSpaces;
         layouts.forEach(layout => {
-            const content = layout.content;
+            const content = layout.content!;
             layout.content = replaceTab(content.replace(/{#0}/, getRootNs(content)), insertSpaces);
         });
     }

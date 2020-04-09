@@ -1,14 +1,10 @@
+import { BackgroundPositionOptions, CalculateOptions, CalculateVarOptions, CalculateVarAsStringOptions, KeyframesData } from '../../@types/lib/squared';
+
 import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
 import { CHAR, CSS, STRING, UNIT, XML } from './regex';
 import { convertAlpha, convertFloat, convertRoman, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
-
-type KeyframesData = squared.lib.css.KeyframesData;
-type BackgroundPositionOptions = squared.lib.css.BackgroundPositionOptions;
-type CalculateOptions = squared.lib.css.CalculateOptions;
-type CalculateVarOptions = squared.lib.css.CalculateVarOptions;
-type CalculateVarAsStringOptions = squared.lib.css.CalculateVarAsStringOptions;
 
 const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;

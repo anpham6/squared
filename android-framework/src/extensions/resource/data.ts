@@ -1,5 +1,5 @@
 import { LayoutRoot } from '../../../../@types/base/application';
-import { AppViewModelAndroid } from '../../../../@types/android/application';
+import { AppViewModelAndroid } from '../../../../@types/android/internal';
 
 import { getDataSet } from '../../lib/util';
 

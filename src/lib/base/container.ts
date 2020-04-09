@@ -1,3 +1,5 @@
+import { ContainerFindOptions, ContainerOptions } from '../../../@types/lib/squared';
+
 import { flatMap, iterateArray, objectMap, partitionArray, sameArray } from '../util';
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
@@ -124,7 +126,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return partitionArray(this._children, predicate);
     }
 
-    public extract(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerOptions<T>): T[] {
+    public extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerOptions<T>): T[] {
         let also: Undef<BindGeneric<T, void>>;
         let error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
@@ -157,7 +159,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return flatMap(this._children, predicate);
     }
 
-    public findIndex(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerOptions<T>) {
+    public findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerOptions<T>) {
         let also: Undef<BindGeneric<T, void>>;
         let error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
@@ -179,7 +181,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return -1;
     }
 
-    public find(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerFindOptions<T>) {
+    public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
         let error: Undef<IteratorPredicate<T, boolean>>;
         let also: Undef<BindGeneric<T, void>>;
         let cascade: Undef<boolean>;
@@ -217,11 +219,11 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return recurse(this);
     }
 
-    public some(predicate: IteratorPredicate<T, boolean>, options?: squared.lib.base.ContainerFindOptions<T>) {
+    public some(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
         return this.find(predicate, options) !== undefined;
     }
 
-    public cascade(predicate?: (item: T) => boolean, options?: squared.lib.base.ContainerOptions<T>) {
+    public cascade(predicate?: (item: T) => boolean, options?: ContainerOptions<T>) {
         let error: Undef<IteratorPredicate<T, boolean>>;
         let also: Undef<BindGeneric<T, void>>;
         if (options) {

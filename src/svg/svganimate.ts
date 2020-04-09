@@ -5,8 +5,6 @@ import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE, KEYSPLINE_NAME, STRING_CUBICBEZIER } from './lib/constant';
 
-type ColorData = squared.lib.color.ColorData;
-
 const $lib = squared.lib;
 
 const { getHexCode, parseColor } = $lib.color;

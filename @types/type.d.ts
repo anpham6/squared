@@ -2,7 +2,6 @@ type Undef<T> = T | undefined;
 type Null<T> = T | null;
 type UndefNull<T> = Undef<T> | Null<T>;
 type Nullable<T> = { [P in keyof T]: T[P] | null; };
-type Optional<T> = { [P in keyof T]?: T[P]; };
 
 type Constructor<T> = new(...args: any[]) => T;
 
@@ -20,3 +19,7 @@ type StringMap = ObjectMap<string>;
 type CallbackResult = (result: {}) => void;
 
 type StandardMap = ObjectMap<any>;
+
+declare class PromiseResult {
+    public then(resolve: () => void): void;
+}

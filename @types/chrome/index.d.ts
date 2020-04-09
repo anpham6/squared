@@ -3,6 +3,4 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 3.5
 
-/// <reference path="application.d.ts" />
-/// <reference path="extension.d.ts" />
-/// <reference path="chrome.d.ts" />
+export * from './squared';

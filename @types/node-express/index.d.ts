@@ -3,4 +3,4 @@
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 3.5
 
-export * as svg from './squared';
+/// <reference path="node.d.ts" />

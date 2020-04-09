@@ -16,7 +16,7 @@ const { getNamedItem } = $lib.dom;
 const { cloneObject } = $lib.util;
 
 function getColorStop(element: SVGGradientElement) {
-    const result: squared.lib.color.ColorStop[] = [];
+    const result: ColorStop[] = [];
     const stops = element.getElementsByTagName('stop');
     const length = stops.length;
     let i = 0;

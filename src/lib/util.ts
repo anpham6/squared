@@ -1,6 +1,6 @@
-import { CHAR, COMPONENT, UNIT, XML } from './regex';
+import { DelimitStringOptions } from '../../@types/lib/squared';
 
-type DelimitStringOptions = squared.lib.util.DelimitStringOptions;
+import { CHAR, COMPONENT, UNIT, XML } from './regex';
 
 const UUID_ALPHA = '0123456789abcdef';
 const UUID_SEGMENT = [8, 4, 4, 4, 12];

@@ -43,7 +43,7 @@ export function truncate(value: number | string, precision = 3) {
     }
     else {
         if (base !== 0) {
-            precision += base.toString().length;
+            precision += squared.base.toString().length;
         }
         return truncateTrailingZero(value.toPrecision(precision));
     }

@@ -1,4 +1,5 @@
-import { FileArchivingOptions, FileAsset, FileCopyingOptions } from '../../@types/base/application';
+import { FileArchivingOptions, FileCopyingOptions } from '../../@types/base/application';
+import { FileAsset } from '../../@types/base/file';
 import { FileOutputOptions, ResourceStoredMapAndroid } from '../../@types/android/application';
 
 import Resource from './resource';
@@ -419,7 +420,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             const { content, filename: filenameA, pathname } = layouts[i];
             result[filenameA] = [content];
             if (actionable) {
-                assets.push(createFileAsset(pathname, i === 0 ? this.userSettings.outputMainFileName : `${filenameA}.xml`, content));
+                assets.push(createFileAsset(pathname, i === 0 ? this.userSettings.outputMainFileName : `${filenameA}.xml`, content!));
             }
         }
         if (actionable) {
