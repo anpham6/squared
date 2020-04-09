@@ -103,7 +103,7 @@ export namespace lib {
         const BOX_PADDING: string[];
         const TEXT_STYLE: string[];
         function getStyle(element: Null<Element>, pseudoElt?: string): CSSStyleDeclaration;
-        function getFontSize(element: Null<Element>): number;
+        function getFontSize(element: Element): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkWritingMode(attr: string, value: string): string;
         function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;

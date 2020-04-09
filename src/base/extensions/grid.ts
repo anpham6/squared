@@ -29,7 +29,7 @@ function getRowIndex(columns: NodeUI[][], target: NodeUI) {
 }
 
 export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataCellAttribute<T extends NodeUI>(): GridCellData<T> {
+    public static createDataCellAttribute(): GridCellData<NodeUI> {
         return {
             rowSpan: 0,
             columnSpan: 0,

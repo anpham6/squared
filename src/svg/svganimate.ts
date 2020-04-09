@@ -18,9 +18,7 @@ const REGEX_BEZIER = /^\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$/;
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
-    public static getSplitValue(value: number, next: number, percent: number) {
-        return value + (next - value) * percent;
-    }
+    public static getSplitValue = (value: number, next: number, percent: number) => value + (next - value) * percent;
 
     public static convertTimingFunction(value: string) {
         const keySpline = KEYSPLINE_NAME[value];

@@ -33,103 +33,25 @@ const REGEX_COMMAND = /([A-Za-z])([^A-Za-z]+)?/g;
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
-    public static isContainer(object: SvgElement): object is SvgGroup {
-        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_CONTAINER);
-    }
-
-    public static isElement(object: SvgElement): object is SvgElement {
-        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
-    }
-
-    public static isShape(object: SvgElement): object is SvgShape {
-        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_SHAPE);
-    }
-
-    public static isAnimate(object: SvgAnimation): object is SvgAnimate {
-        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
-    }
-
-    public static isAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
-        return hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM);
-    }
-
-    public static asSvg(object: SvgElement): object is Svg {
-        return object.instanceType === INSTANCE_TYPE.SVG;
-    }
-
-    public static asG(object: SvgElement): object is SvgG {
-        return object.instanceType === INSTANCE_TYPE.SVG_G;
-    }
-
-    public static asPattern(object: SvgElement): object is SvgPattern {
-        return object.instanceType === INSTANCE_TYPE.SVG_PATTERN;
-    }
-
-    public static asShapePattern(object: SvgElement): object is SvgShapePattern {
-        return object.instanceType === INSTANCE_TYPE.SVG_SHAPE_PATTERN;
-    }
-
-    public static asUsePattern(object: SvgElement): object is SvgUsePattern {
-        return object.instanceType === INSTANCE_TYPE.SVG_USE_PATTERN;
-    }
-
-    public static asImage(object: SvgElement): object is SvgImage {
-        return object.instanceType === INSTANCE_TYPE.SVG_IMAGE;
-    }
-
-    public static asUse(object: SvgElement): object is SvgUse {
-        return object.instanceType === INSTANCE_TYPE.SVG_USE;
-    }
-
-    public static asUseSymbol(object: SvgElement): object is SvgUseSymbol {
-        return object.instanceType === INSTANCE_TYPE.SVG_USE_SYMBOL;
-    }
-
-    public static asSet(object: SvgAnimation) {
-        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATION;
-    }
-
-    public static asAnimate(object: SvgAnimation): object is SvgAnimate {
-        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE;
-    }
-
-    public static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform {
-        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
-    }
-
-    public static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion {
-        return object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_MOTION;
-    }
-
-    public static setName(element?: SVGElement) {
-        if (element) {
-            let value = '';
-            let tagName: Undef<string>;
-            if (isString(element.id)) {
-                const id = convertWord(element.id, true);
-                if (!NAME_GRAPHICS.has(id)) {
-                    value = id;
-                }
-                tagName = id;
-            }
-            else {
-                tagName = element.tagName;
-            }
-            let index = NAME_GRAPHICS.get(tagName) || 0;
-            if (value !== '') {
-                NAME_GRAPHICS.set(value, index);
-                return value;
-            }
-            else {
-                NAME_GRAPHICS.set(tagName, ++index);
-                return `${tagName}_${index}`;
-            }
-        }
-        else {
-            NAME_GRAPHICS.clear();
-            return '';
-        }
-    }
+    public static isContainer = (object: SvgElement): object is SvgGroup => hasBit(object.instanceType, INSTANCE_TYPE.SVG_CONTAINER);
+    public static isElement = (object: SvgElement): object is SvgElement => hasBit(object.instanceType, INSTANCE_TYPE.SVG_ELEMENT);
+    public static isShape = (object: SvgElement): object is SvgShape => hasBit(object.instanceType, INSTANCE_TYPE.SVG_SHAPE);
+    public static isAnimate = (object: SvgAnimation): object is SvgAnimate => hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE);
+    public static isAnimateTransform = (object: SvgAnimation): object is SvgAnimateTransform => hasBit(object.instanceType, INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM);
+    public static asSvg = (object: SvgElement): object is Svg => object.instanceType === INSTANCE_TYPE.SVG;
+    public static asG = (object: SvgElement): object is SvgG => object.instanceType === INSTANCE_TYPE.SVG_G;
+    public static asPattern = (object: SvgElement): object is SvgPattern => object.instanceType === INSTANCE_TYPE.SVG_PATTERN;
+    public static asShapePattern = (object: SvgElement): object is SvgShapePattern => object.instanceType === INSTANCE_TYPE.SVG_SHAPE_PATTERN;
+    public static asUsePattern = (object: SvgElement): object is SvgUsePattern => object.instanceType === INSTANCE_TYPE.SVG_USE_PATTERN;
+    public static asImage = (object: SvgElement): object is SvgImage => object.instanceType === INSTANCE_TYPE.SVG_IMAGE;
+    public static asUse = (object: SvgElement): object is SvgUse => object.instanceType === INSTANCE_TYPE.SVG_USE;
+    public static asUseSymbol = (object: SvgElement): object is SvgUseSymbol => object.instanceType === INSTANCE_TYPE.SVG_USE_SYMBOL;
+    public static asSet = (object: SvgAnimation) => object.instanceType === INSTANCE_TYPE.SVG_ANIMATION;
+    public static asAnimate = (object: SvgAnimation): object is SvgAnimate => object.instanceType === INSTANCE_TYPE.SVG_ANIMATE;
+    public static asAnimateTransform = (object: SvgAnimation): object is SvgAnimateTransform => object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_TRANSFORM;
+    public static asAnimateMotion = (object: SvgAnimation): object is SvgAnimateMotion => object.instanceType === INSTANCE_TYPE.SVG_ANIMATE_MOTION;
+    public static drawCircle = (cx: number, cy: number, r: number, precision?: number) => SvgBuild.drawEllipse(cx, cy, r, r, precision);
+    public static drawPolygon = (values: Point[] | DOMPoint[], precision?: number) => values.length ? SvgBuild.drawPolyline(values, precision) + 'Z' : '';
 
     public static drawLine(x1: number, y1: number, x2 = 0, y2 = 0, precision?: number) {
         if (precision) {
@@ -155,10 +77,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         return `M${x},${y} ${width},${y} ${width},${height} ${x},${height} Z`;
     }
 
-    public static drawCircle(cx: number, cy: number, r: number, precision?: number) {
-        return SvgBuild.drawEllipse(cx, cy, r, r, precision);
-    }
-
     public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, precision?: number) {
         if (ry === undefined) {
             ry = rx;
@@ -175,10 +93,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             cx -= rx;
         }
         return `M${cx},${cy} a${rx},${ry},0,0,1,${radius},0 a${rx},${ry},0,0,1,-${radius},0`;
-    }
-
-    public static drawPolygon(values: Point[] | DOMPoint[], precision?: number) {
-        return values.length ? SvgBuild.drawPolyline(values, precision) + 'Z' : '';
     }
 
     public static drawPolyline(values: Point[] | DOMPoint[], precision?: number) {
@@ -897,5 +811,35 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         values.forEach(value => points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(value))));
         const [left, top, right, bottom] = this.minMaxPoints(points, true);
         return { top, right, bottom, left };
+    }
+
+    public static setName(element?: SVGElement) {
+        if (element) {
+            let value = '';
+            let tagName: Undef<string>;
+            if (isString(element.id)) {
+                const id = convertWord(element.id, true);
+                if (!NAME_GRAPHICS.has(id)) {
+                    value = id;
+                }
+                tagName = id;
+            }
+            else {
+                tagName = element.tagName;
+            }
+            let index = NAME_GRAPHICS.get(tagName) || 0;
+            if (value !== '') {
+                NAME_GRAPHICS.set(value, index);
+                return value;
+            }
+            else {
+                NAME_GRAPHICS.set(tagName, ++index);
+                return `${tagName}_${index}`;
+            }
+        }
+        else {
+            NAME_GRAPHICS.clear();
+            return '';
+        }
     }
 }

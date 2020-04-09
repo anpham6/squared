@@ -12,7 +12,7 @@ const { withinRange } = squared.lib.util;
 const FLEXBOX = EXT_NAME.FLEXBOX;
 
 export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataAttribute<T extends NodeUI>(node: T, children: T[]): FlexboxData<T> {
+    public static createDataAttribute(node: NodeUI, children: NodeUI[]): FlexboxData<NodeUI> {
         return {
             ...(<Required<FlexData>> node.flexdata),
             rowCount: 0,

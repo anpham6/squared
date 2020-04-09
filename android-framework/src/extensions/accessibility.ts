@@ -68,6 +68,7 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                             if (embedded.length && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                                 node.data(Resource.KEY_NAME, 'embedded', embedded);
                             }
+                            node.clear();
                         }
                         break;
                 }

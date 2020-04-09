@@ -16,13 +16,7 @@ const { isNumber } = $lib.util;
 const hasSingleImage = (visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat;
 
 export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataAttribute(): ListData {
-        return {
-            ordinal: '',
-            imageSrc: '',
-            imagePosition: ''
-        };
-    }
+    public static createDataAttribute = (): ListData => ({ ordinal: '', imageSrc: '', imagePosition: '' });
 
     public condition(node: T) {
         const length = node.length;

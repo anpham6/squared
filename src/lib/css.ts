@@ -299,7 +299,10 @@ export function getStyle(element: Null<Element>, pseudoElt = ''): CSSStyleDeclar
     return <CSSStyleDeclaration> { position: 'static', display: 'none' };
 }
 
-export function getFontSize(element: Null<Element>) {
+export function getFontSize(element: Element) {
+    if (element.nodeName.charAt(0) === '#') {
+        element = element.parentElement || document.body;
+    }
     return parseFloat(getStyle(element).getPropertyValue('font-size'));
 }
 
@@ -661,7 +664,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'lineHeight':
             return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element), min: 0 }));
         case 'fontSize':
-            return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element.parentElement), min: 0 }));
+            return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element.parentElement || document.body), min: 0 }));
         case 'margin':
             return calculateVarAsString(element, value, { dimension: 'width', boundingBox });
         case 'borderBottomLeftRadius':

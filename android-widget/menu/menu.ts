@@ -60,9 +60,7 @@ function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, option
             if (value) {
                 const match = pattern.exec(value);
                 if (match) {
-                    const name = NAMESPACE_APP.includes(attr) ? 'app' : 'android';
-                    const data = safeNestedMap(options, name);
-                    data[attr] = Array.from(new Set(match)).join('|');
+                    safeNestedMap(options, NAMESPACE_APP.includes(attr) ? 'app' : 'android')[attr] = Array.from(new Set(match)).join('|');
                 }
             }
         }

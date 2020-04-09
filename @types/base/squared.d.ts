@@ -573,14 +573,16 @@ declare namespace extensions {
     class Accessibility<T extends NodeUI> extends ExtensionUI<T> {}
     class Column<T extends NodeUI> extends ExtensionUI<T> {}
     class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
-        public static isAligned<T extends NodeUI>(node: T): boolean;
-        public static isJustified<T extends NodeUI>(node: T): boolean;
-        public static createDataAttribute<T extends NodeUI>(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string, autoFlow: string): CssGridData<T>;
+        public static isFr(value: string): boolean;
+        public static isPx(value: string): boolean;
+        public static isAligned(node: NodeUI): boolean;
+        public static isJustified(node: NodeUI): boolean;
+        public static createDataAttribute(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string, autoFlow: string): CssGridData<NodeUI>;
         public static createDataRowAttribute(): CssGridDirectionData;
     }
     class Flexbox<T extends NodeUI> extends ExtensionUI<T> {}
     class Grid<T extends NodeUI> extends ExtensionUI<T> {
-        public static createDataCellAttribute<T extends NodeUI>(): GridCellData<T>;
+        public static createDataCellAttribute(): GridCellData<NodeUI>;
     }
     class List<T extends NodeUI> extends ExtensionUI<T> {}
     class Relative<T extends NodeUI> extends ExtensionUI<T> {}

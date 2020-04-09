@@ -11,13 +11,8 @@ type SvgAnimation = squared.svg.SvgAnimation;
 const { hasValue, safeNestedArray, sortNumber } = squared.lib.util;
 
 export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimationIntervalMap {
-    public static getGroupEndTime(item: SvgAnimationAttribute) {
-        return item.iterationCount === 'infinite' ? Number.POSITIVE_INFINITY : item.delay + item.duration * parseInt(item.iterationCount);
-    }
-
-    public static getKeyName(item: SvgAnimation) {
-        return item.attributeName + (SvgBuild.isAnimateTransform(item) ? ':' + TRANSFORM.typeAsName(item.type) : '');
-    }
+    public static getGroupEndTime = (item: SvgAnimationAttribute) => item.iterationCount === 'infinite' ? Number.POSITIVE_INFINITY : item.delay + item.duration * parseInt(item.iterationCount);
+    public static getKeyName = (item: SvgAnimation) => item.attributeName + (SvgBuild.isAnimateTransform(item) ? ':' + TRANSFORM.typeAsName(item.type) : '');
 
     public map: SvgAnimationIntervalAttributeMap;
 

@@ -64,7 +64,23 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                 }
                 const offsetParent: number = node[marginName];
                 const offsetChild: number = target[marginName];
-                const adjustRegion = (item: NodeUI, adjustment: number) => item.setBox(region, { reset: 1, adjustment });
+                const adjustRegion = (item: NodeUI, adjustment: number) => {
+                    if (item.getBox(region)[0] === 1) {
+                        const registered = item.registerBox(region);
+                        if (registered) {
+                            const [reset, value] = registered.getBox(region);
+                            adjustment = Math.max(value, adjustment);
+                            if (reset === 1) {
+                                registered.setBox(region, { adjustment });
+                            }
+                            else {
+                                registered.setCacheValue('marginTop', adjustment);
+                            }
+                            return;
+                        }
+                    }
+                    item.setBox(region, { reset: 1, adjustment });
+                };
                 if (offsetParent >= 0 && offsetChild >= 0) {
                     const height = target.bounds.height;
                     let resetChild = false;
@@ -271,16 +287,24 @@ function getBottomChild(node: NodeUI) {
 }
 
 function isVerticalOverflow(node: NodeUI) {
-    switch (node.cssInitial('overflowY')) {
-        case 'auto':
-        case 'hidden':
-        case 'overlay':
-            return true;
+    for (const value of [node.cssInitial('overflowX'), node.cssInitial('overflowY')]) {
+        switch (value) {
+            case 'auto':
+            case 'hidden':
+            case 'overlay':
+                return true;
+        }
     }
     return false;
 }
 
-const resetBox = (node: NodeUI, region: number) => node.setBox(region, { reset: 1 });
+function resetBox(node: NodeUI, region: number, register?: NodeUI) {
+    node.setBox(region, { reset: 1 });
+    if (register) {
+        node.registerBox(region, register);
+    }
+}
+
 const setMinHeight = (node: NodeUI, offset: number) => node.css('minHeight', formatPX(Math.max(offset, node.hasPX('minHeight', false) ? node.parseHeight(node.css('minHeight')) : 0)));
 const canResetChild = (node: NodeUI, children = true) => (!children && node.blockStatic || children && node.length > 0 && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
 const validAboveChild = (node: NodeUI, children: boolean) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
@@ -391,7 +415,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                         break;
                                                     }
                                                 }
-                                                resetBox(bottomChild, BOX_STANDARD.MARGIN_BOTTOM);
+                                                resetBox(bottomChild, BOX_STANDARD.MARGIN_BOTTOM, previous);
                                                 if (childBottom > marginBottom) {
                                                     marginBottom = childBottom;
                                                     inheritedBottom = true;
@@ -432,7 +456,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                         break;
                                                     }
                                                 }
-                                                resetBox(topChild, BOX_STANDARD.MARGIN_TOP);
+                                                resetBox(topChild, BOX_STANDARD.MARGIN_TOP, current);
                                                 if (childTop > marginTop) {
                                                     marginTop = childTop;
                                                     inheritedTop = true;

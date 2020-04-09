@@ -1668,7 +1668,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public removeTry(replacement?: T, beforeReplace?: () => void) {
-            if (!beforeReplace && replacement) {
+            if (replacement && !beforeReplace) {
                 beforeReplace = () => replacement.anchorClear();
             }
             return super.removeTry(replacement, beforeReplace);

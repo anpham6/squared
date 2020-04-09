@@ -390,11 +390,11 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             while (j < length) {
                 const td = tr[j];
                 const data: TableCellData = td.data(TABLE, 'cellData');
+                const columnWidth = mapWidth[j];
                 j += data.colSpan;
                 if (data.placed) {
                     continue;
                 }
-                const columnWidth = mapWidth[j];
                 if (columnWidth) {
                     switch (mainData.layoutType) {
                         case LAYOUT_TABLE.NONE:

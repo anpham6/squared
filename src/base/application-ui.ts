@@ -40,8 +40,7 @@ function createPseudoElement(parent: HTMLElement, tagName = 'span', index = -1) 
 }
 
 function saveAlignment(preAlignment: ObjectIndex<StringMap>, element: HTMLElement, id: number, attr: string, value: string, restoreValue: string) {
-    const stored = safeNestedMap(preAlignment, id);
-    stored[attr] = restoreValue;
+    safeNestedMap(preAlignment, id)[attr] = restoreValue;
     element.style.setProperty(attr, value);
 }
 

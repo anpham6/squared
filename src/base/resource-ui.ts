@@ -322,6 +322,14 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         images: new Map()
     };
 
+    public static isInheritedStyle(node: NodeUI, attr: string) {
+        return node.styleElement && node.style[attr] === node.actualParent?.style[attr] && (node.cssStyle[attr] === 'inherit' || node.cssInitial(attr) === '');
+    }
+
+    public static isBackgroundVisible(object: Undef<BoxStyle>) {
+        return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
+    }
+
     public static generateId(section: string, name: string, start = 1) {
         const prefix = name;
         let i = start;
@@ -399,10 +407,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             }
         });
         return numberArray ? [undefined, result] : [result];
-    }
-
-    public static isBackgroundVisible(object: Undef<BoxStyle>) {
-        return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
     }
 
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Dimension) {
@@ -637,10 +641,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             }
         }
         return width > 0 && height > 0 ? { width: Math.round(width), height: Math.round(height) } : undefined;
-    }
-
-    public static isInheritedStyle(node: NodeUI, attr: string) {
-        return node.styleElement && node.style[attr] === node.actualParent?.style[attr] && (node.cssStyle[attr] === 'inherit' || node.cssInitial(attr) === '');
     }
 
     public static hasLineBreak(node: NodeUI, lineBreak = false, trim = false) {

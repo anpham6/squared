@@ -1414,8 +1414,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             case 'LEGEND': {
                 if (!node.hasWidth) {
+                    const { centerAligned, rightAligned } = node;
                     node.css('minWidth', formatPX(node.actualWidth), true);
                     node.css('display', 'inline-block', true);
+                    node.setCacheValue('centerAligned', centerAligned);
+                    node.setCacheValue('rightAligned', rightAligned);
                 }
                 const offset = node.actualHeight * this.localSettings.deviations.legendBottomOffset;
                 node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);

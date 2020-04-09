@@ -504,8 +504,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public lockAttr(name: string, attr: string) {
-        const locked = safeNestedMap(this._locked, name);
-        locked[attr] = true;
+        safeNestedMap(this._locked, name)[attr] = true;
     }
 
     public unlockAttr(name: string, attr: string) {

@@ -68,14 +68,15 @@ function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const r = q - unitPX.length;
     const s = unitRepeat.length;
     const result: string[] = new Array(q);
-    for (let i = 0; i < q; ++i) {
+    for (let i = 0; i < q; i++) {
         if (repeat[i]) {
-            for (let j = 0, k = 0; j < r; ++j) {
+            for (let j = 0, k = 0; j < r; ++i, ++j, ++k) {
                 if (k === s) {
                     k = 0;
                 }
-                result[i] = unitRepeat[k++];
+                result[i] = unitRepeat[k];
             }
+            --i;
         }
         else {
             result[i] = unitPX.shift() as string;
@@ -118,7 +119,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         if (CSS.PX.test(value)) {
             filled += parseFloat(value);
         }
-        else if (isFr(value)) {
+        else if (CssGrid.isFr(value)) {
             fractional += parseFloat(value);
         }
         else if (isPercent(value)) {
@@ -130,7 +131,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
         if (ratio > 0) {
             for (i = 0; i < length; ++i) {
                 const value = unit[i];
-                if (isFr(value)) {
+                if (CssGrid.isFr(value)) {
                     unit[i] = formatPX(parseFloat(value) * ratio);
                 }
             }
@@ -180,19 +181,15 @@ function getOpenRowIndex(cells: number[][]) {
     return Math.max(0, length - 1);
 }
 
-const isFr = (value: string) => value.endsWith('fr');
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, index !== 0 ? 'width' : 'height')) : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
-    public static isAligned<T extends NodeUI>(node: T) {
-        return node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
-    }
+    public static isFr = (value: string) => /\dfr$/.test(value);
+    public static isPx = (value: string) => CSS.PX.test(value);
+    public static isAligned = (node: NodeUI) => node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
+    public static isJustified = (node: NodeUI) => (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
 
-    public static isJustified<T extends NodeUI>(node: T) {
-        return (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
-    }
-
-    public static createDataAttribute<T extends NodeUI>(data: GridAlignment): CssGridData<T> {
+    public static createDataAttribute(data: GridAlignment): CssGridData<NodeUI> {
         const autoFlow = data.gridAutoFlow;
         return Object.assign(data, {
             children: [],
@@ -775,7 +772,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (isPercent(value)) {
                     percent -= parseFloat(value) / 100;
                 }
-                else if (isFr(value)) {
+                else if (CssGrid.isFr(value)) {
                     fr += parseFloat(value);
                 }
                 else if (value === 'auto') {
@@ -788,7 +785,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     q = unit.length;
                     for (let i = 0; i < q; ++i) {
                         const value = unit[i];
-                        if (isFr(value)) {
+                        if (CssGrid.isFr(value)) {
                             unit[i] = percent * (parseFloat(value) / fr) + 'fr';
                         }
                     }

@@ -16,9 +16,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         rawData: new Map()
     };
 
-    public static canCompressImage(filename: string) {
-        return /\.(png|jpg|jpeg)$/i.test(filename);
-    }
+    public static canCompressImage = (filename: string) => /\.(png|jpg|jpeg)$/i.test(filename);
 
     public fileHandler?: squared.base.File<T>;
     public readonly abstract application: squared.base.Application<T>;

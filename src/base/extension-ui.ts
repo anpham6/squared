@@ -50,12 +50,12 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
         this._isAll = tagNames.length === 0;
     }
 
-    public condition(node: T, parent?: T) {
-        return node.dataset.use ? this.included(<HTMLElement> node.element) : !this._isAll;
-    }
-
     public is(node: T) {
         return this._isAll || this.tagNames.includes(node.tagName);
+    }
+
+    public condition(node: T, parent?: T) {
+        return node.dataset.use ? this.included(<HTMLElement> node.element) : !this._isAll;
     }
 
     public included(element: HTMLElement) {
