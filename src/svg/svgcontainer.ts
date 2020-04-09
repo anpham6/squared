@@ -45,11 +45,11 @@ function getFillPattern(element: SVGGraphicsElement, viewport?: Svg): Undef<SVGP
     return undefined;
 }
 
-function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup, viewBox?: DOMRect, element?: SVGSVGElement) {
+function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup, viewBox?: DOMRect, element?: SVGSVGElement | SVGSymbolElement) {
     if (parent) {
         const aspectRatio = group.aspectRatio;
         const parentAspectRatio = parent.aspectRatio;
-        if (viewBox) {
+        if (viewBox && element) {
             cloneObject(viewBox, aspectRatio);
             const { width, height } = aspectRatio;
             if (width > 0 && height > 0) {
@@ -57,23 +57,38 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
                 const parentWidth = parentAspectRatio.width || parent.viewBox.width;
                 const parentHeight = parentAspectRatio.height || parent.viewBox.height;
                 const parentRatio = parentWidth / parentHeight;
-                const ratioA = parentWidth / width;
-                const ratioB = parentHeight / height;
-                let recenter = true;
-                if (ratioA !== ratioB) {
-                    aspectRatio.unit = Math.min(ratioA, ratioB);
+                const ratioWidth = parentWidth / width;
+                const ratioHeight = parentHeight / height;
+                const w = getAttribute(element, 'width');
+                const h = getAttribute(element, 'height');
+                let boxWidth: number;
+                let boxHeight: number;
+                if (SVG.svg(element)) {
+                    boxWidth = element.width.baseVal.value;
+                    boxHeight = element.height.baseVal.value;
                 }
-                if (element) {
-                    const hasWidth = isLength(getAttribute(element, 'width'));
-                    const hasHeight = isLength(getAttribute(element, 'height'));
-                    if (hasWidth || hasHeight) {
+                else {
+                    boxWidth = parseFloat(w);
+                    boxHeight = parseFloat(h);
+                }
+                const hasWidth = isLength(w);
+                const hasHeight = isLength(h);
+                const boxRatioWidth = boxWidth / width;
+                const boxRatioHeight = boxHeight / height;
+                let resizeUnit = hasWidth && hasHeight;
+                if (boxWidth >= width && boxHeight >= height) {
+                    aspectRatio.unit = Math.min(boxRatioWidth, boxRatioHeight);
+                    resizeUnit = false;
+                }
+                else if (ratioWidth !== ratioHeight) {
+                    aspectRatio.unit = Math.min(ratioWidth, ratioHeight);
+                }
+                if (hasWidth || hasHeight) {
+                    if (!isNaN(boxWidth) && !isNaN(boxHeight)) {
                         const { align, meetOrSlice } = element.preserveAspectRatio.baseVal;
-                        const ratioW = element.width.baseVal.value / width;
-                        const ratioH = element.height.baseVal.value / height;
-                        const resizeUnit = hasWidth && hasHeight;
-                        if (ratioW === ratioH) {
+                        if (boxRatioWidth === boxRatioHeight) {
                             if (resizeUnit) {
-                                aspectRatio.unit *= ratioW;
+                                aspectRatio.unit *= boxRatioWidth;
                             }
                             aspectRatio.align = SVGPreserveAspectRatio.SVG_PRESERVEASPECTRATIO_XMINYMIN;
                             if (width > height) {
@@ -86,13 +101,13 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
                         else {
                             switch (meetOrSlice) {
                                 case SVGPreserveAspectRatio.SVG_MEETORSLICE_MEET:
-                                    if (ratioH < ratioW) {
+                                    if (boxRatioHeight < boxRatioWidth) {
                                         if (resizeUnit) {
                                             if (height >= width && height >= parentHeight) {
-                                                aspectRatio.unit = ratioH;
+                                                aspectRatio.unit = boxRatioHeight;
                                             }
                                             else {
-                                                aspectRatio.unit *= ratioH;
+                                                aspectRatio.unit *= boxRatioHeight;
                                             }
                                         }
                                         aspectRatio.alignX = true;
@@ -100,23 +115,23 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
                                     else {
                                         if (resizeUnit) {
                                             if (width >= height && width >= parentWidth) {
-                                                aspectRatio.unit = ratioW;
+                                                aspectRatio.unit = boxRatioWidth;
                                             }
                                             else {
-                                                aspectRatio.unit *= ratioW;
+                                                aspectRatio.unit *= boxRatioWidth;
                                             }
                                         }
                                         aspectRatio.alignY = true;
                                     }
                                     break;
                                 case SVGPreserveAspectRatio.SVG_MEETORSLICE_SLICE:
-                                    if (ratioH > ratioW) {
+                                    if (boxRatioHeight > boxRatioWidth) {
                                         if (resizeUnit) {
                                             if (height >= width && height >= parentHeight) {
-                                                aspectRatio.unit = ratioH;
+                                                aspectRatio.unit = boxRatioHeight;
                                             }
                                             else {
-                                                aspectRatio.unit *= ratioH;
+                                                aspectRatio.unit *= boxRatioHeight;
                                             }
                                         }
                                         aspectRatio.alignX = true;
@@ -125,10 +140,10 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
                                     else {
                                         if (resizeUnit) {
                                             if (width >= height && width >= parentWidth) {
-                                                aspectRatio.unit = ratioW;
+                                                aspectRatio.unit = boxRatioWidth;
                                             }
                                             else {
-                                                aspectRatio.unit *= ratioW;
+                                                aspectRatio.unit *= boxRatioWidth;
                                             }
                                         }
                                         aspectRatio.alignX = width > parentWidth;
@@ -139,10 +154,9 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
                             aspectRatio.align = align;
                         }
                         aspectRatio.meetOrSlice = meetOrSlice;
-                        recenter = false;
                     }
                 }
-                if (recenter) {
+                else {
                     if (parentRatio > ratio) {
                         aspectRatio.position.x = (parentWidth - (parentHeight * ratio)) / 2;
                     }
@@ -230,7 +244,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 if (target) {
                     if (SVG.symbol(target)) {
                         svg = new squared.svg.SvgUseSymbol(item, target);
-                        setAspectRatio(container, <SvgGroup> svg, target.viewBox.baseVal);
+                        setAspectRatio(container, <SvgGroup> svg, target.viewBox.baseVal, target);
                         requireClip = true;
                     }
                     else if (SVG.image(target)) {

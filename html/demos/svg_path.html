@@ -83,6 +83,18 @@
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
+        <svg viewBox="0 0 80 20" xmlns="http://www.w3.org/2000/svg">
+            <symbol id="myDot" width="10" height="10" viewBox="0 0 2 2">
+                <circle cx="1" cy="1" r="1" />
+            </symbol>
+            <path d="M0,10 h80 M10,0 v20 M25,0 v20 M40,0 v20 M55,0 v20 M70,0 v20" fill="none" stroke="pink" />
+            <use href="#myDot" x="5"  y="5" style="opacity: 1.0" />
+            <use href="#myDot" x="20" y="5" style="opacity: 0.8" />
+            <use href="#myDot" x="35" y="5" style="opacity: 0.6" />
+            <use href="#myDot" x="50" y="5" style="opacity: 0.4" />
+            <use href="#myDot" x="65" y="5" style="opacity: 0.2" />
+        </svg>
+        <br /><br />
         <svg viewBox="0 0 200 100">
             <g fill="grey" transform="rotate(-10 50 100) scale(1 0.5) translate(-36 45.5)">
                 <path id="heart" d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" />

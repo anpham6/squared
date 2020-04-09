@@ -56,7 +56,6 @@ declare interface SvgBaseVal extends SvgElement {
 declare interface SvgView extends SvgElement {
     name: string;
     transformed?: SvgTransform[];
-    translationOffset?: Point;
     readonly opacity: string;
     readonly visible: boolean;
     readonly transforms: SvgTransform[];
@@ -201,7 +200,8 @@ declare class SvgG extends SvgContainer implements SvgView, SvgPaint {
     clipPath: string;
     clipRule: string;
     transformed?: SvgTransform[];
-    translationOffset?: Point;
+    useParent?: SvgUse | SvgUseSymbol;
+    patternParent?: SvgShapePattern;
     readonly element: SVGGElement;
     constructor(element: SVGGElement);
     setPaint(d?: string[], precision?: number): void;
@@ -220,6 +220,7 @@ declare class SvgShape extends SvgElement implements SvgView, SvgSynchronize {
     transforms: SvgTransform[];
     animations: SvgAnimation[];
     path?: SvgPath;
+    transformed?: SvgTransform[];
     readonly element: SVGGeometryElement | SVGUseElement;
     synchronize(options?: SvgSynchronizeOptions): void;
     getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
@@ -244,6 +245,7 @@ declare class SvgImage extends SvgElement implements SvgView, SvgViewRect, SvgBa
     animations: SvgAnimation[];
     rotateAngle?: number;
     transformed?: SvgTransform[];
+    translationOffset?: Point;
     readonly element: SVGImageElement | SVGUseElement;
     readonly href: string;
     setRect(): void;
@@ -279,6 +281,8 @@ declare class SvgUse extends SvgShape implements SvgViewRect, SvgBaseVal, SvgPai
     clipPath: string;
     clipRule: string;
     transformed?: SvgTransform[];
+    useParent?: SvgUse | SvgUseSymbol;
+    patternParent?: SvgShapePattern;
     readonly element: SVGUseElement;
     readonly shapeElement: SVGGeometryElement;
     setRect(): void;
@@ -319,6 +323,7 @@ declare class SvgPath implements SvgBaseVal, SvgPaint, SvgTransformable {
     strokeDashoffset: string;
     clipPath: string;
     clipRule: string;
+    useParent?: SvgUse | SvgUseSymbol;
     patternParent?: SvgShapePattern;
     transformed?: SvgTransform[];
     transformResidual?: SvgTransform[][];
@@ -371,6 +376,8 @@ declare class SvgUseSymbol extends SvgContainer implements SvgViewBox, SvgPaint 
     clipPath: string;
     clipRule: string;
     transformed?: SvgTransform[];
+    useParent?: SvgUse | SvgUseSymbol;
+    patternParent?: SvgShapePattern;
     readonly element: SVGUseElement;
     readonly symbolElement: SVGSymbolElement;
     setPaint(d?: string[], precision?: number): void;
@@ -399,7 +406,6 @@ declare class SvgPattern extends SvgContainer implements SvgView {
     transforms: SvgTransform[];
     animations: SvgAnimation[];
     transformed?: SvgTransform[];
-    translationOffset?: Point;
     readonly element: SVGGraphicsElement;
     readonly patternElement: SVGPatternElement;
     getTransforms(element?: SVGGraphicsElement): SvgTransform[];
@@ -426,6 +432,8 @@ declare class SvgShapePattern extends SvgPattern implements SvgPaint {
     clipRule: string;
     drawRegion?: BoxRect;
     transformed?: SvgTransform[];
+    useParent?: SvgUse | SvgUseSymbol;
+    patternParent?: SvgShapePattern;
     readonly element: SVGGeometryElement | SVGUseElement;
     readonly patternElement: SVGPatternElement;
     readonly patternUnits: number;

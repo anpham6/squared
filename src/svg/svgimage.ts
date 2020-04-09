@@ -11,6 +11,7 @@ const { resolvePath } = squared.lib.util;
 
 export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) implements squared.svg.SvgImage {
     public rotateAngle?: number;
+    public translationOffset?: Point;
     public readonly imageElement: Null<SVGImageElement> = null;
 
     private __get_transforms = false;

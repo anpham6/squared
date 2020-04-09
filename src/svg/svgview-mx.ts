@@ -87,7 +87,6 @@ function getKeyframeOrigin(attrMap: AttributeMap, element: SVGGraphicsElement, o
 export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
         public transformed?: SvgTransform[];
-        public translationOffset?: Point;
 
         protected _transforms?: SvgTransform[];
         protected _animations?: SvgAnimation[];
