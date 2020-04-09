@@ -728,7 +728,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
 
     public getDrawableImages(node: T, data: BoxStyle) {
         const backgroundImage = data.backgroundImage;
-        if (backgroundImage || node.extracted && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+        const embedded: Undef<T[]> = node.data(Resource.KEY_NAME, 'embedded');
+        if (backgroundImage || embedded) {
             const resource = <android.base.Resource<T>> this.resource;
             const screenDimension = node.localSettings.screenDimension;
             const { bounds, fontSize } = node;
@@ -853,12 +854,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundSize = flatArray(backgroundSize);
                 }
             }
-            if (node.extracted) {
+            if (embedded) {
                 if (length === 0) {
                     backgroundRepeat.length = 0;
                     backgroundSize.length = 0;
                 }
-                node.extracted.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE')).forEach(image => {
+                embedded.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE')).forEach(image => {
                     const element = <HTMLImageElement> image.element;
                     const src = resource.addImageSrc(element);
                     if (src !== '') {

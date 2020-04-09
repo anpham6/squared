@@ -98,11 +98,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     const interval = 100 / stepSize;
                     const splitTimes: number[] = [];
                     const splitValues: string[] = [];
-                    let i = 0;
-                    while (i <= stepSize) {
+                    for (let i = 0; i <= stepSize; ++i) {
                         const offset = i === 0 && match[2] === 'start' ? 1 : 0;
                         const time = keyTimes[index] + keyTimeTotal * (i / stepSize);
-                        const percent = (interval * (i++ + offset)) / 100;
+                        const percent = (interval * (i + offset)) / 100;
                         const result: string[] = [];
                         switch (attributeName) {
                             case 'fill':

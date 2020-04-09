@@ -1,8 +1,4 @@
 module.exports = {
-    "globals": {
-        "Atomics": "readonly",
-        "SharedArrayBuffer": "readonly"
-    },
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
         "project": "tsconfig.json",

@@ -40,7 +40,11 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     }
 
     get length() {
-        const { images, rawData, fonts } = Resource.ASSETS;
-        return images.size + rawData.size + fonts.size;
+        const assets = Resource.ASSETS;
+        let result = 0;
+        for (const name in assets) {
+            result += assets[name].size;
+        }
+        return result;
     }
 }

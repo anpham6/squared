@@ -8,9 +8,11 @@ module.exports = {
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
-        ".eslint-config"
+        ".eslint-shared"
     ],
-    "ignorePatterns": ["index.d.ts"],
+    "ignorePatterns": [
+        "index.d.ts"
+    ],
     "globals": {
         "squared": "readonly"
     }

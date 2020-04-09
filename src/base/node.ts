@@ -601,6 +601,21 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin
     return maxValue > 0 ? Math.min(value, maxValue) : value;
 }
 
+function setOverflow(node: T) {
+    let result = 0;
+    if (node.htmlElement && !node.inputElement && !node.imageElement && node.tagName !== 'HR' && !node.documentBody) {
+        const element = <HTMLElement> node.element;
+        const { overflowX, overflowY } = node.cssAsObject('overflowX', 'overflowY');
+        if (node.hasHeight && (node.hasPX('height') || node.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
+            result |= NODE_ALIGNMENT.VERTICAL;
+        }
+        if ((node.hasPX('width') || node.hasPX('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
+            result |= NODE_ALIGNMENT.HORIZONTAL;
+        }
+    }
+    return result;
+}
+
 function convertPosition(node: T, attr: string) {
     if (!node.positionStatic) {
         const unit = node.cssInitial(attr, true);
@@ -2423,30 +2438,21 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.htmlElement && (<HTMLImageElement> this._element).src || '';
     }
 
-    get overflow() {
+    get overflowX() {
         let result = this._cached.overflow;
         if (result === undefined) {
-            result = 0;
-            if (this.htmlElement && !this.inputElement && !this.imageElement && this.tagName !== 'HR' && !this.documentBody) {
-                const element = <HTMLElement> this._element;
-                const { overflowX, overflowY } = this.cssAsObject('overflowX', 'overflowY');
-                if (this.hasHeight && (this.hasPX('height') || this.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
-                    result |= NODE_ALIGNMENT.VERTICAL;
-                }
-                if ((this.hasPX('width') || this.hasPX('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
-                    result |= NODE_ALIGNMENT.HORIZONTAL;
-                }
-            }
+            result = setOverflow(this);
             this._cached.overflow = result;
         }
-        return result;
-    }
-
-    get overflowX() {
-        return hasBit(this.overflow, NODE_ALIGNMENT.HORIZONTAL);
+        return hasBit(result, NODE_ALIGNMENT.HORIZONTAL);
     }
     get overflowY() {
-        return hasBit(this.overflow, NODE_ALIGNMENT.VERTICAL);
+        let result = this._cached.overflow;
+        if (result === undefined) {
+            result = setOverflow(this);
+            this._cached.overflow = result;
+        }
+        return hasBit(result, NODE_ALIGNMENT.VERTICAL);
     }
 
     get baseline() {

@@ -987,9 +987,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     animate.attributeName = 'stroke-dasharray';
                                     animate.baseValue = getFromToValue(baseValue[j]);
                                     animate.delay = delay;
-                                    animate.to = getFromToValue(items[j++]);
                                     animate.duration = duration;
                                     animate.fillFreeze = duration === 0;
+                                    animate.to = getFromToValue(items[j++]);
                                     extracted.push(animate);
                                 }
                             }

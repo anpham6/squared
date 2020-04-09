@@ -588,7 +588,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public renderTemplates?: NodeTemplate<T>[];
         public outerWrapper?: T;
         public companion?: T;
-        public extracted?: T[];
         public horizontalRows?: T[][];
         public innerBefore?: T;
         public innerAfter?: T;

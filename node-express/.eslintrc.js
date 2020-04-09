@@ -8,11 +8,11 @@ module.exports = {
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
-        "../.eslint-config"
+        "../.eslint-shared"
     ],
+    "ignorePatterns": [],
     "rules": {
         "no-console": "off",
-        "@typescript-eslint/prefer-includes": "off",
-        "@typescript-eslint/no-var-requires": "off"
+        "@typescript-eslint/prefer-includes": "off"
     }
 };

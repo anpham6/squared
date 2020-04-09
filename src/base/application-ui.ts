@@ -281,12 +281,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 switch (getStyle(element).position) {
                     case 'absolute':
                     case 'fixed':
-                        return this.isUseElement(element);
+                        return this.useElement(element);
                 }
                 let current = element.parentElement;
                 while (current) {
                     if (getStyle(current).display === 'none') {
-                        return this.isUseElement(element);
+                        return this.useElement(element);
                     }
                     current = current.parentElement;
                 }
@@ -294,7 +294,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (iterateArray(element.children, (item: HTMLElement) => controllerHandler.visibleElement(item)) === Number.POSITIVE_INFINITY) {
                     return true;
                 }
-                return this.isUseElement(element);
+                return this.useElement(element);
             }
         }
         return false;
@@ -571,7 +571,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return undefined;
     }
 
-    public isUseElement(element: HTMLElement) {
+    public useElement(element: HTMLElement) {
         const use = element.dataset.use;
         return isString(use) && use.split(XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
     }
@@ -745,315 +745,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         node.inlineText = inlineText;
     }
 
-    protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
-        let styleMap: StringMap = getElementCache(element, `styleMap${pseudoElt}`, sessionId);
-        let nested = 0;
-        if (element.tagName === 'Q') {
-            if (!styleMap) {
-                styleMap = {};
-                setElementCache(element, `styleMap${pseudoElt}`, sessionId, styleMap);
-            }
-            let content = styleMap.content;
-            if (typeof content !== 'string' || content === '') {
-                content = getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
-                styleMap.content = content;
-            }
-            if (content.endsWith('-quote')) {
-                let parent = element.parentElement;
-                while (parent?.tagName === 'Q') {
-                    nested++;
-                    parent = parent.parentElement;
-                }
-            }
-        }
-        if (styleMap) {
-            let value = styleMap.content;
-            if (value) {
-                const textContent = trimBoth(value, '"');
-                let absolute = false;
-                switch (styleMap.position) {
-                    case 'absolute':
-                    case 'fixed':
-                        absolute = true;
-                        break;
-                }
-                const checkPseudoAfter = () => {
-                    if (!absolute && textContent !== '') {
-                        const previousSibling = <Element> element.childNodes[element.childNodes.length - 1];
-                        if (isTextNode(previousSibling)) {
-                            return !/\s+$/.test(previousSibling.textContent as string);
-                        }
-                    }
-                    return false;
-                };
-                if (textContent.trim() === '') {
-                    const checkDimension = (after: boolean) => {
-                        if ((after || convertFloat(styleMap.width) === 0) && convertFloat(styleMap.height) === 0) {
-                            for (const attr in styleMap) {
-                                if (/(padding|Width|Height)/.test(attr) && convertFloat(styleMap[attr]) > 0) {
-                                    return true;
-                                }
-                                else if (!absolute && attr.startsWith('margin') && convertFloat(styleMap[attr]) !== 0) {
-                                    return true;
-                                }
-                            }
-                            return false;
-                        }
-                        return true;
-                    };
-                    if (pseudoElt === '::after') {
-                        if (!checkPseudoAfter() && !checkDimension(true)) {
-                            return undefined;
-                        }
-                    }
-                    else {
-                        const childNodes = element.childNodes;
-                        const length = childNodes.length;
-                        let i = 0;
-                        while (i < length) {
-                            const child = <Element> childNodes[i++];
-                            if (isTextNode(child)) {
-                                if ((child.textContent as string).trim() !== '') {
-                                    break;
-                                }
-                            }
-                            else if (child instanceof HTMLElement) {
-                                const style = getStyle(child);
-                                switch (style.getPropertyValue('position')) {
-                                    case 'fixed':
-                                    case 'absolute':
-                                        continue;
-                                }
-                                if (style.getPropertyValue('float') !== 'none') {
-                                    return undefined;
-                                }
-                                break;
-                            }
-                        }
-                        switch (styleMap.display) {
-                            case undefined:
-                            case 'block':
-                            case 'inline':
-                            case 'inherit':
-                            case 'initial': {
-                                if (!checkDimension(false)) {
-                                    return undefined;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                }
-                else if (value === 'inherit') {
-                    let current: Null<HTMLElement> = element;
-                    do {
-                        value = getStyle(current).getPropertyValue('content');
-                        if (value !== 'inherit') {
-                            break;
-                        }
-                        current = current.parentElement;
-                    }
-                    while (current);
-                }
-                const style = getStyle(element);
-                TEXT_STYLE.forEach(attr => {
-                    if (!isString(styleMap[attr])) {
-                        styleMap[attr] = style[attr];
-                    }
-                });
-                let tagName = '';
-                let content = '';
-                switch (value) {
-                    case 'normal':
-                    case 'none':
-                    case 'initial':
-                    case 'inherit':
-                    case 'unset':
-                    case 'no-open-quote':
-                    case 'no-close-quote':
-                    case '""':
-                        break;
-                    case 'open-quote':
-                        if (pseudoElt === '::before') {
-                            content = nested % 2 === 0 ? '“' : "‘";
-                        }
-                        break;
-                    case 'close-quote':
-                        if (pseudoElt === '::after') {
-                            content = nested % 2 === 0 ? '”' : "’";
-                        }
-                        break;
-                    default: {
-                        const url = resolveURL(value);
-                        if (url !== '') {
-                            content = url;
-                            const format = fromLastIndexOf(content, '.').toLowerCase();
-                            const imageFormat = this._localSettings.supported.imageFormat;
-                            if (imageFormat === '*' || imageFormat.includes(format)) {
-                                tagName = 'img';
-                            }
-                            else {
-                                content = '';
-                            }
-                        }
-                        else {
-                            let found = false;
-                            REGEX_COUNTER.lastIndex = 0;
-                            let match: Null<RegExpExecArray>;
-                            while ((match = REGEX_COUNTER.exec(value)) !== null) {
-                                const attr = match[1];
-                                if (attr) {
-                                    content += getNamedItem(element, attr.trim());
-                                }
-                                else if (match[2] || match[5]) {
-                                    const counterType = match[2] === 'counter';
-                                    const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
-                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
-                                    const subcounter: number[] = [];
-                                    let current: Null<HTMLElement> = element;
-                                    let counter = initialValue;
-                                    let ascending = false;
-                                    let lastResetElement: Undef<Element>;
-                                    const incrementCounter = (increment: number, pseudo: boolean) => {
-                                        const length = subcounter.length;
-                                        if (length === 0) {
-                                            counter += increment;
-                                        }
-                                        else if (ascending || pseudo) {
-                                            subcounter[length - 1] += increment;
-                                        }
-                                    };
-                                    const cascadeCounterSibling = (sibling: Element) => {
-                                        if (getCounterValue(getStyle(sibling).getPropertyValue('counter-reset'), counterName) === undefined) {
-                                            iterateArray(sibling.children, item => {
-                                                if (item.className !== '__squared.pseudo') {
-                                                    let increment = getCounterIncrementValue(item, counterName, pseudoElt, sessionId);
-                                                    if (increment) {
-                                                        incrementCounter(increment, true);
-                                                    }
-                                                    const childStyle = getStyle(item);
-                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-increment'), counterName);
-                                                    if (increment) {
-                                                        incrementCounter(increment, false);
-                                                    }
-                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-reset'), counterName);
-                                                    if (increment !== undefined) {
-                                                        return true;
-                                                    }
-                                                    cascadeCounterSibling(item);
-                                                }
-                                                return;
-                                            });
-                                        }
-                                    };
-                                    while (current) {
-                                        ascending = false;
-                                        if (current.previousElementSibling) {
-                                            current = <Null<HTMLElement>> current.previousElementSibling;
-                                            if (current) {
-                                                cascadeCounterSibling(current);
-                                            }
-                                        }
-                                        else if (current.parentElement) {
-                                            current = current.parentElement;
-                                            ascending = true;
-                                        }
-                                        else {
-                                            break;
-                                        }
-                                        if (current && current.className !== '__squared.pseudo') {
-                                            const pesudoIncrement = getCounterIncrementValue(current, counterName, pseudoElt, sessionId);
-                                            if (pesudoIncrement) {
-                                                incrementCounter(pesudoIncrement, true);
-                                            }
-                                            const currentStyle = getStyle(current);
-                                            const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment'), counterName);
-                                            if (counterIncrement) {
-                                                incrementCounter(counterIncrement, false);
-                                            }
-                                            const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'), counterName);
-                                            if (counterReset !== undefined) {
-                                                if (!lastResetElement) {
-                                                    counter += counterReset;
-                                                }
-                                                lastResetElement = current;
-                                                if (counterType) {
-                                                    break;
-                                                }
-                                                else if (ascending) {
-                                                    subcounter.push((pesudoIncrement || 0) + counterReset);
-                                                }
-                                            }
-                                        }
-                                    }
-                                    if (lastResetElement) {
-                                        if (!counterType && subcounter.length > 1) {
-                                            subcounter.reverse().splice(1, 1);
-                                            const textValue = match[7];
-                                            subcounter.forEach(leading => content += convertListStyle(styleName, leading, true) + textValue);
-                                        }
-                                    }
-                                    else {
-                                        counter = initialValue;
-                                    }
-                                    content += convertListStyle(styleName, counter, true);
-                                }
-                                else if (match[9]) {
-                                    content += match[9];
-                                }
-                                found = true;
-                            }
-                            if (!found) {
-                                content = value;
-                            }
-                        }
-                        break;
-                    }
-                }
-                if (!isString(styleMap.display)) {
-                    styleMap.display = 'inline';
-                }
-                if (content || value === '""') {
-                    if (tagName === '') {
-                        tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
-                    }
-                    const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
-                    if (tagName === 'img') {
-                        (<HTMLImageElement> pseudoElement).src = content;
-                        const image = this.resourceHandler.getImage(content);
-                        if (image) {
-                            if (!isString(styleMap.width) && image.width > 0) {
-                                styleMap.width = formatPX(image.width);
-                            }
-                            if (!isString(styleMap.height) && image.height > 0) {
-                                styleMap.height = formatPX(image.height);
-                            }
-                        }
-                    }
-                    else if (value !== '""') {
-                        pseudoElement.innerText = content;
-                    }
-                    for (const attr in styleMap) {
-                        if (attr !== 'display') {
-                            pseudoElement.style[attr] = styleMap[attr];
-                        }
-                    }
-                    setElementCache(pseudoElement, 'pseudoElement', sessionId, pseudoElt);
-                    setElementCache(pseudoElement, 'styleMap', sessionId, styleMap);
-                    return pseudoElement;
-                }
-            }
-        }
-        return undefined;
-    }
-
     protected setBaseLayout() {
         const { controllerHandler, processing, session } = this;
         const { extensionMap, clearMap } = session;
         const cache = processing.cache;
         const documentRoot = processing.node as T;
         const mapY = new Map<number, Map<number, T>>();
-        let extensions = this.extensions.filter(item => !item.eventOnly);
+        let extensions = this.extensionsTraverse;
         {
             let maxDepth = 0;
             const setMap = (depth: number, id: number, node: T) => mapY.get(depth)?.set(id, node) || mapY.set(depth, new Map<number, T>([[id, node]]));
@@ -1774,6 +1472,308 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return layout;
     }
 
+    protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
+        let styleMap: StringMap = getElementCache(element, `styleMap${pseudoElt}`, sessionId);
+        let nested = 0;
+        if (element.tagName === 'Q') {
+            if (!styleMap) {
+                styleMap = {};
+                setElementCache(element, `styleMap${pseudoElt}`, sessionId, styleMap);
+            }
+            let content = styleMap.content;
+            if (typeof content !== 'string' || content === '') {
+                content = getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
+                styleMap.content = content;
+            }
+            if (content.endsWith('-quote')) {
+                let parent = element.parentElement;
+                while (parent?.tagName === 'Q') {
+                    nested++;
+                    parent = parent.parentElement;
+                }
+            }
+        }
+        if (styleMap) {
+            let value = styleMap.content;
+            if (value) {
+                const textContent = trimBoth(value, '"');
+                let absolute = false;
+                switch (styleMap.position) {
+                    case 'absolute':
+                    case 'fixed':
+                        absolute = true;
+                        break;
+                }
+                const checkPseudoAfter = () => {
+                    if (!absolute && textContent !== '') {
+                        const previousSibling = <Element> element.childNodes[element.childNodes.length - 1];
+                        if (isTextNode(previousSibling)) {
+                            return !/\s+$/.test(previousSibling.textContent as string);
+                        }
+                    }
+                    return false;
+                };
+                if (textContent.trim() === '') {
+                    const checkDimension = (after: boolean) => {
+                        if ((after || convertFloat(styleMap.width) === 0) && convertFloat(styleMap.height) === 0) {
+                            for (const attr in styleMap) {
+                                if (/(padding|Width|Height)/.test(attr) && convertFloat(styleMap[attr]) > 0) {
+                                    return true;
+                                }
+                                else if (!absolute && attr.startsWith('margin') && convertFloat(styleMap[attr]) !== 0) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+                        return true;
+                    };
+                    if (pseudoElt === '::after') {
+                        if (!checkPseudoAfter() && !checkDimension(true)) {
+                            return undefined;
+                        }
+                    }
+                    else {
+                        const childNodes = element.childNodes;
+                        const length = childNodes.length;
+                        let i = 0;
+                        while (i < length) {
+                            const child = <Element> childNodes[i++];
+                            if (isTextNode(child)) {
+                                if ((child.textContent as string).trim() !== '') {
+                                    break;
+                                }
+                            }
+                            else if (child instanceof HTMLElement) {
+                                const style = getStyle(child);
+                                switch (style.getPropertyValue('position')) {
+                                    case 'fixed':
+                                    case 'absolute':
+                                        continue;
+                                }
+                                if (style.getPropertyValue('float') !== 'none') {
+                                    return undefined;
+                                }
+                                break;
+                            }
+                        }
+                        switch (styleMap.display) {
+                            case undefined:
+                            case 'block':
+                            case 'inline':
+                            case 'inherit':
+                            case 'initial': {
+                                if (!checkDimension(false)) {
+                                    return undefined;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                }
+                else if (value === 'inherit') {
+                    let current: Null<HTMLElement> = element;
+                    do {
+                        value = getStyle(current).getPropertyValue('content');
+                        if (value !== 'inherit') {
+                            break;
+                        }
+                        current = current.parentElement;
+                    }
+                    while (current);
+                }
+                const style = getStyle(element);
+                TEXT_STYLE.forEach(attr => {
+                    if (!isString(styleMap[attr])) {
+                        styleMap[attr] = style[attr];
+                    }
+                });
+                let tagName = '';
+                let content = '';
+                switch (value) {
+                    case 'normal':
+                    case 'none':
+                    case 'initial':
+                    case 'inherit':
+                    case 'unset':
+                    case 'no-open-quote':
+                    case 'no-close-quote':
+                    case '""':
+                        break;
+                    case 'open-quote':
+                        if (pseudoElt === '::before') {
+                            content = nested % 2 === 0 ? '“' : "‘";
+                        }
+                        break;
+                    case 'close-quote':
+                        if (pseudoElt === '::after') {
+                            content = nested % 2 === 0 ? '”' : "’";
+                        }
+                        break;
+                    default: {
+                        const url = resolveURL(value);
+                        if (url !== '') {
+                            content = url;
+                            const format = fromLastIndexOf(content, '.').toLowerCase();
+                            const imageFormat = this._localSettings.supported.imageFormat;
+                            if (imageFormat === '*' || imageFormat.includes(format)) {
+                                tagName = 'img';
+                            }
+                            else {
+                                content = '';
+                            }
+                        }
+                        else {
+                            let found = false;
+                            REGEX_COUNTER.lastIndex = 0;
+                            let match: Null<RegExpExecArray>;
+                            while ((match = REGEX_COUNTER.exec(value)) !== null) {
+                                const attr = match[1];
+                                if (attr) {
+                                    content += getNamedItem(element, attr.trim());
+                                }
+                                else if (match[2] || match[5]) {
+                                    const counterType = match[2] === 'counter';
+                                    const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
+                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
+                                    const subcounter: number[] = [];
+                                    let current: Null<HTMLElement> = element;
+                                    let counter = initialValue;
+                                    let ascending = false;
+                                    let lastResetElement: Undef<Element>;
+                                    const incrementCounter = (increment: number, pseudo: boolean) => {
+                                        const length = subcounter.length;
+                                        if (length === 0) {
+                                            counter += increment;
+                                        }
+                                        else if (ascending || pseudo) {
+                                            subcounter[length - 1] += increment;
+                                        }
+                                    };
+                                    const cascadeCounterSibling = (sibling: Element) => {
+                                        if (getCounterValue(getStyle(sibling).getPropertyValue('counter-reset'), counterName) === undefined) {
+                                            iterateArray(sibling.children, item => {
+                                                if (item.className !== '__squared.pseudo') {
+                                                    let increment = getCounterIncrementValue(item, counterName, pseudoElt, sessionId);
+                                                    if (increment) {
+                                                        incrementCounter(increment, true);
+                                                    }
+                                                    const childStyle = getStyle(item);
+                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-increment'), counterName);
+                                                    if (increment) {
+                                                        incrementCounter(increment, false);
+                                                    }
+                                                    increment = getCounterValue(childStyle.getPropertyValue('counter-reset'), counterName);
+                                                    if (increment !== undefined) {
+                                                        return true;
+                                                    }
+                                                    cascadeCounterSibling(item);
+                                                }
+                                                return;
+                                            });
+                                        }
+                                    };
+                                    while (current) {
+                                        ascending = false;
+                                        if (current.previousElementSibling) {
+                                            current = <Null<HTMLElement>> current.previousElementSibling;
+                                            if (current) {
+                                                cascadeCounterSibling(current);
+                                            }
+                                        }
+                                        else if (current.parentElement) {
+                                            current = current.parentElement;
+                                            ascending = true;
+                                        }
+                                        else {
+                                            break;
+                                        }
+                                        if (current && current.className !== '__squared.pseudo') {
+                                            const pesudoIncrement = getCounterIncrementValue(current, counterName, pseudoElt, sessionId);
+                                            if (pesudoIncrement) {
+                                                incrementCounter(pesudoIncrement, true);
+                                            }
+                                            const currentStyle = getStyle(current);
+                                            const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment'), counterName);
+                                            if (counterIncrement) {
+                                                incrementCounter(counterIncrement, false);
+                                            }
+                                            const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'), counterName);
+                                            if (counterReset !== undefined) {
+                                                if (!lastResetElement) {
+                                                    counter += counterReset;
+                                                }
+                                                lastResetElement = current;
+                                                if (counterType) {
+                                                    break;
+                                                }
+                                                else if (ascending) {
+                                                    subcounter.push((pesudoIncrement || 0) + counterReset);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (lastResetElement) {
+                                        if (!counterType && subcounter.length > 1) {
+                                            subcounter.reverse().splice(1, 1);
+                                            const textValue = match[7];
+                                            subcounter.forEach(leading => content += convertListStyle(styleName, leading, true) + textValue);
+                                        }
+                                    }
+                                    else {
+                                        counter = initialValue;
+                                    }
+                                    content += convertListStyle(styleName, counter, true);
+                                }
+                                else if (match[9]) {
+                                    content += match[9];
+                                }
+                                found = true;
+                            }
+                            if (!found) {
+                                content = value;
+                            }
+                        }
+                        break;
+                    }
+                }
+                if (!isString(styleMap.display)) {
+                    styleMap.display = 'inline';
+                }
+                if (content || value === '""') {
+                    if (tagName === '') {
+                        tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
+                    }
+                    const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
+                    if (tagName === 'img') {
+                        (<HTMLImageElement> pseudoElement).src = content;
+                        const image = this.resourceHandler.getImage(content);
+                        if (image) {
+                            if (!isString(styleMap.width) && image.width > 0) {
+                                styleMap.width = formatPX(image.width);
+                            }
+                            if (!isString(styleMap.height) && image.height > 0) {
+                                styleMap.height = formatPX(image.height);
+                            }
+                        }
+                    }
+                    else if (value !== '""') {
+                        pseudoElement.innerText = content;
+                    }
+                    for (const attr in styleMap) {
+                        if (attr !== 'display') {
+                            pseudoElement.style[attr] = styleMap[attr];
+                        }
+                    }
+                    setElementCache(pseudoElement, 'pseudoElement', sessionId, pseudoElt);
+                    setElementCache(pseudoElement, 'styleMap', sessionId, styleMap);
+                    return pseudoElement;
+                }
+            }
+        }
+        return undefined;
+    }
+
     protected createAssetOptions(options?: FileActionOptions) {
         let assets = options?.assets;
         if (assets) {
@@ -1783,6 +1783,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             assets = this.layouts;
         }
         return { ...options, assets };
+    }
+
+    protected createLayoutControl(parent: T, node: T) {
+        return new LayoutUI(
+            parent,
+            node,
+            node.containerType,
+            node.alignmentType,
+            node.children as T[]
+        );
     }
 
     protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
@@ -1863,16 +1873,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
     }
 
-    protected createLayoutControl(parent: T, node: T) {
-        return new LayoutUI(
-            parent,
-            node,
-            node.containerType,
-            node.alignmentType,
-            node.children as T[]
-        );
-    }
-
     get layouts() {
         return this._layouts.sort((a, b) => {
             const indexA = a.index;
@@ -1898,6 +1898,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     get extensionsCascade() {
         return this.extensions.filter(item => !!item.init);
+    }
+
+    get extensionsTraverse() {
+        return this.extensions.filter(item => !item.eventOnly);
     }
 
     get length() {

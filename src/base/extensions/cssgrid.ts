@@ -56,31 +56,29 @@ function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const unitPX: string[] = [];
     const unitRepeat: string[] = [];
     const length = sizes.length;
-    let i = 0;
-    while (i < length) {
+    for (let i = 0; i < length; ++i) {
         if (repeat[i]) {
-            unitRepeat.push(sizes[i++]);
+            unitRepeat.push(sizes[i]);
         }
         else {
-            unitPX.push(sizes[i++]);
+            unitPX.push(sizes[i]);
         }
     }
     const q = data.length;
     const r = q - unitPX.length;
     const s = unitRepeat.length;
     const result: string[] = new Array(q);
-    i = 0;
-    while (i < q) {
+    for (let i = 0; i < q; ++i) {
         if (repeat[i]) {
             for (let j = 0, k = 0; j < r; ++j) {
                 if (k === s) {
                     k = 0;
                 }
-                result[i++] = unitRepeat[k++];
+                result[i] = unitRepeat[k++];
             }
         }
         else {
-            result[i++] = unitPX.shift() as string;
+            result[i] = unitPX.shift() as string;
         }
     }
     return result;

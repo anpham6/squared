@@ -693,8 +693,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         return this._resourceHandler.fileHandler;
     }
 
-    get extensionsCascade() {
-        return <Extension<T>[]> [];
+    get extensionsCascade(): Extension<T>[] {
+        return [];
     }
 
     get nextId() {

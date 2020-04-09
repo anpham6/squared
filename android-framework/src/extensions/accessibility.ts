@@ -2,7 +2,7 @@ import { AccessibilityOptions } from '../../../@types/android/extension';
 
 import Resource from '../resource';
 
-const { NODE_PROCEDURE } = squared.base.lib.enumeration;
+const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 type View = android.base.View;
 
@@ -58,15 +58,16 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                         break;
                     }
                     case 'INPUT_IMAGE':
-                        node.extracted = [node];
+                        if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                            node.data(Resource.KEY_NAME, 'embedded', [node]);
+                        }
                         break;
                     case 'BUTTON':
                         if (node.length) {
-                            const extracted = node.children.filter((item: T) => !item.textElement) as T[];
-                            if (extracted.length) {
-                                node.extracted = extracted;
+                            const embedded = node.extract((item: T) => !item.textElement) as T[];
+                            if (embedded.length && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                                node.data(Resource.KEY_NAME, 'embedded', embedded);
                             }
-                            node.clear();
                         }
                         break;
                 }

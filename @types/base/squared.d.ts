@@ -66,16 +66,17 @@ declare class ApplicationUI<T extends NodeUI> extends Application<T> {
     readonly resourceHandler: ResourceUI<T>;
     readonly fileHandler: Undef<FileUI<T>>;
     readonly extensions: ExtensionUI<T>[];
+    readonly extensionsTraverse: ExtensionUI<T>[];
     readonly layouts: FileAsset[];
     readonly clearMap: Map<T, string>;
     conditionElement(element: HTMLElement, pseudoElt?: string): boolean;
+    useElement(element: HTMLElement): boolean;
     createNode(options: NodeUIOptions<T>): T;
     renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
     resolveTarget(target: Undef<string>): Undef<T>;
     addLayout(layout: LayoutUI<T>): void;
     addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
     saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
-    isUseElement(element: HTMLElement): boolean;
     constructor(
         framework: number,
         nodeConstructor: Constructor<T>,
@@ -326,6 +327,7 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     readonly hasHeight: boolean;
     readonly lineHeight: number;
     readonly display: string;
+    readonly positionStatic: boolean;
     readonly positionRelative: boolean;
     readonly top: number;
     readonly right: number;
@@ -343,7 +345,6 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     readonly paddingRight: number;
     readonly paddingBottom: number;
     readonly paddingLeft: number;
-    readonly inlineFlow: boolean;
     readonly inline: boolean;
     readonly inlineStatic: boolean;
     readonly inlineVertical: boolean;
@@ -353,18 +354,18 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     readonly textContent: string;
     readonly textBounds: Null<BoxRectDimension>;
     readonly lineBreak: boolean;
-    readonly positionStatic: boolean;
     readonly block: boolean;
     readonly blockStatic: boolean;
-    readonly blockDimension: boolean;
     readonly blockVertical: boolean;
-    readonly contentBox: boolean;
-    readonly autoMargin: AutoMargin;
+    readonly blockDimension: boolean;
     readonly pageFlow: boolean;
+    readonly inlineFlow: boolean;
+    readonly autoMargin: AutoMargin;
     readonly floating: boolean;
     readonly float: string;
     readonly baseline: boolean;
     readonly multiline: boolean;
+    readonly contentBox: boolean;
     readonly contentBoxWidth: number;
     readonly contentBoxHeight: number;
     readonly flexdata: FlexData;
@@ -375,7 +376,6 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     readonly visibleStyle: VisibleStyle;
     readonly fontSize: number;
     readonly src: string;
-    readonly overflow: number;
     readonly overflowX: boolean;
     readonly overflowY: boolean;
     readonly verticalAlign: string;
@@ -451,6 +451,7 @@ declare class NodeUI extends Node implements LayoutType {
     alignmentType: number;
     containerType: number;
     containerName: string;
+    containerIndex: number;
     baselineActive: boolean;
     baselineAltered: boolean;
     positioned: boolean;
@@ -471,7 +472,6 @@ declare class NodeUI extends Node implements LayoutType {
     siblingsLeading: NodeUI[];
     siblingsTrailing: NodeUI[];
     floatContainer: boolean;
-    containerIndex: number;
     localSettings: LocalSettingsUI;
     renderAs?: NodeUI;
     renderParent?: NodeUI;
@@ -483,7 +483,6 @@ declare class NodeUI extends Node implements LayoutType {
     innerAfter?: NodeUI;
     companion?: NodeUI;
     labelFor?: NodeUI;
-    extracted?: NodeUI[];
     horizontalRows?: NodeUI[][];
     readonly renderChildren: NodeUI[];
     readonly nodeGroup: boolean;

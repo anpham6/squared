@@ -83,11 +83,9 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         const length = nextCoordsX.length;
         if (length) {
             let columnLength = -1;
-            let i = 0;
-            let j: number;
-            while (i < length) {
+            for (let i = 0; i < length; ++i) {
                 const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
-                if (i++ === 0) {
+                if (i === 0) {
                     columnLength = length;
                 }
                 else if (columnLength !== nextAxisX.length) {
@@ -100,14 +98,14 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             }
             else {
                 const columnRight: number[] = [];
-                for (i = 0; i < length; ++i) {
+                for (let i = 0; i < length; ++i) {
                     const nextAxisX: T[] = nextMapX[nextCoordsX[i]];
                     const q = nextAxisX.length;
                     if (i === 0 && q === 0) {
                         return undefined;
                     }
                     columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
-                    for (j = 0; j < q; ++j) {
+                    for (let j = 0; j < q; ++j) {
                         const nextX = nextAxisX[j];
                         const { left, right } = nextX.linear;
                         if (i === 0 || aboveRange(left, columnRight[i - 1])) {
@@ -156,7 +154,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 const q = columnRight.length;
-                for (i = 0, j = -1; i < q; ++i) {
+                for (let i = 0, j = -1; i < q; ++i) {
                     if (!columns[i]) {
                         if (j === -1) {
                             j = i - 1;
@@ -170,7 +168,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         j = -1;
                     }
                 }
-                for (i = 0; i < columns.length; ++i) {
+                for (let i = 0; i < columns.length; ++i) {
                     if (columns[i]?.length) {
                         columnEnd.push(columnRight[i]);
                     }
