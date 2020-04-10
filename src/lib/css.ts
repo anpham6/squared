@@ -1970,7 +1970,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
             if (item.tagName === 'SOURCE') {
                 const { media, type, srcset: srcsetA } = item;
-                if (isString(srcsetA) && !(isString(media) && !validMediaRule(media)) && (!isString(type) || !mimeType || mimeType.includes((type.split('/').pop() as string).trim().toLowerCase()))) {
+                if (isString(srcsetA) && !(isString(media) && !validMediaRule(media)) && (!isString(type) || !mimeType || mimeType.includes(type.trim().toLowerCase()))) {
                     srcset = srcsetA;
                     sizes = item.sizes;
                     return true;

@@ -1,5 +1,5 @@
 import { FileActionOptions, UserSettings } from './base/application';
-import { BackgroundPositionOptions, CalculateOptions, CalculateVarAsStringOptions, CalculateVarOptions, ContainerOptions, ContainerFindOptions, DelimitStringOptions, KeyframesData } from './lib/squared';
+import { BackgroundPositionOptions, CalculateOptions, CalculateVarAsStringOptions, CalculateVarOptions, ContainerOptions, ContainerFindOptions, DelimitStringOptions, FormatOrAll, KeyframesData } from './lib/squared';
 
 type ExtensionRequest = string | squared.base.Extension<squared.base.Node>;
 
@@ -267,7 +267,9 @@ export namespace lib {
     }
 
     namespace util {
+        function hasMimeType(formats: FormatOrAll, value: string): boolean;
         function parseMimeType(value: string): string;
+        function fromMimeType(value: string): string;
         function capitalize(value: string, upper?: boolean): string;
         function capitalizeString(value: string): string;
         function lowerCaseString(value: string): string;

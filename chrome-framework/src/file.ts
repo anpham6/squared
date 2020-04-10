@@ -157,7 +157,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     public getImageAssets() {
         const result: ChromeAsset[] = [];
-        for (const uri of ASSETS.images.keys()) {
+        for (const uri of ASSETS.image.keys()) {
             const data = <ChromeAsset> parseUri(uri);
             if (this.validFile(data)) {
                 data.uri = uri;

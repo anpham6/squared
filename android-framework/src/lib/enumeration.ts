@@ -49,5 +49,6 @@ export enum CONTAINER_NODE {
     RELATIVE,
     CONSTRAINT,
     WEBVIEW,
+    VIDEOVIEW,
     UNKNOWN
 }

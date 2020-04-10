@@ -18,7 +18,7 @@ const $lib = squared.lib;
 const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = $lib.css;
 const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
 const { maxArray } = $lib.math;
-const { appendSeparator, convertFloat, convertWord, flatArray, fromLastIndexOf, hasBit, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = $lib.util;
+const { appendSeparator, convertFloat, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = $lib.util;
 const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -148,7 +148,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public abstract userSettings: UserUISettings;
 
     private readonly _layouts: FileAsset[] = [];
-    private readonly _localSettings!: ControllerUISettings;
+    private readonly _controllerSettings!: ControllerUISettings;
     private readonly _excluded!: Set<string>;
 
     protected constructor(
@@ -160,7 +160,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     {
         super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
         const localSettings = this.controllerHandler.localSettings;
-        this._localSettings = localSettings;
+        this._controllerSettings = localSettings;
         this._excluded = localSettings.unsupported.excluded;
     }
 
@@ -226,7 +226,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         extensions.forEach(ext => ext.beforeCascade(documentRoot));
-        const baseTemplate = this._localSettings.layout.baseTemplate;
+        const baseTemplate = this._controllerSettings.layout.baseTemplate;
         documentRoot.forEach(layout => {
             const node = layout.node;
             const renderTemplates = (node.renderParent as T).renderTemplates;
@@ -327,7 +327,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
         if (isString(content)) {
             const layout: FileAsset = {
-                pathname: pathname ? trimString(pathname, '/') : appendSeparator(this.userSettings.outputDirectory, this._localSettings.layout.pathName),
+                pathname: pathname ? trimString(pathname, '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
                 filename,
                 content,
                 index
@@ -544,7 +544,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public afterCreateCache(element: HTMLElement) {
         const dataset = element.dataset;
         const { filename, iteration } = dataset;
-        const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
+        const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._controllerSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
         const postfix = (iteration ? parseInt(iteration) : -1) + 1;
         const layoutName = convertWord(postfix > 1 ? `${prefix}_${postfix}` : prefix, true);
         dataset.iteration = postfix.toString();
@@ -1613,9 +1613,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         const url = resolveURL(value);
                         if (url !== '') {
                             content = url;
-                            const format = fromLastIndexOf(content, '.').toLowerCase();
-                            const imageFormat = this._localSettings.supported.imageFormat;
-                            if (imageFormat === '*' || imageFormat.includes(format)) {
+                            if (hasMimeType(this._controllerSettings.mimeType.image, url)) {
                                 tagName = 'img';
                             }
                             else {
@@ -1833,7 +1831,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (invalid) {
                     const offset = floatPosition - parent.box.left - marginLeft - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0));
                     if (offset > 0 && offset < boxWidth) {
-                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
+                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                     }
                 }
             }
@@ -1865,7 +1863,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (invalid) {
                     const offset = parent.box.right - floatPosition - marginRight - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0));
                     if (offset > 0 && offset < boxWidth) {
-                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
+                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                     }
                 }
             }

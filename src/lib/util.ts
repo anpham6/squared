@@ -1,4 +1,4 @@
-import { DelimitStringOptions } from '../../@types/lib/squared';
+import { DelimitStringOptions, FormatOrAll } from '../../@types/lib/squared';
 
 import { CHAR, COMPONENT, UNIT, XML } from './regex';
 
@@ -13,12 +13,18 @@ const NUMERALS = [
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
 
+export function hasMimeType(formats: FormatOrAll, value: string) {
+    return formats === '*' || formats.includes(parseMimeType(value));
+}
+
 export function parseMimeType(value: string) {
-    switch (fromLastIndexOf(value, '.').toLowerCase()) {
+    switch (fromLastIndexOf(value.trim(), '.').toLowerCase()) {
         case 'aac':
             return 'audio/aac';
         case 'abw':
             return 'application/x-abiword';
+        case 'apng':
+            return 'image/apng';
         case 'arc':
             return 'application/x-freearc';
         case 'avi':
@@ -44,22 +50,35 @@ export function parseMimeType(value: string) {
         case 'docx':
             return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
         case 'eot':
+        case 'embedded-opentype':
             return 'application/vnd.ms-fontobject';
         case 'epub':
             return 'application/epub+zip';
+        case 'flac':
+            return 'audio/flac';
         case 'gif':
             return 'image/gif';
+        case 'gsm':
+            return 'audio/gsm';
+        case 'heic':
+            return 'image/heic';
+        case 'heif':
+            return 'image/heif';
         case 'htm':
         case 'html':
             return 'text/html';
+        case 'cur':
         case 'ico':
-            return 'image/vnd.microsoft.icon';
+            return 'image/x-icon';
         case 'ics':
             return 'text/calendar';
         case 'jar':
             return 'application/java-archive';
         case 'jpeg':
         case 'jpg':
+        case '.jfif':
+        case '.pjpeg':
+        case '.pjp':
             return 'image/jpeg';
         case 'js':
         case 'mjs':
@@ -71,10 +90,13 @@ export function parseMimeType(value: string) {
         case 'mid':
         case 'midi':
             return 'audio/midi';
+        case 'mkv':
+            return 'video/x-matroska';
         case 'mp3':
-            return 'audio/mpeg';
         case 'mpeg':
-            return 'video/mpeg';
+            return 'audio/mpeg';
+        case 'mp4':
+            return 'video/mp4';
         case 'mpkg':
             return 'application/vnd.apple.installer+xml';
         case 'odp':
@@ -84,12 +106,16 @@ export function parseMimeType(value: string) {
         case 'odt':
             return 'application/vnd.oasis.opendocument.text';
         case 'oga':
+        case 'spx':
+        case 'ogg':
             return 'audio/ogg';
         case 'ogv':
+        case 'ogm':
             return 'video/ogg';
         case 'ogx':
             return 'application/ogg';
         case 'otf':
+        case 'opentype':
             return 'font/otf';
         case 'png':
             return 'image/png';
@@ -117,6 +143,7 @@ export function parseMimeType(value: string) {
         case 'ts':
             return 'video/mp2t';
         case 'ttf':
+        case 'truetype':
             return 'font/ttf';
         case 'txt':
             return 'text/plain';
@@ -125,9 +152,8 @@ export function parseMimeType(value: string) {
         case 'wav':
             return 'audio/wav';
         case 'weba':
-            return 'audio/webm';
         case 'webm':
-            return 'video/webm';
+            return 'audio/webm';
         case 'webp':
             return 'image/webp';
         case 'woff':
@@ -152,6 +178,155 @@ export function parseMimeType(value: string) {
             return 'video/3gpp2';
         case '7z':
             return 'application/x-7z-compressed';
+        default:
+            return '';
+    }
+}
+
+export function fromMimeType(value: string) {
+    switch (value) {
+        case 'audio/aac':
+            return 'aac';
+        case 'application/x-abiword':
+            return 'abw';
+        case 'image/apng':
+            return 'apng';
+        case 'application/x-freearc':
+            return 'arc';
+        case 'video/x-msvideo':
+            return 'avi';
+        case 'application/vnd.amazon.ebook':
+            return 'azw';
+        case 'application/octet-stream':
+            return 'bin';
+        case 'image/bmp':
+            return 'bmp';
+        case 'application/x-bzip':
+            return 'bz';
+        case 'application/x-bzip2':
+            return 'bz2';
+        case 'application/x-csh':
+            return 'csh';
+        case 'text/css':
+            return 'css';
+        case 'text/csv':
+            return 'csv';
+        case 'application/msword':
+            return 'doc';
+        case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+            return 'docx';
+        case 'application/vnd.ms-fontobject':
+            return 'eot';
+        case 'application/epub+zip':
+            return 'epub';
+        case 'audio/flac':
+            return 'flac';
+        case 'image/gif':
+            return 'gif';
+        case 'audio/gsm':
+            return 'gsm';
+        case 'image/heic':
+            return 'heic';
+        case 'image/heif':
+            return 'heif';
+        case 'text/html':
+            return 'html';
+        case 'image/x-icon':
+            return 'ico';
+        case 'text/calendar':
+            return 'ics';
+        case 'application/java-archive':
+            return 'jar';
+        case 'image/jpeg':
+            return 'jpg';
+        case 'text/javascript':
+            return 'js';
+        case 'application/json':
+            return 'json';
+        case 'application/ld+json':
+            return 'jsonld';
+        case 'audio/midi':
+            return 'mid';
+        case 'video/x-matroska':
+            return 'mkv';
+        case 'audio/mpeg':
+            return 'mp3';
+        case 'video/mp4':
+            return 'mp4';
+        case 'application/vnd.apple.installer+xml':
+            return 'mpkg';
+        case 'application/vnd.oasis.opendocument.presentation':
+            return 'odp';
+        case 'application/vnd.oasis.opendocument.spreadsheet':
+            return 'ods';
+        case 'application/vnd.oasis.opendocument.text':
+            return 'odt';
+        case 'audio/ogg':
+            return 'ogg';
+        case 'video/ogg':
+            return 'ogv';
+        case 'application/ogg':
+            return 'ogx';
+        case 'font/otf':
+            return 'otf';
+        case 'image/png':
+            return 'png';
+        case 'application/pdf':
+            return 'pdf';
+        case 'application/vnd.ms-powerpoint':
+            return 'ppt';
+        case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+            return 'pptx';
+        case 'application/x-rar-compressed':
+            return 'rar';
+        case 'application/rtf':
+            return 'rtf';
+        case 'application/x-sh':
+            return 'sh';
+        case 'image/svg+xml':
+            return 'svg';
+        case 'application/x-shockwave-flash':
+            return 'swf';
+        case 'application/x-tar':
+            return 'tar';
+        case 'image/tiff':
+            return 'tif';
+        case 'video/mp2t':
+            return 'ts';
+        case 'font/ttf':
+            return 'ttf';
+        case 'text/plain':
+            return 'txt';
+        case 'application/vnd.visio':
+            return 'vsd';
+        case 'audio/wav':
+            return 'wav';
+        case 'audio/webm':
+            return 'video/webm';
+        case 'image/webp':
+            return 'webp';
+        case 'font/woff':
+            return 'woff';
+        case 'font/woff2':
+            return 'woff2';
+        case 'application/xhtml+xml':
+            return 'xhtml';
+        case 'application/vnd.ms-excel':
+            return 'xls';
+        case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+            return 'xlsx';
+        case 'text/xml':
+            return 'xml';
+        case 'application/vnd.mozilla.xul+xml':
+            return 'xul';
+        case 'application/zip':
+            return 'zip';
+        case 'video/3gpp':
+            return '3gp';
+        case 'video/3gpp2':
+            return '3g2';
+        case 'application/x-7z-compressed':
+            return '7z';
         default:
             return '';
     }

@@ -1,3 +1,4 @@
+import { FormatOrAll } from '../lib/squared';
 import { FileAsset } from '../base/file';
 import { AppViewModelAndroid } from './internal';
 import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
@@ -42,7 +43,7 @@ declare namespace base {
         public static formatName(value: string): string;
         public static addTheme(theme: StyleAttribute, path?: string, file?: string): boolean;
         public static addString(value: string, name?: string, numberAlias?: boolean): string;
-        public static addImage(images: StringMap, prefix?: string, imageFormat?: "*" | string[]): string;
+        public static addImage(images: StringMap, prefix?: string, imageFormat?: FormatOrAll): string;
         public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
@@ -62,7 +63,9 @@ declare namespace base {
         resourceStyleToXml(options?: FileOutputOptions): string[];
         resourceDimenToXml(options?: FileOutputOptions): string[];
         resourceDrawableToXml(options?: FileOutputOptions): string[];
-        resourceDrawableImageToXml(options?: FileOutputOptions): string[];
+        resourceDrawableImageToString(options?: FileOutputOptions): string[];
+        resourceRawVideoToString(options?: FileOutputOptions): string[];
+        resourceRawAudioToString(options?: FileOutputOptions): string[];
         resourceAnimToXml(options?: FileOutputOptions): string[];
         layoutAllToXml(layouts: FileAsset[], options?: FileOutputOptions): {};
     }
@@ -206,6 +209,7 @@ declare namespace lib {
             GRID,
             RELATIVE,
             CONSTRAINT,
+            VIDEOVIEW,
             WEBVIEW,
             UNKNOWN
         }
@@ -253,6 +257,7 @@ declare namespace lib {
             GRID: string;
             RELATIVE: string;
             WEBVIEW: string;
+            VIDEOVIEW: string;
             RADIOGROUP: string;
             HORIZONTAL_SCROLL: string;
             VERTICAL_SCROLL: string;

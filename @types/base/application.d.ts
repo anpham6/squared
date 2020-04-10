@@ -1,3 +1,4 @@
+import { FormatOrAll } from '../lib/squared';
 import { LayoutUI, NodeUI } from './squared';
 import { FileAsset, FileAssetExclude } from './file';
 
@@ -25,9 +26,11 @@ export interface UserUISettings extends UserSettings {
 }
 
 export interface ControllerSettings {
-    supported: {
-        fontFormat: '*' | string[];
-        imageFormat: '*' | string[];
+    mimeType: {
+        font: FormatOrAll;
+        image: FormatOrAll;
+        audio: FormatOrAll;
+        video: FormatOrAll;
     };
 }
 
@@ -41,6 +44,8 @@ export interface ControllerUISettings extends ControllerSettings {
         string: string;
         font: string;
         image: string;
+        video: string;
+        audio: string;
     };
     style: {
         inputBorderColor: string;

@@ -191,14 +191,24 @@ const appBase: AppFramework<View> = {
                 file.resourceDrawableToXml(createAssetsOptions(options, directory));
             }
         },
-        copyResourceDrawableImageXml(directory: string, options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                file.resourceDrawableImageToXml(createAssetsOptions(options, directory));
-            }
-        },
         copyResourceAnimXml(directory: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
                 file.resourceAnimToXml(createAssetsOptions(options, directory));
+            }
+        },
+        copyResourceDrawableImage(directory: string, options?: FileOutputOptions) {
+            if (checkApplication(application)) {
+                file.resourceDrawableImageToString(createAssetsOptions(options, directory));
+            }
+        },
+        copyResourceRawVideo(directory: string, options?: FileOutputOptions) {
+            if (checkApplication(application)) {
+                file.resourceRawVideoToString(createAssetsOptions(options, directory));
+            }
+        },
+        copyResourceRawAudio(directory: string, options?: FileOutputOptions) {
+            if (checkApplication(application)) {
+                file.resourceRawAudioToString(createAssetsOptions(options, directory));
             }
         },
         saveLayoutAllXml(filename?: string, options?: FileOutputOptions) {
@@ -246,14 +256,24 @@ const appBase: AppFramework<View> = {
                 file.resourceDrawableToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-drawable'));
             }
         },
-        saveResourceDrawableImageXml(filename?: string, options?: FileOutputOptions) {
-            if (checkApplication(application)) {
-                file.resourceDrawableImageToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-drawable-image'));
-            }
-        },
         saveResourceAnimXml(filename?: string, options?: FileOutputOptions) {
             if (checkApplication(application)) {
                 file.resourceAnimToXml(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-anim'));
+            }
+        },
+        saveResourceDrawableImage(filename?: string, options?: FileOutputOptions) {
+            if (checkApplication(application)) {
+                file.resourceDrawableImageToString(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-drawable-image'));
+            }
+        },
+        saveResourceRawVideo(filename?: string, options?: FileOutputOptions) {
+            if (checkApplication(application)) {
+                file.resourceRawVideoToString(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-raw-video'));
+            }
+        },
+        saveResourceRawAudio(filename?: string, options?: FileOutputOptions) {
+            if (checkApplication(application)) {
+                file.resourceRawAudioToString(createAssetsOptions(options, undefined, filename || userSettings.outputArchiveName + '-raw-audio'));
             }
         },
         writeLayoutAllXml(options?: FileOutputOptions) {
@@ -283,11 +303,17 @@ const appBase: AppFramework<View> = {
         writeResourceDrawableXml(options?: FileOutputOptions) {
             return checkApplication(application) ? file.resourceDrawableToXml(options) : [];
         },
-        writeResourceDrawableImageXml(options?: FileOutputOptions) {
-            return checkApplication(application) ? file.resourceDrawableImageToXml(options) : [];
-        },
         writeResourceAnimXml(options?: FileOutputOptions) {
             return checkApplication(application) ? file.resourceAnimToXml(options) : [];
+        },
+        writeResourceDrawableImage(options?: FileOutputOptions) {
+            return checkApplication(application) ? file.resourceDrawableImageToString(options) : [];
+        },
+        writeResourceRawVideo(options?: FileOutputOptions) {
+            return checkApplication(application) ? file.resourceRawVideoToString(options) : [];
+        },
+        writeResourceRawAudio(options?: FileOutputOptions) {
+            return checkApplication(application) ? file.resourceRawAudioToString(options) : [];
         }
     },
     create() {

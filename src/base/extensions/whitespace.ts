@@ -393,12 +393,17 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 let childBottom = bottomChild.marginBottom;
                                                 let currentChild = bottomChild;
                                                 while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                    childBottom = Math.max(currentChild.marginTop, currentChild.marginBottom, childBottom);
-                                                    resetBox(currentChild, BOX_STANDARD.MARGIN_TOP);
+                                                    const currentTop = currentChild.marginTop;
+                                                    childBottom = Math.max(currentTop, currentChild.marginBottom, childBottom);
+                                                    if (currentTop !== 0) {
+                                                        resetBox(currentChild, BOX_STANDARD.MARGIN_TOP);
+                                                    }
                                                     const sibling = currentChild.previousSibling as T;
                                                     if (sibling) {
                                                         if (sibling.marginBottom >= childBottom) {
-                                                            resetBox(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
+                                                            if (currentChild.marginBottom !== 0) {
+                                                                resetBox(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
+                                                            }
                                                             bottomChild = sibling;
                                                             childBottom = sibling.marginBottom;
                                                             currentChild = sibling;
@@ -407,7 +412,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                             break;
                                                         }
                                                         else {
-                                                            resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM);
+                                                            if (sibling.marginBottom !== 0) {
+                                                                resetBox(sibling, BOX_STANDARD.MARGIN_BOTTOM);
+                                                            }
                                                             currentChild = sibling;
                                                         }
                                                     }
@@ -415,7 +422,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                         break;
                                                     }
                                                 }
-                                                resetBox(bottomChild, BOX_STANDARD.MARGIN_BOTTOM, previous);
+                                                if (childBottom !== 0) {
+                                                    resetBox(bottomChild, BOX_STANDARD.MARGIN_BOTTOM, previous);
+                                                }
                                                 if (childBottom > marginBottom) {
                                                     marginBottom = childBottom;
                                                     inheritedBottom = true;
@@ -434,12 +443,17 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 let childTop = topChild.marginTop;
                                                 let currentChild = topChild;
                                                 while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                    childTop = Math.max(currentChild.marginTop, currentChild.marginBottom, childTop);
-                                                    resetBox(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
+                                                    const currentBottom = currentChild.marginBottom;
+                                                    childTop = Math.max(currentChild.marginTop, currentBottom, childTop);
+                                                    if (currentBottom !== 0) {
+                                                        resetBox(currentChild, BOX_STANDARD.MARGIN_BOTTOM);
+                                                    }
                                                     const sibling = currentChild.nextSibling as T;
                                                     if (sibling) {
                                                         if (sibling.marginTop >= childTop) {
-                                                            resetBox(currentChild, BOX_STANDARD.MARGIN_TOP);
+                                                            if (currentChild.marginTop !== 0) {
+                                                                resetBox(currentChild, BOX_STANDARD.MARGIN_TOP);
+                                                            }
                                                             topChild = sibling;
                                                             childTop = sibling.marginTop;
                                                             currentChild = sibling;
@@ -448,7 +462,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                             break;
                                                         }
                                                         else {
-                                                            resetBox(sibling, BOX_STANDARD.MARGIN_TOP);
+                                                            if (sibling.marginTop !== 0) {
+                                                                resetBox(sibling, BOX_STANDARD.MARGIN_TOP);
+                                                            }
                                                             currentChild = sibling;
                                                         }
                                                     }
@@ -456,7 +472,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                         break;
                                                     }
                                                 }
-                                                resetBox(topChild, BOX_STANDARD.MARGIN_TOP, current);
+                                                if (childTop !== 0) {
+                                                    resetBox(topChild, BOX_STANDARD.MARGIN_TOP, current);
+                                                }
                                                 if (childTop > marginTop) {
                                                     marginTop = childTop;
                                                     inheritedTop = true;

@@ -16,7 +16,7 @@ const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
 const { CHAR, FILE, STRING, XML } = $lib.regex;
 const { getElementCache, setElementCache } = $lib.session;
 
-const { images, rawData } = Resource.ASSETS;
+const { image, rawData } = Resource.ASSETS;
 
 type PreloadImage = HTMLImageElement | string;
 
@@ -32,9 +32,9 @@ const REGEX_URL = /\s*(url|local)\((?:['""]([^'")]+)['"]|([^)]+))\)(?:\s*format\
 const REGEX_DATAURI = new RegExp(`(url\\("(${STRING.DATAURI})"\\)),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
-    const image = images.get(uri);
-    if (width > 0 && height > 0 || !image || image.width === 0 || image.height === 0) {
-        images.set(uri, { width, height, uri });
+    const asset = image.get(uri);
+    if (width > 0 && height > 0 || !asset || asset.width === 0 || asset.height === 0) {
+        image.set(uri, { width, height, uri });
     }
 }
 
@@ -154,9 +154,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         let THEN: Undef<() => void>;
         const resume = () => {
             this.initializing = false;
-            preloaded.forEach(image => {
-                if (image.parentElement) {
-                    documentRoot.removeChild(image);
+            preloaded.forEach(asset => {
+                if (asset.parentElement) {
+                    documentRoot.removeChild(asset);
                 }
             });
             preloaded.length = 0;
@@ -198,19 +198,19 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (preloadImages) {
             for (const element of this.rootElements) {
                 element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
-                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
+                element.querySelectorAll('input[type=image]').forEach((asset: HTMLInputElement) => addImageSrc(asset.src, asset.width, asset.height));
             }
-            for (const image of images.values()) {
-                const uri = image.uri as string;
+            for (const asset of image.values()) {
+                const uri = asset.uri as string;
                 if (isSvg(uri)) {
                     imageElements.push(uri);
                 }
-                else if (image.width === 0 || image.height === 0) {
+                else if (asset.width === 0 || asset.height === 0) {
                     const element = document.createElement('img');
                     element.src = uri;
                     if (element.naturalWidth > 0 && element.naturalHeight > 0) {
-                        image.width = element.naturalWidth;
-                        image.height = element.naturalHeight;
+                        asset.width = element.naturalWidth;
+                        asset.height = element.naturalHeight;
                     }
                     else {
                         documentRoot.appendChild(element);
@@ -228,7 +228,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (width > 0 && height > 0) {
                     data.width = width;
                     data.height = height;
-                    images.set(uri, { width, height, uri: data.filename });
+                    image.set(uri, { width, height, uri: data.filename });
                 }
                 else {
                     document.body.appendChild(element);
@@ -237,35 +237,35 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         for (const element of this.rootElements) {
-            element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                if (isSvg(image.src)) {
+            element.querySelectorAll('img').forEach((asset: HTMLImageElement) => {
+                if (isSvg(asset.src)) {
                     if (preloadImages) {
-                        imageElements.push(image.src);
+                        imageElements.push(asset.src);
                     }
                 }
                 else {
                     if (preloadImages) {
-                        parseSrcSet(image.srcset);
+                        parseSrcSet(asset.srcset);
                     }
-                    if (image.complete) {
-                        resource.addImage(image);
+                    if (asset.complete) {
+                        resource.addImage(asset);
                     }
                     else if (preloadImages) {
-                        imageElements.push(image);
+                        imageElements.push(asset);
                     }
                 }
             });
         }
         if (imageElements.length) {
             this.initializing = true;
-            Promise.all(objectMap(imageElements, image => {
+            Promise.all(objectMap(imageElements, asset => {
                 return new Promise((resolve, reject) => {
-                    if (typeof image === 'string') {
-                        resolve(getImageSvgAsync(image));
+                    if (typeof asset === 'string') {
+                        resolve(getImageSvgAsync(asset));
                     }
                     else {
-                        image.addEventListener('load', () => resolve(image));
-                        image.addEventListener('error', () => reject(image));
+                        asset.addEventListener('load', () => resolve(asset));
+                        asset.addEventListener('error', () => reject(asset));
                     }
                 });
             }))

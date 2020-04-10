@@ -569,6 +569,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin
             case 'SVG':
             case 'IFRAME':
             case 'VIDEO':
+            case 'AUDIO':
             case 'CANVAS':
             case 'OBJECT':
             case 'EMBED': {

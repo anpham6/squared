@@ -1,10 +1,12 @@
 import { FontFaceData } from '../lib/squared';
-import { ImageAsset, RawAsset } from './file';
+import { Asset, ImageAsset, RawAsset } from './file';
 
 export interface ResourceAssetMap {
     ids: Map<string, string[]>;
-    images: Map<string, ImageAsset>;
     fonts: Map<string, FontFaceData[]>;
+    image: Map<string, ImageAsset>;
+    video: Map<string, Asset>;
+    audio: Map<string, Asset>;
     rawData: Map<string, RawAsset>;
 }
 

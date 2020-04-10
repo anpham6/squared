@@ -2,11 +2,11 @@ import { AppHandler, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, A
 import { ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileCopyingOptions, LayoutOptions, LayoutResult, LayoutRoot, LayoutType, NodeGroupUIOptions, NodeTemplate, NodeUIOptions, UserSettings, UserUISettings } from './application';
 import { AutoMargin, AscendOptions, BoxOptions, BoxType, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './node';
 import { ResourceAssetMap, ResourceStoredMap } from './resource';
-import { FileAsset, ImageAsset, RawAsset } from './file';
+import { Asset, FileAsset, ImageAsset, RawAsset } from './file';
 
 import { CssGridData, CssGridDirectionData, GridCellData } from './extension';
 
-import { FontFaceData } from '../lib/squared';
+import { FontFaceData, FormatOrAll } from '../lib/squared';
 
 declare interface FileActions {
     copyToDisk(directory: string, options?: FileActionOptions): void;
@@ -144,12 +144,17 @@ declare class Resource<T extends Node> implements Resource<T> {
     readonly application: Application<T>;
     readonly cache: NodeList<T>;
     readonly userSettings: UserSettings;
+    readonly mimeTypeMap: ObjectMap<FormatOrAll>;
     readonly fileSeparator?: string;
     reset(): void;
     addImage(element: Undef<HTMLImageElement>): void;
-    getImage(src: string): Undef<ImageAsset>;
+    getImage(uri: string): Undef<ImageAsset>;
     addFont(data: FontFaceData): void;
     getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<FontFaceData>;
+    addVideo(uri: string, mimeType?: string): void;
+    getVideo(uri: string): Undef<Asset>;
+    addAudio(uri: string, mimeType?: string): void;
+    getAudio(uri: string): Undef<Asset>;
     addRawData(uri: string, mimeType: string, encoding: string, content: string): string;
     getRawData(uri: string): Undef<RawAsset>;
     setFileHandler(instance: File<T>): void;
@@ -253,7 +258,7 @@ declare class File<T extends Node> implements FileActions {
 declare class FileUI<T extends NodeUI> extends File<T> {
     resource: ResourceUI<T>;
     readonly userSettings: UserUISettings;
-    readonly directory: { string: string; font: string; image: string };
+    readonly directory: { string: string; image: string; video: string; audio: string; font: string };
 }
 
 declare class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements LayoutType {

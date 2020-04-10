@@ -6,13 +6,15 @@ const $lib = squared.lib;
 
 const { STRING, XML } = $lib.regex;
 const { extractURL } = $lib.css;
-const { fromLastIndexOf, randomUUID } = $lib.util;
+const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = $lib.util;
 
 export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
     public static ASSETS: ResourceAssetMap = {
         ids: new Map(),
-        images: new Map(),
         fonts: new Map(),
+        image: new Map(),
+        video: new Map(),
+        audio: new Map(),
         rawData: new Map()
     };
 
@@ -44,13 +46,17 @@ export default abstract class Resource<T extends squared.base.Node> implements s
                 }
             }
             if (uri !== '') {
-                Resource.ASSETS.images.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
+                Resource.ASSETS.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
             }
         }
     }
 
-    public getImage(src: string) {
-        return Resource.ASSETS.images.get(src);
+    public addVideo(uri: string, mimeType?: string) {
+        Resource.ASSETS.video.set(uri, { uri, mimeType });
+    }
+
+    public addAudio(uri: string, mimeType?: string) {
+        Resource.ASSETS.audio.set(uri, { uri, mimeType });
     }
 
     public addFont(data: FontFaceData) {
@@ -66,15 +72,6 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         }
     }
 
-    public getFont(fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
-        const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
-        if (font) {
-            const fontFormat = this.controllerSettings.supported.fontFormat;
-            return font.find(item => item.fontStyle === fontStyle && (!fontWeight || item.fontWeight === parseInt(fontWeight)) && (fontFormat === '*' || fontFormat.includes(item.srcFormat)));
-        }
-        return undefined;
-    }
-
     public addRawData(uri: string, mimeType: string, encoding: string, content: string, width = 0, height = 0) {
         mimeType = mimeType.toLowerCase();
         encoding = encoding.toLowerCase();
@@ -88,37 +85,13 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         else {
             content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
         }
-        const imageFormat = this.controllerSettings.supported.imageFormat;
-        const origin = location.origin;
-        const valid = uri.startsWith(origin);
-        let filename: Undef<string>;
-        if (imageFormat === '*') {
-            if (valid) {
-                filename = fromLastIndexOf(uri, '/');
-            }
-            else {
-                let extension = mimeType.split('/').pop() as string;
-                if (extension === 'svg+xml') {
-                    extension = 'svg';
-                }
-                filename = randomUUID(this.fileSeparator) + '.' + extension;
-            }
-        }
-        else {
-            const length = imageFormat.length;
-            let i = 0;
-            while (i < length) {
-                const extension = imageFormat[i++];
-                if (mimeType.includes(extension)) {
-                    const ext = '.' + extension;
-                    filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/') : randomUUID(this.fileSeparator) + ext;
-                    break;
-                }
-            }
-        }
-        if (filename) {
+        const imageMimeType = this.mimeTypeMap.image;
+        if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {
+            const origin = location.origin;
+            const ext = fromMimeType(mimeType);
+            const filename = uri.endsWith('.' + ext) ? fromLastIndexOf(uri, '/') : randomUUID(this.fileSeparator) + '.' + ext;
             Resource.ASSETS.rawData.set(uri, {
-                pathname: valid ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '',
+                pathname: uri.startsWith(origin) ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '',
                 filename,
                 content,
                 base64,
@@ -129,6 +102,27 @@ export default abstract class Resource<T extends squared.base.Node> implements s
             return filename;
         }
         return '';
+    }
+
+    public getImage(uri: string) {
+        return Resource.ASSETS.image.get(uri);
+    }
+
+    public getVideo(uri: string) {
+        return Resource.ASSETS.video.get(uri);
+    }
+
+    public getAudio(uri: string) {
+        return Resource.ASSETS.audio.get(uri);
+    }
+
+    public getFont(fontFamily: string, fontStyle = 'normal', fontWeight?: string) {
+        const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
+        if (font) {
+            const mimeType = this.mimeTypeMap.font;
+            return font.find(item => item.fontStyle === fontStyle && (!fontWeight || item.fontWeight === parseInt(fontWeight)) && (hasMimeType(mimeType, item.srcFormat) || item.srcUrl && hasMimeType(mimeType, item.srcUrl)));
+        }
+        return undefined;
     }
 
     public getRawData(uri: string) {
@@ -144,5 +138,9 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public setFileHandler(instance: squared.base.File<T>) {
         instance.resource = this;
         this.fileHandler = instance;
+    }
+
+    get mimeTypeMap() {
+        return this.controllerSettings.mimeType;
     }
 }

@@ -962,7 +962,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {
-         if (offset !== 0) {
+        if (offset !== 0) {
             const attr = CSS_SPACING.get(region);
             if (attr) {
                 const node = this._boxRegister[region];

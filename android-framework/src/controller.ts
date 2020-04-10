@@ -23,7 +23,7 @@ const { getElementsBetweenSiblings, getRangeClientRect } = $lib.dom;
 const { truncate } = $lib.math;
 const { CHAR } = $lib.regex;
 const { getElementAsNode, getPseudoElt } = $lib.session;
-const { assignEmptyValue, convertFloat, hasBit, isString, objectMap, partitionArray, withinRange } = $lib.util;
+const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, objectMap, parseMimeType, partitionArray, withinRange } = $lib.util;
 const { STRING_XMLENCODING, replaceTab } = $lib.xml;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
@@ -378,6 +378,13 @@ function adjustBodyMargin(node: View, position: string) {
     return 0;
 }
 
+function setInlineBlock(node: View) {
+    const { centerAligned, rightAligned } = node;
+    node.css('display', 'inline-block', true);
+    node.setCacheValue('centerAligned', centerAligned);
+    node.setCacheValue('rightAligned', rightAligned);
+}
+
 function segmentRightAligned<T extends View>(children: T[]) {
     return partitionArray<T>(children, item => item.float === 'right' || item.autoMargin.left === true);
 }
@@ -483,7 +490,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         directory: {
             string: 'res/values',
             font: 'res/font',
-            image: 'res/drawable'
+            image: 'res/drawable',
+            video: 'res/raw',
+            audio: 'res/raw'
         },
         svg: {
             enabled: false
@@ -497,9 +506,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             progressForegroundColor: 'rgb(138, 180, 248)',
             progressBackgroundColor: 'rgb(237, 237, 237)'
         },
-        supported: {
-            fontFormat: ['truetype', 'opentype'],
-            imageFormat: ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'cur']
+        mimeType: {
+            font: ['font/ttf', 'font/otf'],
+            image: ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp', 'image/svg+xml', 'image/heic', 'image/heif', 'image/x-icon'],
+            audio: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'audio/aac', 'audio/flac', 'audio/gsm', 'audio/midi', 'audio/mpeg', 'audio/wav', 'audio/ogg'],
+            video: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'video/webm']
         },
         unsupported: {
             cascade: new Set(['SELECT', 'svg']),
@@ -517,7 +528,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 'AREA',
                 'SOURCE',
                 'TEMPLATE',
-                'DATALIST'
+                'DATALIST',
+                'TRACK'
             ]),
             excluded: new Set(['BR', 'WBR'])
         },
@@ -1168,12 +1180,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return undefined;
     }
 
-    public renderNode(layout: squared.base.LayoutUI<T>) {
-        const { containerType, node } = layout;
+    public renderNode(layout: squared.base.LayoutUI<T>): NodeXmlTemplate<T> {
+        let { parent, containerType } = layout;
+        const node = layout.node;
         const dataset = node.dataset;
-        let controlName = View.getControlName(containerType, node.api);
-        let parent = layout.parent;
         let target = !dataset.use && dataset.target;
+        let controlName = View.getControlName(containerType, node.api);
         switch (node.tagName) {
             case 'IMG': {
                 const application = this.application;
@@ -1186,7 +1198,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let scaleType = 'fitXY';
                 let imageSet: Undef<ImageSrcSet[]>;
                 if (isString(element.srcset) || node.actualParent?.tagName === 'PICTURE') {
-                    imageSet = getSrcSet(element, this.localSettings.supported.imageFormat as string[]);
+                    const mimeType = this.localSettings.mimeType.image;
+                    imageSet = getSrcSet(element, mimeType === '*' ? undefined : mimeType);
                     if (imageSet.length) {
                         const image = imageSet[0];
                         const actualWidth = image.actualWidth;
@@ -1414,11 +1427,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             case 'LEGEND': {
                 if (!node.hasWidth) {
-                    const { centerAligned, rightAligned } = node;
-                    node.css('minWidth', formatPX(node.actualWidth), true);
-                    node.css('display', 'inline-block', true);
-                    node.setCacheValue('centerAligned', centerAligned);
-                    node.setCacheValue('rightAligned', rightAligned);
+                    node.css('minWidth', formatPX(node.actualWidth));
+                    setInlineBlock(node);
                 }
                 const offset = node.actualHeight * this.localSettings.deviations.legendBottomOffset;
                 node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
@@ -1462,6 +1472,64 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 node.attr('_', 'style', '@android:style/Widget.ProgressBar.Horizontal');
                 node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.FONT_STYLE });
                 break;
+            }
+            case 'AUDIO':
+            case 'VIDEO': {
+                const videoMimeType = this.localSettings.mimeType.video;
+                const element = <HTMLVideoElement> node.element;
+                let src = element.src;
+                let mimeType: Undef<string>;
+                if (hasMimeType(videoMimeType, src)) {
+                    mimeType = parseMimeType(src);
+                }
+                else {
+                    src = '';
+                    iterateArray(element.children, (source: HTMLSourceElement) => {
+                        if (source.tagName === 'SOURCE') {
+                            if (hasMimeType(videoMimeType, source.src)) {
+                                src = source.src;
+                                mimeType = parseMimeType(src);
+                                return true;
+                            }
+                            else {
+                                mimeType = source.type.trim().toLowerCase();
+                                if (videoMimeType.includes(mimeType)) {
+                                    src = source.src;
+                                    return true;
+                                }
+                            }
+                        }
+                        return;
+                    });
+                }
+                if (!node.hasPX('width')) {
+                    node.css('width', formatPX(node.actualWidth), true);
+                }
+                if (!node.hasPX('height')) {
+                    node.css('height', formatPX(node.actualHeight), true);
+                }
+                if (node.inline) {
+                    setInlineBlock(node);
+                }
+                if (isString(src)) {
+                    this.application.resourceHandler.addVideo(src, mimeType);
+                    node.inlineText = false;
+                }
+                else if (isString(element.poster)) {
+                    node.setCacheValue('tagName', 'IMG');
+                    src = element.src;
+                    element.src = element.poster;
+                    layout.containerType = CONTAINER_NODE.IMAGE;
+                    const template = this.renderNode(layout);
+                    element.src = src;
+                    return template;
+                }
+                else {
+                    containerType = CONTAINER_NODE.TEXT;
+                    controlName = View.getControlName(containerType, node.api);
+                    layout.containerType = containerType;
+                    node.inlineText = true;
+                }
             }
         }
         switch (controlName) {
@@ -1555,7 +1623,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         node.setControlType(controlName, containerType);
         node.addAlign(layout.alignmentType);
         node.render(target ? this.application.resolveTarget(target) : parent);
-        return <NodeXmlTemplate<T>> {
+        return {
             type: NODE_TEMPLATE.XML,
             node,
             parent,

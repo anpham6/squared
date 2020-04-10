@@ -7,7 +7,7 @@ function stringify(template) {
         for (var i = 0; i < template[name].length; i += 3) {
             output += template[name][i];
             if (template[name][i + 1]) {
-                output += (name === 'drawableImage' ? '\n' : '') +
+                output += (name === 'drawableImage' || name.startsWith('raw') ? '\n' : '') +
                           `<!-- filename: ${template[name][i + 1]}/${template[name][i + 2]} -->\n\n`;
             }
             else {
