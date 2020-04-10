@@ -1514,6 +1514,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (isString(src)) {
                     this.application.resourceHandler.addVideo(src, mimeType);
                     node.inlineText = false;
+                    node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
                 }
                 else if (isString(element.poster)) {
                     node.setCacheValue('tagName', 'IMG');

@@ -9,23 +9,33 @@ export interface FileAsset extends Asset {
     filename: string;
     content?: string;
     compress?: CompressionFormat[];
-    exclusions?: FileAssetExclude;
+    exclusions?: FileExclude;
 }
 
-export interface FileAssetExclude {
+export interface FileExclude {
     pathname?: string[];
     filename?: string[];
     extension?: string[];
     pattern?: string[];
 }
 
-export interface ImageAsset extends Asset {
+export interface ImageAsset extends Omit<Asset, "index"> {
     width: number;
     height: number;
 }
 
-export interface RawAsset extends FileAsset, Partial<ImageAsset> {
+export interface ExternalAsset extends Omit<FileAsset, "index"> {
     base64?: string;
+}
+
+export interface RawAsset extends ExternalAsset, Partial<ImageAsset> {
+}
+
+export interface RequestAsset extends ExternalAsset {
+    base64?: string;
+    href?: string;
+    rootDir?: string;
+    copyTo?: string;
 }
 
 export interface CompressionFormat {

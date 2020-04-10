@@ -1,6 +1,6 @@
 import { FormatOrAll } from '../lib/squared';
 import { LayoutUI, NodeUI } from './squared';
-import { FileAsset, FileAssetExclude } from './file';
+import { FileAsset, FileExclude } from './file';
 
 export interface UserSettings {
     builtInExtensions: string[];
@@ -152,7 +152,7 @@ export interface NodeGroupUIOptions<T> {
 
 export interface FileActionOptions {
     assets?: FileAsset[];
-    exclusions?: FileAssetExclude;
+    exclusions?: FileExclude;
     callback?: CallbackResult;
 }
 

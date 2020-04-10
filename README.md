@@ -334,6 +334,8 @@ squared.system.saveVideoAssets(filename?: string, options?: {})
 squared.system.saveAudioAssets(filename?: string, options?: {})
 squared.system.saveFontAssets(filename?: string, options?: {})
 
+squared.system.saveAsWebPage(filename?: string, options?: {})
+
 // async methods
 await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"
 await chrome.getElementById(value: string, cache?: boolean)

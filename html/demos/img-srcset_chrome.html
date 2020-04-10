@@ -33,7 +33,7 @@
                         squared.system.saveImageAssets();
                         squared.system.saveScriptAssets();
                         squared.system.saveLinkAssets();
-                        squared.system.saveAudioAssets();
+                        // squared.system.saveAudioAssets();
                         // squared.system.saveVideoAssets();
                         const options = {
                             assets: [
@@ -73,6 +73,7 @@
                         };
                         squared.createFrom('gz', options);
                         squared.appendFromArchive('C:/Users/An/git/squared/html/demos/base_project.zip', options);
+                        squared.system.saveAsWebPage();
                     });
                 });
             });
@@ -102,7 +103,7 @@
                                                          images/pencil-xxhdpi.png 3x,
                                                          images/pencil-xxxhdpi.png 4x" />
         <br /><br />
-        <audio controls>
+        <!--<audio controls>
             <source
                 src="https://archive.org/download/ElephantsDream/ED-CM-5.1-DVD-C.mp3"
                 type="audio/mpeg">
@@ -120,7 +121,7 @@
                 src="https://archive.org/download/ElephantsDream/ed_hd.ogv"
                 type="video/ogg">
             Your browser doesn't support HTML5 video tag.
-        </video>
+        </video>-->
     </div>
     <!-- END: DEMO -->
 

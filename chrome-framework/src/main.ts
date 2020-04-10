@@ -19,7 +19,7 @@ import * as constant from './lib/constant';
 
 type FileOptions = FileArchivingOptionsChrome | FileCopyingOptionsChrome;
 
-const { flatArray, isString } = squared.lib.util;
+const { flatArray, isString, isObject } = squared.lib.util;
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 let initialized = false;
@@ -74,9 +74,14 @@ async function findElementAllAsync(query: NodeListOf<Element>, cache: boolean) {
 }
 
 function createAssetsOptions(assets: FileAsset[], options?: FileOptions, directory?: string, filename?: string): FileOptions {
-    const items = options?.assets;
-    if (items) {
-        assets = assets.concat(items);
+    if (isObject(options)) {
+        const items = options.assets;
+        if (items) {
+            assets = assets.concat(items);
+        }
+    }
+    else {
+        options = undefined;
     }
     return {
         ...options,
@@ -202,6 +207,13 @@ const appBase: ChromeFramework<View> = {
         },
         saveFontAssets(filename?: string, options?: FileArchivingOptionsChrome) {
             file?.archiving(createAssetsOptions(<FileAsset[]> file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
+        },
+        saveAsWebPage: (filename?: string, options?: FileArchivingOptionsChrome) => {
+            if (!isObject(options)) {
+                options = {};
+            }
+            options.saveAsWebPage = true;
+            file?.saveToArchive(filename || userSettings.outputArchiveName, options);
         }
     },
     create() {

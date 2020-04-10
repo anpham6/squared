@@ -15,28 +15,51 @@ const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
 const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
 
 function parseUri(value: string): Undef<ChromeAsset> {
-    value = trimEnd(value, '/');
-    const match = COMPONENT.PROTOCOL.exec(value);
-    let pathname = '';
-    let filename = '';
+    const uri = trimEnd(value, '/');
+    const match = COMPONENT.PROTOCOL.exec(uri);
     if (match) {
+        let pathname = '';
+        let filename = '';
+        let rootDir = '';
+        let copyTo: Undef<string>;
         const host = match[2];
         const port = match[3];
         const path = match[4];
-        if (!value.startsWith(trimEnd(location.origin, '/'))) {
+        const getDirectory = (start = 1) => {
+            if (start > 1) {
+                rootDir = path.substring(0, start);
+            }
+            return path.substring(start, path.lastIndexOf('/'));
+        };
+        let local = true;
+        if (!uri.startsWith(trimEnd(location.origin, '/'))) {
             pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
+            local = false;
         }
-        if (path) {
-            const index = path.lastIndexOf('/');
-            if (index > 0) {
-                pathname += path.substring(1, index);
-                filename = fromLastIndexOf(path, '/');
+        if (path && path !== '/') {
+            filename = fromLastIndexOf(path, '/');
+            if (local) {
+                const prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+                if (path.startsWith(prefix)) {
+                    pathname = getDirectory(prefix.length);
+                }
+                else {
+                    copyTo = '__serverroot__';
+                    pathname = getDirectory();
+                }
+            }
+            else {
+                pathname += getDirectory();
             }
         }
-    }
-    if (pathname !== '') {
+        else {
+            filename = 'index.html';
+        }
         const extension = filename.includes('.') ? fromLastIndexOf(filename, '.').toLowerCase() : undefined;
         return {
+            href: value,
+            rootDir,
+            copyTo,
             pathname,
             filename,
             extension,
@@ -86,7 +109,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
-            assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
+            assets: <FileAsset[]> this.getAssetsAll(options).concat(options?.assets || []),
             appendTo: pathname
         });
     }
@@ -94,7 +117,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public saveToArchive(filename: string, options?: FileArchivingOptionsChrome) {
         this.archiving({
             ...options,
-            assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
+            assets: <FileAsset[]> this.getAssetsAll(options).concat(options?.assets || []),
             filename
         });
     }
@@ -133,10 +156,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
                     data.uri = uri;
-                    const type = element.type;
-                    if (type) {
-                        data.mimeType = type;
-                    }
+                    data.mimeType = element.type.trim() || parseMimeType(uri);
                     processExtensions.bind(this, data)();
                     result.push(data);
                 }
@@ -154,6 +174,17 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
                     data.uri = uri;
+                    switch (element.rel.trim()) {
+                        case 'stylesheet':
+                            data.mimeType = 'text/css';
+                            break;
+                        case 'icon':
+                            data.mimeType = 'image/x-icon';
+                            break;
+                        default:
+                            data.mimeType = element.type.trim() || parseMimeType(uri);
+                            break;
+                    }
                     processExtensions.bind(this, data)();
                     result.push(data);
                 }
@@ -198,10 +229,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     data = { pathname, filename, uri };
                 }
                 else if (base64) {
-                    data = { pathname: 'generated/base64', filename, base64 };
+                    data = { pathname: '__generated__/base64', filename, base64 };
                 }
                 else if (content && mimeType) {
-                    data = { pathname: `generated/${mimeType}`, filename, content };
+                    data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content };
                 }
                 else {
                     continue;
@@ -282,10 +313,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     protected getRawAssets(tagName: string) {
         const result: ChromeAsset[] = [];
         document.querySelectorAll(tagName).forEach((element: HTMLVideoElement | HTMLAudioElement) => {
-            const videos = new Set<string>();
-            resolveAssetSource(videos, element.src);
-            element.querySelectorAll('source').forEach((source: HTMLSourceElement) => resolveAssetSource(videos, source.src));
-            for (const uri of videos) {
+            const items = new Set<string>();
+            resolveAssetSource(items, element.src);
+            element.querySelectorAll('source').forEach((source: HTMLSourceElement) => resolveAssetSource(items, source.src));
+            for (const uri of items) {
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
                     data.uri = uri;
@@ -297,10 +328,14 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
-    protected getAssetsAll() {
-        return this.getHtmlPage()
-            .concat(this.getScriptAssets())
-            .concat(this.getLinkAssets())
+    protected getAssetsAll(options: FileArchivingOptionsChrome = {}) {
+        const { name, rel, saveAsWebPage } = options;
+        const result = this.getHtmlPage(name);
+        if (saveAsWebPage && result.length) {
+            result[0].mimeType = '@' + result[0].mimeType;
+        }
+        return result.concat(this.getScriptAssets())
+            .concat(this.getLinkAssets(rel))
             .concat(this.getImageAssets())
             .concat(this.getVideoAssets())
             .concat(this.getAudioAssets())

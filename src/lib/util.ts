@@ -76,15 +76,17 @@ export function parseMimeType(value: string) {
             return 'application/java-archive';
         case 'jpeg':
         case 'jpg':
-        case '.jfif':
-        case '.pjpeg':
-        case '.pjp':
+        case 'jfif':
+        case 'pjpeg':
+        case 'pjp':
             return 'image/jpeg';
         case 'js':
         case 'mjs':
             return 'text/javascript';
         case 'json':
             return 'application/json';
+        case 'jsonp':
+            return 'application/javascript';
         case 'jsonld':
             return 'application/ld+json';
         case 'mid':
@@ -167,7 +169,7 @@ export function parseMimeType(value: string) {
         case 'xlsx':
             return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
         case 'xml':
-            return 'text/xml';
+            return 'application/xml';
         case 'xul':
             return 'application/vnd.mozilla.xul+xml';
         case 'zip':

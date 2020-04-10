@@ -18,7 +18,7 @@ const { getElementAsNode } = $lib.session;
 const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, trimEnd, trimStart } = $lib.util;
 const { STRING_SPACE, STRING_TABSPACE } = $lib.xml;
 
-const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+, \\d+%?, \\d+%?(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
+const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
 const REGEX_NOBREAKSPACE = /\u00A0/g;
 const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');

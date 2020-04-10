@@ -1,9 +1,8 @@
 
 import { FileCopyingOptions, FileArchivingOptions } from '../base/application';
-import { RawAsset } from '../base/file';
+import { RequestAsset } from '../base/file';
 
-interface ChromeAsset extends Omit<RawAsset, keyof Dimension | 'content'> {
-    content?: string;
+interface ChromeAsset extends RequestAsset {
     extension?: string;
 }
 
@@ -16,4 +15,5 @@ interface FileCopyingOptionsChrome extends FileCopyingOptions, FileActionAttribu
 }
 
 interface FileArchivingOptionsChrome extends FileArchivingOptions, FileActionAttribute {
+    saveAsWebPage?: boolean;
 }

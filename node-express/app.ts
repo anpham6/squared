@@ -1,4 +1,4 @@
-import { CompressionFormat, RawAsset, Settings } from '../@types/node-express/node';
+import { CompressionFormat, RequestAsset, Settings } from '../@types/node-express/node';
 
 import express = require('express');
 import bodyParser = require('body-parser');
@@ -89,8 +89,8 @@ if (env === 'development') {
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
 const SEPARATOR = path.sep;
 
-function getFileData(file: RawAsset, dirname: string) {
-    const pathname = path.join(dirname, file.pathname);
+function getFileData(file: RequestAsset, dirname: string) {
+    const pathname = path.join(dirname, file.copyTo || '', file.pathname);
     const compress = file.compress;
     const gz = getCompressFormat(compress, 'gz');
     const br = getCompressFormat(compress, 'br');
@@ -163,6 +163,33 @@ function writeBuffer(filename: string, compress: number, callback: () => void) {
     }
 }
 
+function processAssets(filepath: string, file: RequestAsset, items: RequestAsset[]) {
+    switch (file.mimeType) {
+        case '@text/html': {
+            let html = fs.readFileSync(filepath).toString('utf8');
+            items.forEach(item => {
+                if (item !== file && item.href) {
+                    const separator = item.href.indexOf('\\') !== -1 ? '\\' : '/';
+                    const location = appendSeparator(item.pathname, item.filename, separator);
+                    const value = `"${pathJoinForward(item.copyTo || '', location)}"`;
+                    if (item.rootDir) {
+                        html = replacePathName(html, item.rootDir + location, value);
+                    }
+                    else {
+                        html = replacePathName(html, item.href, value);
+                        html = replacePathName(html, separator + location, value);
+                    }
+                }
+            });
+            fs.writeFileSync(filepath, html);
+            break;
+        }
+    }
+}
+
+const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
+const pathJoinForward = (leading: string, trailing: string) => path.join(leading, trailing).replace(/\\/g, '/');
+const replacePathName = (source: string, segment: string, value: string) => source.replace(new RegExp(`["']\\s*${segment}\\s*["']`, 'g'), value);
 const getCompressFormat = (compress: CompressionFormat[] | undefined, format: string) => compress && compress.find(item => item.format === format);
 const isURIFile = (value: string) => /^[A-Za-z]{3,}:\/\//.test(value);
 const isUNCDirectory = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
@@ -208,7 +235,7 @@ app.post('/api/assets/copy', (req, res) => {
         try {
             const notFound = {};
             const emptyDir = {};
-            (req.body as RawAsset[]).forEach(file => {
+            (req.body as RequestAsset[]).forEach(file => {
                 const { pathname, filename, pngCompress, gzipLevel, brotliQuality } = getFileData(file, dirname);
                 const { content, base64, uri } = file;
                 const compressFile = () => {
@@ -270,6 +297,7 @@ app.post('/api/assets/copy', (req, res) => {
                             const stream = fs.createWriteStream(filename);
                             stream.on('finish', () => {
                                 if (!notFound[uri]) {
+                                    processAssets(filename, file, req.body);
                                     writeBuffer(filename, pngCompress, compressFile);
                                 }
                             });
@@ -401,10 +429,10 @@ app.post('/api/assets/archive', (req, res) => {
                 archive.directory(unzip_to, false);
             }
             const notFound = {};
-            (req.body as RawAsset[]).forEach(file => {
+            (req.body as RequestAsset[]).forEach(file => {
                 const { pathname, filename, pngCompress, gzipLevel, brotliQuality } = getFileData(file, dirname);
                 const { content, base64, uri } = file;
-                const data = { name: path.join(file.pathname, file.filename) };
+                const data = { name: path.join(file.copyTo || '', file.pathname, file.filename) };
                 const compressFile = () => {
                     if (gzipLevel !== -1) {
                         delayed++;
@@ -464,6 +492,7 @@ app.post('/api/assets/archive', (req, res) => {
                             const stream = fs.createWriteStream(filename);
                             stream.on('finish', () => {
                                 if (!notFound[uri]) {
+                                    processAssets(filename, file, req.body);
                                     writeBuffer(filename, pngCompress, compressFile);
                                 }
                             });
@@ -522,7 +551,7 @@ app.post('/api/assets/archive', (req, res) => {
         }
     };
     if (append_to) {
-        const errorAppendTo = (name: string, err: Error) => {
+        const errorAppend = (name: string, err: Error) => {
             zipname = '';
             resume();
             console.log(`FAIL: ${name} (${err})`);
@@ -544,10 +573,10 @@ app.post('/api/assets/archive', (req, res) => {
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
-                                errorAppendTo(zipname, new Error(statusCode + ' ' + response.statusMessage));
+                                errorAppend(zipname, new Error(statusCode + ' ' + response.statusMessage));
                             }
                         })
-                        .on('error', err => errorAppendTo(zipname, err))
+                        .on('error', err => errorAppend(zipname, err))
                         .pipe(stream);
                 }
                 else if (fs.existsSync(append_to)) {
@@ -565,15 +594,15 @@ app.post('/api/assets/archive', (req, res) => {
                     copied();
                 }
                 else {
-                    errorAppendTo(append_to, new Error('Archive not found.'));
+                    errorAppend(append_to, new Error('Archive not found.'));
                 }
             }
             catch (err) {
-                errorAppendTo(zipname, <Error> err);
+                errorAppend(zipname, <Error> err);
             }
         }
         else {
-            errorAppendTo(append_to, new Error('Invalid archive format.'));
+            errorAppend(append_to, new Error('Invalid archive format.'));
         }
     }
     else {
