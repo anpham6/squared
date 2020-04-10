@@ -322,12 +322,16 @@ squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e
 squared.system.copyScriptAssets(directory: string, options?: {})
 squared.system.copyLinkAssets(directory: string, options?: {}) // option "rel": e.g. "stylesheet"
 squared.system.copyImageAssets(directory: string, options?: {})
+squared.system.copyVideoAssets(directory: string, options?: {})
+squared.system.copyAudioAssets(directory: string, options?: {})
 squared.system.copyFontAssets(directory: string, options?: {})
 
 squared.system.saveHtmlPage(filename?: string, options?: {}) // option "name": e.g. "index.html"
 squared.system.saveScriptAssets(filename?: string, options?: {})
 squared.system.saveLinkAssets(filename?: string, options?: {}) // option "rel": e.g. "stylesheet"
 squared.system.saveImageAssets(filename?: string, options?: {})
+squared.system.saveVideoAssets(filename?: string, options?: {})
+squared.system.saveAudioAssets(filename?: string, options?: {})
 squared.system.saveFontAssets(filename?: string, options?: {})
 
 // async methods

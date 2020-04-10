@@ -26,13 +26,15 @@
                 System.import('/build/chrome-framework/src/main.js').then(result => {
                     chrome = result.default;
                     squared.setFramework(chrome);
-                    squared.settings.preloadImages = true;
+                    squared.settings.preloadImages = false;
                     squared.settings.compressImages = false;
                     squared.parseDocument('squared_ui').then(function() {
                         squared.system.saveHtmlPage();
                         squared.system.saveImageAssets();
                         squared.system.saveScriptAssets();
                         squared.system.saveLinkAssets();
+                        squared.system.saveAudioAssets();
+                        // squared.system.saveVideoAssets();
                         const options = {
                             assets: [
                                 {
@@ -99,6 +101,26 @@
                                                          images/pencil-xhdpi.png 2x,
                                                          images/pencil-xxhdpi.png 3x,
                                                          images/pencil-xxxhdpi.png 4x" />
+        <br /><br />
+        <audio controls>
+            <source
+                src="https://archive.org/download/ElephantsDream/ED-CM-5.1-DVD-C.mp3"
+                type="audio/mpeg">
+            <source
+                src="https://archive.org/download/ElephantsDream/ED-CM-5.1-DVD-C.ogg"
+                type="audio/ogg">
+            Your browser doesn't support HTML5 video tag.
+        </audio>
+        <br /><br />
+        <video width="400" controls poster="https://upload.wikimedia.org/wikipedia/commons/e/e8/Elephants_Dream_s5_both.jpg">
+            <source
+                src="https://archive.org/download/ElephantsDream/ed_1024_512kb.mp4"
+                type="video/mp4">
+            <source
+                src="https://archive.org/download/ElephantsDream/ed_hd.ogv"
+                type="video/ogg">
+            Your browser doesn't support HTML5 video tag.
+        </video>
     </div>
     <!-- END: DEMO -->
 

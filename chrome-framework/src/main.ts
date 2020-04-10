@@ -148,18 +148,18 @@ const appBase: ChromeFramework<View> = {
             controller?.elementMap.clear();
         },
         copyHtmlPage(directory: string, options?: FileCopyingOptionsChrome) {
-            if (file && isString(directory)) {
-                file.copying(createAssetsOptions(<FileAsset[]> file.getHtmlPage(options?.name), options, directory));
+            if (isString(directory)) {
+                file?.copying(createAssetsOptions(<FileAsset[]> file.getHtmlPage(options?.name), options, directory));
             }
         },
         copyScriptAssets(directory: string, options?: FileCopyingOptionsChrome) {
-            if (file && isString(directory)) {
-                file.copying(createAssetsOptions(<FileAsset[]> file.getScriptAssets(), options, directory));
+            if (isString(directory)) {
+                file?.copying(createAssetsOptions(<FileAsset[]> file.getScriptAssets(), options, directory));
             }
         },
         copyLinkAssets(directory: string, options?: FileCopyingOptionsChrome) {
-            if (file && isString(directory)) {
-                file.copying(createAssetsOptions(<FileAsset[]> file.getLinkAssets(options?.rel), options, directory));
+            if (isString(directory)) {
+                file?.copying(createAssetsOptions(<FileAsset[]> file.getLinkAssets(options?.rel), options, directory));
             }
         },
         copyImageAssets(directory: string, options?: FileCopyingOptionsChrome) {
@@ -167,35 +167,41 @@ const appBase: ChromeFramework<View> = {
                 file.copying(createAssetsOptions(<FileAsset[]> file.getImageAssets(), options, directory));
             }
         },
+        copyVideoAssets(directory: string, options?: FileCopyingOptionsChrome) {
+            if (isString(directory)) {
+                file?.copying(createAssetsOptions(<FileAsset[]> file.getVideoAssets(), options, directory));
+            }
+        },
+        copyAudioAssets(directory: string, options?: FileCopyingOptionsChrome) {
+            if (isString(directory)) {
+                file?.copying(createAssetsOptions(<FileAsset[]> file.getAudioAssets(), options, directory));
+            }
+        },
         copyFontAssets(directory: string, options?: FileCopyingOptionsChrome) {
-            if (file && isString(directory)) {
-                file.copying(createAssetsOptions(<FileAsset[]> file.getFontAssets(), options, directory));
+            if (isString(directory)) {
+                file?.copying(createAssetsOptions(<FileAsset[]> file.getFontAssets(), options, directory));
             }
         },
         saveHtmlPage(filename?: string, options?: FileArchivingOptionsChrome) {
-            if (file) {
-                file.archiving(createAssetsOptions(<FileAsset[]> file.getHtmlPage(options?.name), options, undefined, (filename || userSettings.outputArchiveName) + '-html'));
-            }
+            file?.archiving(createAssetsOptions(<FileAsset[]> file.getHtmlPage(options?.name), options, undefined, (filename || userSettings.outputArchiveName) + '-html'));
         },
         saveScriptAssets(filename?: string, options?: FileArchivingOptionsChrome) {
-            if (file) {
-                file.archiving(createAssetsOptions(<FileAsset[]> file.getScriptAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-script'));
-            }
+            file?.archiving(createAssetsOptions(<FileAsset[]> file.getScriptAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-script'));
         },
         saveLinkAssets(filename?: string, options?: FileArchivingOptionsChrome) {
-            if (file) {
-                file.archiving(createAssetsOptions(<FileAsset[]> file.getLinkAssets(options?.rel), options, undefined, (filename || userSettings.outputArchiveName) + '-link'));
-            }
+            file?.archiving(createAssetsOptions(<FileAsset[]> file.getLinkAssets(options?.rel), options, undefined, (filename || userSettings.outputArchiveName) + '-link'));
         },
         saveImageAssets(filename?: string, options?: FileArchivingOptionsChrome) {
-            if (file) {
-                file.archiving(createAssetsOptions(<FileAsset[]> file.getImageAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-image'));
-            }
+            file?.archiving(createAssetsOptions(<FileAsset[]> file.getImageAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-image'));
+        },
+        saveVideoAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+            file?.archiving(createAssetsOptions(<FileAsset[]> file.getVideoAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-video'));
+        },
+        saveAudioAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+            file?.archiving(createAssetsOptions(<FileAsset[]> file.getAudioAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-audio'));
         },
         saveFontAssets(filename?: string, options?: FileArchivingOptionsChrome) {
-            if (file) {
-                file.archiving(createAssetsOptions(<FileAsset[]> file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
-            }
+            file?.archiving(createAssetsOptions(<FileAsset[]> file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
         }
     },
     create() {

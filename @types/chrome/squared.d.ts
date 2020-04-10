@@ -39,6 +39,8 @@ declare namespace base {
         getScriptAssets(): ChromeAsset[];
         getLinkAssets(): ChromeAsset[];
         getImageAssets(): ChromeAsset[];
+        getVideoAssets(): ChromeAsset[];
+        getAudioAssets(): ChromeAsset[];
         getFontAssets(): ChromeAsset[];
     }
 

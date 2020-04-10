@@ -16,7 +16,7 @@ const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
 const { CHAR, FILE, STRING, XML } = $lib.regex;
 const { getElementCache, setElementCache } = $lib.session;
 
-const { image, rawData } = Resource.ASSETS;
+const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 
 type PreloadImage = HTMLImageElement | string;
 
@@ -32,9 +32,11 @@ const REGEX_URL = /\s*(url|local)\((?:['""]([^'")]+)['"]|([^)]+))\)(?:\s*format\
 const REGEX_DATAURI = new RegExp(`(url\\("(${STRING.DATAURI})"\\)),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
-    const asset = image.get(uri);
-    if (width > 0 && height > 0 || !asset || asset.width === 0 || asset.height === 0) {
-        image.set(uri, { width, height, uri });
+    if (uri !== '') {
+        const image = ASSET_IMAGE.get(uri);
+        if (width > 0 && height > 0 || !image || image.width === 0 || image.height === 0) {
+            ASSET_IMAGE.set(uri, { width, height, uri });
+        }
     }
 }
 
@@ -42,7 +44,7 @@ function parseSrcSet(value: string) {
     if (value !== '') {
         value.split(XML.SEPARATOR).forEach(uri => {
             if (uri !== '') {
-                addImageSrc(resolvePath(uri.split(CHAR.SPACE)[0].trim()));
+                addImageSrc(resolvePath(uri.split(CHAR.SPACE)[0]));
             }
         });
     }
@@ -154,9 +156,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         let THEN: Undef<() => void>;
         const resume = () => {
             this.initializing = false;
-            preloaded.forEach(asset => {
-                if (asset.parentElement) {
-                    documentRoot.removeChild(asset);
+            preloaded.forEach(image => {
+                if (image.parentElement) {
+                    documentRoot.removeChild(image);
                 }
             });
             preloaded.length = 0;
@@ -198,19 +200,20 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (preloadImages) {
             for (const element of this.rootElements) {
                 element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
-                element.querySelectorAll('input[type=image]').forEach((asset: HTMLInputElement) => addImageSrc(asset.src, asset.width, asset.height));
+                element.querySelectorAll('video').forEach((source: HTMLVideoElement) => addImageSrc(source.poster));
+                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
             }
-            for (const asset of image.values()) {
-                const uri = asset.uri as string;
+            for (const image of ASSET_IMAGE.values()) {
+                const uri = image.uri as string;
                 if (isSvg(uri)) {
                     imageElements.push(uri);
                 }
-                else if (asset.width === 0 || asset.height === 0) {
+                else if (image.width === 0 || image.height === 0) {
                     const element = document.createElement('img');
                     element.src = uri;
                     if (element.naturalWidth > 0 && element.naturalHeight > 0) {
-                        asset.width = element.naturalWidth;
-                        asset.height = element.naturalHeight;
+                        image.width = element.naturalWidth;
+                        image.height = element.naturalHeight;
                     }
                     else {
                         documentRoot.appendChild(element);
@@ -219,7 +222,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             }
         }
-        for (const [uri, data] of rawData.entries()) {
+        for (const [uri, data] of ASSET_RAWDATA.entries()) {
             const mimeType = data.mimeType;
             if (mimeType?.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
                 const element = document.createElement('img');
@@ -228,7 +231,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 if (width > 0 && height > 0) {
                     data.width = width;
                     data.height = height;
-                    image.set(uri, { width, height, uri: data.filename });
+                    ASSET_IMAGE.set(uri, { width, height, uri: data.filename });
                 }
                 else {
                     document.body.appendChild(element);
@@ -237,35 +240,35 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         for (const element of this.rootElements) {
-            element.querySelectorAll('img').forEach((asset: HTMLImageElement) => {
-                if (isSvg(asset.src)) {
+            element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
+                if (isSvg(image.src)) {
                     if (preloadImages) {
-                        imageElements.push(asset.src);
+                        imageElements.push(image.src);
                     }
                 }
                 else {
                     if (preloadImages) {
-                        parseSrcSet(asset.srcset);
+                        parseSrcSet(image.srcset);
                     }
-                    if (asset.complete) {
-                        resource.addImage(asset);
+                    if (image.complete) {
+                        resource.addImage(image);
                     }
                     else if (preloadImages) {
-                        imageElements.push(asset);
+                        imageElements.push(image);
                     }
                 }
             });
         }
         if (imageElements.length) {
             this.initializing = true;
-            Promise.all(objectMap(imageElements, asset => {
+            Promise.all(objectMap(imageElements, image => {
                 return new Promise((resolve, reject) => {
-                    if (typeof asset === 'string') {
-                        resolve(getImageSvgAsync(asset));
+                    if (typeof image === 'string') {
+                        resolve(getImageSvgAsync(image));
                     }
                     else {
-                        asset.addEventListener('load', () => resolve(asset));
-                        asset.addEventListener('error', () => reject(asset));
+                        image.addEventListener('load', () => resolve(image));
+                        image.addEventListener('error', () => reject(image));
                     }
                 });
             }))

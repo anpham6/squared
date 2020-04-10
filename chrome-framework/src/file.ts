@@ -7,7 +7,7 @@ type View = chrome.base.View;
 
 const $lib = squared.lib;
 
-const { COMPONENT, FILE } = $lib.regex;
+const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
 const { appendSeparator, convertWord, fromLastIndexOf, objectMap, parseMimeType, resolvePath, safeNestedArray, spliceString, trimEnd } = $lib.util;
 
 const ASSETS = Resource.ASSETS;
@@ -44,6 +44,13 @@ function parseUri(value: string): Undef<ChromeAsset> {
         };
     }
     return undefined;
+}
+
+function resolveAssetSource(data: Set<string>, value: string) {
+    const src = resolvePath(value);
+    if (src !== '') {
+        data.add(src);
+    }
 }
 
 function convertFileMatch(value: string) {
@@ -157,13 +164,30 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     public getImageAssets() {
         const result: ChromeAsset[] = [];
-        for (const uri of ASSETS.image.keys()) {
-            const data = <ChromeAsset> parseUri(uri);
-            if (this.validFile(data)) {
-                data.uri = uri;
-                processExtensions.bind(this, data)();
-                result.push(data);
+        const processUri = (uri: string) => {
+            if (uri !== '') {
+                const data = <ChromeAsset> parseUri(uri);
+                if (this.validFile(data)) {
+                    data.uri = uri;
+                    processExtensions.bind(this, data)();
+                    result.push(data);
+                }
             }
+        };
+        if (this.userSettings.preloadImages) {
+            for (const uri of ASSETS.image.keys()) {
+                processUri(uri);
+            }
+        }
+        else {
+            document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => source.srcset.split(XML.SEPARATOR).forEach(uri => processUri(resolvePath(uri.split(CHAR.SPACE)[0]))));
+            document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(resolvePath(source.poster)));
+            document.querySelectorAll('img, input[type=image]').forEach((image: HTMLInputElement) => {
+                const src = image.src.trim();
+                if (!src.startsWith('data:image/')) {
+                    processUri(resolvePath(src));
+                }
+            });
         }
         for (const [uri, rawData] of ASSETS.rawData) {
             const filename = rawData.filename;
@@ -221,6 +245,14 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
+    public getVideoAssets() {
+        return this.getRawAssets('video');
+    }
+
+    public getAudioAssets() {
+        return this.getRawAssets('audio');
+    }
+
     public getFontAssets() {
         const result: ChromeAsset[] = [];
         for (const fonts of ASSETS.fonts.values()) {
@@ -247,11 +279,31 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return false;
     }
 
+    protected getRawAssets(tagName: string) {
+        const result: ChromeAsset[] = [];
+        document.querySelectorAll(tagName).forEach((element: HTMLVideoElement | HTMLAudioElement) => {
+            const videos = new Set<string>();
+            resolveAssetSource(videos, element.src);
+            element.querySelectorAll('source').forEach((source: HTMLSourceElement) => resolveAssetSource(videos, source.src));
+            for (const uri of videos) {
+                const data = parseUri(uri);
+                if (this.validFile(data)) {
+                    data.uri = uri;
+                    processExtensions.bind(this, data)();
+                    result.push(data);
+                }
+            }
+        });
+        return result;
+    }
+
     protected getAssetsAll() {
         return this.getHtmlPage()
             .concat(this.getScriptAssets())
             .concat(this.getLinkAssets())
             .concat(this.getImageAssets())
+            .concat(this.getVideoAssets())
+            .concat(this.getAudioAssets())
             .concat(this.getFontAssets());
     }
 

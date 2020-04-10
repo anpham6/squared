@@ -738,6 +738,7 @@ export function cloneObject(data: {}, result = {}, array = false) {
 }
 
 export function resolvePath(value: string, href?: string) {
+    value = value.trim();
     if (!COMPONENT.PROTOCOL.test(value)) {
         const origin = location.origin;
         let pathname = (href?.replace(origin, '') || location.pathname).split('/');
