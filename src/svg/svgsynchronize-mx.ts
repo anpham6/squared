@@ -17,7 +17,7 @@ const $lib = squared.lib;
 
 const { clamp, equal, multipleOf } = $lib.math;
 const { CHAR } = $lib.regex;
-const { hasBit, hasValue, isEqual, isNumber, joinMap, objectMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = $lib.util;
+const { hasBit, hasValue, isEqual, isNumber, joinArray, objectMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = $lib.util;
 
 type AnimateValue = number | Point[] | string;
 type TimelineValue = Map<any, AnimateValue>;
@@ -1952,7 +1952,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                     if (repeatingResult || infiniteResult) {
                         removeAnimations(animationsBase, staggered);
                         const timeRange = Array.from(animateTimeRangeMap.entries());
-                        const synchronizedName = joinMap(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-', false);
+                        const synchronizedName = joinArray(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-', false);
                         const parent = this.parent;
                         [repeatingResult, infiniteResult].forEach(result => {
                             if (result) {

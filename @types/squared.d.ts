@@ -107,11 +107,11 @@ export namespace lib {
         function hasComputedStyle(element: Element): element is HTMLElement;
         function checkWritingMode(attr: string, value: string): string;
         function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration): string;
+        function checkMediaRule(value: string, fontSize?: number): boolean;
         function parseSelectorText(value: string, document?: boolean): string[];
         function getSpecificity(value: string): number;
-        function getKeyframeRules(): ObjectMap<KeyframesData>;
-        function parseKeyframeRule(rules: CSSRuleList): KeyframesData;
-        function validMediaRule(value: string, fontSize?: number): boolean;
+        function getKeyframesRules(): ObjectMap<KeyframesData>;
+        function parseKeyframes(rules: CSSRuleList): KeyframesData;
         function isParentStyle(element: Element, attr: string, ...styles: string[]): boolean;
         function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]): string;
         function calculate(value: string, options?: CalculateOptions): number;
@@ -320,16 +320,15 @@ export namespace lib {
         function flatArray<T>(list: any[]): T[];
         function flatMultiArray<T>(list: any[]): T[];
         function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>): T[];
-        function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
+        function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;
         function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
         function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
+        function conditionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
+        function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
         function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
-        function filterMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[];
         function objectMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
-        function joinMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;
-        function captureMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
     }
 
     namespace xml {

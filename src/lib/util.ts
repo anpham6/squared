@@ -1034,6 +1034,19 @@ export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
     return false;
 }
 
+export function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char = '\n', trailing = true): string {
+    let result = '';
+    const length = list.length;
+    let i = 0;
+    while (i < length) {
+        const value = predicate(list[i], i++, list);
+        if (value !== '') {
+            result += value + char;
+        }
+    }
+    return trailing ? result : result.substring(0, result.length - char.length);
+}
+
 export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Number.POSITIVE_INFINITY) {
     start = Math.max(start, 0);
     const length = Math.min(list.length, end);
@@ -1062,6 +1075,20 @@ export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPr
     return length;
 }
 
+export function conditionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
+    const length = list.length;
+    let i = -1;
+    while (++i < length) {
+        const item = list[i];
+        if (predicate(item, i, list)) {
+            const value = callback(item, i, list);
+            if (value === false) {
+                break;
+            }
+        }
+    }
+}
+
 export function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = new Array(length);
@@ -1070,20 +1097,6 @@ export function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T
         const item = predicate(list[i], i++, list);
         if (hasValue(item)) {
             result[j++] = item;
-        }
-    }
-    result.length = j;
-    return result;
-}
-
-export function filterMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, U>): U[] {
-    const length = list.length;
-    const result: U[] = new Array(length);
-    let i = -1, j = 0;
-    while (++i < length) {
-        const item = list[i];
-        if (predicate(item, i, list)) {
-            result[j++] = callback(item, i, list);
         }
     }
     result.length = j;
@@ -1107,31 +1120,4 @@ export function objectMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate
         result[i] = predicate(list[i], i++, list);
     }
     return result;
-}
-
-export function joinMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char = '\n', trailing = true): string {
-    let result = '';
-    const length = list.length;
-    let i = 0;
-    while (i < length) {
-        const value = predicate(list[i], i++, list);
-        if (value !== '') {
-            result += value + char;
-        }
-    }
-    return trailing ? result : result.substring(0, result.length - char.length);
-}
-
-export function captureMap<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
-    const length = list.length;
-    let i = -1;
-    while (++i < length) {
-        const item = list[i];
-        if (predicate(item, i, list)) {
-            const value = callback(item, i, list);
-            if (value === false) {
-                break;
-            }
-        }
-    }
 }

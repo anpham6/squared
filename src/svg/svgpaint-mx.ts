@@ -13,7 +13,7 @@ const { parseColor } = $lib.color;
 const { extractURL, getFontSize, hasCalc, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = $lib.css;
 const { truncate } = $lib.math;
 const { STRING, XML } = $lib.regex;
-const { convertCamelCase, convertFloat, isNumber, isString, joinMap, objectMap } = $lib.util;
+const { convertCamelCase, convertFloat, isNumber, isString, joinArray, objectMap } = $lib.util;
 
 const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
 const REGEX_CACHE: ObjectMap<RegExp> = {
@@ -180,7 +180,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
                 switch (attr) {
                     case 'strokeDasharray':
-                        value = value !== 'none' ? joinMap(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ', false) : '';
+                        value = value !== 'none' ? joinArray(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ', false) : '';
                         break;
                     case 'strokeDashoffset':
                     case 'strokeWidth':

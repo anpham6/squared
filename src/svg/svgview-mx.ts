@@ -13,7 +13,7 @@ type SvgElement = squared.svg.SvgElement;
 
 const $lib = squared.lib;
 
-const { getFontSize, getKeyframeRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = $lib.css;
+const { getFontSize, getKeyframesRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = $lib.css;
 const { isWinEdge } = $lib.client;
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;
@@ -34,7 +34,7 @@ const ANIMATION_DEFAULT = {
     'animation-fill-mode': 'none',
     'animation-timing-function': 'ease'
 };
-const KEYFRAME_MAP = getKeyframeRules();
+const KEYFRAME_MAP = getKeyframesRules();
 const REGEX_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
 
 function parseAttribute(element: SVGElement, attr: string) {

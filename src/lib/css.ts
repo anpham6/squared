@@ -1251,7 +1251,7 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
     return value || '';
 }
 
-export function getKeyframeRules(): ObjectMap<KeyframesData> {
+export function getKeyframesRules(): ObjectMap<KeyframesData> {
     const result: ObjectMap<KeyframesData> = {};
     violation: {
         const styleSheets = document.styleSheets;
@@ -1265,7 +1265,7 @@ export function getKeyframeRules(): ObjectMap<KeyframesData> {
                     try {
                         const item = <CSSKeyframesRule> cssRules[j];
                         if (item.type === CSSRule.KEYFRAMES_RULE) {
-                            const value = parseKeyframeRule(item.cssRules);
+                            const value = parseKeyframes(item.cssRules);
                             if (Object.keys(value).length) {
                                 const name = item.name;
                                 if (result[name]) {
@@ -1287,7 +1287,7 @@ export function getKeyframeRules(): ObjectMap<KeyframesData> {
     return result;
 }
 
-export function parseKeyframeRule(rules: CSSRuleList) {
+export function parseKeyframes(rules: CSSRuleList) {
     const result: KeyframesData = {};
     const length = rules.length;
     let i = 0;
@@ -1322,7 +1322,7 @@ export function parseKeyframeRule(rules: CSSRuleList) {
     return result;
 }
 
-export function validMediaRule(value: string, fontSize?: number) {
+export function checkMediaRule(value: string, fontSize?: number) {
     switch (value) {
         case 'only all':
         case 'only screen':
@@ -1970,7 +1970,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
             if (item.tagName === 'SOURCE') {
                 const { media, type, srcset: srcsetA } = item;
-                if (isString(srcsetA) && !(isString(media) && !validMediaRule(media)) && (!isString(type) || !mimeType || mimeType.includes(type.trim().toLowerCase()))) {
+                if (isString(srcsetA) && !(isString(media) && !checkMediaRule(media)) && (!isString(type) || !mimeType || mimeType.includes(type.trim().toLowerCase()))) {
                     srcset = srcsetA;
                     sizes = item.sizes;
                     return true;
@@ -2027,8 +2027,8 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
             for (const value of sizes.trim().split(XML.SEPARATOR)) {
                 let match = REGEX_SOURCESIZES.exec(value);
                 if (match) {
-                    const ruleA = match[2] ? validMediaRule(match[2]) : undefined;
-                    const ruleB = match[6] ? validMediaRule(match[6]) : undefined;
+                    const ruleA = match[2] ? checkMediaRule(match[2]) : undefined;
+                    const ruleB = match[6] ? checkMediaRule(match[6]) : undefined;
                     switch (match[5]) {
                         case 'and':
                             if (!ruleA || !ruleB) {

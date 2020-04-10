@@ -306,14 +306,14 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (Object.keys(filtered).length) {
                             const combined: ObjectMap<Set<string>> = {};
                             const deleteKeys = new Set<string>();
-                            const joinMap: StringMap = {};
+                            const joinArray: StringMap = {};
                             for (const attr in filtered) {
-                                joinMap[attr] = filtered[attr].join(',');
+                                joinArray[attr] = filtered[attr].join(',');
                             }
                             for (const attrA in filtered) {
                                 for (const attrB in filtered) {
-                                    const index = joinMap[attrA];
-                                    if (attrA !== attrB && index === joinMap[attrB]) {
+                                    const index = joinArray[attrA];
+                                    if (attrA !== attrB && index === joinArray[attrB]) {
                                         let data = combined[index];
                                         if (!data) {
                                             data = new Set(attrA.split(';'));

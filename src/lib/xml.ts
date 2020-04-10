@@ -1,5 +1,5 @@
 import { ESCAPE } from './regex';
-import { isPlainObject, joinMap } from './util';
+import { isPlainObject, joinArray } from './util';
 
 type XMLTagData = {
     tag: string;
@@ -43,7 +43,7 @@ export function pushIndent(value: string, depth: number, char = '\t', indent?: s
         if (indent === undefined) {
             indent = char.repeat(depth);
         }
-        return joinMap(value.split('\n'), line => line !== '' ? indent + line : '');
+        return joinArray(value.split('\n'), line => line !== '' ? indent + line : '');
     }
     return value;
 }
@@ -63,7 +63,7 @@ export function pushIndentArray(values: string[], depth: number, char = '\t', se
 export function replaceIndent(value: string, depth: number, pattern: RegExp) {
     if (depth >= 0) {
         let indent = -1;
-        return joinMap(value.split('\n'), line => {
+        return joinArray(value.split('\n'), line => {
             const match = pattern.exec(line);
             if (match) {
                 if (indent === -1) {
@@ -80,7 +80,7 @@ export function replaceIndent(value: string, depth: number, pattern: RegExp) {
 export function replaceTab(value: string, spaces = 4, preserve = false) {
     if (spaces > 0) {
         if (preserve) {
-            return joinMap(value.split('\n'), line => {
+            return joinArray(value.split('\n'), line => {
                 const match = REGEX_INDENT.exec(line);
                 if (match) {
                     return ' '.repeat(spaces * match[1].length) + match[2];

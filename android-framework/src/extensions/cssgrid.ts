@@ -16,7 +16,7 @@ const $base_lib = $base.lib;
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { maxArray, truncate } = $lib.math;
 const { CHAR } = $lib.regex;
-const { captureMap, flatMultiArray, hasValue, isArray } = $lib.util;
+const { conditionArray, flatMultiArray, hasValue, isArray } = $lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 
@@ -67,7 +67,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
             }
             else {
                 let size = 0;
-                captureMap(
+                conditionArray(
                     <View[][]> mainData.rowData[i],
                     item => isArray(item),
                     item => size = Math.min(size, ...item.map(child => child.bounds[dimension]))

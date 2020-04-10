@@ -10,7 +10,7 @@ import Resource from './resource';
 
 const $lib = squared.lib;
 
-const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, validMediaRule } = $lib.css;
+const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, checkMediaRule } = $lib.css;
 const { isTextNode } = $lib.dom;
 const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
 const { CHAR, FILE, STRING, XML } = $lib.regex;
@@ -438,7 +438,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 applyStyleSheet((<CSSImportRule> rule).styleSheet);
                                 break;
                             case CSSRule.MEDIA_RULE:
-                                if (validMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
+                                if (checkMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
                                     this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
                                 }
                                 break;
