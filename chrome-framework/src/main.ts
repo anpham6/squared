@@ -1,6 +1,6 @@
-import { UserSettings } from '../../@types/base/application';
 import { FileAsset } from '../../@types/base/file';
 import { ChromeFramework } from '../../@types/chrome/internal';
+import { UserSettingsChrome } from '../../@types/chrome/application';
 import { FileCopyingOptionsChrome, FileArchivingOptionsChrome } from '../../@types/chrome/file';
 
 import Application from './application';
@@ -15,6 +15,7 @@ import CompressGzip from './extensions/compress/gzip';
 
 import SETTINGS from './settings';
 
+import * as enumeration from './lib/enumeration';
 import * as constant from './lib/constant';
 
 type FileOptions = FileArchivingOptionsChrome | FileCopyingOptionsChrome;
@@ -26,50 +27,94 @@ let initialized = false;
 let application: Application<View>;
 let controller: Controller<View>;
 let file: Undef<File<View>>;
-let userSettings: UserSettings;
+let userSettings: UserSettingsChrome;
 let elementMap: Map<Element, View>;
 
-function findElement(element: HTMLElement, cache: boolean) {
-    if (cache) {
-        const result = elementMap.get(element);
-        if (result) {
-            return result;
-        }
+function getCachedElement(element: HTMLElement, cache: boolean) {
+    if (!cache) {
+        elementMap.clear();
+        return undefined;
     }
-    const preloadImages = userSettings.preloadImages;
-    userSettings.preloadImages = false;
-    application.parseDocument(element);
-    userSettings.preloadImages = preloadImages;
-    return elementMap.get(element) || null;
+    return elementMap.get(element);
+}
+
+function findElement(element: HTMLElement, cache: boolean) {
+    let result = getCachedElement(element, cache);
+    if (result === undefined) {
+        application.queryState = enumeration.APP_QUERYSTATE.SINGLE;
+        application.parseDocument(element);
+        result = elementMap.get(element);
+        application.queryState = enumeration.APP_QUERYSTATE.NONE;
+    }
+    return result || null;
 }
 
 async function findElementAsync(element: HTMLElement, cache: boolean) {
-    if (cache) {
-        const result = elementMap.get(element);
-        if (result) {
-            return result;
-        }
+    let result = getCachedElement(element, cache);
+    if (result === undefined) {
+        application.queryState = enumeration.APP_QUERYSTATE.SINGLE;
+        await application.parseDocumentAsync(element);
+        result = elementMap.get(element);
+        application.queryState = enumeration.APP_QUERYSTATE.NONE;
     }
-    await application.parseDocument(element);
-    return elementMap.get(element) || null;
+    return result || null;
 }
 
-async function findElementAllAsync(query: NodeListOf<Element>, cache: boolean) {
+function findElementAll(query: NodeListOf<Element>) {
+    application.queryState = enumeration.APP_QUERYSTATE.MULTIPLE;
     let incomplete = false;
     const length = query.length;
     const result: View[] = new Array(length);
     for (let i = 0; i < length; ++i) {
-        const item = await findElementAsync(<HTMLElement> query[i], cache);
+        const element = <HTMLElement> query[i];
+        let item = elementMap.get(element);
         if (item) {
             result[i] = item;
         }
         else {
-            incomplete = true;
+            application.parseDocument(element);
+            item = elementMap.get(element);
+            if (item) {
+                result[i] = item;
+            }
+            else {
+                incomplete = true;
+            }
         }
     }
     if (incomplete) {
         flatArray<View>(result);
     }
+    application.queryState = enumeration.APP_QUERYSTATE.NONE;
+    return result;
+}
+
+async function findElementAllAsync(query: NodeListOf<Element>) {
+    let resultCount = 0;
+    const length = query.length;
+    const result: View[] = new Array(length);
+    for (let i = 0; i < length; ++i) {
+        const element = <HTMLElement> query[i];
+        const item = elementMap.get(element);
+        if (item) {
+            result[i] = item;
+            resultCount++;
+        }
+        else {
+            application.queryState = enumeration.APP_QUERYSTATE.MULTIPLE;
+            await application.parseDocumentAsync(element).then(() => {
+                const awaited = elementMap.get(element);
+                if (awaited) {
+                    result[i] = awaited;
+                    resultCount++;
+                }
+            });
+        }
+    }
+    if (length !== resultCount) {
+        flatArray<View>(result);
+    }
+    application.queryState = enumeration.APP_QUERYSTATE.NONE;
     return result;
 }
 
@@ -101,7 +146,8 @@ const appBase: ChromeFramework<View> = {
         View
     },
     lib: {
-        constant
+        constant,
+        enumeration
     },
     extensions: {
         compress: {
@@ -110,12 +156,6 @@ const appBase: ChromeFramework<View> = {
         }
     },
     system: {
-        getElement(element: HTMLElement, cache = true) {
-            if (application) {
-                return findElement(element, cache);
-            }
-            return null;
-        },
         getElementById(value: string, cache = true) {
             if (application) {
                 const element = document.getElementById(value);
@@ -137,14 +177,21 @@ const appBase: ChromeFramework<View> = {
         querySelectorAll(value: string, cache = true) {
             const result: View[] = [];
             if (application) {
-                document.querySelectorAll(value).forEach(element => {
-                    const item = findElement(<HTMLElement> element, cache);
-                    if (item) {
-                        result.push(item);
+                const query = document.querySelectorAll(value);
+                if (query.length) {
+                    if (!cache) {
+                        elementMap.clear();
                     }
-                });
+                    return findElementAll(query);
+                }
             }
             return result;
+        },
+        getElement(element: HTMLElement, cache = false) {
+            if (application) {
+                return findElement(element, cache);
+            }
+            return null;
         },
         getElementMap() {
             return controller?.elementMap || new Map<Element, View>();
@@ -245,12 +292,6 @@ const appBase: ChromeFramework<View> = {
         }
         return appBase.create();
     },
-    getElement: async (element: HTMLElement, cache = true) => {
-        if (application) {
-            return await findElementAsync(element, cache);
-        }
-        return null;
-    },
     getElementById: async (value: string, cache = true) => {
         if (application) {
             const element = document.getElementById(value);
@@ -273,8 +314,17 @@ const appBase: ChromeFramework<View> = {
         if (application) {
             const query = document.querySelectorAll(value);
             if (query.length) {
-                return await findElementAllAsync(query, cache);
+                if (!cache) {
+                    elementMap.clear();
+                }
+                return await findElementAllAsync(query);
             }
+        }
+        return null;
+    },
+    getElement: async (element: HTMLElement, cache = false) => {
+        if (application) {
+            return await findElementAsync(element, cache);
         }
         return null;
     }

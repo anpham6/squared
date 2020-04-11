@@ -2,12 +2,15 @@ import { NodeOptionsChrome, UserSettingsChrome } from '../../@types/chrome/appli
 
 import Resource from './resource';
 
+import { APP_QUERYSTATE } from './lib/enumeration';
+
 const { isTextNode } = squared.lib.dom;
 
 export default class Application<T extends chrome.base.View> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public builtInExtensions: ObjectMap<chrome.base.Extension<T>> = {};
     public extensions: chrome.base.Extension<T>[] = [];
     public userSettings!: UserSettingsChrome;
+    public queryState = 0;
 
     public finalize() {}
 
@@ -31,11 +34,13 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     }
 
     public afterCreateCache() {
-        if (this.userSettings.cacheQuerySelectorResultSet) {
-            (<chrome.base.Controller<T>> this.controllerHandler).cacheElementList(this.processing.cache);
-        }
-        else {
-            (<chrome.base.Controller<T>> this.controllerHandler).cacheElement(this.processing.node as T);
+        switch (this.queryState) {
+            case APP_QUERYSTATE.SINGLE:
+                (<chrome.base.Controller<T>> this.controllerHandler).cacheElement(this.processing.node as T);
+                break;
+            default:
+                (<chrome.base.Controller<T>> this.controllerHandler).cacheElementList(this.processing.cache);
+                break;
         }
     }
 

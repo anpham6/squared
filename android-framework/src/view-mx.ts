@@ -1667,7 +1667,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return localizeString(value, this._localization, this.api);
         }
 
-        public removeTry(replacement?: T, beforeReplace?: () => void) {
+        public removeTry(replacement?: T, beforeReplace?: FunctionVoid) {
             if (replacement && !beforeReplace) {
                 beforeReplace = () => replacement.anchorClear();
             }

@@ -10,6 +10,7 @@ type BindGeneric<T, U> = (item: T, ...args: any[]) => U;
 
 type FunctionType<T> = (...args: any[]) => T;
 type FunctionMap<T> = ObjectMap<FunctionType<T>>;
+type FunctionVoid = () => void;
 
 type ObjectMap<T> = { [key: string]: T };
 type ObjectIndex<T> = { [key: number]: T };
@@ -20,6 +21,7 @@ type CallbackResult = (result: {}) => void;
 
 type StandardMap = ObjectMap<any>;
 
-declare class PromiseResult {
-    public then(resolve: () => void): void;
+declare class PromiseObject {
+    public then(callback: FunctionVoid): void;
+    public catch(callback: (error: Error, resume?: FunctionVoid) => void): void;
 }

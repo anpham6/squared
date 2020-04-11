@@ -747,7 +747,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return false;
     }
 
-    public removeTry(replacement?: T, beforeReplace?: () => void) {
+    public removeTry(replacement?: T, beforeReplace?: FunctionVoid) {
         const renderParent = this.renderParent;
         if (renderParent) {
             const { renderTemplates, renderChildren } = renderParent;

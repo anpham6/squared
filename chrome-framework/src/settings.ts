@@ -10,7 +10,6 @@ const settings: UserSettingsChrome = {
     handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,
-    cacheQuerySelectorResultSet: true,
     excludePlainText: true,
     outputFileExclusions: ['squared.*', 'chrome.framework.*'],
     outputEmptyCopyDirectory: false,

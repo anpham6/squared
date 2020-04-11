@@ -19,6 +19,7 @@ const { getElementCache, setElementCache } = $lib.session;
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 
 type PreloadImage = HTMLImageElement | string;
+type ResultCatch = (error: Error, resolve?: FunctionVoid) => void;
 
 const REGEX_MEDIATEXT = /all|screen/;
 const REGEX_BACKGROUND = /^background/;
@@ -139,7 +140,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.closed = false;
     }
 
-    public parseDocument(...elements: any[]): PromiseResult {
+    public parseDocument(...elements: any[]): PromiseObject {
         const { controllerHandler: controller, resourceHandler: resource } = this;
         this.initializing = false;
         this.rootElements.clear();
@@ -153,8 +154,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const preloadImages = this.userSettings.preloadImages;
         const imageElements: PreloadImage[] = [];
         const styleElement = insertStyleSheetRule(`html > body { overflow: hidden !important; }`);
-        let THEN: Undef<() => void>;
-        const resume = () => {
+        const removePreloaded = () => {
             this.initializing = false;
             preloaded.forEach(image => {
                 if (image.parentElement) {
@@ -162,6 +162,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             });
             preloaded.length = 0;
+        };
+        let THEN: Undef<FunctionVoid>;
+        let CATCH: Undef<ResultCatch>;
+        const resume = () => {
+            removePreloaded();
             this.extensions.forEach(ext => ext.beforeParseDocument());
             for (const element of this.rootElements) {
                 if (this.createCache(element)) {
@@ -288,30 +293,50 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
                 resume();
             })
-            .catch((error: Event | HTMLImageElement) => {
+            .catch((error: Error | Event | HTMLImageElement) => {
+                let target = error;
                 if (error instanceof Event) {
-                    error = <HTMLImageElement> error.target;
+                    target = <HTMLImageElement> error.target;
                 }
-                const message = error instanceof HTMLImageElement ? error.src : '';
-                if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
+                const message = target instanceof HTMLImageElement ? target.src : '';
+                if (CATCH) {
+                    if (!(error instanceof Error)) {
+                        error = new Error(message ? `FAIL: ${message}` : 'Unable to preload images.');
+                    }
+                    removePreloaded();
+                    CATCH(error, resume);
+                }
+                else if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
                     resume();
+                }
+                else {
+                    removePreloaded();
                 }
             });
         }
         else {
             resume();
         }
-        const PromiseResult = class {
-            public then(resolve: () => void) {
+        const Result = class {
+            public then(callback: FunctionVoid) {
                 if (imageElements.length) {
-                    THEN = resolve;
+                    THEN = callback;
                 }
                 else {
-                    resolve();
+                    callback();
                 }
+                return this;
+            }
+            public catch(callback: ResultCatch) {
+                CATCH = callback;
+                return this;
             }
         };
-        return new PromiseResult();
+        return new Result();
+    }
+
+    public async parseDocumentAsync(...elements: any[]): Promise<PromiseObject> {
+        return await this.parseDocument(...elements);
     }
 
     public createCache(documentRoot: HTMLElement) {

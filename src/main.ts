@@ -77,7 +77,7 @@ export function setViewModel(data?: {}) {
     }
 }
 
-export function parseDocument(...elements: (HTMLElement | string)[]): PromiseResult {
+export function parseDocument(...elements: (HTMLElement | string)[]): PromiseObject {
     if (main) {
         if (settings.handleExtensionsAsync) {
             const extensionManager = main.extensionManager;
@@ -101,10 +101,20 @@ export function parseDocument(...elements: (HTMLElement | string)[]): PromiseRes
     else if (settings.showErrorMessages) {
         alert('ERROR: Framework not installed.');
     }
-    const PromiseResult = class {
-        public then(resolve: () => void) {}
+    const Result = class {
+        public then(callback: FunctionVoid) {
+            return this;
+        }
+        public catch(callback: (error: Error) => void) {
+            callback(new Error('Framework not installed.'));
+            return this;
+        }
     };
-    return new PromiseResult();
+    return new Result();
+}
+
+export async function parseDocumentAsync(...elements: (HTMLElement | string)[]): Promise<PromiseObject> {
+    return await parseDocument(...elements);
 }
 
 export function include(value: ExtensionRequest, options?: {}) {

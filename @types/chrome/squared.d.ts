@@ -13,6 +13,7 @@ declare function querySelectorAll(value: string): Promise<Null<View>>;
 declare namespace base {
     class Application<T extends View> extends squared.base.Application<T> {
         userSettings: UserSettingsChrome;
+        queryState: number;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
     }

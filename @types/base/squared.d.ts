@@ -36,7 +36,8 @@ declare class Application<T extends Node> implements FileActions {
     readonly nextId: number;
     readonly length: number;
     reset(): void;
-    parseDocument(...elements: (string | HTMLElement)[]): PromiseResult;
+    parseDocument(...elements: (string | HTMLElement)[]): PromiseObject;
+    parseDocumentAsync(...elements: (string | HTMLElement)[]): Promise<PromiseObject>;
     createCache(documentRoot: HTMLElement): boolean;
     createNode(options: {}): T;
     insertNode(element: Element, parent?: T, pseudoElt?: string): Undef<T>;
@@ -538,7 +539,7 @@ declare class NodeUI extends Node implements LayoutType {
     exclude(options: ExcludeUIOptions): void;
     hide(options?: HideUIOptions<NodeUI>): void;
     appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
-    removeTry(replacement?: NodeUI, beforeReplace?: () => void): boolean;
+    removeTry(replacement?: NodeUI, beforeReplace?: FunctionVoid): boolean;
     sort(predicate?: (a: Node, b: Node) => number): this;
     render(parent?: NodeUI): void;
     renderEach(predicate: IteratorPredicate<NodeUI, void>): this;

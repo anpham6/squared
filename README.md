@@ -48,7 +48,7 @@ GitHub
         squared.setFramework(android); // OR: 'chrome'
 
         // Required: zero or more DOM elements
-        squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview' */, /* etc... */);
+        squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview' */, /* etc... */); // OR: parseDocumentAsync
         squared.close();
 
         // Optional: node-express / squared-apache
@@ -171,7 +171,6 @@ squared.settings = {
     handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,
-    cacheQuerySelectorResultSet: true,
     excludePlainText: true,
     outputFileExclusions: ['squared.*', 'chrome.framework.*'],
     outputEmptyCopyDirectory: false,
@@ -191,6 +190,7 @@ setFramework(module: {}, cached?: boolean) // install application converter
 setViewModel(data?: {}) // object data for layout bindings
 
 parseDocument() // see installation section
+parseDocumentAsync()
 
 ready() // boolean indicating if parseDocument can be called
 close() // close current session preceding write to disk or local output
@@ -309,10 +309,10 @@ squared.system.writeResourceRawAudio()
 The system methods querySelector and querySelectorAll can also be called from every Node object and provide the same functionality as the similarly named DOM methods.
 
 ```javascript
-squared.system.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"
-squared.system.getElementById(value: string, cache?: boolean)
+squared.system.getElementById(value: string, cache?: boolean) // cache: default "true"
 squared.system.querySelector(value: string, cache?: boolean)
 squared.system.querySelectorAll(value: string, cache?: boolean)
+squared.system.getElement(element: HTMLElement, cache?: boolean) // cache: default "false"
 squared.system.getElementMap()
 squared.system.clearElementMap()
 
