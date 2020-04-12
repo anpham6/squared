@@ -22,17 +22,17 @@ const extensionsAsync = new Set<Extension>();
 const optionsAsync = new Map<string, StandardMap>();
 const settings = <UserSettings> {};
 const system = <FunctionMap<any>> {};
-let main: Application;
+let main: Undef<Application>;
 let framework: AppFramework<Node>;
 
 function includeExtension(extensions: Extension[], ext: Extension) {
-    if (!extensions.includes(ext)) {
+    if (main && !extensions.includes(ext)) {
         ext.application = main;
         extensions.push(ext);
     }
 }
 
-const checkMain = () => main?.initializing === false && main.length > 0;
+const checkWritable = (app: Undef<Application>): app is Application => app?.initializing === false && app.length > 0;
 
 export function setFramework(value: AppFramework<Node>, cached = false) {
     const reloading = framework !== undefined;
@@ -199,40 +199,40 @@ export function ready() {
 }
 
 export function close() {
-    if (checkMain()) {
+    if (checkWritable(main)) {
         main.finalize();
     }
 }
 
 export function copyToDisk(value: string, options?: FileActionOptions) {
-    if (checkMain() && util.isString(value)) {
+    if (checkWritable(main) && util.isString(value)) {
         main.finalize();
         main.copyToDisk(value, options);
     }
 }
 
 export function appendToArchive(value: string, options?: FileActionOptions) {
-    if (checkMain() && util.isString(value)) {
+    if (checkWritable(main) && util.isString(value)) {
         main.finalize();
         main.appendToArchive(value, options);
     }
 }
 
 export function saveToArchive(value?: string, options?: FileActionOptions) {
-    if (checkMain()) {
+    if (checkWritable(main)) {
         main.finalize();
         main.saveToArchive(value, options);
     }
 }
 
 export function createFrom(value: string, options: FileActionOptions) {
-    if (checkMain() && util.isString(value) && util.isPlainObject(options) && options.assets?.length) {
+    if (checkWritable(main) && util.isString(value) && util.isPlainObject(options) && options.assets?.length) {
         main.createFrom(value, options);
     }
 }
 
 export function appendFromArchive(value: string, options: FileActionOptions) {
-    if (checkMain() && util.isString(value) && util.isPlainObject(options) && options.assets?.length) {
+    if (checkWritable(main) && util.isString(value) && util.isPlainObject(options) && options.assets?.length) {
         main.appendFromArchive(value, options);
     }
 }

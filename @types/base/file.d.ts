@@ -35,7 +35,7 @@ export interface RequestAsset extends ExternalAsset {
     base64?: string;
     href?: string;
     rootDir?: string;
-    copyTo?: string;
+    moveTo?: string;
 }
 
 export interface CompressionFormat {

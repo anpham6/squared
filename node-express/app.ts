@@ -100,7 +100,7 @@ const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.ver
 const SEPARATOR = path.sep;
 
 function getFileOutput(file: RequestAsset, dirname: string) {
-    const pathname = path.join(dirname, file.copyTo || '', file.pathname);
+    const pathname = path.join(dirname, file.moveTo || '', file.pathname);
     return {
         pathname,
         filepath: path.join(pathname, file.filename)
@@ -157,7 +157,7 @@ function checkVersion(major: number, minor: number, patch = 0) {
     return true;
 }
 
-function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (result: boolean) => void, archive?: archiver.Archiver, entryName?: string) {
+function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void, archive?: archiver.Archiver, entryName?: string) {
     const mimeType = file.mimeType;
     if (!mimeType) {
         return;
@@ -170,7 +170,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 if (item !== file && item.href) {
                     const separator = item.href.indexOf('\\') !== -1 ? '\\' : '/';
                     const location = appendSeparator(item.pathname, item.filename, separator);
-                    const value = `"${pathJoinForward(item.copyTo || '', location)}"`;
+                    const value = `"${pathJoinForward(item.moveTo || '', location)}"`;
                     if (item.rootDir) {
                         html = replacePathName(html, item.rootDir + location, value);
                     }
@@ -204,11 +204,11 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                                 archive.file(png, { name: entryName });
                             }
                         }
-                        finalize(true);
+                        finalize(png);
                     });
                 })
                 .catch(err => {
-                    finalize(true);
+                    finalize('');
                     writeError(filepath, err);
                 });
         }
@@ -233,11 +233,11 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                                 archive.file(jpg, { name: entryName });
                             }
                         }
-                        finalize(true);
+                        finalize(jpg);
                     });
                 })
                 .catch(err => {
-                    finalize(true);
+                    finalize('');
                     writeError(filepath, err);
                 });
         }
@@ -255,18 +255,18 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                         else if (archive && entryName) {
                             archive.file(bmp, { name: replaceExtension(entryName, 'bmp') });
                         }
-                        finalize(true);
+                        finalize(bmp);
                     });
                 })
                 .catch(err => {
-                    finalize(true);
+                    finalize('');
                     writeError(filepath, err);
                 });
         }
     }
 }
 
-function writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (result: boolean) => void, archive?: archiver.Archiver) {
+function writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void, archive?: archiver.Archiver) {
     if (hasCompressPng(file.compress)) {
         try {
             tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
@@ -286,28 +286,33 @@ function writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: strin
     }
 }
 
-function compressImage(filepath: string, finalize: (result: boolean) => void, archive?: archiver.Archiver, entryName?: string) {
-    const completed = () => {
-        if (archive && entryName) {
-            archive.file(filepath, { name: entryName });
+function compressImage(filepath: string, finalize: (filepath?: string) => void, archive?: archiver.Archiver, entryName?: string) {
+    const completed = (success: boolean) => {
+        if (success) {
+            if (archive && entryName) {
+                archive.file(filepath, { name: entryName });
+            }
+            finalize(filepath);
         }
-        finalize(true);
+        else {
+            finalize('');
+        }
     };
     try {
         tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
             if (!err) {
                 fs.writeFileSync(filepath, resultData);
             }
-            completed();
+            completed(true);
         });
     }
     catch (err) {
-        completed();
+        completed(false);
         writeError(filepath, err);
     }
 }
 
-function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (result: boolean) => void, archive?: archiver.Archiver) {
+function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void, archive?: archiver.Archiver) {
     const { gzip, brotli } = getCompressOutput(file);
     const entryName = getEntryName(file);
     transformBuffer(assets, file, filepath, status, finalize, archive, entryName);
@@ -319,11 +324,11 @@ function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: stri
                 if (archive) {
                     archive.file(gz, { name: `${entryName}.gz` });
                 }
-                finalize(true);
+                finalize(gz);
             })
             .on('error', err => {
                 writeError(gz, err);
-                finalize(true);
+                finalize('');
             });
     }
     if (brotli !== -1 && checkVersion(11, 7)) {
@@ -334,16 +339,16 @@ function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: stri
                 if (archive) {
                     archive.file(br, { name: `${entryName}.br` });
                 }
-                finalize(true);
+                finalize(br);
             })
             .on('error', err => {
                 writeError(br, err);
-                finalize(true);
+                finalize('');
             });
     }
 }
 
-function processAssets(dirname: string, assets: RequestAsset[], status: AsyncStatus, finalize: (result: boolean) => void, empty: boolean, archive?: archiver.Archiver) {
+function processAssets(dirname: string, assets: RequestAsset[], status: AsyncStatus, finalize: (filepath?: string) => void, empty: boolean, archive?: archiver.Archiver) {
     const emptyDir = {};
     const notFound: ObjectMap<boolean> = {};
     const processing: ObjectMap<RequestAsset[]> = {};
@@ -381,7 +386,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                         }
                         writeBuffer(assets, file, filepath, status, finalize, archive);
                     }
-                    finalize(true);
+                    finalize(filepath);
                 }
             );
         }
@@ -392,7 +397,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
             const checkQueue = () => {
                 if (completed.indexOf(filepath) !== -1) {
                     writeBuffer(assets, file, filepath, status, finalize, archive);
-                    finalize(true);
+                    finalize('');
                     return true;
                 }
                 else {
@@ -415,13 +420,13 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 }
                 for (const item of (processing[filepath] || [file])) {
                     writeBuffer(assets, item, filepath, status, finalize, archive);
-                    finalize(true);
+                    finalize(filepath);
                 }
                 delete processing[filepath];
             };
             const errorRequest = () => {
                 if (!notFound[uri]) {
-                    finalize(true);
+                    finalize('');
                     notFound[uri] = true;
                 }
                 delete processing[filepath];
@@ -460,7 +465,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                                     processQueue();
                                 }
                                 else {
-                                    finalize(true);
+                                    finalize('');
                                 }
                             }
                         );
@@ -495,7 +500,7 @@ function replaceExtension(value: string, ext: string) {
 }
 
 const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
-const getEntryName = (file: RequestAsset) => path.join(file.copyTo || '', file.pathname, file.filename);
+const getEntryName = (file: RequestAsset) => path.join(file.moveTo || '', file.pathname, file.filename);
 const replacePathName = (source: string, segment: string, value: string) => source.replace(new RegExp(`["']\\s*${segment}\\s*["']`, 'g'), value);
 const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
 const pathJoinForward = (leading: string, trailing: string) => path.join(leading, trailing).replace(/\\/g, '/');
@@ -530,21 +535,25 @@ app.post('/api/assets/copy', (req, res) => {
             res.json({ application: `DIRECTORY: ${dirname}`, system: err });
             return;
         }
+        const files = new Set<string>();
         const status: AsyncStatus = { delayed: 0 };
         let cleared = false;
-        const finalize = (running = false) => {
+        const finalize = (filepath?: string) => {
             if (status.delayed === Number.POSITIVE_INFINITY) {
                 return;
             }
-            if (!running || running && --status.delayed === 0 && cleared) {
-                res.json({ success: status.delayed === 0, directory: dirname });
+            if (filepath) {
+                files.add(filepath);
+            }
+            if (filepath === undefined || --status.delayed === 0 && cleared) {
+                res.json({ success: status.delayed === 0, directory: dirname, files: Array.from(files) });
                 status.delayed = Number.POSITIVE_INFINITY;
             }
         };
         try {
             processAssets(dirname, <RequestAsset[]> req.body, status, finalize, req.query.empty === '1');
             if (status.delayed === 0) {
-                finalize(false);
+                finalize();
             }
             else {
                 cleared = true;
@@ -582,6 +591,7 @@ app.post('/api/assets/archive', (req, res) => {
             format = 'zip';
             break;
     }
+    const files = new Set<string>();
     const status: AsyncStatus = { delayed: 0 };
     let success = false;
     let cleared = false;
@@ -602,27 +612,35 @@ app.post('/api/assets/archive', (req, res) => {
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
             const bytes = archive.pointer();
-            console.log(`WRITE: ${zipname} (${bytes} bytes)`);
+            const response = { success, directory: dirname, zipname, bytes, files: Array.from(files) };
             if (formatGzip) {
                 const gz = req.query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
                 createGzipWriteStream(zipname, gz)
-                    .on('finish', () => res.json({ success, directory: dirname, zipname: gz, bytes }))
+                    .on('finish', () => {
+                        response.zipname = gz;
+                        response.bytes = fs.statSync(gz).size;
+                        res.json(response);
+                    })
                     .on('error', err => {
                         writeError(gz, err);
-                        res.json({ success, directory: dirname, zipname, bytes });
+                        res.json(response);
                     });
             }
             else {
-                res.json({ success, directory: dirname, zipname, bytes });
+                res.json(response);
             }
             status.delayed = Number.POSITIVE_INFINITY;
+            console.log(`WRITE: ${zipname} (${bytes} bytes)`);
         });
         archive.pipe(output);
-        const finalize = (running = false) => {
+        const finalize = (filepath?: string) => {
             if (status.delayed === Number.POSITIVE_INFINITY) {
                 return;
             }
-            if (!running || running && --status.delayed === 0 && cleared) {
+            if (filepath) {
+                files.add(filepath.substring(dirname.length + 1));
+            }
+            if (filepath === undefined || --status.delayed === 0 && cleared) {
                 success = status.delayed === 0;
                 archive.finalize();
             }
@@ -633,7 +651,7 @@ app.post('/api/assets/archive', (req, res) => {
             }
             processAssets(dirname, <RequestAsset[]> req.body, status, finalize, false, archive);
             if (status.delayed === 0) {
-                finalize(false);
+                finalize();
             }
             else {
                 cleared = true;

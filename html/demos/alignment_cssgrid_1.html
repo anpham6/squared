@@ -162,6 +162,9 @@
                     squared.setFramework(android);
                     squared.parseDocument().then(() => {
                         squared.saveToArchive('jimp', {
+                            callback: result => {
+                                console.log(result);
+                            },
                             assets: [
                                 {
                                     pathname: 'images',

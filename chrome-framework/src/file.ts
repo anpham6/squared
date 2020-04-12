@@ -21,7 +21,7 @@ function parseUri(value: string): Undef<ChromeAsset> {
         let pathname = '';
         let filename = '';
         let rootDir = '';
-        let copyTo: Undef<string>;
+        let moveTo: Undef<string>;
         const host = match[2];
         const port = match[3];
         const path = match[4];
@@ -44,7 +44,7 @@ function parseUri(value: string): Undef<ChromeAsset> {
                     pathname = getDirectory(prefix.length);
                 }
                 else {
-                    copyTo = '__serverroot__';
+                    moveTo = '__serverroot__';
                     pathname = getDirectory();
                 }
             }
@@ -59,7 +59,7 @@ function parseUri(value: string): Undef<ChromeAsset> {
         return {
             href: value,
             rootDir,
-            copyTo,
+            moveTo,
             pathname,
             filename,
             extension,
