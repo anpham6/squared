@@ -10,6 +10,7 @@ declare namespace node {
         request_post_limit?: number | string;
         gzip_level?: number | string;
         brotli_quality?: number | string;
+        jpeg_quality?: number | string;
         tinypng_api_key?: string;
     }
 

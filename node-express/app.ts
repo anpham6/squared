@@ -17,6 +17,7 @@ interface AsyncStatus {
 }
 
 interface CompressOutput {
+    jpeg: number;
     gzip?: number;
     brotli?: number;
 }
@@ -28,6 +29,7 @@ let UNC_READ = false;
 let UNC_WRITE = false;
 let GZIP_LEVEL = 9;
 let BROTLI_QUALITY = 11;
+let JPEG_QUALITY = 100;
 let TINIFY_API_KEY = false;
 
 try {
@@ -38,18 +40,22 @@ catch (err) {
 }
 
 if (squared) {
-    const { disk_read, disk_write, unc_read, unc_write, gzip_level, brotli_quality, tinypng_api_key } = squared;
+    const { disk_read, disk_write, unc_read, unc_write, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key } = squared;
     DISK_READ = disk_read === true;
     DISK_WRITE = disk_write === true;
     UNC_READ = unc_read === true;
     UNC_WRITE = unc_write === true;
     const gzip = parseInt(gzip_level as string);
     const brotli = parseInt(brotli_quality as string);
+    const jpeg = parseInt(jpeg_quality as string);
     if (!isNaN(gzip)) {
         GZIP_LEVEL = gzip;
     }
     if (!isNaN(brotli)) {
         BROTLI_QUALITY = brotli;
+    }
+    if (!isNaN(jpeg)) {
+        JPEG_QUALITY = jpeg;
     }
     if (tinypng_api_key) {
         tinify.key = tinypng_api_key;
@@ -111,9 +117,11 @@ function getCompressOutput(file: RequestAsset): CompressOutput {
     const compress = file.compress;
     const gz = getCompressFormat(compress, 'gz');
     const br = getCompressFormat(compress, 'br');
+    const jpeg = isJPEG(file) && getCompressFormat(compress, 'jpeg');
     return {
         gzip: gz ? (!isNaN(gz.level as number) ? gz.level : undefined) : -1,
-        brotli: br ? (!isNaN(br.level as number) ? br.level : undefined) : -1
+        brotli: br ? (!isNaN(br.level as number) ? br.level : undefined) : -1,
+        jpeg: jpeg && jpeg.level ? Math.min(jpeg.level, 100) : -1
     };
 }
 
@@ -219,7 +227,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             jimp.read(filepath)
                 .then(image => {
                     const jpg = replaceExtension(filepath, 'jpg');
-                    image.write(jpg, err => {
+                    image.quality(JPEG_QUALITY).write(jpg, err => {
                         if (err) {
                             writeError(jpg, err);
                         }
@@ -273,6 +281,9 @@ function writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: strin
                 if (!err) {
                     fs.writeFileSync(filepath, resultData);
                 }
+                if (isJPEG(file)) {
+                    removeCompressionFormat(file, 'jpeg');
+                }
                 compressFile(assets, file, filepath, status, finalize, archive);
             });
         }
@@ -313,38 +324,61 @@ function compressImage(filepath: string, finalize: (filepath?: string) => void, 
 }
 
 function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void, archive?: archiver.Archiver) {
-    const { gzip, brotli } = getCompressOutput(file);
+    const { jpeg, gzip, brotli } = getCompressOutput(file);
     const entryName = getEntryName(file);
-    transformBuffer(assets, file, filepath, status, finalize, archive, entryName);
-    if (gzip !== -1) {
+    const resumeThread = () => {
+        transformBuffer(assets, file, filepath, status, finalize, archive, entryName);
+        if (gzip !== -1) {
+            status.delayed++;
+            const gz = `${filepath}.gz`;
+            createGzipWriteStream(filepath, gz, gzip)
+                .on('finish', () => {
+                    if (archive) {
+                        archive.file(gz, { name: `${entryName}.gz` });
+                    }
+                    finalize(gz);
+                })
+                .on('error', err => {
+                    writeError(gz, err);
+                    finalize('');
+                });
+        }
+        if (brotli !== -1 && checkVersion(11, 7)) {
+            status.delayed++;
+            const br = `${filepath}.br`;
+            createBrotliWriteStream(filepath, br, brotli, file.mimeType)
+                .on('finish', () => {
+                    if (archive) {
+                        archive.file(br, { name: `${entryName}.br` });
+                    }
+                    finalize(br);
+                })
+                .on('error', err => {
+                    writeError(br, err);
+                    finalize('');
+                });
+        }
+    };
+    if (jpeg !== -1) {
         status.delayed++;
-        const gz = `${filepath}.gz`;
-        createGzipWriteStream(filepath, gz, gzip)
-            .on('finish', () => {
-                if (archive) {
-                    archive.file(gz, { name: `${entryName}.gz` });
-                }
-                finalize(gz);
+        jimp.read(filepath)
+            .then(image => {
+                image.quality(jpeg).write(filepath, err => {
+                    if (err) {
+                        writeError(filepath, err);
+                    }
+                    finalize('');
+                    resumeThread();
+                });
             })
-            .on('error', err => {
-                writeError(gz, err);
+            .catch(err => {
+                writeError(filepath, err);
                 finalize('');
+                resumeThread();
             });
     }
-    if (brotli !== -1 && checkVersion(11, 7)) {
-        status.delayed++;
-        const br = `${filepath}.br`;
-        createBrotliWriteStream(filepath, br, brotli, file.mimeType)
-            .on('finish', () => {
-                if (archive) {
-                    archive.file(br, { name: `${entryName}.br` });
-                }
-                finalize(br);
-            })
-            .on('error', err => {
-                writeError(br, err);
-                finalize('');
-            });
+    else {
+        resumeThread();
     }
 }
 
@@ -499,6 +533,30 @@ function replaceExtension(value: string, ext: string) {
     return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
 }
 
+function isJPEG(file: RequestAsset) {
+    switch (path.extname(file.filename).toLowerCase()) {
+        case '.jpg':
+        case '.jpeg':
+            break;
+        default:
+            if (!file.mimeType || !file.mimeType.endsWith('image/jpeg')) {
+                return false;
+            }
+            break;
+    }
+    return true;
+}
+
+function removeCompressionFormat(file: RequestAsset, format: string) {
+    const compress = file.compress;
+    if (compress) {
+        const index = compress.findIndex(value => value.format === format);
+        if (index !== -1) {
+            compress.splice(index, 1);
+        }
+    }
+}
+
 const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
 const getEntryName = (file: RequestAsset) => path.join(file.moveTo || '', file.pathname, file.filename);
 const replacePathName = (source: string, segment: string, value: string) => source.replace(new RegExp(`["']\\s*${segment}\\s*["']`, 'g'), value);
@@ -596,7 +654,7 @@ app.post('/api/assets/archive', (req, res) => {
     let success = false;
     let cleared = false;
     let zipname = '';
-    const resume = (unzip_to = '') => {
+    const resumeThread = (unzip_to = '') => {
         const directory = unzip_to || dirname;
         try {
             fs.mkdirpSync(directory);
@@ -605,7 +663,7 @@ app.post('/api/assets/archive', (req, res) => {
             res.json({ application: `DIRECTORY: ${directory}`, system: err });
             return;
         }
-        const archive = archiver(format, { zlib: { level: 9 } });
+        const archive = archiver(format, { zlib: { level: GZIP_LEVEL } });
         if (!zipname) {
             zipname = path.join(dirname, (req.query.filename || 'squared') + '.' + format);
         }
@@ -664,22 +722,22 @@ app.post('/api/assets/archive', (req, res) => {
     if (append_to) {
         const errorAppend = (name: string, err: Error) => {
             zipname = '';
-            resume();
+            resumeThread();
             writeError(name, err);
         };
         const match = /([^/\\]+)\.(zip|tar)$/i.exec(append_to);
         if (match) {
             zipname = path.join(dirname, match[0]);
             try {
-                const copied = () => {
+                const copySuccess = () => {
                     format = <archiver.Format> match[2].toLowerCase();
                     const unzip_to = path.join(dirname, match[1]);
                     decompress(zipname, unzip_to)
-                        .then(() => resume(unzip_to));
+                        .then(() => resumeThread(unzip_to));
                 };
                 if (isURIFile(append_to)) {
                     const stream = fs.createWriteStream(zipname);
-                    stream.on('finish', copied);
+                    stream.on('finish', copySuccess);
                     request(append_to)
                         .on('response', response => {
                             const statusCode = response.statusCode;
@@ -702,7 +760,7 @@ app.post('/api/assets/archive', (req, res) => {
                         return;
                     }
                     fs.copyFileSync(append_to, zipname);
-                    copied();
+                    copySuccess();
                 }
                 else {
                     errorAppend(append_to, new Error('Archive not found.'));
@@ -717,7 +775,7 @@ app.post('/api/assets/archive', (req, res) => {
         }
     }
     else {
-        resume();
+        resumeThread();
     }
 });
 
