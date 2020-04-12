@@ -13,7 +13,7 @@
     "dev-base": "tsc && rollup -c rollup.config.dev-base.js && cd ./android-framework && rollup -c rollup.config.dev.js",
     "dev-express": "cd ./node-express && eslint **/*.ts && tsc -outDir ../",
     "dev": "tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js && cd ../chrome-framework && rollup -c rollup.config.js",
-    "prod": "npm run clean && eslint **/*.ts && tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./node-express && eslint **/*.ts && tsc && cd ../build && terser app.js --c -o ../app.js && cd ../android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js",
+    "prod": "npm run clean && eslint **/*.ts && tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./node-express && eslint **/*.ts && tsc && cd ../build && terser app.js -c toplevel -m -o ../app.js && cd ../android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },
   "repository": {
@@ -62,6 +62,7 @@
     "decompress": "^4.2.1",
     "express": "^4.17.1",
     "fs-extra": "^9.0.0",
+    "jimp": "^0.10.1",
     "request": "^2.88.2",
     "rimraf": "^3.0.2",
     "tinify": "^1.6.0-beta.2",
@@ -72,6 +73,7 @@
     "@types/decompress": "^4.2.3",
     "@types/express": "^4.17.6",
     "@types/fs-extra": "^8.1.0",
+    "@types/jimp": "^0.2.28",
     "@types/node": "^13.11.1",
     "@types/request": "^2.48.4",
     "@types/uuid": "^7.0.2",

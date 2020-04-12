@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "es6",
     "module": "CommonJS",
     "outDir": "../build",
     "moduleResolution": "node",
     "inlineSourceMap": false,
-    "lib": ["ES5"],
+    "lib": ["es2016"],
     "noUnusedLocals": true,
     "alwaysStrict": true,
     "strictBindCallApply": true,
@@ -19,6 +19,8 @@
     "esModuleInterop": true 
   },
   "include": [
+    "../@types/type.d.ts",
     "app.ts"
-  ]
+  ],
+  "exclude": []
 }

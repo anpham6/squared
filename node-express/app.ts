@@ -9,7 +9,17 @@ import archiver = require('archiver');
 import decompress = require('decompress');
 import request = require('request');
 import uuid = require('uuid');
+import jimp = require('jimp');
 import tinify = require('tinify');
+
+interface AsyncStatus {
+    delayed: number;
+}
+
+interface CompressOutput {
+    gzip?: number;
+    brotli?: number;
+}
 
 let squared: Settings | undefined;
 let DISK_READ = false;
@@ -89,17 +99,21 @@ if (env === 'development') {
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
 const SEPARATOR = path.sep;
 
-function getFileData(file: RequestAsset, dirname: string) {
+function getFileOutput(file: RequestAsset, dirname: string) {
     const pathname = path.join(dirname, file.copyTo || '', file.pathname);
+    return {
+        pathname,
+        filepath: path.join(pathname, file.filename)
+    };
+}
+
+function getCompressOutput(file: RequestAsset): CompressOutput {
     const compress = file.compress;
     const gz = getCompressFormat(compress, 'gz');
     const br = getCompressFormat(compress, 'br');
     return {
-        pathname,
-        filename: path.join(pathname, file.filename),
-        pngCompress: getCompressFormat(compress, 'png') ? 1 : -1,
-        gzipLevel: gz ? (!isNaN(gz.level as number) ? gz.level : undefined) : -1,
-        brotliQuality: br ? (!isNaN(br.level as number) ? br.level : undefined) : -1
+        gzip: gz ? (!isNaN(gz.level as number) ? gz.level : undefined) : -1,
+        brotli: br ? (!isNaN(br.level as number) ? br.level : undefined) : -1
     };
 }
 
@@ -117,7 +131,7 @@ function createBrotliWriteStream(source: string, filename: string, quality?: num
         .pipe(
             zlib.createBrotliCompress({
                 params: {
-                    [zlib.constants.BROTLI_PARAM_MODE]: /^text\//.test(mimeType) ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
+                    [zlib.constants.BROTLI_PARAM_MODE]: /text\//.test(mimeType) ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
                     [zlib.constants.BROTLI_PARAM_QUALITY]: quality !== undefined ? quality : BROTLI_QUALITY,
                     [zlib.constants.BROTLI_PARAM_SIZE_HINT]: fs.statSync(source).size
                 }
@@ -143,31 +157,16 @@ function checkVersion(major: number, minor: number, patch = 0) {
     return true;
 }
 
-function writeBuffer(filename: string, compress: number, callback: () => void) {
-    if (TINIFY_API_KEY && compress !== -1) {
-        try {
-            tinify.fromBuffer(fs.readFileSync(filename)).toBuffer((err, resultData) => {
-                if (!err) {
-                    fs.writeFileSync(filename, resultData);
-                }
-                callback();
-            });
-        }
-        catch (err) {
-            callback();
-            console.log(`FAIL: ${filename} (${err})`);
-        }
+function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (result: boolean) => void, archive?: archiver.Archiver, entryName?: string) {
+    const mimeType = file.mimeType;
+    if (!mimeType) {
+        return;
     }
-    else {
-        callback();
-    }
-}
-
-function processAssets(filepath: string, file: RequestAsset, items: RequestAsset[]) {
-    switch (file.mimeType) {
-        case '@text/html': {
+    switch (mimeType) {
+        case '@:text/html':
+        case '@:application/xhtml+xml': {
             let html = fs.readFileSync(filepath).toString('utf8');
-            items.forEach(item => {
+            assets.forEach(item => {
                 if (item !== file && item.href) {
                     const separator = item.href.indexOf('\\') !== -1 ? '\\' : '/';
                     const location = appendSeparator(item.pathname, item.filename, separator);
@@ -182,18 +181,329 @@ function processAssets(filepath: string, file: RequestAsset, items: RequestAsset
                 }
             });
             fs.writeFileSync(filepath, html);
-            break;
+            return;
+        }
+    }
+    if (mimeType.startsWith('png:image/')) {
+        if (!mimeType.endsWith('/png')) {
+            status.delayed++;
+            jimp.read(filepath)
+                .then(image => {
+                    const png = replaceExtension(filepath, 'png');
+                    image.write(png, err => {
+                        if (err) {
+                            writeError(png, err);
+                        }
+                        else if (archive && entryName) {
+                            entryName = replaceExtension(entryName, 'png');
+                            if (hasCompressPng(file.compress)) {
+                                compressImage(png, finalize, archive, entryName);
+                                return;
+                            }
+                            else {
+                                archive.file(png, { name: entryName });
+                            }
+                        }
+                        finalize(true);
+                    });
+                })
+                .catch(err => {
+                    finalize(true);
+                    writeError(filepath, err);
+                });
+        }
+    }
+    else if (mimeType.startsWith('jpeg:image/')) {
+        if (!mimeType.endsWith('/jpeg')) {
+            status.delayed++;
+            jimp.read(filepath)
+                .then(image => {
+                    const jpg = replaceExtension(filepath, 'jpg');
+                    image.write(jpg, err => {
+                        if (err) {
+                            writeError(jpg, err);
+                        }
+                        else if (archive && entryName) {
+                            entryName = replaceExtension(entryName, 'jpg');
+                            if (hasCompressPng(file.compress)) {
+                                compressImage(jpg, finalize, archive, entryName);
+                                return;
+                            }
+                            else {
+                                archive.file(jpg, { name: entryName });
+                            }
+                        }
+                        finalize(true);
+                    });
+                })
+                .catch(err => {
+                    finalize(true);
+                    writeError(filepath, err);
+                });
+        }
+    }
+    else if (mimeType.startsWith('bmp:image/')) {
+        if (!mimeType.endsWith('/bmp')) {
+            status.delayed++;
+            jimp.read(filepath)
+                .then(image => {
+                    const bmp = replaceExtension(filepath, 'bmp');
+                    image.write(bmp, err => {
+                        if (err) {
+                            writeError(bmp, err);
+                        }
+                        else if (archive && entryName) {
+                            archive.file(bmp, { name: replaceExtension(entryName, 'bmp') });
+                        }
+                        finalize(true);
+                    });
+                })
+                .catch(err => {
+                    finalize(true);
+                    writeError(filepath, err);
+                });
         }
     }
 }
 
+function writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (result: boolean) => void, archive?: archiver.Archiver) {
+    if (hasCompressPng(file.compress)) {
+        try {
+            tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
+                if (!err) {
+                    fs.writeFileSync(filepath, resultData);
+                }
+                compressFile(assets, file, filepath, status, finalize, archive);
+            });
+        }
+        catch (err) {
+            compressFile(assets, file, filepath, status, finalize, archive);
+            writeError(filepath, err);
+        }
+    }
+    else {
+        compressFile(assets, file, filepath, status, finalize, archive);
+    }
+}
+
+function compressImage(filepath: string, finalize: (result: boolean) => void, archive?: archiver.Archiver, entryName?: string) {
+    const completed = () => {
+        if (archive && entryName) {
+            archive.file(filepath, { name: entryName });
+        }
+        finalize(true);
+    };
+    try {
+        tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
+            if (!err) {
+                fs.writeFileSync(filepath, resultData);
+            }
+            completed();
+        });
+    }
+    catch (err) {
+        completed();
+        writeError(filepath, err);
+    }
+}
+
+function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (result: boolean) => void, archive?: archiver.Archiver) {
+    const { gzip, brotli } = getCompressOutput(file);
+    const entryName = getEntryName(file);
+    transformBuffer(assets, file, filepath, status, finalize, archive, entryName);
+    if (gzip !== -1) {
+        status.delayed++;
+        const gz = `${filepath}.gz`;
+        createGzipWriteStream(filepath, gz, gzip)
+            .on('finish', () => {
+                if (archive) {
+                    archive.file(gz, { name: `${entryName}.gz` });
+                }
+                finalize(true);
+            })
+            .on('error', err => {
+                writeError(gz, err);
+                finalize(true);
+            });
+    }
+    if (brotli !== -1 && checkVersion(11, 7)) {
+        status.delayed++;
+        const br = `${filepath}.br`;
+        createBrotliWriteStream(filepath, br, brotli, file.mimeType)
+            .on('finish', () => {
+                if (archive) {
+                    archive.file(br, { name: `${entryName}.br` });
+                }
+                finalize(true);
+            })
+            .on('error', err => {
+                writeError(br, err);
+                finalize(true);
+            });
+    }
+}
+
+function processAssets(dirname: string, assets: RequestAsset[], status: AsyncStatus, finalize: (result: boolean) => void, empty: boolean, archive?: archiver.Archiver) {
+    const emptyDir = {};
+    const notFound: ObjectMap<boolean> = {};
+    const processing: ObjectMap<RequestAsset[]> = {};
+    const completed: string[] = [];
+    assets.forEach(file => {
+        const { pathname, filepath } = getFileOutput(file, dirname);
+        const { content, base64, uri } = file;
+        if (archive) {
+            fs.mkdirpSync(pathname);
+        }
+        else if (!emptyDir[pathname]) {
+            if (empty) {
+                try {
+                    fs.emptyDirSync(pathname);
+                }
+                catch (err) {
+                    writeError(pathname, err);
+                }
+            }
+            if (!fs.existsSync(pathname)) {
+                fs.mkdirpSync(pathname);
+            }
+            emptyDir[pathname] = true;
+        }
+        if (content || base64) {
+            status.delayed++;
+            fs.writeFile(
+                filepath,
+                base64 || content,
+                base64 ? 'base64' : 'utf8',
+                err => {
+                    if (!err) {
+                        if (archive) {
+                            archive.file(filepath, { name: getEntryName(file) });
+                        }
+                        writeBuffer(assets, file, filepath, status, finalize, archive);
+                    }
+                    finalize(true);
+                }
+            );
+        }
+        else if (uri) {
+            if (notFound[uri]) {
+                return;
+            }
+            const checkQueue = () => {
+                if (completed.indexOf(filepath) !== -1) {
+                    writeBuffer(assets, file, filepath, status, finalize, archive);
+                    finalize(true);
+                    return true;
+                }
+                else {
+                    const queue = processing[filepath];
+                    if (queue) {
+                        status.delayed++;
+                        queue.push(file);
+                        return true;
+                    }
+                    else {
+                        processing[filepath] = [file];
+                        return false;
+                    }
+                }
+            };
+            const processQueue = () => {
+                completed.push(filepath);
+                if (archive) {
+                    archive.file(filepath, { name: getEntryName(file) });
+                }
+                for (const item of (processing[filepath] || [file])) {
+                    writeBuffer(assets, item, filepath, status, finalize, archive);
+                    finalize(true);
+                }
+                delete processing[filepath];
+            };
+            const errorRequest = () => {
+                if (!notFound[uri]) {
+                    finalize(true);
+                    notFound[uri] = true;
+                }
+                delete processing[filepath];
+            };
+            try {
+                if (isURIFile(uri)) {
+                    if (checkQueue()) {
+                        return;
+                    }
+                    const stream = fs.createWriteStream(filepath);
+                    stream.on('finish', () => {
+                        if (!notFound[uri]) {
+                            processQueue();
+                        }
+                    });
+                    status.delayed++;
+                    request(uri)
+                        .on('response', response => {
+                            const statusCode = response.statusCode;
+                            if (statusCode >= 300) {
+                                errorRequest();
+                                writeError(uri, statusCode + ' ' + response.statusMessage);
+                            }
+                        })
+                        .on('error', errorRequest)
+                        .pipe(stream);
+                }
+                else {
+                    const copyUri = () => {
+                        status.delayed++;
+                        fs.copyFile(
+                            uri,
+                            filepath,
+                            err => {
+                                if (!err) {
+                                    processQueue();
+                                }
+                                else {
+                                    finalize(true);
+                                }
+                            }
+                        );
+                    };
+                    if (isUNCFile(uri)) {
+                        if (UNC_READ) {
+                            if (checkQueue()) {
+                                return;
+                            }
+                            copyUri();
+                        }
+                    }
+                    else if (DISK_READ && path.isAbsolute(uri)) {
+                        if (checkQueue()) {
+                            return;
+                        }
+                        copyUri();
+                    }
+                }
+            }
+            catch (err) {
+                errorRequest();
+                writeError(uri, err);
+            }
+        }
+    });
+}
+
+function replaceExtension(value: string, ext: string) {
+    const index = value.lastIndexOf('.');
+    return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
+}
+
+const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
+const getEntryName = (file: RequestAsset) => path.join(file.copyTo || '', file.pathname, file.filename);
+const replacePathName = (source: string, segment: string, value: string) => source.replace(new RegExp(`["']\\s*${segment}\\s*["']`, 'g'), value);
 const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
 const pathJoinForward = (leading: string, trailing: string) => path.join(leading, trailing).replace(/\\/g, '/');
-const replacePathName = (source: string, segment: string, value: string) => source.replace(new RegExp(`["']\\s*${segment}\\s*["']`, 'g'), value);
 const getCompressFormat = (compress: CompressionFormat[] | undefined, format: string) => compress && compress.find(item => item.format === format);
 const isURIFile = (value: string) => /^[A-Za-z]{3,}:\/\//.test(value);
 const isUNCDirectory = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
 const isUNCFile = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
+const hasCompressPng = (compress: CompressionFormat[] | undefined) => TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
 
 app.post('/api/assets/copy', (req, res) => {
     const dirname = path.normalize(req.query.to as string);
@@ -220,131 +530,20 @@ app.post('/api/assets/copy', (req, res) => {
             res.json({ application: `DIRECTORY: ${dirname}`, system: err });
             return;
         }
-        const empty = req.query.empty === '1';
-        let delayed = 0;
+        const status: AsyncStatus = { delayed: 0 };
         let cleared = false;
         const finalize = (running = false) => {
-            if (delayed === Number.POSITIVE_INFINITY) {
+            if (status.delayed === Number.POSITIVE_INFINITY) {
                 return;
             }
-            if (!running || running && --delayed === 0 && cleared) {
-                res.json({ success: delayed === 0, directory: dirname });
-                delayed = Number.POSITIVE_INFINITY;
+            if (!running || running && --status.delayed === 0 && cleared) {
+                res.json({ success: status.delayed === 0, directory: dirname });
+                status.delayed = Number.POSITIVE_INFINITY;
             }
         };
         try {
-            const notFound = {};
-            const emptyDir = {};
-            (req.body as RequestAsset[]).forEach(file => {
-                const { pathname, filename, pngCompress, gzipLevel, brotliQuality } = getFileData(file, dirname);
-                const { content, base64, uri } = file;
-                const compressFile = () => {
-                    if (gzipLevel !== -1) {
-                        delayed++;
-                        createGzipWriteStream(filename, `${filename}.gz`, gzipLevel)
-                            .on('finish', () => finalize(true));
-                    }
-                    if (brotliQuality !== -1 && checkVersion(11, 7)) {
-                        delayed++;
-                        createBrotliWriteStream(filename, `${filename}.br`, brotliQuality, file.mimeType)
-                            .on('finish', () => finalize(true));
-                    }
-                    finalize(true);
-                };
-                if (!emptyDir[pathname]) {
-                    if (empty) {
-                        try {
-                            fs.emptyDirSync(pathname);
-                        }
-                        catch (err) {
-                            console.log(`FAIL: ${pathname} (${err})`);
-                        }
-                    }
-                    if (!fs.existsSync(pathname)) {
-                        fs.mkdirpSync(pathname);
-                    }
-                    emptyDir[pathname] = true;
-                }
-                if (content || base64) {
-                    delayed++;
-                    fs.writeFile(
-                        filename,
-                        base64 || content,
-                        base64 ? 'base64' : 'utf8',
-                        err => {
-                            if (!err) {
-                                writeBuffer(filename, pngCompress, compressFile);
-                            }
-                            else {
-                                finalize(true);
-                            }
-                        }
-                    );
-                }
-                else if (uri) {
-                    if (notFound[uri]) {
-                        return;
-                    }
-                    const errorRequest = () => {
-                        if (!notFound[uri]) {
-                            finalize(true);
-                            notFound[uri] = true;
-                        }
-                    };
-                    try {
-                        if (isURIFile(uri)) {
-                            delayed++;
-                            const stream = fs.createWriteStream(filename);
-                            stream.on('finish', () => {
-                                if (!notFound[uri]) {
-                                    processAssets(filename, file, req.body);
-                                    writeBuffer(filename, pngCompress, compressFile);
-                                }
-                            });
-                            request(uri)
-                                .on('response', response => {
-                                    const statusCode = response.statusCode;
-                                    if (statusCode >= 300) {
-                                        errorRequest();
-                                        console.log(`FAIL: ${uri} (${statusCode} ${response.statusMessage})`);
-                                    }
-                                })
-                                .on('error', errorRequest)
-                                .pipe(stream);
-                        }
-                        else {
-                            const copyUri = () => {
-                                delayed++;
-                                fs.copyFile(
-                                    uri,
-                                    filename,
-                                    err => {
-                                        if (!err) {
-                                            writeBuffer(filename, pngCompress, compressFile);
-                                        }
-                                        else {
-                                            finalize(true);
-                                        }
-                                    }
-                                );
-                            };
-                            if (isUNCFile(uri)) {
-                                if (UNC_READ) {
-                                    copyUri();
-                                }
-                            }
-                            else if (DISK_READ && path.isAbsolute(uri)) {
-                                copyUri();
-                            }
-                        }
-                    }
-                    catch (err) {
-                        errorRequest();
-                        console.log(`FAIL: ${uri} (${err})`);
-                    }
-                }
-            });
-            if (delayed === 0) {
+            processAssets(dirname, <RequestAsset[]> req.body, status, finalize, req.query.empty === '1');
+            if (status.delayed === 0) {
                 finalize(false);
             }
             else {
@@ -371,11 +570,11 @@ app.post('/api/assets/archive', (req, res) => {
         append_to = path.normalize(append_to);
     }
     let format: archiver.Format;
-    let gzip = false;
+    let formatGzip = false;
     switch (req.query.format) {
         case 'gz':
         case 'tgz':
-            gzip = true;
+            formatGzip = true;
         case 'tar':
             format = 'tar';
             break;
@@ -383,8 +582,8 @@ app.post('/api/assets/archive', (req, res) => {
             format = 'zip';
             break;
     }
+    const status: AsyncStatus = { delayed: 0 };
     let success = false;
-    let delayed = 0;
     let cleared = false;
     let zipname = '';
     const resume = (unzip_to = '') => {
@@ -404,23 +603,27 @@ app.post('/api/assets/archive', (req, res) => {
         output.on('close', () => {
             const bytes = archive.pointer();
             console.log(`WRITE: ${zipname} (${bytes} bytes)`);
-            if (gzip) {
+            if (formatGzip) {
                 const gz = req.query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
-                createGzipWriteStream(zipname, gz, 9)
-                    .on('finish', () => res.json({ success, directory: dirname, zipname: gz, bytes }));
+                createGzipWriteStream(zipname, gz)
+                    .on('finish', () => res.json({ success, directory: dirname, zipname: gz, bytes }))
+                    .on('error', err => {
+                        writeError(gz, err);
+                        res.json({ success, directory: dirname, zipname, bytes });
+                    });
             }
             else {
                 res.json({ success, directory: dirname, zipname, bytes });
             }
-            delayed = Number.POSITIVE_INFINITY;
+            status.delayed = Number.POSITIVE_INFINITY;
         });
         archive.pipe(output);
         const finalize = (running = false) => {
-            if (delayed === Number.POSITIVE_INFINITY) {
+            if (status.delayed === Number.POSITIVE_INFINITY) {
                 return;
             }
-            if (!running || running && --delayed === 0 && cleared) {
-                success = delayed === 0;
+            if (!running || running && --status.delayed === 0 && cleared) {
+                success = status.delayed === 0;
                 archive.finalize();
             }
         };
@@ -428,118 +631,8 @@ app.post('/api/assets/archive', (req, res) => {
             if (unzip_to) {
                 archive.directory(unzip_to, false);
             }
-            const notFound = {};
-            (req.body as RequestAsset[]).forEach(file => {
-                const { pathname, filename, pngCompress, gzipLevel, brotliQuality } = getFileData(file, dirname);
-                const { content, base64, uri } = file;
-                const data = { name: path.join(file.copyTo || '', file.pathname, file.filename) };
-                const compressFile = () => {
-                    if (gzipLevel !== -1) {
-                        delayed++;
-                        const gz = `${filename}.gz`;
-                        createGzipWriteStream(filename, gz, gzipLevel)
-                            .on('finish', () => {
-                                if (delayed !== Number.POSITIVE_INFINITY) {
-                                    archive.file(gz, { name: `${data.name}.gz` });
-                                    finalize(true);
-                                }
-                            });
-                    }
-                    if (brotliQuality !== -1 && checkVersion(11, 7)) {
-                        delayed++;
-                        const br = `${filename}.br`;
-                        createBrotliWriteStream(filename, br, brotliQuality, file.mimeType)
-                            .on('finish', () => {
-                                if (delayed !== Number.POSITIVE_INFINITY) {
-                                    archive.file(br, { name: `${data.name}.br` });
-                                    finalize(true);
-                                }
-                            });
-                    }
-                    archive.file(filename, data);
-                    finalize(true);
-                };
-                fs.mkdirpSync(pathname);
-                if (content || base64) {
-                    delayed++;
-                    fs.writeFile(
-                        filename,
-                        base64 || content,
-                        base64 ? 'base64' : 'utf8',
-                        err => {
-                            if (!err) {
-                                writeBuffer(filename, pngCompress, compressFile);
-                            }
-                            else {
-                                finalize(true);
-                            }
-                        }
-                    );
-                }
-                else if (uri) {
-                    if (notFound[uri]) {
-                        return;
-                    }
-                    const errorRequest = () => {
-                        if (!notFound[uri]) {
-                            finalize(true);
-                            notFound[uri] = true;
-                        }
-                    };
-                    try {
-                        if (isURIFile(uri)) {
-                            delayed++;
-                            const stream = fs.createWriteStream(filename);
-                            stream.on('finish', () => {
-                                if (!notFound[uri]) {
-                                    processAssets(filename, file, req.body);
-                                    writeBuffer(filename, pngCompress, compressFile);
-                                }
-                            });
-                            request(uri)
-                                .on('response', response => {
-                                    const statusCode = response.statusCode;
-                                    if (statusCode >= 300) {
-                                        errorRequest();
-                                        console.log(`FAIL: ${uri} (${statusCode} ${response.statusMessage})`);
-                                    }
-                                })
-                                .on('error', errorRequest)
-                                .pipe(stream);
-                        }
-                        else {
-                            const copyUri = () => {
-                                delayed++;
-                                fs.copyFile(
-                                    uri,
-                                    filename,
-                                    err => {
-                                        if (!err) {
-                                            writeBuffer(filename, pngCompress, compressFile);
-                                        }
-                                        else {
-                                            finalize(true);
-                                        }
-                                    }
-                                );
-                            };
-                            if (isUNCFile(uri)) {
-                                if (UNC_READ) {
-                                    copyUri();
-                                }
-                            }
-                            else if (DISK_READ && path.isAbsolute(uri)) {
-                                copyUri();
-                            }
-                        }
-                    }
-                    catch (err) {
-                        errorRequest();
-                        console.log(`FAIL: ${uri} (${err})`);
-                    }
-                }
-            });
-            if (delayed === 0) {
+            processAssets(dirname, <RequestAsset[]> req.body, status, finalize, false, archive);
+            if (status.delayed === 0) {
                 finalize(false);
             }
             else {
@@ -554,7 +647,7 @@ app.post('/api/assets/archive', (req, res) => {
         const errorAppend = (name: string, err: Error) => {
             zipname = '';
             resume();
-            console.log(`FAIL: ${name} (${err})`);
+            writeError(name, err);
         };
         const match = /([^/\\]+)\.(zip|tar)$/i.exec(append_to);
         if (match) {
@@ -615,7 +708,7 @@ app.get('/api/browser/download', (req, res) => {
     if (filepath) {
         res.sendFile(filepath, err => {
             if (err) {
-                console.log(`FAIL: ${filepath} (${err})`);
+                writeError(filepath, err);
             }
         });
     }

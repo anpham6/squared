@@ -25,6 +25,7 @@
     "src/**/*"
   ],
   "exclude": [
+    "index.d.ts",
     "build",
     "dist",
     "node_modules"

@@ -13,8 +13,9 @@ export default [
         plugins: [
             terser({
                 compress: {
-                    pure_getters: true,
-                    unsafe: true
+                    loops: false,
+                    booleans: false,
+                    keep_classnames: true
                 }
             })
         ]
@@ -31,8 +32,9 @@ export default [
             async(),
             terser({
                 compress: {
-                    pure_getters: true,
-                    unsafe: true
+                    loops: false,
+                    booleans: false,
+                    keep_classnames: true
                 }
             })
         ]
@@ -48,8 +50,9 @@ export default [
         plugins: [
             terser({
                 compress: {
-                    pure_getters: true,
-                    unsafe: true
+                    loops: false,
+                    booleans: false,
+                    keep_classnames: true
                 }
             })
         ]

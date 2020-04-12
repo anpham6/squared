@@ -332,7 +332,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         const { name, rel, saveAsWebPage } = options;
         const result = this.getHtmlPage(name);
         if (saveAsWebPage && result.length) {
-            result[0].mimeType = '@' + result[0].mimeType;
+            result[0].mimeType = '@:' + result[0].mimeType;
         }
         return result.concat(this.getScriptAssets())
             .concat(this.getLinkAssets(rel))

@@ -161,7 +161,35 @@
                     squared.settings.compressImages = false;
                     squared.setFramework(android);
                     squared.parseDocument().then(() => {
-                        squared.saveToArchive();
+                        squared.saveToArchive('jimp', {
+                            assets: [
+                                {
+                                    pathname: 'images',
+                                    filename: 'swatch.jpg',
+                                    mimeType: 'png:image/jpeg',
+                                    compress: [{ format: 'png' }],
+                                    uri: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/swatch.jpg'
+                                },
+                                {
+                                    pathname: 'images',
+                                    filename: 'swatch.jpg',
+                                    mimeType: 'bmp:image/jpeg',
+                                    uri: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/swatch.jpg'
+                                },
+                                {
+                                    pathname: 'images',
+                                    filename: 'pencil.png',
+                                    mimeType: 'jpeg:image/png',
+                                    uri: 'http://localhost:3000/demos/images/pencil.png'
+                                },
+                                {
+                                    pathname: 'images',
+                                    filename: 'pencil.png',
+                                    mimeType: 'bmp:image/png',
+                                    uri: 'http://localhost:3000/demos/images/pencil.png'
+                                }
+                            ]
+                        });
                     });
                 });
             });

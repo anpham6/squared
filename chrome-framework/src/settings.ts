@@ -1,10 +1,7 @@
 import { UserSettingsChrome } from '../../@types/chrome/application';
 
 const settings: UserSettingsChrome = {
-    builtInExtensions: [
-        'chrome.compress.brotli',
-        'chrome.compress.gzip'
-    ],
+    builtInExtensions: [],
     preloadImages: false,
     compressImages: false,
     handleExtensionsAsync: true,

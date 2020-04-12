@@ -101,7 +101,7 @@ These settings are available in the global variable "squared" to customize your 
 
 ```javascript
 squared.settings = {
-    builtInExtensions: [
+    builtInExtensions: [ // default is all
         'android.delegate.background',
         'android.delegate.negative-x',
         'android.delegate.positive-x',
@@ -162,7 +162,7 @@ squared.settings = {
 
 ```javascript
 squared.settings = {
-    builtInExtensions: [
+    builtInExtensions: [ // default is none
         'chrome.compress.brotli',
         'chrome.compress.gzip'
     ],
@@ -581,6 +581,39 @@ Most of the Android support library extensions can be configured using the same 
 <img src="html/demos/images/android/drawer.navigationview.png" alt="drawer: actionbar" />
 
 <img src="html/demos/images/android/menu.png" alt="toolbar: menu" />
+
+### ALL: Jimp (node-express) / ImageJ (squared-apache)
+
+Image conversion can be achieved using the mimeType property in a RequestAsset object. The supported formats are:
+
+* png
+* jpeg
+* bmp
+* gif (node-express: readonly)
+* tiff (node-express: readonly)
+
+```xml
+{saveAsExtension}:image/{format}
+```
+
+```javascript
+const options = {
+    assets: [
+        {
+            pathname: 'images',
+            filename: 'pencil.png',
+            mimeType: 'jpeg:image/png',
+            uri: 'http://localhost:3000/demos/images/pencil.png'
+        },
+        {
+            pathname: 'images',
+            filename: 'pencil.png',
+            mimeType: 'bmp:image/png',
+            uri: 'http://localhost:3000/demos/images/pencil.png'
+        }
+    ]
+};
+```
 
 ### ALL: User Written HTML
 
