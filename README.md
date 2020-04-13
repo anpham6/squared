@@ -137,7 +137,8 @@ squared.settings = {
     framesPerSecond: 60,
     supportRTL: true,
     preloadImages: true,
-    compressImages: false, // Required: TinyPNG API Key <https://tinypng.com/developers>
+    compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
+    convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff
     supportNegativeLeftTop: true,
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
@@ -167,7 +168,7 @@ squared.settings = {
         'chrome.compress.gzip'
     ],
     preloadImages: false,
-    compressImages: false, // Required: TinyPNG API Key <https://tinypng.com/developers>
+    compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
     handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,
@@ -197,14 +198,14 @@ close() // close current session preceding write to disk or local output
 reset() // clear cached layouts and reopen new session
 
 // Required: node-express / squared-apache
-// NOTE: options: { assets?: FileAsset[], exclusions?: {}, callback?: () => void }
+// NOTE: options: { assets?: RequestAsset[], exclusions?: {}, callback?: () => void }
 
 saveToArchive(filename?: string, options?: {}) // save entire project as a new archive
-createFrom(format: string, options: {}) // create new archive from only FileAsset[]
+createFrom(format: string, options: {}) // create new archive from only RequestAsset[]
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
 appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive
-appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only FileAsset[]
+appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only RequestAsset[]
 
 // Required (all): --disk-write | --unc-write | --access-all (command-line)
 copyToDisk(directory: string, options?: {}) // copy entire project to local directory
@@ -225,7 +226,7 @@ You can use the "system.customize" method to change the default settings for the
 squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
 squared.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
 
-// NOTE: options: { assets?: FileAsset[], callback?: () => void }
+// NOTE: options: { assets?: RequestAsset[], callback?: () => void }
 
 squared.system.copyLayoutAllXml(directory: string, options?: {}) // copy generated xml
 squared.system.copyResourceAllXml(directory: string, options?: {})
@@ -316,7 +317,7 @@ squared.system.getElement(element: HTMLElement, cache?: boolean) // cache: defau
 squared.system.getElementMap()
 squared.system.clearElementMap()
 
-// NOTE: options: { assets?: FileAsset[], callback?: () => void }
+// NOTE: options: { assets?: RequestAsset[], callback?: () => void }
 
 squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
 squared.system.copyScriptAssets(directory: string, options?: {})
@@ -614,6 +615,7 @@ const options = {
     ]
 };
 ```
+Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package.
 
 ### ALL: User Written HTML
 

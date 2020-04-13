@@ -10,6 +10,7 @@ export interface UserSettingsAndroid extends UserUISettings {
     resolutionScreenHeight: number;
     supportRTL: boolean;
     compressImages: boolean;
+    convertImages: string;
     customizationsOverwritePrivilege: boolean;
     convertPixels: string;
     manifestLabelAppName: string;

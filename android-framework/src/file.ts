@@ -19,7 +19,7 @@ type View = android.base.View;
 
 const $lib = squared.lib;
 
-const { fromLastIndexOf, objectMap, trimEnd } = $lib.util;
+const { fromLastIndexOf, objectMap, parseMimeType, trimEnd } = $lib.util;
 const { applyTemplate, replaceTab } = $lib.xml;
 
 type ItemValue = {
@@ -49,16 +49,28 @@ function getFileAssets(pathname: string, items: string[]) {
     return items as any[];
 }
 
-function getImageAssets(pathname: string, items: string[], compression: boolean) {
+function getImageAssets(pathname: string, items: string[], convertExt: string, compress: boolean) {
     const length = items.length;
     if (length) {
+        let convertMimeType = parseMimeType(convertExt.toLowerCase());
+        if (!convertMimeType.startsWith('image/')) {
+            convertMimeType = '';
+        }
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
-            const filename = items[i + 2].split('?')[0];
+            const filename = items[i + 2].split('?')[0].trim();
+            let mimeType: Undef<string>;
+            if (convertMimeType !== '') {
+                const fileMimeType = parseMimeType(filename);
+                if (fileMimeType.startsWith('image/') && fileMimeType !== convertMimeType) {
+                    mimeType = `@${convertExt}:${fileMimeType}`;
+                }
+            }
             result[j++] = {
                 pathname: pathname + items[i + 1],
                 filename,
-                compress: compression && Resource.canCompressImage(filename) ? [{ format: 'png' }] : undefined,
+                mimeType,
+                compress: compress && Resource.canCompressImage(filename) ? [{ format: 'png' }] : undefined,
                 uri: items[i]
             };
         }
@@ -149,13 +161,13 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             }
         }
         if (directory || filename) {
-            const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
-            const compressImages = this.userSettings.compressImages;
+            const userSettings = this.userSettings;
+            const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
             let assets: FileAsset[] = [];
             for (const name in result) {
                 switch (name) {
                     case 'drawableImage':
-                        assets = assets.concat(getImageAssets(outputDirectory, result[name], compressImages));
+                        assets = assets.concat(getImageAssets(outputDirectory, result[name], userSettings.convertImages, userSettings.compressImages));
                         break;
                     case 'rawVideo':
                         assets = assets.concat(getRawAssets(outputDirectory + this.directory.video, result[name]));
@@ -420,23 +432,24 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                         result.push(
                             value,
                             `${imageDirectory}-${dpi}`,
-                            name + '.' + fromLastIndexOf(value, '.')
+                            name + '.' + fromLastIndexOf(value, '.').toLowerCase()
                         );
                     }
                 }
                 else {
-                    const mdpi = images.mdpi;
-                    if (mdpi) {
+                    const value = images.mdpi;
+                    if (value) {
                         result.push(
-                            mdpi,
+                            value,
                             imageDirectory,
-                            name + '.' + fromLastIndexOf(mdpi, '.')
+                            name + '.' + fromLastIndexOf(value, '.').toLowerCase()
                         );
                     }
                 }
             }
             if (directory || filename) {
-                options.assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.compressImages).concat(options.assets || []);
+                const { outputDirectory, convertImages, compressImages } = this.userSettings;
+                options.assets = getImageAssets(getOutputDirectory(outputDirectory), result, convertImages, compressImages).concat(options.assets || []);
                 if (directory) {
                     this.copying(options);
                 }
@@ -521,6 +534,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     protected getAssetsAll(assets?: FileAsset[]) {
+        const userSettings = this.userSettings;
         let result: FileAsset[] = [];
         if (assets) {
             const length = assets.length;
@@ -530,7 +544,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 const item = assets[i++];
                 if (!item.uri) {
                     if (first) {
-                        item.filename = this.userSettings.outputMainFileName;
+                        item.filename = userSettings.outputMainFileName;
                         first = false;
                     }
                     else {
@@ -543,7 +557,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             }
             result = result.concat(assets);
         }
-        const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
+        const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
         return result.concat(
             getFileAssets(outputDirectory, this.resourceStringToXml()),
             getFileAssets(outputDirectory, this.resourceStringArrayToXml()),
@@ -552,7 +566,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             getFileAssets(outputDirectory, this.resourceDimenToXml()),
             getFileAssets(outputDirectory, this.resourceStyleToXml()),
             getFileAssets(outputDirectory, this.resourceDrawableToXml()),
-            getImageAssets(outputDirectory, this.resourceDrawableImageToString(), this.userSettings.compressImages),
+            getImageAssets(outputDirectory, this.resourceDrawableImageToString(), userSettings.convertImages, userSettings.compressImages),
             getFileAssets(outputDirectory, this.resourceAnimToXml()),
             getRawAssets(outputDirectory + this.directory.video, this.resourceRawVideoToString()),
             getRawAssets(outputDirectory + this.directory.audio, this.resourceRawAudioToString())

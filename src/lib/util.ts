@@ -983,9 +983,10 @@ export function flatMultiArray<T>(list: any[]): T[] {
     return result;
 }
 
-export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>) {
+export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number) {
     let length = list.length;
     let i = -1;
+    let deleted = 0;
     while (++i < length) {
         const item = list[i];
         if (predicate(item, i, list)) {
@@ -993,6 +994,9 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
                 callback(item, i, list);
             }
             list.splice(i--, 1);
+            if (++deleted === deleteCount) {
+                break;
+            }
             length--;
         }
     }

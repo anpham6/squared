@@ -320,7 +320,7 @@ export namespace lib {
         function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
         function flatArray<T>(list: any[]): T[];
         function flatMultiArray<T>(list: any[]): T[];
-        function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>): T[];
+        function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
         function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
         function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, string>, char?: string, trailing?: boolean): string;

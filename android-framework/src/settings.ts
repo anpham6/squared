@@ -38,6 +38,7 @@ const settings: UserSettingsAndroid = {
     supportRTL: true,
     preloadImages: true,
     compressImages: false,
+    convertImages: '',
     supportNegativeLeftTop: true,
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
