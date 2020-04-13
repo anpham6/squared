@@ -1,6 +1,12 @@
-import { FormatOrAll } from '../lib/squared';
+import { MIMEOrAll } from '../lib/squared';
 
 export interface CompressOptions {
     level?: number;
-    mimeTypes: FormatOrAll;
+    mimeTypes: MIMEOrAll;
+}
+
+export interface ConvertOptions extends CompressOptions {
+    mimeTypes: string[];
+    replaceWith: boolean;
+    pickSmaller: boolean;
 }

@@ -138,7 +138,7 @@ squared.settings = {
     supportRTL: true,
     preloadImages: true,
     compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
-    convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff - (optional: %png chooses smaller file)
+    convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff
     supportNegativeLeftTop: true,
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
@@ -164,8 +164,15 @@ squared.settings = {
 ```javascript
 squared.settings = {
     builtInExtensions: [ // default is none
+        'chrome.compress.png',
+        'chrome.compress.jpeg',
         'chrome.compress.brotli',
-        'chrome.compress.gzip'
+        'chrome.compress.gzip',
+        'chrome.convert.png',
+        'chrome.convert.jpeg',
+        'chrome.convert.bmp',
+        'chrome.convert.gif', // squared-apache: gif | tiff
+        'chrome.convert.tiff'
     ],
     preloadImages: false,
     compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>

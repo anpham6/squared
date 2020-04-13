@@ -1,5 +1,5 @@
 import { FileActionOptions, UserSettings } from './base/application';
-import { BackgroundPositionOptions, CalculateOptions, CalculateVarAsStringOptions, CalculateVarOptions, ContainerOptions, ContainerFindOptions, DelimitStringOptions, FormatOrAll, KeyframesData } from './lib/squared';
+import { BackgroundPositionOptions, CalculateOptions, CalculateVarAsStringOptions, CalculateVarOptions, ContainerOptions, ContainerFindOptions, DelimitStringOptions, MIMEOrAll, KeyframesData } from './lib/squared';
 
 type ExtensionRequest = string | squared.base.Extension<squared.base.Node>;
 
@@ -144,7 +144,6 @@ export namespace lib {
 
     namespace dom {
         const ELEMENT_BLOCK: string[];
-
         function newBoxRect(): BoxRect;
         function newBoxRectDimension(): BoxRectDimension;
         function newBoxModel(): BoxModel;
@@ -268,7 +267,7 @@ export namespace lib {
     }
 
     namespace util {
-        function hasMimeType(formats: FormatOrAll, value: string): boolean;
+        function hasMimeType(formats: MIMEOrAll, value: string): boolean;
         function parseMimeType(value: string): string;
         function fromMimeType(value: string): string;
         function capitalize(value: string, upper?: boolean): string;

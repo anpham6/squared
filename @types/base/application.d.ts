@@ -1,4 +1,4 @@
-import { FormatOrAll } from '../lib/squared';
+import { MIMEOrAll } from '../lib/squared';
 import { LayoutUI, NodeUI } from './squared';
 import { FileAsset, FileExclude } from './file';
 
@@ -27,10 +27,10 @@ export interface UserUISettings extends UserSettings {
 
 export interface ControllerSettings {
     mimeType: {
-        font: FormatOrAll;
-        image: FormatOrAll;
-        audio: FormatOrAll;
-        video: FormatOrAll;
+        font: MIMEOrAll;
+        image: MIMEOrAll;
+        audio: MIMEOrAll;
+        video: MIMEOrAll;
     };
 }
 

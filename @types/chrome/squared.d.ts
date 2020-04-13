@@ -36,13 +36,13 @@ declare namespace base {
         application: Application<T>;
         readonly userSettings: UserSettingsChrome;
         readonly outputFileExclusions: RegExp[];
-        getHtmlPage(name?: string): ChromeAsset[];
-        getScriptAssets(): ChromeAsset[];
-        getLinkAssets(): ChromeAsset[];
-        getImageAssets(): ChromeAsset[];
-        getVideoAssets(): ChromeAsset[];
-        getAudioAssets(): ChromeAsset[];
-        getFontAssets(): ChromeAsset[];
+        getHtmlPage(name?: string, ignoreExtensions?: boolean): ChromeAsset[];
+        getScriptAssets(ignoreExtensions?: boolean): ChromeAsset[];
+        getLinkAssets(rel?: string, ignoreExtensions?: boolean): ChromeAsset[];
+        getImageAssets(ignoreExtensions?: boolean): ChromeAsset[];
+        getVideoAssets(ignoreExtensions?: boolean): ChromeAsset[];
+        getAudioAssets(ignoreExtensions?: boolean): ChromeAsset[];
+        getFontAssets(ignoreExtensions?: boolean): ChromeAsset[];
     }
 
     class Extension<T extends View> extends squared.base.Extension<T> {
@@ -61,6 +61,15 @@ declare namespace extensions {
     namespace compress {
         class Brotli<T extends View> extends squared.base.Extension<T> {}
         class Gzip<T extends View> extends squared.base.Extension<T> {}
+        class Jpeg<T extends View> extends squared.base.Extension<T> {}
+        class Png<T extends View> extends squared.base.Extension<T> {}
+    }
+    namespace convert {
+        class Bmp<T extends View> extends squared.base.Extension<T> {}
+        class Gif<T extends View> extends squared.base.Extension<T> {}
+        class Jpeg<T extends View> extends squared.base.Extension<T> {}
+        class Png<T extends View> extends squared.base.Extension<T> {}
+        class Tiff<T extends View> extends squared.base.Extension<T> {}
     }
 }
 

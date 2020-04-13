@@ -1,4 +1,4 @@
-import { DelimitStringOptions, FormatOrAll } from '../../@types/lib/squared';
+import { DelimitStringOptions, MIMEOrAll } from '../../@types/lib/squared';
 
 import { CHAR, COMPONENT, UNIT, XML } from './regex';
 
@@ -13,7 +13,7 @@ const NUMERALS = [
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
 
-export function hasMimeType(formats: FormatOrAll, value: string) {
+export function hasMimeType(formats: MIMEOrAll, value: string) {
     return formats === '*' || formats.includes(parseMimeType(value));
 }
 

@@ -6,7 +6,7 @@ import { Asset, FileAsset, ImageAsset, RawAsset } from './file';
 
 import { CssGridData, CssGridDirectionData, GridCellData } from './extension';
 
-import { FontFaceData, FormatOrAll } from '../lib/squared';
+import { FontFaceData, MIMEOrAll } from '../lib/squared';
 
 declare interface FileActions {
     copyToDisk(directory: string, options?: FileActionOptions): void;
@@ -145,7 +145,7 @@ declare class Resource<T extends Node> implements Resource<T> {
     readonly application: Application<T>;
     readonly cache: NodeList<T>;
     readonly userSettings: UserSettings;
-    readonly mimeTypeMap: ObjectMap<FormatOrAll>;
+    readonly mimeTypeMap: ObjectMap<MIMEOrAll>;
     readonly fileSeparator?: string;
     reset(): void;
     addImage(element: Undef<HTMLImageElement>): void;

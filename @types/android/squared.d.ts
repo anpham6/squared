@@ -1,4 +1,4 @@
-import { FormatOrAll } from '../lib/squared';
+import { MIMEOrAll } from '../lib/squared';
 import { FileAsset } from '../base/file';
 import { AppViewModelAndroid } from './internal';
 import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
@@ -43,7 +43,7 @@ declare namespace base {
         public static formatName(value: string): string;
         public static addTheme(theme: StyleAttribute, path?: string, file?: string): boolean;
         public static addString(value: string, name?: string, numberAlias?: boolean): string;
-        public static addImage(images: StringMap, prefix?: string, imageFormat?: FormatOrAll): string;
+        public static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
         public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;

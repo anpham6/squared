@@ -1,4 +1,4 @@
-import { FormatOrAll } from '../../@types/lib/squared';
+import { MIMEOrAll } from '../../@types/lib/squared';
 import { ResourceStoredMapAndroid, StyleAttribute } from '../../@types/android/application';
 import { ViewAttribute } from '../../@types/android/node';
 
@@ -167,7 +167,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return '';
     }
 
-    public static addImage(images: StringMap, prefix = '', imageFormat?: FormatOrAll) {
+    public static addImage(images: StringMap, prefix = '', imageFormat?: MIMEOrAll) {
         const mdpi = images.mdpi;
         if (mdpi) {
             if (Object.keys(images).length === 1) {

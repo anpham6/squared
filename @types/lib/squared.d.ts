@@ -1,7 +1,7 @@
 
 export interface KeyframesData extends ObjectMap<StringMap> {}
 
-export type FormatOrAll = string[] | "*";
+export type MIMEOrAll = string[] | "*";
 
 export interface FontFaceData {
     fontFamily: string;
