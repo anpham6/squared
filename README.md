@@ -138,7 +138,7 @@ squared.settings = {
     supportRTL: true,
     preloadImages: true,
     compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
-    convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff
+    convertImages: '', // png | jpeg | bmp | squared-apache: gif | tiff - (optional: %png chooses smaller file)
     supportNegativeLeftTop: true,
     exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
@@ -615,7 +615,7 @@ const options = {
     ]
 };
 ```
-Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package.
+Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files.
 
 ### ALL: User Written HTML
 

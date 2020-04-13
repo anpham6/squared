@@ -3,8 +3,8 @@
 build/
 node_modules/
 temp/
-*.zip
-.DS_Store
 *.code-workspace
 package-lock.json
 app.js
+*.zip
+.DS_Store

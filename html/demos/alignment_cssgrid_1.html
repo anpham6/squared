@@ -51,6 +51,7 @@
             color: #757575;
         }
         .cards {
+            background-image: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg);
             display: grid;
             grid-template-columns: 2fr 1fr 1fr;
             grid-gap: 10px;
@@ -158,39 +159,46 @@
                 squared.base = result;
                 System.import('/build/android-framework/src/main.js').then(result => {
                     android = result.default;
-                    squared.setFramework(android);
-                    squared.parseDocument().then(() => {
-                        squared.saveToArchive('jimp', {
-                            callback: result => {
-                                console.log(result);
-                            },
-                            assets: [
-                                {
-                                    pathname: 'images',
-                                    filename: 'swatch.jpg',
-                                    mimeType: '@png:image/jpeg',
-                                    compress: [{ format: 'jpeg', level: 50 }],
-                                    uri: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/swatch.jpg'
+                    System.import('/build/chrome-framework/src/main.js').then(result => {
+                        chrome = result.default;
+                        squared.setFramework(android);
+                        squared.parseDocument().then(() => {
+                            squared.saveToArchive('jimp', {
+                                callback: result => {
+                                    console.log(result);
                                 },
-                                {
-                                    pathname: 'images',
-                                    filename: 'swatch.jpg',
-                                    mimeType: 'bmp:image/jpeg',
-                                    uri: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/swatch.jpg'
-                                },
-                                {
-                                    pathname: 'images',
-                                    filename: 'pencil.png',
-                                    mimeType: 'jpeg:image/png',
-                                    uri: 'http://localhost:3000/demos/images/pencil.png'
-                                },
-                                {
-                                    pathname: 'images',
-                                    filename: 'pencil.png',
-                                    mimeType: 'bmp:image/png',
-                                    uri: 'http://localhost:3000/demos/images/pencil.png'
-                                }
-                            ]
+                                assets: [
+                                    {
+                                        pathname: 'images',
+                                        filename: 'swatch.jpg',
+                                        mimeType: '%png:image/jpeg',
+                                        compress: [{ format: 'jpeg', level: 50 }],
+                                        uri: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/swatch.jpg'
+                                    },
+                                    {
+                                        pathname: 'images',
+                                        filename: 'swatch.jpg',
+                                        mimeType: '%bmp:image/jpeg',
+                                        uri: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/swatch.jpg'
+                                    },
+                                    {
+                                        pathname: 'images',
+                                        filename: 'pencil.png',
+                                        mimeType: '%jpeg:image/png',
+                                        uri: 'http://localhost:3000/demos/images/pencil.png'
+                                    },
+                                    {
+                                        pathname: 'images',
+                                        filename: 'pencil.png',
+                                        mimeType: '%bmp:image/png',
+                                        uri: 'http://localhost:3000/demos/images/pencil.png'
+                                    }
+                                ]
+                            });
+                            squared.setFramework(chrome);
+                            squared.settings.preloadImages = false;
+                            squared.settings.outputFileExclusions = ['android.framework.js', 'chrome.framework.js'];
+                            squared.system.saveAsWebPage();
                         });
                     });
                 });

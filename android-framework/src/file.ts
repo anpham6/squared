@@ -52,9 +52,13 @@ function getFileAssets(pathname: string, items: string[]) {
 function getImageAssets(pathname: string, items: string[], convertExt: string, compress: boolean) {
     const length = items.length;
     if (length) {
-        let convertMimeType = parseMimeType(convertExt.toLowerCase());
+        convertExt = convertExt.toLowerCase();
+        let convertMimeType = parseMimeType(convertExt);
         if (!convertMimeType.startsWith('image/')) {
             convertMimeType = '';
+        }
+        if (!/^[a-z\d]/.test(convertExt)) {
+            convertExt = '@' + convertExt;
         }
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
@@ -63,7 +67,7 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
             if (convertMimeType !== '') {
                 const fileMimeType = parseMimeType(filename);
                 if (fileMimeType.startsWith('image/') && fileMimeType !== convertMimeType) {
-                    mimeType = `@${convertExt}:${fileMimeType}`;
+                    mimeType = convertExt + ':' + fileMimeType;
                 }
             }
             result[j++] = {

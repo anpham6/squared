@@ -13,8 +13,10 @@ import jimp = require('jimp');
 import tinify = require('tinify');
 
 interface AsyncStatus {
+    archiving: boolean;
     delayed: number;
     filesToRemove: string[];
+    filesToCompare: string[];
 }
 
 interface CompressOutput {
@@ -142,7 +144,7 @@ function createBrotliWriteStream(source: string, filename: string, quality?: num
                 params: {
                     [zlib.constants.BROTLI_PARAM_MODE]: /text\//.test(mimeType) ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
                     [zlib.constants.BROTLI_PARAM_QUALITY]: quality !== undefined ? quality : BROTLI_QUALITY,
-                    [zlib.constants.BROTLI_PARAM_SIZE_HINT]: fs.statSync(source).size
+                    [zlib.constants.BROTLI_PARAM_SIZE_HINT]: getFileSize(source)
                 }
             })
         )
@@ -179,7 +181,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 if (item !== file && item.href) {
                     const separator = item.href.indexOf('\\') !== -1 ? '\\' : '/';
                     const location = appendSeparator(item.pathname, item.filename, separator);
-                    const value = `"${pathJoinForward(item.moveTo || '', location)}"`;
+                    const value = pathJoinForward(item.moveTo || '', location);
                     if (item.rootDir) {
                         html = replacePathName(html, item.rootDir + location, value);
                     }
@@ -194,7 +196,8 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
         }
     }
     const replace = mimeType.charAt(0) === '@';
-    if (/^@?png:image\//.test(mimeType)) {
+    const smaller = mimeType.charAt(0) === '%';
+    if (/^[@%]?png:image\//.test(mimeType)) {
         if (!mimeType.endsWith('/png')) {
             status.delayed++;
             jimp.read(filepath)
@@ -207,6 +210,9 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                         else {
                             if (replace) {
                                 status.filesToRemove.push(filepath);
+                            }
+                            else if (smaller) {
+                                status.filesToCompare.push(filepath, png);
                             }
                             if (hasCompressPng(file.compress)) {
                                 compressImage(png, finalize);
@@ -222,7 +228,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 });
         }
     }
-    else if (/^@?jpeg:image\//.test(mimeType)) {
+    else if (/^[@%]?jpeg:image\//.test(mimeType)) {
         if (!mimeType.endsWith('/jpeg')) {
             status.delayed++;
             jimp.read(filepath)
@@ -235,6 +241,9 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                         else {
                             if (replace) {
                                 status.filesToRemove.push(filepath);
+                            }
+                            else if (smaller) {
+                                status.filesToCompare.push(filepath, jpg);
                             }
                             if (hasCompressPng(file.compress)) {
                                 compressImage(jpg, finalize);
@@ -250,7 +259,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 });
         }
     }
-    else if (/^@?bmp:image\//.test(mimeType)) {
+    else if (/^[@%]?bmp:image\//.test(mimeType)) {
         if (!mimeType.endsWith('/bmp')) {
             status.delayed++;
             jimp.read(filepath)
@@ -262,6 +271,9 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                         }
                         else if (replace) {
                             status.filesToRemove.push(filepath);
+                        }
+                        else if (smaller) {
+                            status.filesToCompare.push(filepath, bmp);
                         }
                         finalize(bmp);
                     });
@@ -435,7 +447,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 delete processing[filepath];
             };
             try {
-                if (isURIFile(uri)) {
+                if (isFileURI(uri)) {
                     if (checkQueue()) {
                         return;
                     }
@@ -473,7 +485,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                             }
                         );
                     };
-                    if (isUNCFile(uri)) {
+                    if (isFileUNC(uri)) {
                         if (UNC_READ) {
                             if (checkQueue()) {
                                 return;
@@ -526,20 +538,55 @@ function removeCompressionFormat(file: RequestAsset, format: string) {
     }
 }
 
+function removeUnusedFiles(dirname: string, status: AsyncStatus, files: Set<string>) {
+    const { filesToCompare, filesToRemove } = status;
+    const length = filesToCompare.length;
+    for (let i = 0; i < length; i += 2) {
+        const original = filesToCompare[i];
+        const transformed = filesToCompare[i + 1];
+        const smaller = getFileSize(original) > getFileSize(transformed) ? original : transformed;
+        if (!filesToRemove.includes(smaller)) {
+            filesToRemove.push(smaller);
+        }
+    }
+    filesToRemove.forEach(value => {
+        try {
+            fs.unlink(value);
+            files.delete(value.substring(dirname.length + 1));
+        }
+        catch (err) {
+            writeError(value, err);
+        }
+    });
+}
+
+function replacePathName(source: string, segment: string, value: string) {
+    let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])\\s*=\\s*["']\\s*${segment}\\s*["']`, 'g');
+    let match: RegExpExecArray | null = null;
+    while ((match = pattern.exec(source)) !== null) {
+        source = source.replace(match[0], match[1].toLowerCase() + '="' + value + '"');
+    }
+    pattern = new RegExp(`url\\(\\s*["']?\\s*${segment}\\s*["']?\\s*\\)`, 'g');
+    while ((match = pattern.exec(source)) !== null) {
+        source = source.replace(match[0], `url(${value})`);
+    }
+    return source;
+}
+
 const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
-const replacePathName = (source: string, segment: string, value: string) => source.replace(new RegExp(`["']\\s*${segment}\\s*["']`, 'g'), value);
 const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
 const pathJoinForward = (leading: string, trailing: string) => path.join(leading, trailing).replace(/\\/g, '/');
-const getCompressFormat = (compress: CompressionFormat[] | undefined, format: string) => compress && compress.find(item => item.format === format);
-const isURIFile = (value: string) => /^[A-Za-z]{3,}:\/\//.test(value);
-const isUNCDirectory = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
-const isUNCFile = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
+const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value);
+const isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
+const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
 const hasCompressPng = (compress: CompressionFormat[] | undefined) => TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
+const getCompressFormat = (compress: CompressionFormat[] | undefined, format: string) => compress && compress.find(item => item.format === format);
+const getFileSize = (filepath: string) => fs.statSync(filepath).size;
 
 app.post('/api/assets/copy', (req, res) => {
     const dirname = path.normalize(req.query.to as string);
     if (dirname) {
-        if (isUNCDirectory(dirname)) {
+        if (isDirectoryUNC(dirname)) {
             if (!UNC_WRITE) {
                 res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
                 return;
@@ -563,8 +610,10 @@ app.post('/api/assets/copy', (req, res) => {
         }
         const files = new Set<string>();
         const status: AsyncStatus = {
+            archiving: false,
             delayed: 0,
-            filesToRemove: []
+            filesToRemove: [],
+            filesToCompare: []
         };
         let cleared = false;
         const finalize = (filepath?: string) => {
@@ -572,17 +621,10 @@ app.post('/api/assets/copy', (req, res) => {
                 return;
             }
             if (filepath) {
-                files.add(filepath);
+                files.add(filepath.substring(dirname.length + 1));
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
-                status.filesToRemove.forEach(value => {
-                    try {
-                        fs.unlink(value);
-                    }
-                    catch (err) {
-                        writeError(value, err);
-                    }
-                });
+                removeUnusedFiles(dirname, status, files);
                 res.json({ success: status.delayed === 0, directory: dirname, files: Array.from(files) });
                 status.delayed = Number.POSITIVE_INFINITY;
             }
@@ -632,8 +674,10 @@ app.post('/api/assets/archive', (req, res) => {
     }
     const files = new Set<string>();
     const status: AsyncStatus = {
+        archiving: true,
         delayed: 0,
-        filesToRemove: []
+        filesToRemove: [],
+        filesToCompare: []
     };
     let success = false;
     let cleared = false;
@@ -650,7 +694,7 @@ app.post('/api/assets/archive', (req, res) => {
                 createGzipWriteStream(zipname, gz)
                     .on('finish', () => {
                         response.zipname = gz;
-                        response.bytes = fs.statSync(gz).size;
+                        response.bytes = getFileSize(gz);
                         res.json(response);
                     })
                     .on('error', err => {
@@ -674,14 +718,7 @@ app.post('/api/assets/archive', (req, res) => {
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
                 success = status.delayed === 0;
-                status.filesToRemove.forEach(value => {
-                    try {
-                        fs.unlinkSync(value);
-                    }
-                    catch (err) {
-                        writeError(value, err);
-                    }
-                });
+                removeUnusedFiles(dirname, status, files);
                 archive.directory(dirname, false);
                 archive.finalize();
             }
@@ -724,7 +761,7 @@ app.post('/api/assets/archive', (req, res) => {
                             resumeThread();
                         });
                 };
-                if (isURIFile(append_to)) {
+                if (isFileURI(append_to)) {
                     const stream = fs.createWriteStream(zippath);
                     stream.on('finish', copySuccess);
                     request(append_to)
@@ -738,7 +775,7 @@ app.post('/api/assets/archive', (req, res) => {
                         .pipe(stream);
                 }
                 else if (fs.existsSync(append_to)) {
-                    if (isUNCFile(append_to)) {
+                    if (isFileUNC(append_to)) {
                         if (!UNC_READ) {
                             res.json({ application: 'OPTION: --unc-read', system: 'Reading from UNC shares is not enabled.' });
                             return;
