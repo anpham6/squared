@@ -4,7 +4,6 @@ const settings: UserSettingsChrome = {
     builtInExtensions: [],
     preloadImages: false,
     compressImages: false,
-    handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,
     excludePlainText: true,

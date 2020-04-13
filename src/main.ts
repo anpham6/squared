@@ -18,9 +18,10 @@ type Application = squared.base.Application<Node>;
 type Extension = squared.base.Extension<Node>;
 type ExtensionRequest = Null<Extension | string>;
 
-const extensionsAsync = new Set<Extension>();
-const optionsAsync = new Map<string, StandardMap>();
+const extensionsQueue = new Set<Extension>();
+const optionsQueue = new Map<string, StandardMap>();
 const settings = <UserSettings> {};
+const extensionsExternal = new Set<Extension>();
 const system = <FunctionMap<any>> {};
 let main: Undef<Application>;
 let framework: AppFramework<Node>;
@@ -79,17 +80,15 @@ export function setViewModel(data?: {}) {
 
 export function parseDocument(...elements: (HTMLElement | string)[]): PromiseObject {
     if (main) {
-        if (settings.handleExtensionsAsync) {
-            const extensionManager = main.extensionManager;
-            for (const item of extensionsAsync) {
-                extensionManager.include(item);
-            }
-            for (const [name, options] of optionsAsync.entries()) {
-                configure(name, options);
-            }
-            extensionsAsync.clear();
-            optionsAsync.clear();
+        const extensionManager = main.extensionManager;
+        for (const item of extensionsQueue) {
+            extensionManager.include(item);
         }
+        for (const [name, options] of optionsQueue.entries()) {
+            configure(name, options);
+        }
+        extensionsQueue.clear();
+        optionsQueue.clear();
         if (!main.closed) {
             return main.parseDocument(...elements);
         }
@@ -123,23 +122,14 @@ export function include(value: ExtensionRequest, options?: {}) {
             value = value.trim();
             value = main.builtInExtensions[value] || retrieve(value);
         }
-        if (value instanceof squared.base.Extension && main.extensionManager.include(value)) {
+        if (value instanceof squared.base.Extension) {
+            extensionsExternal.add(value);
+            if (!main.extensionManager.include(value)) {
+                extensionsQueue.add(value);
+            }
             if (options) {
                 configure(value, options);
             }
-            return true;
-        }
-    }
-    return false;
-}
-
-export function includeAsync(value: ExtensionRequest, options?: {}) {
-    if (include(value, options)) {
-        return true;
-    }
-    else if (value instanceof squared.base.Extension) {
-        extensionsAsync.add(value);
-        if (settings.handleExtensionsAsync) {
             return true;
         }
     }
@@ -153,7 +143,8 @@ export function exclude(value: ExtensionRequest) {
             value = extensionManager.retrieve(value.trim());
         }
         if (value instanceof squared.base.Extension) {
-            extensionsAsync.delete(value);
+            extensionsQueue.delete(value);
+            extensionsExternal.delete(value);
             return extensionManager.exclude(value);
         }
     }
@@ -165,16 +156,14 @@ export function configure(value: ExtensionRequest, options: {}) {
         if (typeof value === 'string') {
             if (main) {
                 value = value.trim();
-                const extension = main.extensionManager.retrieve(value) || util.findSet(extensionsAsync, item => item.name === value);
+                const extension = main.extensionManager.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
                 if (extension) {
                     Object.assign(extension.options, options);
                     return true;
                 }
                 else {
-                    optionsAsync.set(value, options);
-                    if (settings.handleExtensionsAsync) {
-                        return true;
-                    }
+                    optionsQueue.set(value, options);
+                    return true;
                 }
             }
         }
@@ -187,7 +176,18 @@ export function configure(value: ExtensionRequest, options: {}) {
 }
 
 export function retrieve(value: string) {
-    return main?.extensionManager.retrieve(value) || null;
+    let result: Null<Extension> = null;
+    if (main) {
+        result = main.extensionManager.retrieve(value);
+        if (result === null) {
+            for (const ext of extensionsExternal) {
+                if (ext.name === value) {
+                    return ext;
+                }
+            }
+        }
+    }
+    return result;
 }
 
 export function reset() {

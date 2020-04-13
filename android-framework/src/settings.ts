@@ -46,7 +46,6 @@ const settings: UserSettingsAndroid = {
     createQuerySelectorMap: false,
     convertPixels: 'dp',
     insertSpaces: 4,
-    handleExtensionsAsync: true,
     autoCloseOnWrite: true,
     showErrorMessages: true,
     manifestLabelAppName: 'android',

@@ -5,7 +5,6 @@ import { FileAsset, FileExclude } from './file';
 export interface UserSettings {
     builtInExtensions: string[];
     preloadImages: boolean;
-    handleExtensionsAsync: boolean;
     showErrorMessages: boolean;
     createQuerySelectorMap: boolean;
     outputEmptyCopyDirectory: boolean;

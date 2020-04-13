@@ -146,7 +146,6 @@ squared.settings = {
     createQuerySelectorMap: false,
     convertPixels: 'dp',
     insertSpaces: 4,
-    handleExtensionsAsync: true,
     autoCloseOnWrite: true,
     showErrorMessages: true,
     manifestLabelAppName: 'android',
@@ -176,7 +175,6 @@ squared.settings = {
     ],
     preloadImages: false,
     compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
-    handleExtensionsAsync: true,
     showErrorMessages: false,
     createQuerySelectorMap: true,
     excludePlainText: true,
@@ -377,11 +375,6 @@ CSS Grid and Flexbox layouts are are for the most part fully supported. There is
 <script src="/dist/extensions/android.widget.menu.min.js"></script>
 <script src="/dist/extensions/android.widget.toolbar.min.js"></script>
 <script>
-    // required when handleExtensionsAsync = false
-    squared.include(android.widget.coordinator);
-    squared.include(android.widget.menu);
-    squared.include(android.widget.toolbar);
-
     // configure an extension
     squared.configure('android.widget.toolbar', { // optional: default configuration is usually provided
         'elementId': { // HTML DOM
