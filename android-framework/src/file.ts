@@ -62,7 +62,7 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
         }
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
-            const filename = items[i + 2].split('?')[0].trim();
+            const filename = items[i + 2].split('?')[0].trim().toLowerCase();
             let mimeType: Undef<string>;
             if (convertMimeType !== '') {
                 const fileMimeType = parseMimeType(filename);
@@ -90,7 +90,7 @@ function getRawAssets(pathname: string, items: string[]) {
         for (let i = 0, j = 0; i < length; i += 3) {
             result[j++] = {
                 pathname,
-                filename: items[i + 2],
+                filename: items[i + 2].toLowerCase(),
                 mimeType: items[i + 1],
                 uri: items[i]
             };

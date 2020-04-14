@@ -181,7 +181,8 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                         delete android.id;
                     }
                     collapsingToolbarNode.setControlType(collapsingToolbarName, CONTAINER_NODE.BLOCK);
-                    collapsingToolbarNode.each(item => item.dataset.target = (collapsingToolbarNode as T).controlId);
+                    const controlId = collapsingToolbarNode.controlId;
+                    collapsingToolbarNode.each(item => item.dataset.target = controlId);
                 }
             }
         }

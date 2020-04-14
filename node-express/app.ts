@@ -131,7 +131,7 @@ function getCompressOutput(file: RequestAsset): CompressOutput {
 function createGzipWriteStream(source: string, filename: string, level?: number) {
     const o = fs.createWriteStream(filename);
     fs.createReadStream(source)
-        .pipe(zlib.createGzip({ level: level !== undefined ? level : GZIP_LEVEL }))
+        .pipe(zlib.createGzip({ level: level || GZIP_LEVEL }))
         .pipe(o);
     return o;
 }
@@ -143,7 +143,7 @@ function createBrotliWriteStream(source: string, filename: string, quality?: num
             zlib.createBrotliCompress({
                 params: {
                     [zlib.constants.BROTLI_PARAM_MODE]: /text\//.test(mimeType) ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
-                    [zlib.constants.BROTLI_PARAM_QUALITY]: quality !== undefined ? quality : BROTLI_QUALITY,
+                    [zlib.constants.BROTLI_PARAM_QUALITY]: quality || BROTLI_QUALITY,
                     [zlib.constants.BROTLI_PARAM_SIZE_HINT]: getFileSize(source)
                 }
             })
@@ -175,6 +175,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
     }
     switch (mimeType) {
         case '@text/html':
+        case '@text/css':
         case '@application/xhtml+xml': {
             let html = fs.readFileSync(filepath).toString('utf8');
             assets.forEach(item => {

@@ -33,10 +33,10 @@ export default class Application<T extends chrome.base.View> extends squared.bas
         return this.createNode({ element });
     }
 
-    public afterCreateCache() {
+    public afterCreateCache(node: T) {
         switch (this.queryState) {
             case APP_QUERYSTATE.SINGLE:
-                (<chrome.base.Controller<T>> this.controllerHandler).cacheElement(this.processing.node as T);
+                (<chrome.base.Controller<T>> this.controllerHandler).cacheElement(node);
                 break;
             default:
                 (<chrome.base.Controller<T>> this.controllerHandler).cacheElementList(this.processing.cache);

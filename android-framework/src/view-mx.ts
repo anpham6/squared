@@ -87,10 +87,11 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
         setMultiline(node, lineHeight, false);
     }
     else {
-        const setBoxPadding = (offset: number, padded = false) => {
+        const height = node.height;
+        const setBoxPadding = (offset: number, padding = false) => {
             let upper = Math.round(offset);
             if (upper > 0) {
-                const boxPadding = inlineStyle && (node.styleText || padded) && !node.inline && !(node.inputElement && !isLength(styleValue, true));
+                const boxPadding = (inlineStyle || height > lineHeight) && (node.styleText || padding) && !node.inline && !(node.inputElement && !isLength(styleValue, true));
                 if (top) {
                     if (boxPadding) {
                         if (upper > 0) {
@@ -120,7 +121,6 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                 }
             }
         };
-        const height = node.height;
         if (lineHeight === height) {
             node.mergeGravity('gravity', 'center_vertical', false);
         }

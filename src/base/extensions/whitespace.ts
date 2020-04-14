@@ -423,7 +423,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     }
                                                 }
                                                 if (childBottom !== 0) {
-                                                    resetBox(bottomChild, BOX_STANDARD.MARGIN_BOTTOM, previous);
+                                                    resetBox(bottomChild, BOX_STANDARD.MARGIN_BOTTOM, previous.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0 ? previous : undefined);
                                                 }
                                                 if (childBottom > marginBottom) {
                                                     marginBottom = childBottom;
@@ -473,7 +473,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     }
                                                 }
                                                 if (childTop !== 0) {
-                                                    resetBox(topChild, BOX_STANDARD.MARGIN_TOP, current);
+                                                    resetBox(topChild, BOX_STANDARD.MARGIN_TOP, current.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? current : undefined);
                                                 }
                                                 if (childTop > marginTop) {
                                                     marginTop = childTop;
@@ -694,7 +694,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                     else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE') {
-                        if (!actualParent.documentRoot && actualParent.ascend({ condition: item => item.documentRoot, attr: 'outerWrapper' }).length === 0) {
+                        if (!actualParent.originalRoot) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
                             const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
                             const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);

@@ -1,6 +1,14 @@
 import { terser } from 'rollup-plugin-terser';
 import async from 'rollup-plugin-async';
 
+const options = {
+    compress: {
+        loops: false,
+        booleans: false,
+        keep_classnames: true
+    }
+};
+
 export default [
     {
         input: './build/src/main.js',
@@ -11,13 +19,8 @@ export default [
             format: 'umd'
         },
         plugins: [
-            terser({
-                compress: {
-                    loops: false,
-                    booleans: false,
-                    keep_classnames: true
-                }
-            })
+            async(),
+            terser(options)
         ]
     },
     {
@@ -30,13 +33,7 @@ export default [
         },
         plugins: [
             async(),
-            terser({
-                compress: {
-                    loops: false,
-                    booleans: false,
-                    keep_classnames: true
-                }
-            })
+            terser(options)
         ]
     },
     {
@@ -48,13 +45,7 @@ export default [
             format: 'umd'
         },
         plugins: [
-            terser({
-                compress: {
-                    loops: false,
-                    booleans: false,
-                    keep_classnames: true
-                }
-            })
+            terser(options)
         ]
     }
 ];

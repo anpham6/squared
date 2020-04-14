@@ -219,7 +219,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         continue;
                     }
                 }
-                const layoutName = node.innerMostWrapped.dataset.layoutName;
+                const layoutName = node.innerMostWrapped.data(Application.KEY_NAME, 'layoutName');
                 if (layoutName) {
                     documentRoot.push({ node, layoutName });
                 }
@@ -536,19 +536,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             });
             controllerHandler.evaluateNonStatic(node, cache);
             controllerHandler.sortInitialCache();
-            return true;
         }
-        return false;
+        return node;
     }
 
-    public afterCreateCache(element: HTMLElement) {
-        const dataset = element.dataset;
+    public afterCreateCache(node: T) {
+        const dataset = node.dataset;
         const { filename, iteration } = dataset;
-        const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._controllerSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
+        const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._controllerSettings.layout.fileExtension}$`), '') || node.elementId || `document_${this.length}`;
         const postfix = (iteration ? parseInt(iteration) : -1) + 1;
-        const layoutName = convertWord(postfix > 1 ? `${prefix}_${postfix}` : prefix, true);
+        const layoutName = convertWord(postfix > 0 ? `${prefix}_${postfix}` : prefix, true);
         dataset.iteration = postfix.toString();
         dataset.layoutName = layoutName;
+        node.data(Application.KEY_NAME, 'layoutName', layoutName);
         this.setBaseLayout();
         this.setConstraints();
         this.setResources();
@@ -667,8 +667,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.naturalChildren = children;
             node.naturalElements = elements;
             this.cacheNodeChildren(node, children, inlineText);
-            if (this.userSettings.createQuerySelectorMap && k > 0) {
-                node.queryMap = this.createQueryMap(elements);
+            if (k > 0 && this.userSettings.createQuerySelectorMap) {
+                node.queryMap = this.createQueryMap(elements, k);
             }
         }
         return node;

@@ -639,13 +639,7 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
                 return 0;
         }
         const width = node.css(border[1]);
-        let result: number;
-        if (isLength(width, true)) {
-            result = node.parseUnit(width, dimension);
-        }
-        else {
-            result = convertFloat(node.style[border[1]]);
-        }
+        const result = isLength(width, true) ? node.parseUnit(width, dimension) : convertFloat(node.style[border[1]]);
         if (result > 0) {
             return Math.max(Math.round(result), 1);
         }
@@ -2917,6 +2911,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._textStyle;
         if (result === undefined) {
             result = this.cssAsObject(...TEXT_STYLE);
+            result.fontSize = this.fontSize + 'px';
             this._textStyle = result;
         }
         return result;

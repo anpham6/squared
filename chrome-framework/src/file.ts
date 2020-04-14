@@ -158,7 +158,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
                     data.uri = uri;
-                    data.mimeType = element.type.trim() || parseMimeType(uri);
+                    data.mimeType = element.type.trim() || parseMimeType(uri) || 'text/javascript';
                     if (!ignoreExtensions) {
                         processExtensions.bind(this, data)();
                     }
@@ -345,12 +345,20 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     protected getAssetsAll(options: FileArchivingOptionsChrome = {}) {
         const { name, rel } = options;
         const saveAsWebPage = options.saveAsWebPage === true;
-        const result = this.getHtmlPage(name, saveAsWebPage);
-        if (saveAsWebPage && result.length) {
-            result[0].mimeType = '@' + result[0].mimeType;
+        const result = this.getHtmlPage(name, saveAsWebPage).concat(this.getLinkAssets(rel, saveAsWebPage));
+        if (saveAsWebPage) {
+            result.forEach(item => {
+                const mimeType = item.mimeType;
+                switch (mimeType) {
+                    case 'text/html':
+                    case 'text/css':
+                    case 'application/xhtml+xml':
+                        item.mimeType = '@' + mimeType;
+                        break;
+                }
+            });
         }
         return result.concat(this.getScriptAssets(saveAsWebPage))
-            .concat(this.getLinkAssets(rel, saveAsWebPage))
             .concat(this.getImageAssets(saveAsWebPage))
             .concat(this.getVideoAssets(saveAsWebPage))
             .concat(this.getAudioAssets(saveAsWebPage))

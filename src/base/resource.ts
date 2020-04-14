@@ -9,6 +9,7 @@ const { extractURL } = $lib.css;
 const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = $lib.util;
 
 export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
+    public static KEY_NAME = 'squared.resource';
     public static ASSETS: ResourceAssetMap = {
         ids: new Map(),
         fonts: new Map(),
@@ -89,7 +90,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {
             const origin = location.origin;
             const ext = fromMimeType(mimeType);
-            const filename = uri.endsWith('.' + ext) ? fromLastIndexOf(uri, '/') : randomUUID(this.fileSeparator) + '.' + ext;
+            const filename = uri.endsWith('.' + ext) ? fromLastIndexOf(uri, '/') : this.randomUUID + '.' + ext;
             Resource.ASSETS.rawData.set(uri, {
                 pathname: uri.startsWith(origin) ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '',
                 filename,
@@ -142,5 +143,9 @@ export default abstract class Resource<T extends squared.base.Node> implements s
 
     get mimeTypeMap() {
         return this.controllerSettings.mimeType;
+    }
+
+    get randomUUID() {
+        return randomUUID();
     }
 }

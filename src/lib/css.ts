@@ -1209,7 +1209,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         }
         case 'background':
         case 'gridTemplate':
-            break;
+            return getStyle(element)[attr];
         default:
             if (attr.endsWith('Color')) {
                 return calculateColor(element, value.trim());

@@ -11,7 +11,7 @@ const $lib = squared.lib;
 const { findColorShade, parseColor } = $lib.color;
 const { extractURL, getSrcSet } = $lib.css;
 const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
-const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = $lib.util;
+const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, randomUUID, resolvePath, safeNestedArray, spliceArray, trimString } = $lib.util;
 
 const STORED = <ResourceStoredMapAndroid> squared.base.ResourceUI.STORED;
 const REGEX_NONWORD = /[^\w+]/g;
@@ -178,7 +178,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             }
             const src = fromLastIndexOf(mdpi, '/');
             if (!imageFormat || hasMimeType(imageFormat, src)) {
-                const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - fromLastIndexOf(src, '.').length - 1)), images);
+                const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - fromLastIndexOf(src, '.').length - 1)).toLowerCase(), images);
                 CACHE_IMAGE[mdpi] = asset;
                 return asset;
             }
@@ -302,8 +302,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return asset;
     }
 
-    get fileSeparator() {
-        return '_';
+    get randomUUID() {
+        return '__' + randomUUID('_');
     }
 
     get userSettings() {

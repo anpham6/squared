@@ -18,14 +18,15 @@
                 System.import('/build/android-framework/src/main.js').then(result => {
                     android = result.default;
                     squared.setFramework(android);
-                    squared.parseDocument('squared_ui');
-                    squared.close();
+                    squared.parseDocument('squared_ui').then(() => {
+                        squared.close();
 
-                    var views = squared.system.writeLayoutAllXml();
-                    document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+                        var views = squared.system.writeLayoutAllXml();
+                        document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
 
-                    var resource = squared.system.writeResourceAllXml();
-                    document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                        var resource = squared.system.writeResourceAllXml();
+                        document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                    });
                 });
             });
         });

@@ -5,7 +5,7 @@ type View = android.base.View;
 
 const $lib = android.lib;
 
-const { isNumber, sameArray, safeNestedMap } = squared.lib.util;
+const { appendSeparator, isNumber, sameArray, safeNestedMap } = squared.lib.util;
 
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -134,7 +134,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
             this.addDescendant(item);
             return false;
         });
-        node.dataset.pathname = 'res/menu';
+        node.dataset.pathname = appendSeparator(this.controller.userSettings.outputDirectory, 'res/menu');
         return {
             output: <NodeXmlTemplate<T>> {
                 type: NODE_TEMPLATE.XML,

@@ -11,26 +11,33 @@ There is also a virtual DOM framework for the browser which offers fast querying
 Express server through Node.js is available with a provided default configuration. It is sufficient to load this program locally and can also be used for development. Using Express is highly recommended as you can create a ZIP archive of the generated resources from inside your browser which can be conveniently extracted into your project folder. Installing these dependencies are only required if you plan on using Express as your local web server. 
 
 * Install Node.js: http://www.nodejs.org
-* Install squared: (choose one)
 
 NPM  
 &nbsp;&nbsp;&nbsp;&gt; npm install squared  
 &nbsp;&nbsp;&nbsp;&gt; cd node_modules/squared  
+&nbsp;&nbsp;&nbsp;&gt; Configure: squared.settings.json  
 &nbsp;&nbsp;&nbsp;&gt; node app.js  
 
 GitHub  
 &nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared  
 &nbsp;&nbsp;&nbsp;&gt; cd squared  
 &nbsp;&nbsp;&nbsp;&gt; npm install  
-&nbsp;&nbsp;&nbsp;&gt; npm run prod -OR- npm run dev
+&nbsp;&nbsp;&nbsp;&gt; npm run prod -OR- npm run dev  
+&nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)
 &nbsp;&nbsp;&nbsp;&gt; node app.js  
 
-* Open Browser: http://localhost:3000
+* http://localhost:3000
 
 *** OR ***
 
-* Install squared-apache: https://github.com/anpham6/squared-apache
-* Open Browser: http://localhost:8080
+* Install Ktor: https://ktor.io
+
+&nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared-apache  
+&nbsp;&nbsp;&nbsp;&gt; cd squared-apache  
+&nbsp;&nbsp;&nbsp;&gt; squared.settings (configure)
+&nbsp;&nbsp;&nbsp;&gt; gradlew run
+
+* http://localhost:8080
 
 ```javascript
 <script src="/dist/squared.min.js"></script>
@@ -175,9 +182,9 @@ squared.settings = {
     ],
     preloadImages: false,
     compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
-    showErrorMessages: false,
-    createQuerySelectorMap: true,
     excludePlainText: true,
+    createQuerySelectorMap: true,
+    showErrorMessages: false,
     outputFileExclusions: ['squared.*', 'chrome.framework.*'],
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
@@ -340,13 +347,13 @@ squared.system.saveVideoAssets(filename?: string, options?: {})
 squared.system.saveAudioAssets(filename?: string, options?: {})
 squared.system.saveFontAssets(filename?: string, options?: {})
 
-squared.system.saveAsWebPage(filename?: string, options?: {})
-
 // async methods
-await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "true"
-await chrome.getElementById(value: string, cache?: boolean)
+await chrome.getElementById(value: string, cache?: boolean) // cache: default "true"
 await chrome.querySelector(value: string, cache?: boolean)
 await chrome.querySelectorAll(value: string, cache?: boolean)
+await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "false"
+
+chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets
 ```
 
 ### ALL: Excluding Procedures / Applied Attributes
@@ -615,7 +622,7 @@ const options = {
     ]
 };
 ```
-Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files.
+Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
 
 ### ALL: User Written HTML
 

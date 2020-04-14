@@ -59,6 +59,8 @@ const isSvg = (value: string) => FILE.SVG.test(value);
 const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
+    public static KEY_NAME = 'squared.application';
+
     public initializing = false;
     public closed = false;
     public readonly Node: Constructor<T>;
@@ -101,7 +103,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public abstract createNode(options: {}): T;
     public abstract insertNode(element: Element, parent?: T): Undef<T>;
-    public abstract afterCreateCache(element: HTMLElement): void;
+    public abstract afterCreateCache(node: T): void;
     public abstract finalize(): void;
 
     public abstract set viewModel(data: Undef<AppViewModel>);
@@ -153,7 +155,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const preloaded: HTMLImageElement[] = [];
         const preloadImages = this.userSettings.preloadImages;
         const imageElements: PreloadImage[] = [];
-        const styleElement = insertStyleSheetRule(`html > body { overflow: hidden !important; }`);
+        const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
         const removePreloaded = () => {
             this.initializing = false;
             preloaded.forEach(image => {
@@ -165,12 +167,13 @@ export default abstract class Application<T extends Node> implements squared.bas
         };
         let THEN: Undef<FunctionVoid>;
         let CATCH: Undef<ResultCatch>;
-        const resume = () => {
+        const resumeThread = () => {
             removePreloaded();
             this.extensions.forEach(ext => ext.beforeParseDocument());
             for (const element of this.rootElements) {
-                if (this.createCache(element)) {
-                    this.afterCreateCache(element);
+                const node = this.createCache(element);
+                if (node) {
+                    this.afterCreateCache(node);
                 }
             }
             this.extensions.forEach(ext => ext.afterParseDocument());
@@ -291,7 +294,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         resource.addImage(value);
                     }
                 }
-                resume();
+                resumeThread();
             })
             .catch((error: Error | Event | HTMLImageElement) => {
                 let target = error;
@@ -304,10 +307,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                         error = new Error(message ? `FAIL: ${message}` : 'Unable to preload images.');
                     }
                     removePreloaded();
-                    CATCH(error, resume);
+                    CATCH(error, resumeThread);
                 }
                 else if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
-                    resume();
+                    resumeThread();
                 }
                 else {
                     removePreloaded();
@@ -315,7 +318,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             });
         }
         else {
-            resume();
+            resumeThread();
         }
         const Result = class {
             public then(callback: FunctionVoid) {
@@ -343,9 +346,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         const node = this.createRootNode(documentRoot);
         if (node) {
             this.controllerHandler.sortInitialCache();
-            return true;
         }
-        return false;
+        return node;
     }
 
     public toString() {
@@ -425,25 +427,26 @@ export default abstract class Application<T extends Node> implements squared.bas
             node.naturalChildren = children;
             node.naturalElements = elements;
             node.inlineText = inlineText;
-            if (this.userSettings.createQuerySelectorMap && k > 0) {
-                node.queryMap = this.createQueryMap(elements);
+            if (k > 0 && this.userSettings.createQuerySelectorMap) {
+                node.queryMap = this.createQueryMap(elements, k);
             }
         }
         return node;
     }
 
-    protected createQueryMap(elements: T[]) {
+    protected createQueryMap(elements: T[], length: number) {
         const result: T[][] = [elements];
-        elements.forEach(item => {
-            const childMap = item.queryMap as T[][];
+        let i = 0;
+        while (i < length) {
+            const childMap = elements[i++].queryMap;
             if (childMap) {
-                const length = childMap.length;
-                for (let i = 0; i < length; ++i) {
-                    const j = i + 1;
-                    result[j] = result[j]?.concat(childMap[i]) || childMap[i];
+                const q = childMap.length;
+                for (let j = 0; j < q; ++j) {
+                    const k = j + 1;
+                    result[k] = result[k]?.concat(childMap[j] as T[]) || childMap[j];
                 }
             }
-        });
+        }
         return result;
     }
 

@@ -17,6 +17,7 @@ declare interface FileActions {
 }
 
 declare class Application<T extends Node> implements FileActions {
+    public static KEY_NAME: string;
     framework: number;
     userSettings: UserSettings;
     initializing: boolean;
@@ -38,10 +39,10 @@ declare class Application<T extends Node> implements FileActions {
     reset(): void;
     parseDocument(...elements: (string | HTMLElement)[]): PromiseObject;
     parseDocumentAsync(...elements: (string | HTMLElement)[]): Promise<PromiseObject>;
-    createCache(documentRoot: HTMLElement): boolean;
+    createCache(documentRoot: HTMLElement): Undef<T>;
     createNode(options: {}): T;
     insertNode(element: Element, parent?: T, pseudoElt?: string): Undef<T>;
-    afterCreateCache(element: HTMLElement): void;
+    afterCreateCache(node: T): void;
     copyToDisk(directory: string, options?: FileCopyingOptions): void;
     appendToArchive(pathname: string, options?: FileCopyingOptions): void;
     saveToArchive(filename?: string, options?: FileArchivingOptions): void;
@@ -138,6 +139,7 @@ declare class ControllerUI<T extends NodeUI> extends Controller<T> {
 }
 
 declare class Resource<T extends Node> implements Resource<T> {
+    public static KEY_NAME: string;
     public static ASSETS: ResourceAssetMap;
     public static canCompressImage(filename: string): boolean;
     controllerSettings: ControllerSettings;
@@ -146,7 +148,7 @@ declare class Resource<T extends Node> implements Resource<T> {
     readonly cache: NodeList<T>;
     readonly userSettings: UserSettings;
     readonly mimeTypeMap: ObjectMap<MIMEOrAll>;
-    readonly fileSeparator?: string;
+    readonly randomUUID: string;
     reset(): void;
     addImage(element: Undef<HTMLImageElement>): void;
     getImage(uri: string): Undef<ImageAsset>;
@@ -162,7 +164,6 @@ declare class Resource<T extends Node> implements Resource<T> {
 }
 
 declare class ResourceUI<T extends NodeUI> extends Resource<T> {
-    public static KEY_NAME: string;
     public static STORED: ResourceStoredMap;
     public static canCompressImage(filename: string): boolean;
     public static generateId(section: string, name: string, start?: number): string;

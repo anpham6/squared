@@ -312,8 +312,6 @@ const replaceAmpersand = (value: string) => value.replace(/&/g, '&amp;');
 const getGradientPosition = (value: string) => isString(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : <RegExpExecArray> [value, value]) : null;
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
-    public static KEY_NAME = 'squared.resource';
-
     public static STORED: ResourceStoredMap = {
         strings: new Map(),
         arrays: new Map(),
@@ -977,7 +975,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                 }
                 if (value !== '') {
-                    node.data(ResourceUI.KEY_NAME, 'valueString', { key, value: value.replace(/\\n\\n$/, '\\n') });
+                    node.data(ResourceUI.KEY_NAME, 'valueString', { key, value });
                 }
             }
             if (hint !== '') {
@@ -1040,6 +1038,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
             }
         });
-        return styled ? value.replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture))) : value;
+        if (styled) {
+            value = value
+                        .replace(/^\\n\\n/, '\\n')
+                        .replace(/\\n\\n$/, '\\n')
+                        .replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
+        }
+        return value;
     }
 }
