@@ -22,34 +22,31 @@ type GridAlignment = {
     justifyContent: string;
     gridAutoFlow: string;
 };
-
 type GridLayout = {
     placement: number[];
     rowSpan: number;
     columnSpan: number;
     outerCoord: number;
 };
-
 type RepeatItem = {
     name?: string;
     unit?: string;
     unitMin?: string;
 };
-
 type RowData = Undef<NodeUI[]>[][];
 
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
-const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
-const STRING_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
-const STRING_NAMED = '\\[([\\w\\-\\s]+)\\]';
-const REGEX_UNIT = new RegExp(`^(${STRING_UNIT})$`);
-const REGEX_NAMED = new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+const STRING_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
+const STRING_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
+const STRING_NAMED = '\\[([\\w\\s\\-]+)\\]';
+const REGEX_UNIT = new RegExp(`^${STRING_UNIT}$`);
+const REGEX_NAMED = new RegExp(`\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s+(.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT}\\s*)\\s*`, 'g');
 const REGEX_REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+const REGEX_CELL_UNIT = new RegExp(STRING_UNIT);
+const REGEX_CELL_MINMAX = new RegExp(STRING_MINMAX);
+const REGEX_CELL_FIT_CONTENT = new RegExp(STRING_FIT_CONTENT);
+const REGEX_CELL_NAMED = new RegExp(STRING_NAMED);
 const REGEX_STARTEND = /^([\w-]+)-(start|end)$/;
-const REGEX_CELL_UNIT = new RegExp('[\\d.]+[a-z%]+|auto|max-content|min-content');
-const REGEX_CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
-const REGEX_CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
-const REGEX_CELL_NAMED = new RegExp('\\[([\\w\\-\\s]+)\\]');
 
 function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const repeat = data.repeat;

@@ -5,6 +5,7 @@ import SvgPaint$MX from './svgpaint-mx';
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgView$MX from './svgview-mx';
 import SvgViewRect$MX from './svgviewrect-mx';
+import SvgBuild from './svgbuild';
 import SvgContainer from './svgcontainer';
 
 import { INSTANCE_TYPE } from './lib/constant';
@@ -21,6 +22,17 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
     public build(options?: SvgBuildOptions) {
         this.setRect();
         super.build({ ...options, symbolElement: this.symbolElement });
+        const x = this.getBaseValue('x', 0);
+        const y = this.getBaseValue('y', 0);
+        if (x !== 0 || y !== 0) {
+            const pt = { x, y };
+            this.cascade(item => {
+                if (SvgBuild.asImage(item)) {
+                    item.translationOffset = pt;
+                }
+                return false;
+            });
+        }
         this.setPaint(this.getPathAll(), options?.precision);
     }
 

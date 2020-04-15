@@ -6,8 +6,7 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
 
-const $lib = squared.lib;
-const $base = squared.base;
+const { lib: $lib, base: $base } = squared;
 const $base_lib = $base.lib;
 
 const { isLength } = $lib.css;

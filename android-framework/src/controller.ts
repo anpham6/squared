@@ -13,8 +13,7 @@ import { adjustAbsolutePaddingOffset, createViewAttribute, getDocumentId, getRoo
 
 type LayoutUI = squared.base.LayoutUI<View>;
 
-const $lib = squared.lib;
-const $base = squared.base;
+const { lib: $lib, base: $base } = squared;
 
 const { PLATFORM, isPlatform } = $lib.client;
 const { parseColor } = $lib.color;
@@ -34,21 +33,17 @@ const REGEX_TEXTSHADOW = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)
 
 function sortHorizontalFloat(list: View[]) {
     list.sort((a, b) => {
-        const floatA = a.float;
-        const floatB = b.float;
-        if (floatA !== 'none' && floatB !== 'none') {
-            if (floatA !== floatB) {
-                return floatA === 'left' ? -1 : 1;
-            }
-            else if (floatA === 'right' && floatB === 'right') {
+        switch (a.float) {
+            case 'left':
+                return -1;
+            case 'right':
                 return 1;
-            }
         }
-        else if (floatA !== 'none') {
-            return floatA === 'left' ? -1 : 1;
-        }
-        else if (floatB !== 'none') {
-            return floatB === 'left' ? 1 : -1;
+        switch (b.float) {
+            case 'left':
+                return 1;
+            case 'right':
+                return -1;
         }
         return 0;
     });
@@ -312,9 +307,8 @@ function setLeftTopAxis(node: View, parent: View, horizontal: boolean) {
     }
 }
 
-function setImageDimension(node: View, value: number, width: number, height: number, image: Undef<ImageAsset>) {
-    width = value;
-    node.css('width', formatPX(value), true);
+function setImageDimension(node: View, width: number, height: number, image: Undef<ImageAsset>) {
+    node.css('width', formatPX(width), true);
     if (image && image.width > 0 && image.height > 0) {
         height = image.height * (width / image.width);
         node.css('height', formatPX(height), true);
@@ -365,7 +359,7 @@ function isConstraintLayout(layout: LayoutUI, vertical: boolean) {
 
 function adjustBodyMargin(node: View, position: string) {
     if (node.leftTopAxis) {
-        const parent = node.absoluteParent as View;
+        const parent = <View> node.absoluteParent;
         if (parent.documentBody) {
             switch (position) {
                 case 'top':
@@ -458,7 +452,7 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly = fa
     }
     else {
         const parent = node.actualParent;
-        if (parent && parent.display === 'table-cell') {
+        if (parent?.display === 'table-cell') {
             switch (parent.verticalAlign) {
                 case 'middle':
                     bias = 0.5;
@@ -589,7 +583,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const insertSpaces = this.userSettings.insertSpaces;
         layouts.forEach(layout => {
             const content = layout.content!;
-            layout.content = replaceTab(content.replace(/{#0}/, getRootNs(content)), insertSpaces);
+            layout.content = replaceTab(content.replace('{#0}', getRootNs(content)), insertSpaces);
         });
     }
 
@@ -1211,7 +1205,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         const actualWidth = image.actualWidth;
                         if (actualWidth) {
                             if (percentWidth === -1) {
-                                [width, height] = setImageDimension(node, actualWidth, width, height, application.resourceHandler.getImage(element.src));
+                                [width, height] = setImageDimension(node, actualWidth, height, application.resourceHandler.getImage(element.src));
                             }
                             else {
                                 width = node.bounds.width;
@@ -1222,7 +1216,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             const stored = application.resourceHandler.getImage(image.src);
                             if (stored) {
                                 if (percentWidth === -1) {
-                                    [width, height] = setImageDimension(node, stored.width, width, height, stored);
+                                    [width, height] = setImageDimension(node, stored.width, height, stored);
                                 }
                                 else {
                                     width = node.bounds.width;
@@ -1699,15 +1693,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return output;
     }
 
-    public addGuideline(node: T, parent: T, options?: GuidelineOptions) {
-        let percent = false;
-        let opposing = false;
-        let orientation: Undef<string>;
-        if (options) {
-            percent = options.percent === true;
-            opposing = options.opposing === true;
-            orientation = options.orientation;
-        }
+    public addGuideline(node: T, parent: T, options: GuidelineOptions = {}) {
+        const { percent, opposing, orientation } = options;
         let documentParent = node.documentParent as T;
         if (parent.nodeGroup && !documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
             documentParent = parent;

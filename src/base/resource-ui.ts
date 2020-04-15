@@ -20,7 +20,7 @@ const { STRING_SPACE, STRING_TABSPACE } = $lib.xml;
 
 const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
 const REGEX_NOBREAKSPACE = /\u00A0/g;
-const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
+const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
 const REGEX_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 
@@ -210,7 +210,7 @@ function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boole
         case 'pre-line':
             value = value
                 .replace(/\n/g, '\\n')
-                .replace(/[ ]+/g, ' ');
+                .replace(/\s+/g, ' ');
             return [value, true, false];
     }
     if (node.onlyChild && node.htmlElement) {

@@ -347,13 +347,18 @@ const appBase: ChromeFramework<View> = {
         }
         return null;
     },
-    saveAsWebPage: (filename?: string, options?: FileArchivingOptionsChrome) => {
-        if (application) {
+    saveAsWebPage: async (filename?: string, options?: FileArchivingOptionsChrome) => {
+        if (file) {
             if (!isObject(options)) {
                 options = {};
             }
             options.saveAsWebPage = true;
-            file?.saveToArchive(filename || userSettings.outputArchiveName, options);
+            const preloadImages = userSettings.preloadImages;
+            userSettings.preloadImages = true;
+            await application.parseDocumentAsync(document.body).then(() => {
+                file!.saveToArchive(filename || userSettings.outputArchiveName, options);
+                userSettings.preloadImages = preloadImages;
+            });
         }
     }
 };

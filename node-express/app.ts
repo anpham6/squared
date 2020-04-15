@@ -626,7 +626,7 @@ app.post('/api/assets/copy', (req, res) => {
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
                 removeUnusedFiles(dirname, status, files);
-                res.json({ success: status.delayed === 0, directory: dirname, files: Array.from(files) });
+                res.json({ success: status.delayed === 0, files: Array.from(files) });
                 status.delayed = Number.POSITIVE_INFINITY;
             }
         };

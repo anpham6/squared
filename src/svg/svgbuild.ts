@@ -22,6 +22,7 @@ type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
 const $lib = squared.lib;
+
 const { isAngle, parseAngle } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = $lib.math;

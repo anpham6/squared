@@ -29,8 +29,8 @@ const REGEX_FONTFAMILY = /\s*font-family:[^\w]*([^'";]+)/;
 const REGEX_FONTSRC = /\s*src:\s*([^;]+);/;
 const REGEX_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
 const REGEX_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-const REGEX_URL = /\s*(url|local)\((?:['""]([^'")]+)['"]|([^)]+))\)(?:\s*format\(['"]?([\w-]+)['"]?\))?\s*/;
-const REGEX_DATAURI = new RegExp(`(url\\("(${STRING.DATAURI})"\\)),?\\s*`, 'g');
+const REGEX_URL = /\s*(url|local)\((?:["']([^'")]+)["']|([^)]+))\)(?:\s*format\(["']?([\w-]+)["']?\))?\s*/;
+const REGEX_DATAURI = new RegExp(`url\\(["']?(${STRING.DATAURI})["']?\\),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
     if (uri !== '') {
@@ -522,34 +522,34 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const cssStyle = item.style;
                 const important: ObjectMap<boolean> = {};
                 const baseMap: StringMap = {};
-                const parseImageUrl = (styleMap: StringMap, attr: string) => {
-                    const value = styleMap[attr];
+                const parseImageUrl = (attr: string) => {
+                    const value = baseMap[attr];
                     if (value && value !== 'initial') {
                         let result = value;
                         REGEX_DATAURI.lastIndex = 0;
                         let match: Null<RegExpExecArray>;
                         while ((match = REGEX_DATAURI.exec(value)) !== null) {
-                            if (match[3]) {
-                                const mimeType = match[3].split(XML.DELIMITER);
-                                resourceHandler.addRawData(match[2], mimeType[0].trim(), mimeType[1]?.trim() || 'utf8', match[4]);
+                            if (match[2]) {
+                                const mimeType = match[2].split(XML.DELIMITER);
+                                resourceHandler.addRawData(match[1], mimeType[0].trim(), mimeType[1]?.trim() || 'utf8', match[3]);
                             }
                             else if (this.userSettings.preloadImages) {
-                                const uri = resolvePath(match[4], styleSheetHref);
+                                const uri = resolvePath(match[3], styleSheetHref);
                                 if (uri !== '') {
                                     if (!resourceHandler.getImage(uri)) {
                                         addImageSrc(uri);
                                     }
-                                    result = result.replace(match[1], `url("${uri}")`);
+                                    result = result.replace(match[0], `url("${uri}")`);
                                 }
                             }
                         }
-                        styleMap[attr] = result;
+                        baseMap[attr] = result;
                     }
                 };
                 Array.from(cssStyle).forEach(attr => baseMap[convertCamelCase(attr)] = cssStyle[attr]);
-                parseImageUrl(baseMap, 'backgroundImage');
-                parseImageUrl(baseMap, 'listStyleImage');
-                parseImageUrl(baseMap, 'content');
+                parseImageUrl('backgroundImage');
+                parseImageUrl('listStyleImage');
+                parseImageUrl('content');
                 REGEX_IMPORTANT.lastIndex = 0;
                 let match: Null<RegExpExecArray>;
                 while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {

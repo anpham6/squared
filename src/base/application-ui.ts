@@ -46,7 +46,7 @@ function saveAlignment(preAlignment: ObjectIndex<StringMap>, element: HTMLElemen
 
 function getCounterValue(name: string, counterName: string, fallback = 1) {
     if (name !== 'none') {
-        const pattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
+        const pattern = /\s*([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\s*/g;
         let match: Null<RegExpExecArray>;
         while ((match = pattern.exec(name)) !== null) {
             if (match[1] === counterName) {
@@ -301,7 +301,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public insertNode(element: Element, parent?: T, pseudoElt?: string) {
         if (isTextNode(element)) {
-            if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (parent.element as Element).childElementCount === 0)) {
+            if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (<Element> parent.element).childElementCount === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode({ parent, element, append: false });
                 if (parent) {
@@ -1220,16 +1220,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             else if (float === 'left') {
-                if (!leftBelow) {
-                    leftBelow = [];
+                if (leftBelow) {
+                    leftBelow.push(node);
                 }
-                leftBelow.push(node);
+                else {
+                    leftBelow = [node];
+                }
             }
             else if (float === 'right') {
-                if (!rightBelow) {
-                    rightBelow = [];
+                if (rightBelow) {
+                    rightBelow.push(node);
                 }
-                rightBelow.push(node);
+                else {
+                    rightBelow = [node];
+                }
             }
             else {
                 inlineBelow.push(node);

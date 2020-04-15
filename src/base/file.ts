@@ -1,17 +1,9 @@
-import { FileArchivingOptions, FileCopyingOptions, UserSettings } from '../../@types/base/application';
+import { FileActionResult, FileArchivingOptions, FileCopyingOptions, UserSettings } from '../../@types/base/application';
 import { RawAsset } from '../../@types/base/file';
 
 const { fromLastIndexOf, isString } = squared.lib.util;
 
 const isHttpProtocol = () => location.protocol.startsWith('http');
-
-export interface ExpressResult {
-    success: boolean;
-    directory: string;
-    zipname?: string;
-    application?: string;
-    system?: string;
-}
 
 export default abstract class File<T extends squared.base.Node> implements squared.base.File<T> {
     public static downloadFile(data: Blob, filename: string, mimeType?: string) {
@@ -59,14 +51,13 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public addAsset(data: Partial<RawAsset>) {
         if (data.content || data.uri || data.base64) {
-            const assets = this.assets;
             const { pathname, filename } = data;
-            const asset = assets.find(item => item.pathname === pathname && item.filename === filename);
-             if (asset) {
+            const asset = this.assets.find(item => item.pathname === pathname && item.filename === filename);
+            if (asset) {
                 Object.assign(asset, data);
             }
             else {
-                assets.push(<RawAsset> data);
+                this.assets.push(<RawAsset> data);
             }
         }
     }
@@ -77,26 +68,25 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public copying(options: FileCopyingOptions) {
         if (isHttpProtocol()) {
-            const directory = options.directory;
+            const { assets, directory } = options;
             if (isString(directory)) {
-                const assets = options.assets ? options.assets.concat(this.assets) : this.assets;
-                if (assets.length) {
-                    assets[0].exclusions = options.exclusions;
+                const body = assets ? assets.concat(this.assets) : this.assets;
+                if (body.length) {
+                    body[0].exclusions = options.exclusions;
                     fetch(
                         '/api/assets/copy' +
                         '?to=' + encodeURIComponent(directory.trim()) +
-                        '&empty=' + (this.userSettings.outputEmptyCopyDirectory === true ? '1' : '0'), {
+                        '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0'), {
                             method: 'POST',
-                            headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
-                            body: JSON.stringify(assets)
+                            headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
+                            body: JSON.stringify(body)
                         }
                     )
                     .then((response: Response) => response.json())
-                    .then((result: ExpressResult) => {
+                    .then((result: FileActionResult) => {
                         if (result) {
-                            const callback = options.callback;
-                            if (typeof callback === 'function') {
-                                callback(result);
+                            if (typeof options.callback === 'function') {
+                                options.callback(result);
                             }
                             if (this.userSettings.showErrorMessages) {
                                 const { application, system } = result;
@@ -121,27 +111,26 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public archiving(options: FileArchivingOptions) {
         if (isHttpProtocol()) {
-            const filename = options.filename;
+            const { assets, filename } = options;
             if (isString(filename)) {
-                const assets = options.assets ? options.assets.concat(this.assets) : this.assets;
-                if (assets.length) {
-                    assets[0].exclusions = options.exclusions;
+                const body = assets ? assets.concat(this.assets) : this.assets;
+                if (body.length) {
+                    body[0].exclusions = options.exclusions;
                     fetch(
                         '/api/assets/archive' +
                         '?filename=' + encodeURIComponent(filename.trim()) +
                         '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
                         '&append_to=' + encodeURIComponent((options.appendTo || '').trim()), {
                             method: 'POST',
-                            headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
-                            body: JSON.stringify(assets)
+                            headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
+                            body: JSON.stringify(body)
                         }
                     )
                     .then((response: Response) => response.json())
-                    .then((result: ExpressResult) => {
+                    .then((result: FileActionResult) => {
                         if (result) {
-                            const callback = options.callback;
-                            if (typeof callback === 'function') {
-                                callback(result);
+                            if (typeof options.callback === 'function') {
+                                options.callback(result);
                             }
                             const zipname = result.zipname;
                             if (isString(zipname)) {

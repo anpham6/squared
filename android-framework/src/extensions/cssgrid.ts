@@ -9,8 +9,7 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-const $base = squared.base;
+const { lib: $lib, base: $base } = squared;
 const $base_lib = $base.lib;
 
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;

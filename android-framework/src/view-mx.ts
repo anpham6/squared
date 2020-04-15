@@ -9,8 +9,7 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 
 type T = android.base.View;
 
-const $lib = squared.lib;
-const $base = squared.base;
+const { lib: $lib, base: $base } = squared;
 
 const { BOX_MARGIN, BOX_PADDING, CSS_UNIT, formatPX, isLength, isPercent } = $lib.css;
 const { createElement, getNamedItem, newBoxModel } = $lib.dom;
@@ -30,7 +29,7 @@ const SPACING_CHECKBOX = 4;
 const REGEX_DATASETATTR = /^attr[A-Z]/;
 const REGEX_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
 const REGEX_STRINGVALID = /[^\w$\-_.]/g;
-const REGEX_CLIPNONE = /^rect\(0[a-z]*, 0[a-z]*, 0[a-z]*, 0[a-z]*\)$/;
+const REGEX_CLIPNONE = /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/;
 
 function checkTextAlign(value: string, ignoreStart: boolean) {
     switch (value) {
