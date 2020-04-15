@@ -1,41 +1,35 @@
 # squared
 
-This program can convert moderately complex HTML pages into the standard XML layouts for Android. HTML is the most popular and versatile way to design user interfaces and can be used to generate the UI for any platform. SVG is nearly fully supported including transformations and CSS/SMIL animations.
-
-The ratio is about 1 line of HTML for every 10 lines of Android XML when using squared to generate the UI for your mobile application. It will also auto-generate the XML resources for the entire project. Using HTML best practices and techniques will output the fastest possible layout structure which is close to 95% efficient and better than most hand-written code.
-
-There is also a virtual DOM framework for the browser which offers fast querying and a better programming interface than a plain DOM element.
-
 ## Installation (global js variable: squared)
 
-Express server through Node.js is available with a provided default configuration. It is sufficient to load this program locally and can also be used for development. Using Express is highly recommended as you can create a ZIP archive of the generated resources from inside your browser which can be conveniently extracted into your project folder. Installing these dependencies are only required if you plan on using Express as your local web server. 
+Option #1 (easier):
 
 * Install Node.js: http://www.nodejs.org
-
-NPM  
-&nbsp;&nbsp;&nbsp;&gt; npm install squared  
-&nbsp;&nbsp;&nbsp;&gt; cd node_modules/squared  
-&nbsp;&nbsp;&nbsp;&gt; Configure: squared.settings.json  
-&nbsp;&nbsp;&nbsp;&gt; node app.js  
 
 GitHub  
 &nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared  
 &nbsp;&nbsp;&nbsp;&gt; cd squared  
 &nbsp;&nbsp;&nbsp;&gt; npm install  
 &nbsp;&nbsp;&nbsp;&gt; npm run prod -OR- npm run dev  
-&nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)
+&nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
+&nbsp;&nbsp;&nbsp;&gt; node app.js  
+
+NPM  
+&nbsp;&nbsp;&nbsp;&gt; npm install squared  
+&nbsp;&nbsp;&nbsp;&gt; cd node_modules/squared  
+&nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
 &nbsp;&nbsp;&nbsp;&gt; node app.js  
 
 * http://localhost:3000
 
-*** OR ***
+Option #2 (more features):
 
 * Install Ktor: https://ktor.io
 
 &nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared-apache  
 &nbsp;&nbsp;&nbsp;&gt; cd squared-apache  
-&nbsp;&nbsp;&nbsp;&gt; squared.settings (configure)
-&nbsp;&nbsp;&nbsp;&gt; gradlew run
+&nbsp;&nbsp;&nbsp;&gt; squared.settings (configure)  
+&nbsp;&nbsp;&nbsp;&gt; gradlew run  
 
 * http://localhost:8080
 
@@ -48,14 +42,12 @@ GitHub
     // optional
     squared.settings.targetAPI = 29;
 
-    // without Express: use either console.log() or element.innerHTML to display using "system.write" commands
-
     document.addEventListener('DOMContentLoaded', function() {
         // Required
         squared.setFramework(android); // OR: 'chrome'
 
         // Required: zero or more DOM elements
-        squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview' */, /* etc... */); // OR: parseDocumentAsync
+        squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview-id' */, /* etc... */); // OR: parseDocumentAsync
         squared.close();
 
         // Optional: node-express / squared-apache
@@ -70,9 +62,10 @@ GitHub
     });
 </script>
 ```
-The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build into a single entity with combined shared resources.
 
-Library files are in the /dist folder. A minimum of *two* files are required to run squared.
+The primary function "parseDocument" can be called on multiple elements and multiple times per session. The application will continuously and progressively build the layout files into a single entity with combined shared resources.
+
+Library files are in the /dist folder. A minimum of *three* files are required to run squared.
 
 1. squared
 2. squared-base
@@ -82,23 +75,21 @@ Library files are in the /dist folder. A minimum of *two* files are required to 
 
 Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3
 
-There are ES6 minified versions (*.min.js) and also ES6 non-minified versions. Browsers which do not support at least ES6 (under 5%) are not being supported due to this primarily being a development tool.
+There are ES6 minified versions (*.min.js) and also ES6 non-minified versions. Browsers which do not support at least ES6 (under 5%) are not being supported to take advantage of async/await and also for code readability.
 
 NOTE: Calling "save" or "write" methods before the images have completely loaded can sometimes cause them to be excluded from the generated layout. In these cases you should use the "parseDocument" promise method "then" to set a callback for your commands.
 
 ```javascript
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        squared.setFramework(android);
-        squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(function() {
-            squared.close();
-            squared.saveToArchive();
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    squared.setFramework(android);
+    squared.parseDocument(/* 'mainview' */, /* 'subview' */).then(function() {
+        squared.close();
+        squared.saveToArchive();
     });
-</script>
+});
 ```
 
-*** External CSS files cannot be parsed when loading HTML pages using the file:// protocol (hard drive) with Chrome 64 or higher. Loading the HTML page from a web server (http://localhost) or embedding the CSS files into a &lt;style&gt; tag can get you past this security restriction. You can also use your preferred browser Safari/Edge/Firefox. The latest version of Chrome is ideally what you should use to generate the production version of your program. ***
+*** External CSS files cannot be parsed when loading HTML pages using the file:/// protocol (hard drive) with Chrome 64 or higher. Loading the HTML page from a web server (http://localhost) or embedding the CSS files into a &lt;style&gt; tag can get you past this security restriction. You can also use your preferred browser Safari/Edge/Firefox. The latest version of Chrome is ideally what you should use to generate the production version of your program. ***
 
 ### ALL: User Settings
 
@@ -165,6 +156,7 @@ squared.settings = {
     outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
 };
 ```
+
 #### Example: chrome
 
 ```javascript
@@ -199,7 +191,7 @@ There is no official documentation as this project is still in early development
 ```javascript
 .settings // see user preferences section
 
-setFramework(module: {}, cached?: boolean) // install application converter
+setFramework(module: {}, cached?: boolean) // install application interpreter
 setViewModel(data?: {}) // object data for layout bindings
 
 parseDocument() // see installation section
@@ -232,8 +224,6 @@ exclude(name: string) // remove an extension by namespace or control
 
 ### ANDROID: Public System Methods
 
-You can use the "system.customize" method to change the default settings for the specific controls which are applied when a view is rendered.
-
 ```javascript
 squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
 squared.system.addXmlNs(name: string, uri: string) // add global namespaces for third-party controls
@@ -262,7 +252,7 @@ squared.system.saveResourceFontXml(filename?: string, options?: {})
 squared.system.saveResourceStringXml(filename?: string, options?: {})
 squared.system.saveResourceStyleXml(filename?: string, options?: {})
 
-squared.system.writeLayoutAllXml() // write generated xml
+squared.system.writeLayoutAllXml() // write string[] generated xml
 squared.system.writeResourceAllXml()
 squared.system.writeResourceAnimXml()
 squared.system.writeResourceArrayXml()
@@ -287,37 +277,49 @@ squared.system.writeResourceRawAudio()
 ```
 
 ```javascript
-<script>
-    // targetAPI: 0 - ALL, 29 - Android Q
-    squared.system.customize(squared.settings.targetAPI, 'Button', {
-        android: {
-            minWidth: '35px',
-            minHeight: '25px'
-        }
-    });
-
-    // NOTE: "exclusions" attribute and some compression formats are only available when using squared-apache
-    squared.settings.outputArchiveFormat = '7z';
-    squared.saveToArchive('archive1', {
-        assets: [
-            {
-                pathname: 'app/src/main/res/drawable',
-                filename: 'ic_launcher_background.xml',
-                uri: 'http://localhost:3000/examples/common/ic_launcher_background.xml',
-                compress: [{ format: 'gz', level: 9 }, { format: 'br' }, { format: 'bz2' }, { format: 'lzma' }, { format: 'zstd' }, { format: 'lz4' }]
-            }
-        ],
-        exclusions: { // All attributes are optional
-            pathname: ['app/build', 'app/libs'],
-            filename: ['ic_launcher_foreground.xml'],
-            extension: ['iml', 'pro'],
-            pattern: ['outputs', 'grad.+\\.', '\\.git']
-        }
-    });
-</script>
+// targetAPI: 0 - ALL, 29 - Android Q
+squared.system.customize(squared.settings.targetAPI, 'Button', {
+    android: {
+        minWidth: '35px',
+        minHeight: '25px'
+    }
+});
 ```
 
-### CHROME: Public System Methods
+```javascript
+// NOTE: "exclusions" attribute and some compression formats are only available when using squared-apache
+squared.settings.outputArchiveFormat = '7z';
+squared.saveToArchive('archive1', {
+    assets: [
+        {
+            pathname: 'app/src/main/res/drawable',
+            filename: 'ic_launcher_background.xml',
+            uri: 'http://localhost:3000/examples/common/ic_launcher_background.xml',
+            compress: [{ format: 'gz', level: 9 }, { format: 'br' }, { format: 'bz2' }, { format: 'lzma' }, { format: 'zstd' }, { format: 'lz4' }]
+        }
+    ],
+    exclusions: { // All attributes are optional
+        pathname: ['app/build', 'app/libs'],
+        filename: ['ic_launcher_foreground.xml'],
+        extension: ['iml', 'pro'],
+        pattern: ['outputs', 'grad.+\\.', '\\.git']
+    }
+});
+```
+
+### CHROME: Public Methods
+
+```javascript
+// async methods
+await chrome.getElementById(value: string, cache?: boolean) // cache: default "true"
+await chrome.querySelector(value: string, cache?: boolean)
+await chrome.querySelectorAll(value: string, cache?: boolean)
+await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "false"
+
+chrome.saveAsWebPage(filename?: string, options?: {}): void // create archive with html and web page assets asychronously
+```
+
+### Public System Methods
 
 The system methods querySelector and querySelectorAll can also be called from every Node object and provide the same functionality as the similarly named DOM methods.
 
@@ -346,14 +348,6 @@ squared.system.saveImageAssets(filename?: string, options?: {})
 squared.system.saveVideoAssets(filename?: string, options?: {})
 squared.system.saveAudioAssets(filename?: string, options?: {})
 squared.system.saveFontAssets(filename?: string, options?: {})
-
-// async methods
-await chrome.getElementById(value: string, cache?: boolean) // cache: default "true"
-await chrome.querySelector(value: string, cache?: boolean)
-await chrome.querySelectorAll(value: string, cache?: boolean)
-await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "false"
-
-chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets
 ```
 
 ### ALL: Excluding Procedures / Applied Attributes
@@ -374,8 +368,6 @@ Most attributes can be excluded from the generated XML using the dataset feature
 ### ALL: Extension Configuration (example: android)
 
 Layout rendering can also be customized using extensions as the program was built to be nearly completely modular. Some of the common layouts already have built-in extensions which you can load or unload based on your preference.
-
-CSS Grid and Flexbox layouts are are for the most part fully supported. There is also support for SVG and most of the common floating techniques.
 
 ```javascript
 <script src="/dist/extensions/android.widget.coordinator.min.js"></script>
@@ -402,7 +394,7 @@ CSS Grid and Flexbox layouts are are for the most part fully supported. There is
     }
 
     // third-party: install an extension
-    var sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
+    const sample = new Sample('your.namespace.sample', 0, { /* same as configure */ });
     squared.include(sample);
 </script>
 ```
@@ -412,18 +404,16 @@ CSS Grid and Flexbox layouts are are for the most part fully supported. There is
 ViewModel data can be applied to most HTML elements using the dataset attribute.
 
 ```javascript
-<script>
-    squared.setViewModel({
-        import: ['java.util.Map', 'java.util.List'],
-        variable: [
-            { name: 'user', type: 'com.example.User' },
-            { name: 'list', type: 'List&lt;String>' },
-            { name: 'map', type: 'Map&lt;String, String>' },
-            { name: 'index', type: 'int' },
-            { name: 'key', type: 'String' }
-        ]
-    });
-</script>
+squared.setViewModel({
+    import: ['java.util.Map', 'java.util.List'],
+    variable: [
+        { name: 'user', type: 'com.example.User' },
+        { name: 'list', type: 'List&lt;String>' },
+        { name: 'map', type: 'Map&lt;String, String>' },
+        { name: 'index', type: 'int' },
+        { name: 'key', type: 'String' }
+    ]
+});
 ```
 
 Two additional output parameters are required with the "data-viewmodel" prefix. 
@@ -464,7 +454,7 @@ data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
 
 ### ALL: Custom Attributes (example: android)
 
-System or extension generated attributes can be overridden with dataset. They will only be visible on the declared framework.
+System or extension generated attributes can be overridden preceding final output. They will only be visible on the declared framework.
 
 data-{framework}-attr-{namespace}? -> default: "android"
 
@@ -484,7 +474,7 @@ data-{framework}-attr-{namespace}? -> default: "android"
 
 ### ALL: Redirecting Output Location
 
-It is sometimes necessary to append elements into other containers when trying to design a UI which will look identical on the Android device. Redirection will fail if the target "location" is not a block/container element.
+It is sometimes necessary to append elements into other containers when trying to design a UI which will look identical on the target device. Redirection will fail if the target "location" is not a block/container element.
 
 ```xml
 <div>
@@ -512,6 +502,41 @@ It is sometimes necessary to append elements into other containers when trying t
 ```
 
 Using "target" into a ConstraintLayout or RelativeLayout container will not include automatic positioning.
+
+### ALL: Jimp (node-express) / ImageJ (squared-apache)
+
+Image conversion can be achieved using the mimeType property in a RequestAsset object. The supported formats are:
+
+* png
+* jpeg
+* bmp
+* gif (node-express: readonly)
+* tiff (node-express: readonly)
+
+```xml
+{saveAsExtension}:image/{format}
+```
+
+```javascript
+const options = {
+    assets: [
+        {
+            pathname: 'images',
+            filename: 'pencil.png',
+            mimeType: 'jpeg:image/png',
+            uri: 'http://localhost:3000/demos/images/pencil.png'
+        },
+        {
+            pathname: 'images',
+            filename: 'pencil.png',
+            mimeType: 'bmp:image/png',
+            uri: 'http://localhost:3000/demos/images/pencil.png'
+        }
+    ]
+};
+```
+
+Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
 
 ### ANDROID: Layout Includes / Merge Tag
 
@@ -550,7 +575,7 @@ The attributes "android-include" and "android-include-end" can only be applied t
 
 ### ANDROID: SVG animations with CSS/SMIL
 
-Only the XML based layout and resource files are generated with squared which can be viewed on the Android device/emulator without any Java/Kotlin backend code. To play animations you also have to "start" the animation in MainActivity.java.
+Only the XML based layout and resource files can be viewed on the Android device/emulator without any Java/Kotlin backend code. To play animations you also have to "start" the animation in MainActivity.java.
 
 ```javascript
     import android.graphics.drawable.Animatable;
@@ -564,7 +589,7 @@ Only the XML based layout and resource files are generated with squared which ca
 
 ### ANDROID: Extension Widgets
 
-Most of the Android support library extensions can be configured using the same attribute name in the Android documentation. See /android/widget/*.html for usage instructions in the squared-apache <https://github.com/anpham6/squared-apache> project.
+See /android/widget/*.html for usage instructions in the squared-apache <https://github.com/anpham6/squared-apache> project.
 
 - android.external
 - android.substitute
@@ -590,42 +615,6 @@ Most of the Android support library extensions can be configured using the same 
 
 <img src="html/demos/images/android/menu.png" alt="toolbar: menu" />
 
-### ALL: Jimp (node-express) / ImageJ (squared-apache)
+### LICENSE
 
-Image conversion can be achieved using the mimeType property in a RequestAsset object. The supported formats are:
-
-* png
-* jpeg
-* bmp
-* gif (node-express: readonly)
-* tiff (node-express: readonly)
-
-```xml
-{saveAsExtension}:image/{format}
-```
-
-```javascript
-const options = {
-    assets: [
-        {
-            pathname: 'images',
-            filename: 'pencil.png',
-            mimeType: 'jpeg:image/png',
-            uri: 'http://localhost:3000/demos/images/pencil.png'
-        },
-        {
-            pathname: 'images',
-            filename: 'pencil.png',
-            mimeType: 'bmp:image/png',
-            uri: 'http://localhost:3000/demos/images/pencil.png'
-        }
-    ]
-};
-```
-Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
-
-### ALL: User Written HTML
-
-Using excessive DIV tags are not required for mobile devices which can cause additional FrameLayouts or LinearLayouts to be generated. Block level elements are almost always rendered to preserve any CSS styles which are applied to the tag.
-
-If you plan on using this library it adheres to strict HTML validation rules regarding "block-level" and "inline" elements. You can basically code the HTML any way you want although using reasonable techniques for mobile devices will lead you to a more accurate layout.
+MIT
