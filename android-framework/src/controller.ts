@@ -341,7 +341,7 @@ function checkClearMap(node: View, clearMap: Map<View, string>) {
         return clearMap.has(node);
     }
     else if (node.nodeGroup) {
-        return node.cascade(item => item.naturalChild).some((item: View) => clearMap.has(item));
+        return node.some((item: View) => item.naturalChild && clearMap.has(item), { cascade: true });
     }
     else {
         return clearMap.has(<View> node.innerMostWrapped);

@@ -444,6 +444,7 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
     hasFlex(direction: "row" | "column"): boolean;
     setBounds(cache?: boolean): Undef<BoxRectDimension>;
+    resetBounds(): void;
     querySelector(value: string): Null<Node>;
     querySelectorAll(value: string, resultCount?: number): Node[];
     constructor(id: number, sessionId?: string, element?: Element);

@@ -393,6 +393,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract readonly renderChildren: T[];
 
     protected _boxRegister: ObjectIndex<T> = {};
+    protected _preferInitial = true;
     protected _documentParent?: T;
     protected _controlName?: string;
     protected abstract _cached: CachedValueUI<T>;
@@ -1219,9 +1220,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     case 'bottom':
                     case 'left':
                         cached.autoPosition = undefined;
+                        cached.positiveAxis = undefined;
                         break;
+                    case 'fontSize':
                     case 'lineHeight':
                         cached.baselineHeight = undefined;
+                        break;
+                    case 'whiteSpace':
+                        cached.preserveWhiteSpace = undefined;
+                        cached.textEmpty = undefined;
                         break;
                 }
             });
@@ -1635,11 +1642,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get preserveWhiteSpace() {
-        let result = this._cached.whiteSpace;
+        let result = this._cached.preserveWhiteSpace;
         if (result === undefined) {
             const value = this.css('whiteSpace');
             result = value === 'pre' || value === 'pre-wrap';
-            this._cached.whiteSpace = result;
+            this._cached.preserveWhiteSpace = result;
         }
         return result;
     }

@@ -249,6 +249,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         styleMap.display = 'block';
                     }
                 case 'VIDEO':
+                case 'CANVAS':
                 case 'svg':
                 case 'IMG': {
                     const setDimension = (attr: string, opposing: string) => {

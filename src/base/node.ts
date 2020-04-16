@@ -617,14 +617,14 @@ function setOverflow(node: T) {
     return result;
 }
 
-function convertPosition(node: T, attr: string) {
-    if (!node.positionStatic) {
-        const unit = node.cssInitial(attr, true);
+function convertPosition(this: T, attr: string) {
+    if (!this.positionStatic) {
+        const unit = getInitialValue.bind(this, attr, true)();
         if (isLength(unit)) {
-            return node.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
+            return this.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
         }
-        else if (isPercent(unit) && node.styleElement) {
-            return convertFloat(node.style[attr]);
+        else if (isPercent(unit) && this.styleElement) {
+            return convertFloat(this.style[attr]);
         }
     }
     return 0;
@@ -688,6 +688,9 @@ function convertBox(node: T, attr: string, margin: boolean) {
     return node.parseUnit(node.css(attr), 'width', node.actualParent?.gridElement !== true);
 }
 
+function getInitialValue(this: T, attr: string, modified?: boolean, computed?: boolean) {
+    return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, modified, computed);
+}
 
 const canTextAlign = (node: T) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
@@ -715,6 +718,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected abstract _cached: CachedValue<T>;
     protected abstract _naturalChildren?: T[];
     protected abstract _naturalElements?: T[];
+    protected abstract _preferInitial: boolean;
 
     private _data = {};
     private _documentBody = false;
@@ -827,31 +831,70 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public unsetCache(...attrs: string[]) {
+        const resetBounds = (cascade = true) => {
+            if (this._preferInitial) {
+                this.resetBounds();
+                if (cascade) {
+                    this.cascade(item => {
+                        item.resetBounds();
+                        return false;
+                    });
+                }
+            }
+        };
         if (attrs.length) {
             const cached = this._cached;
             attrs.forEach(attr => {
                 switch (attr) {
                     case 'position':
-                    case 'display':
+                        if (this._preferInitial) {
+                            this.cascade(item => {
+                                if (!item.pageFlow) {
+                                    item.unsetCache('absoluteParent');
+                                }
+                                item.resetBounds();
+                                return false;
+                            });
+                        }
                         this._cached = {};
+                        resetBounds();
+                        break;
+                    case 'display':
+                    case 'float':
+                    case 'tagName':
+                        this._cached = {};
+                        resetBounds();
                         return;
                     case 'width':
                         cached.actualWidth = undefined;
+                        cached.percentWidth = undefined;
                     case 'minWidth':
                         cached.width = undefined;
                     case 'maxWidth':
                         cached.overflow = undefined;
+                        resetBounds();
                         break;
                     case 'height':
                         cached.actualHeight = undefined;
+                        cached.percentHeight = undefined;
                     case 'minHeight':
                         cached.height = undefined;
+                        if (this._preferInitial) {
+                            cached.blockVertical = undefined;
+                            cached.overflow = undefined;
+                            this.each(item => item.unsetCache('height', 'blockVertical', 'overflow', 'bottomAligned'));
+                        }
                     case 'maxHeight':
                         cached.overflow = undefined;
+                        resetBounds();
                         break;
                     case 'verticalAlign':
                         cached.baseline = undefined;
+                        resetBounds();
                         break;
+                    case 'left':
+                    case 'right':
+                        resetBounds();
                     case 'textAlign':
                         cached.rightAligned = undefined;
                         cached.centerAligned = undefined;
@@ -859,32 +902,38 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'top':
                     case 'bottom':
                         cached.bottomAligned = undefined;
-                        break;
-                    case 'backgroundColor':
-                    case 'backgroundImage':
-                        cached.visibleStyle = undefined;
-                        break;
-                    case 'float':
-                        cached.floating = undefined;
+                        resetBounds();
                         break;
                     case 'overflowX':
                     case 'overflowY':
                         cached.overflow = undefined;
+                        resetBounds();
                         break;
                     default:
                         if (attr.startsWith('margin')) {
                             cached.autoMargin = undefined;
                             cached.rightAligned = undefined;
                             cached.centerAligned = undefined;
+                            resetBounds();
                         }
                         else if (attr.startsWith('padding')) {
                             cached.contentBoxWidth = undefined;
                             cached.contentBoxHeight = undefined;
+                            resetBounds();
                         }
                         else if (attr.startsWith('border')) {
                             cached.visibleStyle = undefined;
                             cached.contentBoxWidth = undefined;
                             cached.contentBoxHeight = undefined;
+                            resetBounds();
+                        }
+                        else if (attr.startsWith('background')) {
+                            cached.visibleStyle = undefined;
+                        }
+                        else if (TEXT_STYLE.includes(attr)) {
+                            cached.lineHeight = undefined;
+                            this._textStyle = undefined;
+                            resetBounds();
                         }
                         break;
                 }
@@ -894,6 +943,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         else {
             this._cached = {};
             this._textStyle = undefined;
+            resetBounds();
         }
     }
 
@@ -1304,6 +1354,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._linear = undefined;
         }
         return bounds;
+    }
+
+    public resetBounds() {
+        this._bounds = undefined;
+        this._box = undefined;
+        this._linear = undefined;
+        this._textBounds = null;
+        this._cached.multiline = undefined;
     }
 
     public querySelector(value: string) {
@@ -1767,7 +1825,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get bounds() {
-        return this._bounds || this.setBounds() || assignRect(this.boundingClientRect);
+        return this._bounds || this.setBounds(false) || assignRect(this.boundingClientRect);
     }
 
     get linear() {
@@ -1947,7 +2005,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     else {
                         value = parseUnit(lineHeight, this.fontSize);
                         if (PX.test(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
-                            const fontSize = this.cssInitial('fontSize');
+                            const fontSize = getInitialValue.bind(this, 'fontSize')();
                             if (REGEX_EM.test(fontSize)) {
                                 value *= parseFloat(fontSize);
                             }
@@ -1960,7 +2018,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         value = parent.lineHeight;
                     }
                     if (this.styleElement) {
-                        const fontSize = this.cssInitial('fontSize');
+                        const fontSize = getInitialValue.bind(this, 'fontSize')();
                         if (REGEX_EM.test(fontSize)) {
                             const emSize = parseFloat(fontSize);
                             if (emSize !== 1) {
@@ -2030,7 +2088,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get top() {
         let result = this._cached.top;
         if (result === undefined) {
-            result = convertPosition(this, 'top');
+            result = convertPosition.bind(this, 'top')();
             this._cached.top = result;
         }
         return result;
@@ -2038,7 +2096,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get right() {
         let result = this._cached.right;
         if (result === undefined) {
-            result = convertPosition(this, 'right');
+            result = convertPosition.bind(this, 'right')();
             this._cached.right = result;
         }
         return result;
@@ -2046,7 +2104,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get bottom() {
         let result = this._cached.bottom;
         if (result === undefined) {
-            result = convertPosition(this, 'bottom');
+            result = convertPosition.bind(this, 'bottom')();
             this._cached.bottom = result;
         }
         return result;
@@ -2054,7 +2112,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get left() {
         let result = this._cached.left;
         if (result === undefined) {
-            result = convertPosition(this, 'left');
+            result = convertPosition.bind(this, 'left')();
             this._cached.left = result;
         }
         return result;
@@ -2235,6 +2293,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             case 'TEXTAREA':
             case 'PROGRESS':
             case 'METER':
+            case 'CANVAS':
                 this._inlineText = false;
                 break;
             case 'BUTTON':
@@ -2280,7 +2339,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get blockStatic() {
         let result = this._cached.blockStatic;
         if (result === undefined) {
-            result = this.pageFlow && (this.block && !this.floating || this.lineBreak || this.blockDimension && (this.cssInitial('width') === '100%' || this.cssInitial('minWidth') === '100%') && !this.hasPX('maxWidth'));
+            result = this.pageFlow && (this.block && !this.floating || this.lineBreak || this.blockDimension && (getInitialValue.bind(this, 'width')() === '100%' || getInitialValue.bind(this, 'minWidth')() === '100%') && !this.hasPX('maxWidth'));
             this._cached.blockStatic = result;
         }
         return result;
@@ -2561,10 +2620,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = '';
                     break;
                 default:
-                    if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || this.cssInitial('backgroundColor') === result)) {
+                    if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.bind(this, 'backgroundColor')() === result)) {
                         let parent = this.actualParent;
                         while (parent) {
-                            const color = parent.cssInitial('backgroundColor', true);
+                            const color = getInitialValue.bind(parent, 'backgroundColor', true)();
                             if (color !== '') {
                                 if (color === result && parent.backgroundColor === '') {
                                     result = '';
@@ -2614,7 +2673,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get percentWidth() {
         let result = this._cached.percentWidth;
         if (result === undefined) {
-            const value = this.cssInitial('width');
+            const value = getInitialValue.bind(this, 'width')();
             result = isPercent(value) ? parseFloat(value) / 100 : 0;
             this._cached.percentWidth = result;
         }
@@ -2623,7 +2682,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get percentHeight() {
         let result = this._cached.percentHeight;
         if (result === undefined) {
-            const value = this.cssInitial('height');
+            const value = getInitialValue.bind(this, 'height')();
             result = isPercent(value) && (this.actualParent?.hasHeight || this.css('position') === 'fixed') ? parseFloat(value) / 100 : 0;
             this._cached.percentHeight = result;
         }
@@ -2682,7 +2741,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             result = this.actualParent;
             if (!this.pageFlow && !this.documentBody) {
                 while (result && !result.documentBody) {
-                    switch (result.cssInitial('position', false, true)) {
+                    switch (getInitialValue.bind(result, 'position', false, true)()) {
                         case 'static':
                         case 'initial':
                         case 'unset':
@@ -2891,8 +2950,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (result === 0 && !this.naturalChild) {
                 const element = this.element;
                 if (element && hasComputedStyle(element)) {
-                    const node = getElementAsNode<T>(element, this.sessionId);
-                    result = node?.fontSize || getFontSize(getStyle(element));
+                    result = getElementAsNode<T>(element, this.sessionId)?.fontSize || getFontSize(getStyle(element));
                 }
                 else {
                     result = this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize || getFontSize(getStyle(document.body));
