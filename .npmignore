@@ -3,6 +3,7 @@
 @types/
 android-framework/
 android-widget/
+build/
 chrome-framework/
 html/books/
 html/demos/
@@ -12,6 +13,7 @@ src/
 temp/
 .eslint*
 .git*
+*.code-workspace
 rollup.*
 tsconfig.*
 !app.js

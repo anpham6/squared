@@ -1,4 +1,4 @@
-/* android.widget.drawer 1.5.1
+/* android.widget.drawer 1.6.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -44,7 +44,7 @@ this.android.widget.drawer = (function () {
             const options = createViewAttribute(this.options.self);
             if (Drawer.findNestedElement(node.element, "android.widget.menu" /* MENU */)) {
                 assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
-                this._setStyleTheme(node.api);
+                this.setStyleTheme(node.api);
             }
             else {
                 const navigationViewOptions = createViewAttribute(this.options.navigationView);
@@ -110,7 +110,7 @@ this.android.widget.drawer = (function () {
                 }
             }
         }
-        _setStyleTheme(api) {
+        setStyleTheme(api) {
             const settings = this.application.userSettings;
             const options = createStyleAttribute(this.options.resource);
             assignEmptyValue(options, 'name', settings.manifestThemeName);
@@ -131,7 +131,7 @@ this.android.widget.drawer = (function () {
 
     const drawer = new Drawer("android.widget.drawer" /* DRAWER */, 2 /* ANDROID */);
     if (squared) {
-        squared.includeAsync(drawer);
+        squared.include(drawer);
     }
 
     return drawer;

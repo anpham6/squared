@@ -1,4 +1,4 @@
-/* android.widget.bottomnavigation 1.5.1
+/* android.widget.bottomnavigation 1.6.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -23,9 +23,10 @@ this.android.widget.bottomnavigation = (function () {
             assignEmptyValue(options, 'android', 'background', '?android:attr/windowBackground');
             iterateArray(node.children, (item) => {
                 item.hide();
-                for (const child of item.cascade()) {
+                item.cascade((child) => {
                     child.hide();
-                }
+                    return false;
+                });
             }, 5);
             const controlName = node.api < 29 /* Q */ ? SUPPORT_ANDROID.BOTTOM_NAVIGATION : SUPPORT_ANDROID_X.BOTTOM_NAVIGATION;
             node.setControlType(controlName, CONTAINER_NODE.BLOCK);
@@ -34,10 +35,11 @@ this.android.widget.bottomnavigation = (function () {
             node.apply(Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue')));
             node.setLayoutWidth('match_parent');
             node.setLayoutHeight('wrap_content');
-            for (const item of node.cascade()) {
+            node.cascade((item) => {
                 this.addDescendant(item);
-            }
-            this._setStyleTheme();
+                return false;
+            });
+            this.setStyleTheme();
             return {
                 output: {
                     type: 1 /* XML */,
@@ -67,7 +69,7 @@ this.android.widget.bottomnavigation = (function () {
                 node.app('menu', app.menu);
             }
         }
-        _setStyleTheme() {
+        setStyleTheme() {
             const options = createStyleAttribute(this.options.resource);
             assignEmptyValue(options, 'name', this.application.userSettings.manifestThemeName);
             assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
@@ -77,7 +79,7 @@ this.android.widget.bottomnavigation = (function () {
 
     const bottomNavigation = new BottomNavigation("android.widget.bottomnavigation" /* BOTTOM_NAVIGATION */, 2 /* ANDROID */);
     if (squared) {
-        squared.includeAsync(bottomNavigation);
+        squared.include(bottomNavigation);
     }
 
     return bottomNavigation;

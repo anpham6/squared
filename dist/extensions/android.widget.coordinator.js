@@ -1,4 +1,4 @@
-/* android.widget.coordinator 1.5.1
+/* android.widget.coordinator 1.6.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -45,20 +45,22 @@ this.android.widget.coordinator = (function () {
         postOptimize(node) {
             if (node.documentRoot) {
                 if (node.inlineWidth) {
-                    for (const item of node) {
+                    node.some(item => {
                         if (item.rightAligned) {
                             node.setLayoutWidth('match_parent', true);
-                            break;
+                            return true;
                         }
-                    }
+                        return false;
+                    });
                 }
                 if (node.inlineHeight) {
-                    for (const item of node) {
+                    node.some(item => {
                         if (item.bottomAligned) {
                             node.setLayoutHeight('match_parent', true);
-                            break;
+                            return true;
                         }
-                    }
+                        return false;
+                    });
                 }
             }
         }
@@ -66,7 +68,7 @@ this.android.widget.coordinator = (function () {
 
     const coordinator = new Coordinator("android.widget.coordinator" /* COORDINATOR */, 2 /* ANDROID */);
     if (squared) {
-        squared.includeAsync(coordinator);
+        squared.include(coordinator);
     }
 
     return coordinator;

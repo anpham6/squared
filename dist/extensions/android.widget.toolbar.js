@@ -1,4 +1,4 @@
-/* android.widget.toolbar 1.5.1
+/* android.widget.toolbar 1.6.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -137,7 +137,7 @@ this.android.widget.toolbar = (function () {
                 else {
                     assignEmptyValue(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
                 }
-                appBarNode = this._createPlaceholder(node, appBarChildren, target);
+                appBarNode = this.createPlaceholder(node, appBarChildren, target);
                 appBarNode.parent = parent;
                 let id = android.id;
                 if (isString(id)) {
@@ -154,7 +154,7 @@ this.android.widget.toolbar = (function () {
                     }
                     assignEmptyValue(app, 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
                     assignEmptyValue(app, 'toolbarId', node.documentId);
-                    collapsingToolbarNode = this._createPlaceholder(node, collapsingToolbarChildren, target);
+                    collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
                     if (collapsingToolbarNode) {
                         collapsingToolbarNode.parent = appBarNode;
                         android = collapsingToolbarOptions.android;
@@ -164,7 +164,8 @@ this.android.widget.toolbar = (function () {
                             delete android.id;
                         }
                         collapsingToolbarNode.setControlType(collapsingToolbarName, CONTAINER_NODE.BLOCK);
-                        collapsingToolbarNode.each(item => item.dataset.target = collapsingToolbarNode.controlId);
+                        const controlId = collapsingToolbarNode.controlId;
+                        collapsingToolbarNode.each(item => item.dataset.target = controlId);
                     }
                 }
             }
@@ -308,15 +309,13 @@ this.android.widget.toolbar = (function () {
                 }
             }
         }
-        _createPlaceholder(node, children, target) {
+        createPlaceholder(node, children, target) {
             const delegate = children.length > 0;
             const placeholder = this.application.createNode({ parent: node, children, delegate, cascade: true });
             placeholder.inherit(node, 'base');
             if (delegate) {
                 let containerIndex = Number.POSITIVE_INFINITY;
-                for (const item of children) {
-                    containerIndex = Math.min(containerIndex, item.containerIndex);
-                }
+                children.forEach(item => containerIndex = Math.min(containerIndex, item.containerIndex));
                 placeholder.containerIndex = containerIndex;
             }
             if (target) {
@@ -331,7 +330,7 @@ this.android.widget.toolbar = (function () {
 
     const toolbar = new Toolbar("android.widget.toolbar" /* TOOLBAR */, 2 /* ANDROID */);
     if (squared) {
-        squared.includeAsync(toolbar);
+        squared.include(toolbar);
     }
 
     return toolbar;

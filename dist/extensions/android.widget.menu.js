@@ -1,4 +1,4 @@
-/* android.widget.menu 1.5.1
+/* android.widget.menu 1.6.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -7,7 +7,7 @@ this.android.widget.menu = (function () {
     'use strict';
 
     const $lib = android.lib;
-    const { isNumber, sameArray, safeNestedMap } = squared.lib.util;
+    const { appendSeparator, isNumber, sameArray, safeNestedMap } = squared.lib.util;
     const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { EXT_ANDROID } = $lib.constant;
     const { CONTAINER_NODE } = $lib.enumeration;
@@ -57,9 +57,7 @@ this.android.widget.menu = (function () {
                 if (value) {
                     const match = pattern.exec(value);
                     if (match) {
-                        const name = NAMESPACE_APP.includes(attr) ? 'app' : 'android';
-                        const data = safeNestedMap(options, name);
-                        data[attr] = Array.from(new Set(match)).join('|');
+                        safeNestedMap(options, NAMESPACE_APP.includes(attr) ? 'app' : 'android')[attr] = Array.from(new Set(match)).join('|');
                     }
                 }
             }
@@ -117,10 +115,11 @@ this.android.widget.menu = (function () {
             node.addAlign(4 /* AUTO_LAYOUT */);
             node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
             node.render(outerParent);
-            for (const item of node.cascade()) {
+            node.cascade((item) => {
                 this.addDescendant(item);
-            }
-            node.dataset.pathname = 'res/menu';
+                return false;
+            });
+            node.dataset.pathname = appendSeparator(this.controller.userSettings.outputDirectory, 'res/menu');
             return {
                 output: {
                     type: 1 /* XML */,
@@ -219,7 +218,7 @@ this.android.widget.menu = (function () {
 
     const menu = new Menu("android.widget.menu" /* MENU */, 2 /* ANDROID */, ['NAV']);
     if (squared) {
-        squared.includeAsync(menu);
+        squared.include(menu);
     }
 
     return menu;

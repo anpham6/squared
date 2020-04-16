@@ -1,4 +1,4 @@
-/* squared.base 1.5.1
+/* squared.base 1.6.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -31,17 +31,15 @@
     }
 
     const $lib = squared.lib;
-    const { CSS: CSS$1, STRING, XML } = $lib.regex;
-    const { buildAlphaString, fromLastIndexOf } = $lib.util;
-    const getFileName = () => buildAlphaString(5).toLowerCase() + '_' + new Date().getTime();
+    const { STRING, XML } = $lib.regex;
+    const { extractURL } = $lib.css;
+    const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = $lib.util;
     class Resource {
         reset() {
-            var _a;
             const ASSETS = Resource.ASSETS;
             for (const name in ASSETS) {
                 ASSETS[name].clear();
             }
-            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.reset();
         }
         addImage(element) {
             var _a;
@@ -55,12 +53,15 @@
                     }
                 }
                 if (uri !== '') {
-                    Resource.ASSETS.images.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
+                    Resource.ASSETS.image.set(uri, { width: element.naturalWidth, height: element.naturalHeight, uri });
                 }
             }
         }
-        getImage(src) {
-            return Resource.ASSETS.images.get(src);
+        addVideo(uri, mimeType) {
+            Resource.ASSETS.video.set(uri, { uri, mimeType });
+        }
+        addAudio(uri, mimeType) {
+            Resource.ASSETS.audio.set(uri, { uri, mimeType });
         }
         addFont(data) {
             const fonts = Resource.ASSETS.fonts;
@@ -73,14 +74,6 @@
             else {
                 fonts.set(fontFamily, [data]);
             }
-        }
-        getFont(fontFamily, fontStyle = 'normal', fontWeight) {
-            const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
-            if (font) {
-                const fontFormat = this.controllerSettings.supported.fontFormat;
-                return font.find(item => item.fontStyle === fontStyle && (fontWeight === undefined || item.fontWeight === parseInt(fontWeight)) && (fontFormat === '*' || fontFormat.includes(item.srcFormat)));
-            }
-            return undefined;
         }
         addRawData(uri, mimeType, encoding, content, width = 0, height = 0) {
             mimeType = mimeType.toLowerCase();
@@ -95,35 +88,13 @@
             else {
                 content = content.replace(/\\(["'])/g, (match, ...capture) => capture[0]);
             }
-            const imageFormat = this.controllerSettings.supported.imageFormat;
-            const origin = location.origin;
-            const valid = uri.startsWith(origin);
-            const pathname = valid ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '';
-            let filename;
-            if (imageFormat === '*') {
-                if (valid) {
-                    filename = fromLastIndexOf(uri, '/');
-                }
-                else {
-                    let extension = mimeType.split('/').pop();
-                    if (extension === 'svg+xml') {
-                        extension = 'svg';
-                    }
-                    filename = getFileName() + '.' + extension;
-                }
-            }
-            else {
-                for (const extension of imageFormat) {
-                    if (mimeType.includes(extension)) {
-                        const ext = '.' + extension;
-                        filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/') : getFileName() + ext;
-                        break;
-                    }
-                }
-            }
-            if (filename) {
+            const imageMimeType = this.mimeTypeMap.image;
+            if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {
+                const origin = location.origin;
+                const ext = fromMimeType(mimeType);
+                const filename = uri.endsWith('.' + ext) ? fromLastIndexOf(uri, '/') : this.randomUUID + '.' + ext;
                 Resource.ASSETS.rawData.set(uri, {
-                    pathname,
+                    pathname: uri.startsWith(origin) ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '',
                     filename,
                     content,
                     base64,
@@ -135,13 +106,27 @@
             }
             return '';
         }
+        getImage(uri) {
+            return Resource.ASSETS.image.get(uri);
+        }
+        getVideo(uri) {
+            return Resource.ASSETS.video.get(uri);
+        }
+        getAudio(uri) {
+            return Resource.ASSETS.audio.get(uri);
+        }
+        getFont(fontFamily, fontStyle = 'normal', fontWeight) {
+            const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
+            if (font) {
+                const mimeType = this.mimeTypeMap.font;
+                return font.find(item => item.fontStyle === fontStyle && (!fontWeight || item.fontWeight === parseInt(fontWeight)) && (hasMimeType(mimeType, item.srcFormat) || item.srcUrl && hasMimeType(mimeType, item.srcUrl)));
+            }
+            return undefined;
+        }
         getRawData(uri) {
-            if (/^url\(/.test(uri)) {
-                const match = CSS$1.URL.exec(uri);
-                if (match) {
-                    uri = match[1];
-                }
-                else {
+            if (uri.startsWith('url(')) {
+                uri = extractURL(uri);
+                if (uri === '') {
                     return undefined;
                 }
             }
@@ -151,13 +136,23 @@
             instance.resource = this;
             this.fileHandler = instance;
         }
+        get mimeTypeMap() {
+            return this.controllerSettings.mimeType;
+        }
+        get randomUUID() {
+            return randomUUID();
+        }
     }
+    Resource.KEY_NAME = 'squared.resource';
     Resource.ASSETS = {
         ids: new Map(),
-        images: new Map(),
         fonts: new Map(),
+        image: new Map(),
+        video: new Map(),
+        audio: new Map(),
         rawData: new Map()
     };
+    Resource.canCompressImage = (filename) => /\.(png|jpg|jpeg)$/i.test(filename);
 
     var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
         function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -169,12 +164,12 @@
         });
     };
     const $lib$1 = squared.lib;
-    const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, validMediaRule } = $lib$1.css;
+    const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, checkMediaRule } = $lib$1.css;
     const { isTextNode } = $lib$1.dom;
     const { convertCamelCase, isString, objectMap, resolvePath } = $lib$1.util;
     const { CHAR, FILE, STRING: STRING$1, XML: XML$1 } = $lib$1.regex;
     const { getElementCache, setElementCache } = $lib$1.session;
-    const { images, rawData } = Resource.ASSETS;
+    const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
     const REGEX_MEDIATEXT = /all|screen/;
     const REGEX_BACKGROUND = /^background/;
     const REGEX_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
@@ -183,21 +178,23 @@
     const REGEX_FONTSRC = /\s*src:\s*([^;]+);/;
     const REGEX_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
     const REGEX_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-    const REGEX_URL = /\s*(url|local)\((?:['""]([^'")]+)['"]|([^)]+))\)(?:\s*format\(['"]?([\w-]+)['"]?\))?\s*/;
-    const REGEX_DATAURI = new RegExp(`(url\\("(${STRING$1.DATAURI})"\\)),?\\s*`, 'g');
+    const REGEX_URL = /\s*(url|local)\((?:["']([^'")]+)["']|([^)]+))\)(?:\s*format\(["']?([\w-]+)["']?\))?\s*/;
+    const REGEX_DATAURI = new RegExp(`url\\(["']?(${STRING$1.DATAURI})["']?\\),?\\s*`, 'g');
     function addImageSrc(uri, width = 0, height = 0) {
-        const image = images.get(uri);
-        if (image === undefined || width > 0 && height > 0 || image.width === 0 || image.height === 0) {
-            images.set(uri, { width, height, uri });
+        if (uri !== '') {
+            const image = ASSET_IMAGE.get(uri);
+            if (width > 0 && height > 0 || !image || image.width === 0 || image.height === 0) {
+                ASSET_IMAGE.set(uri, { width, height, uri });
+            }
         }
     }
     function parseSrcSet(value) {
         if (value !== '') {
-            for (const uri of value.split(XML$1.SEPARATOR)) {
+            value.split(XML$1.SEPARATOR).forEach(uri => {
                 if (uri !== '') {
-                    addImageSrc(resolvePath(uri.split(CHAR.SPACE)[0].trim()));
+                    addImageSrc(resolvePath(uri.split(CHAR.SPACE)[0]));
                 }
-            }
+            });
         }
     }
     function getImageSvgAsync(value) {
@@ -242,16 +239,25 @@
             var _a;
             (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveToArchive(filename || this.userSettings.outputArchiveName, options);
         }
+        createFrom(format, options) {
+            var _a;
+            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.createFrom(format, options);
+        }
+        appendFromArchive(filename, options) {
+            var _a;
+            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.appendFromArchive(filename, options);
+        }
         reset() {
+            var _a;
             const processing = this.processing;
             processing.cache.reset();
             processing.excluded.clear();
             processing.sessionId = '';
             this.session.active.length = 0;
             this.controllerHandler.reset();
-            for (const ext of this.extensions) {
-                ext.subscribers.clear();
-            }
+            this.resourceHandler.reset();
+            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.reset();
+            this.extensions.forEach(ext => ext.subscribers.clear());
             this.closed = false;
         }
         parseDocument(...elements) {
@@ -267,27 +273,28 @@
             const preloaded = [];
             const preloadImages = this.userSettings.preloadImages;
             const imageElements = [];
-            const styleElement = insertStyleSheetRule(`html > body { overflow: hidden !important; }`);
-            let THEN;
-            const resume = () => {
+            const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
+            const removePreloaded = () => {
                 this.initializing = false;
-                for (const image of preloaded) {
+                preloaded.forEach(image => {
                     if (image.parentElement) {
                         documentRoot.removeChild(image);
                     }
-                }
+                });
                 preloaded.length = 0;
-                for (const ext of this.extensions) {
-                    ext.beforeParseDocument();
-                }
+            };
+            let THEN;
+            let CATCH;
+            const resumeThread = () => {
+                removePreloaded();
+                this.extensions.forEach(ext => ext.beforeParseDocument());
                 for (const element of this.rootElements) {
-                    if (this.createCache(element)) {
-                        this.afterCreateCache(element);
+                    const node = this.createCache(element);
+                    if (node) {
+                        this.afterCreateCache(node);
                     }
                 }
-                for (const ext of this.extensions) {
-                    ext.afterParseDocument();
-                }
+                this.extensions.forEach(ext => ext.afterParseDocument());
                 try {
                     document.head.removeChild(styleElement);
                 }
@@ -300,7 +307,7 @@
             if (elements.length === 0) {
                 elements.push(document.body);
             }
-            for (const value of elements) {
+            elements.forEach(value => {
                 let element;
                 if (typeof value === 'string') {
                     element = document.getElementById(value);
@@ -309,19 +316,20 @@
                     element = value;
                 }
                 else {
-                    continue;
+                    return;
                 }
                 if (element) {
                     this.rootElements.add(element);
                 }
-            }
+            });
             const documentRoot = this.rootElements.values().next().value;
             if (preloadImages) {
                 for (const element of this.rootElements) {
                     element.querySelectorAll('picture > source').forEach((source) => parseSrcSet(source.srcset));
+                    element.querySelectorAll('video').forEach((source) => addImageSrc(source.poster));
                     element.querySelectorAll('input[type=image]').forEach((image) => addImageSrc(image.src, image.width, image.height));
                 }
-                for (const image of images.values()) {
+                for (const image of ASSET_IMAGE.values()) {
                     const uri = image.uri;
                     if (isSvg(uri)) {
                         imageElements.push(uri);
@@ -340,7 +348,7 @@
                     }
                 }
             }
-            for (const [uri, data] of rawData.entries()) {
+            for (const [uri, data] of ASSET_RAWDATA.entries()) {
                 const mimeType = data.mimeType;
                 if ((mimeType === null || mimeType === void 0 ? void 0 : mimeType.startsWith('image/')) && !mimeType.endsWith('svg+xml')) {
                     const element = document.createElement('img');
@@ -349,7 +357,7 @@
                     if (width > 0 && height > 0) {
                         data.width = width;
                         data.height = height;
-                        images.set(uri, { width, height, uri: data.filename });
+                        ASSET_IMAGE.set(uri, { width, height, uri: data.filename });
                     }
                     else {
                         document.body.appendChild(element);
@@ -392,7 +400,7 @@
                 }))
                     .then((result) => {
                     const length = result.length;
-                    for (let i = 0; i < length; i++) {
+                    for (let i = 0; i < length; ++i) {
                         const value = result[i];
                         if (typeof value === 'string') {
                             const uri = imageElements[i];
@@ -404,44 +412,60 @@
                             resource.addImage(value);
                         }
                     }
-                    resume();
+                    resumeThread();
                 })
                     .catch((error) => {
+                    let target = error;
                     if (error instanceof Event) {
-                        error = error.target;
+                        target = error.target;
                     }
-                    const message = error instanceof HTMLImageElement ? error.src : '';
-                    if (!this.userSettings.showErrorMessages || !isString(message) || confirm('FAIL: ' + message)) {
-                        resume();
+                    const message = target instanceof HTMLImageElement ? target.src : '';
+                    if (CATCH) {
+                        if (!(error instanceof Error)) {
+                            error = new Error(message ? `FAIL: ${message}` : 'Unable to preload images.');
+                        }
+                        removePreloaded();
+                        CATCH(error, resumeThread);
+                    }
+                    else if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
+                        resumeThread();
+                    }
+                    else {
+                        removePreloaded();
                     }
                 });
             }
             else {
-                resume();
+                resumeThread();
             }
-            const PromiseResult = class {
-                then(resolve) {
+            const Result = class {
+                then(callback) {
                     if (imageElements.length) {
-                        THEN = resolve;
+                        THEN = callback;
                     }
                     else {
-                        resolve();
+                        callback();
                     }
+                    return this;
+                }
+                catch(callback) {
+                    CATCH = callback;
+                    return this;
                 }
             };
-            return new PromiseResult();
+            return new Result();
+        }
+        parseDocumentAsync(...elements) {
+            return __awaiter(this, void 0, void 0, function* () {
+                return yield this.parseDocument(...elements);
+            });
         }
         createCache(documentRoot) {
             const node = this.createRootNode(documentRoot);
             if (node) {
-                node.parent.setBounds();
-                for (const item of this._cache) {
-                    item.setBounds();
-                }
                 this.controllerHandler.sortInitialCache();
-                return true;
             }
-            return false;
+            return node;
         }
         toString() {
             return '';
@@ -482,10 +506,9 @@
                 const children = new Array(length);
                 const elements = new Array(childElementCount);
                 let inlineText = true;
-                let j = 0;
-                let k = 0;
-                for (let i = 0; i < length; i++) {
-                    const element = childNodes[i];
+                let i = 0, j = 0, k = 0;
+                while (i < length) {
+                    const element = childNodes[i++];
                     let child;
                     if (element.nodeName.charAt(0) === '#') {
                         if (isTextNode(element)) {
@@ -519,22 +542,23 @@
                 node.naturalChildren = children;
                 node.naturalElements = elements;
                 node.inlineText = inlineText;
-                if (this.userSettings.createQuerySelectorMap && k > 0) {
-                    node.queryMap = this.createQueryMap(elements);
+                if (k > 0 && this.userSettings.createQuerySelectorMap) {
+                    node.queryMap = this.createQueryMap(elements, k);
                 }
             }
             return node;
         }
-        createQueryMap(elements) {
+        createQueryMap(elements, length) {
             var _a;
             const result = [elements];
-            for (const item of elements) {
-                const childMap = item.queryMap;
+            let i = 0;
+            while (i < length) {
+                const childMap = elements[i++].queryMap;
                 if (childMap) {
-                    const length = childMap.length;
-                    for (let i = 0; i < length; i++) {
-                        const j = i + 1;
-                        result[j] = ((_a = result[j]) === null || _a === void 0 ? void 0 : _a.concat(childMap[i])) || childMap[i];
+                    const q = childMap.length;
+                    for (let j = 0; j < q; ++j) {
+                        const k = j + 1;
+                        result[k] = ((_a = result[k]) === null || _a === void 0 ? void 0 : _a.concat(childMap[j])) || childMap[j];
                     }
                 }
             }
@@ -547,8 +571,9 @@
                     const cssRules = item.cssRules;
                     if (cssRules) {
                         const length = cssRules.length;
-                        for (let i = 0; i < length; i++) {
-                            const rule = cssRules[i];
+                        let i = 0;
+                        while (i < length) {
+                            const rule = cssRules[i++];
                             switch (rule.type) {
                                 case CSSRule.STYLE_RULE:
                                 case CSSRule.FONT_FACE_RULE:
@@ -558,7 +583,7 @@
                                     applyStyleSheet(rule.styleSheet);
                                     break;
                                 case CSSRule.MEDIA_RULE:
-                                    if (validMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
+                                    if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
                                         this.applyCSSRuleList(rule.cssRules);
                                     }
                                     break;
@@ -583,8 +608,9 @@
             };
             const styleSheets = document.styleSheets;
             const length = styleSheets.length;
-            for (let i = 0; i < length; i++) {
-                const styleSheet = styleSheets[i];
+            let i = 0;
+            while (i < length) {
+                const styleSheet = styleSheets[i++];
                 let mediaText;
                 try {
                     mediaText = styleSheet.media.mediaText;
@@ -596,14 +622,8 @@
                 }
             }
         }
-        applyCSSRuleList(rules) {
-            const length = rules.length;
-            for (let i = 0; i < length; i++) {
-                this.applyStyleRule(rules[i]);
-            }
-        }
         applyStyleRule(item) {
-            var _a, _b, _c, _d, _e, _f, _g;
+            var _a, _b, _c, _d, _e, _f;
             const resourceHandler = this.resourceHandler;
             const sessionId = this.processing.sessionId;
             const styleSheetHref = ((_a = item.parentStyleSheet) === null || _a === void 0 ? void 0 : _a.href) || undefined;
@@ -616,37 +636,36 @@
                     const cssStyle = item.style;
                     const important = {};
                     const baseMap = {};
-                    const parseImageUrl = (styleMap, attr) => {
+                    const parseImageUrl = (attr) => {
                         var _a;
-                        const value = styleMap[attr];
+                        const value = baseMap[attr];
                         if (value && value !== 'initial') {
                             let result = value;
+                            REGEX_DATAURI.lastIndex = 0;
                             let match;
                             while ((match = REGEX_DATAURI.exec(value)) !== null) {
-                                if (match[3]) {
-                                    const mimeType = match[3].split(XML$1.DELIMITER);
-                                    resourceHandler.addRawData(match[2], mimeType[0].trim(), ((_a = mimeType[1]) === null || _a === void 0 ? void 0 : _a.trim()) || 'utf8', match[4]);
+                                if (match[2]) {
+                                    const mimeType = match[2].split(XML$1.DELIMITER);
+                                    resourceHandler.addRawData(match[1], mimeType[0].trim(), ((_a = mimeType[1]) === null || _a === void 0 ? void 0 : _a.trim()) || 'utf8', match[3]);
                                 }
                                 else if (this.userSettings.preloadImages) {
-                                    const uri = resolvePath(match[4], styleSheetHref);
+                                    const uri = resolvePath(match[3], styleSheetHref);
                                     if (uri !== '') {
-                                        if (resourceHandler.getImage(uri) === undefined) {
+                                        if (!resourceHandler.getImage(uri)) {
                                             addImageSrc(uri);
                                         }
-                                        result = result.replace(match[1], `url("${uri}")`);
+                                        result = result.replace(match[0], `url("${uri}")`);
                                     }
                                 }
                             }
-                            styleMap[attr] = result;
-                            REGEX_DATAURI.lastIndex = 0;
+                            baseMap[attr] = result;
                         }
                     };
-                    for (const attr of Array.from(cssStyle)) {
-                        baseMap[convertCamelCase(attr)] = cssStyle[attr];
-                    }
-                    parseImageUrl(baseMap, 'backgroundImage');
-                    parseImageUrl(baseMap, 'listStyleImage');
-                    parseImageUrl(baseMap, 'content');
+                    Array.from(cssStyle).forEach(attr => baseMap[convertCamelCase(attr)] = cssStyle[attr]);
+                    parseImageUrl('backgroundImage');
+                    parseImageUrl('listStyleImage');
+                    parseImageUrl('content');
+                    REGEX_IMPORTANT.lastIndex = 0;
                     let match;
                     while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
                         const attr = convertCamelCase(match[1]);
@@ -717,14 +736,13 @@
                         }
                         important[attr] = true;
                     }
-                    REGEX_IMPORTANT.lastIndex = 0;
-                    for (const selectorText of parseSelectorText(item.selectorText)) {
+                    parseSelectorText(item.selectorText, true).forEach(selectorText => {
                         const specificity = getSpecificity(selectorText);
                         const [selector, target] = selectorText.split('::');
                         const targetElt = target ? '::' + target : '';
                         document.querySelectorAll(selector || '*').forEach((element) => {
-                            const attrStyle = 'styleMap' + targetElt;
-                            const attrSpecificity = 'styleSpecificity' + targetElt;
+                            const attrStyle = `styleMap${targetElt}`;
+                            const attrSpecificity = `styleSpecificity${targetElt}`;
                             const styleData = getElementCache(element, attrStyle, sessionId);
                             if (styleData) {
                                 const specificityData = getElementCache(element, attrSpecificity, sessionId) || {};
@@ -751,24 +769,25 @@
                                 for (const attr in styleMap) {
                                     specificityData[attr] = specificity + (important[attr] ? 1000 : 0);
                                 }
-                                setElementCache(element, 'style' + targetElt, '0', getStyle(element, targetElt));
+                                setElementCache(element, `style${targetElt}`, '0', getStyle(element, targetElt));
                                 setElementCache(element, 'sessionId', '0', sessionId);
                                 setElementCache(element, attrStyle, sessionId, styleMap);
                                 setElementCache(element, attrSpecificity, sessionId, specificityData);
                             }
                         });
-                    }
+                    });
                     break;
                 }
                 case CSSRule.FONT_FACE_RULE: {
                     const attr = (_b = REGEX_FONTFACE.exec(cssText)) === null || _b === void 0 ? void 0 : _b[1];
                     if (attr) {
                         const fontFamily = (((_c = REGEX_FONTFAMILY.exec(attr)) === null || _c === void 0 ? void 0 : _c[1]) || '').trim();
-                        const srcMatch = (((_d = REGEX_FONTSRC.exec(attr)) === null || _d === void 0 ? void 0 : _d[1]) || '').split(XML$1.SEPARATOR);
-                        if (fontFamily !== '' && srcMatch.length) {
+                        const match = (((_d = REGEX_FONTSRC.exec(attr)) === null || _d === void 0 ? void 0 : _d[1]) || '').split(XML$1.SEPARATOR);
+                        if (fontFamily !== '' && match.length) {
                             const fontStyle = ((_e = REGEX_FONTSTYLE.exec(attr)) === null || _e === void 0 ? void 0 : _e[1].toLowerCase()) || 'normal';
                             const fontWeight = parseInt(((_f = REGEX_FONTWEIGHT.exec(attr)) === null || _f === void 0 ? void 0 : _f[1]) || '400');
-                            for (const value of srcMatch) {
+                            match.forEach(value => {
+                                var _a;
                                 const urlMatch = REGEX_URL.exec(value);
                                 if (urlMatch) {
                                     let srcUrl;
@@ -786,14 +805,21 @@
                                         fontStyle,
                                         srcUrl,
                                         srcLocal,
-                                        srcFormat: ((_g = urlMatch[4]) === null || _g === void 0 ? void 0 : _g.toLowerCase().trim()) || 'truetype'
+                                        srcFormat: ((_a = urlMatch[4]) === null || _a === void 0 ? void 0 : _a.toLowerCase().trim()) || 'truetype'
                                     });
                                 }
-                            }
+                            });
                         }
                     }
                     break;
                 }
+            }
+        }
+        applyCSSRuleList(rules) {
+            const length = rules.length;
+            let i = 0;
+            while (i < length) {
+                this.applyStyleRule(rules[i++]);
             }
         }
         get controllerHandler() {
@@ -818,6 +844,7 @@
             return 0;
         }
     }
+    Application.KEY_NAME = 'squared.application';
 
     class Controller {
         preventNodeCascade(element) {
@@ -873,7 +900,7 @@
             else {
                 const framework = ext.framework;
                 if (framework > 0) {
-                    for (const item of ext.dependencies) {
+                    ext.dependencies.forEach(item => {
                         if (item.preload) {
                             name = item.name;
                             if (this.retrieve(name) === null) {
@@ -883,7 +910,7 @@
                                 }
                             }
                         }
-                    }
+                    });
                 }
                 if ((framework === 0 || hasBit(framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
                     ext.application = application;
@@ -894,9 +921,9 @@
             return false;
         }
         exclude(ext) {
-            const extensions = this.application.extensions;
+            const extensions = this.extensions;
             const length = extensions.length;
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < length; ++i) {
                 if (extensions[i] === ext) {
                     extensions.splice(i, 1);
                     return true;
@@ -905,7 +932,11 @@
             return false;
         }
         retrieve(name) {
-            for (const ext of this.application.extensions) {
+            const extensions = this.extensions;
+            const length = extensions.length;
+            let i = 0;
+            while (i < length) {
+                const ext = extensions[i++];
                 if (ext.name === name) {
                     return ext;
                 }
@@ -933,156 +964,16 @@
             const value = this.optionValue(name, attr);
             return typeof value === 'boolean' ? value : false;
         }
+        get extensions() {
+            return this.application.extensions;
+        }
     }
 
-    const { fromLastIndexOf: fromLastIndexOf$1, isString: isString$1, trimString } = squared.lib.util;
-    const isHttpProtocol = () => /^http/.test(location.protocol);
+    const { fromLastIndexOf: fromLastIndexOf$1, isString: isString$1 } = squared.lib.util;
+    const isHttpProtocol = () => location.protocol.startsWith('http');
     class File {
         constructor() {
             this.assets = [];
-        }
-        static getMimeType(value) {
-            switch (value.toLowerCase()) {
-                case 'aac':
-                    return 'audio/aac';
-                case 'abw':
-                    return 'application/x-abiword';
-                case 'arc':
-                    return 'application/x-freearc';
-                case 'avi':
-                    return 'video/x-msvideo';
-                case 'azw':
-                    return 'application/vnd.amazon.ebook';
-                case 'bin':
-                    return 'application/octet-stream';
-                case 'bmp':
-                    return 'image/bmp';
-                case 'bz':
-                    return 'application/x-bzip';
-                case 'bz2':
-                    return 'application/x-bzip2';
-                case 'csh':
-                    return 'application/x-csh';
-                case 'css':
-                    return 'text/css';
-                case 'csv':
-                    return 'text/csv';
-                case 'doc':
-                    return 'application/msword';
-                case 'docx':
-                    return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-                case 'eot':
-                    return 'application/vnd.ms-fontobject';
-                case 'epub':
-                    return 'application/epub+zip';
-                case 'gif':
-                    return 'image/gif';
-                case 'htm':
-                case 'html':
-                    return 'text/html';
-                case 'ico':
-                    return 'image/vnd.microsoft.icon';
-                case 'ics':
-                    return 'text/calendar';
-                case 'jar':
-                    return 'application/java-archive';
-                case 'jpeg':
-                case 'jpg':
-                    return 'image/jpeg';
-                case 'js':
-                case 'mjs':
-                    return 'text/javascript';
-                case 'json':
-                    return 'application/json';
-                case 'jsonld':
-                    return 'application/ld+json';
-                case 'mid':
-                case 'midi':
-                    return 'audio/midi';
-                case 'mp3':
-                    return 'audio/mpeg';
-                case 'mpeg':
-                    return 'video/mpeg';
-                case 'mpkg':
-                    return 'application/vnd.apple.installer+xml';
-                case 'odp':
-                    return 'application/vnd.oasis.opendocument.presentation';
-                case 'ods':
-                    return 'application/vnd.oasis.opendocument.spreadsheet';
-                case 'odt':
-                    return 'application/vnd.oasis.opendocument.text';
-                case 'oga':
-                    return 'audio/ogg';
-                case 'ogv':
-                    return 'video/ogg';
-                case 'ogx':
-                    return 'application/ogg';
-                case 'otf':
-                    return 'font/otf';
-                case 'png':
-                    return 'image/png';
-                case 'pdf':
-                    return 'application/pdf';
-                case 'ppt':
-                    return 'application/vnd.ms-powerpoint';
-                case 'pptx':
-                    return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
-                case 'rar':
-                    return 'application/x-rar-compressed';
-                case 'rtf':
-                    return 'application/rtf';
-                case 'sh':
-                    return 'application/x-sh';
-                case 'svg':
-                    return 'image/svg+xml';
-                case 'swf':
-                    return 'application/x-shockwave-flash';
-                case 'tar':
-                    return 'application/x-tar';
-                case 'tif':
-                case 'tiff':
-                    return 'image/tiff';
-                case 'ts':
-                    return 'video/mp2t';
-                case 'ttf':
-                    return 'font/ttf';
-                case 'txt':
-                    return 'text/plain';
-                case 'vsd':
-                    return 'application/vnd.visio';
-                case 'wav':
-                    return 'audio/wav';
-                case 'weba':
-                    return 'audio/webm';
-                case 'webm':
-                    return 'video/webm';
-                case 'webp':
-                    return 'image/webp';
-                case 'woff':
-                    return 'font/woff';
-                case 'woff2':
-                    return 'font/woff2';
-                case 'xhtml':
-                    return 'application/xhtml+xml';
-                case 'xls':
-                    return 'application/vnd.ms-excel';
-                case 'xlsx':
-                    return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-                case 'xml':
-                    return 'text/xml';
-                case 'xul':
-                    return 'application/vnd.mozilla.xul+xml';
-                case 'zip':
-                    return 'application/zip';
-                case '3gp':
-                    return 'video/3gpp';
-                case '.3g2':
-                    return 'video/3gpp2';
-                case '.7z':
-                    return 'application/x-7z-compressed';
-                default:
-                    return '';
-            }
         }
         static downloadFile(data, filename, mimeType) {
             const blob = new Blob([data], { type: mimeType || 'application/octet-stream' });
@@ -1100,16 +991,21 @@
             body.removeChild(element);
             setTimeout(() => window.URL.revokeObjectURL(url), 1);
         }
+        createFrom(format, options) {
+            this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { format }));
+        }
+        appendFromArchive(filename, options) {
+            this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { appendTo: filename, format: filename.substring(filename.lastIndexOf('.') + 1) }));
+        }
         addAsset(data) {
             if (data.content || data.uri || data.base64) {
-                const assets = this.assets;
                 const { pathname, filename } = data;
-                const asset = assets.find(item => item.pathname === pathname && item.filename === filename);
+                const asset = this.assets.find(item => item.pathname === pathname && item.filename === filename);
                 if (asset) {
                     Object.assign(asset, data);
                 }
                 else {
-                    assets.push(data);
+                    this.assets.push(data);
                 }
             }
         }
@@ -1118,27 +1014,23 @@
         }
         copying(options) {
             if (isHttpProtocol()) {
-                const directory = options.directory;
+                const { assets, directory } = options;
                 if (isString$1(directory)) {
-                    let assets = options.assets || [];
-                    assets = assets.concat(this.assets);
-                    if (assets.length) {
-                        const { outputDirectory, outputEmptyCopyDirectory, outputArchiveTimeout } = this.userSettings;
+                    const body = assets ? assets.concat(this.assets) : this.assets;
+                    if (body.length) {
+                        body[0].exclusions = options.exclusions;
                         fetch('/api/assets/copy' +
                             '?to=' + encodeURIComponent(directory.trim()) +
-                            '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
-                            '&empty=' + (outputEmptyCopyDirectory ? '1' : '0') +
-                            '&timeout=' + outputArchiveTimeout, {
+                            '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0'), {
                             method: 'POST',
-                            headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
-                            body: JSON.stringify(assets)
+                            headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
+                            body: JSON.stringify(body)
                         })
                             .then((response) => response.json())
                             .then((result) => {
                             if (result) {
-                                const callback = options.callback;
-                                if (typeof callback === 'function') {
-                                    callback(result);
+                                if (typeof options.callback === 'function') {
+                                    options.callback(result);
                                 }
                                 if (this.userSettings.showErrorMessages) {
                                     const { application, system } = result;
@@ -1150,7 +1042,7 @@
                         })
                             .catch(err => {
                             if (this.userSettings.showErrorMessages) {
-                                alert('ERROR: ' + err);
+                                alert(`ERROR: ${err}`);
                             }
                         });
                     }
@@ -1162,32 +1054,28 @@
         }
         archiving(options) {
             if (isHttpProtocol()) {
-                const filename = options.filename;
+                const { assets, filename } = options;
                 if (isString$1(filename)) {
-                    let assets = options.assets || [];
-                    assets = assets.concat(this.assets);
-                    if (assets.length) {
-                        const { outputDirectory, outputArchiveFormat, outputArchiveTimeout } = this.userSettings;
+                    const body = assets ? assets.concat(this.assets) : this.assets;
+                    if (body.length) {
+                        body[0].exclusions = options.exclusions;
                         fetch('/api/assets/archive' +
                             '?filename=' + encodeURIComponent(filename.trim()) +
-                            '&directory=' + encodeURIComponent(trimString(outputDirectory, '/')) +
-                            '&format=' + outputArchiveFormat +
-                            '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
-                            '&timeout=' + outputArchiveTimeout, {
+                            '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
+                            '&append_to=' + encodeURIComponent((options.appendTo || '').trim()), {
                             method: 'POST',
-                            headers: new Headers({ 'Accept': 'application/json, text/plain, */*', 'Content-Type': 'application/json' }),
-                            body: JSON.stringify(assets)
+                            headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
+                            body: JSON.stringify(body)
                         })
                             .then((response) => response.json())
                             .then((result) => {
                             if (result) {
-                                const callback = options.callback;
-                                if (typeof callback === 'function') {
-                                    callback(result);
+                                if (typeof options.callback === 'function') {
+                                    options.callback(result);
                                 }
                                 const zipname = result.zipname;
-                                if (zipname) {
-                                    fetch('/api/browser/download?filename=' + encodeURIComponent(zipname))
+                                if (isString$1(zipname)) {
+                                    fetch('/api/browser/download?filepath=' + encodeURIComponent(zipname))
                                         .then((response) => response.blob())
                                         .then((blob) => File.downloadFile(blob, fromLastIndexOf$1(zipname, '/', '\\')));
                                 }
@@ -1201,7 +1089,7 @@
                         })
                             .catch(err => {
                             if (this.userSettings.showErrorMessages) {
-                                alert('ERROR: ' + err);
+                                alert(`ERROR: ${err}`);
                             }
                         });
                     }
@@ -1215,31 +1103,24 @@
 
     const $lib$2 = squared.lib;
     const { USER_AGENT, isUserAgent } = $lib$2.client;
-    const { BOX_BORDER, TEXT_STYLE, checkStyleValue, formatPX, getInheritedStyle, getStyle: getStyle$1, hasComputedStyle: hasComputedStyle$1, isLength, isPercent, parseSelectorText: parseSelectorText$1, parseUnit } = $lib$2.css;
+    const { BOX_BORDER, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle: getStyle$1, hasComputedStyle: hasComputedStyle$1, isLength, isPercent, parseSelectorText: parseSelectorText$1, parseUnit } = $lib$2.css;
     const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib$2.dom;
-    const { CHAR: CHAR$1, CSS: CSS$2, FILE: FILE$1, XML: XML$2 } = $lib$2.regex;
+    const { CHAR: CHAR$1, CSS: CSS$1, FILE: FILE$1, XML: XML$2 } = $lib$2.regex;
     const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache: getElementCache$1, getPseudoElt, setElementCache: setElementCache$1 } = $lib$2.session;
-    const { aboveRange, belowRange, convertCamelCase: convertCamelCase$1, convertFloat, convertInt, hasBit: hasBit$1, hasValue, isNumber, isObject: isObject$1, isString: isString$2, iterateArray, spliceString } = $lib$2.util;
-    const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS$2;
-    const REGEX_INLINE = /^inline/;
-    const REGEX_INLINEDASH = /^inline-/;
-    const REGEX_MARGIN = /^margin/;
-    const REGEX_PADDING = /^padding/;
-    const REGEX_BORDER = /^border/;
-    const REGEX_BACKGROUND$1 = /\s*(url\(.+?\))\s*/;
+    const { aboveRange, belowRange, convertCamelCase: convertCamelCase$1, convertFloat, convertInt, hasBit: hasBit$1, hasValue, isNumber, isObject: isObject$1, isString: isString$2, iterateArray, spliceString, splitEnclosing } = $lib$2.util;
+    const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS$1;
+    const REGEX_BACKGROUND$1 = /\s*(url|[a-z-]+gradient)/;
     const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
     const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
     const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
-    const REGEX_EM = /em$/;
-    const REGEX_GRID = /grid$/;
-    const REGEX_FLEX = /flex$/;
+    const REGEX_EM = /\dem$/;
     function setNaturalChildren(node) {
         var _a;
         let children;
         if (node.naturalElement) {
             const sessionId = node.sessionId;
-            let i = 0;
             children = [];
+            let i = 0;
             node.element.childNodes.forEach((element) => {
                 const item = getElementAsNode(element, sessionId);
                 if (item) {
@@ -1264,39 +1145,39 @@
         if (isNumber(value)) {
             return parseFloat(value);
         }
-        else if (value === 'inherit' && parent === undefined) {
+        else if (value === 'inherit' && !parent) {
             return getFlexValue(node, attr, fallback, node.actualParent);
         }
         return fallback;
     }
-    function validateQuerySelector(node, selector, index, last, adjacent) {
-        var _a;
+    function validateQuerySelector(child, selector, index, last, adjacent) {
+        var _a, _b;
         if (selector.all) {
             return true;
         }
         let tagName = selector.tagName;
-        if (tagName && tagName !== node.tagName.toUpperCase()) {
+        if (tagName && tagName !== child.tagName.toUpperCase()) {
             return false;
         }
         const id = selector.id;
-        if (id && id !== node.elementId) {
+        if (id && id !== child.elementId) {
             return false;
         }
         const { attrList, classList, notList, pseudoList } = selector;
         if (pseudoList) {
-            const parent = node.actualParent;
-            tagName = node.tagName;
+            const parent = child.actualParent;
+            tagName = child.tagName;
             for (const pseudo of pseudoList) {
                 switch (pseudo) {
                     case ':first-child':
                     case ':nth-child(1)':
-                        if (node !== parent.firstChild) {
+                        if (child !== parent.firstChild) {
                             return false;
                         }
                         break;
                     case ':last-child':
                     case ':nth-last-child(1)':
-                        if (node !== parent.lastChild) {
+                        if (child !== parent.lastChild) {
                             return false;
                         }
                         break;
@@ -1317,7 +1198,7 @@
                     case ':first-of-type': {
                         for (const item of parent.naturalElements) {
                             if (item.tagName === tagName) {
-                                if (item !== node) {
+                                if (item !== child) {
                                     return false;
                                 }
                                 break;
@@ -1329,19 +1210,19 @@
                     case ':nth-last-child(n)':
                         break;
                     case ':empty':
-                        if (node.element.childNodes.length) {
+                        if (child.element.childNodes.length) {
                             return false;
                         }
                         break;
                     case ':checked':
                         switch (tagName) {
                             case 'INPUT':
-                                if (!node.toElementBoolean('checked')) {
+                                if (!child.toElementBoolean('checked')) {
                                     return false;
                                 }
                                 break;
                             case 'OPTION':
-                                if (!node.toElementBoolean('selected')) {
+                                if (!child.toElementBoolean('selected')) {
                                     return false;
                                 }
                                 break;
@@ -1350,41 +1231,41 @@
                         }
                         break;
                     case ':enabled':
-                        if (!node.inputElement || node.toElementBoolean('disabled')) {
+                        if (!child.inputElement || child.toElementBoolean('disabled')) {
                             return false;
                         }
                         break;
                     case ':disabled':
-                        if (!node.inputElement || !node.toElementBoolean('disabled')) {
+                        if (!child.inputElement || !child.toElementBoolean('disabled')) {
                             return false;
                         }
                         break;
                     case ':read-only': {
-                        const element = node.element;
+                        const element = child.element;
                         if (element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && !element.readOnly) {
                             return false;
                         }
                         break;
                     }
                     case ':read-write': {
-                        const element = node.element;
+                        const element = child.element;
                         if (!element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && element.readOnly) {
                             return false;
                         }
                         break;
                     }
                     case ':required':
-                        if (!node.inputElement || tagName === 'BUTTON' || !node.toElementBoolean('required')) {
+                        if (!child.inputElement || tagName === 'BUTTON' || !child.toElementBoolean('required')) {
                             return false;
                         }
                         break;
                     case ':optional':
-                        if (!node.inputElement || tagName === 'BUTTON' || node.toElementBoolean('required')) {
+                        if (!child.inputElement || tagName === 'BUTTON' || child.toElementBoolean('required')) {
                             return false;
                         }
                         break;
                     case ':placeholder-shown': {
-                        if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && node.toElementString('placeholder') !== '')) {
+                        if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && child.toElementString('placeholder') !== '')) {
                             return false;
                         }
                         break;
@@ -1392,7 +1273,7 @@
                     case ':default': {
                         switch (tagName) {
                             case 'INPUT': {
-                                const element = node.element;
+                                const element = child.element;
                                 switch (element.type) {
                                     case 'radio':
                                     case 'checkbox':
@@ -1406,15 +1287,15 @@
                                 break;
                             }
                             case 'OPTION':
-                                if (node.element.attributes['selected'] === undefined) {
+                                if (child.element.attributes['selected'] === undefined) {
                                     return false;
                                 }
                                 break;
                             case 'BUTTON': {
-                                const form = node.ascend({ condition: item => item.tagName === 'FORM' })[0];
+                                const form = child.ascend({ condition: item => item.tagName === 'FORM' })[0];
                                 if (form) {
                                     let valid = false;
-                                    const element = node.element;
+                                    const element = child.element;
                                     iterateArray(form.element.querySelectorAll('*'), (item) => {
                                         switch (item.tagName) {
                                             case 'BUTTON':
@@ -1445,7 +1326,7 @@
                     case ':in-range':
                     case ':out-of-range': {
                         if (tagName === 'INPUT') {
-                            const element = node.element;
+                            const element = child.element;
                             const value = parseFloat(element.value);
                             if (!isNaN(value)) {
                                 const min = parseFloat(element.min);
@@ -1470,7 +1351,7 @@
                     }
                     case ':indeterminate':
                         if (tagName === 'INPUT') {
-                            const element = node.element;
+                            const element = child.element;
                             switch (element.type) {
                                 case 'checkbox':
                                     if (!element.indeterminate) {
@@ -1482,7 +1363,7 @@
                                         return false;
                                     }
                                     else if (element.name) {
-                                        if (iterateArray((((_a = node.ascend({ condition: item => item.tagName === 'FORM' })[0]) === null || _a === void 0 ? void 0 : _a.element) || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item) => item.checked) === Number.POSITIVE_INFINITY) {
+                                        if (iterateArray((((_a = child.ascend({ condition: item => item.tagName === 'FORM' })[0]) === null || _a === void 0 ? void 0 : _a.element) || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item) => item.checked) === Number.POSITIVE_INFINITY) {
                                             return false;
                                         }
                                     }
@@ -1492,7 +1373,7 @@
                             }
                         }
                         else if (tagName === 'PROGRESS') {
-                            if (node.toElementInt('value', -1) !== -1) {
+                            if (child.toElementInt('value', -1) !== -1) {
                                 return false;
                             }
                         }
@@ -1505,7 +1386,7 @@
                             return false;
                         }
                         else {
-                            const element = node.element;
+                            const element = child.element;
                             if (!(location.hash === `#${element.id}` || tagName === 'A' && location.hash === `#${element.name}`)) {
                                 return false;
                             }
@@ -1513,7 +1394,7 @@
                         break;
                     }
                     case ':scope':
-                        if (!last || adjacent === '>' && node !== this) {
+                        if (!last || adjacent === '>' && child !== this) {
                             return false;
                         }
                         break;
@@ -1530,7 +1411,7 @@
                     case ':focus-within':
                     case ':valid':
                     case ':invalid': {
-                        const element = node.element;
+                        const element = child.element;
                         if (iterateArray(parent.element.querySelectorAll(':scope > ' + pseudo), item => item === element) !== Number.POSITIVE_INFINITY) {
                             return false;
                         }
@@ -1544,7 +1425,7 @@
                             if (match[1]) {
                                 children = children.slice(0).reverse();
                             }
-                            const i = (match[2] === 'child' ? children.indexOf(node) : children.filter(item => item.tagName === tagName).indexOf(node)) + 1;
+                            const i = (match[2] === 'child' ? children.indexOf(child) : children.filter(item => item.tagName === tagName).indexOf(child)) + 1;
                             if (i > 0) {
                                 if (isNumber(placement)) {
                                     if (parseInt(placement) !== i) {
@@ -1615,8 +1496,7 @@
                         else {
                             match = REGEX_QUERY_LANG.exec(pseudo);
                             if (match) {
-                                const attributes = node.attributes;
-                                if (attributes['lang'] && match[1].toLowerCase() === attributes['lang'].toLowerCase()) {
+                                if (((_b = child.attributes['lang']) === null || _b === void 0 ? void 0 : _b.trim().toLowerCase()) === match[1].toLowerCase()) {
                                     continue;
                                 }
                             }
@@ -1628,7 +1508,7 @@
         }
         if (notList) {
             for (const not of notList) {
-                const notData = { all: false };
+                const notData = {};
                 switch (not.charAt(0)) {
                     case '.':
                         notData.classList = [not];
@@ -1667,14 +1547,15 @@
                         else {
                             return false;
                         }
+                        break;
                 }
-                if (validateQuerySelector.call(this, node, notData, index, last)) {
+                if (validateQuerySelector.call(this, child, notData, index, last)) {
                     return false;
                 }
             }
         }
         if (classList) {
-            const elementList = node.element.classList;
+            const elementList = child.element.classList;
             for (const className of classList) {
                 if (!elementList.contains(className)) {
                     return false;
@@ -1682,7 +1563,7 @@
             }
         }
         if (attrList) {
-            const attributes = node.attributes;
+            const attributes = child.attributes;
             for (const attr of attrList) {
                 let value = attributes[attr.key];
                 if (value === undefined) {
@@ -1734,27 +1615,7 @@
     }
     function hasTextAlign(node, value, localizedValue) {
         const textAlign = node.cssAscend('textAlign', node.textElement && node.blockStatic && !node.hasPX('width'));
-        if (textAlign === value || textAlign === localizedValue) {
-            if (node.textElement && node.blockStatic) {
-                return !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true);
-            }
-            else {
-                const parent = node.actualParent;
-                if (parent) {
-                    const children = parent.naturalChildren;
-                    if (children.length === 1) {
-                        return true;
-                    }
-                    else {
-                        const index = node.childIndex;
-                        const previousSibling = children[index - 1];
-                        const nextSibling = children[index + 1];
-                        return (previousSibling === undefined || !previousSibling.pageFlow || previousSibling.blockStatic || previousSibling.lineBreak) && (nextSibling === undefined || !nextSibling.pageFlow || nextSibling.blockStatic || nextSibling.lineBreak);
-                    }
-                }
-            }
-        }
-        return false;
+        return (textAlign === value || textAlign === localizedValue) && (node.blockStatic ? node.textElement && !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true) : node.display.startsWith('inline'));
     }
     function setStyleCache(element, attr, sessionId, value, current) {
         if (current !== value) {
@@ -1774,8 +1635,145 @@
             deleteElementCache(element, attr, sessionId);
         }
     }
+    function flexParent(node, direction) {
+        const parent = node.actualParent;
+        return (parent === null || parent === void 0 ? void 0 : parent.flexElement) === true && parent.flexdata[direction] === true;
+    }
+    function setDimension(node, styleMap, attr, attrMin, attrMax) {
+        const valueA = styleMap[attr];
+        const baseValue = node.parseUnit(valueA, attr);
+        let value = Math.max(baseValue, node.parseUnit(styleMap[attrMin], attr));
+        if (value === 0 && node.styleElement) {
+            const element = node.element;
+            switch (element.tagName) {
+                case 'IMG':
+                case 'INPUT':
+                    if (element.type !== 'image') {
+                        break;
+                    }
+                case 'TD':
+                case 'TH':
+                case 'SVG':
+                case 'IFRAME':
+                case 'VIDEO':
+                case 'AUDIO':
+                case 'CANVAS':
+                case 'OBJECT':
+                case 'EMBED': {
+                    const size = getNamedItem(element, attr);
+                    if (size !== '') {
+                        value = isNumber(size) ? parseFloat(size) : node.parseUnit(size, attr);
+                        if (value > 0) {
+                            node.css(attr, isPercent(size) ? size : size + 'px');
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        let maxValue = 0;
+        if (baseValue > 0 && !node.imageElement) {
+            const valueB = styleMap[attrMax];
+            if (valueA === valueB) {
+                delete styleMap[attrMax];
+            }
+            else {
+                maxValue = node.parseUnit(valueB, attr);
+                if (maxValue > 0 && maxValue <= baseValue && isLength(valueA)) {
+                    maxValue = 0;
+                    styleMap[attr] = valueB;
+                    delete styleMap[attrMax];
+                }
+            }
+        }
+        return maxValue > 0 ? Math.min(value, maxValue) : value;
+    }
+    function setOverflow(node) {
+        let result = 0;
+        if (node.htmlElement && !node.inputElement && !node.imageElement && node.tagName !== 'HR' && !node.documentBody) {
+            const element = node.element;
+            const { overflowX, overflowY } = node.cssAsObject('overflowX', 'overflowY');
+            if (node.hasHeight && (node.hasPX('height') || node.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
+                result |= 16 /* VERTICAL */;
+            }
+            if ((node.hasPX('width') || node.hasPX('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
+                result |= 8 /* HORIZONTAL */;
+            }
+        }
+        return result;
+    }
+    function convertPosition(node, attr) {
+        if (!node.positionStatic) {
+            const unit = node.cssInitial(attr, true);
+            if (isLength(unit)) {
+                return node.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
+            }
+            else if (isPercent(unit) && node.styleElement) {
+                return convertFloat(node.style[attr]);
+            }
+        }
+        return 0;
+    }
+    function convertBorderWidth(node, dimension, border) {
+        if (!node.plainText) {
+            switch (node.css(border[0])) {
+                case 'none':
+                case 'initial':
+                case 'hidden':
+                    return 0;
+            }
+            const width = node.css(border[1]);
+            const result = isLength(width, true) ? node.parseUnit(width, dimension) : convertFloat(node.style[border[1]]);
+            if (result > 0) {
+                return Math.max(Math.round(result), 1);
+            }
+        }
+        return 0;
+    }
+    function convertBox(node, attr, margin) {
+        var _a, _b;
+        switch (node.display) {
+            case 'table':
+                if (!margin && node.css('borderCollapse') === 'collapse') {
+                    return 0;
+                }
+                break;
+            case 'table-row':
+                return 0;
+            case 'table-cell':
+                if (margin) {
+                    switch (node.tagName) {
+                        case 'TD':
+                        case 'TH':
+                            return 0;
+                        default: {
+                            const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
+                            if (parent) {
+                                const [horizontal, vertical] = parent.css('borderSpacing').split(' ');
+                                switch (attr) {
+                                    case 'marginTop':
+                                    case 'marginBottom':
+                                        return vertical ? node.parseUnit(vertical, 'height', false) : node.parseUnit(horizontal, 'width', false);
+                                    case 'marginRight':
+                                        if (((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.lastChild) !== node) {
+                                            return node.parseUnit(horizontal, 'width', false);
+                                        }
+                                    case 'marginLeft':
+                                        return 0;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    return 0;
+                }
+                break;
+        }
+        return node.parseUnit(node.css(attr), 'width', ((_b = node.actualParent) === null || _b === void 0 ? void 0 : _b.gridElement) !== true);
+    }
     const canTextAlign = (node) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
     const validateCssSet = (value, actualValue) => value === actualValue || isLength(value, true) && PX.test(actualValue);
+    const soryById = (a, b) => a.id < b.id ? -1 : 1;
     class Node extends squared.lib.base.Container {
         constructor(id, sessionId = '0', element) {
             super();
@@ -1786,9 +1784,11 @@
             this.childIndex = Number.POSITIVE_INFINITY;
             this._element = null;
             this._data = {};
+            this._documentBody = false;
             this._inlineText = false;
             if (element) {
                 this._element = element;
+                this._documentBody = element === document.body;
             }
             else {
                 this.style = {};
@@ -1799,16 +1799,20 @@
         init() {
             const element = this._element;
             if (element) {
+                const styleElement = this.styleElement;
                 const sessionId = this.sessionId;
                 const styleMap = getElementCache$1(element, 'styleMap', sessionId) || {};
                 let style;
                 if (!this.pseudoElement) {
                     style = getStyle$1(element);
-                    if (this.styleElement) {
+                    if (styleElement) {
                         const items = Array.from(element.style);
-                        if (items.length) {
+                        const length = items.length;
+                        if (length) {
                             const inline = element.style;
-                            for (const attr of items) {
+                            let i = 0;
+                            while (i < length) {
+                                const attr = items[i++];
                                 styleMap[convertCamelCase$1(attr)] = inline.getPropertyValue(attr);
                             }
                         }
@@ -1817,12 +1821,23 @@
                 else {
                     style = getStyle$1(element.parentElement, getPseudoElt(element, sessionId));
                 }
-                if (this.styleElement) {
+                if (styleElement) {
                     const revisedMap = {};
-                    for (const attr in styleMap) {
-                        const value = checkStyleValue(element, attr, styleMap[attr], style);
-                        if (value !== '') {
-                            revisedMap[attr] = value;
+                    const writingMode = style.writingMode;
+                    for (let attr in styleMap) {
+                        const value = styleMap[attr];
+                        const alias = checkWritingMode(attr, writingMode);
+                        if (alias !== '') {
+                            if (!styleMap[alias]) {
+                                attr = alias;
+                            }
+                            else {
+                                continue;
+                            }
+                        }
+                        const result = checkStyleValue(element, attr, value, style);
+                        if (result !== '') {
+                            revisedMap[attr] = result;
                         }
                     }
                     this._styleMap = revisedMap;
@@ -1867,7 +1882,7 @@
         unsetCache(...attrs) {
             if (attrs.length) {
                 const cached = this._cached;
-                for (const attr of attrs) {
+                attrs.forEach(attr => {
                     switch (attr) {
                         case 'position':
                         case 'display':
@@ -1910,16 +1925,16 @@
                             cached.overflow = undefined;
                             break;
                         default:
-                            if (REGEX_MARGIN.test(attr)) {
+                            if (attr.startsWith('margin')) {
                                 cached.autoMargin = undefined;
                                 cached.rightAligned = undefined;
                                 cached.centerAligned = undefined;
                             }
-                            else if (REGEX_PADDING.test(attr)) {
+                            else if (attr.startsWith('padding')) {
                                 cached.contentBoxWidth = undefined;
                                 cached.contentBoxHeight = undefined;
                             }
-                            else if (REGEX_BORDER.test(attr)) {
+                            else if (attr.startsWith('border')) {
                                 cached.visibleStyle = undefined;
                                 cached.contentBoxWidth = undefined;
                                 cached.contentBoxHeight = undefined;
@@ -1927,7 +1942,7 @@
                             break;
                     }
                     cached[attr] = undefined;
-                }
+                });
             }
             else {
                 this._cached = {};
@@ -1935,11 +1950,14 @@
             }
         }
         ascend(options = {}) {
-            const { condition, including, error, every, excluding } = options;
             let attr = options.attr;
             if (!isString$2(attr)) {
                 attr = 'actualParent';
             }
+            else if (!/Parent$/i.test(attr)) {
+                return [];
+            }
+            const { condition, including, error, every, excluding } = options;
             const result = [];
             let parent = options.startSelf ? this : this[attr];
             while (parent && parent !== excluding) {
@@ -2112,7 +2130,7 @@
                 if (this.pseudoElement) {
                     const element = this._element;
                     const sessionId = this.sessionId;
-                    result = (_a = getElementCache$1(element.parentElement, 'styleSpecificity' + getPseudoElt(element, sessionId), sessionId)) === null || _a === void 0 ? void 0 : _a[attr];
+                    result = (_a = getElementCache$1(element.parentElement, `styleSpecificity${getPseudoElt(element, sessionId)}`, sessionId)) === null || _a === void 0 ? void 0 : _a[attr];
                 }
                 else {
                     result = (_b = getElementCache$1(this._element, 'styleSpecificity', this.sessionId)) === null || _b === void 0 ? void 0 : _b[attr];
@@ -2152,9 +2170,7 @@
                         valid.push(attr);
                     }
                     else {
-                        for (const value of valid) {
-                            this.cssFinally(value);
-                        }
+                        valid.forEach(value => this.cssFinally(value));
                         return undefined;
                     }
                 }
@@ -2167,31 +2183,28 @@
         }
         cssCopy(node, ...attrs) {
             const styleMap = this._styleMap;
-            for (const attr of attrs) {
-                styleMap[attr] = node.css(attr);
-            }
+            attrs.forEach(attr => styleMap[attr] = node.css(attr));
         }
         cssCopyIfEmpty(node, ...attrs) {
             const styleMap = this._styleMap;
-            for (const attr of attrs) {
+            attrs.forEach(attr => {
                 if (!hasValue(styleMap[attr])) {
                     styleMap[attr] = node.css(attr);
                 }
-            }
+            });
         }
         cssAsTuple(...attrs) {
             const length = attrs.length;
             const result = new Array(length);
-            for (let i = 0; i < length; i++) {
-                result[i] = this.css(attrs[i]);
+            let i = 0;
+            while (i < length) {
+                result[i] = this.css(attrs[i++]);
             }
             return result;
         }
         cssAsObject(...attrs) {
             const result = {};
-            for (const attr of attrs) {
-                result[attr] = this.css(attr);
-            }
+            attrs.forEach(attr => result[attr] = this.css(attr));
             return result;
         }
         toInt(attr, fallback = NaN, initial = false) {
@@ -2294,169 +2307,191 @@
             return isLength((initial && ((_a = this._initial) === null || _a === void 0 ? void 0 : _a.styleMap) || this._styleMap)[attr], percent);
         }
         hasFlex(direction) {
-            return this._flexParent(direction);
+            return flexParent(this, direction);
         }
         setBounds(cache = true) {
+            let bounds;
             if (this.styleElement) {
-                this._bounds = assignRect(actualClientRect(this._element, cache ? this.sessionId : undefined));
-                if (this.documentBody && this.marginTop === 0) {
-                    this._bounds.top = 0;
-                }
+                bounds = assignRect(actualClientRect(this._element, cache ? this.sessionId : undefined));
+                this._bounds = bounds;
             }
             else if (this.plainText) {
                 const rect = getRangeClientRect(this._element);
-                const bounds = assignRect(rect);
+                bounds = assignRect(rect);
                 const lines = rect.numberOfLines;
                 bounds.numberOfLines = lines;
                 this._bounds = bounds;
                 this._textBounds = bounds;
                 this._cached.multiline = lines > 1;
             }
-            if (!cache) {
+            if (!cache && bounds) {
                 this._box = undefined;
                 this._linear = undefined;
             }
+            return bounds;
         }
         querySelector(value) {
-            return this.naturalElement && this.querySelectorAll(value, 1)[0] || null;
+            return this.querySelectorAll(value, 1)[0] || null;
         }
         querySelectorAll(value, resultCount = -1) {
             let result = [];
             const queryMap = this.queryMap;
-            if (queryMap) {
+            if (queryMap && resultCount !== 0) {
                 const queries = parseSelectorText$1(value);
-                for (let i = 0; i < queries.length; i++) {
-                    const query = queries[i];
+                let length = queries.length;
+                let i = 0;
+                while (i < length) {
+                    const query = queries[i++];
                     const selectors = [];
                     let offset = -1;
                     invalid: {
-                        let adjacent;
-                        let match;
-                        while ((match = SELECTOR_G.exec(query)) !== null) {
-                            let segment = match[1];
-                            let all = false;
-                            let tagName;
-                            let id;
-                            let classList;
-                            let attrList;
-                            let pseudoList;
-                            let notList;
-                            if (segment.length === 1) {
-                                const ch = segment.charAt(0);
-                                switch (ch) {
-                                    case '+':
-                                    case '~':
-                                        offset--;
-                                    case '>':
-                                        if (adjacent || selectors.length === 0) {
-                                            selectors.length = 0;
-                                            break invalid;
-                                        }
-                                        adjacent = ch;
-                                        continue;
-                                    case '*':
-                                        all = true;
-                                        break;
-                                }
-                            }
-                            else if (segment.endsWith('|*')) {
-                                all = segment === '*|*';
-                            }
-                            else if (segment.charAt(0) === '*') {
-                                segment = segment.substring(1);
-                            }
-                            else if (/^::/.test(segment)) {
-                                selectors.length = 0;
-                                break invalid;
-                            }
-                            if (!all) {
-                                let subMatch;
-                                while ((subMatch = SELECTOR_ATTR.exec(segment)) !== null) {
-                                    if (attrList === undefined) {
-                                        attrList = [];
+                        if (query === '*') {
+                            selectors.push({ all: true });
+                            offset++;
+                        }
+                        else {
+                            let adjacent;
+                            SELECTOR_G.lastIndex = 0;
+                            let match;
+                            while ((match = SELECTOR_G.exec(query)) !== null) {
+                                let segment = match[1];
+                                let all = false;
+                                if (segment.length === 1) {
+                                    const ch = segment.charAt(0);
+                                    switch (ch) {
+                                        case '+':
+                                        case '~':
+                                            offset--;
+                                        case '>':
+                                            if (adjacent || selectors.length === 0) {
+                                                selectors.length = 0;
+                                                break invalid;
+                                            }
+                                            adjacent = ch;
+                                            continue;
+                                        case '*':
+                                            all = true;
+                                            break;
                                     }
-                                    const caseInsensitive = subMatch[6] === 'i';
-                                    let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
-                                    if (caseInsensitive) {
-                                        attrValue = attrValue.toLowerCase();
-                                    }
-                                    attrList.push({
-                                        key: subMatch[1],
-                                        symbol: subMatch[2],
-                                        value: attrValue,
-                                        caseInsensitive
-                                    });
-                                    segment = spliceString(segment, subMatch.index, subMatch[0].length);
                                 }
-                                if (segment.includes('::')) {
+                                else if (segment.endsWith('|*')) {
+                                    all = segment === '*|*';
+                                }
+                                else if (segment.charAt(0) === '*') {
+                                    segment = segment.substring(1);
+                                }
+                                else if (segment.startsWith('::')) {
                                     selectors.length = 0;
                                     break invalid;
                                 }
-                                while ((subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
-                                    if (/^:not\(/.test(subMatch[0])) {
-                                        if (subMatch[1]) {
-                                            if (notList === undefined) {
-                                                notList = [];
-                                            }
-                                            notList.push(subMatch[1]);
-                                        }
-                                    }
-                                    else {
-                                        if (pseudoList === undefined) {
-                                            pseudoList = [];
-                                        }
-                                        pseudoList.push(subMatch[0]);
-                                    }
-                                    segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                                if (all) {
+                                    selectors.push({ all: true });
                                 }
-                                while ((subMatch = SELECTOR_LABEL.exec(segment)) !== null) {
-                                    const label = subMatch[0];
-                                    switch (label.charAt(0)) {
-                                        case '#':
-                                            id = label.substring(1);
-                                            break;
-                                        case '.':
-                                            if (classList === undefined) {
-                                                classList = [];
-                                            }
-                                            classList.push(label.substring(1));
-                                            break;
-                                        default:
-                                            tagName = label.toUpperCase();
-                                            break;
+                                else {
+                                    let tagName;
+                                    let id;
+                                    let classList;
+                                    let attrList;
+                                    let pseudoList;
+                                    let notList;
+                                    let subMatch;
+                                    while ((subMatch = SELECTOR_ATTR.exec(segment)) !== null) {
+                                        if (attrList === undefined) {
+                                            attrList = [];
+                                        }
+                                        const caseInsensitive = subMatch[6] === 'i';
+                                        let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
+                                        if (caseInsensitive) {
+                                            attrValue = attrValue.toLowerCase();
+                                        }
+                                        attrList.push({
+                                            key: subMatch[1],
+                                            symbol: subMatch[2],
+                                            value: attrValue,
+                                            caseInsensitive
+                                        });
+                                        segment = spliceString(segment, subMatch.index, subMatch[0].length);
                                     }
-                                    segment = spliceString(segment, subMatch.index, subMatch[0].length);
+                                    if (segment.includes('::')) {
+                                        selectors.length = 0;
+                                        break invalid;
+                                    }
+                                    while ((subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
+                                        const pseudoClass = subMatch[0];
+                                        if (pseudoClass.startsWith(':not(')) {
+                                            if (subMatch[1]) {
+                                                if (notList === undefined) {
+                                                    notList = [];
+                                                }
+                                                notList.push(subMatch[1]);
+                                            }
+                                        }
+                                        else {
+                                            if (pseudoList === undefined) {
+                                                pseudoList = [];
+                                            }
+                                            pseudoList.push(pseudoClass);
+                                        }
+                                        segment = spliceString(segment, subMatch.index, pseudoClass.length);
+                                    }
+                                    while ((subMatch = SELECTOR_LABEL.exec(segment)) !== null) {
+                                        const label = subMatch[0];
+                                        switch (label.charAt(0)) {
+                                            case '#':
+                                                id = label.substring(1);
+                                                break;
+                                            case '.':
+                                                if (classList === undefined) {
+                                                    classList = [];
+                                                }
+                                                classList.push(label.substring(1));
+                                                break;
+                                            default:
+                                                tagName = label.toUpperCase();
+                                                break;
+                                        }
+                                        segment = spliceString(segment, subMatch.index, label.length);
+                                    }
+                                    selectors.push({
+                                        tagName,
+                                        id,
+                                        adjacent,
+                                        classList,
+                                        pseudoList,
+                                        notList,
+                                        attrList
+                                    });
                                 }
+                                offset++;
+                                adjacent = undefined;
                             }
-                            selectors.push({
-                                all,
-                                tagName,
-                                id,
-                                adjacent,
-                                classList,
-                                pseudoList,
-                                notList,
-                                attrList
-                            });
-                            offset++;
-                            adjacent = undefined;
                         }
-                        SELECTOR_G.lastIndex = 0;
                     }
-                    let length = queryMap.length;
+                    length = queryMap.length;
                     if (selectors.length && offset !== -1 && offset < length) {
                         const dataEnd = selectors.pop();
                         const lastEnd = selectors.length === 0;
-                        let pending = [];
-                        for (let j = offset; j < length; j++) {
-                            const dataMap = queryMap[j];
-                            if (dataEnd.all) {
-                                pending = pending.concat(dataMap);
-                            }
-                            else {
-                                for (const node of dataMap) {
-                                    if (validateQuerySelector.call(this, node, dataEnd, i, lastEnd)) {
-                                        pending.push(node);
+                        const currentCount = result.length;
+                        let pending;
+                        if (dataEnd.all && length - offset === 1) {
+                            pending = queryMap[offset];
+                        }
+                        else {
+                            pending = [];
+                            let j = offset;
+                            while (j < length) {
+                                const dataMap = queryMap[j++];
+                                if (dataEnd.all) {
+                                    pending = pending.concat(dataMap);
+                                }
+                                else {
+                                    const q = dataMap.length;
+                                    let k = 0;
+                                    while (k < q) {
+                                        const node = dataMap[k++];
+                                        if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector.call(this, node, dataEnd, i, lastEnd)) {
+                                            pending.push(node);
+                                        }
                                     }
                                 }
                             }
@@ -2469,7 +2504,10 @@
                                 const selector = selectors[index];
                                 const last = index === length - 1;
                                 const next = [];
-                                for (const node of nodes) {
+                                const q = nodes.length;
+                                let j = 0;
+                                while (j < q) {
+                                    const node = nodes[j++];
                                     if (adjacent) {
                                         const parent = node.actualParent;
                                         if (adjacent === '>') {
@@ -2491,9 +2529,10 @@
                                                     break;
                                                 }
                                                 case '~': {
-                                                    const q = children.length;
-                                                    for (let k = 0; k < q; k++) {
-                                                        const sibling = children[k];
+                                                    const r = children.length;
+                                                    let k = 0;
+                                                    while (k < r) {
+                                                        const sibling = children[k++];
                                                         if (sibling === node) {
                                                             break;
                                                         }
@@ -2524,206 +2563,59 @@
                                 }
                                 return false;
                             };
-                            for (const node of pending) {
-                                if (ascendQuerySelector(0, dataEnd.adjacent, [node])) {
+                            let count = currentCount;
+                            const r = pending.length;
+                            let j = 0;
+                            while (j < r) {
+                                const node = pending[j++];
+                                if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(0, dataEnd.adjacent, [node])) {
                                     result.push(node);
-                                    if (result.length === resultCount) {
-                                        return result;
+                                    if (++count === resultCount) {
+                                        return result.sort(soryById);
                                     }
                                 }
                             }
                         }
-                        else if (result.length === 0 && (i === queries.length - 1 || resultCount >= 0 && resultCount <= pending.length)) {
-                            if (resultCount >= 0 && pending.length > resultCount) {
-                                pending.length = resultCount;
+                        else if (currentCount === 0) {
+                            if (i === queries.length - 1 || resultCount > 0 && resultCount <= pending.length) {
+                                if (resultCount > 0 && pending.length > resultCount) {
+                                    pending.length = resultCount;
+                                }
+                                return pending.sort(soryById);
                             }
-                            return pending;
+                            else {
+                                result = pending;
+                            }
                         }
                         else {
-                            result = result.concat(pending);
-                            if (resultCount >= 0 && result.length >= resultCount) {
-                                result.length = resultCount;
-                                return result;
-                            }
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-        _setDimension(attr, attrMin, attrMax) {
-            const styleMap = this._styleMap;
-            const valueA = styleMap[attr];
-            const baseValue = this.parseUnit(valueA, attr);
-            let value = Math.max(baseValue, this.parseUnit(styleMap[attrMin], attr));
-            if (value === 0 && this.styleElement) {
-                const element = this._element;
-                switch (element.tagName) {
-                    case 'IMG':
-                    case 'INPUT':
-                        if (element.type !== 'image') {
-                            break;
-                        }
-                    case 'TD':
-                    case 'TH':
-                    case 'SVG':
-                    case 'IFRAME':
-                    case 'VIDEO':
-                    case 'CANVAS':
-                    case 'OBJECT':
-                    case 'EMBED': {
-                        const size = getNamedItem(element, attr);
-                        if (size !== '') {
-                            value = isNumber(size) ? parseFloat(size) : this.parseUnit(size, attr);
-                            if (value > 0) {
-                                this.css(attr, isPercent(size) ? size : size + 'px');
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-            let maxValue = 0;
-            if (baseValue > 0 && !this.imageElement) {
-                const valueB = styleMap[attrMax];
-                if (valueA === valueB) {
-                    delete styleMap[attrMax];
-                }
-                else {
-                    maxValue = this.parseUnit(valueB, attr);
-                    if (maxValue > 0 && maxValue <= baseValue && isLength(valueA)) {
-                        maxValue = 0;
-                        styleMap[attr] = valueB;
-                        delete styleMap[attrMax];
-                    }
-                }
-            }
-            return maxValue > 0 ? Math.min(value, maxValue) : value;
-        }
-        _convertPosition(attr) {
-            if (!this.positionStatic) {
-                const unit = this.cssInitial(attr, true);
-                if (isLength(unit)) {
-                    return this.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
-                }
-                else if (isPercent(unit) && this.styleElement) {
-                    return convertFloat(this.style[attr]);
-                }
-            }
-            return 0;
-        }
-        _convertBorderWidth(index) {
-            if (!this.plainText) {
-                const [borderStyle, borderWidth] = BOX_BORDER[index];
-                const value = this.css(borderStyle);
-                if (value !== 'none') {
-                    const width = this.css(borderWidth);
-                    let result;
-                    switch (width) {
-                        case 'thin':
-                        case 'medium':
-                        case 'thick':
-                            result = convertFloat(this.style[borderWidth]);
-                            break;
-                        default:
-                            result = this.parseUnit(width, index === 1 || index === 3 ? 'width' : 'height');
-                            break;
-                    }
-                    if (result > 0) {
-                        return Math.max(Math.round(result), 1);
-                    }
-                }
-            }
-            return 0;
-        }
-        _convertBox(attr, margin) {
-            var _a, _b;
-            switch (this.display) {
-                case 'table':
-                    if (!margin && this.css('borderCollapse') === 'collapse') {
-                        return 0;
-                    }
-                    break;
-                case 'table-row':
-                    return 0;
-                case 'table-cell':
-                    if (margin) {
-                        switch (this.tagName) {
-                            case 'TD':
-                            case 'TH':
-                                return 0;
-                            default: {
-                                const parent = this.ascend({ condition: node => node.tagName === 'TABLE' })[0];
-                                if (parent) {
-                                    const [horizontal, vertical] = parent.css('borderSpacing').split(' ');
-                                    switch (attr) {
-                                        case 'marginTop':
-                                        case 'marginBottom':
-                                            return vertical ? this.parseUnit(vertical, 'height', false) : this.parseUnit(horizontal, 'width', false);
-                                        case 'marginRight':
-                                            if (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.lastChild) !== this) {
-                                                return this.parseUnit(horizontal, 'width', false);
-                                            }
-                                        case 'marginLeft':
-                                            return 0;
+                            const q = pending.length;
+                            if (resultCount > 0) {
+                                let count = currentCount;
+                                let j = 0;
+                                while (j < q) {
+                                    const node = pending[j++];
+                                    if (!result.includes(node)) {
+                                        result.push(node);
+                                        if (++count === resultCount) {
+                                            return result.sort(soryById);
+                                        }
                                     }
                                 }
-                                break;
                             }
-                        }
-                        return 0;
-                    }
-                    break;
-            }
-            const result = this.parseUnit(this.css(attr), 'width', ((_b = this.actualParent) === null || _b === void 0 ? void 0 : _b.gridElement) !== true);
-            if (!margin) {
-                let paddingStart = this.toFloat('paddingInlineStart', 0);
-                let paddingEnd = this.toFloat('paddingInlineEnd', 0);
-                if (paddingStart > 0 || paddingEnd > 0) {
-                    if (this.css('writingMode') === 'vertical-rl') {
-                        if (this.dir === 'rtl') {
-                            if (attr !== 'paddingBottom') {
-                                paddingStart = 0;
-                            }
-                            if (attr !== 'paddingTop') {
-                                paddingEnd = 0;
-                            }
-                        }
-                        else {
-                            if (attr !== 'paddingTop') {
-                                paddingStart = 0;
-                            }
-                            if (attr !== 'paddingBottom') {
-                                paddingEnd = 0;
+                            else {
+                                let j = 0;
+                                while (j < q) {
+                                    const node = pending[j++];
+                                    if (!result.includes(node)) {
+                                        result.push(node);
+                                    }
+                                }
                             }
                         }
                     }
-                    else {
-                        if (this.dir === 'rtl') {
-                            if (attr !== 'paddingRight') {
-                                paddingStart = 0;
-                            }
-                            if (attr !== 'paddingLeft') {
-                                paddingEnd = 0;
-                            }
-                        }
-                        else {
-                            if (attr !== 'paddingLeft') {
-                                paddingStart = 0;
-                            }
-                            if (attr !== 'paddingRight') {
-                                paddingEnd = 0;
-                            }
-                        }
-                    }
-                    return paddingStart + result + paddingEnd;
                 }
             }
-            return result;
-        }
-        _flexParent(direction) {
-            const parent = this.actualParent;
-            return (parent === null || parent === void 0 ? void 0 : parent.flexElement) === true && parent.flexdata[direction] === true;
+            return result.sort(soryById);
         }
         set parent(value) {
             if (value) {
@@ -2804,7 +2696,7 @@
         get flexElement() {
             let result = this._cached.flexElement;
             if (result === undefined) {
-                result = REGEX_FLEX.test(this.display);
+                result = this.display.endsWith('flex');
                 this._cached.flexElement = result;
             }
             return result;
@@ -2812,7 +2704,7 @@
         get gridElement() {
             let result = this._cached.gridElement;
             if (result === undefined) {
-                result = REGEX_GRID.test(this.display);
+                result = this.display.endsWith('grid');
                 this._cached.gridElement = result;
             }
             return result;
@@ -2869,17 +2761,17 @@
             return this.tagName === 'BR';
         }
         get documentBody() {
-            return this._element === document.body;
+            return this._documentBody;
         }
         get initial() {
             return this._initial;
         }
         get bounds() {
-            return this._bounds || assignRect(this.boundingClientRect);
+            return this._bounds || this.setBounds() || assignRect(this.boundingClientRect);
         }
         get linear() {
-            const setDimension = () => {
-                const bounds = this._bounds;
+            const setBoxRect = () => {
+                const bounds = this.bounds;
                 if (bounds) {
                     if (this.styleElement) {
                         const { marginBottom, marginRight } = this;
@@ -2901,11 +2793,11 @@
                 }
                 return newBoxRectDimension();
             };
-            return this._linear || setDimension();
+            return this._linear || setBoxRect();
         }
         get box() {
-            const setDimension = () => {
-                const bounds = this._bounds;
+            const setBoxRect = () => {
+                const bounds = this.bounds;
                 if (bounds) {
                     if (this.styleElement) {
                         this._box = {
@@ -2924,7 +2816,7 @@
                 }
                 return newBoxRectDimension();
             };
-            return this._box || setDimension();
+            return this._box || setBoxRect();
         }
         get dataset() {
             if (this.styleElement) {
@@ -2944,12 +2836,12 @@
             if (result === undefined) {
                 if (this.flexElement) {
                     const { flexWrap, flexDirection, alignContent, justifyContent } = this.cssAsObject('flexWrap', 'flexDirection', 'alignContent', 'justifyContent');
-                    const row = /^row/.test(flexDirection);
+                    const row = flexDirection.startsWith('row');
                     result = {
                         row,
                         column: !row,
-                        reverse: /reverse$/.test(flexDirection),
-                        wrap: /^wrap/.test(flexWrap),
+                        reverse: flexDirection.endsWith('reverse'),
+                        wrap: flexWrap.startsWith('wrap'),
                         wrapReverse: flexWrap === 'wrap-reverse',
                         alignContent,
                         justifyContent
@@ -2995,7 +2887,7 @@
         get width() {
             let result = this._cached.width;
             if (result === undefined) {
-                result = this._setDimension('width', 'minWidth', 'maxWidth');
+                result = setDimension(this, this._styleMap, 'width', 'minWidth', 'maxWidth');
                 this._cached.width = result;
             }
             return result;
@@ -3003,7 +2895,7 @@
         get height() {
             let result = this._cached.height;
             if (result === undefined) {
-                result = this._setDimension('height', 'minHeight', 'maxHeight');
+                result = setDimension(this, this._styleMap, 'height', 'minHeight', 'maxHeight');
                 this._cached.height = result;
             }
             return result;
@@ -3022,12 +2914,7 @@
             if (result === undefined) {
                 const value = this.css('height');
                 if (isPercent(value)) {
-                    if (this.pageFlow && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody)) {
-                        result = parseFloat(value) > 0;
-                    }
-                    else {
-                        result = this.css('position') === 'fixed';
-                    }
+                    result = this.pageFlow && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody) ? parseFloat(value) > 0 : this.css('position') === 'fixed';
                 }
                 else {
                     result = this.height > 0;
@@ -3047,6 +2934,9 @@
                         const lineHeight = this.css('lineHeight');
                         if (isPercent(lineHeight)) {
                             value = convertFloat(this.style.lineHeight);
+                        }
+                        else if (isNumber(lineHeight)) {
+                            value = parseFloat(lineHeight) * this.fontSize;
                         }
                         else {
                             value = parseUnit(lineHeight, this.fontSize);
@@ -3130,7 +3020,7 @@
         get top() {
             let result = this._cached.top;
             if (result === undefined) {
-                result = this._convertPosition('top');
+                result = convertPosition(this, 'top');
                 this._cached.top = result;
             }
             return result;
@@ -3138,7 +3028,7 @@
         get right() {
             let result = this._cached.right;
             if (result === undefined) {
-                result = this._convertPosition('right');
+                result = convertPosition(this, 'right');
                 this._cached.right = result;
             }
             return result;
@@ -3146,7 +3036,7 @@
         get bottom() {
             let result = this._cached.bottom;
             if (result === undefined) {
-                result = this._convertPosition('bottom');
+                result = convertPosition(this, 'bottom');
                 this._cached.bottom = result;
             }
             return result;
@@ -3154,7 +3044,7 @@
         get left() {
             let result = this._cached.left;
             if (result === undefined) {
-                result = this._convertPosition('left');
+                result = convertPosition(this, 'left');
                 this._cached.left = result;
             }
             return result;
@@ -3162,7 +3052,7 @@
         get marginTop() {
             let result = this._cached.marginTop;
             if (result === undefined) {
-                result = this.inlineStatic ? 0 : this._convertBox('marginTop', true);
+                result = this.inlineStatic ? 0 : convertBox(this, 'marginTop', true);
                 this._cached.marginTop = result;
             }
             return result;
@@ -3170,7 +3060,7 @@
         get marginRight() {
             let result = this._cached.marginRight;
             if (result === undefined) {
-                result = this._convertBox('marginRight', true);
+                result = convertBox(this, 'marginRight', true);
                 this._cached.marginRight = result;
             }
             return result;
@@ -3178,7 +3068,7 @@
         get marginBottom() {
             let result = this._cached.marginBottom;
             if (result === undefined) {
-                result = this.inlineStatic ? 0 : this._convertBox('marginBottom', true);
+                result = this.inlineStatic ? 0 : convertBox(this, 'marginBottom', true);
                 this._cached.marginBottom = result;
             }
             return result;
@@ -3186,7 +3076,7 @@
         get marginLeft() {
             let result = this._cached.marginLeft;
             if (result === undefined) {
-                result = this._convertBox('marginLeft', true);
+                result = convertBox(this, 'marginLeft', true);
                 this._cached.marginLeft = result;
             }
             return result;
@@ -3194,7 +3084,7 @@
         get borderTopWidth() {
             let result = this._cached.borderTopWidth;
             if (result === undefined) {
-                result = this._convertBorderWidth(0);
+                result = convertBorderWidth(this, 'height', BOX_BORDER[0]);
                 this._cached.borderTopWidth = result;
             }
             return result;
@@ -3202,7 +3092,7 @@
         get borderRightWidth() {
             let result = this._cached.borderRightWidth;
             if (result === undefined) {
-                result = this._convertBorderWidth(1);
+                result = convertBorderWidth(this, 'height', BOX_BORDER[1]);
                 this._cached.borderRightWidth = result;
             }
             return result;
@@ -3210,7 +3100,7 @@
         get borderBottomWidth() {
             let result = this._cached.borderBottomWidth;
             if (result === undefined) {
-                result = this._convertBorderWidth(2);
+                result = convertBorderWidth(this, 'width', BOX_BORDER[2]);
                 this._cached.borderBottomWidth = result;
             }
             return result;
@@ -3218,7 +3108,7 @@
         get borderLeftWidth() {
             let result = this._cached.borderLeftWidth;
             if (result === undefined) {
-                result = this._convertBorderWidth(3);
+                result = convertBorderWidth(this, 'width', BOX_BORDER[3]);
                 this._cached.borderLeftWidth = result;
             }
             return result;
@@ -3226,7 +3116,7 @@
         get paddingTop() {
             let result = this._cached.paddingTop;
             if (result === undefined) {
-                result = this._convertBox('paddingTop', false);
+                result = convertBox(this, 'paddingTop', false);
                 this._cached.paddingTop = result;
             }
             return result;
@@ -3234,7 +3124,7 @@
         get paddingRight() {
             let result = this._cached.paddingRight;
             if (result === undefined) {
-                result = this._convertBox('paddingRight', false);
+                result = convertBox(this, 'paddingRight', false);
                 this._cached.paddingRight = result;
             }
             return result;
@@ -3242,7 +3132,7 @@
         get paddingBottom() {
             let result = this._cached.paddingBottom;
             if (result === undefined) {
-                result = this._convertBox('paddingBottom', false);
+                result = convertBox(this, 'paddingBottom', false);
                 this._cached.paddingBottom = result;
             }
             return result;
@@ -3250,7 +3140,7 @@
         get paddingLeft() {
             let result = this._cached.paddingLeft;
             if (result === undefined) {
-                result = this._convertBox('paddingLeft', false);
+                result = convertBox(this, 'paddingLeft', false);
                 this._cached.paddingLeft = result;
             }
             return result;
@@ -3296,7 +3186,7 @@
             if (result === undefined) {
                 if (this.naturalElement && !this.floating) {
                     const value = this.display;
-                    result = REGEX_INLINE.test(value) || value === 'table-cell';
+                    result = value.startsWith('inline') || value === 'table-cell';
                 }
                 else {
                     result = false;
@@ -3308,7 +3198,7 @@
         get inlineDimension() {
             let result = this._cached.inlineDimension;
             if (result === undefined) {
-                result = this.naturalElement && (REGEX_INLINEDASH.test(this.display) || this.floating);
+                result = this.naturalElement && (this.display.startsWith('inline-') || this.floating);
                 this._cached.inlineDimension = result;
             }
             return result;
@@ -3381,7 +3271,7 @@
                 }
                 else {
                     const value = this.display;
-                    result = REGEX_INLINEDASH.test(value) || value === 'table';
+                    result = value.startsWith('inline-') || value === 'table';
                 }
                 this._cached.blockDimension = result;
             }
@@ -3508,32 +3398,21 @@
         get src() {
             return this.htmlElement && this._element.src || '';
         }
-        get overflow() {
+        get overflowX() {
             let result = this._cached.overflow;
             if (result === undefined) {
-                result = 0;
-                if (this.htmlElement && !this.inputElement && !this.imageElement && this.tagName !== 'HR' && !this.documentBody) {
-                    const element = this._element;
-                    const { overflowX, overflowY } = this.cssAsObject('overflowX', 'overflowY');
-                    if (this.hasHeight && (this.hasPX('height') || this.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
-                        result |= 16 /* VERTICAL */;
-                    }
-                    if ((this.hasPX('width') || this.hasPX('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
-                        result |= 8 /* HORIZONTAL */;
-                    }
-                    if (overflowX === 'auto' || overflowX === 'hidden' || overflowX === 'overlay' || overflowY === 'auto' || overflowY === 'hidden' || overflowY === 'overlay') {
-                        result |= 64 /* BLOCK */;
-                    }
-                }
+                result = setOverflow(this);
                 this._cached.overflow = result;
             }
-            return result;
-        }
-        get overflowX() {
-            return hasBit$1(this.overflow, 8 /* HORIZONTAL */);
+            return hasBit$1(result, 8 /* HORIZONTAL */);
         }
         get overflowY() {
-            return hasBit$1(this.overflow, 16 /* VERTICAL */);
+            let result = this._cached.overflow;
+            if (result === undefined) {
+                result = setOverflow(this);
+                this._cached.overflow = result;
+            }
+            return hasBit$1(result, 16 /* VERTICAL */);
         }
         get baseline() {
             let result = this._cached.baseline;
@@ -3552,9 +3431,14 @@
         get verticalAlign() {
             let result = this._cached.verticalAlign;
             if (result === undefined) {
-                result = this.css('verticalAlign');
-                if (isLength(result, true)) {
-                    result = this.parseUnit(result, 'height') + 'px';
+                if (this.pageFlow) {
+                    result = this.css('verticalAlign');
+                    if (isLength(result, true)) {
+                        result = this.parseUnit(result, 'height') + 'px';
+                    }
+                }
+                else {
+                    result = '0px';
                 }
                 this._cached.verticalAlign = result;
             }
@@ -3573,13 +3457,16 @@
                     }
                     else {
                         const children = this.naturalChildren;
-                        if (children.length) {
+                        const length = children.length;
+                        if (length) {
                             let top = Number.POSITIVE_INFINITY;
                             let right = Number.NEGATIVE_INFINITY;
                             let left = Number.POSITIVE_INFINITY;
                             let bottom = Number.NEGATIVE_INFINITY;
                             let numberOfLines = 0;
-                            for (const node of children) {
+                            let i = 0;
+                            while (i < length) {
+                                const node = children[i++];
                                 if (node.textElement) {
                                     const rect = actualTextRangeRect(node.element, node.sessionId);
                                     top = Math.min(rect.top, top);
@@ -3635,7 +3522,7 @@
                         result = '';
                         break;
                     default:
-                        if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (this._initial === undefined || this.cssInitial('backgroundColor') === result)) {
+                        if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || this.cssInitial('backgroundColor') === result)) {
                             let parent = this.actualParent;
                             while (parent) {
                                 const color = parent.cssInitial('backgroundColor', true);
@@ -3655,15 +3542,29 @@
             return result;
         }
         get backgroundImage() {
-            var _a;
             let result = this._cached.backgroundImage;
             if (result === undefined) {
-                const value = this.css('backgroundImage');
+                let value = this.css('backgroundImage');
                 if (value !== '' && value !== 'none' && value !== 'initial') {
                     result = value;
                 }
                 else {
-                    result = ((_a = REGEX_BACKGROUND$1.exec(this.css('background'))) === null || _a === void 0 ? void 0 : _a[1]) || '';
+                    value = this.css('background');
+                    if (REGEX_BACKGROUND$1.test(value)) {
+                        const segments = [];
+                        const background = splitEnclosing(value);
+                        const length = background.length;
+                        for (let i = 1; i < length; ++i) {
+                            const name = background[i - 1].trim();
+                            if (REGEX_BACKGROUND$1.test(name)) {
+                                segments.push(name + background[i]);
+                            }
+                        }
+                        result = segments.join(', ');
+                    }
+                    else {
+                        result = '';
+                    }
                 }
                 this._cached.backgroundImage = result;
             }
@@ -3709,15 +3610,15 @@
                     let backgroundRepeatX = false;
                     let backgroundRepeatY = false;
                     if (backgroundImage) {
-                        for (const repeat of this.css('backgroundRepeat').split(XML$2.SEPARATOR)) {
-                            const [repeatX, repeatY] = repeat.split(' ');
+                        this.css('backgroundRepeat').split(XML$2.SEPARATOR).forEach(repeat => {
+                            const [repeatX, repeatY] = repeat.split(CHAR$1.SPACE);
                             if (!backgroundRepeatX) {
                                 backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x';
                             }
                             if (!backgroundRepeatY) {
                                 backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
                             }
-                        }
+                        });
                     }
                     result = {
                         background: borderWidth || backgroundImage || backgroundColor,
@@ -3783,7 +3684,7 @@
                             break;
                     }
                 }
-                else if (this.inlineStatic || this.display === 'table-cell' || this._flexParent('row')) {
+                else if (this.inlineStatic || this.display === 'table-cell' || flexParent(this, 'row')) {
                     result = this.bounds.width;
                 }
                 else {
@@ -3804,7 +3705,7 @@
         get actualHeight() {
             let result = this._cached.actualHeight;
             if (result === undefined) {
-                if (!this.inlineStatic && this.display !== 'table-cell' && !this._flexParent('column')) {
+                if (!this.inlineStatic && this.display !== 'table-cell' && !flexParent(this, 'column')) {
                     result = this.height;
                     if (result > 0) {
                         if (this.contentBox && !this.tableElement) {
@@ -3855,8 +3756,9 @@
         }
         get lastStaticChild() {
             const children = this.naturalChildren;
-            for (let i = children.length - 1; i >= 0; i--) {
-                const node = children[i];
+            let i = children.length - 1;
+            while (i >= 0) {
+                const node = children[i--];
                 if (node.pageFlow) {
                     return node;
                 }
@@ -3900,8 +3802,9 @@
                 if (this.styleElement) {
                     const attributes = this._element.attributes;
                     const length = attributes.length;
-                    for (let i = 0; i < length; i++) {
-                        const { name, value } = attributes.item(i);
+                    let i = 0;
+                    while (i < length) {
+                        const { name, value } = attributes.item(i++);
                         result[name] = value;
                     }
                 }
@@ -3914,7 +3817,7 @@
             return (this.naturalElement && ((_a = this._element) === null || _a === void 0 ? void 0 : _a.getBoundingClientRect()) || this._bounds || newBoxRectDimension());
         }
         get fontSize() {
-            var _a;
+            var _a, _b;
             let result = this._fontSize;
             if (result === undefined) {
                 const getFontSize = (style) => parseFloat(style.getPropertyValue('font-size'));
@@ -3937,24 +3840,10 @@
                     const element = this.element;
                     if (element && hasComputedStyle$1(element)) {
                         const node = getElementAsNode(element, this.sessionId);
-                        if (node) {
-                            result = node.fontSize;
-                        }
-                        else {
-                            result = getFontSize(getStyle$1(element));
-                        }
+                        result = (node === null || node === void 0 ? void 0 : node.fontSize) || getFontSize(getStyle$1(element));
                     }
                     else {
-                        do {
-                            const parent = this.actualParent;
-                            if (parent) {
-                                result = getFontSize(parent.style);
-                            }
-                            else {
-                                result = getFontSize(getStyle$1(document.body));
-                                break;
-                            }
-                        } while (result === 0);
+                        result = ((_b = this.ascend({ condition: item => item.fontSize > 0 })[0]) === null || _b === void 0 ? void 0 : _b.fontSize) || getFontSize(getStyle$1(document.body));
                     }
                 }
                 this._fontSize = result;
@@ -3968,6 +3857,7 @@
             let result = this._textStyle;
             if (result === undefined) {
                 result = this.cssAsObject(...TEXT_STYLE);
+                result.fontSize = this.fontSize + 'px';
                 this._textStyle = result;
             }
             return result;
@@ -4076,10 +3966,12 @@
     const { cloneObject, convertWord, hasBit: hasBit$2, isArray, iterateArray: iterateArray$1, safeNestedMap, searchObject, spliceArray, withinRange } = $lib$3.util;
     const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
     const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
-    const REGEX_INLINEDASH$1 = /^inline-/;
     function cascadeActualPadding(children, attr, value) {
         let valid = false;
-        for (const item of children) {
+        const length = children.length;
+        let i = 0;
+        while (i < length) {
+            const item = children[i++];
             if (item.blockStatic) {
                 return false;
             }
@@ -4224,7 +4116,10 @@
         }
         static baseline(list, text = false) {
             const result = [];
-            for (const item of list) {
+            const length = list.length;
+            let i = 0;
+            while (i < length) {
+                const item = list[i++];
                 if (item.baseline && (!text || item.textElement) && !item.baselineAltered) {
                     if (item.naturalElements.length) {
                         if (item.baselineElement) {
@@ -4292,26 +4187,27 @@
             const length = list.length;
             if (length > 1) {
                 const nodes = new Array(length);
-                let q = 0;
-                for (let i = 0; i < length; i++) {
-                    const item = list[i];
+                let i = 0, n = 0;
+                while (i < length) {
+                    const item = list[i++];
                     if (item.pageFlow) {
                         if (item.floating) {
                             floated.add(item.float);
                         }
-                        nodes[q++] = item;
+                        nodes[n++] = item;
                     }
                     else if (item.autoPosition) {
-                        nodes[q++] = item;
+                        nodes[n++] = item;
                     }
                 }
-                if (q) {
-                    nodes.length = q;
+                if (n) {
+                    nodes.length = n;
                     const siblings = [nodes[0]];
                     let x = 1;
                     let y = 1;
-                    for (let i = 1; i < q; i++) {
-                        const node = nodes[i];
+                    i = 1;
+                    while (i < n) {
+                        const node = nodes[i++];
                         if (node.alignedVertically(siblings, cleared) > 0) {
                             y++;
                         }
@@ -4323,14 +4219,16 @@
                         }
                         siblings.push(node);
                     }
-                    linearX = x === q;
-                    linearY = y === q;
+                    linearX = x === n;
+                    linearY = y === n;
                     if (linearX && floated.size) {
                         let boxLeft = Number.POSITIVE_INFINITY;
                         let boxRight = Number.NEGATIVE_INFINITY;
                         let floatLeft = Number.NEGATIVE_INFINITY;
                         let floatRight = Number.POSITIVE_INFINITY;
-                        for (const node of nodes) {
+                        i = 0;
+                        while (i < n) {
+                            const node = nodes[i++];
                             const { left, right } = node.linear;
                             boxLeft = Math.min(boxLeft, left);
                             boxRight = Math.max(boxRight, right);
@@ -4343,21 +4241,22 @@
                                     break;
                             }
                         }
-                        for (let i = 0, j = 0, k = 0, l = 0, m = 0; i < q; i++) {
+                        let j = 0, k = 0, l = 0, m = 0;
+                        for (i = 0; i < n; ++i) {
                             const node = nodes[i];
                             const { left, right } = node.linear;
                             if (Math.floor(left) <= boxLeft) {
-                                j++;
+                                ++j;
                             }
                             if (Math.ceil(right) >= boxRight) {
-                                k++;
+                                ++k;
                             }
                             if (!node.floating) {
                                 if (left === floatLeft) {
-                                    l++;
+                                    ++l;
                                 }
                                 if (right === floatRight) {
-                                    m++;
+                                    ++m;
                                 }
                             }
                             if (i === 0) {
@@ -4387,8 +4286,9 @@
             let row = [];
             let siblings = [];
             const length = list.length;
-            for (let i = 0; i < length; i++) {
-                const node = list[i];
+            let i = 0;
+            while (i < length) {
+                const node = list[i++];
                 let active = node;
                 if (!node.naturalChild) {
                     if (node.nodeGroup) {
@@ -4437,7 +4337,7 @@
         attr(name, attr, value, overwrite = true) {
             let obj = this['__' + name];
             if (value) {
-                if (obj === undefined) {
+                if (!obj) {
                     if (!this._namespaces.includes(name)) {
                         this._namespaces.push(name);
                     }
@@ -4476,7 +4376,7 @@
         delete(name, ...attrs) {
             const obj = this['__' + name];
             if (obj) {
-                for (const attr of attrs) {
+                attrs.forEach(attr => {
                     if (attr.includes('*')) {
                         for (const [key] of searchObject(obj, attr)) {
                             delete obj[key];
@@ -4485,12 +4385,11 @@
                     else {
                         delete obj[attr];
                     }
-                }
+                });
             }
         }
         lockAttr(name, attr) {
-            const locked = safeNestedMap(this._locked, name);
-            locked[attr] = true;
+            safeNestedMap(this._locked, name)[attr] = true;
         }
         unlockAttr(name, attr) {
             const locked = this._locked[name];
@@ -4518,11 +4417,9 @@
         renderEach(predicate) {
             const children = this.renderChildren;
             const length = children.length;
-            for (let i = 0; i < length; i++) {
-                const item = children[i];
-                if (item.visible) {
-                    predicate(item, i, children);
-                }
+            let i = 0;
+            while (i < length) {
+                predicate(children[i], i++, children);
             }
             return this;
         }
@@ -4539,7 +4436,7 @@
             this.visible = false;
         }
         inherit(node, ...modules) {
-            for (const name of modules) {
+            modules.forEach(name => {
                 switch (name) {
                     case 'base': {
                         this._documentParent = node.documentParent;
@@ -4561,15 +4458,13 @@
                         break;
                     case 'alignment': {
                         const styleMap = this._styleMap;
-                        for (const attr of INHERIT_ALIGNMENT) {
-                            styleMap[attr] = node.css(attr);
-                        }
+                        INHERIT_ALIGNMENT.forEach(attr => styleMap[attr] = node.css(attr));
                         if (!this.positionStatic) {
-                            for (const attr of BOX_POSITION) {
+                            BOX_POSITION.forEach(attr => {
                                 if (node.hasPX(attr)) {
                                     styleMap[attr] = node.css(attr);
                                 }
-                            }
+                            });
                         }
                         Object.assign(this.autoMargin, node.autoMargin);
                         this.autoPosition = node.autoPosition;
@@ -4580,7 +4475,7 @@
                         break;
                     case 'textStyle':
                         this.cssApply(node.textStyle);
-                        this.fontSize = node.fontSize;
+                        this.setCacheValue('fontSize', node.fontSize);
                         break;
                     case 'boxStyle': {
                         const { backgroundColor, backgroundImage } = node;
@@ -4612,7 +4507,7 @@
                         break;
                     }
                 }
-            }
+            });
         }
         addAlign(value) {
             if (!this.hasAlign(value)) {
@@ -4662,12 +4557,12 @@
                             exclude += (exclude !== '' ? '|' : '') + value;
                         }
                         if (exclude !== '') {
-                            for (const name of exclude.split(/\s*\|\s*/)) {
+                            exclude.split(/\s*\|\s*/).forEach(name => {
                                 const i = enumeration[name.toUpperCase()] || 0;
                                 if (i > 0 && !hasBit$2(offset, i)) {
                                     offset |= i;
                                 }
-                            }
+                            });
                         }
                         return offset;
                     };
@@ -4682,7 +4577,7 @@
         appendTry(node, replacement, append = true) {
             const children = this.children;
             const length = children.length;
-            for (let i = 0; i < length; i++) {
+            for (let i = 0; i < length; ++i) {
                 const item = children[i];
                 if (item === node || item === node.innerMostWrapped || item === node.outerMostWrapper) {
                     children[i] = replacement;
@@ -4726,6 +4621,7 @@
                                                 replacement.documentRoot = true;
                                                 this.documentRoot = false;
                                             }
+                                            replacement.depth = this.depth;
                                             this.renderParent = undefined;
                                             return true;
                                         }
@@ -4784,9 +4680,7 @@
                                             if (length === siblings.length + 1) {
                                                 const getLayoutWidth = (node) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
                                                 let width = actualParent.box.width - getLayoutWidth(this);
-                                                for (const item of siblings) {
-                                                    width -= getLayoutWidth(item);
-                                                }
+                                                siblings.forEach(item => width -= getLayoutWidth(item));
                                                 if (width >= 0) {
                                                     return 0 /* HORIZONTAL */;
                                                 }
@@ -4806,7 +4700,7 @@
                                 if (floating && !horizontal && previous.blockStatic) {
                                     return 0 /* HORIZONTAL */;
                                 }
-                                else if (!REGEX_INLINEDASH$1.test(this.display)) {
+                                else if (!this.display.startsWith('inline-')) {
                                     let { top, bottom } = this.bounds;
                                     if (this.textElement && cleared.size && siblings.some(item => cleared.has(item)) && siblings.some(item => Math.floor(top) < item.bounds.top && Math.ceil(bottom) > item.bounds.bottom)) {
                                         return 7 /* FLOAT_INTERSECT */;
@@ -4816,14 +4710,14 @@
                                             const float = siblings[0].float;
                                             let maxBottom = Number.NEGATIVE_INFINITY;
                                             let contentWidth = 0;
-                                            for (const item of siblings) {
+                                            siblings.forEach(item => {
                                                 if (item.floating) {
                                                     if (item.float === float) {
                                                         maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
                                                     }
                                                     contentWidth += item.linear.width;
                                                 }
-                                            }
+                                            });
                                             if (Math.ceil(contentWidth) >= this.actualParent.box.width) {
                                                 return 5 /* FLOAT_BLOCK */;
                                             }
@@ -4988,7 +4882,7 @@
         resetBox(region, node) {
             const boxReset = this._boxReset;
             const applyReset = (attrs, start) => {
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < 4; ++i) {
                     const key = CSS_SPACING_KEYS[i + start];
                     if (hasBit$2(region, key)) {
                         const name = attrs[i];
@@ -5021,7 +4915,7 @@
         transferBox(region, node) {
             const boxAdjustment = this._boxAdjustment;
             const applyReset = (attrs, start) => {
-                for (let i = 0; i < 4; i++) {
+                for (let i = 0; i < 4; ++i) {
                     const key = CSS_SPACING_KEYS[i + start];
                     if (hasBit$2(region, key)) {
                         const previous = this.registerBox(key);
@@ -5151,7 +5045,7 @@
         unsetCache(...attrs) {
             if (attrs.length) {
                 const cached = this._cached;
-                for (const attr of attrs) {
+                attrs.forEach(attr => {
                     switch (attr) {
                         case 'top':
                         case 'right':
@@ -5163,7 +5057,7 @@
                             cached.baselineHeight = undefined;
                             break;
                     }
-                }
+                });
             }
             super.unsetCache(...attrs);
         }
@@ -5328,17 +5222,6 @@
             }
             return result;
         }
-        set overflow(value) {
-            if (value === 0 || value === 16 /* VERTICAL */ || value === 8 /* HORIZONTAL */ || value === (8 /* HORIZONTAL */ | 16 /* VERTICAL */)) {
-                if (hasBit$2(this.overflow, 64 /* BLOCK */)) {
-                    value |= 64 /* BLOCK */;
-                }
-                this._cached.overflow = value;
-            }
-        }
-        get overflow() {
-            return super.overflow;
-        }
         get baselineElement() {
             let result = this._cached.baselineElement;
             if (result === undefined) {
@@ -5372,7 +5255,7 @@
             return this._visible;
         }
         set controlName(value) {
-            if (!this.rendered || this._controlName === undefined) {
+            if (!this.rendered || !this._controlName) {
                 this._controlName = value;
             }
         }
@@ -5411,8 +5294,9 @@
                 const children = parent.naturalChildren;
                 const index = children.indexOf(this);
                 if (index !== -1) {
-                    for (let i = index - 1; i >= 0; i--) {
-                        const node = children[i];
+                    let i = index - 1;
+                    while (i >= 0) {
+                        const node = children[i--];
                         if (node && (!node.excluded || node.lineBreak)) {
                             return node;
                         }
@@ -5428,8 +5312,9 @@
                 const index = children.indexOf(this);
                 if (index !== -1) {
                     const length = children.length;
-                    for (let i = index + 1; i < length; i++) {
-                        const node = children[i];
+                    let i = index + 1;
+                    while (i < length) {
+                        const node = children[i++];
                         if (node && (!node.excluded || node.lineBreak)) {
                             return node;
                         }
@@ -5569,12 +5454,6 @@
             }
             return null;
         }
-        set fontSize(value) {
-            this._fontSize = value;
-        }
-        get fontSize() {
-            return super.fontSize;
-        }
         get extensions() {
             let result = this._cached.extensions;
             if (result === undefined) {
@@ -5704,7 +5583,10 @@
                     result = true;
                     if (length > 1) {
                         let previousBottom = Number.POSITIVE_INFINITY;
-                        for (const node of this.children) {
+                        const children = this.children;
+                        let i = 0;
+                        while (i < length) {
+                            const node = children[i++];
                             if (node.blockStatic || node.multiline || Math.ceil(node.bounds.top) >= previousBottom) {
                                 result = false;
                                 break;
@@ -5729,11 +5611,11 @@
     const { BOX_POSITION: BOX_POSITION$1, TEXT_STYLE: TEXT_STYLE$1, convertListStyle, formatPX: formatPX$1, getStyle: getStyle$2, insertStyleSheetRule: insertStyleSheetRule$1, resolveURL } = $lib$4.css;
     const { getNamedItem: getNamedItem$1, isTextNode: isTextNode$2, removeElementsByClassName } = $lib$4.dom;
     const { maxArray } = $lib$4.math;
-    const { convertFloat: convertFloat$1, convertWord: convertWord$1, flatArray, fromLastIndexOf: fromLastIndexOf$2, hasBit: hasBit$4, isString: isString$3, iterateArray: iterateArray$2, partitionArray, safeNestedArray, safeNestedMap: safeNestedMap$1, trimBoth, trimString: trimString$1 } = $lib$4.util;
-    const { CSS: CSS$3, XML: XML$4 } = $lib$4.regex;
+    const { appendSeparator, convertFloat: convertFloat$1, convertWord: convertWord$1, flatArray, hasBit: hasBit$4, hasMimeType: hasMimeType$1, isString: isString$3, iterateArray: iterateArray$2, partitionArray, safeNestedArray, safeNestedMap: safeNestedMap$1, trimBoth, trimString } = $lib$4.util;
+    const { XML: XML$4 } = $lib$4.regex;
     const { getElementCache: getElementCache$2, getPseudoElt: getPseudoElt$1, setElementCache: setElementCache$2 } = $lib$4.session;
     const { isPlainText } = $lib$4.xml;
-    const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:, ([a-z-]+))?\)|(counters)\(([^,]+), "([^"]*)"(?:, ([a-z-]+))?\)|"([^"]+)")\s*/g;
+    const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
     const STRING_PSEUDOPREFIX = '__squared_';
     function createPseudoElement(parent, tagName = 'span', index = -1) {
         const element = document.createElement(tagName);
@@ -5748,13 +5630,12 @@
         return element;
     }
     function saveAlignment(preAlignment, element, id, attr, value, restoreValue) {
-        const stored = safeNestedMap$1(preAlignment, id);
-        stored[attr] = restoreValue;
+        safeNestedMap$1(preAlignment, id)[attr] = restoreValue;
         element.style.setProperty(attr, value);
     }
     function getCounterValue(name, counterName, fallback = 1) {
         if (name !== 'none') {
-            const pattern = /\s*([^\-\d][^\-\d]?[^ ]*) (-?\d+)\s*/g;
+            const pattern = /\s*([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\s*/g;
             let match;
             while ((match = pattern.exec(name)) !== null) {
                 if (match[1] === counterName) {
@@ -5767,7 +5648,7 @@
     }
     function getCounterIncrementValue(parent, counterName, pseudoElt, sessionId, fallback) {
         var _a;
-        const counterIncrement = (_a = getElementCache$2(parent, 'styleMap' + pseudoElt, sessionId)) === null || _a === void 0 ? void 0 : _a.counterIncrement;
+        const counterIncrement = (_a = getElementCache$2(parent, `styleMap${pseudoElt}`, sessionId)) === null || _a === void 0 ? void 0 : _a.counterIncrement;
         return counterIncrement ? getCounterValue(counterIncrement, counterName, fallback) : undefined;
     }
     function checkTraverseHorizontal(node, horizontal, vertical) {
@@ -5789,7 +5670,7 @@
             const included = value.split(XML$4.SEPARATOR);
             const result = [];
             const untagged = [];
-            for (const ext of extensions) {
+            extensions.forEach(ext => {
                 const index = included.indexOf(ext.name);
                 if (index !== -1) {
                     result[index] = ext;
@@ -5797,7 +5678,7 @@
                 else {
                     untagged.push(ext);
                 }
-            }
+            });
             if (result.length) {
                 return flatArray(result).concat(untagged);
             }
@@ -5809,8 +5690,9 @@
         let floating = true;
         let right = true;
         const length = nodes.length;
-        for (let i = 0; i < length; i++) {
-            const item = nodes[i];
+        let i = 0;
+        while (i < length) {
+            const item = nodes[i++];
             if (!item.floating) {
                 floating = false;
             }
@@ -5847,11 +5729,10 @@
             this.extensions = [];
             this._layouts = [];
             const localSettings = this.controllerHandler.localSettings;
-            this._localSettings = localSettings;
+            this._controllerSettings = localSettings;
             this._excluded = localSettings.unsupported.excluded;
         }
         finalize() {
-            var _a;
             if (this.closed) {
                 return;
             }
@@ -5865,16 +5746,16 @@
                     node.render(parent);
                     this.addLayoutTemplate(parent, node, template);
                 }
-                else if (node.renderParent === undefined) {
+                else if (!node.renderParent) {
                     cache.remove(node);
                 }
             }
             const children = cache.children;
             const length = children.length;
             const rendered = new Array(length);
-            let j = 0;
-            for (let i = 0; i < length; i++) {
-                const node = children[i];
+            let i = 0, j = 0;
+            while (i < length) {
+                const node = children[i++];
                 if (node.renderParent && node.visible) {
                     if (node.hasProcedure(NODE_PROCEDURE.LAYOUT)) {
                         node.setLayout();
@@ -5887,45 +5768,44 @@
             }
             rendered.length = j;
             controllerHandler.optimize(rendered);
-            for (const ext of extensions) {
+            extensions.forEach(ext => {
                 for (const node of ext.subscribers) {
                     ext.postOptimize(node);
                 }
-            }
+            });
             const documentRoot = [];
-            for (const node of rendered) {
+            i = 0;
+            while (i < j) {
+                const node = rendered[i++];
                 if (node.hasResource(NODE_RESOURCE.BOX_SPACING)) {
                     node.setBoxSpacing();
                 }
                 if (node.documentRoot) {
-                    const layoutName = node.innerMostWrapped.dataset.layoutName;
+                    if (node.renderChildren.length === 0 && !node.inlineText) {
+                        const naturalElement = node.naturalElements;
+                        if (naturalElement.length && naturalElement.every(item => item.documentRoot)) {
+                            continue;
+                        }
+                    }
+                    const layoutName = node.innerMostWrapped.data(Application.KEY_NAME, 'layoutName');
                     if (layoutName) {
                         documentRoot.push({ node, layoutName });
                     }
                 }
             }
-            for (const ext of extensions) {
-                ext.beforeCascade();
-            }
-            const baseTemplate = this._localSettings.layout.baseTemplate;
-            for (const layout of documentRoot) {
+            extensions.forEach(ext => ext.beforeCascade(documentRoot));
+            const baseTemplate = this._controllerSettings.layout.baseTemplate;
+            documentRoot.forEach(layout => {
+                var _a;
                 const node = layout.node;
-                if (node.documentRoot && node.renderChildren.length === 0 && !node.inlineText) {
-                    const naturalElement = node.naturalElements;
-                    if (naturalElement.length && node.naturalElements.every(item => item.documentRoot)) {
-                        continue;
-                    }
-                }
                 const renderTemplates = node.renderParent.renderTemplates;
                 if (renderTemplates) {
-                    this.saveDocument(layout.layoutName, baseTemplate + controllerHandler.cascadeDocument(renderTemplates, 0), node.dataset.pathname, ((_a = node.renderExtension) === null || _a === void 0 ? void 0 : _a.some(item => item.documentBase)) ? 0 : undefined);
+                    this.saveDocument(layout.layoutName, baseTemplate + controllerHandler.cascadeDocument(renderTemplates, Math.abs(node.depth)), node.dataset.pathname, ((_a = node.renderExtension) === null || _a === void 0 ? void 0 : _a.some(item => item.documentBase)) ? 0 : undefined);
                 }
-            }
+            });
             this.resourceHandler.finalize(layouts);
             controllerHandler.finalize(layouts);
-            for (const ext of extensions) {
-                ext.afterFinalize();
-            }
+            extensions.forEach(ext => ext.afterFinalize());
             removeElementsByClassName('__squared.pseudo');
             this.closed = true;
         }
@@ -5959,12 +5839,12 @@
                     switch (getStyle$2(element).position) {
                         case 'absolute':
                         case 'fixed':
-                            return this._isUseElement(element);
+                            return this.useElement(element);
                     }
                     let current = element.parentElement;
                     while (current) {
                         if (getStyle$2(current).display === 'none') {
-                            return this._isUseElement(element);
+                            return this.useElement(element);
                         }
                         current = current.parentElement;
                     }
@@ -5972,7 +5852,7 @@
                     if (iterateArray$2(element.children, (item) => controllerHandler.visibleElement(item)) === Number.POSITIVE_INFINITY) {
                         return true;
                     }
-                    return this._isUseElement(element);
+                    return this.useElement(element);
                 }
             }
             return false;
@@ -5984,7 +5864,7 @@
                     const node = this.createNode({ parent, element, append: false });
                     if (parent) {
                         node.cssApply(parent.textStyle);
-                        node.fontSize = parent.fontSize;
+                        node.setCacheValue('fontSize', parent.fontSize);
                     }
                     return node;
                 }
@@ -6004,7 +5884,7 @@
         saveDocument(filename, content, pathname, index) {
             if (isString$3(content)) {
                 const layout = {
-                    pathname: pathname ? trimString$1(pathname, '/') : this._localSettings.layout.pathName,
+                    pathname: pathname ? trimString(pathname, '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
                     filename,
                     content,
                     index
@@ -6080,11 +5960,7 @@
                     node.innerWrapped = replace;
                 }
             }
-            if (children) {
-                for (const item of children) {
-                    item.parent = node;
-                }
-            }
+            children === null || children === void 0 ? void 0 : children.forEach(item => item.parent = node);
             if (options.append !== false) {
                 processing.cache.append(node, options.delegate === true, options.cascade === true);
             }
@@ -6102,13 +5978,15 @@
                 let resetBounds = false;
                 if (node.documentBody) {
                     parent.naturalChild = true;
+                    parent.setCacheValue('naturalElement', true);
                     parent.visible = false;
+                    parent.addAlign(4 /* AUTO_LAYOUT */);
                     parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
                     cache.append(parent);
                 }
                 node.originalRoot = true;
                 node.documentParent = parent;
-                for (const item of cache) {
+                cache.each(item => {
                     if (item.styleElement) {
                         const element = item.element;
                         if (item.length) {
@@ -6122,39 +6000,38 @@
                             }
                         }
                         if (item.positionRelative) {
-                            for (const attr of BOX_POSITION$1) {
+                            BOX_POSITION$1.forEach(attr => {
                                 if (item.hasPX(attr)) {
                                     saveAlignment(preAlignment, element, item.id, attr, 'auto', item.css(attr));
                                     resetBounds = true;
                                 }
-                            }
+                            });
                         }
                         if (item.dir === 'rtl') {
                             element.dir = 'ltr';
                             direction.add(element);
                         }
                     }
-                }
+                });
                 if (!resetBounds && direction.size) {
                     resetBounds = true;
                 }
-                for (const item of this.processing.excluded) {
+                this.processing.excluded.each(item => {
                     if (!item.pageFlow) {
                         item.cssTry('display', 'none');
                     }
-                }
-                parent.setBounds();
-                for (const item of cache) {
+                });
+                cache.each(item => {
                     if (!item.pseudoElement) {
                         item.setBounds(preAlignment[item.id] === undefined && !resetBounds);
                     }
                     else {
                         pseudoElements.push(item);
                     }
-                }
+                });
                 if (pseudoElements.length) {
                     const pseudoMap = [];
-                    for (const item of pseudoElements) {
+                    pseudoElements.forEach((item) => {
                         const parentElement = item.actualParent.element;
                         let id = parentElement.id;
                         let styleElement;
@@ -6168,11 +6045,9 @@
                         if (item.cssTry('display', item.display)) {
                             pseudoMap.push({ item, id, parentElement, styleElement });
                         }
-                    }
-                    for (const data of pseudoMap) {
-                        data.item.setBounds(false);
-                    }
-                    for (const data of pseudoMap) {
+                    });
+                    pseudoMap.forEach(data => data.item.setBounds(false));
+                    pseudoMap.forEach(data => {
                         const styleElement = data.styleElement;
                         if (data.id.startsWith(STRING_PSEUDOPREFIX)) {
                             data.parentElement.id = '';
@@ -6185,9 +6060,9 @@
                             }
                         }
                         data.item.cssFinally('display');
-                    }
+                    });
                 }
-                for (const item of this.processing.excluded) {
+                this.processing.excluded.each(item => {
                     if (!item.lineBreak) {
                         item.setBounds();
                         item.saveAsInitial();
@@ -6195,8 +6070,8 @@
                     if (!item.pageFlow) {
                         item.cssFinally('display');
                     }
-                }
-                for (const item of cache) {
+                });
+                cache.each(item => {
                     if (item.styleElement) {
                         const element = item.element;
                         const reset = preAlignment[item.id];
@@ -6210,21 +6085,21 @@
                         }
                     }
                     item.saveAsInitial();
-                }
+                });
                 controllerHandler.evaluateNonStatic(node, cache);
                 controllerHandler.sortInitialCache();
-                return true;
             }
-            return false;
+            return node;
         }
-        afterCreateCache(element) {
-            const dataset = element.dataset;
+        afterCreateCache(node) {
+            const dataset = node.dataset;
             const { filename, iteration } = dataset;
-            const prefix = isString$3(filename) && filename.replace(new RegExp(`\\.${this._localSettings.layout.fileExtension}$`), '') || element.id || `document_${this.length}`;
-            const suffix = (iteration ? parseInt(iteration) : -1) + 1;
-            const layoutName = convertWord$1(suffix > 1 ? `${prefix}_${suffix}` : prefix, true);
-            dataset.iteration = suffix.toString();
+            const prefix = isString$3(filename) && filename.replace(new RegExp(`\\.${this._controllerSettings.layout.fileExtension}$`), '') || node.elementId || `document_${this.length}`;
+            const postfix = (iteration ? parseInt(iteration) : -1) + 1;
+            const layoutName = convertWord$1(postfix > 0 ? `${prefix}_${postfix}` : prefix, true);
+            dataset.iteration = postfix.toString();
             dataset.layoutName = layoutName;
+            node.data(Application.KEY_NAME, 'layoutName', layoutName);
             this.setBaseLayout();
             this.setConstraints();
             this.setResources();
@@ -6244,9 +6119,13 @@
             }
             return undefined;
         }
+        useElement(element) {
+            const use = element.dataset.use;
+            return isString$3(use) && use.split(XML$4.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
+        }
         toString() {
             var _a;
-            return ((_a = this._layouts[0]) === null || _a === void 0 ? void 0 : _a.content) || '';
+            return ((_a = this.layouts[0]) === null || _a === void 0 ? void 0 : _a.content) || '';
         }
         cascadeParentNode(parentElement, depth, extensions) {
             var _a;
@@ -6255,9 +6134,8 @@
                 node.depth = depth;
                 if (depth === 0) {
                     this._cache.append(node);
-                    const extensionManager = this.extensionManager;
                     for (const name of node.extensions) {
-                        if ((_a = extensionManager.retrieve(name)) === null || _a === void 0 ? void 0 : _a.cascadeAll) {
+                        if ((_a = this.extensionManager.retrieve(name)) === null || _a === void 0 ? void 0 : _a.cascadeAll) {
                             this._cascadeAll = true;
                             break;
                         }
@@ -6275,10 +6153,9 @@
                 const children = new Array(length);
                 const elements = new Array(parentElement.childElementCount);
                 let inlineText = true;
-                let j = 0;
-                let k = 0;
-                for (let i = 0; i < length; i++) {
-                    const element = childNodes[i];
+                let i = 0, j = 0, k = 0;
+                while (i < length) {
+                    const element = childNodes[i++];
                     let child;
                     if (element === beforeElement) {
                         child = this.insertNode(beforeElement, undefined, '::before');
@@ -6339,8 +6216,8 @@
                 node.naturalChildren = children;
                 node.naturalElements = elements;
                 this.cacheNodeChildren(node, children, inlineText);
-                if (this.userSettings.createQuerySelectorMap && k > 0) {
-                    node.queryMap = this.createQueryMap(elements);
+                if (k > 0 && this.userSettings.createQuerySelectorMap) {
+                    node.queryMap = this.createQueryMap(elements, k);
                 }
             }
             return node;
@@ -6354,7 +6231,7 @@
                 if (length > 1) {
                     let trailing = children[0];
                     let floating = false;
-                    for (let i = 0, j = 0; i < length; i++) {
+                    for (let i = 0, j = 0; i < length; ++i) {
                         const child = children[i];
                         if (child.excluded) {
                             this.processing.excluded.append(child);
@@ -6414,316 +6291,19 @@
             }
             node.inlineText = inlineText;
         }
-        createPseduoElement(element, pseudoElt, sessionId) {
-            let styleMap = getElementCache$2(element, 'styleMap' + pseudoElt, sessionId);
-            let nested = 0;
-            if (element.tagName === 'Q') {
-                if (styleMap === undefined) {
-                    styleMap = {};
-                    setElementCache$2(element, 'styleMap' + pseudoElt, sessionId, styleMap);
-                }
-                let content = styleMap.content;
-                if (typeof content !== 'string' || content === '') {
-                    content = getStyle$2(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
-                    styleMap.content = content;
-                }
-                if (/-quote$/.test(content)) {
-                    let parent = element.parentElement;
-                    while ((parent === null || parent === void 0 ? void 0 : parent.tagName) === 'Q') {
-                        nested++;
-                        parent = parent.parentElement;
-                    }
-                }
-            }
-            if (styleMap) {
-                let value = styleMap.content;
-                if (value) {
-                    const textContent = trimBoth(value, '"');
-                    let absolute = false;
-                    switch (styleMap.position) {
-                        case 'absolute':
-                        case 'fixed':
-                            absolute = true;
-                            break;
-                    }
-                    const checkPseudoAfter = () => {
-                        if (!absolute && textContent !== '') {
-                            const previousSibling = element.childNodes[element.childNodes.length - 1];
-                            if (isTextNode$2(previousSibling)) {
-                                return !/\s+$/.test(previousSibling.textContent);
-                            }
-                        }
-                        return false;
-                    };
-                    if (textContent.trim() === '') {
-                        const checkDimension = (after) => {
-                            if ((after || convertFloat$1(styleMap.width) === 0) && convertFloat$1(styleMap.height) === 0) {
-                                for (const attr in styleMap) {
-                                    if (/(padding|Width|Height)/.test(attr) && convertFloat$1(styleMap[attr]) > 0) {
-                                        return true;
-                                    }
-                                    else if (!absolute && /^margin/.test(attr) && convertFloat$1(styleMap[attr]) !== 0) {
-                                        return true;
-                                    }
-                                }
-                                return false;
-                            }
-                            return true;
-                        };
-                        if (pseudoElt === '::after') {
-                            if (!checkPseudoAfter() && !checkDimension(true)) {
-                                return undefined;
-                            }
-                        }
-                        else {
-                            const childNodes = element.childNodes;
-                            const length = childNodes.length;
-                            for (let i = 0; i < length; i++) {
-                                const child = childNodes[i];
-                                if (isTextNode$2(child)) {
-                                    if (child.textContent.trim() !== '') {
-                                        break;
-                                    }
-                                }
-                                else if (child instanceof HTMLElement) {
-                                    const style = getStyle$2(child);
-                                    switch (style.getPropertyValue('position')) {
-                                        case 'fixed':
-                                        case 'absolute':
-                                            continue;
-                                    }
-                                    if (style.getPropertyValue('float') !== 'none') {
-                                        return undefined;
-                                    }
-                                    break;
-                                }
-                            }
-                            switch (styleMap.display) {
-                                case undefined:
-                                case 'block':
-                                case 'inline':
-                                case 'inherit':
-                                case 'initial': {
-                                    if (!checkDimension(false)) {
-                                        return undefined;
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    else if (value === 'inherit') {
-                        let current = element;
-                        do {
-                            value = getStyle$2(current).getPropertyValue('content');
-                            if (value !== 'inherit') {
-                                break;
-                            }
-                            current = current.parentElement;
-                        } while (current);
-                    }
-                    const style = getStyle$2(element);
-                    for (const attr of TEXT_STYLE$1) {
-                        if (styleMap[attr] === undefined) {
-                            styleMap[attr] = style[attr];
-                        }
-                    }
-                    let tagName = '';
-                    let content = '';
-                    switch (value) {
-                        case 'normal':
-                        case 'none':
-                        case 'initial':
-                        case 'inherit':
-                        case 'unset':
-                        case 'no-open-quote':
-                        case 'no-close-quote':
-                        case '""':
-                            break;
-                        case 'open-quote':
-                            if (pseudoElt === '::before') {
-                                content = nested % 2 === 0 ? '“' : "‘";
-                            }
-                            break;
-                        case 'close-quote':
-                            if (pseudoElt === '::after') {
-                                content = nested % 2 === 0 ? '”' : "’";
-                            }
-                            break;
-                        default:
-                            if (CSS$3.URL.test(value)) {
-                                content = resolveURL(value);
-                                const format = fromLastIndexOf$2(content, '.').toLowerCase();
-                                const imageFormat = this._localSettings.supported.imageFormat;
-                                if (imageFormat === '*' || imageFormat.includes(format)) {
-                                    tagName = 'img';
-                                }
-                                else {
-                                    content = '';
-                                }
-                            }
-                            else {
-                                let found = false;
-                                let match;
-                                while ((match = REGEX_COUNTER.exec(value)) !== null) {
-                                    const attr = match[1];
-                                    if (attr) {
-                                        content += getNamedItem$1(element, attr.trim());
-                                    }
-                                    else if (match[2] || match[5]) {
-                                        const counterType = match[2] === 'counter';
-                                        const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
-                                        const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
-                                        const subcounter = [];
-                                        let current = element;
-                                        let counter = initialValue;
-                                        let ascending = false;
-                                        let lastResetElement;
-                                        const incrementCounter = (increment, pseudo) => {
-                                            const length = subcounter.length;
-                                            if (length === 0) {
-                                                counter += increment;
-                                            }
-                                            else if (ascending || pseudo) {
-                                                subcounter[length - 1] += increment;
-                                            }
-                                        };
-                                        const cascadeCounterSibling = (sibling) => {
-                                            if (getCounterValue(getStyle$2(sibling).getPropertyValue('counter-reset'), counterName) === undefined) {
-                                                iterateArray$2(sibling.children, item => {
-                                                    if (item.className !== '__squared.pseudo') {
-                                                        let increment = getCounterIncrementValue(item, counterName, pseudoElt, sessionId);
-                                                        if (increment) {
-                                                            incrementCounter(increment, true);
-                                                        }
-                                                        const childStyle = getStyle$2(item);
-                                                        increment = getCounterValue(childStyle.getPropertyValue('counter-increment'), counterName);
-                                                        if (increment) {
-                                                            incrementCounter(increment, false);
-                                                        }
-                                                        increment = getCounterValue(childStyle.getPropertyValue('counter-reset'), counterName);
-                                                        if (increment !== undefined) {
-                                                            return true;
-                                                        }
-                                                        cascadeCounterSibling(item);
-                                                    }
-                                                    return;
-                                                });
-                                            }
-                                        };
-                                        do {
-                                            ascending = false;
-                                            if (current.previousElementSibling) {
-                                                current = current.previousElementSibling;
-                                                cascadeCounterSibling(current);
-                                            }
-                                            else if (current.parentElement) {
-                                                current = current.parentElement;
-                                                ascending = true;
-                                            }
-                                            else {
-                                                break;
-                                            }
-                                            if (current.className !== '__squared.pseudo') {
-                                                const pesudoIncrement = getCounterIncrementValue(current, counterName, pseudoElt, sessionId);
-                                                if (pesudoIncrement) {
-                                                    incrementCounter(pesudoIncrement, true);
-                                                }
-                                                const currentStyle = getStyle$2(current);
-                                                const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment'), counterName);
-                                                if (counterIncrement) {
-                                                    incrementCounter(counterIncrement, false);
-                                                }
-                                                const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'), counterName);
-                                                if (counterReset !== undefined) {
-                                                    if (lastResetElement === undefined) {
-                                                        counter += counterReset;
-                                                    }
-                                                    lastResetElement = current;
-                                                    if (counterType) {
-                                                        break;
-                                                    }
-                                                    else if (ascending) {
-                                                        subcounter.push((pesudoIncrement || 0) + counterReset);
-                                                    }
-                                                }
-                                            }
-                                        } while (true);
-                                        if (lastResetElement) {
-                                            if (!counterType && subcounter.length > 1) {
-                                                subcounter.reverse();
-                                                subcounter.splice(1, 1);
-                                                for (const leading of subcounter) {
-                                                    content += convertListStyle(styleName, leading, true) + match[7];
-                                                }
-                                            }
-                                        }
-                                        else {
-                                            counter = initialValue;
-                                        }
-                                        content += convertListStyle(styleName, counter, true);
-                                    }
-                                    else if (match[9]) {
-                                        content += match[9];
-                                    }
-                                    found = true;
-                                }
-                                if (!found) {
-                                    content = value;
-                                }
-                                REGEX_COUNTER.lastIndex = 0;
-                            }
-                            break;
-                    }
-                    if (styleMap.display === undefined) {
-                        styleMap.display = 'inline';
-                    }
-                    if (content || value === '""') {
-                        if (tagName === '') {
-                            tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
-                        }
-                        const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
-                        if (tagName === 'img') {
-                            pseudoElement.src = content;
-                            const image = this.resourceHandler.getImage(content);
-                            if (image) {
-                                if (styleMap.width === undefined && image.width > 0) {
-                                    styleMap.width = formatPX$1(image.width);
-                                }
-                                if (styleMap.height === undefined && image.height > 0) {
-                                    styleMap.height = formatPX$1(image.height);
-                                }
-                            }
-                        }
-                        else if (value !== '""') {
-                            pseudoElement.innerText = content;
-                        }
-                        for (const attr in styleMap) {
-                            if (attr !== 'display') {
-                                pseudoElement.style[attr] = styleMap[attr];
-                            }
-                        }
-                        setElementCache$2(pseudoElement, 'pseudoElement', sessionId, pseudoElt);
-                        setElementCache$2(pseudoElement, 'styleMap', sessionId, styleMap);
-                        return pseudoElement;
-                    }
-                }
-            }
-            return undefined;
-        }
         setBaseLayout() {
             const { controllerHandler, processing, session } = this;
             const { extensionMap, clearMap } = session;
             const cache = processing.cache;
             const documentRoot = processing.node;
             const mapY = new Map();
-            let extensions = this.extensions.filter(item => !item.eventOnly);
+            let extensions = this.extensionsTraverse;
             {
                 let maxDepth = 0;
                 const setMap = (depth, id, node) => { var _a; return ((_a = mapY.get(depth)) === null || _a === void 0 ? void 0 : _a.set(id, node)) || mapY.set(depth, new Map([[id, node]])); };
                 const getIndex = (value) => (value * -1) - 2;
                 setMap(-1, 0, documentRoot.parent);
-                for (const node of cache) {
+                cache.each(node => {
                     if (node.length) {
                         const depth = node.depth;
                         setMap(depth, node.id, node);
@@ -6731,7 +6311,7 @@
                         if (node.floatContainer) {
                             const floated = new Set();
                             const clearable = {};
-                            for (const item of node.naturalChildren) {
+                            node.naturalChildren.forEach((item) => {
                                 if (item.pageFlow) {
                                     const floating = item.floating;
                                     if (floated.size) {
@@ -6750,17 +6330,15 @@
                                                         previousFloat = [clearable.left, clearable.right];
                                                         break;
                                                 }
-                                                if (previousFloat) {
-                                                    for (const previous of previousFloat) {
-                                                        if (previous) {
-                                                            const float = previous.float;
-                                                            if (floated.has(float) && Math.ceil(item.bounds.top) >= previous.bounds.bottom) {
-                                                                floated.delete(float);
-                                                                clearable[float] = undefined;
-                                                            }
+                                                previousFloat === null || previousFloat === void 0 ? void 0 : previousFloat.forEach(previous => {
+                                                    if (previous) {
+                                                        const float = previous.float;
+                                                        if (floated.has(float) && Math.ceil(item.bounds.top) >= previous.bounds.bottom) {
+                                                            floated.delete(float);
+                                                            clearable[float] = undefined;
                                                         }
                                                     }
-                                                }
+                                                });
                                             }
                                             if (floated.has(clear) || clear === 'both') {
                                                 clearMap.set(item, floated.size === 2 ? 'both' : clear);
@@ -6779,30 +6357,30 @@
                                         clearable[float] = item;
                                     }
                                 }
-                            }
+                            });
                         }
                     }
-                }
-                for (let i = 0; i < maxDepth; i++) {
-                    mapY.set(getIndex(i), new Map());
+                });
+                let i = 0;
+                while (i < maxDepth) {
+                    mapY.set(getIndex(i++), new Map());
                 }
                 cache.afterAppend = (node, cascade = false) => {
-                    var _a;
                     setMap(getIndex(node.depth), node.id, node);
                     if (cascade && node.length) {
-                        for (const item of node.cascade()) {
+                        node.cascade((item) => {
+                            var _a;
                             if (item.length) {
                                 const depth = item.depth;
                                 (_a = mapY.get(depth)) === null || _a === void 0 ? void 0 : _a.delete(item.id);
                                 setMap(getIndex(depth), item.id, item);
                             }
-                        }
+                            return false;
+                        });
                     }
                 };
             }
-            for (const ext of this.extensions) {
-                ext.beforeBaseLayout();
-            }
+            this.extensions.forEach(ext => ext.beforeBaseLayout());
             for (const depth of mapY.values()) {
                 for (const parent of depth.values()) {
                     if (parent.length === 0) {
@@ -6812,25 +6390,25 @@
                     const renderExtension = parent.renderExtension;
                     const axisY = parent.duplicate();
                     const length = axisY.length;
-                    for (let k = 0; k < length; k++) {
-                        let nodeY = axisY[k];
+                    for (let i = 0; i < length; ++i) {
+                        let nodeY = axisY[i];
                         if (nodeY.rendered || !nodeY.visible) {
                             continue;
                         }
                         let parentY = nodeY.parent;
-                        if (length > 1 && k < length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(2 /* UNKNOWN */) || nodeY.hasAlign(8192 /* EXTENDABLE */)) && !parentY.hasAlign(4 /* AUTO_LAYOUT */) && !nodeY.nodeGroup && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                        if (length > 1 && i < length - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(2 /* UNKNOWN */) || nodeY.hasAlign(8192 /* EXTENDABLE */)) && !parentY.hasAlign(4 /* AUTO_LAYOUT */) && !nodeY.nodeGroup && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                             const horizontal = [];
                             const vertical = [];
-                            let l = k;
+                            let l = i;
                             let m = 0;
                             if (parentY.layoutVertical && nodeY.hasAlign(8192 /* EXTENDABLE */)) {
                                 horizontal.push(nodeY);
-                                l++;
-                                m++;
+                                ++l;
+                                ++m;
                             }
                             traverse: {
                                 let floatActive = false;
-                                for (; l < length; l++, m++) {
+                                for (; l < length; ++l, ++m) {
                                     const item = axisY[l];
                                     if (item.pageFlow) {
                                         if (item.labelFor && !item.visible) {
@@ -6871,11 +6449,11 @@
                                                             if (!item.floating || previous.floating && item.bounds.top < Math.floor(previous.bounds.bottom)) {
                                                                 let floatBottom = Number.NEGATIVE_INFINITY;
                                                                 if (!item.floating) {
-                                                                    for (const node of horizontal) {
+                                                                    horizontal.forEach(node => {
                                                                         if (node.floating) {
                                                                             floatBottom = Math.max(floatBottom, node.bounds.bottom);
                                                                         }
-                                                                    }
+                                                                    });
                                                                 }
                                                                 if (!item.floating && item.bounds.top < Math.floor(floatBottom) || floatActive) {
                                                                     horizontal.push(item);
@@ -6969,7 +6547,7 @@
                             }
                         }
                         nodeY.removeAlign(8192 /* EXTENDABLE */);
-                        if (k === length - 1) {
+                        if (i === length - 1) {
                             parentY.removeAlign(2 /* UNKNOWN */);
                         }
                         if (nodeY.renderAs && parentY.appendTry(nodeY, nodeY.renderAs, false)) {
@@ -6981,10 +6559,13 @@
                         }
                         if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
                             const descendant = extensionMap.get(nodeY.id);
-                            const combined = descendant ? (renderExtension ? renderExtension.concat(descendant) : descendant) : renderExtension;
+                            let combined = descendant ? (renderExtension ? renderExtension.concat(descendant) : descendant) : renderExtension;
+                            let next = false;
                             if (combined) {
-                                let next = false;
-                                for (const ext of combined) {
+                                const q = combined.length;
+                                let j = 0;
+                                while (j < q) {
+                                    const ext = combined[j++];
                                     const result = ext.processChild(nodeY, parentY);
                                     if (result) {
                                         const { output, renderAs, outputAs } = result;
@@ -7009,10 +6590,13 @@
                                 }
                             }
                             if (nodeY.styleElement) {
-                                let next = false;
-                                for (const ext of prioritizeExtensions(nodeY.dataset.use, extensions)) {
+                                combined = prioritizeExtensions(nodeY.dataset.use, extensions);
+                                const q = combined.length;
+                                let j = 0;
+                                while (j < q) {
+                                    const ext = combined[j++];
                                     if (ext.is(nodeY)) {
-                                        if (ext.condition(nodeY, parentY) && (descendant === undefined || !descendant.includes(ext))) {
+                                        if (ext.condition(nodeY, parentY) && (!descendant || !descendant.includes(ext))) {
                                             const result = ext.processNode(nodeY, parentY);
                                             if (result) {
                                                 const { output, renderAs, outputAs } = result;
@@ -7051,7 +6635,7 @@
                             }
                         }
                         if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
-                            let layout = this._createLayoutControl(parentY, nodeY);
+                            let layout = this.createLayoutControl(parentY, nodeY);
                             if (layout.containerType === 0) {
                                 const result = nodeY.length ? controllerHandler.processUnknownParent(layout) : controllerHandler.processUnknownChild(layout);
                                 if (result.next) {
@@ -7076,10 +6660,10 @@
                     }
                     const outerA = a.outerWrapper;
                     const outerB = b.outerWrapper;
-                    if (a === outerB || outerA === undefined && outerB) {
+                    if (a === outerB || !outerA && outerB) {
                         return -1;
                     }
-                    else if (b === outerA || outerB === undefined && outerA) {
+                    else if (b === outerA || !outerB && outerA) {
                         return 1;
                     }
                     const groupA = a.nodeGroup;
@@ -7097,41 +6681,39 @@
                 }
                 return a.depth < b.depth ? -1 : 1;
             });
-            for (const ext of this.extensions) {
+            this.extensions.forEach(ext => {
                 for (const node of ext.subscribers) {
                     if (cache.contains(node)) {
                         ext.postBaseLayout(node);
                     }
                 }
                 ext.afterBaseLayout();
-            }
+            });
             session.cache.join(cache);
             session.excluded.join(processing.excluded);
         }
         setConstraints() {
             const cache = this._cache;
             this.controllerHandler.setConstraints();
-            for (const ext of this.extensions) {
+            this.extensions.forEach(ext => {
                 for (const node of ext.subscribers) {
                     if (cache.contains(node)) {
                         ext.postConstraints(node);
                     }
                 }
                 ext.afterConstraints();
-            }
+            });
         }
         setResources() {
             const resourceHandler = this.resourceHandler;
-            for (const node of this._cache) {
+            this._cache.each(node => {
                 resourceHandler.setBoxStyle(node);
                 if (!node.imageElement && !node.svgElement && node.visible) {
                     resourceHandler.setFontStyle(node);
                     resourceHandler.setValueString(node);
                 }
-            }
-            for (const ext of this.extensions) {
-                ext.afterResources();
-            }
+            });
+            this.extensions.forEach(ext => ext.afterResources());
         }
         processFloatHorizontal(layout) {
             const controllerHandler = this.controllerHandler;
@@ -7183,16 +6765,20 @@
                     }
                 }
                 else if (float === 'left') {
-                    if (leftBelow === undefined) {
-                        leftBelow = [];
+                    if (leftBelow) {
+                        leftBelow.push(node);
                     }
-                    leftBelow.push(node);
+                    else {
+                        leftBelow = [node];
+                    }
                 }
                 else if (float === 'right') {
-                    if (rightBelow === undefined) {
-                        rightBelow = [];
+                    if (rightBelow) {
+                        rightBelow.push(node);
                     }
-                    rightBelow.push(node);
+                    else {
+                        rightBelow = [node];
+                    }
                 }
                 else {
                     inlineBelow.push(node);
@@ -7233,16 +6819,18 @@
                 layerIndex.push(rightSub);
             }
             layout.type = controllerHandler.containerTypeVerticalMargin;
-            layout.add(64 /* BLOCK */);
             layout.itemCount = layerIndex.length;
-            for (const item of layerIndex) {
+            layout.add(64 /* BLOCK */);
+            layerIndex.forEach(item => {
                 let segments;
                 let floatgroup;
                 if (Array.isArray(item[0])) {
                     segments = item;
+                    const itemCount = segments.length;
                     let grouping = segments[0];
-                    for (let i = 1; i < segments.length; i++) {
-                        grouping = grouping.concat(segments[i]);
+                    let i = 1;
+                    while (i < itemCount) {
+                        grouping = grouping.concat(segments[i++]);
                     }
                     grouping.sort((a, b) => a.childIndex < b.childIndex ? -1 : 1);
                     const node = layout.node;
@@ -7256,14 +6844,14 @@
                             node: floatgroup,
                             containerType,
                             alignmentType: alignmentType | (segments.some(seg => seg === rightSub || seg === rightAbove) ? 2048 /* RIGHT */ : 0),
-                            itemCount: segments.length
+                            itemCount
                         }));
                     }
                 }
                 else {
                     segments = [item];
                 }
-                for (const seg of segments) {
+                segments.forEach(seg => {
                     const first = seg[0];
                     const node = floatgroup || layout.node;
                     const target = controllerHandler.createNodeGroup(first, seg, { parent: node, delegate: true });
@@ -7291,10 +6879,10 @@
                     }
                     this.addLayout(group);
                     if (seg === inlineAbove) {
-                        this._setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
+                        this.setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
                     }
-                }
-            }
+                });
+            });
             return layout;
         }
         processFloatVertical(layout) {
@@ -7317,7 +6905,7 @@
             let clearReset = false;
             let blockArea = false;
             let layoutVertical = true;
-            for (const node of layout) {
+            layout.each(node => {
                 if (node.blockStatic && floated.length === 0) {
                     current.push(node);
                     blockArea = true;
@@ -7352,7 +6940,7 @@
                         current.push(node);
                     }
                 }
-            }
+            });
             if (floated.length) {
                 floatedRows.push(floated);
             }
@@ -7362,7 +6950,7 @@
             if (!layoutVertical) {
                 const node = layout.node;
                 const length = Math.max(floatedRows.length, staticRows.length);
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const pageFlow = staticRows[i] || [];
                     if (floatedRows[i] === null && pageFlow.length) {
                         const layoutType = controllerHandler.containerTypeVertical;
@@ -7390,21 +6978,319 @@
                             }
                             group.itemCount = children.length;
                             this.addLayout(group);
-                            for (let item of children) {
+                            children.forEach(item => {
                                 if (!item.nodeGroup) {
                                     item = controllerHandler.createNodeGroup(item, [item], { parent: basegroup, delegate: true });
                                 }
                                 this.addLayout(new LayoutUI(basegroup, item, containerType, alignmentType | 128 /* SEGMENTED */ | 64 /* BLOCK */, item.children));
-                            }
+                            });
                             if (pageFlow.length && floating.length) {
                                 const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
-                                this._setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
+                                this.setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
                             }
                         }
                     }
                 }
             }
             return layout;
+        }
+        createPseduoElement(element, pseudoElt, sessionId) {
+            let styleMap = getElementCache$2(element, `styleMap${pseudoElt}`, sessionId);
+            let nested = 0;
+            if (element.tagName === 'Q') {
+                if (!styleMap) {
+                    styleMap = {};
+                    setElementCache$2(element, `styleMap${pseudoElt}`, sessionId, styleMap);
+                }
+                let content = styleMap.content;
+                if (typeof content !== 'string' || content === '') {
+                    content = getStyle$2(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
+                    styleMap.content = content;
+                }
+                if (content.endsWith('-quote')) {
+                    let parent = element.parentElement;
+                    while ((parent === null || parent === void 0 ? void 0 : parent.tagName) === 'Q') {
+                        nested++;
+                        parent = parent.parentElement;
+                    }
+                }
+            }
+            if (styleMap) {
+                let value = styleMap.content;
+                if (value) {
+                    const textContent = trimBoth(value, '"');
+                    let absolute = false;
+                    switch (styleMap.position) {
+                        case 'absolute':
+                        case 'fixed':
+                            absolute = true;
+                            break;
+                    }
+                    const checkPseudoAfter = () => {
+                        if (!absolute && textContent !== '') {
+                            const previousSibling = element.childNodes[element.childNodes.length - 1];
+                            if (isTextNode$2(previousSibling)) {
+                                return !/\s+$/.test(previousSibling.textContent);
+                            }
+                        }
+                        return false;
+                    };
+                    if (textContent.trim() === '') {
+                        const checkDimension = (after) => {
+                            if ((after || convertFloat$1(styleMap.width) === 0) && convertFloat$1(styleMap.height) === 0) {
+                                for (const attr in styleMap) {
+                                    if (/(padding|Width|Height)/.test(attr) && convertFloat$1(styleMap[attr]) > 0) {
+                                        return true;
+                                    }
+                                    else if (!absolute && attr.startsWith('margin') && convertFloat$1(styleMap[attr]) !== 0) {
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            }
+                            return true;
+                        };
+                        if (pseudoElt === '::after') {
+                            if (!checkPseudoAfter() && !checkDimension(true)) {
+                                return undefined;
+                            }
+                        }
+                        else {
+                            const childNodes = element.childNodes;
+                            const length = childNodes.length;
+                            let i = 0;
+                            while (i < length) {
+                                const child = childNodes[i++];
+                                if (isTextNode$2(child)) {
+                                    if (child.textContent.trim() !== '') {
+                                        break;
+                                    }
+                                }
+                                else if (child instanceof HTMLElement) {
+                                    const style = getStyle$2(child);
+                                    switch (style.getPropertyValue('position')) {
+                                        case 'fixed':
+                                        case 'absolute':
+                                            continue;
+                                    }
+                                    if (style.getPropertyValue('float') !== 'none') {
+                                        return undefined;
+                                    }
+                                    break;
+                                }
+                            }
+                            switch (styleMap.display) {
+                                case undefined:
+                                case 'block':
+                                case 'inline':
+                                case 'inherit':
+                                case 'initial': {
+                                    if (!checkDimension(false)) {
+                                        return undefined;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else if (value === 'inherit') {
+                        let current = element;
+                        do {
+                            value = getStyle$2(current).getPropertyValue('content');
+                            if (value !== 'inherit') {
+                                break;
+                            }
+                            current = current.parentElement;
+                        } while (current);
+                    }
+                    const style = getStyle$2(element);
+                    TEXT_STYLE$1.forEach(attr => {
+                        if (!isString$3(styleMap[attr])) {
+                            styleMap[attr] = style[attr];
+                        }
+                    });
+                    let tagName = '';
+                    let content = '';
+                    switch (value) {
+                        case 'normal':
+                        case 'none':
+                        case 'initial':
+                        case 'inherit':
+                        case 'unset':
+                        case 'no-open-quote':
+                        case 'no-close-quote':
+                        case '""':
+                            break;
+                        case 'open-quote':
+                            if (pseudoElt === '::before') {
+                                content = nested % 2 === 0 ? '“' : "‘";
+                            }
+                            break;
+                        case 'close-quote':
+                            if (pseudoElt === '::after') {
+                                content = nested % 2 === 0 ? '”' : "’";
+                            }
+                            break;
+                        default: {
+                            const url = resolveURL(value);
+                            if (url !== '') {
+                                content = url;
+                                if (hasMimeType$1(this._controllerSettings.mimeType.image, url)) {
+                                    tagName = 'img';
+                                }
+                                else {
+                                    content = '';
+                                }
+                            }
+                            else {
+                                let found = false;
+                                REGEX_COUNTER.lastIndex = 0;
+                                let match;
+                                while ((match = REGEX_COUNTER.exec(value)) !== null) {
+                                    const attr = match[1];
+                                    if (attr) {
+                                        content += getNamedItem$1(element, attr.trim());
+                                    }
+                                    else if (match[2] || match[5]) {
+                                        const counterType = match[2] === 'counter';
+                                        const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
+                                        const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
+                                        const subcounter = [];
+                                        let current = element;
+                                        let counter = initialValue;
+                                        let ascending = false;
+                                        let lastResetElement;
+                                        const incrementCounter = (increment, pseudo) => {
+                                            const length = subcounter.length;
+                                            if (length === 0) {
+                                                counter += increment;
+                                            }
+                                            else if (ascending || pseudo) {
+                                                subcounter[length - 1] += increment;
+                                            }
+                                        };
+                                        const cascadeCounterSibling = (sibling) => {
+                                            if (getCounterValue(getStyle$2(sibling).getPropertyValue('counter-reset'), counterName) === undefined) {
+                                                iterateArray$2(sibling.children, item => {
+                                                    if (item.className !== '__squared.pseudo') {
+                                                        let increment = getCounterIncrementValue(item, counterName, pseudoElt, sessionId);
+                                                        if (increment) {
+                                                            incrementCounter(increment, true);
+                                                        }
+                                                        const childStyle = getStyle$2(item);
+                                                        increment = getCounterValue(childStyle.getPropertyValue('counter-increment'), counterName);
+                                                        if (increment) {
+                                                            incrementCounter(increment, false);
+                                                        }
+                                                        increment = getCounterValue(childStyle.getPropertyValue('counter-reset'), counterName);
+                                                        if (increment !== undefined) {
+                                                            return true;
+                                                        }
+                                                        cascadeCounterSibling(item);
+                                                    }
+                                                    return;
+                                                });
+                                            }
+                                        };
+                                        while (current) {
+                                            ascending = false;
+                                            if (current.previousElementSibling) {
+                                                current = current.previousElementSibling;
+                                                if (current) {
+                                                    cascadeCounterSibling(current);
+                                                }
+                                            }
+                                            else if (current.parentElement) {
+                                                current = current.parentElement;
+                                                ascending = true;
+                                            }
+                                            else {
+                                                break;
+                                            }
+                                            if (current && current.className !== '__squared.pseudo') {
+                                                const pesudoIncrement = getCounterIncrementValue(current, counterName, pseudoElt, sessionId);
+                                                if (pesudoIncrement) {
+                                                    incrementCounter(pesudoIncrement, true);
+                                                }
+                                                const currentStyle = getStyle$2(current);
+                                                const counterIncrement = getCounterValue(currentStyle.getPropertyValue('counter-increment'), counterName);
+                                                if (counterIncrement) {
+                                                    incrementCounter(counterIncrement, false);
+                                                }
+                                                const counterReset = getCounterValue(currentStyle.getPropertyValue('counter-reset'), counterName);
+                                                if (counterReset !== undefined) {
+                                                    if (!lastResetElement) {
+                                                        counter += counterReset;
+                                                    }
+                                                    lastResetElement = current;
+                                                    if (counterType) {
+                                                        break;
+                                                    }
+                                                    else if (ascending) {
+                                                        subcounter.push((pesudoIncrement || 0) + counterReset);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (lastResetElement) {
+                                            if (!counterType && subcounter.length > 1) {
+                                                subcounter.reverse().splice(1, 1);
+                                                const textValue = match[7];
+                                                subcounter.forEach(leading => content += convertListStyle(styleName, leading, true) + textValue);
+                                            }
+                                        }
+                                        else {
+                                            counter = initialValue;
+                                        }
+                                        content += convertListStyle(styleName, counter, true);
+                                    }
+                                    else if (match[9]) {
+                                        content += match[9];
+                                    }
+                                    found = true;
+                                }
+                                if (!found) {
+                                    content = value;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    if (!isString$3(styleMap.display)) {
+                        styleMap.display = 'inline';
+                    }
+                    if (content || value === '""') {
+                        if (tagName === '') {
+                            tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
+                        }
+                        const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
+                        if (tagName === 'img') {
+                            pseudoElement.src = content;
+                            const image = this.resourceHandler.getImage(content);
+                            if (image) {
+                                if (!isString$3(styleMap.width) && image.width > 0) {
+                                    styleMap.width = formatPX$1(image.width);
+                                }
+                                if (!isString$3(styleMap.height) && image.height > 0) {
+                                    styleMap.height = formatPX$1(image.height);
+                                }
+                            }
+                        }
+                        else if (value !== '""') {
+                            pseudoElement.innerText = content;
+                        }
+                        for (const attr in styleMap) {
+                            if (attr !== 'display') {
+                                pseudoElement.style[attr] = styleMap[attr];
+                            }
+                        }
+                        setElementCache$2(pseudoElement, 'pseudoElement', sessionId, pseudoElt);
+                        setElementCache$2(pseudoElement, 'styleMap', sessionId, styleMap);
+                        return pseudoElement;
+                    }
+                }
+            }
+            return undefined;
         }
         createAssetOptions(options) {
             let assets = options === null || options === void 0 ? void 0 : options.assets;
@@ -7416,16 +7302,19 @@
             }
             return Object.assign(Object.assign({}, options), { assets });
         }
-        _setFloatPadding(parent, target, inlineAbove, leftAbove, rightAbove) {
+        createLayoutControl(parent, node) {
+            return new LayoutUI(parent, node, node.containerType, node.alignmentType, node.children);
+        }
+        setFloatPadding(parent, target, inlineAbove, leftAbove, rightAbove) {
             let paddingNodes = [];
-            for (const child of inlineAbove) {
-                if (requirePadding(child)) {
+            inlineAbove.forEach(child => {
+                if (requirePadding(child) || child.centerAligned) {
                     paddingNodes.push(child);
                 }
                 if (child.blockStatic) {
                     paddingNodes = paddingNodes.concat(child.cascade((item) => requirePadding(item)));
                 }
-            }
+            });
             const bottom = target.bounds.bottom;
             const boxWidth = parent.actualBoxWidth();
             if (leftAbove.length) {
@@ -7433,7 +7322,7 @@
                 let marginLeft = 0;
                 let invalid = false;
                 let spacing = false;
-                for (const child of leftAbove) {
+                leftAbove.forEach(child => {
                     if (child.bounds.top < bottom) {
                         const right = child.linear.right + getRelativeOffset(child, false);
                         if (right > floatPosition) {
@@ -7444,18 +7333,18 @@
                             spacing = false;
                         }
                     }
-                }
+                });
                 if (floatPosition !== Number.NEGATIVE_INFINITY) {
-                    for (const child of paddingNodes) {
-                        if (Math.floor(child.linear.left) <= floatPosition) {
+                    paddingNodes.forEach(child => {
+                        if (Math.floor(child.linear.left) <= floatPosition || child.centerAligned) {
                             marginLeft = Math.max(marginLeft, child.marginLeft);
                             invalid = true;
                         }
-                    }
+                    });
                     if (invalid) {
                         const offset = floatPosition - parent.box.left - marginLeft - maxArray(target.map((child) => !paddingNodes.includes(child) ? child.marginLeft : 0));
                         if (offset > 0 && offset < boxWidth) {
-                            target.modifyBox(256 /* PADDING_LEFT */, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._localSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(256 /* PADDING_LEFT */, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                         }
                     }
                 }
@@ -7465,7 +7354,7 @@
                 let marginRight = 0;
                 let invalid = false;
                 let spacing = false;
-                for (const child of rightAbove) {
+                rightAbove.forEach(child => {
                     if (child.bounds.top < bottom) {
                         const left = child.linear.left + getRelativeOffset(child, true);
                         if (left < floatPosition) {
@@ -7476,29 +7365,22 @@
                             spacing = false;
                         }
                     }
-                }
+                });
                 if (floatPosition !== Number.POSITIVE_INFINITY) {
-                    for (const child of paddingNodes) {
+                    paddingNodes.forEach(child => {
                         if (child.multiline || Math.ceil(child.linear.right) >= floatPosition) {
                             marginRight = Math.max(marginRight, child.marginRight);
                             invalid = true;
                         }
-                    }
+                    });
                     if (invalid) {
                         const offset = parent.box.right - floatPosition - marginRight - maxArray(target.map((child) => !paddingNodes.includes(child) ? child.marginRight : 0));
                         if (offset > 0 && offset < boxWidth) {
-                            target.modifyBox(64 /* PADDING_RIGHT */, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._localSettings.deviations.textMarginBoundarySize) : 0));
+                            target.modifyBox(64 /* PADDING_RIGHT */, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
                         }
                     }
                 }
             }
-        }
-        _createLayoutControl(parent, node) {
-            return new LayoutUI(parent, node, node.containerType, node.alignmentType, node.children);
-        }
-        _isUseElement(element) {
-            const use = element.dataset.use;
-            return isString$3(use) && use.split(XML$4.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
         }
         get layouts() {
             return this._layouts.sort((a, b) => {
@@ -7524,6 +7406,9 @@
         get extensionsCascade() {
             return this.extensions.filter(item => !!item.init);
         }
+        get extensionsTraverse() {
+            return this.extensions.filter(item => !item.eventOnly);
+        }
         get length() {
             return this.session.cache.length;
         }
@@ -7533,7 +7418,7 @@
     const { USER_AGENT: USER_AGENT$1, isUserAgent: isUserAgent$1, isWinEdge } = $lib$5.client;
     const { BOX_BORDER: BOX_BORDER$1, BOX_PADDING: BOX_PADDING$1, formatPX: formatPX$2, getStyle: getStyle$3, isLength: isLength$1, isPercent: isPercent$1 } = $lib$5.css;
     const { isTextNode: isTextNode$3, withinViewport } = $lib$5.dom;
-    const { capitalize, convertFloat: convertFloat$2, flatArray: flatArray$1, iterateArray: iterateArray$3, safeNestedArray: safeNestedArray$1 } = $lib$5.util;
+    const { capitalize, convertFloat: convertFloat$2, flatArray: flatArray$1, isString: isString$4, iterateArray: iterateArray$3, safeNestedArray: safeNestedArray$1 } = $lib$5.util;
     const { actualClientRect: actualClientRect$1, getElementCache: getElementCache$3, setElementCache: setElementCache$3 } = $lib$5.session;
     const { pushIndent, pushIndentArray } = $lib$5.xml;
     function positionAbsolute(style) {
@@ -7584,10 +7469,10 @@
             else {
                 styleMap = getElementCache$3(element, 'styleMap', sessionId) || {};
                 const setBorderStyle = () => {
-                    if (styleMap.border === undefined && checkBorderAttribute()) {
+                    if (!isString$4(styleMap.border) && checkBorderAttribute()) {
                         const inputBorderColor = this.localSettings.style.inputBorderColor;
                         styleMap.border = `outset 1px ${inputBorderColor}`;
-                        for (let i = 0; i < 4; i++) {
+                        for (let i = 0; i < 4; ++i) {
                             const border = BOX_BORDER$1[i];
                             styleMap[border[0]] = 'outset';
                             styleMap[border[1]] = '1px';
@@ -7600,14 +7485,14 @@
                 const setButtonStyle = (applied) => {
                     if (applied) {
                         const backgroundColor = styleMap.backgroundColor;
-                        if (backgroundColor === undefined || backgroundColor === 'initial') {
+                        if (!isString$4(backgroundColor) || backgroundColor === 'initial') {
                             styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
                         }
                     }
-                    if (styleMap.textAlign === undefined) {
+                    if (!isString$4(styleMap.textAlign)) {
                         styleMap.textAlign = 'center';
                     }
-                    if (styleMap.padding === undefined && !BOX_PADDING$1.some(attr => !!styleMap[attr])) {
+                    if (!isString$4(styleMap.padding) && !BOX_PADDING$1.some(attr => !!styleMap[attr])) {
                         styleMap.paddingTop = '2px';
                         styleMap.paddingRight = '6px';
                         styleMap.paddingBottom = '3px';
@@ -7627,12 +7512,12 @@
                         case 'SELECT':
                         case 'BUTTON':
                         case 'TEXTAREA':
-                            if (styleMap.display === undefined) {
+                            if (!isString$4(styleMap.display)) {
                                 styleMap.display = 'inline-block';
                             }
                             break;
                         case 'FIELDSET':
-                            if (styleMap.display === undefined) {
+                            if (!isString$4(styleMap.display)) {
                                 styleMap.display = 'block';
                             }
                             break;
@@ -7659,20 +7544,20 @@
                                 case 'search':
                                 case 'number':
                                 case 'tel':
-                                    if (styleMap.fontSize === undefined) {
+                                    if (!isString$4(styleMap.fontSize)) {
                                         styleMap.fontSize = '13.3333px';
                                     }
                                     break;
                             }
                             break;
                         case 'CODE':
-                            if (styleMap.fontFamily === undefined) {
+                            if (!isString$4(styleMap.fontFamily)) {
                                 styleMap.fontFamily = 'monospace';
                             }
                             break;
                         case 'LEGEND':
                         case 'RT':
-                            if (styleMap.display === undefined) {
+                            if (!isString$4(styleMap.display)) {
                                 styleMap.display = 'block';
                             }
                             break;
@@ -7720,31 +7605,32 @@
                         break;
                     case 'BODY': {
                         const backgroundColor = styleMap.backgroundColor;
-                        if (backgroundColor === undefined || backgroundColor === 'initial') {
+                        if (!isString$4(backgroundColor) || backgroundColor === 'initial') {
                             styleMap.backgroundColor = 'rgb(255, 255, 255)';
                         }
                         break;
                     }
                     case 'FORM':
-                        if (styleMap.marginTop === undefined) {
+                        if (!isString$4(styleMap.marginTop)) {
                             styleMap.marginTop = '0px';
                         }
                         break;
                     case 'LI':
-                        if (styleMap.listStyleImage === undefined) {
+                        if (!isString$4(styleMap.listStyleImage)) {
                             const style = getStyle$3(element);
                             styleMap.listStyleImage = style.getPropertyValue('list-style-image');
                         }
                         break;
                     case 'IFRAME':
-                        if (styleMap.display === undefined) {
+                        if (!isString$4(styleMap.display)) {
                             styleMap.display = 'block';
                         }
+                    case 'VIDEO':
                     case 'svg':
                     case 'IMG': {
                         const setDimension = (attr, opposing) => {
                             const dimension = styleMap[attr];
-                            if (dimension === undefined || dimension === 'auto') {
+                            if (!isString$4(dimension) || dimension === 'auto') {
                                 const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
                                 if (match) {
                                     const value = match[1];
@@ -7766,8 +7652,8 @@
                                 else {
                                     const value = styleMap[opposing];
                                     if (value && isLength$1(value)) {
-                                        const attrMax = 'max' + capitalize(attr);
-                                        if (styleMap[attrMax] === undefined || !isPercent$1(attrMax)) {
+                                        const attrMax = `max${capitalize(attr)}`;
+                                        if (!isString$4(styleMap[attrMax]) || !isPercent$1(attrMax)) {
                                             const image = this.application.resourceHandler.getImage(element.src);
                                             if (image && image.width > 0 && image.height > 0) {
                                                 styleMap[attr] = formatPX$2(image[attr] * parseFloat(value) / image[opposing]);
@@ -7899,7 +7785,7 @@
         evaluateNonStatic(documentRoot, cache) {
             const altered = new Set();
             const removed = new Set();
-            for (const node of cache) {
+            cache.each(node => {
                 if (!node.documentRoot && !node.pageFlow) {
                     const actualParent = node.parent;
                     let parent;
@@ -7941,7 +7827,7 @@
                                                 if (outsideX && (node.left < 0 || node.right > 0) || outsideY && (node.top < 0 || node.bottom !== 0)) {
                                                     outside = true;
                                                 }
-                                                else if (!overflowX && ((node.left < 0 || node.right > 0) && Math.ceil(node.bounds.right) < linear.left || (node.left > 0 || node.right < 0) && Math.floor(node.bounds.left) > linear.right)) {
+                                                else if (!overflowX && ((node.left < 0 || node.right > 0) && Math.ceil(node.bounds.right) < linear.left || (node.left > 0 || node.right < 0) && Math.floor(node.bounds.left) > linear.right) && parent.some(item => item.pageFlow)) {
                                                     outside = true;
                                                 }
                                                 else if (!overflowY && ((node.top < 0 || node.bottom > 0) && Math.ceil(node.bounds.bottom) < parent.bounds.top || (node.top > 0 || node.bottom < 0) && Math.floor(node.bounds.top) > parent.bounds.bottom)) {
@@ -7972,7 +7858,7 @@
                             break;
                         }
                     }
-                    if (parent === undefined) {
+                    if (!parent) {
                         parent = documentRoot;
                     }
                     if (parent !== actualParent) {
@@ -8013,11 +7899,9 @@
                     }
                     node.documentParent = parent;
                 }
-            }
+            });
             for (const node of removed) {
-                node.each((item, index) => {
-                    item.containerIndex = index;
-                });
+                node.each((item, index) => item.containerIndex = index);
             }
             for (const node of altered) {
                 const layers = [];
@@ -8043,7 +7927,7 @@
                 const length = layers.length;
                 if (length) {
                     const children = node.children;
-                    for (let i = 0, j = 0, k = 1; i < length; i++, j++) {
+                    for (let i = 0, j = 0, k = 1; i < length; ++i, ++j) {
                         const order = layers[i];
                         if (order) {
                             order.sort((a, b) => {
@@ -8056,12 +7940,10 @@
                                     return zA < zB ? -1 : 1;
                                 }
                                 return 0;
-                            });
-                            for (const item of order) {
-                                item.containerIndex = maxIndex + k++;
-                            }
+                            })
+                                .forEach(item => item.containerIndex = maxIndex + k++);
                             const q = children.length;
-                            for (let l = 0; l < q; l++) {
+                            for (let l = 0; l < q; ++l) {
                                 if (order.includes(children[l])) {
                                     children[l] = undefined;
                                 }
@@ -8101,27 +7983,31 @@
             const showAttributes = this.userSettings.showAttributes;
             const indent = '\t'.repeat(depth);
             let output = '';
-            for (const item of templates) {
+            const length = templates.length;
+            let i = 0;
+            while (i < length) {
+                const item = templates[i++];
                 const node = item.node;
                 switch (item.type) {
                     case 1 /* XML */: {
                         const { controlName, attributes } = item;
                         const { id, renderTemplates } = node;
-                        const depthA = depth + 1;
-                        const beforeInside = this.getBeforeInsideTemplate(id, depthA);
-                        const afterInside = this.getAfterInsideTemplate(id, depthA);
-                        let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? pushIndent(attributes, depthA) : node.extractAttributes(depthA)) : '')}`;
+                        const next = depth + 1;
+                        const previous = node.depth < 0 ? depth + node.depth : depth;
+                        const beforeInside = this.getBeforeInsideTemplate(id, next);
+                        const afterInside = this.getAfterInsideTemplate(id, next);
+                        let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? pushIndent(attributes, next) : node.extractAttributes(next)) : '')}`;
                         if (renderTemplates || beforeInside !== '' || afterInside !== '') {
                             template += '>\n' +
                                 beforeInside +
-                                (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, renderTemplates), depthA) : '') +
+                                (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, renderTemplates), next) : '') +
                                 afterInside +
                                 indent + `</${controlName}>\n`;
                         }
                         else {
                             template += ' />\n';
                         }
-                        output += this.getBeforeOutsideTemplate(id, depth) + template + this.getAfterOutsideTemplate(id, depth);
+                        output += this.getBeforeOutsideTemplate(id, previous) + template + this.getAfterOutsideTemplate(id, previous);
                         break;
                     }
                     case 2 /* INCLUDE */: {
@@ -8160,8 +8046,9 @@
             if (element && hasComputedStyle$2(element)) {
                 const children = element.children;
                 const length = children.length;
-                for (let i = 0; i < length; i++) {
-                    const item = children[i];
+                let i = 0;
+                while (i < length) {
+                    const item = children[i++];
                     if (includes(item.dataset.use, name)) {
                         return item;
                     }
@@ -8169,11 +8056,11 @@
             }
             return null;
         }
-        condition(node, parent) {
-            return node.dataset.use ? this.included(node.element) : !this._isAll;
-        }
         is(node) {
             return this._isAll || this.tagNames.includes(node.tagName);
+        }
+        condition(node, parent) {
+            return node.dataset.use ? this.included(node.element) : !this._isAll;
         }
         included(element) {
             return includes(element.dataset.use, this.name);
@@ -8204,7 +8091,7 @@
         afterConstraints() { }
         afterResources() { }
         beforeBaseLayout() { }
-        beforeCascade() { }
+        beforeCascade(documentRoot) { }
         afterFinalize() { }
         set application(value) {
             this._application = value;
@@ -8241,9 +8128,7 @@
         init() {
             var _a;
             if (this.length) {
-                for (const item of this.children) {
-                    item.parent = this;
-                }
+                this.each(item => item.parent = this);
                 this.setBounds();
                 this.saveAsInitial();
                 this.dir = ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.dir) || '';
@@ -8252,7 +8137,9 @@
         setBounds() {
             if (this.length) {
                 this._bounds = NodeUI.outerRegion(this);
+                return this._bounds;
             }
+            return undefined;
         }
         previousSiblings(options) {
             var _a;
@@ -8415,9 +8302,7 @@
         get childIndex() {
             let result = super.childIndex;
             if (result === Number.POSITIVE_INFINITY) {
-                for (const node of this) {
-                    result = Math.min(node.childIndex, result);
-                }
+                this.each(node => result = Math.min(node.childIndex, result));
                 super.childIndex = result;
             }
             return result;
@@ -8428,9 +8313,7 @@
         get containerIndex() {
             let result = super.containerIndex;
             if (result === Number.POSITIVE_INFINITY) {
-                for (const node of this) {
-                    result = Math.min(node.containerIndex, result);
-                }
+                this.each(node => result = Math.min(node.containerIndex, result));
                 super.containerIndex = result;
             }
             return result;
@@ -8496,12 +8379,11 @@
     const { cos, equal: equal$1, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = $lib$7.math;
     const { CHAR: CHAR$2, ESCAPE, STRING: STRING$2, XML: XML$5 } = $lib$7.regex;
     const { getElementAsNode: getElementAsNode$2 } = $lib$7.session;
-    const { convertCamelCase: convertCamelCase$2, convertFloat: convertFloat$3, hasValue: hasValue$1, isEqual, isNumber: isNumber$1, isString: isString$4, iterateArray: iterateArray$4, trimEnd, trimStart } = $lib$7.util;
+    const { appendSeparator: appendSeparator$1, convertCamelCase: convertCamelCase$2, convertFloat: convertFloat$3, hasValue: hasValue$1, isEqual, isNumber: isNumber$1, isString: isString$5, iterateArray: iterateArray$4, trimEnd, trimStart } = $lib$7.util;
     const { STRING_SPACE, STRING_TABSPACE } = $lib$7.xml;
-    const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+, \\d+%?, \\d+%?(?:, [\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING$2.LENGTH_PERCENTAGE}|${STRING$2.CSS_ANGLE}|(?:${STRING$2.CSS_CALC}(?=,)|${STRING$2.CSS_CALC}))?,?\\s*`;
-    const REGEX_URL$1 = /^url/;
+    const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING$2.LENGTH_PERCENTAGE}|${STRING$2.CSS_ANGLE}|(?:${STRING$2.CSS_CALC}(?=,)|${STRING$2.CSS_CALC}))?,?\\s*`;
     const REGEX_NOBREAKSPACE = /\u00A0/g;
-    const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating)?-?(linear|radial|conic)-gradient\\(((?:to [a-z ]+|(?:from )?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at [\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
+    const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
     const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
     const REGEX_TRAILINGINDENT = /\n([^\S\n]*)?$/;
     function parseColorStops(node, gradient, value) {
@@ -8570,7 +8452,10 @@
                         offset = (horizontal ? node.parseWidth(unit, false) : node.parseHeight(unit, false)) / size;
                     }
                     else if (isCalc(unit)) {
-                        offset = calculate(match[6], size, node.fontSize) / size;
+                        offset = calculate(match[6], { boundingSize: size, fontSize: node.fontSize }) / size;
+                        if (isNaN(offset)) {
+                            offset = -1;
+                        }
                     }
                     if (repeat && offset !== -1) {
                         offset *= extent;
@@ -8597,15 +8482,15 @@
             lastStop.offset = 1;
         }
         let percent = 0;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
             const stop = result[i];
             if (stop.offset === -1) {
                 if (i === 0) {
                     stop.offset = 0;
                 }
                 else {
-                    for (let j = i + 1, k = 2; j < length - 1; j++, k++) {
-                        const data = result[j];
+                    for (let j = i + 1, k = 2; j < length - 1; ++k) {
+                        const data = result[j++];
                         if (data.offset !== -1) {
                             stop.offset = (percent + data.offset) / k;
                             break;
@@ -8621,10 +8506,12 @@
         if (repeat) {
             if (percent < 100) {
                 complete: {
-                    const original = result.slice(0);
                     let basePercent = percent;
+                    const original = result.slice(0);
                     while (percent < 100) {
-                        for (const data of original) {
+                        let i = 0;
+                        while (i < length) {
+                            const data = original[i++];
                             percent = Math.min(basePercent + data.offset, 1);
                             result.push(Object.assign(Object.assign({}, data), { offset: percent }));
                             if (percent === 1) {
@@ -8684,7 +8571,7 @@
             case 'pre-line':
                 value = value
                     .replace(/\n/g, '\\n')
-                    .replace(/[ ]+/g, ' ');
+                    .replace(/\s+/g, ' ');
                 return [value, true, false];
         }
         if (node.onlyChild && node.htmlElement) {
@@ -8778,8 +8665,15 @@
         return '';
     }
     const replaceAmpersand = (value) => value.replace(/&/g, '&amp;');
-    const getGradientPosition = (value) => isString$4(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value]) : null;
+    const getGradientPosition = (value) => isString$5(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value]) : null;
     class ResourceUI extends Resource {
+        static isInheritedStyle(node, attr) {
+            var _a;
+            return node.styleElement && node.style[attr] === ((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.style[attr]) && (node.cssStyle[attr] === 'inherit' || node.cssInitial(attr) === '');
+        }
+        static isBackgroundVisible(object) {
+            return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
+        }
         static generateId(section, name, start = 1) {
             const prefix = name;
             let i = start;
@@ -8854,22 +8748,20 @@
             });
             return numberArray ? [undefined, result] : [result];
         }
-        static isBackgroundVisible(object) {
-            return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
-        }
         static parseBackgroundImage(node, backgroundImage, screenDimension) {
             var _a, _b;
             if (backgroundImage !== '') {
                 const images = [];
-                let match;
                 let i = 0;
+                REGEX_BACKGROUNDIMAGE.lastIndex = 0;
+                let match;
                 while ((match = REGEX_BACKGROUNDIMAGE.exec(backgroundImage)) !== null) {
                     const value = match[0];
-                    if (REGEX_URL$1.test(value) || value === 'initial') {
+                    if (value.startsWith('url(') || value === 'initial') {
                         images.push(value);
                     }
                     else {
-                        const repeating = match[1] === 'repeating';
+                        const repeating = !!match[1];
                         const type = match[2];
                         const direction = match[3];
                         const imageDimension = getBackgroundSize(node, i, node.css('backgroundSize'), screenDimension);
@@ -8955,14 +8847,14 @@
                                 if (position) {
                                     const name = (_a = position[1]) === null || _a === void 0 ? void 0 : _a.trim();
                                     if (name) {
-                                        if (/^circle/.test(name)) {
+                                        if (name.startsWith('circle')) {
                                             shape = 'circle';
                                         }
                                         else {
                                             let minRadius = Number.POSITIVE_INFINITY;
                                             const radiusXY = name.split(' ');
                                             const length = radiusXY.length;
-                                            for (let j = 0; j < length; j++) {
+                                            for (let j = 0; j < length; ++j) {
                                                 minRadius = Math.min(j === 0 ? node.parseWidth(radiusXY[j], false) : node.parseHeight(radiusXY[j], false), minRadius);
                                             }
                                             radius = minRadius;
@@ -8973,15 +8865,15 @@
                                         }
                                     }
                                 }
-                                for (const corner of [[0, 0], [width, 0], [width, height], [0, height]]) {
+                                [[0, 0], [width, 0], [width, height], [0, height]].forEach(corner => {
                                     const length = Math.round(hypotenuse(Math.abs(corner[0] - left), Math.abs(corner[1] - top)));
                                     closestCorner = Math.min(length, closestCorner);
                                     farthestCorner = Math.max(length, farthestCorner);
-                                }
-                                for (const side of [width - left, height - top, left]) {
+                                });
+                                [width - left, height - top, left].forEach(side => {
                                     closestSide = Math.min(side, closestSide);
                                     farthestSide = Math.max(side, farthestSide);
-                                }
+                                });
                                 const radial = {
                                     type,
                                     repeating,
@@ -9035,9 +8927,8 @@
                         }
                         images.push(gradient || 'initial');
                     }
-                    i++;
+                    ++i;
                 }
-                REGEX_BACKGROUNDIMAGE.lastIndex = 0;
                 if (images.length) {
                     return images;
                 }
@@ -9057,31 +8948,28 @@
                 case 'initial':
                     return undefined;
                 default: {
-                    const dimensions = value.split(' ');
+                    const dimensions = value.split(CHAR$2.SPACE);
                     const length = dimensions.length;
                     if (length === 1) {
                         dimensions[1] = dimensions[0];
                     }
-                    for (let i = 0; i < length; i++) {
-                        let size = dimensions[i];
+                    dimensions.forEach((size, index) => {
                         if (size === 'auto') {
                             size = '100%';
                         }
-                        if (i === 0) {
-                            width = node.parseUnit(size, 'width', false, screenDimension);
+                        switch (index) {
+                            case 0:
+                                width = node.parseUnit(size, 'width', false, screenDimension);
+                                break;
+                            case 1:
+                                height = node.parseUnit(size, 'height', false, screenDimension);
+                                break;
                         }
-                        else {
-                            height = node.parseUnit(size, 'height', false, screenDimension);
-                        }
-                    }
+                    });
                     break;
                 }
             }
             return width > 0 && height > 0 ? { width: Math.round(width), height: Math.round(height) } : undefined;
-        }
-        static isInheritedStyle(node, attr) {
-            var _a;
-            return node.styleElement && node.style[attr] === ((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.style[attr]) && (node.cssStyle[attr] === 'inherit' || node.cssInitial(attr) === '');
         }
         static hasLineBreak(node, lineBreak = false, trim = false) {
             if (node.naturalElements.length) {
@@ -9093,7 +8981,7 @@
                 if (trim) {
                     value = value.trim();
                 }
-                return value.includes('\n') && (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap') || /^pre/.test(node.css('whiteSpace')));
+                return value.includes('\n') && (node.plainText && isParentStyle(element, 'whiteSpace', 'pre', 'pre-wrap') || node.css('whiteSpace').startsWith('pre'));
             }
             return false;
         }
@@ -9129,8 +9017,13 @@
             }
         }
         writeRawImage(filename, base64) {
-            var _a;
-            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.addAsset({ pathname: this.controllerSettings.directory.image, filename, base64 });
+            const fileHandler = this.fileHandler;
+            if (fileHandler) {
+                const asset = { pathname: appendSeparator$1(this.userSettings.outputDirectory, this.controllerSettings.directory.image), filename, base64 };
+                fileHandler.addAsset(asset);
+                return asset;
+            }
+            return undefined;
         }
         setBoxStyle(node) {
             var _a;
@@ -9154,8 +9047,9 @@
                     const length = borderRadius.length;
                     if (length) {
                         const dimension = horizontal ? 'width' : 'height';
-                        for (let i = 0; i < length; i++) {
-                            borderRadius[i] = formatPX$3(node.parseUnit(borderRadius[i], dimension, false));
+                        let i = 0;
+                        while (i < length) {
+                            borderRadius[i] = formatPX$3(node.parseUnit(borderRadius[i++], dimension, false));
                         }
                         boxStyle.borderRadius = borderRadius;
                     }
@@ -9347,7 +9241,7 @@
                         }
                         else if (node.inlineText) {
                             key = textContent.trim();
-                            [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(1024 /* INLINE */) ? replaceAmpersand(textContent) : this._removeExcludedFromText(node, element));
+                            [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(1024 /* INLINE */) ? replaceAmpersand(textContent) : this.removeExcludedFromText(node, element));
                         }
                         else if (node.naturalChildren.length === 0 && (textContent === null || textContent === void 0 ? void 0 : textContent.trim()) === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                             value = textContent;
@@ -9360,7 +9254,7 @@
                         const previousSibling = node.siblingsLeading[0];
                         let previousSpaceEnd = false;
                         if (value.length > 1) {
-                            if (previousSibling === undefined || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && CHAR$2.TRAILINGSPACE.test(previousSibling.textContent)) {
+                            if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && CHAR$2.TRAILINGSPACE.test(previousSibling.textContent)) {
                                 value = value.replace(CHAR$2.LEADINGSPACE, '');
                             }
                             else if (previousSibling.naturalElement) {
@@ -9398,7 +9292,7 @@
                         }
                     }
                     if (value !== '') {
-                        node.data(ResourceUI.KEY_NAME, 'valueString', { key, value: value.replace(/\\n\\n$/, '\\n') });
+                        node.data(ResourceUI.KEY_NAME, 'valueString', { key, value });
                     }
                 }
                 if (hint !== '') {
@@ -9412,7 +9306,7 @@
                 }
             }
         }
-        _removeExcludedFromText(node, element) {
+        removeExcludedFromText(node, element) {
             const styled = element.children.length > 0 || element.tagName === 'CODE';
             const preserveWhitespace = node.preserveWhiteSpace;
             const attr = styled ? 'innerHTML' : 'textContent';
@@ -9440,7 +9334,7 @@
                         }
                         else {
                             const textContent = child.plainText ? child.textContent : child[attr];
-                            if (isString$4(textContent)) {
+                            if (isString$5(textContent)) {
                                 if (!preserveWhitespace) {
                                     value = value.replace(textContent, '');
                                 }
@@ -9460,10 +9354,15 @@
                     }
                 }
             });
-            return styled ? value.replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture))) : value;
+            if (styled) {
+                value = value
+                    .replace(/^\\n\\n/, '\\n')
+                    .replace(/\\n\\n$/, '\\n')
+                    .replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
+            }
+            return value;
         }
     }
-    ResourceUI.KEY_NAME = 'squared.resource';
     ResourceUI.STORED = {
         strings: new Map(),
         arrays: new Map(),
@@ -9549,28 +9448,27 @@
 
     const $lib$8 = squared.lib;
     const { formatPercent, formatPX: formatPX$4, isLength: isLength$4, isPercent: isPercent$3 } = $lib$8.css;
-    const { CHAR: CHAR$3, CSS: CSS$4 } = $lib$8.regex;
-    const { isNumber: isNumber$2, safeNestedArray: safeNestedArray$2, trimString: trimString$2, withinRange: withinRange$1 } = $lib$8.util;
+    const { CHAR: CHAR$3, CSS: CSS$2 } = $lib$8.regex;
+    const { isNumber: isNumber$2, safeNestedArray: safeNestedArray$2, trimString: trimString$1, withinRange: withinRange$1 } = $lib$8.util;
     const CSS_GRID = EXT_NAME.CSS_GRID;
     const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
-    const STRING_MINMAX = 'minmax\\(([^,]+), ([^)]+)\\)';
-    const STRING_FIT_CONTENT = 'fit-content\\(([\\d.]+[a-z%]+)\\)';
-    const STRING_NAMED = '\\[([\\w\\-\\s]+)\\]';
-    const REGEX_UNIT = new RegExp(`^(${STRING_UNIT})$`);
-    const REGEX_NAMED = new RegExp(`\\s*(repeat\\((auto-fit|auto-fill|\\d+), (.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+    const STRING_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
+    const STRING_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
+    const STRING_NAMED = '\\[([\\w\\s\\-]+)\\]';
+    const REGEX_UNIT = new RegExp(`^${STRING_UNIT}$`);
+    const REGEX_NAMED = new RegExp(`\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s+(.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT}\\s*)\\s*`, 'g');
     const REGEX_REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+    const REGEX_CELL_UNIT = new RegExp(STRING_UNIT);
+    const REGEX_CELL_MINMAX = new RegExp(STRING_MINMAX);
+    const REGEX_CELL_FIT_CONTENT = new RegExp(STRING_FIT_CONTENT);
+    const REGEX_CELL_NAMED = new RegExp(STRING_NAMED);
     const REGEX_STARTEND = /^([\w-]+)-(start|end)$/;
-    const REGEX_CELL_UNIT = new RegExp('[\\d.]+[a-z%]+|auto|max-content|min-content');
-    const REGEX_CELL_MINMAX = new RegExp('minmax\\(([^,]+), ([^)]+)\\)');
-    const REGEX_CELL_FIT_CONTENT = new RegExp('fit-content\\(([\\d.]+[a-z%]+)\\)');
-    const REGEX_CELL_NAMED = new RegExp('\\[([\\w\\-\\s]+)\\]');
-    const REGEX_SPAN = /^span/;
     function repeatUnit(data, sizes) {
         const repeat = data.repeat;
         const unitPX = [];
         const unitRepeat = [];
         const length = sizes.length;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
             if (repeat[i]) {
                 unitRepeat.push(sizes[i]);
             }
@@ -9584,13 +9482,13 @@
         const result = new Array(q);
         for (let i = 0; i < q; i++) {
             if (repeat[i]) {
-                for (let j = 0, k = 0; j < r; i++, j++, k++) {
+                for (let j = 0, k = 0; j < r; ++i, ++j, ++k) {
                     if (k === s) {
                         k = 0;
                     }
                     result[i] = unitRepeat[k];
                 }
-                i--;
+                --i;
             }
             else {
                 result[i] = unitPX.shift();
@@ -9605,7 +9503,7 @@
             let sizeMin = 0;
             [unit[0], unitMin[0]].forEach(value => {
                 if (isPercent$3(value)) {
-                    sizeMin = Math.max((parseFloat(value) / 100) * dimension, sizeMin);
+                    sizeMin = Math.max(parseFloat(value) / 100 * dimension, sizeMin);
                 }
                 else if (isLength$4(value)) {
                     sizeMin = Math.max(parseFloat(value), sizeMin);
@@ -9620,26 +9518,18 @@
         }
         return false;
     }
-    function getColumnTotal(rows) {
-        let value = 0;
-        for (const row of rows) {
-            if (row) {
-                value++;
-            }
-        }
-        return value;
-    }
     function setFlexibleDimension(dimension, gap, count, unit, max) {
         let filled = 0;
         let fractional = 0;
         let percent = 1;
         const length = unit.length;
-        for (let i = 0; i < length; i++) {
-            const value = unit[i];
-            if (CSS$4.PX.test(value)) {
+        let i = 0;
+        while (i < length) {
+            const value = unit[i++];
+            if (CSS$2.PX.test(value)) {
                 filled += parseFloat(value);
             }
-            else if (isFr(value)) {
+            else if (CssGrid.isFr(value)) {
                 fractional += parseFloat(value);
             }
             else if (isPercent$3(value)) {
@@ -9649,9 +9539,9 @@
         if (percent < 1 && fractional > 0) {
             const ratio = (((dimension * percent) - ((count - 1) * gap) - max.reduce((a, b) => a + Math.max(0, b), 0) - filled) / fractional);
             if (ratio > 0) {
-                for (let i = 0; i < length; i++) {
+                for (i = 0; i < length; ++i) {
                     const value = unit[i];
-                    if (isFr(value)) {
+                    if (CssGrid.isFr(value)) {
                         unit[i] = formatPX$4(parseFloat(value) * ratio);
                     }
                 }
@@ -9660,14 +9550,15 @@
     }
     function fillUnitEqually(unit, length) {
         if (unit.length === 0) {
-            for (let i = 0; i < length; i++) {
-                unit[i] = '1fr';
+            let i = 0;
+            while (i < length) {
+                unit[i++] = '1fr';
             }
         }
     }
     function getOpenCellIndex(iteration, length, available) {
         if (available) {
-            for (let i = 0, j = -1, k = 0; i < iteration; i++) {
+            for (let i = 0, j = -1, k = 0; i < iteration; ++i) {
                 if (available[i] === 0) {
                     if (j === -1) {
                         j = i;
@@ -9686,7 +9577,7 @@
     }
     function getOpenRowIndex(cells) {
         const length = cells.length;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
             const cell = cells[i];
             for (const value of cell) {
                 if (value === 0) {
@@ -9696,15 +9587,8 @@
         }
         return Math.max(0, length - 1);
     }
-    const isFr = (value) => /fr$/.test(value);
     const convertLength = (node, value, index) => isLength$4(value) ? formatPX$4(node.parseUnit(value, index !== 0 ? 'width' : 'height')) : value;
     class CssGrid extends ExtensionUI {
-        static isAligned(node) {
-            return node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
-        }
-        static isJustified(node) {
-            return (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
-        }
         static createDataAttribute(data) {
             const autoFlow = data.gridAutoFlow;
             return Object.assign(data, {
@@ -9752,22 +9636,23 @@
             const layout = [];
             const setDataRows = (item, placement, length) => {
                 if (placement.every(value => value > 0)) {
-                    for (let i = placement[rowA] - 1; i < placement[rowB] - 1; i++) {
+                    for (let i = placement[rowA] - 1; i < placement[rowB] - 1; ++i) {
                         const data = safeNestedArray$2(rowData, i);
                         let cell = openCells[i];
                         let j = placement[colA] - 1;
-                        if (cell === undefined) {
+                        if (!cell) {
                             cell = new Array(length).fill(0);
                             if (!dense) {
-                                for (let k = 0; k < j; k++) {
-                                    cell[k] = 1;
+                                let k = 0;
+                                while (k < j) {
+                                    cell[k++] = 1;
                                 }
                             }
                             openCells[i] = cell;
                         }
-                        for (; j < placement[colB] - 1; j++) {
+                        while (j < placement[colB] - 1) {
                             safeNestedArray$2(data, j).push(item);
-                            cell[j] = 1;
+                            cell[j++] = 1;
                         }
                     }
                     return true;
@@ -9780,19 +9665,18 @@
                 if (value !== '' && value !== 'none' && value !== 'auto') {
                     const data = index === 0 ? row : column;
                     const { name, repeat, unit, unitMin } = data;
-                    let match;
                     let i = 1;
+                    REGEX_NAMED.lastIndex = 0;
+                    let match;
                     while ((match = REGEX_NAMED.exec(value)) !== null) {
                         const command = match[1].trim();
                         switch (index) {
                             case 0:
                             case 1:
-                                if (command.charAt(0) === '[') {
-                                    for (const attr of match[4].split(CHAR$3.SPACE)) {
-                                        safeNestedArray$2(name, attr).push(i);
-                                    }
+                                if (command.startsWith('[')) {
+                                    match[4].split(CHAR$3.SPACE).forEach(attr => safeNestedArray$2(name, attr).push(i));
                                 }
-                                else if (/^repeat/.test(command)) {
+                                else if (command.startsWith('repeat')) {
                                     let iterations = 1;
                                     switch (match[2]) {
                                         case 'auto-fit':
@@ -9807,13 +9691,14 @@
                                     }
                                     if (iterations > 0) {
                                         const repeating = [];
+                                        REGEX_REPEAT.lastIndex = 0;
                                         let subMatch;
                                         while ((subMatch = REGEX_REPEAT.exec(match[3])) !== null) {
                                             const subPattern = subMatch[1];
                                             let namedMatch;
                                             if ((namedMatch = REGEX_CELL_NAMED.exec(subPattern)) !== null) {
                                                 const subName = namedMatch[1];
-                                                if (name[subName] === undefined) {
+                                                if (!name[subName]) {
                                                     name[subName] = [];
                                                 }
                                                 repeating.push({ name: subName });
@@ -9829,8 +9714,8 @@
                                             }
                                         }
                                         if (repeating.length) {
-                                            for (let j = 0; j < iterations; j++) {
-                                                for (const item of repeating) {
+                                            for (let j = 0; j < iterations; ++j) {
+                                                repeating.forEach(item => {
                                                     const { name: nameA, unit: unitA } = item;
                                                     if (nameA) {
                                                         name[nameA].push(i);
@@ -9839,31 +9724,30 @@
                                                         unit.push(unitA);
                                                         unitMin.push(item.unitMin || '');
                                                         repeat.push(true);
-                                                        i++;
+                                                        ++i;
                                                     }
-                                                }
+                                                });
                                             }
                                         }
-                                        REGEX_REPEAT.lastIndex = 0;
                                     }
                                 }
-                                else if (/^minmax/.test(command)) {
+                                else if (command.startsWith('minmax')) {
                                     unit.push(convertLength(node, match[6], index));
                                     unitMin.push(convertLength(node, match[5], index));
                                     repeat.push(false);
-                                    i++;
+                                    ++i;
                                 }
-                                else if (/^fit-content/.test(command)) {
+                                else if (command.startsWith('fit-content')) {
                                     unit.push(convertLength(node, match[7], index));
                                     unitMin.push('0px');
                                     repeat.push(false);
-                                    i++;
+                                    ++i;
                                 }
                                 else if (REGEX_UNIT.test(command)) {
                                     unit.push(convertLength(node, command, index));
                                     unitMin.push('');
                                     repeat.push(false);
-                                    i++;
+                                    ++i;
                                 }
                                 break;
                             case 2:
@@ -9872,7 +9756,6 @@
                                 break;
                         }
                     }
-                    REGEX_NAMED.lastIndex = 0;
                 }
             });
             if (horizontal) {
@@ -9918,7 +9801,7 @@
                     autoHeight = setAutoFill(row, node.actualHeight);
                 }
                 node.each((item, index) => {
-                    if (previous === undefined || item.linear[directionA] >= previous.linear[directionB] || columnIndex > 0 && columnIndex === columnMax) {
+                    if (!previous || item.linear[directionA] >= previous.linear[directionB] || columnIndex > 0 && columnIndex === columnMax) {
                         columnMax = Math.max(columnIndex, columnMax);
                         rowIndex++;
                         columnIndex = 1;
@@ -9926,13 +9809,13 @@
                     const { gridRowEnd, gridColumnEnd } = item.cssAsObject('gridRowEnd', 'gridColumnEnd');
                     let rowSpan = 1;
                     let columnSpan = 1;
-                    if (REGEX_SPAN.test(gridRowEnd)) {
+                    if (gridRowEnd.startsWith('span')) {
                         rowSpan = parseInt(gridRowEnd.split(' ')[1]);
                     }
                     else if (isNumber$2(gridRowEnd)) {
                         rowSpan = parseInt(gridRowEnd) - rowIndex;
                     }
-                    if (REGEX_SPAN.test(gridColumnEnd)) {
+                    if (gridColumnEnd.startsWith('span')) {
                         columnSpan = parseInt(gridColumnEnd.split(' ')[1]);
                     }
                     else if (isNumber$2(gridColumnEnd)) {
@@ -9942,15 +9825,16 @@
                         let valid = false;
                         do {
                             const available = new Array(columnMax - 1).fill(1);
-                            for (const cell of layout) {
+                            layout.forEach(cell => {
                                 const placement = cell.placement;
                                 if (placement[indexA] > rowIndex) {
-                                    for (let i = placement[indexB]; i < placement[indexC]; i++) {
+                                    for (let i = placement[indexB]; i < placement[indexC]; ++i) {
                                         available[i - 1] = 0;
                                     }
                                 }
-                            }
-                            for (let i = 0, j = 0, k = 0; i < available.length; i++) {
+                            });
+                            const length = available.length;
+                            for (let i = 0, j = 0, k = 0; i < length; ++i) {
                                 if (available[i]) {
                                     if (j === 0) {
                                         k = i;
@@ -9998,7 +9882,7 @@
                 autoHeight = setAutoFill(row, node.actualHeight);
                 node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
                     if (template !== 'none') {
-                        trimString$2(template.trim(), '"').split(CHAR$3.SPACE).forEach((area, j) => {
+                        trimString$1(template.trim(), '"').split(CHAR$3.SPACE).forEach((area, j) => {
                             if (area.charAt(0) !== '.') {
                                 const templateArea = templateAreas[area];
                                 if (templateArea) {
@@ -10023,7 +9907,7 @@
                     let rowSpan = -1;
                     let columnSpan = -1;
                     if (Object.keys(templateAreas).length) {
-                        for (let i = 0; i < 4; i++) {
+                        for (let i = 0; i < 4; ++i) {
                             const name = positions[i];
                             let template = templateAreas[name];
                             if (template) {
@@ -10090,7 +9974,7 @@
                                     return true;
                                 }
                             }
-                            else if (REGEX_SPAN.test(value)) {
+                            else if (value.startsWith('span')) {
                                 const span = parseInt(value.split(' ')[1]);
                                 if (span === length && previousPlacement) {
                                     if (horizontal) {
@@ -10153,7 +10037,7 @@
                         };
                         let rowStart;
                         let colStart;
-                        for (let i = 0; i < 4; i++) {
+                        for (let i = 0; i < 4; ++i) {
                             const value = positions[i];
                             if (value !== 'auto' && placement[i] === 0) {
                                 const vertical = i % 2 === 0;
@@ -10191,7 +10075,7 @@
                             }
                         }
                     }
-                    if (previousPlacement === undefined) {
+                    if (!previousPlacement) {
                         if (placement[0] === 0) {
                             placement[0] = 1;
                         }
@@ -10233,7 +10117,7 @@
                 let unit = data.unit;
                 let length = 1;
                 let outerCount = 0;
-                for (const item of layout) {
+                layout.forEach(item => {
                     if (item) {
                         const [totalSpan, start, end] = horizontal ? [item.columnSpan, 1, 3] : [item.rowSpan, 0, 2];
                         const placement = item.placement;
@@ -10244,8 +10128,8 @@
                             outerCount += totalSpan;
                         }
                     }
-                }
-                const q = unit.length;
+                });
+                let q = unit.length;
                 ITERATION = Math.max(length, outerCount, horizontal && !autoWidth || !horizontal && !autoHeight ? q : 0);
                 data.length = ITERATION;
                 if (q < ITERATION) {
@@ -10268,7 +10152,7 @@
                                 if (i === r) {
                                     i = 0;
                                 }
-                                unit.push(auto[i]);
+                                unit.push(auto[i++]);
                             }
                         }
                     }
@@ -10279,24 +10163,24 @@
                 let percent = 1;
                 let fr = 0;
                 let auto = 0;
-                for (const value of unit) {
+                unit.forEach(value => {
                     if (isPercent$3(value)) {
                         percent -= parseFloat(value) / 100;
                     }
-                    else if (isFr(value)) {
+                    else if (CssGrid.isFr(value)) {
                         fr += parseFloat(value);
                     }
                     else if (value === 'auto') {
                         auto++;
                     }
-                }
+                });
                 data.flexible = percent < 1 || fr > 0;
                 if (percent < 1) {
                     if (fr > 0) {
-                        const r = unit.length;
-                        for (let i = 0; i < r; i++) {
+                        q = unit.length;
+                        for (let i = 0; i < q; ++i) {
                             const value = unit[i];
-                            if (isFr(value)) {
+                            if (CssGrid.isFr(value)) {
                                 unit[i] = percent * (parseFloat(value) / fr) + 'fr';
                             }
                         }
@@ -10316,7 +10200,7 @@
                     const PLACEMENT = placement.slice(0);
                     if (PLACEMENT[rowA] === 0) {
                         let length = rowData.length;
-                        for (let i = (dense ? 0 : getOpenRowIndex(openCells)), j = 0, k = -1; i < length; i++) {
+                        for (let i = (dense ? 0 : getOpenRowIndex(openCells)), j = 0, k = -1; i < length; ++i) {
                             const l = getOpenCellIndex(ITERATION, COLUMN_SPAN, openCells[i]);
                             if (l !== -1) {
                                 if (j === 0) {
@@ -10348,17 +10232,18 @@
                         const available = [];
                         const l = PLACEMENT[rowA] - 1;
                         const m = PLACEMENT[rowB] - 1;
-                        for (let i = l; i < m; i++) {
-                            const data = rowData[i];
-                            if (data === undefined) {
+                        let i = l;
+                        while (i < m) {
+                            const data = rowData[i++];
+                            if (!data) {
                                 available.push([[0, -1]]);
                             }
-                            else if (getColumnTotal(data) + COLUMN_SPAN <= ITERATION) {
+                            else if (data.reduce((a, b) => a + (b ? 1 : 0), 0) + COLUMN_SPAN <= ITERATION) {
                                 const range = [];
                                 let span = 0;
-                                for (let j = 0, k = -1; j < ITERATION; j++) {
+                                for (let j = 0, k = -1; j < ITERATION; ++j) {
                                     const rowItem = data[j];
-                                    if (rowItem === undefined) {
+                                    if (!rowItem) {
                                         if (k === -1) {
                                             k = j;
                                         }
@@ -10393,12 +10278,14 @@
                                 if (length > 1) {
                                     found: {
                                         for (const outside of data) {
-                                            for (let i = outside[0]; i < outside[1]; i++) {
-                                                for (let j = 1; j < length; j++) {
-                                                    const avail = available[j];
+                                            for (i = outside[0]; i < outside[1]; ++i) {
+                                                let j = 1;
+                                                while (j < length) {
+                                                    const avail = available[j++];
                                                     const q = avail.length;
-                                                    for (let k = 0; k < q; k++) {
-                                                        const inside = avail[k];
+                                                    let k = 0;
+                                                    while (k < q) {
+                                                        const inside = avail[k++];
                                                         if (i >= inside[0] && (inside[1] === -1 || i + COLUMN_SPAN <= inside[1])) {
                                                             PLACEMENT[colA] = i + 1;
                                                             break found;
@@ -10439,15 +10326,18 @@
                         const cellIndex = horizontal ? rowStart : columnStart;
                         if (cellIndex > 0) {
                             const cells = openCells[cellIndex - 1];
-                            for (let i = 0; i < ITERATION; i++) {
-                                cells[i] = 1;
+                            let i = 0;
+                            while (i < ITERATION) {
+                                cells[i++] = 1;
                             }
                         }
                     }
                     if (rowCount > 1) {
                         const rowSpanMultiple = mainData.rowSpanMultiple;
-                        for (let i = rowStart; i < rowStart + rowCount; i++) {
-                            rowSpanMultiple[i] = true;
+                        const length = rowStart + rowCount;
+                        let i = rowStart;
+                        while (i < length) {
+                            rowSpanMultiple[i++] = true;
                         }
                     }
                     item.data(CSS_GRID, 'cellData', {
@@ -10467,35 +10357,37 @@
                 else {
                     rowMain = mainData.rowData;
                     const length = rowData.length;
-                    for (let i = 0; i < length; i++) {
+                    for (let i = 0; i < length; ++i) {
                         const data = rowData[i];
                         const q = data.length;
-                        for (let j = 0; j < q; j++) {
-                            safeNestedArray$2(rowMain, j)[i] = data[j];
+                        let j = 0;
+                        while (j < q) {
+                            safeNestedArray$2(rowMain, j)[i] = data[j++];
                         }
                     }
                 }
                 const unitTotal = horizontal ? row.unitTotal : column.unitTotal;
                 const children = mainData.children;
                 const columnCount = column.unit.length;
-                for (const data of rowMain) {
+                rowMain.forEach(data => {
                     const length = data.length;
-                    for (let i = 0; i < length; i++) {
+                    let i = 0;
+                    while (i < length) {
                         const columnItem = data[i];
                         let count = unitTotal[i] || 0;
                         if (columnItem) {
                             let maxDimension = 0;
-                            for (const item of columnItem) {
+                            columnItem.forEach(item => {
                                 if (!children.includes(item)) {
                                     maxDimension = Math.max(maxDimension, horizontal ? item.bounds.height : item.bounds.width);
                                     children.push(item);
                                 }
-                            }
+                            });
                             count += maxDimension;
                         }
-                        unitTotal[i] = count;
+                        unitTotal[i++] = count;
                     }
-                }
+                });
                 if (children.length === node.length) {
                     const { gap: rowGap, unit: rowUnit } = row;
                     const { gap: columnGap, unit: columnUnit } = column;
@@ -10506,14 +10398,14 @@
                     row.length = rowCount;
                     column.length = columnCount;
                     let minCellHeight = 0;
-                    for (let i = 0; i < rowCount; i++) {
+                    for (let i = 0; i < rowCount; ++i) {
                         const rowItem = rowMain[i];
                         const unitHeight = rowUnit[i];
                         if (rowItem) {
-                            for (let j = 0; j < columnCount; j++) {
+                            for (let j = 0; j < columnCount; ++j) {
                                 const columnItem = rowItem[j];
                                 if (columnItem) {
-                                    for (const item of columnItem) {
+                                    columnItem.forEach((item) => {
                                         if (!modified.has(item)) {
                                             const { columnSpan, rowSpan } = item.data(CSS_GRID, 'cellData');
                                             const x = j + columnSpan - 1;
@@ -10561,7 +10453,7 @@
                                             }
                                             modified.add(item);
                                         }
-                                    }
+                                    });
                                 }
                                 else if (!horizontal) {
                                     mainData.emptyRows[j] = [Number.POSITIVE_INFINITY];
@@ -10611,6 +10503,10 @@
             return undefined;
         }
     }
+    CssGrid.isFr = (value) => /\dfr$/.test(value);
+    CssGrid.isPx = (value) => CSS$2.PX.test(value);
+    CssGrid.isAligned = (node) => node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
+    CssGrid.isJustified = (node) => (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
 
     const { withinRange: withinRange$2 } = squared.lib.util;
     const FLEXBOX = EXT_NAME.FLEXBOX;
@@ -10630,7 +10526,7 @@
             const mainData = Flexbox.createDataAttribute(node, children);
             if (node.cssTry('align-items', 'start')) {
                 if (node.cssTry('justify-items', 'start')) {
-                    for (const item of children) {
+                    children.forEach(item => {
                         if (item.cssTry('align-self', 'start')) {
                             if (item.cssTry('justify-self', 'start')) {
                                 const { width, height } = item.boundingClientRect;
@@ -10639,7 +10535,7 @@
                             }
                             item.cssFinally('align-self');
                         }
-                    }
+                    });
                     node.cssFinally('justify-items');
                 }
                 node.cssFinally('align-items');
@@ -10665,8 +10561,9 @@
                 let row = [rowStart];
                 const rows = [row];
                 let length = children.length;
-                for (let i = 1; i < length; i++) {
-                    const item = children[i];
+                let i = 1;
+                while (i < length) {
+                    const item = children[i++];
                     if (rowStart[method](item.bounds, 'bounds')) {
                         row.push(item);
                     }
@@ -10680,29 +10577,32 @@
                 let maxCount = 0;
                 let offset;
                 length = rows.length;
+                i = 0;
                 if (length > 1) {
                     const boxSize = node.box[size];
-                    for (let i = 0; i < length; i++) {
+                    while (i < length) {
                         const seg = rows[i];
+                        maxCount = Math.max(seg.length, maxCount);
                         const group = controller.createNodeGroup(seg[0], seg, { parent: node, delegate: true, cascade: true });
                         group.addAlign(128 /* SEGMENTED */);
-                        group.containerIndex = i;
                         group.box[size] = boxSize;
-                        maxCount = Math.max(seg.length, maxCount);
+                        group.containerIndex = i++;
                     }
                     offset = length;
                 }
                 else {
                     const item = rows[0];
                     node.retain(item);
-                    for (let i = 0; i < item.length; i++) {
-                        item[i].containerIndex = i;
-                    }
                     maxCount = item.length;
+                    while (i < maxCount) {
+                        item[i].containerIndex = i++;
+                    }
                     offset = maxCount;
                 }
-                for (let i = 0; i < absolute.length; i++) {
-                    absolute[i].containerIndex = offset + i;
+                const q = absolute.length;
+                i = 0;
+                while (i < q) {
+                    absolute[i].containerIndex = offset + i++;
                 }
                 node.concat(absolute);
                 node.sort();
@@ -10742,12 +10642,14 @@
     }
 
     const $lib$9 = squared.lib;
-    const { aboveRange: aboveRange$1, belowRange: belowRange$1, safeNestedArray: safeNestedArray$3, withinRange: withinRange$3 } = $lib$9.util;
+    const { aboveRange: aboveRange$1, belowRange: belowRange$1, objectMap: objectMap$1, safeNestedArray: safeNestedArray$3, withinRange: withinRange$3 } = $lib$9.util;
     const GRID = EXT_NAME.GRID;
     function getRowIndex(columns, target) {
         const topA = target.bounds.top;
-        for (const column of columns) {
-            const index = column.findIndex(item => {
+        const length = columns.length;
+        let i = 0;
+        while (i < length) {
+            const index = columns[i++].findIndex(item => {
                 const top = item.bounds.top;
                 return withinRange$3(topA, top) || Math.ceil(topA) >= top && topA < Math.floor(item.bounds.bottom);
             });
@@ -10774,7 +10676,7 @@
                 if (node.display === 'table') {
                     return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
                 }
-                else if (node.percentWidth === 0 || node.find(item => item.percentWidth > 0, { cascade: true }) === undefined) {
+                else if (node.percentWidth === 0 || !node.find(item => item.percentWidth > 0, { cascade: true })) {
                     let minLength = false;
                     let itemCount = 0;
                     for (const item of node) {
@@ -10798,20 +10700,20 @@
         processNode(node) {
             var _a;
             const columnEnd = [];
-            const columns = [];
             const nextMapX = {};
-            for (const row of node) {
-                for (const column of row) {
+            let columns = [];
+            node.each(row => {
+                row.each((column) => {
                     if (column.visible) {
                         safeNestedArray$3(nextMapX, Math.floor(column.linear.left)).push(column);
                     }
-                }
-            }
+                });
+            });
             const nextCoordsX = Object.keys(nextMapX);
             const length = nextCoordsX.length;
             if (length) {
                 let columnLength = -1;
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const nextAxisX = nextMapX[nextCoordsX[i]];
                     if (i === 0) {
                         columnLength = length;
@@ -10822,20 +10724,18 @@
                     }
                 }
                 if (columnLength !== -1) {
-                    for (const value of nextCoordsX) {
-                        columns.push(nextMapX[value]);
-                    }
+                    columns = objectMap$1(nextCoordsX, value => nextMapX[value]);
                 }
                 else {
                     const columnRight = [];
-                    for (let i = 0; i < length; i++) {
+                    for (let i = 0; i < length; ++i) {
                         const nextAxisX = nextMapX[nextCoordsX[i]];
                         const q = nextAxisX.length;
                         if (i === 0 && q === 0) {
                             return undefined;
                         }
                         columnRight[i] = i === 0 ? 0 : columnRight[i - 1];
-                        for (let j = 0; j < q; j++) {
+                        for (let j = 0; j < q; ++j) {
                             const nextX = nextAxisX[j];
                             const { left, right } = nextX.linear;
                             if (i === 0 || aboveRange$1(left, columnRight[i - 1])) {
@@ -10858,18 +10758,19 @@
                                 if (columnLast) {
                                     let minLeft = Number.POSITIVE_INFINITY;
                                     let maxRight = Number.NEGATIVE_INFINITY;
-                                    for (const item of columnLast) {
+                                    columnLast.forEach(item => {
                                         const linear = item.linear;
                                         minLeft = Math.min(linear.left, minLeft);
                                         maxRight = Math.max(linear.right, maxRight);
-                                    }
+                                    });
                                     if (Math.floor(left) > Math.ceil(minLeft) && Math.floor(right) > Math.ceil(maxRight)) {
                                         const index = getRowIndex(columns, nextX);
                                         if (index !== -1) {
-                                            for (let k = columns.length - 1; k >= 0; k--) {
-                                                const row = columns[k];
+                                            let k = columns.length - 1;
+                                            while (k >= 0) {
+                                                const row = columns[k--];
                                                 if (row) {
-                                                    if (row[index] === undefined) {
+                                                    if (!row[index]) {
                                                         columnLast.length = 0;
                                                     }
                                                     break;
@@ -10882,13 +10783,13 @@
                             columnRight[i] = Math.max(right, columnRight[i]);
                         }
                     }
-                    const r = columnRight.length;
-                    for (let i = 0, j = -1; i < r; i++) {
-                        if (columns[i] === undefined) {
+                    const q = columnRight.length;
+                    for (let i = 0, j = -1; i < q; ++i) {
+                        if (!columns[i]) {
                             if (j === -1) {
                                 j = i - 1;
                             }
-                            else if (i === r - 1) {
+                            else if (i === q - 1) {
                                 columnRight[j] = columnRight[i];
                             }
                         }
@@ -10897,7 +10798,7 @@
                             j = -1;
                         }
                     }
-                    for (let i = 0; i < columns.length; i++) {
+                    for (let i = 0; i < columns.length; ++i) {
                         if ((_a = columns[i]) === null || _a === void 0 ? void 0 : _a.length) {
                             columnEnd.push(columnRight[i]);
                         }
@@ -10906,11 +10807,12 @@
                         }
                     }
                     const maxColumn = columns.reduce((a, b) => Math.max(a, b.length), 0);
-                    for (let l = 0; l < maxColumn; l++) {
+                    for (let l = 0; l < maxColumn; ++l) {
                         const s = columns.length;
-                        for (let m = 0; m < s; m++) {
-                            const row = columns[m];
-                            if (row[l] === undefined) {
+                        let m = 0;
+                        while (m < s) {
+                            const row = columns[m++];
+                            if (!row[l]) {
                                 row[l] = { spacer: 1 };
                             }
                         }
@@ -10922,19 +10824,19 @@
             if (columnCount > 1 && columns[0].length === node.length) {
                 const children = [];
                 const assigned = new Set();
-                for (let i = 0, count = 0; i < columnCount; i++) {
+                for (let i = 0, count = 0; i < columnCount; ++i) {
                     const column = columns[i];
-                    let spacer = 0;
-                    for (let j = 0, start = 0; j < column.length; j++) {
+                    const rowCount = column.length;
+                    for (let j = 0, start = 0, spacer = 0; j < rowCount; ++j) {
                         const item = column[j];
-                        const rowCount = column.length;
                         const rowData = safeNestedArray$3(children, j);
                         if (!item['spacer']) {
                             const data = Object.assign(Grid.createDataCellAttribute(), item.data(GRID, 'cellData'));
                             let rowSpan = 1;
                             let columnSpan = 1 + spacer;
-                            for (let k = i + 1; k < columnCount; k++) {
-                                const row = columns[k][j];
+                            let k = i + 1;
+                            while (k < columnCount) {
+                                const row = columns[k++][j];
                                 if (row.spacer === 1) {
                                     columnSpan++;
                                     row.spacer = 2;
@@ -10944,8 +10846,9 @@
                                 }
                             }
                             if (columnSpan === 1) {
-                                for (let k = j + 1; k < rowCount; k++) {
-                                    const row = column[k];
+                                k = j + 1;
+                                while (k < rowCount) {
+                                    const row = column[k++];
                                     if (row.spacer === 1) {
                                         rowSpan++;
                                         row.spacer = 2;
@@ -10957,20 +10860,20 @@
                             }
                             if (columnEnd.length) {
                                 const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
-                                for (const sibling of item.actualParent.naturalChildren) {
+                                item.actualParent.naturalChildren.forEach((sibling) => {
                                     if (!assigned.has(sibling) && sibling.visible && !sibling.rendered) {
                                         const { left, right } = sibling.linear;
                                         if (aboveRange$1(left, item.linear.right) && belowRange$1(right, columnEnd[l])) {
                                             safeNestedArray$3(data, 'siblings').push(sibling);
                                         }
                                     }
-                                }
+                                });
                             }
                             data.rowSpan = rowSpan;
                             data.columnSpan = columnSpan;
                             data.rowStart = start++ === 0;
                             data.rowEnd = columnSpan + i === columnCount;
-                            data.cellStart = count === 0;
+                            data.cellStart = count++ === 0;
                             data.cellEnd = data.rowEnd && j === rowCount - 1;
                             data.index = i;
                             spacer = 0;
@@ -10985,11 +10888,7 @@
                 }
                 node.each((item) => item.hide());
                 node.clear();
-                for (const group of children) {
-                    for (const item of group) {
-                        item.parent = node;
-                    }
-                }
+                children.forEach(group => group.forEach(item => item.parent = node));
                 if (node.tableElement && node.css('borderCollapse') === 'collapse') {
                     node.resetBox(480 /* PADDING */);
                 }
@@ -11004,13 +10903,6 @@
     const { isNumber: isNumber$3 } = $lib$a.util;
     const hasSingleImage = (visibleStyle) => visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat;
     class List extends ExtensionUI {
-        static createDataAttribute() {
-            return {
-                ordinal: '',
-                imageSrc: '',
-                imagePosition: ''
-            };
-        }
         condition(node) {
             const length = node.length;
             if (length) {
@@ -11021,7 +10913,7 @@
                 let blockAlternate = true;
                 let bulletVisible = false;
                 const children = node.children;
-                for (let i = 0; i < length; i++) {
+                for (let i = 0; i < length; ++i) {
                     const item = children[i];
                     const type = item.css('listStyleType');
                     if (item.display === 'list-item' && (type !== 'none' || item.innerBefore) || item.marginLeft < 0 && type === 'none' && hasSingleImage(item.visibleStyle)) {
@@ -11106,7 +10998,7 @@
                         mainData.ordinal = ordinal;
                     }
                     if (enabled) {
-                        i++;
+                        ++i;
                     }
                 }
                 item.data(EXT_NAME.LIST, 'mainData', mainData);
@@ -11114,6 +11006,7 @@
             return undefined;
         }
     }
+    List.createDataAttribute = () => ({ ordinal: '', imageSrc: '', imagePosition: '' });
 
     const $lib$b = squared.lib;
     const { assignRect: assignRect$1 } = $lib$b.dom;
@@ -11131,7 +11024,7 @@
         }
         postOptimize(node) {
             const renderParent = node.renderParent;
-            const verticalAlign = convertFloat$4(node.verticalAlign);
+            const verticalAlign = !node.baselineAltered ? convertFloat$4(node.verticalAlign) : 0;
             let top = 0;
             let right = 0;
             let bottom = 0;
@@ -11212,10 +11105,13 @@
                                         }
                                         return topA < topB ? -1 : 1;
                                     });
-                                    for (let i = 0; i < length; i++) {
-                                        const item = unaligned[i];
-                                        if (i === 0) {
+                                    let first = true;
+                                    let i = 0;
+                                    while (i < length) {
+                                        const item = unaligned[i++];
+                                        if (first) {
                                             node.modifyBox(2 /* MARGIN_TOP */, convertFloat$4(item.verticalAlign));
+                                            first = false;
                                         }
                                         else {
                                             item.modifyBox(2 /* MARGIN_TOP */, item.linear.top - unaligned[0].linear.top);
@@ -11234,7 +11130,11 @@
                     const hasHorizontal = left !== 0 || right !== 0;
                     let preceding = false;
                     let previous;
-                    for (const item of node.actualParent.naturalChildren) {
+                    const children = node.actualParent.naturalChildren;
+                    const length = children.length;
+                    let i = 0;
+                    while (i < length) {
+                        const item = children[i++];
                         if (item === node) {
                             if (preceding) {
                                 if (hasVertical && renderParent.layoutVertical) {
@@ -11251,7 +11151,7 @@
                                         }
                                     }
                                 }
-                                if (hasHorizontal && renderParent.layoutHorizontal && node.alignSibling('leftRight') === '') {
+                                if (hasHorizontal && renderParent.layoutHorizontal && !node.alignSibling('leftRight')) {
                                     const rect = assignRect$1(node.boundingClientRect);
                                     if (left !== 0) {
                                         left -= rect.left - bounds.left;
@@ -11391,7 +11291,7 @@
             let thead;
             const inheritStyles = (parent) => {
                 if (parent) {
-                    for (const item of parent.cascade()) {
+                    parent.cascade((item) => {
                         switch (item.tagName) {
                             case 'TH':
                             case 'TD':
@@ -11399,7 +11299,8 @@
                                 item.unsetCache('visibleStyle');
                                 break;
                         }
-                    }
+                        return false;
+                    });
                     table = table.concat(parent.children);
                     hideCell(parent);
                 }
@@ -11407,7 +11308,7 @@
             node.each((item) => {
                 switch (item.tagName) {
                     case 'THEAD':
-                        if (thead === undefined) {
+                        if (!thead) {
                             thead = item;
                         }
                         else {
@@ -11418,7 +11319,7 @@
                         tbody.push(item);
                         break;
                     case 'TFOOT':
-                        if (tfoot === undefined) {
+                        if (!tfoot) {
                             tfoot = item;
                         }
                         else {
@@ -11428,23 +11329,26 @@
                 }
             });
             inheritStyles(thead);
-            for (const section of tbody) {
+            tbody.forEach(section => {
                 table = table.concat(section.children);
                 hideCell(section);
-            }
+            });
             inheritStyles(tfoot);
+            const hasWidth = node.hasWidth;
             const borderCollapse = mainData.borderCollapse;
-            const [horizontal, vertical] = borderCollapse ? [0, 0] : replaceMap(node.css('borderSpacing').split(' '), (value, index) => node.parseUnit(value, index === 0 ? 'width' : 'height'));
+            const [horizontal, vertical] = borderCollapse ? [0, 0] : replaceMap(node.css('borderSpacing').split(' '), (value, index) => index === 0 ? node.parseWidth(value) : node.parseHeight(value));
             const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
             const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
             const colgroup = node.element.querySelector('COLGROUP');
+            const caption = node.find(item => item.tagName === 'CAPTION');
+            const captionBottom = node.css('captionSide') === 'bottom';
             const rowWidth = [];
             const mapBounds = [];
             const tableFilled = [];
             const mapWidth = [];
             const rowCount = table.length;
             let columnCount = 0;
-            for (let i = 0; i < rowCount; i++) {
+            for (let i = 0; i < rowCount; ++i) {
                 const tr = table[i];
                 rowWidth[i] = horizontal;
                 const row = tableFilled[i] || [];
@@ -11453,16 +11357,17 @@
                     const element = td.element;
                     const rowSpan = element.rowSpan;
                     let colSpan = element.colSpan;
-                    let j = -1;
-                    for (let k = 0; j === -1; k++) {
-                        if (row[k] === undefined) {
-                            j = k;
-                        }
+                    let j = 0;
+                    while (row[j]) {
+                        j++;
                     }
-                    for (let k = i; k < i + rowSpan; k++) {
-                        const item = safeNestedArray$4(tableFilled, k);
-                        for (let l = j, m = 0; l < j + colSpan; l++) {
-                            if (item[l] === undefined) {
+                    const q = i + rowSpan;
+                    let k = i;
+                    while (k < q) {
+                        const item = safeNestedArray$4(tableFilled, k++);
+                        const r = j + colSpan;
+                        for (let l = j, m = 0; l < r; ++l) {
+                            if (!item[l]) {
                                 item[l] = td;
                                 m++;
                             }
@@ -11598,10 +11503,11 @@
                 });
             }
             let percentAll = false;
+            let mapPercent = 0;
             if (mapWidth.every(value => isPercent$4(value))) {
                 if (mapWidth.reduce((a, b) => a + parseFloat(b), 0) > 1) {
                     let percentTotal = 100;
-                    replaceMap(mapWidth, value => {
+                    replaceMap(mapWidth, (value) => {
                         const percent = parseFloat(value);
                         if (percentTotal <= 0) {
                             value = '0px';
@@ -11622,14 +11528,15 @@
                 const width = mapWidth.reduce((a, b) => a + parseFloat(b), 0);
                 if (node.hasWidth) {
                     if (width < node.width) {
-                        replaceMap(mapWidth, value => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
+                        replaceMap(mapWidth, (value) => value !== '0px' ? ((parseFloat(value) / width) * 100) + '%' : value);
                     }
                     else if (width > node.width) {
                         node.css('width', 'auto');
                         if (!mainData.layoutFixed) {
-                            for (const item of node.cascade()) {
+                            node.cascade((item) => {
                                 item.css('width', 'auto');
-                            }
+                                return false;
+                            });
                         }
                     }
                 }
@@ -11637,7 +11544,6 @@
                     node.css('width', formatPX$5(node.bounds.width));
                 }
             }
-            let mapPercent = 0;
             mainData.layoutType = (() => {
                 if (mapWidth.length > 1) {
                     mapPercent = mapWidth.reduce((a, b) => a + (isPercent$4(b) ? parseFloat(b) : 0), 0);
@@ -11674,7 +11580,6 @@
                 }
                 return 0 /* NONE */;
             })();
-            const caption = node.find(item => item.tagName === 'CAPTION');
             node.clear();
             if (caption) {
                 if (!caption.hasWidth) {
@@ -11691,20 +11596,23 @@
                     caption.css('textAlign', 'center');
                 }
                 caption.data(TABLE, 'cellData', { colSpan: columnCount });
-                caption.parent = node;
+                if (!captionBottom) {
+                    caption.parent = node;
+                }
             }
-            const hasWidth = node.hasWidth;
-            for (let i = 0; i < rowCount; i++) {
-                const tr = tableFilled[i];
+            let i = 0;
+            while (i < rowCount) {
+                const tr = tableFilled[i++];
                 const length = tr.length;
-                for (let j = 0; j < length;) {
+                let j = 0;
+                while (j < length) {
                     const td = tr[j];
                     const data = td.data(TABLE, 'cellData');
+                    const columnWidth = mapWidth[j];
+                    j += data.colSpan;
                     if (data.placed) {
-                        j += data.colSpan;
                         continue;
                     }
-                    const columnWidth = mapWidth[j];
                     if (columnWidth) {
                         switch (mainData.layoutType) {
                             case 0 /* NONE */:
@@ -11779,7 +11687,6 @@
                     }
                     data.placed = true;
                     td.parent = node;
-                    j += data.colSpan;
                 }
                 if (length < columnCount) {
                     const data = tr[length - 1].data(TABLE, 'cellData');
@@ -11787,6 +11694,9 @@
                         data.spaceSpan = columnCount - length;
                     }
                 }
+            }
+            if (caption && captionBottom) {
+                caption.parent = node;
             }
             if (mainData.borderCollapse) {
                 const borderTop = node.cssAsObject('borderTopColor', 'borderTopStyle', 'borderTopWidth');
@@ -11801,9 +11711,9 @@
                 let hideRight = false;
                 let hideBottom = false;
                 let hideLeft = false;
-                for (let i = 0; i < rowCount; i++) {
+                for (i = 0; i < rowCount; ++i) {
                     const tr = tableFilled[i];
-                    for (let j = 0; j < columnCount; j++) {
+                    for (let j = 0; j < columnCount; ++j) {
                         const td = tr[j];
                         if ((td === null || td === void 0 ? void 0 : td.css('visibility')) === 'visible') {
                             if (i === 0) {
@@ -11876,7 +11786,7 @@
                     }, true);
                 }
             }
-            mainData.rowCount = rowCount;
+            mainData.rowCount = rowCount + (caption ? 1 : 0);
             mainData.columnCount = columnCount;
             node.data(TABLE, 'mainData', mainData);
             return undefined;
@@ -11894,7 +11804,11 @@
             let valid = false;
             let inlineVertical = 0;
             let sameValue = 0;
-            for (const item of node) {
+            const children = node.children;
+            const length = children.length;
+            let i = 0;
+            while (i < length) {
+                const item = children[i++];
                 if (!(item.positionStatic || item.positionRelative && item.length)) {
                     return false;
                 }
@@ -11933,7 +11847,7 @@
                     const aboveBaseline = [];
                     let minTop = Number.POSITIVE_INFINITY;
                     let baseline;
-                    for (const item of children) {
+                    children.forEach(item => {
                         const top = item.linear.top;
                         if (item.inlineVertical && top <= minTop) {
                             if (top < minTop) {
@@ -11945,15 +11859,15 @@
                         if (item.baselineActive) {
                             baseline = item;
                         }
-                    }
+                    });
                     if (aboveBaseline.length) {
                         const above = aboveBaseline[0];
                         const top = above.linear.top;
-                        for (const item of children) {
+                        children.forEach(item => {
                             if (item !== baseline) {
                                 if (item.inlineVertical) {
                                     if (!aboveBaseline.includes(item)) {
-                                        if (isLength$6(item.verticalAlign) || baseline === undefined) {
+                                        if (isLength$6(item.verticalAlign) || !baseline) {
                                             item.setBox(2 /* MARGIN_TOP */, { reset: 1, adjustment: item.linear.top - top });
                                             item.baselineAltered = true;
                                         }
@@ -11966,7 +11880,7 @@
                                     item.setCacheValue('verticalAlign', '0px');
                                 }
                             }
-                        }
+                        });
                         if (baseline) {
                             baseline.setBox(2 /* MARGIN_TOP */, { reset: 1, adjustment: baseline.linear.top - top + Math.min(0, above.parseHeight(above.cssInitial('verticalAlign'))) });
                             baseline.baselineAltered = true;
@@ -11985,7 +11899,7 @@
     const { formatPX: formatPX$6 } = $lib$e.css;
     const { maxArray: maxArray$2 } = $lib$e.math;
     const { getElementCache: getElementCache$4 } = $lib$e.session;
-    const { hasBit: hasBit$5, iterateReverseArray } = $lib$e.util;
+    const { iterateReverseArray } = $lib$e.util;
     const DOCTYPE_HTML = ((_a = document.doctype) === null || _a === void 0 ? void 0 : _a.name) === 'html';
     const COLLAPSE_TOP = ['marginTop', 'borderTopWidth', 'paddingTop', 2 /* MARGIN_TOP */];
     const COLLAPSE_BOTTOM = ['marginBottom', 'borderBottomWidth', 'paddingBottom', 8 /* MARGIN_BOTTOM */];
@@ -12038,7 +11952,23 @@
                     }
                     const offsetParent = node[marginName];
                     const offsetChild = target[marginName];
-                    const adjustRegion = (item, adjustment) => item.setBox(region, { reset: 1, adjustment });
+                    const adjustRegion = (item, adjustment) => {
+                        if (item.getBox(region)[0] === 1) {
+                            const registered = item.registerBox(region);
+                            if (registered) {
+                                const [reset, value] = registered.getBox(region);
+                                adjustment = Math.max(value, adjustment);
+                                if (reset === 1) {
+                                    registered.setBox(region, { adjustment });
+                                }
+                                else {
+                                    registered.setCacheValue('marginTop', adjustment);
+                                }
+                                return;
+                            }
+                        }
+                        item.setBox(region, { reset: 1, adjustment });
+                    };
                     if (offsetParent >= 0 && offsetChild >= 0) {
                         const height = target.bounds.height;
                         let resetChild = false;
@@ -12094,11 +12024,11 @@
                             resetBox(target, region);
                             if (!direction && target.floating) {
                                 const bounds = target.bounds;
-                                for (const item of target.actualParent.naturalChildren) {
+                                target.actualParent.naturalChildren.forEach(item => {
                                     if (item.floating && item !== target && item.intersectY(bounds, 'bounds')) {
                                         resetBox(item, region);
                                     }
-                                }
+                                });
                             }
                             if (height === 0 && !target.every(item => item.floating || !item.pageFlow)) {
                                 resetBox(target, direction ? 8 /* MARGIN_BOTTOM */ : 2 /* MARGIN_TOP */);
@@ -12173,7 +12103,7 @@
     function getMarginOffset(below, above, lineHeight, aboveLineBreak) {
         let top = Number.POSITIVE_INFINITY;
         if (below.nodeGroup && below.some(item => item.floating)) {
-            for (const item of below.renderChildren) {
+            below.renderChildren.forEach((item) => {
                 if (!item.floating) {
                     const topA = item.linear.top;
                     if (topA < top) {
@@ -12181,7 +12111,7 @@
                         below = item;
                     }
                 }
-            }
+            });
         }
         if (top === Number.POSITIVE_INFINITY) {
             top = below.linear.top;
@@ -12205,10 +12135,11 @@
         else {
             let bottomFloatChild;
             const children = node.naturalChildren;
-            for (let j = children.length - 1; j >= 0; j--) {
-                const item = children[j];
+            let j = children.length - 1;
+            while (j >= 0) {
+                const item = children[j--];
                 if (item.floating) {
-                    if (bottomChild === undefined) {
+                    if (!bottomChild) {
                         const bottom = item.linear.bottom;
                         if (bottomFloatChild) {
                             if (bottom > bottomFloatChild.linear.bottom) {
@@ -12224,7 +12155,7 @@
                         break;
                     }
                 }
-                else if (bottomChild === undefined) {
+                else if (!bottomChild) {
                     if (bottomFloatChild && bottomFloatChild.linear.bottom > item.linear.bottom) {
                         bottomChild = bottomFloatChild;
                         break;
@@ -12232,40 +12163,56 @@
                     bottomChild = item;
                 }
             }
-            if (bottomChild === undefined) {
+            if (!bottomChild) {
                 bottomChild = bottomFloatChild;
             }
         }
         return bottomChild;
     }
-    const resetBox = (node, region) => node.setBox(region, { reset: 1 });
+    function isVerticalOverflow(node) {
+        for (const value of [node.cssInitial('overflowX'), node.cssInitial('overflowY')]) {
+            switch (value) {
+                case 'auto':
+                case 'hidden':
+                case 'overlay':
+                    return true;
+            }
+        }
+        return false;
+    }
+    function resetBox(node, region, register) {
+        node.setBox(region, { reset: 1 });
+        if (register) {
+            node.registerBox(region, register);
+        }
+    }
     const setMinHeight = (node, offset) => node.css('minHeight', formatPX$6(Math.max(offset, node.hasPX('minHeight', false) ? node.parseHeight(node.css('minHeight')) : 0)));
     const canResetChild = (node, children = true) => (!children && node.blockStatic || children && node.length > 0 && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
-    const validAboveChild = (node, children) => !node.hasPX('height') && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
-    const validBelowChild = (node, children) => !node.hasPX('height') && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
+    const validAboveChild = (node, children) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
+    const validBelowChild = (node, children) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
     class WhiteSpace extends ExtensionUI {
         afterBaseLayout() {
-            var _a, _b;
             const application = this.application;
             const processed = new Set();
             const clearMap = application.session.clearMap;
-            for (const node of this.cacheProcessing) {
+            this.cacheProcessing.each(node => {
+                var _a, _b;
                 if (node.naturalElement && !node.hasAlign(4 /* AUTO_LAYOUT */)) {
                     const children = node.naturalChildren;
                     const length = children.length;
-                    if (length === 0 || node.id === 0) {
-                        continue;
+                    if (length === 0) {
+                        return;
                     }
                     const pageFlow = node.pageFlow;
                     const collapseMargin = pageFlow && isBlockElement(node, true) && !node.actualParent.layoutElement;
                     let firstChild;
                     let lastChild;
-                    for (let i = 0; i < length; i++) {
+                    for (let i = 0; i < length; ++i) {
                         const current = children[i];
                         if (current.pageFlow) {
                             if (collapseMargin) {
                                 if (!current.floating) {
-                                    if (firstChild === undefined) {
+                                    if (!firstChild) {
                                         firstChild = current;
                                     }
                                     lastChild = current;
@@ -12327,12 +12274,17 @@
                                                     let childBottom = bottomChild.marginBottom;
                                                     let currentChild = bottomChild;
                                                     while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                        childBottom = Math.max(currentChild.marginTop, currentChild.marginBottom, childBottom);
-                                                        resetBox(currentChild, 2 /* MARGIN_TOP */);
+                                                        const currentTop = currentChild.marginTop;
+                                                        childBottom = Math.max(currentTop, currentChild.marginBottom, childBottom);
+                                                        if (currentTop !== 0) {
+                                                            resetBox(currentChild, 2 /* MARGIN_TOP */);
+                                                        }
                                                         const sibling = currentChild.previousSibling;
                                                         if (sibling) {
                                                             if (sibling.marginBottom >= childBottom) {
-                                                                resetBox(currentChild, 8 /* MARGIN_BOTTOM */);
+                                                                if (currentChild.marginBottom !== 0) {
+                                                                    resetBox(currentChild, 8 /* MARGIN_BOTTOM */);
+                                                                }
                                                                 bottomChild = sibling;
                                                                 childBottom = sibling.marginBottom;
                                                                 currentChild = sibling;
@@ -12341,7 +12293,9 @@
                                                                 break;
                                                             }
                                                             else {
-                                                                resetBox(sibling, 8 /* MARGIN_BOTTOM */);
+                                                                if (sibling.marginBottom !== 0) {
+                                                                    resetBox(sibling, 8 /* MARGIN_BOTTOM */);
+                                                                }
                                                                 currentChild = sibling;
                                                             }
                                                         }
@@ -12349,7 +12303,9 @@
                                                             break;
                                                         }
                                                     }
-                                                    resetBox(bottomChild, 8 /* MARGIN_BOTTOM */);
+                                                    if (childBottom !== 0) {
+                                                        resetBox(bottomChild, 8 /* MARGIN_BOTTOM */, previous.getBox(8 /* MARGIN_BOTTOM */)[0] === 0 ? previous : undefined);
+                                                    }
                                                     if (childBottom > marginBottom) {
                                                         marginBottom = childBottom;
                                                         inheritedBottom = true;
@@ -12368,12 +12324,17 @@
                                                     let childTop = topChild.marginTop;
                                                     let currentChild = topChild;
                                                     while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
-                                                        childTop = Math.max(currentChild.marginTop, currentChild.marginBottom, childTop);
-                                                        resetBox(currentChild, 8 /* MARGIN_BOTTOM */);
+                                                        const currentBottom = currentChild.marginBottom;
+                                                        childTop = Math.max(currentChild.marginTop, currentBottom, childTop);
+                                                        if (currentBottom !== 0) {
+                                                            resetBox(currentChild, 8 /* MARGIN_BOTTOM */);
+                                                        }
                                                         const sibling = currentChild.nextSibling;
                                                         if (sibling) {
                                                             if (sibling.marginTop >= childTop) {
-                                                                resetBox(currentChild, 2 /* MARGIN_TOP */);
+                                                                if (currentChild.marginTop !== 0) {
+                                                                    resetBox(currentChild, 2 /* MARGIN_TOP */);
+                                                                }
                                                                 topChild = sibling;
                                                                 childTop = sibling.marginTop;
                                                                 currentChild = sibling;
@@ -12382,7 +12343,9 @@
                                                                 break;
                                                             }
                                                             else {
-                                                                resetBox(sibling, 2 /* MARGIN_TOP */);
+                                                                if (sibling.marginTop !== 0) {
+                                                                    resetBox(sibling, 2 /* MARGIN_TOP */);
+                                                                }
                                                                 currentChild = sibling;
                                                             }
                                                         }
@@ -12390,7 +12353,9 @@
                                                             break;
                                                         }
                                                     }
-                                                    resetBox(topChild, 2 /* MARGIN_TOP */);
+                                                    if (childTop !== 0) {
+                                                        resetBox(topChild, 2 /* MARGIN_TOP */, current.getBox(2 /* MARGIN_TOP */)[0] === 0 ? current : undefined);
+                                                    }
                                                     if (childTop > marginTop) {
                                                         marginTop = childTop;
                                                         inheritedTop = true;
@@ -12405,25 +12370,21 @@
                                             if (marginBottom > 0) {
                                                 if (marginTop > 0) {
                                                     if (marginTop <= marginBottom) {
-                                                        if (!inheritedTop || !hasBit$5(current.overflow, 64 /* BLOCK */)) {
-                                                            if (inheritedTop) {
-                                                                inheritedTop = false;
-                                                            }
+                                                        if (!inheritedTop || !isVerticalOverflow(current)) {
                                                             resetBox(current, 2 /* MARGIN_TOP */);
                                                             if (current.bounds.height === 0 && marginBottom >= current.marginBottom) {
                                                                 resetBox(current, 8 /* MARGIN_BOTTOM */);
                                                             }
+                                                            inheritedTop = false;
                                                         }
                                                     }
                                                     else {
-                                                        if (!inheritedBottom || !hasBit$5(previous.overflow, 64 /* BLOCK */)) {
-                                                            if (inheritedBottom) {
-                                                                inheritedBottom = false;
-                                                            }
+                                                        if (!inheritedBottom || !isVerticalOverflow(previous)) {
                                                             resetBox(previous, 8 /* MARGIN_BOTTOM */);
                                                             if (previous.bounds.height === 0 && marginTop >= previous.marginTop) {
                                                                 resetBox(previous, 2 /* MARGIN_TOP */);
                                                             }
+                                                            inheritedBottom = false;
                                                         }
                                                     }
                                                 }
@@ -12435,7 +12396,7 @@
                                                     }
                                                 }
                                             }
-                                            if (marginTop > 0 && previous.floatContainer && current.getBox(2 /* MARGIN_TOP */)[1] === 0 && !hasBit$5(previous.overflow, 64 /* BLOCK */)) {
+                                            if (marginTop > 0 && previous.floatContainer && current.getBox(2 /* MARGIN_TOP */)[1] === 0 && !isVerticalOverflow(previous)) {
                                                 let valid = false;
                                                 if (previous.bounds.height === 0) {
                                                     valid = true;
@@ -12521,7 +12482,7 @@
                             }
                         }
                     }
-                    if (pageFlow && !hasBit$5(node.overflow, 64 /* BLOCK */) && node.tagName !== 'FIELDSET') {
+                    if (pageFlow && !isVerticalOverflow(node) && node.tagName !== 'FIELDSET') {
                         if (firstChild === null || firstChild === void 0 ? void 0 : firstChild.naturalElement) {
                             applyMarginCollapse(node, firstChild, true);
                         }
@@ -12536,8 +12497,8 @@
                         }
                     }
                 }
-            }
-            for (const node of application.processing.excluded) {
+            });
+            application.processing.excluded.each(node => {
                 if (node.lineBreak && !node.lineBreakTrailing && !clearMap.has(node) && !processed.has(node.id)) {
                     let valid = false;
                     const previousSiblings = node.previousSiblings({ floating: false });
@@ -12554,7 +12515,7 @@
                                 const inline = above.inlineStatic && below.inlineStatic;
                                 if (inline && previousSiblings.length === 0) {
                                     processed.add(node.id);
-                                    continue;
+                                    return;
                                 }
                                 if (!above.multiline && above.has('lineHeight')) {
                                     const aboveOffset = Math.floor((above.lineHeight - above.bounds.height) / 2);
@@ -12614,7 +12575,7 @@
                             }
                         }
                         else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE') {
-                            if (!actualParent.documentRoot && actualParent.ascend({ condition: item => item.documentRoot, attr: 'outerWrapper' }).length === 0) {
+                            if (!actualParent.originalRoot) {
                                 const previousStart = previousSiblings[previousSiblings.length - 1];
                                 const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
                                 const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
@@ -12642,19 +12603,15 @@
                             valid = true;
                         }
                         if (valid) {
-                            for (const item of previousSiblings) {
-                                processed.add(item.id);
-                            }
-                            for (const item of nextSiblings) {
-                                processed.add(item.id);
-                            }
+                            previousSiblings.forEach(item => processed.add(item.id));
+                            nextSiblings.forEach(item => processed.add(item.id));
                         }
                     }
                 }
-            }
+            });
         }
         afterConstraints() {
-            for (const node of this.cacheProcessing) {
+            this.cacheProcessing.each(node => {
                 if (node.naturalChild && node.styleElement && node.inlineVertical && node.pageFlow && !node.positioned && !node.actualParent.layoutElement) {
                     const outerWrapper = node.outerMostWrapper;
                     const renderParent = outerWrapper.renderParent;
@@ -12685,12 +12642,13 @@
                                 if (horizontalRows && horizontalRows.length > 1) {
                                     found: {
                                         let maxBottom = Number.NEGATIVE_INFINITY;
-                                        const q = horizontalRows.length;
-                                        for (let i = 0; i < q; i++) {
+                                        const length = horizontalRows.length;
+                                        for (let i = 0; i < length; ++i) {
                                             const row = horizontalRows[i];
-                                            const r = row.length;
-                                            for (let j = 0; j < r; j++) {
-                                                if (outerWrapper === row[j]) {
+                                            const q = row.length;
+                                            let j = 0;
+                                            while (j < q) {
+                                                if (outerWrapper === row[j++]) {
                                                     if (i > 0) {
                                                         setSpacingOffset(outerWrapper, 2 /* MARGIN_TOP */, maxBottom);
                                                     }
@@ -12700,12 +12658,12 @@
                                                     break found;
                                                 }
                                             }
-                                            for (const item of row) {
+                                            row.forEach((item) => {
                                                 const innerWrapped = item.innerMostWrapped;
                                                 if (validSibling(innerWrapped)) {
                                                     maxBottom = Math.max(innerWrapped.actualRect('bottom'), maxBottom);
                                                 }
-                                            }
+                                            });
                                             if (maxBottom === Number.NEGATIVE_INFINITY) {
                                                 break;
                                             }
@@ -12717,7 +12675,7 @@
                                 }
                                 if (horizontal) {
                                     let actualChildren = [];
-                                    for (const item of horizontal) {
+                                    horizontal.forEach(item => {
                                         if (item.nodeGroup) {
                                             actualChildren = actualChildren.concat(item.cascade(child => child.naturalChild));
                                         }
@@ -12727,11 +12685,15 @@
                                         else {
                                             actualChildren.push(item);
                                         }
-                                    }
+                                    });
+                                    let maxBottom = Number.NEGATIVE_INFINITY;
                                     const parent = node.actualParent;
                                     const top = node.actualRect('top');
-                                    let maxBottom = Number.NEGATIVE_INFINITY;
-                                    for (const item of parent.naturalChildren) {
+                                    const naturalChildren = parent.naturalChildren;
+                                    const length = naturalChildren.length;
+                                    let i = 0;
+                                    while (i < length) {
+                                        const item = naturalChildren[i++];
                                         if (actualChildren.includes(item)) {
                                             break;
                                         }
@@ -12781,9 +12743,9 @@
                 }
                 if (node.floatContainer && node.layoutVertical) {
                     const floating = [];
-                    for (const item of node.naturalChildren) {
+                    node.naturalChildren.forEach((item) => {
                         if (!item.pageFlow) {
-                            continue;
+                            return;
                         }
                         if (!item.floating) {
                             if (floating.length) {
@@ -12794,7 +12756,10 @@
                                     const marginTop = (reset === 0 ? item.marginTop : 0) + adjustment;
                                     if (marginTop > 0) {
                                         const top = Math.floor(node.bounds.top);
-                                        for (const previous of floating) {
+                                        const length = floating.length;
+                                        let i = 0;
+                                        while (i < length) {
+                                            const previous = floating[i++];
                                             if (top <= Math.floor(previous.bounds.top)) {
                                                 let floatingRenderParent = previous.outerMostWrapper.renderParent;
                                                 if (floatingRenderParent) {
@@ -12815,9 +12780,9 @@
                         else {
                             floating.push(item);
                         }
-                    }
+                    });
                 }
-            }
+            });
         }
     }
 
