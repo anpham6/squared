@@ -1,13 +1,6 @@
 import { terser } from 'rollup-plugin-terser';
 import async from 'rollup-plugin-async';
-
-const options = {
-    compress: {
-        loops: false,
-        booleans: false,
-        keep_classnames: true
-    }
-};
+import options from './rollup+terser.config';
 
 export default [
     {

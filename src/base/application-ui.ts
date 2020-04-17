@@ -1481,7 +1481,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 setElementCache(element, `styleMap${pseudoElt}`, sessionId, styleMap);
             }
             let content = styleMap.content;
-            if (typeof content !== 'string' || content === '') {
+            if (!content) {
                 content = getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
                 styleMap.content = content;
             }

@@ -84,7 +84,10 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             else {
                 container = node;
             }
-            let ordinal = value === '' ? node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T> : undefined;
+            let ordinal: Undef<T>;
+            if (value === '') {
+                ordinal = node.find((item: T) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) as Undef<T>;
+            }
             if (ordinal) {
                 if (columnCount === 3) {
                     node.android('layout_columnSpan', '2');

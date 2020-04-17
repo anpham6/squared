@@ -1,4 +1,5 @@
 import { terser } from 'rollup-plugin-terser';
+import options from '../rollup+terser.config';
 
 export default {
     input: '../build/android-framework/src/main.js',
@@ -9,12 +10,6 @@ export default {
         format: 'iife'
     },
     plugins: [
-        terser({
-            compress: {
-                loops: false,
-                booleans: false,
-                keep_classnames: true
-            }
-        })
+        terser(options)
     ]
 };

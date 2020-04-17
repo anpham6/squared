@@ -1,5 +1,6 @@
 import { terser } from 'rollup-plugin-terser';
 import async from 'rollup-plugin-async';
+import options from '../rollup+terser.config';
 
 export default {
     input: '../build/chrome-framework/src/main.js',
@@ -11,12 +12,6 @@ export default {
     },
     plugins: [
         async(),
-        terser({
-            compress: {
-                loops: false,
-                booleans: false,
-                keep_classnames: true
-            }
-        })
+        terser(options)
     ]
 };

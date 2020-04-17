@@ -1,5 +1,5 @@
 import { terser } from 'rollup-plugin-terser';
-
+import options from '../rollup+terser.config';
 import { version } from './package.json';
 
 export default [
@@ -22,13 +22,7 @@ export default [
             format: 'iife'
         },
         plugins: [
-            terser({
-                compress: {
-                    loops: false,
-                    booleans: false,
-                    keep_classnames: true
-                }
-            })
+            terser(options)
         ]
     },
     {
@@ -50,13 +44,7 @@ export default [
             format: 'iife'
         },
         plugins: [
-            terser({
-                compress: {
-                    loops: false,
-                    booleans: false,
-                    keep_classnames: true
-                }
-            })
+            terser(options)
         ]
     },
     {
@@ -78,13 +66,7 @@ export default [
             format: 'iife'
         },
         plugins: [
-            terser({
-                compress: {
-                    loops: false,
-                    booleans: false,
-                    keep_classnames: true
-                }
-            })
+            terser(options)
         ]
     },
     {
@@ -106,13 +88,7 @@ export default [
             format: 'iife'
         },
         plugins: [
-            terser({
-                compress: {
-                    loops: false,
-                    booleans: false,
-                    keep_classnames: true
-                }
-            })
+            terser(options)
         ]
     },
     {
@@ -134,13 +110,7 @@ export default [
             format: 'iife'
         },
         plugins: [
-            terser({
-                compress: {
-                    loops: false,
-                    booleans: false,
-                    keep_classnames: true
-                }
-            })
+            terser(options)
         ]
     },
     {
@@ -162,13 +132,7 @@ export default [
             format: 'iife'
         },
         plugins: [
-            terser({
-                compress: {
-                    loops: false,
-                    booleans: false,
-                    keep_classnames: true
-                }
-            })
+            terser(options)
         ]
     }
 ];
