@@ -14,9 +14,9 @@ const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
 const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
 
-function parseUri(value: string): Undef<ChromeAsset> {
-    const uri = trimEnd(value, '/');
-    const match = COMPONENT.PROTOCOL.exec(uri);
+function parseUri(uri: string): Undef<ChromeAsset> {
+    const value = trimEnd(uri, '/');
+    const match = COMPONENT.PROTOCOL.exec(value);
     if (match) {
         let pathname = '';
         let filename = '';
@@ -32,7 +32,7 @@ function parseUri(value: string): Undef<ChromeAsset> {
             return path.substring(start, path.lastIndexOf('/'));
         };
         let local = true;
-        if (!uri.startsWith(trimEnd(location.origin, '/'))) {
+        if (!value.startsWith(trimEnd(location.origin, '/'))) {
             pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
             local = false;
         }
@@ -57,7 +57,7 @@ function parseUri(value: string): Undef<ChromeAsset> {
         }
         const extension = filename.includes('.') ? fromLastIndexOf(filename, '.').toLowerCase() : undefined;
         return {
-            href: value,
+            uri,
             rootDir,
             moveTo,
             pathname,
@@ -138,7 +138,6 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
             }
             if (this.validFile(data)) {
-                data.uri = href;
                 data.mimeType = parseMimeType('html');
                 if (!ignoreExtensions) {
                     processExtensions.bind(this, data)();
@@ -157,7 +156,6 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 const uri = resolvePath(src);
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
-                    data.uri = uri;
                     data.mimeType = element.type.trim() || parseMimeType(uri) || 'text/javascript';
                     if (!ignoreExtensions) {
                         processExtensions.bind(this, data)();
@@ -177,7 +175,6 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 const uri = resolvePath(href);
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
-                    data.uri = uri;
                     switch (element.rel.trim()) {
                         case 'stylesheet':
                             data.mimeType = 'text/css';
@@ -205,7 +202,6 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             if (uri !== '') {
                 const data = <ChromeAsset> parseUri(uri);
                 if (this.validFile(data)) {
-                    data.uri = uri;
                     if (!ignoreExtensions) {
                         processExtensions.bind(this, data)();
                     }
@@ -270,7 +266,6 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 if (COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
                     const data = parseUri(src);
                     if (this.validFile(data)) {
-                        data.uri = src;
                         result.push(data);
                     }
                 }
@@ -302,7 +297,6 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 if (url) {
                     const data = parseUri(url);
                     if (this.validFile(data)) {
-                        data.uri = url;
                         if (!ignoreExtensions) {
                             processExtensions.bind(this, data)();
                         }
@@ -331,7 +325,6 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             for (const uri of items) {
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
-                    data.uri = uri;
                     if (!ignoreExtensions) {
                         processExtensions.bind(this, data)();
                     }

@@ -179,15 +179,16 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
         case '@application/xhtml+xml': {
             let html = fs.readFileSync(filepath).toString('utf8');
             assets.forEach(item => {
-                if (item !== file && item.href) {
-                    const separator = item.href.indexOf('\\') !== -1 ? '\\' : '/';
+                const uri = item.uri;
+                if (item !== file && uri) {
+                    const separator = uri.indexOf('\\') !== -1 ? '\\' : '/';
                     const location = appendSeparator(item.pathname, item.filename, separator);
                     const value = pathJoinForward(item.moveTo || '', location);
                     if (item.rootDir) {
                         html = replacePathName(html, item.rootDir + location, value);
                     }
                     else {
-                        html = replacePathName(html, item.href, value);
+                        html = replacePathName(html, uri, value);
                         html = replacePathName(html, separator + location, value);
                     }
                 }

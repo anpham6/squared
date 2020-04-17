@@ -111,7 +111,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         const result: string[] = [];
         let commands: Undef<SvgPathCommand[]>;
         const length = values.length;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < length; ++i) {
             if (attr === 'd') {
                 result[i] = values[i];
             }
@@ -581,7 +581,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
         }
         let dashTotal = 0;
         let end: number;
-        for (let i = 0, length = 0; ; i += length, j++) {
+        for (let i = 0, length = 0; ; i += length, ++j) {
             length = getDash(j);
             let startOffset: number;
             let actualLength: number;
@@ -707,7 +707,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     };
                     let extracted: SvgAnimation[] = [];
                     let modified = false;
-                    for (let i = 0; i < sorted.length; i++) {
+                    for (let i = 0; i < sorted.length; ++i) {
                         const item = sorted[i];
                         if (item.setterType) {
                             const setDashGroup = (values: number[], offset: number) => {

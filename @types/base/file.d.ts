@@ -33,7 +33,6 @@ export interface RawAsset extends ExternalAsset, Partial<ImageAsset> {
 
 export interface RequestAsset extends ExternalAsset {
     base64?: string;
-    href?: string;
     rootDir?: string;
     moveTo?: string;
 }

@@ -65,7 +65,7 @@ function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const r = q - unitPX.length;
     const s = unitRepeat.length;
     const result: string[] = new Array(q);
-    for (let i = 0; i < q; i++) {
+    for (let i = 0; i < q; ++i) {
         if (repeat[i]) {
             for (let j = 0, k = 0; j < r; ++i, ++j, ++k) {
                 if (k === s) {
