@@ -28,7 +28,7 @@ Option #2 (more features):
 
 &nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared-apache  
 &nbsp;&nbsp;&nbsp;&gt; cd squared-apache  
-&nbsp;&nbsp;&nbsp;&gt; squared.settings (configure)  
+&nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
 &nbsp;&nbsp;&nbsp;&gt; gradlew run  
 
 * http://localhost:8080

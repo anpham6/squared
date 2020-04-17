@@ -36,6 +36,14 @@ let BROTLI_QUALITY = 11;
 let JPEG_QUALITY = 100;
 let TINIFY_API_KEY = false;
 
+const app = express();
+const port = process.env.PORT || '3000';
+const env: string = app.get('env');
+
+app.set('port', port);
+app.use(bodyParser.json({ limit: squared?.request_post_limit || '100mb' }));
+app.use(bodyParser.urlencoded({ extended: true }));
+
 try {
     squared = require('./squared.settings.json');
 }
@@ -44,7 +52,7 @@ catch (err) {
 }
 
 if (squared) {
-    const { disk_read, disk_write, unc_read, unc_write, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key } = squared;
+    const { disk_read, disk_write, unc_read, unc_write, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, routing } = squared;
     DISK_READ = disk_read === true;
     DISK_WRITE = disk_write === true;
     UNC_READ = unc_read === true;
@@ -69,7 +77,22 @@ if (squared) {
             }
         });
     }
+    if (Array.isArray(routing)) {
+        routing.forEach(route => app.use(route.path, express.static(path.join(__dirname, route.mount))));
+    }
 }
+else {
+    app.use('/dist', express.static(path.join(__dirname, 'dist')));
+    app.use('/', express.static(path.join(__dirname, 'html')));
+}
+
+if (env === 'development') {
+    app.use('/build', express.static(path.join(__dirname, 'build')));
+    app.use('/books', express.static(path.join(__dirname, 'html/books')));
+    app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
+    app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
+}
+
 if (process.argv) {
     const argv = process.argv;
     const all = argv.indexOf('--access-all') !== -1;
@@ -85,25 +108,6 @@ if (process.argv) {
     if (all || argv.indexOf('--unc-write') !== -1 || argv.indexOf('--access-unc') !== -1) {
         UNC_WRITE = true;
     }
-}
-
-const app = express();
-const port = process.env.PORT || '3000';
-const env: string = app.get('env');
-
-app.set('port', port);
-app.use(bodyParser.json({ limit: squared?.request_post_limit || '100mb' }));
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
-app.use('/dist', express.static(path.join(__dirname, 'dist')));
-app.use('/temp', express.static(path.join(__dirname, 'temp')));
-app.use('/', express.static(path.join(__dirname, 'html')));
-
-if (env === 'development') {
-    app.use('/build', express.static(path.join(__dirname, 'build')));
-    app.use('/books', express.static(path.join(__dirname, 'html/books')));
-    app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
 }
 
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));

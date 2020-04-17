@@ -7,11 +7,12 @@ declare namespace node {
         disk_write?: boolean;
         unc_read?: boolean;
         unc_write?: boolean;
-        request_post_limit?: number | string;
-        gzip_level?: number | string;
-        brotli_quality?: number | string;
-        jpeg_quality?: number | string;
+        request_post_limit?: string;
+        gzip_level?: string;
+        brotli_quality?: string;
+        jpeg_quality?: string;
         tinypng_api_key?: string;
+        routing?: { mount: string, path: string }[];
     }
 
     interface CompressionFormat extends file.CompressionFormat {}
