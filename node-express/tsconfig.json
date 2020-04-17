@@ -20,7 +20,7 @@
   },
   "include": [
     "../@types/type.d.ts",
-    "app.ts"
+    "*.ts"
   ],
   "exclude": []
 }

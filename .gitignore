@@ -6,5 +6,6 @@ temp/
 *.code-workspace
 package-lock.json
 app.js
+build.js
 *.zip
 .DS_Store

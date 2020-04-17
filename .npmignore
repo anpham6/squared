@@ -5,6 +5,7 @@ android-framework/
 android-widget/
 build/
 chrome-framework/
+dist/bundles/
 html/books/
 html/demos/
 node_modules/
@@ -16,4 +17,5 @@ temp/
 *.code-workspace
 rollup.*
 tsconfig.*
+build.js
 !app.js

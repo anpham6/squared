@@ -7,10 +7,11 @@ import zlib = require('zlib');
 import fs = require('fs-extra');
 import archiver = require('archiver');
 import decompress = require('decompress');
-import got = require('got');
 import uuid = require('uuid');
 import jimp = require('jimp');
 import tinify = require('tinify');
+
+import got from 'got';
 
 interface AsyncStatus {
     archiving: boolean;
@@ -460,7 +461,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                         }
                     });
                     status.delayed++;
-                    got.default.stream(uri)
+                    got.stream(uri)
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
@@ -766,7 +767,7 @@ app.post('/api/assets/archive', (req, res) => {
                 if (isFileURI(append_to)) {
                     const stream = fs.createWriteStream(zippath);
                     stream.on('finish', copySuccess);
-                    got.default.stream(append_to)
+                    got.stream(append_to)
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
