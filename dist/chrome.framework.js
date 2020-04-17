@@ -1,4 +1,4 @@
-/* chrome-framework 1.6.0
+/* chrome-framework 1.6.1
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -123,9 +123,9 @@ var chrome = (function () {
     const ASSETS = Resource.ASSETS;
     const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
     const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
-    function parseUri(value) {
-        const uri = trimEnd(value, '/');
-        const match = COMPONENT.PROTOCOL.exec(uri);
+    function parseUri(uri) {
+        const value = trimEnd(uri, '/');
+        const match = COMPONENT.PROTOCOL.exec(value);
         if (match) {
             let pathname = '';
             let filename = '';
@@ -141,7 +141,7 @@ var chrome = (function () {
                 return path.substring(start, path.lastIndexOf('/'));
             };
             let local = true;
-            if (!uri.startsWith(trimEnd(location.origin, '/'))) {
+            if (!value.startsWith(trimEnd(location.origin, '/'))) {
                 pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
                 local = false;
             }
@@ -166,7 +166,7 @@ var chrome = (function () {
             }
             const extension = filename.includes('.') ? fromLastIndexOf(filename, '.').toLowerCase() : undefined;
             return {
-                href: value,
+                uri,
                 rootDir,
                 moveTo,
                 pathname,
@@ -222,7 +222,6 @@ var chrome = (function () {
                     }
                 }
                 if (this.validFile(data)) {
-                    data.uri = href;
                     data.mimeType = parseMimeType('html');
                     if (!ignoreExtensions) {
                         processExtensions.bind(this, data)();
@@ -240,7 +239,6 @@ var chrome = (function () {
                     const uri = resolvePath(src);
                     const data = parseUri(uri);
                     if (this.validFile(data)) {
-                        data.uri = uri;
                         data.mimeType = element.type.trim() || parseMimeType(uri) || 'text/javascript';
                         if (!ignoreExtensions) {
                             processExtensions.bind(this, data)();
@@ -259,7 +257,6 @@ var chrome = (function () {
                     const uri = resolvePath(href);
                     const data = parseUri(uri);
                     if (this.validFile(data)) {
-                        data.uri = uri;
                         switch (element.rel.trim()) {
                             case 'stylesheet':
                                 data.mimeType = 'text/css';
@@ -286,7 +283,6 @@ var chrome = (function () {
                 if (uri !== '') {
                     const data = parseUri(uri);
                     if (this.validFile(data)) {
-                        data.uri = uri;
                         if (!ignoreExtensions) {
                             processExtensions.bind(this, data)();
                         }
@@ -351,7 +347,6 @@ var chrome = (function () {
                     if (COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
                         const data = parseUri(src);
                         if (this.validFile(data)) {
-                            data.uri = src;
                             result.push(data);
                         }
                     }
@@ -380,7 +375,6 @@ var chrome = (function () {
                     if (url) {
                         const data = parseUri(url);
                         if (this.validFile(data)) {
-                            data.uri = url;
                             if (!ignoreExtensions) {
                                 processExtensions.bind(this, data)();
                             }
@@ -407,7 +401,6 @@ var chrome = (function () {
                 for (const uri of items) {
                     const data = parseUri(uri);
                     if (this.validFile(data)) {
-                        data.uri = uri;
                         if (!ignoreExtensions) {
                             processExtensions.bind(this, data)();
                         }
@@ -459,6 +452,7 @@ var chrome = (function () {
         constructor(id, sessionId, element, afterInit) {
             super(id, sessionId, element);
             this._cached = {};
+            this._preferInitial = false;
             this.init();
             if (afterInit) {
                 afterInit(this);

@@ -1,4 +1,4 @@
-/* squared.base 1.6.0
+/* squared.base 1.6.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1702,14 +1702,14 @@
         }
         return result;
     }
-    function convertPosition(node, attr) {
-        if (!node.positionStatic) {
-            const unit = node.cssInitial(attr, true);
+    function convertPosition(attr) {
+        if (!this.positionStatic) {
+            const unit = getInitialValue.bind(this, attr, true)();
             if (isLength(unit)) {
-                return node.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
+                return this.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
             }
-            else if (isPercent(unit) && node.styleElement) {
-                return convertFloat(node.style[attr]);
+            else if (isPercent(unit) && this.styleElement) {
+                return convertFloat(this.style[attr]);
             }
         }
         return 0;
@@ -1770,6 +1770,9 @@
                 break;
         }
         return node.parseUnit(node.css(attr), 'width', ((_b = node.actualParent) === null || _b === void 0 ? void 0 : _b.gridElement) !== true);
+    }
+    function getInitialValue(attr, modified, computed) {
+        return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, modified, computed);
     }
     const canTextAlign = (node) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
     const validateCssSet = (value, actualValue) => value === actualValue || isLength(value, true) && PX.test(actualValue);
@@ -1880,31 +1883,70 @@
             return isObject$1(stored) ? stored[attr] : undefined;
         }
         unsetCache(...attrs) {
+            const resetBounds = (cascade = true) => {
+                if (!this._preferInitial) {
+                    this.resetBounds();
+                    if (cascade) {
+                        this.cascade(item => {
+                            item.resetBounds();
+                            return false;
+                        });
+                    }
+                }
+            };
             if (attrs.length) {
                 const cached = this._cached;
                 attrs.forEach(attr => {
                     switch (attr) {
                         case 'position':
-                        case 'display':
+                            if (this._preferInitial) {
+                                this.cascade(item => {
+                                    if (!item.pageFlow) {
+                                        item.unsetCache('absoluteParent');
+                                    }
+                                    item.resetBounds();
+                                    return false;
+                                });
+                            }
                             this._cached = {};
+                            resetBounds();
+                            break;
+                        case 'display':
+                        case 'float':
+                        case 'tagName':
+                            this._cached = {};
+                            resetBounds();
                             return;
                         case 'width':
                             cached.actualWidth = undefined;
+                            cached.percentWidth = undefined;
                         case 'minWidth':
                             cached.width = undefined;
                         case 'maxWidth':
                             cached.overflow = undefined;
+                            resetBounds();
                             break;
                         case 'height':
                             cached.actualHeight = undefined;
+                            cached.percentHeight = undefined;
                         case 'minHeight':
                             cached.height = undefined;
+                            if (this._preferInitial) {
+                                cached.blockVertical = undefined;
+                                cached.overflow = undefined;
+                                this.each(item => item.unsetCache('height', 'blockVertical', 'overflow', 'bottomAligned'));
+                            }
                         case 'maxHeight':
                             cached.overflow = undefined;
+                            resetBounds();
                             break;
                         case 'verticalAlign':
                             cached.baseline = undefined;
+                            resetBounds();
                             break;
+                        case 'left':
+                        case 'right':
+                            resetBounds();
                         case 'textAlign':
                             cached.rightAligned = undefined;
                             cached.centerAligned = undefined;
@@ -1912,32 +1954,38 @@
                         case 'top':
                         case 'bottom':
                             cached.bottomAligned = undefined;
-                            break;
-                        case 'backgroundColor':
-                        case 'backgroundImage':
-                            cached.visibleStyle = undefined;
-                            break;
-                        case 'float':
-                            cached.floating = undefined;
+                            resetBounds();
                             break;
                         case 'overflowX':
                         case 'overflowY':
                             cached.overflow = undefined;
+                            resetBounds();
                             break;
                         default:
                             if (attr.startsWith('margin')) {
                                 cached.autoMargin = undefined;
                                 cached.rightAligned = undefined;
                                 cached.centerAligned = undefined;
+                                resetBounds();
                             }
                             else if (attr.startsWith('padding')) {
                                 cached.contentBoxWidth = undefined;
                                 cached.contentBoxHeight = undefined;
+                                resetBounds();
                             }
                             else if (attr.startsWith('border')) {
                                 cached.visibleStyle = undefined;
                                 cached.contentBoxWidth = undefined;
                                 cached.contentBoxHeight = undefined;
+                                resetBounds();
+                            }
+                            else if (attr.startsWith('background')) {
+                                cached.visibleStyle = undefined;
+                            }
+                            else if (TEXT_STYLE.includes(attr)) {
+                                cached.lineHeight = undefined;
+                                this._textStyle = undefined;
+                                resetBounds();
                             }
                             break;
                     }
@@ -1947,6 +1995,7 @@
             else {
                 this._cached = {};
                 this._textStyle = undefined;
+                resetBounds();
             }
         }
         ascend(options = {}) {
@@ -2312,7 +2361,10 @@
         setBounds(cache = true) {
             let bounds;
             if (this.styleElement) {
-                bounds = assignRect(actualClientRect(this._element, cache ? this.sessionId : undefined));
+                if (!cache) {
+                    deleteElementCache(this._element, 'clientRect', this.sessionId);
+                }
+                bounds = assignRect(actualClientRect(this._element, this.sessionId));
                 this._bounds = bounds;
             }
             else if (this.plainText) {
@@ -2329,6 +2381,13 @@
                 this._linear = undefined;
             }
             return bounds;
+        }
+        resetBounds() {
+            this._bounds = undefined;
+            this._box = undefined;
+            this._linear = undefined;
+            this._textBounds = undefined;
+            this._cached.multiline = undefined;
         }
         querySelector(value) {
             return this.querySelectorAll(value, 1)[0] || null;
@@ -2767,7 +2826,7 @@
             return this._initial;
         }
         get bounds() {
-            return this._bounds || this.setBounds() || assignRect(this.boundingClientRect);
+            return this._bounds || this.setBounds(false) || assignRect(this.boundingClientRect);
         }
         get linear() {
             const setBoxRect = () => {
@@ -2941,7 +3000,7 @@
                         else {
                             value = parseUnit(lineHeight, this.fontSize);
                             if (PX.test(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
-                                const fontSize = this.cssInitial('fontSize');
+                                const fontSize = getInitialValue.bind(this, 'fontSize')();
                                 if (REGEX_EM.test(fontSize)) {
                                     value *= parseFloat(fontSize);
                                 }
@@ -2954,7 +3013,7 @@
                             value = parent.lineHeight;
                         }
                         if (this.styleElement) {
-                            const fontSize = this.cssInitial('fontSize');
+                            const fontSize = getInitialValue.bind(this, 'fontSize')();
                             if (REGEX_EM.test(fontSize)) {
                                 const emSize = parseFloat(fontSize);
                                 if (emSize !== 1) {
@@ -3020,7 +3079,7 @@
         get top() {
             let result = this._cached.top;
             if (result === undefined) {
-                result = convertPosition(this, 'top');
+                result = convertPosition.bind(this, 'top')();
                 this._cached.top = result;
             }
             return result;
@@ -3028,7 +3087,7 @@
         get right() {
             let result = this._cached.right;
             if (result === undefined) {
-                result = convertPosition(this, 'right');
+                result = convertPosition.bind(this, 'right')();
                 this._cached.right = result;
             }
             return result;
@@ -3036,7 +3095,7 @@
         get bottom() {
             let result = this._cached.bottom;
             if (result === undefined) {
-                result = convertPosition(this, 'bottom');
+                result = convertPosition.bind(this, 'bottom')();
                 this._cached.bottom = result;
             }
             return result;
@@ -3044,7 +3103,7 @@
         get left() {
             let result = this._cached.left;
             if (result === undefined) {
-                result = convertPosition(this, 'left');
+                result = convertPosition.bind(this, 'left')();
                 this._cached.left = result;
             }
             return result;
@@ -3214,6 +3273,7 @@
                 case 'TEXTAREA':
                 case 'PROGRESS':
                 case 'METER':
+                case 'CANVAS':
                     this._inlineText = false;
                     break;
                 case 'BUTTON':
@@ -3258,7 +3318,7 @@
         get blockStatic() {
             let result = this._cached.blockStatic;
             if (result === undefined) {
-                result = this.pageFlow && (this.block && !this.floating || this.lineBreak || this.blockDimension && (this.cssInitial('width') === '100%' || this.cssInitial('minWidth') === '100%') && !this.hasPX('maxWidth'));
+                result = this.pageFlow && (this.block && !this.floating || this.lineBreak || this.blockDimension && (getInitialValue.bind(this, 'width')() === '100%' || getInitialValue.bind(this, 'minWidth')() === '100%') && !this.hasPX('maxWidth'));
                 this._cached.blockStatic = result;
             }
             return result;
@@ -3522,10 +3582,10 @@
                         result = '';
                         break;
                     default:
-                        if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || this.cssInitial('backgroundColor') === result)) {
+                        if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.bind(this, 'backgroundColor')() === result)) {
                             let parent = this.actualParent;
                             while (parent) {
-                                const color = parent.cssInitial('backgroundColor', true);
+                                const color = getInitialValue.bind(parent, 'backgroundColor', true)();
                                 if (color !== '') {
                                     if (color === result && parent.backgroundColor === '') {
                                         result = '';
@@ -3573,7 +3633,7 @@
         get percentWidth() {
             let result = this._cached.percentWidth;
             if (result === undefined) {
-                const value = this.cssInitial('width');
+                const value = getInitialValue.bind(this, 'width')();
                 result = isPercent(value) ? parseFloat(value) / 100 : 0;
                 this._cached.percentWidth = result;
             }
@@ -3583,7 +3643,7 @@
             var _a;
             let result = this._cached.percentHeight;
             if (result === undefined) {
-                const value = this.cssInitial('height');
+                const value = getInitialValue.bind(this, 'height')();
                 result = isPercent(value) && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.css('position') === 'fixed') ? parseFloat(value) / 100 : 0;
                 this._cached.percentHeight = result;
             }
@@ -3640,7 +3700,7 @@
                 result = this.actualParent;
                 if (!this.pageFlow && !this.documentBody) {
                     while (result && !result.documentBody) {
-                        switch (result.cssInitial('position', false, true)) {
+                        switch (getInitialValue.bind(result, 'position', false, true)()) {
                             case 'static':
                             case 'initial':
                             case 'unset':
@@ -3817,7 +3877,7 @@
             return (this.naturalElement && ((_a = this._element) === null || _a === void 0 ? void 0 : _a.getBoundingClientRect()) || this._bounds || newBoxRectDimension());
         }
         get fontSize() {
-            var _a, _b;
+            var _a, _b, _c;
             let result = this._fontSize;
             if (result === undefined) {
                 const getFontSize = (style) => parseFloat(style.getPropertyValue('font-size'));
@@ -3839,11 +3899,10 @@
                 if (result === 0 && !this.naturalChild) {
                     const element = this.element;
                     if (element && hasComputedStyle$1(element)) {
-                        const node = getElementAsNode(element, this.sessionId);
-                        result = (node === null || node === void 0 ? void 0 : node.fontSize) || getFontSize(getStyle$1(element));
+                        result = ((_b = getElementAsNode(element, this.sessionId)) === null || _b === void 0 ? void 0 : _b.fontSize) || getFontSize(getStyle$1(element));
                     }
                     else {
-                        result = ((_b = this.ascend({ condition: item => item.fontSize > 0 })[0]) === null || _b === void 0 ? void 0 : _b.fontSize) || getFontSize(getStyle$1(document.body));
+                        result = ((_c = this.ascend({ condition: item => item.fontSize > 0 })[0]) === null || _c === void 0 ? void 0 : _c.fontSize) || getFontSize(getStyle$1(document.body));
                     }
                 }
                 this._fontSize = result;
@@ -4035,6 +4094,7 @@
             this.baselineAltered = false;
             this.positioned = false;
             this._boxRegister = {};
+            this._preferInitial = true;
             this._excludeSection = 0;
             this._excludeProcedure = 0;
             this._excludeResource = 0;
@@ -5052,9 +5112,15 @@
                         case 'bottom':
                         case 'left':
                             cached.autoPosition = undefined;
+                            cached.positiveAxis = undefined;
                             break;
+                        case 'fontSize':
                         case 'lineHeight':
                             cached.baselineHeight = undefined;
+                            break;
+                        case 'whiteSpace':
+                            cached.preserveWhiteSpace = undefined;
+                            cached.textEmpty = undefined;
                             break;
                     }
                 });
@@ -5434,11 +5500,11 @@
             return result || this;
         }
         get preserveWhiteSpace() {
-            let result = this._cached.whiteSpace;
+            let result = this._cached.preserveWhiteSpace;
             if (result === undefined) {
                 const value = this.css('whiteSpace');
                 result = value === 'pre' || value === 'pre-wrap';
-                this._cached.whiteSpace = result;
+                this._cached.preserveWhiteSpace = result;
             }
             return result;
         }
@@ -6003,19 +6069,16 @@
                             BOX_POSITION$1.forEach(attr => {
                                 if (item.hasPX(attr)) {
                                     saveAlignment(preAlignment, element, item.id, attr, 'auto', item.css(attr));
-                                    resetBounds = true;
                                 }
                             });
                         }
                         if (item.dir === 'rtl') {
                             element.dir = 'ltr';
                             direction.add(element);
+                            resetBounds = true;
                         }
                     }
                 });
-                if (!resetBounds && direction.size) {
-                    resetBounds = true;
-                }
                 this.processing.excluded.each(item => {
                     if (!item.pageFlow) {
                         item.cssTry('display', 'none');
@@ -7626,6 +7689,7 @@
                             styleMap.display = 'block';
                         }
                     case 'VIDEO':
+                    case 'CANVAS':
                     case 'svg':
                     case 'IMG': {
                         const setDimension = (attr, opposing) => {
@@ -9480,7 +9544,7 @@
         const r = q - unitPX.length;
         const s = unitRepeat.length;
         const result = new Array(q);
-        for (let i = 0; i < q; i++) {
+        for (let i = 0; i < q; ++i) {
             if (repeat[i]) {
                 for (let j = 0, k = 0; j < r; ++i, ++j, ++k) {
                     if (k === s) {

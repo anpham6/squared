@@ -451,19 +451,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         BOX_POSITION.forEach(attr => {
                             if (item.hasPX(attr)) {
                                 saveAlignment(preAlignment, element, item.id, attr, 'auto', item.css(attr));
-                                resetBounds = true;
                             }
                         });
                     }
                     if (item.dir === 'rtl') {
                         element.dir = 'ltr';
                         direction.add(element);
+                        resetBounds = true;
                     }
                 }
             });
-            if (!resetBounds && direction.size) {
-                resetBounds = true;
-            }
             this.processing.excluded.each(item => {
                 if (!item.pageFlow) {
                     item.cssTry('display', 'none');

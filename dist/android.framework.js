@@ -1,4 +1,4 @@
-/* android-framework 1.6.0
+/* android-framework 1.6.1
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -3767,17 +3767,21 @@ var android = (function () {
     const REGEX_TEXTSHADOW = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)\s+(-?[\d.]+[a-z]+)\s*([\d.]+[a-z]+)?/;
     function sortHorizontalFloat(list) {
         list.sort((a, b) => {
-            switch (a.float) {
-                case 'left':
-                    return -1;
-                case 'right':
+            const floatA = a.float;
+            const floatB = b.float;
+            if (floatA !== 'none' && floatB !== 'none') {
+                if (floatA !== floatB) {
+                    return floatA === 'left' ? -1 : 1;
+                }
+                else if (floatA === 'right' && floatB === 'right') {
                     return 1;
+                }
             }
-            switch (b.float) {
-                case 'left':
-                    return 1;
-                case 'right':
-                    return -1;
+            else if (floatA !== 'none') {
+                return floatA === 'left' ? -1 : 1;
+            }
+            else if (floatB !== 'none') {
+                return floatB === 'left' ? 1 : -1;
             }
             return 0;
         });
@@ -4060,7 +4064,7 @@ var android = (function () {
             return clearMap.has(node);
         }
         else if (node.nodeGroup) {
-            return node.cascade(item => item.naturalChild).some((item) => clearMap.has(item));
+            return node.some((item) => item.naturalChild && clearMap.has(item), { cascade: true });
         }
         else {
             return clearMap.has(node.innerMostWrapped);

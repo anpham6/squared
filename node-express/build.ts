@@ -43,10 +43,14 @@ for (let i = 2; i < ARGV.length; i += 2) {
             arg.split(',').forEach(value => {
                 const include: string[] = [];
                 if (value.indexOf('*') !== -1) {
-                    glob.sync(path.resolve(`dist/extensions/${value}`)).forEach(filepath => include.push(filepath));
+                    glob.sync(path.resolve(`dist/extensions/${value}`)).forEach(filepath => {
+                        if (filepath.endsWith('.min.js')) {
+                            include.push(filepath);
+                        }
+                    });
                 }
                 else {
-                    include.push(path.resolve(`dist/extensions/${value}.js`));
+                    include.push(path.resolve(`dist/extensions/${value}.min.js`));
                 }
                 include.forEach(filepath => {
                     if (isFile(filepath)) {

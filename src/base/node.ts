@@ -832,7 +832,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public unsetCache(...attrs: string[]) {
         const resetBounds = (cascade = true) => {
-            if (this._preferInitial) {
+            if (!this._preferInitial) {
                 this.resetBounds();
                 if (cascade) {
                     this.cascade(item => {
@@ -1337,7 +1337,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public setBounds(cache = true) {
         let bounds: Undef<BoxRectDimension>;
         if (this.styleElement) {
-            bounds = assignRect(actualClientRect(<Element> this._element, cache ? this.sessionId : undefined));
+            if (!cache) {
+                deleteElementCache(<Element> this._element, 'clientRect', this.sessionId);
+            }
+            bounds = assignRect(actualClientRect(<Element> this._element, this.sessionId));
             this._bounds = bounds;
         }
         else if (this.plainText) {
@@ -1360,7 +1363,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         this._bounds = undefined;
         this._box = undefined;
         this._linear = undefined;
-        this._textBounds = null;
+        this._textBounds = undefined as any;
         this._cached.multiline = undefined;
     }
 
