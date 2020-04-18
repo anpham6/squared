@@ -769,7 +769,7 @@ export function resolvePath(value: string, href?: string) {
     return value;
 }
 
-export function trimBoth(value: string, char: string) {
+export function trimBoth(value: string, char = '"') {
     const match = new RegExp(`^(${char})(.*?)\\1$`).exec(value);
     return match ? match[2] : value;
 }

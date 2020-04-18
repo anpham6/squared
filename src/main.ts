@@ -100,7 +100,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]): PromiseObj
     else if (settings.showErrorMessages) {
         alert('ERROR: Framework not installed.');
     }
-    const Result = class {
+    return new class {
         public then(callback: FunctionVoid) {
             return this;
         }
@@ -108,8 +108,10 @@ export function parseDocument(...elements: (HTMLElement | string)[]): PromiseObj
             callback(new Error('Framework not installed.'));
             return this;
         }
-    };
-    return new Result();
+        public finally(callback: FunctionVoid) {
+            return this;
+        }
+    }();
 }
 
 export async function parseDocumentAsync(...elements: (HTMLElement | string)[]): Promise<PromiseObject> {

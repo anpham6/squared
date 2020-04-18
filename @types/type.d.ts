@@ -20,8 +20,3 @@ type StringMap = ObjectMap<string>;
 type CallbackResult = (result: {}) => void;
 
 type StandardMap = ObjectMap<any>;
-
-declare class PromiseObject {
-    public then(callback: FunctionVoid): void;
-    public catch(callback: (error: Error, resume?: FunctionVoid) => void): void;
-}

@@ -19,7 +19,7 @@ const { getElementCache, setElementCache } = $lib.session;
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 
 type PreloadImage = HTMLImageElement | string;
-type ResultCatch = (error: Error, resolve?: FunctionVoid) => void;
+type ResultCatch = (error: Error) => void;
 
 const REGEX_MEDIATEXT = /all|screen/;
 const REGEX_BACKGROUND = /^background/;
@@ -167,6 +167,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         };
         let THEN: Undef<FunctionVoid>;
         let CATCH: Undef<ResultCatch>;
+        let FINALLY: Undef<FunctionVoid>;
         const resumeThread = () => {
             removePreloaded();
             this.extensions.forEach(ext => ext.beforeParseDocument());
@@ -184,6 +185,9 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             if (typeof THEN === 'function') {
                 THEN.call(this);
+            }
+            if (typeof FINALLY === 'function') {
+                FINALLY.call(this);
             }
         };
         if (elements.length === 0) {
@@ -302,18 +306,22 @@ export default abstract class Application<T extends Node> implements squared.bas
                     target = <HTMLImageElement> error.target;
                 }
                 const message = target instanceof HTMLImageElement ? target.src : '';
-                if (CATCH) {
+                if (typeof CATCH === 'function') {
                     if (!(error instanceof Error)) {
                         error = new Error(message ? `FAIL: ${message}` : 'Unable to preload images.');
                     }
                     removePreloaded();
-                    CATCH(error, resumeThread);
+                    CATCH.call(this, error);
                 }
                 else if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
                     resumeThread();
+                    return;
                 }
                 else {
                     removePreloaded();
+                }
+                if (typeof FINALLY === 'function') {
+                    FINALLY.call(this);
                 }
             });
         }
@@ -321,12 +329,21 @@ export default abstract class Application<T extends Node> implements squared.bas
             resumeThread();
         }
         const Result = class {
+            public complete = false;
+            constructor(public thisArg: any) {
+            }
             public then(callback: FunctionVoid) {
                 if (imageElements.length) {
                     THEN = callback;
                 }
                 else {
-                    callback();
+                    callback.call(this.thisArg);
+                    if (typeof FINALLY === 'function') {
+                        FINALLY.call(this.thisArg);
+                    }
+                    else {
+                        this.complete = true;
+                    }
                 }
                 return this;
             }
@@ -334,8 +351,19 @@ export default abstract class Application<T extends Node> implements squared.bas
                 CATCH = callback;
                 return this;
             }
+            public finally(callback: FunctionVoid) {
+                if (this.complete) {
+                    if (typeof callback === 'function') {
+                        callback.call(this.thisArg);
+                    }
+                }
+                else {
+                    FINALLY = callback;
+                }
+                return this;
+            }
         };
-        return new Result();
+        return new Result(this);
     }
 
     public async parseDocumentAsync(...elements: any[]): Promise<PromiseObject> {

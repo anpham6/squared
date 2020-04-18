@@ -1496,7 +1496,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (styleMap) {
             let value = styleMap.content;
             if (value) {
-                const textContent = trimBoth(value, '"');
+                const textContent = trimBoth(value);
                 let absolute = false;
                 switch (styleMap.position) {
                     case 'absolute':

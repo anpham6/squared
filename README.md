@@ -44,7 +44,7 @@ Option #2 (more features):
 
     document.addEventListener('DOMContentLoaded', function() {
         // Required
-        squared.setFramework(android); // OR: 'chrome'
+        squared.setFramework(android); // OR: chrome
 
         // Required: zero or more DOM elements
         squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview-id' */, /* etc... */); // OR: parseDocumentAsync
@@ -316,7 +316,7 @@ await chrome.querySelector(value: string, cache?: boolean)
 await chrome.querySelectorAll(value: string, cache?: boolean)
 await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "false"
 
-chrome.saveAsWebPage(filename?: string, options?: {}): void // create archive with html and web page assets asychronously
+chrome.saveAsWebPage(filename?: string, options?: {}): void // create archive with html and web page assets asynchronously
 ```
 
 ### Public System Methods
@@ -578,13 +578,13 @@ The attributes "android-include" and "android-include-end" can only be applied t
 Only the XML based layout and resource files can be viewed on the Android device/emulator without any Java/Kotlin backend code. To play animations you also have to "start" the animation in MainActivity.java.
 
 ```javascript
-    import android.graphics.drawable.Animatable;
+import android.graphics.drawable.Animatable;
 
-    android.widget.ImageView imageView1 = findViewById(R.id.imageview_1);
-    if (imageView1 != null) {
-        Animatable animatable = (Animatable) imageView1.getDrawable();
-        animatable.start();
-    }
+android.widget.ImageView imageView1 = findViewById(R.id.imageview_1);
+if (imageView1 != null) {
+    Animatable animatable = (Animatable) imageView1.getDrawable();
+    animatable.start();
+}
 ```
 
 ### ANDROID: Extension Widgets

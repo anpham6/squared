@@ -475,7 +475,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
         for (const attr of attrList) {
             let value: Undef<string>;
             if (attr.endsWith) {
-                const pattern = new RegExp(`^(.*:)?${attr.key}$`);
+                const pattern = new RegExp(`^(.+:)?${attr.key}$`);
                 for (const name in attributes) {
                     if (pattern.test(name)) {
                         value = attributes[name];
