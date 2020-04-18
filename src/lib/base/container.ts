@@ -142,7 +142,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                 break;
             }
             if (predicate(item, i, children)) {
-                also?.bind(item, item)();
+                also?.call(item, item);
                 result.push(item);
                 children.splice(i--, 1);
                 length--;
@@ -174,7 +174,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                 return -1;
             }
             if (predicate(item, i, children)) {
-                also?.bind(item, item)();
+                also?.call(item, item);
                 return i;
             }
         }
@@ -200,13 +200,13 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                     break;
                 }
                 if (predicate(item, i, children)) {
-                    also?.bind(item, item)();
+                    also?.call(item, item);
                     return item;
                 }
                 if (cascade && item instanceof Container && !item.isEmpty) {
                     const result = recurse(item);
                     if (result) {
-                        also?.bind(item, item)();
+                        also?.call(item, item);
                         return result;
                     }
                     else if (invalid) {
@@ -242,7 +242,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                     break;
                 }
                 if (!predicate || predicate(item)) {
-                    also?.bind(item, item)();
+                    also?.call(item, item);
                     result.push(item);
                 }
                 if (item instanceof Container && !item.isEmpty) {

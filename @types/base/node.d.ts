@@ -117,6 +117,7 @@ export interface QueryData {
 
 export interface QueryAttribute extends StringValue {
     symbol?: string;
+    endsWith?: boolean;
     caseInsensitive: boolean;
 }
 

@@ -473,7 +473,19 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
     if (attrList) {
         const attributes = child.attributes;
         for (const attr of attrList) {
-            let value = attributes[attr.key];
+            let value: Undef<string>;
+            if (attr.endsWith) {
+                const pattern = new RegExp(`^(.*:)?${attr.key}$`);
+                for (const name in attributes) {
+                    if (pattern.test(name)) {
+                        value = attributes[name];
+                        break;
+                    }
+                }
+            }
+            else {
+                value = attributes[attr.key];
+            }
             if (value === undefined) {
                 return false;
             }
@@ -619,7 +631,7 @@ function setOverflow(node: T) {
 
 function convertPosition(this: T, attr: string) {
     if (!this.positionStatic) {
-        const unit = getInitialValue.bind(this, attr, true)();
+        const unit = getInitialValue.call(this, attr, true);
         if (isLength(unit)) {
             return this.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
         }
@@ -1412,11 +1424,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                         break;
                                 }
                             }
-                            else if (segment.endsWith('|*')) {
-                                all = segment === '*|*';
+                            else if (segment.startsWith('*|*')) {
+                                if (segment.length > 3) {
+                                    selectors.length = 0;
+                                    break invalid;
+                                }
+                                all = true;
                             }
-                            else if (segment.charAt(0) === '*') {
-                                segment = segment.substring(1);
+                            else if (segment.startsWith('*|')) {
+                                segment = segment.substring(2);
                             }
                             else if (segment.startsWith('::')) {
                                 selectors.length = 0;
@@ -1437,15 +1453,31 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     if (attrList === undefined) {
                                         attrList = [];
                                     }
+                                    let key = subMatch[1].replace('\\:', ':');
+                                    let endsWith = false;
+                                    switch (key.indexOf('|')) {
+                                        case -1:
+                                            break;
+                                        case 1:
+                                            if (key.charAt(0) === '*') {
+                                                endsWith = true;
+                                                key = key.substring(2);
+                                                break;
+                                            }
+                                        default:
+                                            selectors.length = 0;
+                                            break invalid;
+                                    }
                                     const caseInsensitive = subMatch[6] === 'i';
                                     let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
                                     if (caseInsensitive) {
                                         attrValue = attrValue.toLowerCase();
                                     }
                                     attrList.push({
-                                        key: subMatch[1],
+                                        key,
                                         symbol: subMatch[2],
                                         value: attrValue,
+                                        endsWith,
                                         caseInsensitive
                                     });
                                     segment = spliceString(segment, subMatch.index, subMatch[0].length);
@@ -2008,7 +2040,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     else {
                         value = parseUnit(lineHeight, this.fontSize);
                         if (PX.test(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
-                            const fontSize = getInitialValue.bind(this, 'fontSize')();
+                            const fontSize = getInitialValue.call(this, 'fontSize');
                             if (REGEX_EM.test(fontSize)) {
                                 value *= parseFloat(fontSize);
                             }
@@ -2021,7 +2053,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         value = parent.lineHeight;
                     }
                     if (this.styleElement) {
-                        const fontSize = getInitialValue.bind(this, 'fontSize')();
+                        const fontSize = getInitialValue.call(this, 'fontSize');
                         if (REGEX_EM.test(fontSize)) {
                             const emSize = parseFloat(fontSize);
                             if (emSize !== 1) {
@@ -2091,7 +2123,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get top() {
         let result = this._cached.top;
         if (result === undefined) {
-            result = convertPosition.bind(this, 'top')();
+            result = convertPosition.call(this, 'top');
             this._cached.top = result;
         }
         return result;
@@ -2099,7 +2131,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get right() {
         let result = this._cached.right;
         if (result === undefined) {
-            result = convertPosition.bind(this, 'right')();
+            result = convertPosition.call(this, 'right');
             this._cached.right = result;
         }
         return result;
@@ -2107,7 +2139,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get bottom() {
         let result = this._cached.bottom;
         if (result === undefined) {
-            result = convertPosition.bind(this, 'bottom')();
+            result = convertPosition.call(this, 'bottom');
             this._cached.bottom = result;
         }
         return result;
@@ -2115,7 +2147,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get left() {
         let result = this._cached.left;
         if (result === undefined) {
-            result = convertPosition.bind(this, 'left')();
+            result = convertPosition.call(this, 'left');
             this._cached.left = result;
         }
         return result;
@@ -2342,7 +2374,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get blockStatic() {
         let result = this._cached.blockStatic;
         if (result === undefined) {
-            result = this.pageFlow && (this.block && !this.floating || this.lineBreak || this.blockDimension && (getInitialValue.bind(this, 'width')() === '100%' || getInitialValue.bind(this, 'minWidth')() === '100%') && !this.hasPX('maxWidth'));
+            result = this.pageFlow && (this.block && !this.floating || this.lineBreak || this.blockDimension && (getInitialValue.call(this, 'width') === '100%' || getInitialValue.call(this, 'minWidth') === '100%') && !this.hasPX('maxWidth'));
             this._cached.blockStatic = result;
         }
         return result;
@@ -2623,10 +2655,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = '';
                     break;
                 default:
-                    if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.bind(this, 'backgroundColor')() === result)) {
+                    if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.call(this, 'backgroundColor') === result)) {
                         let parent = this.actualParent;
                         while (parent) {
-                            const color = getInitialValue.bind(parent, 'backgroundColor', true)();
+                            const color = getInitialValue.call(parent, 'backgroundColor', true);
                             if (color !== '') {
                                 if (color === result && parent.backgroundColor === '') {
                                     result = '';
@@ -2676,7 +2708,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get percentWidth() {
         let result = this._cached.percentWidth;
         if (result === undefined) {
-            const value = getInitialValue.bind(this, 'width')();
+            const value = getInitialValue.call(this, 'width');
             result = isPercent(value) ? parseFloat(value) / 100 : 0;
             this._cached.percentWidth = result;
         }
@@ -2685,7 +2717,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get percentHeight() {
         let result = this._cached.percentHeight;
         if (result === undefined) {
-            const value = getInitialValue.bind(this, 'height')();
+            const value = getInitialValue.call(this, 'height');
             result = isPercent(value) && (this.actualParent?.hasHeight || this.css('position') === 'fixed') ? parseFloat(value) / 100 : 0;
             this._cached.percentHeight = result;
         }
@@ -2744,7 +2776,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             result = this.actualParent;
             if (!this.pageFlow && !this.documentBody) {
                 while (result && !result.documentBody) {
-                    switch (getInitialValue.bind(result, 'position', false, true)()) {
+                    switch (getInitialValue.call(result, 'position', false, true)) {
                         case 'static':
                         case 'initial':
                         case 'unset':

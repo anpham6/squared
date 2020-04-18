@@ -541,7 +541,7 @@ declare class NodeUI extends Node implements LayoutType {
     exclude(options: ExcludeUIOptions): void;
     hide(options?: HideUIOptions<NodeUI>): void;
     appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
-    removeTry(replacement?: NodeUI, beforeReplace?: FunctionVoid): boolean;
+    removeTry(replacement?: NodeUI, beforeReplace?: BindGeneric<Undef<NodeUI>, void>): boolean;
     sort(predicate?: (a: Node, b: Node) => number): this;
     render(parent?: NodeUI): void;
     renderEach(predicate: IteratorPredicate<NodeUI, void>): this;

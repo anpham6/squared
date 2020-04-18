@@ -22,6 +22,7 @@ function parseUri(uri: string): Undef<ChromeAsset> {
         let filename = '';
         let rootDir = '';
         let moveTo: Undef<string>;
+        let local: Undef<boolean>;
         const host = match[2];
         const port = match[3];
         const path = match[4];
@@ -31,10 +32,11 @@ function parseUri(uri: string): Undef<ChromeAsset> {
             }
             return path.substring(start, path.lastIndexOf('/'));
         };
-        let local = true;
         if (!value.startsWith(trimEnd(location.origin, '/'))) {
             pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
-            local = false;
+        }
+        else {
+            local = true;
         }
         if (path && path !== '/') {
             filename = fromLastIndexOf(path, '/');
@@ -140,7 +142,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             if (this.validFile(data)) {
                 data.mimeType = parseMimeType('html');
                 if (!ignoreExtensions) {
-                    processExtensions.bind(this, data)();
+                    processExtensions.call(this, data);
                 }
                 result.push(data);
             }
@@ -158,7 +160,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 if (this.validFile(data)) {
                     data.mimeType = element.type.trim() || parseMimeType(uri) || 'text/javascript';
                     if (!ignoreExtensions) {
-                        processExtensions.bind(this, data)();
+                        processExtensions.call(this, data);
                     }
                     result.push(data);
                 }
@@ -187,7 +189,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                             break;
                     }
                     if (!ignoreExtensions) {
-                        processExtensions.bind(this, data)();
+                        processExtensions.call(this, data);
                     }
                     result.push(data);
                 }
@@ -203,7 +205,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 const data = <ChromeAsset> parseUri(uri);
                 if (this.validFile(data)) {
                     if (!ignoreExtensions) {
-                        processExtensions.bind(this, data)();
+                        processExtensions.call(this, data);
                     }
                     result.push(data);
                 }
@@ -244,7 +246,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 if (this.validFile(data)) {
                     data.mimeType = mimeType;
                     if (!ignoreExtensions) {
-                        processExtensions.bind(this, data)();
+                        processExtensions.call(this, data);
                     }
                     result.push(data);
                 }
@@ -298,7 +300,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     const data = parseUri(url);
                     if (this.validFile(data)) {
                         if (!ignoreExtensions) {
-                            processExtensions.bind(this, data)();
+                            processExtensions.call(this, data);
                         }
                         result.push(data);
                     }
@@ -326,7 +328,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
                     if (!ignoreExtensions) {
-                        processExtensions.bind(this, data)();
+                        processExtensions.call(this, data);
                     }
                     result.push(data);
                 }

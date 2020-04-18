@@ -748,7 +748,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return false;
     }
 
-    public removeTry(replacement?: T, beforeReplace?: FunctionVoid) {
+    public removeTry(replacement?: T, beforeReplace?: BindGeneric<Undef<T>, void>) {
         const renderParent = this.renderParent;
         if (renderParent) {
             const { renderTemplates, renderChildren } = renderParent;
@@ -767,9 +767,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         parent.renderChildren.splice(replaceIndex, 1);
                                     }
                                     if (renderParent.appendTry(this, replacement, false)) {
-                                        if (beforeReplace) {
-                                            beforeReplace.bind(this, replacement)();
-                                        }
+                                        beforeReplace?.call(this, replacement);
                                         renderTemplates[index] = templates[replaceIndex];
                                         replacement.renderParent = renderParent;
                                         renderChildren[index] = replacement;
@@ -785,9 +783,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                         else {
-                            if (beforeReplace) {
-                                beforeReplace.bind(this, replacement)();
-                            }
+                            beforeReplace?.call(this, replacement);
                             renderTemplates.splice(index, 1);
                             renderChildren.splice(index, 1);
                             this.renderParent = undefined;

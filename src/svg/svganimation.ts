@@ -226,21 +226,21 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     set fillBackwards(value) {
-        setFillMode.bind(this, value, FILL_MODE.BACKWARDS)();
+        setFillMode.call(this, value, FILL_MODE.BACKWARDS);
     }
     get fillBackwards() {
         return hasBit(this.fillMode, FILL_MODE.BACKWARDS);
     }
 
     set fillForwards(value) {
-        setFillMode.bind(this, value, FILL_MODE.FORWARDS)();
+        setFillMode.call(this, value, FILL_MODE.FORWARDS);
     }
     get fillForwards() {
         return hasBit(this.fillMode, FILL_MODE.FORWARDS);
     }
 
     set fillFreeze(value) {
-        setFillMode.bind(this, value, FILL_MODE.FREEZE)();
+        setFillMode.call(this, value, FILL_MODE.FREEZE);
     }
     get fillFreeze() {
         return hasBit(this.fillMode, FILL_MODE.FREEZE);

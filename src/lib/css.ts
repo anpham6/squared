@@ -361,11 +361,16 @@ export function getSpecificity(value: string) {
                     continue;
             }
         }
-        else if (segment.endsWith('|*')) {
-            continue;
+        else if (segment.startsWith('*|*')) {
+            if (segment.length > 3) {
+                return 0;
+            }
         }
-        else if (segment.charAt(0) === '*') {
-            segment = segment.substring(1);
+        else if (segment.startsWith('*|')) {
+            segment = segment.substring(2);
+        }
+        else if (segment.startsWith('::')) {
+            return 0;
         }
         let subMatch: Null<RegExpExecArray>;
         while ((subMatch = CSS.SELECTOR_ATTR.exec(segment)) !== null) {
