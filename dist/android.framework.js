@@ -1,4 +1,4 @@
-/* android-framework 1.6.1
+/* android-framework 1.6.2
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -9746,7 +9746,10 @@ var android = (function () {
                 else {
                     container = node;
                 }
-                let ordinal = value === '' ? node.find((item) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft) : undefined;
+                let ordinal;
+                if (value === '') {
+                    ordinal = node.find((item) => item.float === 'left' && item.marginLeft < 0 && Math.abs(item.marginLeft) <= item.documentParent.marginLeft);
+                }
                 if (ordinal) {
                     if (columnCount === 3) {
                         node.android('layout_columnSpan', '2');

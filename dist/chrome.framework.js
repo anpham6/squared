@@ -1,4 +1,4 @@
-/* chrome-framework 1.6.1
+/* chrome-framework 1.6.2
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -131,6 +131,7 @@ var chrome = (function () {
             let filename = '';
             let rootDir = '';
             let moveTo;
+            let local;
             const host = match[2];
             const port = match[3];
             const path = match[4];
@@ -140,10 +141,11 @@ var chrome = (function () {
                 }
                 return path.substring(start, path.lastIndexOf('/'));
             };
-            let local = true;
             if (!value.startsWith(trimEnd(location.origin, '/'))) {
                 pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
-                local = false;
+            }
+            else {
+                local = true;
             }
             if (path && path !== '/') {
                 filename = fromLastIndexOf(path, '/');
@@ -224,7 +226,7 @@ var chrome = (function () {
                 if (this.validFile(data)) {
                     data.mimeType = parseMimeType('html');
                     if (!ignoreExtensions) {
-                        processExtensions.bind(this, data)();
+                        processExtensions.call(this, data);
                     }
                     result.push(data);
                 }
@@ -241,7 +243,7 @@ var chrome = (function () {
                     if (this.validFile(data)) {
                         data.mimeType = element.type.trim() || parseMimeType(uri) || 'text/javascript';
                         if (!ignoreExtensions) {
-                            processExtensions.bind(this, data)();
+                            processExtensions.call(this, data);
                         }
                         result.push(data);
                     }
@@ -269,7 +271,7 @@ var chrome = (function () {
                                 break;
                         }
                         if (!ignoreExtensions) {
-                            processExtensions.bind(this, data)();
+                            processExtensions.call(this, data);
                         }
                         result.push(data);
                     }
@@ -284,7 +286,7 @@ var chrome = (function () {
                     const data = parseUri(uri);
                     if (this.validFile(data)) {
                         if (!ignoreExtensions) {
-                            processExtensions.bind(this, data)();
+                            processExtensions.call(this, data);
                         }
                         result.push(data);
                     }
@@ -325,7 +327,7 @@ var chrome = (function () {
                     if (this.validFile(data)) {
                         data.mimeType = mimeType;
                         if (!ignoreExtensions) {
-                            processExtensions.bind(this, data)();
+                            processExtensions.call(this, data);
                         }
                         result.push(data);
                     }
@@ -376,7 +378,7 @@ var chrome = (function () {
                         const data = parseUri(url);
                         if (this.validFile(data)) {
                             if (!ignoreExtensions) {
-                                processExtensions.bind(this, data)();
+                                processExtensions.call(this, data);
                             }
                             result.push(data);
                         }
@@ -402,7 +404,7 @@ var chrome = (function () {
                     const data = parseUri(uri);
                     if (this.validFile(data)) {
                         if (!ignoreExtensions) {
-                            processExtensions.bind(this, data)();
+                            processExtensions.call(this, data);
                         }
                         result.push(data);
                     }

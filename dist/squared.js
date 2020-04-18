@@ -1,4 +1,4 @@
-/* squared 1.6.1
+/* squared 1.6.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -19,7 +19,7 @@
         CSS_SELECTOR_LABEL: '[\\.#]?[\\w\\-]+',
         CSS_SELECTOR_PSEUDO_ELEMENT: '::[\\w\\-]+',
         CSS_SELECTOR_PSEUDO_CLASS: ':[\\w\\-]+(?:\\(\\s*([^()]+)\\s*\\)|\\(\\s*([\\w\\-]+\\(.+?\\))\\s*\\))?',
-        CSS_SELECTOR_ATTR: '\\[([\\w\\-]+)(?:([~^$*|])?=(?:"([^"]+)"|\'([^\']+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
+        CSS_SELECTOR_ATTR: '\\[((?:\\*\\|)?(?:\\w+\\\\:)?[\\w\\-]+)(?:([~^$*|])?=(?:"([^"]+)"|\'([^\']+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
         CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
         CSS_TIME: `(${DECIMAL})(s|ms)`,
         CSS_CALC: 'calc\\((.+)\\)'
@@ -827,7 +827,7 @@
         }
         return value;
     }
-    function trimBoth(value, char) {
+    function trimBoth(value, char = '"') {
         const match = new RegExp(`^(${char})(.*?)\\1$`).exec(value);
         return match ? match[2] : value;
     }
@@ -1344,7 +1344,7 @@
                     break;
                 }
                 if (predicate(item, i, children)) {
-                    also === null || also === void 0 ? void 0 : also.bind(item, item)();
+                    also === null || also === void 0 ? void 0 : also.call(item, item);
                     result.push(item);
                     children.splice(i--, 1);
                     length--;
@@ -1373,7 +1373,7 @@
                     return -1;
                 }
                 if (predicate(item, i, children)) {
-                    also === null || also === void 0 ? void 0 : also.bind(item, item)();
+                    also === null || also === void 0 ? void 0 : also.call(item, item);
                     return i;
                 }
             }
@@ -1398,13 +1398,13 @@
                         break;
                     }
                     if (predicate(item, i, children)) {
-                        also === null || also === void 0 ? void 0 : also.bind(item, item)();
+                        also === null || also === void 0 ? void 0 : also.call(item, item);
                         return item;
                     }
                     if (cascade && item instanceof Container && !item.isEmpty) {
                         const result = recurse(item);
                         if (result) {
-                            also === null || also === void 0 ? void 0 : also.bind(item, item)();
+                            also === null || also === void 0 ? void 0 : also.call(item, item);
                             return result;
                         }
                         else if (invalid) {
@@ -1438,7 +1438,7 @@
                         break;
                     }
                     if (!predicate || predicate(item)) {
-                        also === null || also === void 0 ? void 0 : also.bind(item, item)();
+                        also === null || also === void 0 ? void 0 : also.call(item, item);
                         result.push(item);
                     }
                     if (item instanceof Container && !item.isEmpty) {
@@ -3269,11 +3269,16 @@
                         continue;
                 }
             }
-            else if (segment.endsWith('|*')) {
-                continue;
+            else if (segment.startsWith('*|*')) {
+                if (segment.length > 3) {
+                    return 0;
+                }
             }
-            else if (segment.charAt(0) === '*') {
-                segment = segment.substring(1);
+            else if (segment.startsWith('*|')) {
+                segment = segment.substring(2);
+            }
+            else if (segment.startsWith('::')) {
+                return 0;
             }
             let subMatch;
             while ((subMatch = CSS.SELECTOR_ATTR.exec(segment)) !== null) {
@@ -6137,7 +6142,7 @@
         else if (settings.showErrorMessages) {
             alert('ERROR: Framework not installed.');
         }
-        const Result = class {
+        return new class {
             then(callback) {
                 return this;
             }
@@ -6145,8 +6150,10 @@
                 callback(new Error('Framework not installed.'));
                 return this;
             }
-        };
-        return new Result();
+            finally(callback) {
+                return this;
+            }
+        }();
     }
     function parseDocumentAsync(...elements) {
         return __awaiter(this, void 0, void 0, function* () {

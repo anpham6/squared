@@ -1,4 +1,4 @@
-/* squared.base 1.6.1
+/* squared.base 1.6.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -285,6 +285,7 @@
             };
             let THEN;
             let CATCH;
+            let FINALLY;
             const resumeThread = () => {
                 removePreloaded();
                 this.extensions.forEach(ext => ext.beforeParseDocument());
@@ -302,6 +303,9 @@
                 }
                 if (typeof THEN === 'function') {
                     THEN.call(this);
+                }
+                if (typeof FINALLY === 'function') {
+                    FINALLY.call(this);
                 }
             };
             if (elements.length === 0) {
@@ -420,18 +424,22 @@
                         target = error.target;
                     }
                     const message = target instanceof HTMLImageElement ? target.src : '';
-                    if (CATCH) {
+                    if (typeof CATCH === 'function') {
                         if (!(error instanceof Error)) {
                             error = new Error(message ? `FAIL: ${message}` : 'Unable to preload images.');
                         }
                         removePreloaded();
-                        CATCH(error, resumeThread);
+                        CATCH.call(this, error);
                     }
                     else if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
                         resumeThread();
+                        return;
                     }
                     else {
                         removePreloaded();
+                    }
+                    if (typeof FINALLY === 'function') {
+                        FINALLY.call(this);
                     }
                 });
             }
@@ -439,12 +447,22 @@
                 resumeThread();
             }
             const Result = class {
+                constructor(thisArg) {
+                    this.thisArg = thisArg;
+                    this.complete = false;
+                }
                 then(callback) {
                     if (imageElements.length) {
                         THEN = callback;
                     }
                     else {
-                        callback();
+                        callback.call(this.thisArg);
+                        if (typeof FINALLY === 'function') {
+                            FINALLY.call(this.thisArg);
+                        }
+                        else {
+                            this.complete = true;
+                        }
                     }
                     return this;
                 }
@@ -452,8 +470,19 @@
                     CATCH = callback;
                     return this;
                 }
+                finally(callback) {
+                    if (this.complete) {
+                        if (typeof callback === 'function') {
+                            callback.call(this.thisArg);
+                        }
+                    }
+                    else {
+                        FINALLY = callback;
+                    }
+                    return this;
+                }
             };
-            return new Result();
+            return new Result(this);
         }
         parseDocumentAsync(...elements) {
             return __awaiter(this, void 0, void 0, function* () {
@@ -1565,7 +1594,19 @@
         if (attrList) {
             const attributes = child.attributes;
             for (const attr of attrList) {
-                let value = attributes[attr.key];
+                let value;
+                if (attr.endsWith) {
+                    const pattern = new RegExp(`^(.+:)?${attr.key}$`);
+                    for (const name in attributes) {
+                        if (pattern.test(name)) {
+                            value = attributes[name];
+                            break;
+                        }
+                    }
+                }
+                else {
+                    value = attributes[attr.key];
+                }
                 if (value === undefined) {
                     return false;
                 }
@@ -1704,7 +1745,7 @@
     }
     function convertPosition(attr) {
         if (!this.positionStatic) {
-            const unit = getInitialValue.bind(this, attr, true)();
+            const unit = getInitialValue.call(this, attr, true);
             if (isLength(unit)) {
                 return this.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
             }
@@ -2433,11 +2474,15 @@
                                             break;
                                     }
                                 }
-                                else if (segment.endsWith('|*')) {
-                                    all = segment === '*|*';
+                                else if (segment.startsWith('*|*')) {
+                                    if (segment.length > 3) {
+                                        selectors.length = 0;
+                                        break invalid;
+                                    }
+                                    all = true;
                                 }
-                                else if (segment.charAt(0) === '*') {
-                                    segment = segment.substring(1);
+                                else if (segment.startsWith('*|')) {
+                                    segment = segment.substring(2);
                                 }
                                 else if (segment.startsWith('::')) {
                                     selectors.length = 0;
@@ -2458,15 +2503,31 @@
                                         if (attrList === undefined) {
                                             attrList = [];
                                         }
+                                        let key = subMatch[1].replace('\\:', ':');
+                                        let endsWith = false;
+                                        switch (key.indexOf('|')) {
+                                            case -1:
+                                                break;
+                                            case 1:
+                                                if (key.charAt(0) === '*') {
+                                                    endsWith = true;
+                                                    key = key.substring(2);
+                                                    break;
+                                                }
+                                            default:
+                                                selectors.length = 0;
+                                                break invalid;
+                                        }
                                         const caseInsensitive = subMatch[6] === 'i';
                                         let attrValue = subMatch[3] || subMatch[4] || subMatch[5] || '';
                                         if (caseInsensitive) {
                                             attrValue = attrValue.toLowerCase();
                                         }
                                         attrList.push({
-                                            key: subMatch[1],
+                                            key,
                                             symbol: subMatch[2],
                                             value: attrValue,
+                                            endsWith,
                                             caseInsensitive
                                         });
                                         segment = spliceString(segment, subMatch.index, subMatch[0].length);
@@ -3000,7 +3061,7 @@
                         else {
                             value = parseUnit(lineHeight, this.fontSize);
                             if (PX.test(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
-                                const fontSize = getInitialValue.bind(this, 'fontSize')();
+                                const fontSize = getInitialValue.call(this, 'fontSize');
                                 if (REGEX_EM.test(fontSize)) {
                                     value *= parseFloat(fontSize);
                                 }
@@ -3013,7 +3074,7 @@
                             value = parent.lineHeight;
                         }
                         if (this.styleElement) {
-                            const fontSize = getInitialValue.bind(this, 'fontSize')();
+                            const fontSize = getInitialValue.call(this, 'fontSize');
                             if (REGEX_EM.test(fontSize)) {
                                 const emSize = parseFloat(fontSize);
                                 if (emSize !== 1) {
@@ -3079,7 +3140,7 @@
         get top() {
             let result = this._cached.top;
             if (result === undefined) {
-                result = convertPosition.bind(this, 'top')();
+                result = convertPosition.call(this, 'top');
                 this._cached.top = result;
             }
             return result;
@@ -3087,7 +3148,7 @@
         get right() {
             let result = this._cached.right;
             if (result === undefined) {
-                result = convertPosition.bind(this, 'right')();
+                result = convertPosition.call(this, 'right');
                 this._cached.right = result;
             }
             return result;
@@ -3095,7 +3156,7 @@
         get bottom() {
             let result = this._cached.bottom;
             if (result === undefined) {
-                result = convertPosition.bind(this, 'bottom')();
+                result = convertPosition.call(this, 'bottom');
                 this._cached.bottom = result;
             }
             return result;
@@ -3103,7 +3164,7 @@
         get left() {
             let result = this._cached.left;
             if (result === undefined) {
-                result = convertPosition.bind(this, 'left')();
+                result = convertPosition.call(this, 'left');
                 this._cached.left = result;
             }
             return result;
@@ -3318,7 +3379,7 @@
         get blockStatic() {
             let result = this._cached.blockStatic;
             if (result === undefined) {
-                result = this.pageFlow && (this.block && !this.floating || this.lineBreak || this.blockDimension && (getInitialValue.bind(this, 'width')() === '100%' || getInitialValue.bind(this, 'minWidth')() === '100%') && !this.hasPX('maxWidth'));
+                result = this.pageFlow && (this.block && !this.floating || this.lineBreak || this.blockDimension && (getInitialValue.call(this, 'width') === '100%' || getInitialValue.call(this, 'minWidth') === '100%') && !this.hasPX('maxWidth'));
                 this._cached.blockStatic = result;
             }
             return result;
@@ -3582,10 +3643,10 @@
                         result = '';
                         break;
                     default:
-                        if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.bind(this, 'backgroundColor')() === result)) {
+                        if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.call(this, 'backgroundColor') === result)) {
                             let parent = this.actualParent;
                             while (parent) {
-                                const color = getInitialValue.bind(parent, 'backgroundColor', true)();
+                                const color = getInitialValue.call(parent, 'backgroundColor', true);
                                 if (color !== '') {
                                     if (color === result && parent.backgroundColor === '') {
                                         result = '';
@@ -3633,7 +3694,7 @@
         get percentWidth() {
             let result = this._cached.percentWidth;
             if (result === undefined) {
-                const value = getInitialValue.bind(this, 'width')();
+                const value = getInitialValue.call(this, 'width');
                 result = isPercent(value) ? parseFloat(value) / 100 : 0;
                 this._cached.percentWidth = result;
             }
@@ -3643,7 +3704,7 @@
             var _a;
             let result = this._cached.percentHeight;
             if (result === undefined) {
-                const value = getInitialValue.bind(this, 'height')();
+                const value = getInitialValue.call(this, 'height');
                 result = isPercent(value) && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.css('position') === 'fixed') ? parseFloat(value) / 100 : 0;
                 this._cached.percentHeight = result;
             }
@@ -3700,7 +3761,7 @@
                 result = this.actualParent;
                 if (!this.pageFlow && !this.documentBody) {
                     while (result && !result.documentBody) {
-                        switch (getInitialValue.bind(result, 'position', false, true)()) {
+                        switch (getInitialValue.call(result, 'position', false, true)) {
                             case 'static':
                             case 'initial':
                             case 'unset':
@@ -4671,9 +4732,7 @@
                                             parent.renderChildren.splice(replaceIndex, 1);
                                         }
                                         if (renderParent.appendTry(this, replacement, false)) {
-                                            if (beforeReplace) {
-                                                beforeReplace.bind(this, replacement)();
-                                            }
+                                            beforeReplace === null || beforeReplace === void 0 ? void 0 : beforeReplace.call(this, replacement);
                                             renderTemplates[index] = templates[replaceIndex];
                                             replacement.renderParent = renderParent;
                                             renderChildren[index] = replacement;
@@ -4689,9 +4748,7 @@
                                 }
                             }
                             else {
-                                if (beforeReplace) {
-                                    beforeReplace.bind(this, replacement)();
-                                }
+                                beforeReplace === null || beforeReplace === void 0 ? void 0 : beforeReplace.call(this, replacement);
                                 renderTemplates.splice(index, 1);
                                 renderChildren.splice(index, 1);
                                 this.renderParent = undefined;
@@ -7066,7 +7123,7 @@
                     setElementCache$2(element, `styleMap${pseudoElt}`, sessionId, styleMap);
                 }
                 let content = styleMap.content;
-                if (typeof content !== 'string' || content === '') {
+                if (!content) {
                     content = getStyle$2(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
                     styleMap.content = content;
                 }
@@ -7081,7 +7138,7 @@
             if (styleMap) {
                 let value = styleMap.content;
                 if (value) {
-                    const textContent = trimBoth(value, '"');
+                    const textContent = trimBoth(value);
                     let absolute = false;
                     switch (styleMap.position) {
                         case 'absolute':

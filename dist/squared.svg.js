@@ -1,4 +1,4 @@
-/* squared.svg 1.6.1
+/* squared.svg 1.6.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -1708,19 +1708,19 @@
             return this._to;
         }
         set fillBackwards(value) {
-            setFillMode.bind(this, value, 8 /* BACKWARDS */)();
+            setFillMode.call(this, value, 8 /* BACKWARDS */);
         }
         get fillBackwards() {
             return hasBit$1(this.fillMode, 8 /* BACKWARDS */);
         }
         set fillForwards(value) {
-            setFillMode.bind(this, value, 4 /* FORWARDS */)();
+            setFillMode.call(this, value, 4 /* FORWARDS */);
         }
         get fillForwards() {
             return hasBit$1(this.fillMode, 4 /* FORWARDS */);
         }
         set fillFreeze(value) {
-            setFillMode.bind(this, value, 2 /* FREEZE */)();
+            setFillMode.call(this, value, 2 /* FREEZE */);
         }
         get fillFreeze() {
             return hasBit$1(this.fillMode, 2 /* FREEZE */);

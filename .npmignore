@@ -15,7 +15,7 @@ temp/
 .eslint*
 .git*
 *.code-workspace
-rollup.*
+rollup*
 tsconfig.*
 build.js
 !app.js
