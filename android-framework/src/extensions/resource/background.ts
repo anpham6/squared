@@ -739,8 +739,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const svg: boolean[] = [];
             const imageDimensions: Undef<Dimension>[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
-            const backgroundPositionX = data.backgroundPositionX.split(XML.SEPARATOR);
-            const backgroundPositionY = data.backgroundPositionY.split(XML.SEPARATOR);
+            const backgroundPositionX = data.backgroundPositionX.split(XML.SEPARATOR), backgroundPositionY = data.backgroundPositionY.split(XML.SEPARATOR);
             let backgroundRepeat = data.backgroundRepeat.split(XML.SEPARATOR);
             let backgroundSize = data.backgroundSize.split(XML.SEPARATOR);
             let length = 0;
@@ -914,24 +913,14 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         dimenHeight = dimension.height;
                     }
                 }
-                let top = 0;
-                let right = 0;
-                let bottom = 0;
-                let left = 0;
-                let posTop = NaN;
-                let posRight = NaN;
-                let posBottom = NaN;
-                let posLeft = NaN;
-                let negativeOffset = 0;
-                let offsetX = false;
-                let offsetY = false;
-                let width = 0;
-                let height = 0;
-                let tileModeX = '';
-                let tileModeY = '';
-                let gravityX = '';
-                let gravityY = '';
+                let top = 0, right = 0, bottom = 0, left = 0;
+                let posTop = NaN, posRight = NaN, posBottom = NaN, posLeft = NaN;
+                let offsetX = false, offsetY = false;
+                let width = 0, height = 0;
+                let tileModeX = '', tileModeY = '';
+                let gravityX = '', gravityY = '';
                 let gravityAlign = '';
+                let negativeOffset = 0;
                 let repeat = backgroundRepeat[i];
                 if (repeat.includes(' ')) {
                     const [x, y] = repeat.split(' ');
@@ -1647,8 +1636,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             return result.sort((a, b) => {
-                const orderA = a.order;
-                const orderB = b.order;
+                const orderA = a.order, orderB = b.order;
                 if (orderA === orderB) {
                     return 0;
                 }

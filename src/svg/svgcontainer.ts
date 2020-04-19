@@ -358,16 +358,14 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
             const { align, alignX, alignY, parent } = this.aspectRatio;
             const { width, height } = this;
             const [left, top, right, bottom] = SvgBuild.minMaxPoints(values, true);
-            let x1 = 0;
-            let y1 = 0;
+            let x1 = 0, y1 = 0;
             if (alignX) {
                 x1 = parent.x * -1;
             }
             if (alignY) {
                 y1 = parent.y * -1;
             }
-            let x = x1;
-            let y = y1;
+            let x = x1, y = y1;
             const xMid = () => (width / 2) - ((right + left) / 2);
             const xMax = () => (width - left) - right + x1;
             const yMid = () => (height / 2) - ((top + bottom) / 2);

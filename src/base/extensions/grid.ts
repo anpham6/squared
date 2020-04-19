@@ -130,8 +130,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         else {
                             const columnLast = columns[columns.length - 1];
                             if (columnLast) {
-                                let minLeft = Number.POSITIVE_INFINITY;
-                                let maxRight = Number.NEGATIVE_INFINITY;
+                                let minLeft = Number.POSITIVE_INFINITY, maxRight = Number.NEGATIVE_INFINITY;
                                 columnLast.forEach(item => {
                                     const linear = item.linear;
                                     minLeft = Math.min(linear.left, minLeft);

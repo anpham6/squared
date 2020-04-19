@@ -1117,8 +1117,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssSort(attr: string, ascending = true, duplicate = false) {
         return (duplicate ? this.duplicate() : this.children).sort((a, b) => {
-            const valueA = a.toFloat(attr, a.childIndex);
-            const valueB = b.toFloat(attr, b.childIndex);
+            const valueA = a.toFloat(attr, a.childIndex), valueB = b.toFloat(attr, b.childIndex);
             if (valueA === valueB) {
                 return 0;
             }
@@ -2569,10 +2568,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     const children = this.naturalChildren;
                     const length = children.length;
                     if (length) {
-                        let top = Number.POSITIVE_INFINITY;
-                        let right = Number.NEGATIVE_INFINITY;
-                        let left = Number.POSITIVE_INFINITY;
-                        let bottom = Number.NEGATIVE_INFINITY;
+                        let top = Number.POSITIVE_INFINITY, right = Number.NEGATIVE_INFINITY, bottom = Number.NEGATIVE_INFINITY, left = Number.POSITIVE_INFINITY;
                         let numberOfLines = 0;
                         let i = 0;
                         while (i < length) {
@@ -2720,8 +2716,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const borderWidth = this.borderTopWidth > 0 || this.borderRightWidth > 0 || this.borderBottomWidth > 0 || this.borderLeftWidth > 0;
                 const backgroundColor = this.backgroundColor !== '';
                 const backgroundImage = this.backgroundImage !== '';
-                let backgroundRepeatX = false;
-                let backgroundRepeatY = false;
+                let backgroundRepeatX = false, backgroundRepeatY = false;
                 if (backgroundImage) {
                     this.css('backgroundRepeat').split(XML.SEPARATOR).forEach(repeat => {
                         const [repeatX, repeatY] = repeat.split(CHAR.SPACE);

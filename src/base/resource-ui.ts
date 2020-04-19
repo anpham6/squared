@@ -459,8 +459,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     }
                                     break;
                             }
-                            let x = truncateFraction(offsetAngleX(angle, width));
-                            let y = truncateFraction(offsetAngleY(angle, height));
+                            let x = truncateFraction(offsetAngleX(angle, width)), y = truncateFraction(offsetAngleY(angle, height));
                             if (x !== width && y !== height && !equal(Math.abs(x), Math.abs(y))) {
                                 let opposite: number;
                                 if (angle <= 90) {
@@ -873,8 +872,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             const { width, height } = node.actualDimension;
                             const backgroundSize = `${width - 10}px ${height - 10}px, ${width - 8}px ${height - 8}px`;
                             const backgroundRepeat = 'no-repeat, no-repeat';
-                            const backgroundPositionX = 'center, center';
-                            const backgroundPositionY = 'center, center';
+                            const backgroundPositionX = 'center, center', backgroundPositionY = 'center, center';
                             const backgroundImage = <Gradient[]> ResourceUI.parseBackgroundImage(node, `linear-gradient(${backgroundColor}, ${backgroundColor}), linear-gradient(${borderColor}, ${borderColor})`);
                             value = '';
                             let boxStyle: BoxStyle = node.data(ResourceUI.KEY_NAME, 'boxStyle');

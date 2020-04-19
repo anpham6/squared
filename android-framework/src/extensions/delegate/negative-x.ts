@@ -36,8 +36,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         const children = node.children.filter((item: T) => outsideX(item, node)) as T[];
         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, { children, containerType: CONTAINER_NODE.CONSTRAINT });
         node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
-        let left = NaN;
-        let right = NaN;
+        let left = NaN, right = NaN;
         let firstChild: Undef<T>;
         children.forEach(item => {
             const linear = item.linear;
@@ -136,8 +135,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         for (const node of this.subscribers) {
             const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData');
             if (mainData) {
-                const translateX = node.android('translationX');
-                const translateY = node.android('translationY');
+                const translateX = node.android('translationX'), translateY = node.android('translationY');
                 if (translateX !== '' || translateY !== '') {
                     const x = parseInt(translateX);
                     const y = parseInt(translateY);

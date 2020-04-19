@@ -224,10 +224,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const styleTag = {};
             style[tag] = styleTag;
             const sorted = groupMap[tag].filter(item => !!item).sort((a, b) => {
-                let maxA = 0;
-                let maxB = 0;
-                let countA = 0;
-                let countB = 0;
+                let maxA = 0, maxB = 0;
+                let countA = 0, countB = 0;
                 for (const attr in a) {
                     const lenA = a[attr].length;
                     maxA = Math.max(lenA, maxA);

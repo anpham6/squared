@@ -35,9 +35,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                         if (child.ascend({ condition: item => item === node, attr: 'renderParent'}).length) {
                             const { import: importing, variable } = viewModel;
                             const { depth, id } = node;
-                            const indentA = '\t'.repeat(depth);
-                            const indentB = '\t'.repeat(depth + 1);
-                            const indentC = '\t'.repeat(depth + 2);
+                            const indentA = '\t'.repeat(depth), indentB = '\t'.repeat(depth + 1), indentC = '\t'.repeat(depth + 2);
                             let output = indentA + '<layout {#0}>\n' +
                                          indentB + '<data>\n';
                             if (importing) {

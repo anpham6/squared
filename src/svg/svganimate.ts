@@ -38,8 +38,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public static convertStepTimingFunction(attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number, fontSize?: number): Undef<[number[], string[]]> {
-        const valueA = values[index];
-        const valueB = values[index + 1];
+        const valueA = values[index], valueB = values[index + 1];
         let currentValue: Undef<any[]>;
         let nextValue: Undef<any[]>;
         switch (attributeName) {
@@ -104,8 +103,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         switch (attributeName) {
                             case 'fill':
                             case 'stroke': {
-                                const rgbaA = (<ColorData> currentValue[0]).rgba;
-                                const rgbaB = (<ColorData> nextValue[0]).rgba;
+                                const rgbaA = (<ColorData> currentValue[0]).rgba, rgbaB = (<ColorData> nextValue[0]).rgba;
                                 const rgb = getHexCode(
                                     SvgAnimate.getSplitValue(rgbaA.r, rgbaB.r, percent),
                                     SvgAnimate.getSplitValue(rgbaA.g, rgbaB.g, percent),

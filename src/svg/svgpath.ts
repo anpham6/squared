@@ -28,8 +28,7 @@ interface DashGroup {
 }
 
 function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?: number) {
-    const commandA = path[0];
-    const commandB = path[path.length - 1];
+    const commandA = path[0], commandB = path[path.length - 1];
     if (x !== undefined) {
         switch (attr) {
             case 'x':
@@ -336,10 +335,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
         }
         else if (SVG.rect(element)) {
-            let x = this.getBaseValue('x');
-            let y = this.getBaseValue('y');
-            let width = this.getBaseValue('width');
-            let height = this.getBaseValue('height');
+            let x = this.getBaseValue('x'), y = this.getBaseValue('y');
+            let width = this.getBaseValue('width'), height = this.getBaseValue('height');
             if (requireRefit || transforms?.length) {
                 let points: SvgPoint[] = [
                     { x, y },

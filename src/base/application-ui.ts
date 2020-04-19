@@ -102,8 +102,8 @@ function prioritizeExtensions<T extends NodeUI>(value: Undef<string>, extensions
 
 function getFloatAlignmentType(nodes: NodeUI[]) {
     let result = 0;
-    let floating = true;
     let right = true;
+    let floating = true;
     const length = nodes.length;
     let i = 0;
     while (i < length) {
@@ -1072,24 +1072,21 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         cache.sort((a, b) => {
             if (a.depth === b.depth) {
-                const innerA = a.innerWrapped;
-                const innerB = b.innerWrapped;
+                const innerA = a.innerWrapped, innerB = b.innerWrapped;
                 if (innerA === b) {
                     return -1;
                 }
                 else if (a === innerB) {
                     return 1;
                 }
-                const outerA = a.outerWrapper;
-                const outerB = b.outerWrapper;
+                const outerA = a.outerWrapper, outerB = b.outerWrapper;
                 if (a === outerB || !outerA && outerB) {
                     return -1;
                 }
                 else if (b === outerA || !outerB && outerA) {
                     return 1;
                 }
-                const groupA = a.nodeGroup;
-                const groupB = b.nodeGroup;
+                const groupA = a.nodeGroup, groupB = b.nodeGroup;
                 if (groupA && groupB) {
                     return a.id < b.id ? -1 : 1;
                 }
@@ -1846,8 +1843,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     get layouts() {
         return this._layouts.sort((a, b) => {
-            const indexA = a.index;
-            const indexB = b.index;
+            const indexA = a.index, indexB = b.index;
             if (indexA !== indexB) {
                 if (indexA === 0 || indexB === Number.POSITIVE_INFINITY || indexB === undefined && !(indexA === Number.POSITIVE_INFINITY)) {
                     return -1;

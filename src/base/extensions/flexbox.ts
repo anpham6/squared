@@ -52,14 +52,12 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         if (mainData.wrap) {
             const [align, sort, size, method] = mainData.row ? ['top', 'left', 'right', 'intersectY'] : ['left', 'top', 'bottom', 'intersectX'];
             children.sort((a, b) => {
-                const linearA = a.linear;
-                const linearB = b.linear;
+                const linearA = a.linear,  linearB = b.linear;
                 if (!a[method](b.bounds, 'bounds')) {
                     return linearA[align] < linearB[align] ? -1 : 1;
                 }
                 else {
-                    const posA = linearA[sort];
-                    const posB = linearB[sort];
+                    const posA = linearA[sort], posB = linearB[sort];
                     if (!withinRange(posA, posB)) {
                         return posA < posB ? -1 : 1;
                     }
@@ -128,8 +126,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             if (children.some(item => item.flexbox.order !== 0)) {
                 const [c, d] = mainData.reverse ? [-1, 1] : [1, -1];
                 children.sort((a, b) => {
-                    const orderA = a.flexbox.order;
-                    const orderB = b.flexbox.order;
+                    const orderA = a.flexbox.order, orderB = b.flexbox.order;
                     if (orderA === orderB) {
                         return 0;
                     }

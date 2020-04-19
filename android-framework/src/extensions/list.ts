@@ -120,8 +120,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             else {
                 let gravity = 'right';
                 let paddingRight = 0;
-                let top = 0;
-                let left = 0;
+                let top = 0, left = 0;
                 let image: Undef<string>;
                 if (mainData.imageSrc !== '') {
                     const resource = <android.base.Resource<T>> this.resource;

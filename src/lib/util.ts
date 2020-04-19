@@ -923,8 +923,7 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
             let valueA: any = a;
             let valueB: any = b;
             for (const name of attr.split('.')) {
-                const vA = valueA[name];
-                const vB = valueB[name];
+                const vA = valueA[name], vB = valueB[name];
                 if (vA !== undefined && vB !== undefined) {
                     valueA = vA;
                     valueB = vB;

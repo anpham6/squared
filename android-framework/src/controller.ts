@@ -33,8 +33,7 @@ const REGEX_TEXTSHADOW = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)
 
 function sortHorizontalFloat(list: View[]) {
     list.sort((a, b) => {
-        const floatA = a.float;
-        const floatB = b.float;
+        const floatA = a.float, floatB = b.float;
         if (floatA !== 'none' && floatB !== 'none') {
             if (floatA !== floatB) {
                 return floatA === 'left' ? -1 : 1;
@@ -53,21 +52,8 @@ function sortHorizontalFloat(list: View[]) {
     });
 }
 
-function sortTemplateInvalid(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) {
-    const above = <View> a.node.innerMostWrapped;
-    const below = <View> b.node.innerMostWrapped;
-    return getSortOrderInvalid(above, below);
-}
-
-function sortTemplateStandard(a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) {
-    const above = <View> a.node.innerMostWrapped;
-    const below = <View> b.node.innerMostWrapped;
-    return getSortOrderStandard(above, below);
-}
-
 function getSortOrderStandard(above: View, below: View): number {
-    const parentA = <View> above.actualParent;
-    const parentB = <View> below.actualParent;
+    const parentA = <View> above.actualParent, parentB = <View> below.actualParent;
     if (above === parentB) {
         return -1;
     }
@@ -89,8 +75,7 @@ function getSortOrderStandard(above: View, below: View): number {
 }
 
 function getSortOrderInvalid(above: View, below: View): number {
-    const depthA = above.depth;
-    const depthB = below.depth;
+    const depthA = above.depth, depthB = below.depth;
     if (depthA === depthB) {
         const parentA = <View> above.actualParent;
         const parentB = <View> below.actualParent;
@@ -385,6 +370,8 @@ function segmentLeftAligned<T extends View>(children: T[]) {
     return partitionArray<T>(children, item => item.float === 'left' || item.autoMargin.right === true);
 }
 
+const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderInvalid(<View> a.node.innerMostWrapped, <View> b.node.innerMostWrapped);
+const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderStandard(<View> a.node.innerMostWrapped, <View> b.node.innerMostWrapped);
 const hasCleared = (layout: LayoutUI, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
 const requireSorting = (node: View) => node.zIndex !== 0 || !node.pageFlow;
@@ -2200,8 +2187,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             const container = node.ascend({ condition: (item: T) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
                             if (container.length) {
                                 const { left, right, width } = node.box;
-                                let offsetLeft = 0;
-                                let offsetRight = 0;
+                                let offsetLeft = 0, offsetRight = 0;
                                 parent.naturalChildren.forEach((item: T) => {
                                     const linear = item.linear;
                                     if (item.floating && !children.includes(item) && node.intersectY(linear)) {

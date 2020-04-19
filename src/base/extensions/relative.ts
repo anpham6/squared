@@ -27,10 +27,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
     public postOptimize(node: T) {
         const renderParent = node.renderParent as T;
         const verticalAlign = !node.baselineAltered ? convertFloat(node.verticalAlign) : 0;
-        let top = 0;
-        let right = 0;
-        let bottom = 0;
-        let left = 0;
+        let top = 0, right = 0, bottom = 0, left = 0;
         if (node.hasPX('top')) {
             top = node.top;
         }
@@ -44,8 +41,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
             right = node.right;
         }
         if (renderParent.support.positionTranslation) {
-            let x = 0;
-            let y = 0;
+            let x = 0, y = 0;
             if (left !== 0) {
                 x = left;
             }
@@ -100,8 +96,7 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                             const length = unaligned.length;
                             if (length) {
                                 unaligned.sort((a, b) => {
-                                    const topA = a.linear.top;
-                                    const topB = b.linear.top;
+                                    const topA = a.linear.top, topB = b.linear.top;
                                     if (withinRange(topA, topB)) {
                                         return 0;
                                     }

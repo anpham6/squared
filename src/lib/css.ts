@@ -2011,16 +2011,14 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     }
     else if (length > 1) {
         result.sort((a, b) => {
-            const pxA = a.pixelRatio;
-            const pxB = b.pixelRatio;
+            const pxA = a.pixelRatio, pxB = b.pixelRatio;
             if (pxA > 0 && pxB > 0) {
                 if (pxA !== pxB) {
                     return pxA < pxB ? -1 : 1;
                 }
             }
             else {
-                const widthA = a.width;
-                const widthB = b.width;
+                const widthA = a.width, widthB = b.width;
                 if (widthA !== widthB && widthA > 0 && widthB > 0) {
                     return widthA < widthB ? -1 : 1;
                 }

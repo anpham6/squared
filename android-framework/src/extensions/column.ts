@@ -219,8 +219,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                         columnHeight[j++] = height;
                     }
-                    let anchorTop!: T;
-                    let anchorBottom!: T;
+                    let anchorTop!: T, anchorBottom!: T;
                     let maxHeight = 0;
                     for (j = 0; j < r; ++j) {
                         const value = columnHeight[j];

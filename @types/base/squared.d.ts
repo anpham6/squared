@@ -546,7 +546,7 @@ declare class NodeUI extends Node implements LayoutType {
     set documentParent(value);
     get documentParent(): NodeUI;
     set renderAs(value);
-    get renderAs(): Undef<NodeUI>;
+    get renderAs(): Null<NodeUI>;
     set containerName(value);
     get containerName(): string;
     set autoPosition(value);

@@ -571,8 +571,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     if (order) {
                         order.sort((a, b) => {
                             if (a.parent === b.parent) {
-                                const zA = a.zIndex;
-                                const zB = b.zIndex;
+                                const zA = a.zIndex, zB = b.zIndex;
                                 if (zA === zB) {
                                     return a.id < b.id ? -1 : 1;
                                 }
@@ -602,11 +601,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 return a.depth < b.depth ? -1 : 1;
             }
             else {
-                const parentA = a.documentParent;
-                const parentB = b.documentParent;
+                const parentA = a.documentParent, parentB = b.documentParent;
                 if (parentA !== parentB) {
-                    const depthA = parentA.depth;
-                    const depthB = parentB.depth;
+                    const depthA = parentA.depth, depthB = parentB.depth;
                     if (depthA !== depthB) {
                         return depthA < depthB ? -1 : 1;
                     }

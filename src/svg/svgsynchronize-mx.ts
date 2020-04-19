@@ -677,8 +677,7 @@ function queueIncomplete(incomplete: SvgAnimation[], item: SvgAnimate) {
 
 function sortIncomplete(incomplete: SvgAnimation[], maxTime = Number.POSITIVE_INFINITY) {
     incomplete.sort((a, b) => {
-        const delayA = a.delay;
-        const delayB = a.delay;
+        const delayA = a.delay, delayB = a.delay;
         if (maxTime !== Number.POSITIVE_INFINITY) {
             if (maxTime === delayA && maxTime !== delayB) {
                 return -1;
@@ -721,8 +720,7 @@ function sortEvaluateStart(incomplete: SvgAnimate[], maxTime: number) {
         if (durationB <= maxTime) {
             return -1;
         }
-        const delayA = a.delay;
-        const delayB = b.delay;
+        const delayA = a.delay, delayB = b.delay;
         if (delayA === delayB) {
             return a.group.id < b.group.id ? 1 : -1;
         }

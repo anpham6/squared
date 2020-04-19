@@ -485,14 +485,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const borderRight = node.cssAsObject('borderRightColor', 'borderRightStyle', 'borderRightWidth');
             const borderBottom = node.cssAsObject('borderBottomColor', 'borderBottomStyle', 'borderBottomWidth');
             const borderLeft = node.cssAsObject('borderLeftColor', 'borderLeftStyle', 'borderLeftWidth');
-            const borderTopWidth = parseInt(borderTop.borderTopWidth);
-            const borderRightWidth = parseInt(borderRight.borderRightWidth);
-            const borderBottomWidth = parseInt(borderBottom.borderBottomWidth);
-            const borderLeftWidth = parseInt(borderLeft.borderLeftWidth);
-            let hideTop = false;
-            let hideRight = false;
-            let hideBottom = false;
-            let hideLeft = false;
+            const borderTopWidth = parseInt(borderTop.borderTopWidth), borderRightWidth = parseInt(borderRight.borderRightWidth), borderBottomWidth = parseInt(borderBottom.borderBottomWidth), borderLeftWidth = parseInt(borderLeft.borderLeftWidth);
+            let hideTop = false, hideRight = false, hideBottom = false, hideLeft = false;
             for (i = 0; i < rowCount; ++i) {
                 const tr = tableFilled[i];
                 for (let j = 0; j < columnCount; ++j) {

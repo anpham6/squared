@@ -187,8 +187,7 @@ export const TRANSFORM = {
                 while ((match = pattern.exec(transform)) !== null) {
                     const index = match.index;
                     const attr = match[1];
-                    const isX = attr.endsWith('X');
-                    const isY = attr.endsWith('Y');
+                    const isX = attr.endsWith('X'), isY = attr.endsWith('Y');
                     if (attr.startsWith('rotate')) {
                         const angle = convertAngle(match[2], match[3]);
                         const matrix = MATRIX.rotate(angle);

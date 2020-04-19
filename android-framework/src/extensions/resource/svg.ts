@@ -268,8 +268,7 @@ function getViewport(element: SVGGraphicsElement) {
 }
 
 function getParentOffset(element: SVGGraphicsElement, rootElement: SVGGraphicsElement) {
-    let x = 0;
-    let y = 0;
+    let x = 0, y = 0;
     getViewport(element).forEach(parent => {
         if ((SVG.svg(parent) || SVG.use(parent)) && parent !== rootElement) {
             x += parent.x.baseVal.value;
@@ -314,8 +313,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
             current.length = 0;
         };
         for (let i = 1; i < items.length; ++i) {
-            const itemA = items[i];
-            const itemB = items[i - 1];
+            const itemA = items[i], itemB = items[i - 1];
             if (itemA.type === itemB.type) {
                 let matrix: Undef<SvgMatrix>;
                 switch (itemA.type) {
@@ -592,8 +590,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
 }
 
 function sortSynchronized(a: SvgAnimate, b: SvgAnimate) {
-    const syncA = a.synchronized;
-    const syncB = b.synchronized;
+    const syncA = a.synchronized, syncB = b.synchronized;
     if (syncA && syncB) {
         return syncA.key >= syncB.key ? 1 : -1;
     }
@@ -1447,11 +1444,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const box = svg.viewBox;
                 const scaleX = svg.width / box.width;
                 const scaleY = svg.height / box.height;
-                let x = image.getBaseValue('x', 0) * scaleX;
-                let y = image.getBaseValue('y', 0) * scaleY;
-                let w: number = image.getBaseValue('width', 0);
-                let h: number = image.getBaseValue('height', 0);
                 const offset = getParentOffset(image.element, svg.element);
+                let x = image.getBaseValue('x', 0) * scaleX, y = image.getBaseValue('y', 0) * scaleY;
+                let w: number = image.getBaseValue('width', 0), h: number = image.getBaseValue('height', 0);
                 x += offset.x;
                 y += offset.y;
                 w *= scaleX;

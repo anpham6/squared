@@ -81,10 +81,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                             const height = bottom - top;
                             switch (name) {
                                 case 'inset': {
-                                    let x1 = 0;
-                                    let x2 = 0;
-                                    let y1 = this.convertLength(match[1], height);
-                                    let y2 = 0;
+                                    let x1 = 0, y1 = this.convertLength(match[1], height);
+                                    let x2 = 0, y2 = 0;
                                     if (match[4]) {
                                         x1 = left + this.convertLength(match[4], width);
                                         x2 = right - this.convertLength(match[2], width);
@@ -114,8 +112,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 }
                                 case 'polygon': {
                                     const points = objectMap(match[1].split(XML.SEPARATOR), values => {
-                                        let x = left;
-                                        let y = top;
+                                        let x = left, y = top;
                                         values.trim().split(' ').forEach((value, index) => {
                                             if (index === 0) {
                                                 x += this.convertLength(value, width);

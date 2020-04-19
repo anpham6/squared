@@ -445,9 +445,7 @@ function finalizeGravity(node: T, attr: string) {
         checkMergableGravity('fill', direction);
     }
     let result = '';
-    let x = '';
-    let y = '';
-    let z = '';
+    let x = '', y = '', z = '';
     for (const value of direction.values()) {
         if (isHorizontalAlign(value)) {
             x = value;
@@ -1142,10 +1140,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const boxAdjustment = this._boxAdjustment;
             const renderParent = this.renderParent as T;
             const setBoxModel = (attrs: string[], margin: boolean, unmergeable: boolean) => {
-                let top = 0;
-                let right = 0;
-                let bottom = 0;
-                let left = 0;
+                let top = 0, right = 0, bottom = 0, left = 0;
                 for (let i = 0; i < 4; ++i) {
                     const attr = attrs[i];
                     let value: number = boxReset[attr] === 0 ? this[attr] : 0;
@@ -1860,8 +1855,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent && (renderParent.layoutConstraint || renderParent.layoutRelative)) {
-                let anchorA: string;
-                let anchorB: string;
+                let anchorA: string, anchorB: string;
                 switch (direction) {
                     case 'top':
                         anchorA = 'topBottom';
@@ -2107,9 +2101,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (!direction.has(gravity)) {
                 direction.add(gravity);
                 let result = '';
-                let x = '';
-                let y = '';
-                let z = '';
+                let x = '', y = '', z = '';
                 for (const value of direction.values()) {
                     if (isHorizontalAlign(value)) {
                         if (x === '' || overwrite) {

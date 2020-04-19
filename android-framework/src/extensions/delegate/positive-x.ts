@@ -30,8 +30,7 @@ function setFixedNodes(node: View, contentBox: boolean) {
     const paddingRight = node.paddingRight + (documentBody ? node.marginRight : 0);
     const paddingBottom = node.paddingBottom + (documentBody ? node.marginBottom : 0);
     const paddingLeft = node.paddingLeft + (documentBody ? node.marginLeft : 0);
-    let right = false;
-    let bottom = false;
+    let right = false, bottom = false;
     node.each((item: View) => {
         const fixed = documentRoot && item.css('position') === 'fixed';
         if (item.pageFlow || !contentBox && !fixed) {

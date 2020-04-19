@@ -102,16 +102,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static outerRegion(node: T): BoxRectDimension {
-        let top = Number.POSITIVE_INFINITY;
-        let right = Number.NEGATIVE_INFINITY;
-        let bottom = Number.NEGATIVE_INFINITY;
-        let left = Number.POSITIVE_INFINITY;
+        let top = Number.POSITIVE_INFINITY, right = Number.NEGATIVE_INFINITY, bottom = Number.NEGATIVE_INFINITY, left = Number.POSITIVE_INFINITY;
+        let actualTop: number, actualRight: number, actualBottom: number, actualLeft: number;
         let negativeRight = Number.NEGATIVE_INFINITY;
         let negativeBottom = Number.NEGATIVE_INFINITY;
-        let actualTop: number;
-        let actualRight: number;
-        let actualBottom: number;
-        let actualLeft: number;
         node.each((item: T) => {
             if (item.companion) {
                 actualTop = item.actualRect('top');
@@ -182,8 +176,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (b.length && a.length === 0) {
                     return -1;
                 }
-                const heightA = a.baselineHeight + a.marginBottom;
-                const heightB = b.baselineHeight + b.marginBottom;
+                const heightA = a.baselineHeight + a.marginBottom, heightB = b.baselineHeight + b.marginBottom;
                 if (!equal(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
                 }
@@ -210,8 +203,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (a.textElement && b.inputElement && a.childIndex < b.childIndex) {
                     return -1;
                 }
-                const bottomA = a.bounds.bottom;
-                const bottomB = b.bounds.bottom;
+                const bottomA = a.bounds.bottom, bottomB = b.bounds.bottom;
                 if (bottomA > bottomB) {
                     return -1;
                 }
@@ -226,8 +218,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static linearData<T extends NodeUI>(list: T[], cleared?: Map<T, string>): LinearDataUI<T> {
         const floated = new Set<string>();
-        let linearX = false;
-        let linearY = false;
+        let linearX = false, linearY = false;
         const length = list.length;
         if (length > 1) {
             const nodes: T[] = new Array(length);
@@ -247,8 +238,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (n) {
                 nodes.length = n;
                 const siblings = [nodes[0]];
-                let x = 1;
-                let y = 1;
+                let x = 1, y = 1;
                 i = 1;
                 while (i < n) {
                     const node = nodes[i++];
@@ -266,10 +256,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 linearX = x === n;
                 linearY = y === n;
                 if (linearX && floated.size) {
-                    let boxLeft = Number.POSITIVE_INFINITY;
-                    let boxRight = Number.NEGATIVE_INFINITY;
-                    let floatLeft = Number.NEGATIVE_INFINITY;
-                    let floatRight = Number.POSITIVE_INFINITY;
+                    let boxLeft = Number.POSITIVE_INFINITY, boxRight = Number.NEGATIVE_INFINITY;
+                    let floatLeft = Number.NEGATIVE_INFINITY, floatRight = Number.POSITIVE_INFINITY;
                     i = 0;
                     while (i < n) {
                         const node = nodes[i++];
@@ -411,10 +399,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _childIndex = Number.POSITIVE_INFINITY;
     private _containerIndex = Number.POSITIVE_INFINITY;
     private _visible = true;
+    private _renderAs: Null<T> = null;
     private _locked: ObjectMapNested<boolean> = {};
     private _siblingsLeading?: T[];
     private _siblingsTrailing?: T[];
-    private _renderAs?: T;
 
     public abstract setControlType(viewName: string, containerType?: number): void;
     public abstract setLayout(width?: number, height?: number): void;
