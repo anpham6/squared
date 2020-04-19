@@ -8,13 +8,13 @@
     "express-r": "node app.js --disk-read --unc-read",
     "express-w": "node app.js --disk-write --unc-write",
     "express-rw": "node app.js --access-all",
-    "watch": "tsc -w -p tsconfig.json",
+    "watch": "tsc -w -p tsconfig.dev.json",
     "lint": "eslint **/*.ts --no-ignore",
     "bundles": "node build.js -f android -o dist/bundles/squared.android.bundle.%npm_package_version%.js && node build.js -f android -m svg -o dist/bundles/squared+svg.android.bundle.%npm_package_version%.js && node build.js -f android -e android.widget.* -o dist/bundles/squared.android+widget.bundle.%npm_package_version%.js && node build.js -f android -m svg -e android.widget.* -o dist/bundles/squared+svg.android+widget.bundle.%npm_package_version%.js && node build.js -f chrome -o dist/bundles/squared.chrome.bundle.%npm_package_version%.js && node build.js -f chrome -m svg -o dist/bundles/squared+svg.chrome.bundle.%npm_package_version%.js",
-    "dev-base": "tsc && rollup -c rollup.config.dev-base.js && cd ./android-framework && rollup -c rollup.config.dev.js",
+    "dev-base": "tsc -p ./tsconfig.base.json && rollup -c rollup.config.dev-base.js && cd ./android-framework && rollup -c rollup.config.dev.js",
     "dev-express": "cd ./node-express && eslint **/*.ts && tsc -outDir ../",
-    "dev": "tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js && cd ../chrome-framework && rollup -c rollup.config.js",
-    "prod": "npm run clean && eslint **/*.ts && tsc --inlineSourceMap false && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./node-express && eslint **/*.ts && tsc && cd ../build && terser app.js -c toplevel -m -o ../app.js && terser build.js -o ../build.js && cd ../android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../ && npm run bundles",
+    "dev": "tsc -p ./tsconfig.dev.json && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js && cd ../chrome-framework && rollup -c rollup.config.js",
+    "prod": "npm run clean && eslint **/*.ts && tsc -p ./tsconfig.prod.json && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./node-express && eslint **/*.ts && tsc && cd ../build && terser app.js -c toplevel -m -o ../app.js && terser build.js -o ../build.js && cd ../android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../ && npm run bundles",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },
   "repository": {

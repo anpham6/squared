@@ -1,14 +1,12 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
     "outDir": "../build",
-    "lib": ["es2016"],
-    "inlineSourceMap": false
   },
   "include": [
-    "../@types/type.d.ts",
-    "*.ts"
+    "../@types/index.d.ts",
+    "main.ts",
+    "lib/**/*"
   ],
   "exclude": []
 }
