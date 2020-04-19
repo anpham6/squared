@@ -23,6 +23,7 @@ declare class Application<T extends Node> implements FileActions {
     initializing: boolean;
     closed: boolean;
     viewModel: Undef<AppViewModel>;
+    systemName: string;
     readonly session: AppSession<T>;
     readonly processing: AppProcessing<T>;
     readonly builtInExtensions: ObjectMap<Extension<T>>;
@@ -48,6 +49,8 @@ declare class Application<T extends Node> implements FileActions {
     saveToArchive(filename?: string, options?: FileArchivingOptions): void;
     createFrom(format: string, options: FileArchivingOptions): void;
     appendFromArchive(filename: string, options: FileArchivingOptions): void;
+    getDatasetName(attr: string, element: HTMLElement): Undef<string>;
+    setDatasetName(attr: string, element: HTMLElement, value: string): void;
     finalize(): void;
     toString(): string;
     constructor(
@@ -75,7 +78,6 @@ declare class ApplicationUI<T extends NodeUI> extends Application<T> {
     useElement(element: HTMLElement): boolean;
     createNode(options: NodeUIOptions<T>): T;
     renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
-    resolveTarget(target: Undef<string>): Undef<T>;
     addLayout(layout: LayoutUI<T>): void;
     addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
     saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
@@ -199,7 +201,7 @@ declare class Extension<T extends Node> {
 }
 
 declare class ExtensionUI<T extends NodeUI> extends Extension<T> {
-    public static findNestedElement(element: Null<Element>, name: string): Null<HTMLElement>;
+    public static findNestedElement<T extends NodeUI>(node: T, name: string): Null<HTMLElement>;
     application: ApplicationUI<T>;
     tagNames: string[];
     readonly controller: ControllerUI<T>;
@@ -481,6 +483,7 @@ declare class NodeUI extends Node implements LayoutType {
     siblingsTrailing: NodeUI[];
     floatContainer: boolean;
     localSettings: LocalSettingsUI;
+    use: Undef<string>;
     renderAs?: NodeUI;
     renderParent?: NodeUI;
     renderExtension?: Extension<NodeUI>[];
@@ -509,9 +512,8 @@ declare class NodeUI extends Node implements LayoutType {
     readonly support: SupportUI;
     readonly documentId: string;
     readonly extensions: string[];
-    readonly outerExtensionElement: Null<HTMLElement>;
     setControlType(controlName: string, containerType?: number): void;
-    setExclusions(): void;
+    setExclusions(systemName?: string): void;
     setLayout(): void;
     setAlignment(): void;
     setBoxSpacing(): void;
@@ -541,7 +543,7 @@ declare class NodeUI extends Node implements LayoutType {
     exclude(options: ExcludeUIOptions): void;
     hide(options?: HideUIOptions<NodeUI>): void;
     appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
-    removeTry(replacement?: NodeUI, beforeReplace?: BindGeneric<Undef<NodeUI>, void>): boolean;
+    removeTry(replacement?: NodeUI, beforeReplace?: BindGeneric<Undef<NodeUI>, void>): Undef<NodeTemplate<NodeUI>>;
     sort(predicate?: (a: Node, b: Node) => number): this;
     render(parent?: NodeUI): void;
     renderEach(predicate: IteratorPredicate<NodeUI, void>): this;

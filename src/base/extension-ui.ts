@@ -2,20 +2,22 @@ import { ExtensionResult, LayoutRoot } from '../../@types/base/application';
 
 import Extension from './extension';
 
+type NodeUI = squared.base.NodeUI
+
 const $lib = squared.lib;
 
-const { hasComputedStyle } = $lib.css;
-const { includes } = $lib.util;
+const { capitalize, includes } = $lib.util;
 
-export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
-    public static findNestedElement(element: Null<Element>, name: string) {
-        if (element && hasComputedStyle(element)) {
-            const children = element.children;
+export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
+    public static findNestedElement(node: NodeUI, name: string) {
+        if (node.styleElement) {
+            const systemName = capitalize(node.localSettings.systemName);
+            const children = (<HTMLElement> node.element).children;
             const length = children.length;
             let i = 0;
             while (i < length) {
                 const item = <HTMLElement> children[i++];
-                if (includes(item.dataset.use, name)) {
+                if (includes(item.dataset['use' + systemName] || item.dataset.use, name)) {
                     return item;
                 }
             }
@@ -55,11 +57,11 @@ export default abstract class ExtensionUI<T extends squared.base.NodeUI> extends
     }
 
     public condition(node: T, parent?: T) {
-        return node.dataset.use ? this.included(<HTMLElement> node.element) : !this._isAll;
+        return node.use ? this.included(<HTMLElement> node.element) : !this._isAll;
     }
 
     public included(element: HTMLElement) {
-        return includes(element.dataset.use, this.name);
+        return includes(this.application.getDatasetName('use', element), this.name);
     }
 
     public processNode(node: T, parent: T): Undef<ExtensionResult<T>> {

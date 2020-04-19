@@ -15,7 +15,7 @@ const { isTextNode } = $lib.dom;
 const { equal } = $lib.math;
 const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { cloneObject, convertWord, hasBit, isArray, iterateArray, safeNestedMap, searchObject, spliceArray, withinRange } = $lib.util;
+const { capitalize, cloneObject, convertWord, hasBit, isArray, iterateArray, safeNestedMap, searchObject, spliceArray, withinRange } = $lib.util;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
@@ -71,6 +71,11 @@ function traverseElementSibling(options: SiblingOptions = {}, element: Null<Elem
         element = <Element> element[direction];
     }
     return result;
+}
+
+function getDatasetName(this: NodeUI, attr: string) {
+    const dataset = this.dataset;
+    return dataset[attr + capitalize(this.localSettings.systemName)] || dataset[attr];
 }
 
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
@@ -378,7 +383,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public lineBreakTrailing = false;
     public baselineActive = false;
     public baselineAltered = false;
-    public positioned = false;
     public abstract localSettings: LocalSettingsUI;
     public abstract renderParent?: T;
     public abstract renderExtension?: squared.base.ExtensionUI<T>[];
@@ -436,6 +440,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract get support(): SupportUI;
     public abstract set renderExclude(value: boolean);
     public abstract get renderExclude(): boolean;
+    public abstract set positioned(value);
+    public abstract get positioned(): boolean;
 
     public is(containerType: number) {
         return this.containerType === containerType;
@@ -698,21 +704,23 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public setExclusions() {
+    public setExclusions(systemName?: string) {
         if (this.naturalElement) {
-            const dataset = (<HTMLElement> this._element).dataset;
-            const parentDataset = this.actualParent?.dataset || {};
+            const element = <HTMLElement> this._element;
+            const dataset = element.dataset;
+            const parentDataset = element.parentElement?.dataset || {};
             if (Object.keys(dataset).length || Object.keys(parentDataset).length) {
+                systemName = capitalize(systemName || this.localSettings.systemName);
                 const parseExclusions = (attr: string, enumeration: {}) => {
-                    let exclude = dataset[attr] || '';
+                    let exclude = dataset[attr + systemName] || dataset[attr] || '';
                     let offset = 0;
-                    const value = parentDataset[attr + 'Child'];
+                    const value = parentDataset[attr + 'Child' + systemName] || parentDataset[attr + 'Child'];
                     if (value) {
                         exclude += (exclude !== '' ? '|' : '') + value;
                     }
                     if (exclude !== '') {
-                        exclude.split(/\s*\|\s*/).forEach(name => {
-                            const i: number = enumeration[name.toUpperCase()] || 0;
+                        exclude.split('|').forEach(name => {
+                            const i: number = enumeration[name.trim().toUpperCase()] || 0;
                             if (i > 0 && !hasBit(offset, i)) {
                                 offset |= i;
                             }
@@ -756,13 +764,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 const index = renderChildren.findIndex(node => node === this);
                 if (index !== -1) {
                     const template = renderTemplates[index];
-                    if (template?.node === this) {
+                    if (template.node === this) {
                         if (replacement) {
                             const parent = replacement.renderParent;
                             if (parent === this) {
                                 const templates = parent.renderTemplates;
                                 if (templates) {
-                                    const replaceIndex = templates.findIndex(item => item?.node === replacement);
+                                    const replaceIndex = templates.findIndex(item => item.node === replacement);
                                     if (replaceIndex !== -1) {
                                         parent.renderChildren.splice(replaceIndex, 1);
                                     }
@@ -777,23 +785,22 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         }
                                         replacement.depth = this.depth;
                                         this.renderParent = undefined;
-                                        return true;
+                                        return template;
                                     }
                                 }
                             }
                         }
                         else {
                             beforeReplace?.call(this, replacement);
-                            renderTemplates.splice(index, 1);
                             renderChildren.splice(index, 1);
                             this.renderParent = undefined;
-                            return true;
+                            return renderTemplates.splice(index, 1)[0];
                         }
                     }
                 }
             }
         }
-        return false;
+        return undefined;
     }
 
     public sort(predicate?: (a: T, b: T) => number) {
@@ -1647,23 +1654,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    get outerExtensionElement() {
-        if (this.naturalChild) {
-            let parent = (<Element> this._element).parentElement;
-            while (parent) {
-                if (parent.dataset.use) {
-                    return parent;
-                }
-                parent = parent.parentElement;
-            }
-        }
-        return null;
+    set use(value) {
+        const use = this.use;
+        this.dataset['use' + capitalize(this.localSettings.systemName)] = (use ? use + ', ' : '') + value;
+    }
+
+    get use() {
+        return getDatasetName.call(this, 'use');
     }
 
     get extensions() {
         let result = this._cached.extensions;
         if (result === undefined) {
-            const use = this.dataset.use;
+            const use = this.use;
             result = use ? spliceArray(use.split(XML.SEPARATOR), value => value === '') : [];
             this._cached.extensions = result;
         }

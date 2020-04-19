@@ -10,7 +10,7 @@ const $libA = android.lib;
 
 const { formatPX } = $lib.css;
 const { getElementAsNode } = $lib.session;
-const { assignEmptyValue, safeNestedMap, includes, isString, iterateArray } = $lib.util;
+const { assignEmptyValue, capitalize, includes, isString, iterateArray, safeNestedMap } = $lib.util;
 
 const { NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -40,21 +40,22 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
 
     public init(element: HTMLElement) {
         if (this.included(element)) {
+            const application = this.application;
             iterateArray(element.children, (item: HTMLElement) => {
                 if (item.tagName === 'NAV') {
-                    const use = item.dataset.use;
+                    const use = application.getDatasetName('use', item);
                     if (!includes(use, EXT_ANDROID.EXTERNAL)) {
-                        item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
+                        application.setDatasetName('use', item, (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL);
                         return true;
                     }
                 }
                 return;
             });
-            const target = element.dataset.target;
+            const target = element.dataset.androidTarget;
             if (target) {
                 const targetElement = document.getElementById(target);
-                if (targetElement && element.parentElement !== targetElement && !includes(targetElement.dataset.use, WIDGET_NAME.COORDINATOR)) {
-                    this.application.rootElements.add(element);
+                if (targetElement && !includes(application.getDatasetName('use', targetElement), WIDGET_NAME.COORDINATOR)) {
+                    application.rootElements.add(element);
                 }
             }
         }
@@ -66,13 +67,12 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const resource = <android.base.Resource<T>> this.resource;
         const settings = <UserSettingsAndroid> application.userSettings;
         const element = <HTMLElement> node.element;
-        const target = node.dataset.target;
         const options: StandardMap = { ...this.options[element.id] };
         const toolbarOptions = createViewAttribute(options.self);
         const appBarOptions = createViewAttribute(options.appBar);
         const collapsingToolbarOptions = createViewAttribute(options.collapsingToolbar);
         const numberResourceValue = application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
-        const hasMenu = Toolbar.findNestedElement(element, WIDGET_NAME.MENU);
+        const hasMenu = Toolbar.findNestedElement(node, WIDGET_NAME.MENU);
         const backgroundImage = node.has('backgroundImage');
         const appBarChildren: T[] = [];
         const collapsingToolbarChildren: T[] = [];
@@ -93,10 +93,10 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                     }
                 }
             }
-            if (!dataset.target) {
+            if (!dataset.androidTarget) {
                 const targetNode = getElementAsNode<T>(item, node.sessionId);
                 if (targetNode) {
-                    switch (dataset.targetModule) {
+                    switch (dataset.androidTargetModule) {
                         case 'appBar':
                             appBarChildren.push(targetNode);
                             break;
@@ -154,7 +154,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             else {
                 assignEmptyValue(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
             }
-            appBarNode = this.createPlaceholder(node, appBarChildren, target);
+            appBarNode = this.createPlaceholder(node, appBarChildren, node.target);
             appBarNode.parent = parent;
             let id = android.id;
             if (isString(id)) {
@@ -171,7 +171,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                 }
                 assignEmptyValue(app, 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
                 assignEmptyValue(app, 'toolbarId', node.documentId);
-                collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
+                collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren);
                 if (collapsingToolbarNode) {
                     collapsingToolbarNode.parent = appBarNode;
                     android = collapsingToolbarOptions.android;
@@ -181,8 +181,6 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
                         delete android.id;
                     }
                     collapsingToolbarNode.setControlType(collapsingToolbarName, CONTAINER_NODE.BLOCK);
-                    const controlId = collapsingToolbarNode.controlId;
-                    collapsingToolbarNode.each(item => item.dataset.target = controlId);
                 }
             }
         }
@@ -191,7 +189,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             appBarNode.setLayoutWidth('match_parent');
             appBarNode.setLayoutHeight('wrap_content');
             appBarNode.apply(Resource.formatOptions(appBarOptions, numberResourceValue));
-            appBarNode.render(target ? application.resolveTarget(target) : parent);
+            appBarNode.render(parent);
             outputAs = {
                 type: NODE_TEMPLATE.XML,
                 node: appBarNode,
@@ -267,11 +265,11 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
             node.render(node.parent as T);
         }
         else {
-            node.render(target ? application.resolveTarget(target) : parent);
+            node.render(parent);
         }
         node.setLayoutWidth('match_parent');
         node.apply(Resource.formatOptions(toolbarOptions, numberResourceValue));
-        const output = <NodeXmlTemplate<T>> {
+        const output: NodeXmlTemplate<T> = {
             type: NODE_TEMPLATE.XML,
             node,
             controlName
@@ -302,7 +300,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
     }
 
     public postOptimize(node: T) {
-        const menu = Toolbar.findNestedElement(node.element, WIDGET_NAME.MENU)?.dataset.layoutName;
+        const menu = Toolbar.findNestedElement(node, WIDGET_NAME.MENU)?.dataset['layoutName' + capitalize(this.application.systemName)];
         if (menu) {
             const toolbarOptions = createViewAttribute(this.options[node.elementId]?.self);
             const app = safeNestedMap<string>(toolbarOptions, 'app');
@@ -338,21 +336,22 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         }
     }
 
-    public createPlaceholder(node: T, children: T[], target?: string) {
+    public createPlaceholder(node: T, children: T[], target?: Null<HTMLElement>) {
         const delegate = children.length > 0;
-        const placeholder = this.application.createNode({ parent: node, children, delegate, cascade: true });
-        placeholder.inherit(node, 'base');
+        const container = this.application.createNode({ parent: node, children, delegate, cascade: true });
+        container.inherit(node, 'base');
         if (delegate) {
             let containerIndex = Number.POSITIVE_INFINITY;
             children.forEach(item => containerIndex = Math.min(containerIndex, item.containerIndex));
-            placeholder.containerIndex = containerIndex;
+            container.containerIndex = containerIndex;
         }
         if (target) {
-            placeholder.dataset.target = target;
+            container.dataset.androidTarget = target.id;
+            container.innerWrapped = node;
         }
-        placeholder.exclude({ resource: NODE_RESOURCE.ALL });
-        placeholder.positioned = true;
-        placeholder.renderExclude = false;
-        return placeholder;
+        container.exclude({ resource: NODE_RESOURCE.ALL });
+        container.positioned = true;
+        container.renderExclude = false;
+        return container;
     }
 }

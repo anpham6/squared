@@ -18,7 +18,7 @@ const $lib = squared.lib;
 const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = $lib.css;
 const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
 const { maxArray } = $lib.math;
-const { appendSeparator, convertFloat, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = $lib.util;
+const { appendSeparator, capitalize, convertFloat, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = $lib.util;
 const { XML } = $lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
 const { isPlainText } = $lib.xml;
@@ -130,6 +130,7 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI): boolean => node.textElement && (node.blockStatic || node.multiline);
 const getRelativeOffset = (item: NodeUI, fromRight: boolean) => item.positionRelative ? (item.hasPX('left') ? item.left * (fromRight ? 1 : -1) : item.right * (fromRight ? -1 : 1)) : 0;
+const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => !!item.use }).length > 0;
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public readonly session: AppSessionUI<T> = {
@@ -137,8 +138,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         excluded: new NodeList<T>(),
         extensionMap: new Map<number, ExtensionUI<T>[]>(),
         clearMap: new Map<T, string>(),
-        active: [],
-        targetQueue: new Map<T, NodeTemplate<T>>()
+        active: []
     };
     public readonly builtInExtensions: ObjectMap<ExtensionUI<T>> = {};
     public readonly extensions: ExtensionUI<T>[] = [];
@@ -172,16 +172,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const cache = session.cache;
         const extensions = this.extensions;
         const layouts = this._layouts;
-        for (const [node, template] of session.targetQueue.entries()) {
-            const parent = this.resolveTarget(node.dataset.target);
-            if (parent) {
-                node.render(parent);
-                this.addLayoutTemplate(parent, node, template);
-            }
-            else if (!node.renderParent) {
-                cache.remove(node);
-            }
-        }
         const children = cache.children;
         const length = children.length;
         const rendered: T[] = new Array(length);
@@ -227,6 +217,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         extensions.forEach(ext => ext.beforeCascade(documentRoot));
         const baseTemplate = this._controllerSettings.layout.baseTemplate;
+        const systemName = capitalize(this.systemName);
         documentRoot.forEach(layout => {
             const node = layout.node;
             const renderTemplates = (node.renderParent as T).renderTemplates;
@@ -234,7 +225,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 this.saveDocument(
                     layout.layoutName,
                     baseTemplate + controllerHandler.cascadeDocument(<NodeTemplate<T>[]> renderTemplates, Math.abs(node.depth)),
-                    node.dataset.pathname,
+                    node.dataset['pathname' + systemName],
                     node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
                 );
             }
@@ -267,7 +258,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         session.cache.reset();
         session.excluded.reset();
         session.extensionMap.clear();
-        session.targetQueue.clear();
         this._layouts.length = 0;
     }
 
@@ -378,9 +368,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         parent.renderChildren.push(node);
                         renderTemplates.push(template);
                     }
-                }
-                else {
-                    this.session.targetQueue.set(node, template);
                 }
             }
             else {
@@ -538,37 +525,23 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public afterCreateCache(node: T) {
+        const systemName = capitalize(this.systemName);
         const dataset = node.dataset;
-        const { filename, iteration } = dataset;
+        const filename = dataset['filename' + systemName];
+        const iteration = dataset['iteration' + systemName];
         const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._controllerSettings.layout.fileExtension}$`), '') || node.elementId || `document_${this.length}`;
-        const postfix = (iteration ? parseInt(iteration) : -1) + 1;
-        const layoutName = convertWord(postfix > 0 ? `${prefix}_${postfix}` : prefix, true);
-        dataset.iteration = postfix.toString();
-        dataset.layoutName = layoutName;
+        const suffix = (iteration ? parseInt(iteration) : -1) + 1;
+        const layoutName = convertWord(suffix > 0 ? prefix + '_' + suffix : prefix, true);
+        dataset['iteration' + systemName] = suffix.toString();
+        dataset['layoutName' + systemName] = layoutName;
         node.data(Application.KEY_NAME, 'layoutName', layoutName);
         this.setBaseLayout();
         this.setConstraints();
         this.setResources();
     }
 
-    public resolveTarget(target: Undef<string>) {
-        if (isString(target)) {
-            for (const parent of this._cache) {
-                if (parent.elementId === target || parent.controlId === target) {
-                    return parent;
-                }
-            }
-            for (const parent of this.session.cache) {
-                if (parent.elementId === target || parent.controlId === target) {
-                    return parent;
-                }
-            }
-        }
-        return undefined;
-    }
-
     public useElement(element: HTMLElement) {
-        const use = element.dataset.use;
+        const use = this.getDatasetName('use', element);
         return isString(use) && use.split(XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
     }
 
@@ -578,7 +551,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected cascadeParentNode(parentElement: HTMLElement, depth: number, extensions?: ExtensionUI<T>[]) {
         const node = this.insertNode(parentElement);
-        if (node && (node.display !== 'none' || depth === 0 || node.outerExtensionElement)) {
+        if (node && (node.display !== 'none' || depth === 0 || hasOuterParentExtension(node))) {
             node.depth = depth;
             if (depth === 0) {
                 this._cache.append(node);
@@ -590,7 +563,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
             const controllerHandler = this.controllerHandler;
-            if (node.excluded && node.outerExtensionElement === null || controllerHandler.preventNodeCascade(parentElement)) {
+            if (node.excluded && !hasOuterParentExtension(node) || controllerHandler.preventNodeCascade(parentElement)) {
                 return node;
             }
             const sessionId = this.processing.sessionId;
@@ -632,7 +605,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else if (controllerHandler.includeElement(element)) {
                     if (extensions) {
-                        prioritizeExtensions(element.dataset.use, extensions).some(item => (<any> item.init)(element));
+                        prioritizeExtensions(this.getDatasetName('use', element), extensions).some(item => (<any> item.init)(element));
                     }
                     if (!this.rootElements.has(element)) {
                         child = this.cascadeParentNode(element, depth + 1, extensions);
@@ -1039,7 +1012,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         if (nodeY.styleElement) {
-                            combined = prioritizeExtensions(nodeY.dataset.use, extensions);
+                            combined = prioritizeExtensions(nodeY.use, extensions);
                             const q = combined.length;
                             let j = 0;
                             while (j < q) {

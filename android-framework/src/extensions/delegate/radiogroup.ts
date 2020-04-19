@@ -73,7 +73,6 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
         });
         let length = radiogroup.length;
         if (length > 1) {
-            const { target, use } = node.dataset;
             const linearX = NodeUI.linearData(parent.children.slice(first, last + 1)).linearX;
             const container = this.controller.createNodeGroup(node, radiogroup, { parent, delegate: true });
             const controlName = CONTAINER_ANDROID.RADIOGROUP;
@@ -88,7 +87,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             }
             container.inherit(node, 'alignment');
             container.exclude({ resource: NODE_RESOURCE.ASSET });
-            container.render(target && !use ? this.application.resolveTarget(target) : parent);
+            container.render(parent);
             if (!setBaselineIndex(radiogroup, container)) {
                 container.css('verticalAlign', 'middle');
                 container.setCacheValue('baseline', false);
@@ -137,12 +136,9 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                     if (value === length) {
                         group.unsafe('controlName', controlName);
                         group.containerType = CONTAINER_NODE.RADIO;
-                        const renderParent = group.renderParent;
-                        if (renderParent) {
-                            const template = <NodeXmlTemplate<T>> renderParent.renderTemplates?.find(item => item?.node === group);
-                            if (template) {
-                                template.controlName = controlName;
-                            }
+                        const template = <NodeXmlTemplate<T>> group.renderParent?.renderTemplates?.find(item => item.node === group);
+                        if (template) {
+                            template.controlName = controlName;
                         }
                         setBaselineIndex(radiogroup, group);
                         return undefined;

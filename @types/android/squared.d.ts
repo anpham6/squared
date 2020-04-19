@@ -16,6 +16,7 @@ declare namespace base {
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;
         readonly fileHandler: File<T>;
+        resolveTarget(target: Null<HTMLElement | string>): Undef<T>;
     }
 
     class Controller<T extends View> extends squared.base.ControllerUI<T> {
@@ -95,6 +96,7 @@ declare namespace base {
         readonly flexibleWidth: boolean;
         readonly flexibleHeight: boolean;
         readonly support: SupportAndroid;
+        readonly target: Null<HTMLElement>;
         android(attr: string, value?: string, overwrite?: boolean): string;
         app(attr: string, value?: string, overwrite?: boolean): string;
         applyOptimizations(): void;

@@ -115,8 +115,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                         break;
                 }
                 if (i === 0) {
-                    const dataset = node.dataset;
-                    item.render(dataset.target && !dataset.use ? this.application.resolveTarget(dataset.target) : parent);
+                    item.render(parent);
                 }
                 else {
                     item.render(scrollView[i - 1]);

@@ -35,14 +35,14 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
     public processNode(node: T, parent: T) {
         const resource = <android.base.Resource<T>> this.resource;
         const element = <HTMLElement> node.element;
-        const target = node.dataset.target;
+        const target = node.target;
         const options = createViewAttribute(this.options[element.id]);
         const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1)));
         assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
         if (!node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
             assignEmptyValue(options, 'android', 'focusable', 'false');
         }
-        let src = '';
+        let src: Undef<string>;
         switch (element.tagName) {
             case 'IMG':
                 src = resource.addImageSrc(<HTMLImageElement> element, PREFIX_DIALOG);
@@ -56,17 +56,16 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
                 src = resource.addImageSrc(node.backgroundImage, PREFIX_DIALOG);
                 break;
         }
-        if (src !== '') {
+        if (src) {
             assignEmptyValue(safeNestedMap<string>(options, 'app'), 'srcCompat', `@drawable/${src}`);
         }
         const controlName = node.api < BUILD_ANDROID.Q ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
         node.setControlType(controlName, CONTAINER_NODE.BUTTON);
         node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
         Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-        let outerParent = this.application.resolveTarget(target);
         if (!node.pageFlow) {
             const { leftRight, topBottom } = node.autoMargin;
-            const offsetParent = outerParent || parent;
+            const offsetParent = (<android.base.Application<T>> this.application).resolveTarget(target) || parent;
             if (leftRight) {
                 node.mergeGravity('layout_gravity', 'center_horizontal');
             }
@@ -93,16 +92,17 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
             node.positioned = true;
         }
         else if (target) {
+            const box = node.documentParent.box;
+            const linear = node.linear;
             const horizontalBias = getHorizontalBias(node);
             const verticalBias = getVerticalBias(node);
-            const documentParent = node.documentParent;
             if (horizontalBias < 0.5) {
                 node.mergeGravity('layout_gravity', node.localizeString('left'));
-                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, node.linear.left - documentParent.box.left);
+                node.modifyBox(BOX_STANDARD.MARGIN_LEFT, linear.left - box.left);
             }
             else if (horizontalBias > 0.5) {
                 node.mergeGravity('layout_gravity', node.localizeString('right'));
-                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, documentParent.box.right - node.linear.right);
+                node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, box.right - linear.right);
             }
             else {
                 node.mergeGravity('layout_gravity', 'center_horizontal');
@@ -110,11 +110,11 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
             if (verticalBias < 0.5) {
                 node.app('layout_dodgeInsetEdges', 'top');
                 node.mergeGravity('layout_gravity', 'top');
-                node.modifyBox(BOX_STANDARD.MARGIN_TOP, node.linear.top - documentParent.box.top);
+                node.modifyBox(BOX_STANDARD.MARGIN_TOP, linear.top - box.top);
             }
             else if (verticalBias > 0.5) {
                 node.mergeGravity('layout_gravity', 'bottom');
-                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, documentParent.box.bottom - node.linear.bottom);
+                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, box.bottom - linear.bottom);
             }
             else {
                 node.mergeGravity('layout_gravity', 'center_vertical');
@@ -136,15 +136,10 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
             }
             node.app('layout_anchor', anchor);
             node.exclude({ procedure: NODE_PROCEDURE.ALIGNMENT });
-            node.render(outerParent);
         }
-        else {
-            node.render(parent);
-            outerParent = undefined;
-        }
+        node.render(parent);
         node.apply(options);
         return {
-            outerParent,
             output: <NodeXmlTemplate<T>> {
                 type: NODE_TEMPLATE.XML,
                 node,

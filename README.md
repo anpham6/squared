@@ -452,57 +452,6 @@ data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
 </layout>
 ```
 
-### ALL: Custom Attributes (example: android)
-
-System or extension generated attributes can be overridden preceding final output. They will only be visible on the declared framework.
-
-data-{framework}-attr-{namespace}? -> default: "android"
-
-```xml
-<div
-    data-android-attr="layout_width::match_parent;layout_height::match_parent"
-    data-android-attr-app="layout_scrollFlags::scroll|exitUntilCollapsed">
-</div>
-```
-
-```xml
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    app:layout_scrollFlags="scroll|exitUntilCollapsed" />
-```
-
-### ALL: Redirecting Output Location
-
-It is sometimes necessary to append elements into other containers when trying to design a UI which will look identical on the target device. Redirection will fail if the target "location" is not a block/container element.
-
-```xml
-<div>
-    <span>Item 1</span>
-    <span data-target="location">Item 2</span>
-    <span data-target="location" data-target-index="1">Item 3</span>
-<div>
-<ul id="location">
-    <li>Item 4</li>
-    <li>Item 5</li>
-    <!-- span -->
-</ul>
-```
-
-```xml
-<LinearLayout>
-    <TextView>Item 1</TextView>
-</LinearLayout>
-<LinearLayout>
-    <TextView>Item 4</TextView>
-    <TextView>Item 3</TextView>
-    <TextView>Item 5</TextView>
-    <TextView>Item 2</TextView>
-</LinearLayout>
-```
-
-Using "target" into a ConstraintLayout or RelativeLayout container will not include automatic positioning.
-
 ### ALL: Jimp (node-express) / ImageJ (squared-apache)
 
 Image conversion can be achieved using the mimeType property in a RequestAsset object. The supported formats are:
@@ -572,6 +521,57 @@ Some applications can benefit from using includes or merge tags to share common 
 ```
 
 The attributes "android-include" and "android-include-end" can only be applied to elements which share the same parent container. See /demos/gradient.html for usage instructions.
+
+### ANDROID: Redirecting Output Location
+
+It is sometimes necessary to append elements into other containers when trying to design a UI which will look identical on the Android device. Redirection will fail if the target "location" is not a block/container element.
+
+```xml
+<div>
+    <span>Item 1</span>
+    <span data-android-target="location">Item 2</span>
+    <span data-android-target="location" data-android-target-index="1">Item 3</span>
+<div>
+<ul id="location">
+    <li>Item 4</li>
+    <li>Item 5</li>
+    <!-- span -->
+</ul>
+```
+
+```xml
+<LinearLayout>
+    <TextView>Item 1</TextView>
+</LinearLayout>
+<LinearLayout>
+    <TextView>Item 4</TextView>
+    <TextView>Item 3</TextView>
+    <TextView>Item 5</TextView>
+    <TextView>Item 2</TextView>
+</LinearLayout>
+```
+
+Using "target" into a ConstraintLayout or RelativeLayout container will not include automatic positioning.
+
+### ANDROID: Custom Attributes
+
+System or extension generated attributes can be overridden preceding final output. They will only be visible on the declared framework.
+
+data-android-attr-{namespace}? -> default: "android"
+
+```xml
+<div
+    data-android-attr="layout_width::match_parent;layout_height::match_parent"
+    data-android-attr-app="layout_scrollFlags::scroll|exitUntilCollapsed">
+</div>
+```
+
+```xml
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_scrollFlags="scroll|exitUntilCollapsed" />
+```
 
 ### ANDROID: SVG animations with CSS/SMIL
 

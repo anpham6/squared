@@ -32,7 +32,6 @@ export interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
     excluded: NodeList<T>;
     extensionMap: Map<number, Extension<T>[]>;
     clearMap: Map<T, string>;
-    targetQueue: Map<T, NodeTemplate<T>>;
 }
 
 export interface AppProcessing<T extends Node> {

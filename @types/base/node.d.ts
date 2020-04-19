@@ -122,6 +122,7 @@ export interface QueryAttribute extends StringValue {
 }
 
 export interface LocalSettingsUI {
+    systemName: string;
     screenDimension: Dimension;
 }
 

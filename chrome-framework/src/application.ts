@@ -9,8 +9,9 @@ const { isTextNode } = squared.lib.dom;
 export default class Application<T extends chrome.base.View> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public builtInExtensions: ObjectMap<chrome.base.Extension<T>> = {};
     public extensions: chrome.base.Extension<T>[] = [];
-    public userSettings!: UserSettingsChrome;
+    public systemName = 'chrome';
     public queryState = 0;
+    public userSettings!: UserSettingsChrome;
 
     public finalize() {}
 

@@ -12,7 +12,7 @@ const $lib = squared.lib;
 
 const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, checkMediaRule } = $lib.css;
 const { isTextNode } = $lib.dom;
-const { convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
+const { capitalize, convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
 const { CHAR, FILE, STRING, XML } = $lib.regex;
 const { getElementCache, setElementCache } = $lib.session;
 
@@ -63,6 +63,7 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     public initializing = false;
     public closed = false;
+    public systemName = '';
     public readonly Node: Constructor<T>;
     public readonly rootElements = new Set<HTMLElement>();
     public readonly session: AppSession<T> = {
@@ -376,6 +377,14 @@ export default abstract class Application<T extends Node> implements squared.bas
             this.controllerHandler.sortInitialCache();
         }
         return node;
+    }
+
+    public getDatasetName(attr: string, element: HTMLElement) {
+        return element.dataset[attr + capitalize(this.systemName)] || element.dataset[attr];
+    }
+
+    public setDatasetName(attr: string, element: HTMLElement, value: string) {
+        element.dataset[attr + capitalize(this.systemName)] = value;
     }
 
     public toString() {

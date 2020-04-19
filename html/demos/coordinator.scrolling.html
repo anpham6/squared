@@ -126,9 +126,9 @@
 </head>
 <body>
     <!-- START: DEMO -->
-    <div id="squared_ui" data-use="android.widget.coordinator" data-android-attr="layout_width::match_parent;layout_height::match_parent">
-        <div id="toolbar_demo" data-use="android.widget.toolbar" data-exclude-section="DOM_TRAVERSE">
-            <nav id="toolbar_menu" data-use="android.widget.menu">
+    <div id="squared_ui" data-use-android="android.widget.coordinator" data-android-attr="layout_width::match_parent;layout_height::match_parent">
+        <div id="toolbar_demo" data-use-android="android.widget.toolbar" data-exclude-section-android="DOM_TRAVERSE">
+            <nav id="toolbar_menu" data-use-android="android.widget.menu">
                 <div
                     data-show-as-action="always"
                     title="Web">
@@ -140,10 +140,10 @@
                     <img src="../demos/images/icons8-browse-page-24.png" />
                 </div>
             </nav>
-            <button id="fab_menu" data-use="android.widget.floatingactionbutton" data-target="squared_ui"></button>
+            <button id="fab_menu" data-use-android="android.widget.floatingactionbutton" data-android-target="squared_ui"></button>
         </div>
         <div
-            data-use="android.substitute"
+            data-use-android="android.substitute"
             data-android-substitute-tag="androidx.core.widget.NestedScrollView"
             data-android-attr-app="layout_behavior::@string/appbar_scrolling_view_behavior"
             data-android-include="coordinator_content" data-android-include-end="true"

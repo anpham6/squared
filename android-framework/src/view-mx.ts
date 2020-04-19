@@ -608,6 +608,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         protected _boxReset = newBoxModel();
         protected _innerWrapped?: T;
 
+        private _positioned = false;
         private _controlId?: string;
         private _labelFor?: T;
         private __android: StringMap = {};
@@ -2494,6 +2495,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
         get localSettings() {
             return this._localSettings;
+        }
+
+        set positioned(value) {
+            this._positioned = value;
+        }
+        get positioned() {
+            return this._positioned || this.target !== null;
+        }
+
+        get target() {
+            const target = this.dataset.androidTarget;
+            return target && document.getElementById(target) || null;
         }
     };
 };

@@ -21,7 +21,7 @@ export default class Coordinator<T extends View> extends squared.base.ExtensionU
         const extensionManager = this.application.extensionManager;
         const options = createViewAttribute(this.options[node.elementId]);
         Resource.formatOptions(options, extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-        const element = Coordinator.findNestedElement(node.element, WIDGET_NAME.TOOLBAR);
+        const element = Coordinator.findNestedElement(node, WIDGET_NAME.TOOLBAR);
         if (element) {
             const toolbar = getElementAsNode<T>(element, node.sessionId);
             if (toolbar) {

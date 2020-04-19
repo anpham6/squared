@@ -8,7 +8,7 @@ type View = android.base.View;
 const $lib = squared.lib;
 const $libA = android.lib;
 
-const { assignEmptyValue, cloneObject, safeNestedMap, includes, iterateArray } = $lib.util;
+const { assignEmptyValue, capitalize, cloneObject, safeNestedMap, includes, iterateArray } = $lib.util;
 const { getElementAsNode } = $lib.session;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -36,16 +36,17 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
 
     public init(element: HTMLElement) {
         if (this.included(element)) {
+            const application = this.application;
             const result = iterateArray(element.children, (item: HTMLElement) => {
                 if (item.tagName === 'NAV') {
-                    const use = item.dataset.use;
+                    const use = application.getDatasetName('use', item);
                     if (!includes(use, EXT_ANDROID.EXTERNAL)) {
-                        item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
+                        application.setDatasetName('use', item, (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL);
                     }
                 }
             });
             if (result) {
-                this.application.rootElements.add(element);
+                application.rootElements.add(element);
                 return true;
             }
         }
@@ -54,7 +55,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
 
     public processNode(node: T, parent: T) {
         const options = createViewAttribute(this.options.self);
-        if (Drawer.findNestedElement(node.element, WIDGET_NAME.MENU)) {
+        if (Drawer.findNestedElement(node, WIDGET_NAME.MENU)) {
             assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
             this.setStyleTheme(node.api);
         }
@@ -88,11 +89,11 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
     }
 
     public afterParseDocument() {
+        const systemName = capitalize(this.application.systemName);
         for (const node of this.subscribers) {
-            const element = node.element;
             const options = createViewAttribute(this.options.navigationView);
-            const menu = Drawer.findNestedElement(element, WIDGET_NAME.MENU)?.dataset.layoutName;
-            const headerLayout = Drawer.findNestedElement(element, EXT_ANDROID.EXTERNAL)?.dataset.layoutName;
+            const menu = Drawer.findNestedElement(node, WIDGET_NAME.MENU)?.dataset['layoutName' + systemName];
+            const headerLayout = Drawer.findNestedElement(node, EXT_ANDROID.EXTERNAL)?.dataset['layoutName' + systemName];
             const app = safeNestedMap(options, 'app');
             if (menu) {
                 assignEmptyValue(app, 'menu', `@menu/${menu}`);
@@ -121,7 +122,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
     }
 
     public postOptimize(node: T) {
-        const element = Drawer.findNestedElement(node.element, WIDGET_NAME.COORDINATOR);
+        const element = Drawer.findNestedElement(node, WIDGET_NAME.COORDINATOR);
         if (element) {
             const coordinator = getElementAsNode<T>(element, node.sessionId);
             if (coordinator?.inlineHeight && coordinator.some((item: T) => item.positioned)) {

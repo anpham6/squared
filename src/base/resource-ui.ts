@@ -1001,7 +1001,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         const sessionId = node.sessionId;
         element.childNodes.forEach((item: Element, index: number) => {
             const child = getElementAsNode<NodeUI>(item, sessionId);
-            if (child === null || !child.textElement || !child.pageFlow || child.positioned || child.pseudoElement || child.excluded || child.dataset.target) {
+            if (child === null || !child.textElement || !child.pageFlow || child.positioned || child.pseudoElement || child.excluded) {
                 if (child) {
                     if (styled && child.htmlElement) {
                         const outerHTML = child.toElementString('outerHTML');

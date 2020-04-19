@@ -22,7 +22,7 @@ const { getElementsBetweenSiblings, getRangeClientRect } = $lib.dom;
 const { truncate } = $lib.math;
 const { CHAR } = $lib.regex;
 const { getElementAsNode, getPseudoElt } = $lib.session;
-const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, objectMap, parseMimeType, partitionArray, withinRange } = $lib.util;
+const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, objectMap, parseMimeType, partitionArray, safeNestedArray, withinRange } = $lib.util;
 const { STRING_XMLENCODING, replaceTab } = $lib.xml;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
@@ -191,15 +191,6 @@ function adjustFloatingNegativeMargin(node: View, previous: View) {
         node.anchor('right', previous.documentId);
         previous.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
         return true;
-    }
-    return false;
-}
-
-function isTargeted(parentElement: Null<Element>, node: View) {
-    const target = node.dataset.target;
-    if (target && parentElement) {
-        const element = document.getElementById(target);
-        return !!element && element !== parentElement;
     }
     return false;
 }
@@ -564,6 +555,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         this._targetAPI = targetAPI || BUILD_ANDROID.LATEST;
         this._screenDimension = screenDimension;
         this._defaultViewSettings = {
+            systemName: this.application.systemName,
             screenDimension,
             supportRTL,
             floatPrecision: this.localSettings.precision.standardFloat
@@ -579,6 +571,32 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.applyOptimizations();
             if (node.hasProcedure(NODE_PROCEDURE.CUSTOMIZATION)) {
                 node.applyCustomizations(this.userSettings.customizationsOverwritePrivilege);
+            }
+            const target = node.target;
+            if (target) {
+                const outerWrapper = node.outerMostWrapper as T;
+                if (node !== outerWrapper && target === outerWrapper.target) {
+                    continue;
+                }
+                const parent = this.application.resolveTarget(target);
+                if (parent) {
+                    const template = <NodeTemplate<T>> node.removeTry();
+                    if (template) {
+                        const renderChildren = parent.renderChildren;
+                        const renderTemplates = safeNestedArray(<StandardMap> parent, 'renderTemplates');
+                        let index = parseInt(node.dataset.androidTargetIndex as string);
+                        if (!isNaN(index) && index >= 0) {
+                            index = Math.min(index, renderChildren.length);
+                            renderChildren.splice(index, 0, node);
+                            renderTemplates.splice(index, 0, template);
+                        }
+                        else {
+                            renderChildren.push(node);
+                            renderTemplates.push(template);
+                        }
+                        node.renderParent = parent;
+                    }
+                }
             }
         }
     }
@@ -599,7 +617,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else if (layout.length <= 1) {
             const child = <Undef<T>> node.item(0);
             if (child) {
-                if (node.originalRoot && isTargeted(node.element, child)) {
+                if (node.originalRoot && child.target) {
                     node.hide();
                     return { layout, next: true };
                 }
@@ -713,9 +731,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.marginRight === 0 &&
             node.marginBottom === 0 &&
             node.marginLeft === 0 &&
-            !node.originalRoot &&
             !background &&
-            !node.dataset.use)
+            !node.originalRoot &&
+            !node.use)
         {
             node.hide();
             return { layout, next: true };
@@ -1169,11 +1187,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
         }
         if (valid) {
-            const dataset = node.dataset;
-            const target = !dataset.use && dataset.target;
             node.setControlType(View.getControlName(containerType, node.api), containerType);
             node.addAlign(layout.alignmentType);
-            node.render(target ? (<squared.base.ApplicationUI<T>> this.application).resolveTarget(target) : layout.parent);
+            node.render(layout.parent);
             node.apply(options);
             return <NodeXmlTemplate<T>> {
                 type: NODE_TEMPLATE.XML,
@@ -1187,8 +1203,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public renderNode(layout: squared.base.LayoutUI<T>): NodeXmlTemplate<T> {
         let { parent, containerType } = layout;
         const node = layout.node;
-        const dataset = node.dataset;
-        let target = !dataset.use && dataset.target;
         let controlName = View.getControlName(containerType, node.api);
         switch (node.tagName) {
             case 'IMG': {
@@ -1312,7 +1326,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     else {
                         container.setLayoutHeight('wrap_content');
                     }
-                    container.render(target ? application.resolveTarget(target) : parent);
+                    container.render(parent);
                     container.saveAsInitial();
                     if (!parent.layoutConstraint) {
                         node.modifyBox(BOX_STANDARD.MARGIN_TOP, node.top);
@@ -1329,7 +1343,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     );
                     parent = container;
                     layout.parent = container;
-                    target = undefined;
                 }
                 break;
             }
@@ -1627,7 +1640,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         node.setControlType(controlName, containerType);
         node.addAlign(layout.alignmentType);
-        node.render(target ? this.application.resolveTarget(target) : parent);
+        node.render(parent);
         return {
             type: NODE_TEMPLATE.XML,
             node,
@@ -2128,9 +2141,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.resetBox(BOX_STANDARD.MARGIN, container);
         }
         if (options.inheritDataset && node.naturalElement) {
-            const dataset = container.dataset;
-            Object.assign(dataset, node.dataset);
-            delete dataset.use;
+            Object.assign(container.dataset, node.dataset);
         }
         if (node.renderParent && node.removeTry()) {
             node.rendered = false;
@@ -3222,11 +3233,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     get afterInsertNode() {
         return (node: T) => {
+            node.localSettings = this._defaultViewSettings;
+            node.api = this._targetAPI;
             if (!this.userSettings.exclusionsDisabled) {
                 node.setExclusions();
             }
-            node.localSettings = this._defaultViewSettings;
-            node.api = this._targetAPI;
         };
     }
 

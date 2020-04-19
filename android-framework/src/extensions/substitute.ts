@@ -36,9 +36,8 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
                     node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
                     node.each((item: T) => {
                         if (item.styleElement) {
-                            const dataset = item.dataset;
-                            dataset.use = name;
-                            dataset.androidSubstituteTag = tagChild;
+                            item.use = name;
+                            item.dataset.androidSubstituteTag = tagChild;
                         }
                     });
                 }
