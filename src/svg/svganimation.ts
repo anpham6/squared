@@ -246,19 +246,6 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         return hasBit(this.fillMode, FILL_MODE.FREEZE);
     }
 
-    get fillReplace() {
-        const fillMode = this.fillMode;
-        return fillMode === 0 || fillMode === FILL_MODE.BACKWARDS;
-    }
-
-    get parentContainer() {
-        let result = <Undef<SvgContainer>> this._parent;
-        while (result && !SvgBuild.isContainer(result)) {
-            result = result.parent;
-        }
-        return result;
-    }
-
     set parent(value) {
         this._parent = value;
     }
@@ -276,6 +263,19 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     set setterType(value) {}
     get setterType() {
         return true;
+    }
+
+    get fillReplace() {
+        const fillMode = this.fillMode;
+        return fillMode === 0 || fillMode === FILL_MODE.BACKWARDS;
+    }
+
+    get parentContainer() {
+        let result = <Undef<SvgContainer>> this._parent;
+        while (result && !SvgBuild.isContainer(result)) {
+            result = result.parent;
+        }
+        return result;
     }
 
     get dataset() {

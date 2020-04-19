@@ -20,22 +20,22 @@ declare namespace base {
 
     class Controller<T extends View> extends squared.base.Controller<T> {
         application: Application<T>;
-        readonly elementMap: Map<Element, T>;
-        readonly userSettings: UserSettingsChrome;
+        get elementMap(): Map<Element, T>;
+        get userSettings(): UserSettingsChrome;
         cacheElement(node: T): void;
         cacheElementList(list: squared.base.NodeList<T>): void;
     }
 
     class Resource<T extends View> extends squared.base.Resource<T> {
         application: Application<T>;
-        readonly userSettings: UserSettingsChrome;
+        get userSettings(): UserSettingsChrome;
     }
 
     class File<T extends View> extends squared.base.File<T> {
         resource: Resource<T>;
-        application: Application<T>;
-        readonly userSettings: UserSettingsChrome;
-        readonly outputFileExclusions: RegExp[];
+        get application(): Application<T>;
+        get userSettings(): UserSettingsChrome;
+        get outputFileExclusions(): RegExp[];
         getHtmlPage(name?: string, ignoreExtensions?: boolean): ChromeAsset[];
         getScriptAssets(ignoreExtensions?: boolean): ChromeAsset[];
         getLinkAssets(rel?: string, ignoreExtensions?: boolean): ChromeAsset[];

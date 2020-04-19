@@ -449,15 +449,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return this._values;
     }
 
-    get valueTo() {
-        const values = this._values;
-        return values?.[values.length - 1] || '';
-    }
-
-    get valueFrom() {
-        return this.values[0] || '';
-    }
-
     set keyTimes(value) {
         const values = this._values;
         if ((values === undefined || values.length === value.length) && value.every(fraction => fraction >= 0 && fraction <= 1)) {
@@ -539,28 +530,6 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         return this._alternate;
     }
 
-    get playable() {
-        return !this.paused && this.duration > 0 && this.keyTimes.length > 0;
-    }
-
-    get fillReplace() {
-        return super.fillReplace || this.iterationCount === -1;
-    }
-
-    get fromToType() {
-        const keyTimes = this.keyTimes;
-        return keyTimes.length === 2 && keyTimes[0] === 0 && keyTimes[1] === 1;
-    }
-
-    get evaluateStart() {
-        const keyTimes = this.keyTimes;
-        return keyTimes.length > 0 && keyTimes[0] > 0;
-    }
-    get evaluateEnd() {
-        const keyTimes = this.keyTimes;
-        return keyTimes.length > 0 && keyTimes[keyTimes.length - 1] < 1;
-    }
-
     set setterType(value) {
         this._setterType = value;
     }
@@ -582,6 +551,38 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
     get length() {
         return this._values?.length || 0;
+    }
+
+    get valueTo() {
+        const values = this._values;
+        return values?.[values.length - 1] || '';
+    }
+
+    get valueFrom() {
+        return this.values[0] || '';
+    }
+
+    get playable() {
+        return !this.paused && this.duration > 0 && this.keyTimes.length > 0;
+    }
+
+    get fillReplace() {
+        return super.fillReplace || this.iterationCount === -1;
+    }
+
+    get fromToType() {
+        const keyTimes = this.keyTimes;
+        return keyTimes.length === 2 && keyTimes[0] === 0 && keyTimes[1] === 1;
+    }
+
+    get evaluateStart() {
+        const keyTimes = this.keyTimes;
+        return keyTimes.length > 0 && keyTimes[0] > 0;
+    }
+
+    get evaluateEnd() {
+        const keyTimes = this.keyTimes;
+        return keyTimes.length > 0 && keyTimes[keyTimes.length - 1] < 1;
     }
 
     get instanceType() {

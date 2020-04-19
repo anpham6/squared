@@ -27,9 +27,6 @@ export function toString(): string;
 export namespace lib {
     namespace base {
         class Container<T> implements Iterable<T> {
-            readonly children: T[];
-            readonly isEmpty: boolean;
-            readonly length: number;
             [Symbol.iterator](): Iterator<T>;
             item(index?: number, value?: T): Undef<T>;
             append(item: T): this;
@@ -53,6 +50,9 @@ export namespace lib {
             cascade(predicate?: (item: T) => boolean, options?: ContainerOptions<T>): T[];
             sort(predicate: (a: T, b: T) => number): this;
             concat(list: T[]): this;
+            get children(): T[];
+            get isEmpty(): boolean;
+            get length(): number;
             constructor(children?: T[]);
         }
     }

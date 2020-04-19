@@ -18,25 +18,17 @@ declare interface FileActions {
 
 declare class Application<T extends Node> implements FileActions {
     public static KEY_NAME: string;
-    framework: number;
     userSettings: UserSettings;
     initializing: boolean;
     closed: boolean;
-    viewModel: Undef<AppViewModel>;
     systemName: string;
+    readonly framework: number;
     readonly session: AppSession<T>;
     readonly processing: AppProcessing<T>;
     readonly builtInExtensions: ObjectMap<Extension<T>>;
-    readonly controllerHandler: Controller<T>;
-    readonly resourceHandler: Resource<T>;
-    readonly extensionManager: ExtensionManager<T>;
-    readonly Node: Constructor<T>;
-    readonly fileHandler: Undef<File<T>>;
     readonly extensions: Extension<T>[];
-    readonly extensionsCascade: Extension<T>[];
     readonly rootElements: Set<HTMLElement>;
-    readonly nextId: number;
-    readonly length: number;
+    readonly Node: Constructor<T>;
     reset(): void;
     parseDocument(...elements: (string | HTMLElement)[]): PromiseObject;
     parseDocumentAsync(...elements: (string | HTMLElement)[]): Promise<PromiseObject>;
@@ -53,6 +45,15 @@ declare class Application<T extends Node> implements FileActions {
     setDatasetName(attr: string, element: HTMLElement, value: string): void;
     finalize(): void;
     toString(): string;
+    set viewModel(data: Undef<AppViewModel>);
+    get viewModel(): Undef<AppViewModel>;
+    get controllerHandler(): Controller<T>;
+    get resourceHandler(): Resource<T>;
+    get fileHandler(): Undef<File<T>>;
+    get extensionManager(): ExtensionManager<T>;
+    get extensionsCascade(): Extension<T>[];
+    get nextId(): number;
+    get length(): number;
     constructor(
         framework: number,
         nodeConstructor: Constructor<T>,
@@ -67,13 +68,7 @@ declare class ApplicationUI<T extends NodeUI> extends Application<T> {
     readonly session: AppSessionUI<T>;
     readonly processing: AppProcessingUI<T>;
     readonly builtInExtensions: ObjectMap<ExtensionUI<T>>;
-    readonly controllerHandler: ControllerUI<T>;
-    readonly resourceHandler: ResourceUI<T>;
-    readonly fileHandler: Undef<FileUI<T>>;
     readonly extensions: ExtensionUI<T>[];
-    readonly extensionsTraverse: ExtensionUI<T>[];
-    readonly layouts: FileAsset[];
-    readonly clearMap: Map<T, string>;
     conditionElement(element: HTMLElement, pseudoElt?: string): boolean;
     useElement(element: HTMLElement): boolean;
     createNode(options: NodeUIOptions<T>): T;
@@ -81,6 +76,12 @@ declare class ApplicationUI<T extends NodeUI> extends Application<T> {
     addLayout(layout: LayoutUI<T>): void;
     addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
     saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
+    get controllerHandler(): ControllerUI<T>;
+    get resourceHandler(): ResourceUI<T>;
+    get fileHandler(): Undef<FileUI<T>>;
+    get layouts(): FileAsset[];
+    get clearMap(): Map<T, string>;
+    get extensionsTraverse(): ExtensionUI<T>[];
     constructor(
         framework: number,
         nodeConstructor: Constructor<T>,
@@ -94,25 +95,19 @@ declare class Controller<T extends Node> implements AppHandler<T> {
     sessionId: string;
     readonly application: Application<T>;
     readonly cache: NodeList<T>;
-    readonly userSettings: UserSettings;
     readonly localSettings: ControllerSettings;
-    readonly generateSessionId: string;
-    readonly afterInsertNode?: BindGeneric<Node, void>;
     init(): void;
     reset(): void;
     includeElement(element: Element): boolean;
     preventNodeCascade(element: Element): boolean;
     applyDefaultStyles(element: Element): void;
+    get afterInsertNode(): Undef<BindGeneric<T, void>>;
+    get userSettings(): UserSettings;
+    get generateSessionId(): string;
 }
 
 declare class ControllerUI<T extends NodeUI> extends Controller<T> {
-    readonly userSettings: UserUISettings;
     readonly localSettings: ControllerUISettings;
-    readonly screenDimension: Dimension;
-    readonly containerTypeHorizontal: LayoutType;
-    readonly containerTypeVertical: LayoutType;
-    readonly containerTypeVerticalMargin: LayoutType;
-    readonly containerTypePercent: LayoutType;
     optimize(nodes: T[]): void;
     finalize(layouts: FileAsset[]): void;
     evaluateNonStatic(documentRoot: T, cache: NodeList<T>): void;
@@ -138,6 +133,12 @@ declare class ControllerUI<T extends NodeUI> extends Controller<T> {
     hasAppendProcessing(id?: number): boolean;
     cascadeDocument(templates: NodeTemplate<T>[], depth: number): string;
     getEnclosingXmlTag(controlName: string, attributes?: string, content?: string): string;
+    get userSettings(): UserUISettings;
+    get screenDimension(): Dimension;
+    get containerTypeHorizontal(): LayoutType;
+    get containerTypeVertical(): LayoutType;
+    get containerTypeVerticalMargin(): LayoutType;
+    get containerTypePercent(): LayoutType;
 }
 
 declare class Resource<T extends Node> implements Resource<T> {
@@ -148,9 +149,6 @@ declare class Resource<T extends Node> implements Resource<T> {
     fileHandler?: File<T>;
     readonly application: Application<T>;
     readonly cache: NodeList<T>;
-    readonly userSettings: UserSettings;
-    readonly mimeTypeMap: ObjectMap<MIMEOrAll>;
-    readonly randomUUID: string;
     reset(): void;
     addImage(element: Undef<HTMLImageElement>): void;
     getImage(uri: string): Undef<ImageAsset>;
@@ -163,6 +161,9 @@ declare class Resource<T extends Node> implements Resource<T> {
     addRawData(uri: string, mimeType: string, encoding: string, content: string): string;
     getRawData(uri: string): Undef<RawAsset>;
     setFileHandler(instance: File<T>): void;
+    get userSettings(): UserSettings;
+    get mimeTypeMap(): ObjectMap<MIMEOrAll>;
+    get randomUUID(): string;
 }
 
 declare class ResourceUI<T extends NodeUI> extends Resource<T> {
@@ -178,17 +179,15 @@ declare class ResourceUI<T extends NodeUI> extends Resource<T> {
     public static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
     public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
     controllerSettings: ControllerUISettings;
-    readonly userSettings: UserUISettings;
     finalize(layouts: FileAsset[]): void;
     writeRawImage(filename: string, base64: string): Undef<Partial<RawAsset>>;
     setBoxStyle(node: T): void;
     setFontStyle(node: T): void;
     setValueString(node: T): void;
+    get userSettings(): UserUISettings;
 }
 
 declare class Extension<T extends Node> {
-    application: Application<T>;
-    readonly controller: Controller<T>;
     readonly framework: number;
     readonly name: string;
     readonly options: StandardMap;
@@ -197,17 +196,15 @@ declare class Extension<T extends Node> {
     require(name: string, preload?: boolean): void;
     beforeParseDocument(): void;
     afterParseDocument(): void;
+    set application(value);
+    get application(): Application<T>;
+    get controller(): Controller<T>;
     constructor(name: string, framework: number, options?: StandardMap);
 }
 
 declare class ExtensionUI<T extends NodeUI> extends Extension<T> {
     public static findNestedElement<T extends NodeUI>(node: T, name: string): Null<HTMLElement>;
-    application: ApplicationUI<T>;
     tagNames: string[];
-    readonly controller: ControllerUI<T>;
-    readonly resource: ResourceUI<T>;
-    readonly cache: NodeList<T>;
-    readonly cacheProcessing: NodeList<T>;
     readonly documentBase: boolean;
     readonly eventOnly: boolean;
     readonly cascadeAll: boolean;
@@ -227,12 +224,17 @@ declare class ExtensionUI<T extends NodeUI> extends Extension<T> {
     beforeBaseLayout(): void;
     beforeCascade(documentRoot: LayoutRoot<T>[]): void;
     afterFinalize(): void;
+    set application(value);
+    get application(): ApplicationUI<T>;
+    get controller(): ControllerUI<T>;
+    get resource(): ResourceUI<T>;
+    get cache(): NodeList<T>;
+    get cacheProcessing(): NodeList<T>;
     constructor(name: string, framework: number, options?: StandardMap, tagNames?: string[]);
 }
 
 declare class ExtensionManager<T extends Node> {
     readonly application: Application<T>;
-    readonly extensions: Extension<T>[];
     include(ext: Extension<T>): boolean;
     exclude(ext: Extension<T>): boolean;
     retrieve(name: string): Null<Extension<T>>;
@@ -241,12 +243,12 @@ declare class ExtensionManager<T extends Node> {
     optionValueAsString(name: string, attr: string): string;
     optionValueAsNumber(name: string, attr: string): number;
     optionValueAsBoolean(name: string, attr: string): boolean;
+    get extensions(): Extension<T>[];
 }
 
 declare class File<T extends Node> implements FileActions {
     public static downloadFile(data: Blob, filename: string, mimeType?: string): void;
     resource: Resource<T>;
-    readonly userSettings: UserSettings;
     readonly assets: FileAsset[];
     addAsset(data: Partial<RawAsset>): void;
     reset(): void;
@@ -257,12 +259,13 @@ declare class File<T extends Node> implements FileActions {
     appendFromArchive(filename: string, options: FileArchivingOptions): void;
     copying(options: FileCopyingOptions): void;
     archiving(options: FileArchivingOptions): void;
+    get userSettings(): UserSettings;
 }
 
 declare class FileUI<T extends NodeUI> extends File<T> {
     resource: ResourceUI<T>;
-    readonly userSettings: UserUISettings;
-    readonly directory: { string: string; image: string; video: string; audio: string; font: string };
+    get userSettings(): UserUISettings;
+    get directory(): { string: string; image: string; video: string; audio: string; font: string };
 }
 
 declare class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements LayoutType {
@@ -271,23 +274,24 @@ declare class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> i
     node: T;
     containerType: number;
     alignmentType: number;
-    type: LayoutType;
-    itemCount: number;
     rowCount: number;
     columnCount: number;
     renderType: number;
     renderIndex: number;
-    readonly linearX: boolean;
-    readonly linearY: boolean;
-    readonly floated: Set<string>;
-    readonly singleRowAligned: boolean;
-    readonly unknownAligned: boolean;
     init(): void;
     setContainerType(containerType: number, alignmentType?: number): void;
     hasAlign(value: number): boolean;
     add(value: number): number;
     addRender(value: number): number;
     delete(value: number): number;
+    set itemCount(value);
+    get itemCount(): number;
+    set type(value: LayoutType);
+    get linearX(): boolean;
+    get linearY(): boolean;
+    get floated(): Set<string>;
+    get singleRowAligned(): boolean;
+    get unknownAligned(): boolean;
     constructor(parent: T, node: T, containerType?: number, alignmentType?: number, children?: T[]);
 }
 
@@ -296,115 +300,9 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     depth: number;
     childIndex: number;
     documentRoot: boolean;
-    actualParent: Null<Node>;
-    inlineText: boolean;
-    dir: string;
-    naturalChildren: Node[];
-    naturalElements: Node[];
     style: CSSStyleDeclaration;
-    parent?: Node;
     queryMap?: Node[][];
     readonly sessionId: string;
-    readonly initial: Undef<InitialData<Node>>;
-    readonly box: BoxRectDimension;
-    readonly bounds: BoxRectDimension;
-    readonly linear: BoxRectDimension;
-    readonly element: Null<Element>;
-    readonly elementId: string;
-    readonly tagName: string;
-    readonly naturalChild: boolean;
-    readonly naturalElement: boolean;
-    readonly htmlElement: boolean;
-    readonly styleElement: boolean;
-    readonly imageElement: boolean;
-    readonly svgElement: boolean;
-    readonly flexElement: boolean;
-    readonly gridElement: boolean;
-    readonly textElement: boolean;
-    readonly tableElement: boolean;
-    readonly inputElement: boolean;
-    readonly pseudoElement: boolean;
-    readonly documentBody: boolean;
-    readonly dataset: DOMStringMap;
-    readonly centerAligned: boolean;
-    readonly rightAligned: boolean;
-    readonly bottomAligned: boolean;
-    readonly width: number;
-    readonly height: number;
-    readonly hasWidth: boolean;
-    readonly hasHeight: boolean;
-    readonly lineHeight: number;
-    readonly display: string;
-    readonly positionStatic: boolean;
-    readonly positionRelative: boolean;
-    readonly top: number;
-    readonly right: number;
-    readonly bottom: number;
-    readonly left: number;
-    readonly marginTop: number;
-    readonly marginRight: number;
-    readonly marginBottom: number;
-    readonly marginLeft: number;
-    readonly borderTopWidth: number;
-    readonly borderRightWidth: number;
-    readonly borderBottomWidth: number;
-    readonly borderLeftWidth: number;
-    readonly paddingTop: number;
-    readonly paddingRight: number;
-    readonly paddingBottom: number;
-    readonly paddingLeft: number;
-    readonly inline: boolean;
-    readonly inlineStatic: boolean;
-    readonly inlineVertical: boolean;
-    readonly inlineDimension: boolean;
-    readonly plainText: boolean;
-    readonly styleText: boolean;
-    readonly textContent: string;
-    readonly textBounds: Null<BoxRectDimension>;
-    readonly lineBreak: boolean;
-    readonly block: boolean;
-    readonly blockStatic: boolean;
-    readonly blockVertical: boolean;
-    readonly blockDimension: boolean;
-    readonly pageFlow: boolean;
-    readonly inlineFlow: boolean;
-    readonly autoMargin: AutoMargin;
-    readonly floating: boolean;
-    readonly float: string;
-    readonly baseline: boolean;
-    readonly multiline: boolean;
-    readonly contentBox: boolean;
-    readonly contentBoxWidth: number;
-    readonly contentBoxHeight: number;
-    readonly flexdata: FlexData;
-    readonly flexbox: FlexBox;
-    readonly zIndex: number;
-    readonly backgroundColor: string;
-    readonly backgroundImage: string;
-    readonly visibleStyle: VisibleStyle;
-    readonly fontSize: number;
-    readonly overflowX: boolean;
-    readonly overflowY: boolean;
-    readonly verticalAlign: string;
-    readonly absoluteParent: Null<Node>;
-    readonly actualWidth: number;
-    readonly actualHeight: number;
-    readonly actualDimension: Dimension;
-    readonly percentWidth: number;
-    readonly percentHeight: number;
-    readonly firstChild: Null<Node>;
-    readonly lastChild: Null<Node>;
-    readonly firstStaticChild: Null<Node>;
-    readonly lastStaticChild: Null<Node>;
-    readonly previousSibling: Null<Node>;
-    readonly nextSibling: Null<Node>;
-    readonly previousElementSibling: Null<Node>;
-    readonly nextElementSibling: Null<Node>;
-    readonly attributes: StringMap;
-    readonly boundingClientRect: DOMRect;
-    readonly cssStyle: StringMap;
-    readonly textStyle: StringMap;
-    readonly center: Point;
     init(): void;
     saveAsInitial(overwrite?: boolean): void;
     data(name: string, attr: string, value?: any, overwrite?: boolean): any;
@@ -446,6 +344,119 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     resetBounds(): void;
     querySelector(value: string): Null<Node>;
     querySelectorAll(value: string, resultCount?: number): Node[];
+    set parent(value);
+    get parent(): Null<Node>;
+    set actualParent(value);
+    get actualParent(): Null<Node>;
+    set naturalChildren(value);
+    get naturalChildren(): Node[];
+    set naturalElements(value);
+    get naturalElements(): Node[];
+    set dir(value)
+    get dir(): string;
+    set inlineText(value);
+    get inlineText(): boolean;
+    set textBounds(value);
+    get textBounds(): Null<BoxRectDimension>;
+    get initial(): Undef<InitialData<Node>>;
+    get box(): BoxRectDimension;
+    get bounds(): BoxRectDimension;
+    get linear(): BoxRectDimension;
+    get element(): Null<Element>;
+    get elementId(): string;
+    get tagName(): string;
+    get naturalChild(): boolean;
+    get naturalElement(): boolean;
+    get htmlElement(): boolean;
+    get styleElement(): boolean;
+    get imageElement(): boolean;
+    get svgElement(): boolean;
+    get flexElement(): boolean;
+    get gridElement(): boolean;
+    get textElement(): boolean;
+    get tableElement(): boolean;
+    get inputElement(): boolean;
+    get pseudoElement(): boolean;
+    get documentBody(): boolean;
+    get dataset(): DOMStringMap;
+    get centerAligned(): boolean;
+    get rightAligned(): boolean;
+    get bottomAligned(): boolean;
+    get width(): number;
+    get height(): number;
+    get hasWidth(): boolean;
+    get hasHeight(): boolean;
+    get lineHeight(): number;
+    get display(): string;
+    get positionStatic(): boolean;
+    get positionRelative(): boolean;
+    get top(): number;
+    get right(): number;
+    get bottom(): number;
+    get left(): number;
+    get marginTop(): number;
+    get marginRight(): number;
+    get marginBottom(): number;
+    get marginLeft(): number;
+    get borderTopWidth(): number;
+    get borderRightWidth(): number;
+    get borderBottomWidth(): number;
+    get borderLeftWidth(): number;
+    get paddingTop(): number;
+    get paddingRight(): number;
+    get paddingBottom(): number;
+    get paddingLeft(): number;
+    get inline(): boolean;
+    get inlineStatic(): boolean;
+    get inlineVertical(): boolean;
+    get inlineDimension(): boolean;
+    get plainText(): boolean;
+    get styleText(): boolean;
+    get textContent(): string;
+    get lineBreak(): boolean;
+    get block(): boolean;
+    get blockStatic(): boolean;
+    get blockVertical(): boolean;
+    get blockDimension(): boolean;
+    get pageFlow(): boolean;
+    get inlineFlow(): boolean;
+    get autoMargin(): AutoMargin;
+    get floating(): boolean;
+    get float(): string;
+    get baseline(): boolean;
+    get multiline(): boolean;
+    get contentBox(): boolean;
+    get contentBoxWidth(): number;
+    get contentBoxHeight(): number;
+    get flexdata(): FlexData;
+    get flexbox(): FlexBox;
+    get zIndex(): number;
+    get backgroundColor(): string;
+    get backgroundImage(): string;
+    get visibleStyle(): VisibleStyle;
+    get fontSize(): number;
+    get overflowX(): boolean;
+    get overflowY(): boolean;
+    get verticalAlign(): string;
+    get absoluteParent(): Null<Node>;
+    get actualWidth(): number;
+    get actualHeight(): number;
+    get actualDimension(): Dimension;
+    get percentWidth(): number;
+    get percentHeight(): number;
+    get firstChild(): Null<Node>;
+    get lastChild(): Null<Node>;
+    get firstStaticChild(): Null<Node>;
+    get lastStaticChild(): Null<Node>;
+    get previousSibling(): Null<Node>;
+    get nextSibling(): Null<Node>;
+    get previousElementSibling(): Null<Node>;
+    get nextElementSibling(): Null<Node>;
+    get attributes(): StringMap;
+    get boundingClientRect(): DOMRect;
+    get cssStyle(): StringMap;
+    get textStyle(): StringMap;
+    get center(): Point;
     constructor(id: number, sessionId?: string, element?: Element);
 }
 
@@ -456,32 +467,15 @@ declare class NodeUI extends Node implements LayoutType {
     public static baseline<T>(list: T[], text?: boolean): Null<T>;
     public static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
     alignmentType: number;
-    containerType: number;
-    containerName: string;
-    containerIndex: number;
     baselineActive: boolean;
     baselineAltered: boolean;
-    positioned: boolean;
-    visible: boolean;
     rendered: boolean;
     excluded: boolean;
-    controlId: string;
-    controlName: string;
     originalRoot: boolean;
-    documentParent: NodeUI;
-    renderExclude: boolean;
-    textContent: string;
-    autoPosition: boolean;
-    multiline: boolean;
-    naturalChild: boolean;
     lineBreakLeading: boolean;
     lineBreakTrailing: boolean;
-    siblingsLeading: NodeUI[];
-    siblingsTrailing: NodeUI[];
     floatContainer: boolean;
     localSettings: LocalSettingsUI;
-    use: Undef<string>;
-    renderAs?: NodeUI;
     renderParent?: NodeUI;
     renderExtension?: Extension<NodeUI>[];
     renderTemplates?: NodeTemplate<NodeUI>[];
@@ -492,24 +486,7 @@ declare class NodeUI extends Node implements LayoutType {
     companion?: NodeUI;
     labelFor?: NodeUI;
     horizontalRows?: NodeUI[][];
-    readonly layoutElement: boolean;
     readonly renderChildren: NodeUI[];
-    readonly nodeGroup: boolean;
-    readonly textEmpty: boolean;
-    readonly preserveWhiteSpace: boolean;
-    readonly controlElement: boolean;
-    readonly baselineHeight: number;
-    readonly baselineElement: boolean;
-    readonly positiveAxis: boolean;
-    readonly leftTopAxis: boolean;
-    readonly layoutHorizontal: boolean;
-    readonly layoutVertical: boolean;
-    readonly onlyChild: boolean;
-    readonly outerMostWrapper: NodeUI;
-    readonly innerMostWrapped: NodeUI;
-    readonly support: SupportUI;
-    readonly documentId: string;
-    readonly extensions: string[];
     setControlType(controlName: string, containerType?: number): void;
     setExclusions(systemName?: string): void;
     setLayout(): void;
@@ -542,7 +519,7 @@ declare class NodeUI extends Node implements LayoutType {
     hide(options?: HideUIOptions<NodeUI>): void;
     appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
     removeTry(replacement?: NodeUI, beforeReplace?: BindGeneric<Undef<NodeUI>, void>): Undef<NodeTemplate<NodeUI>>;
-    sort(predicate?: (a: Node, b: Node) => number): this;
+    sort(predicate?: (a: NodeUI, b: NodeUI) => number): this;
     render(parent?: NodeUI): void;
     renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
     parseWidth(value: string, parent?: boolean): number;
@@ -564,16 +541,77 @@ declare class NodeUI extends Node implements LayoutType {
     cssSet(attr: string, value: string, cache?: boolean): string;
     translateX(value: number, options?: TranslateUIOptions): boolean;
     translateY(value: number, options?: TranslateUIOptions): boolean;
+    set naturalChild(value);
+    get naturalChild(): boolean;
+    set documentParent(value);
+    get documentParent(): NodeUI;
+    set renderAs(value);
+    get renderAs(): Undef<NodeUI>;
+    set containerName(value);
+    get containerName(): string;
+    set autoPosition(value);
+    get autoPosition(): boolean;
+    set textContent(value);
+    get textContent(): string;
+    set multiline(value);
+    get multiline(): boolean;
+    set visible(value);
+    get visible(): boolean;
+    set controlName(value);
+    get controlName(): string;
+    set actualParent(value);
+    get actualParent(): Null<NodeUI>;
+    set siblingsLeading(value);
+    get siblingsLeading(): NodeUI[];
+    set siblingsTrailing(value);
+    get siblingsTrailing(): NodeUI[];
+    set childIndex(value);
+    get childIndex(): number;
+    set containerIndex(value);
+    get containerIndex(): number;
+    set use(value);
+    get use(): Undef<string>;
+    set containerType(value: number);
+    get containerType(): number;
+    set positioned(value);
+    get positioned(): boolean;
+    set controlId(name: string);
+    get controlId(): string;
+    set renderExclude(value: boolean);
+    get renderExclude(): boolean;
+    get controlElement(): boolean;
+    get documentId(): string;
+    get baselineHeight(): number;
+    get support(): SupportUI;
+    get layoutElement(): boolean;
+    get layoutHorizontal(): boolean;
+    get layoutVertical(): boolean;
+    get nodeGroup(): boolean;
+    get blockStatic(): boolean;
+    get rightAligned(): boolean;
+    get positiveAxis(): boolean;
+    get leftTopAxis(): boolean;
+    get baselineElement(): boolean;
+    get previousSibling(): Null<NodeUI>;
+    get nextSibling(): Null<NodeUI>;
+    get firstChild(): Null<Node>;
+    get lastChild(): Null<Node>;
+    get onlyChild(): boolean;
+    get textEmpty(): boolean;
+    get innerMostWrapped(): NodeUI;
+    get outerMostWrapper(): NodeUI;
+    get preserveWhiteSpace(): boolean;
+    get extensions(): string[];
     constructor(id: number, sessionId?: string, element?: Element);
 }
 
 declare class NodeGroupUI extends NodeUI {}
 
 declare class NodeList<T extends Node> extends squared.lib.base.Container<T> {
-    readonly nextId: number;
     afterAppend?: (node: T, cascade?: boolean) => void;
     append(node: T, delegate?: boolean, cascade?: boolean): this;
     reset(): void;
+    get nextId(): number;
     constructor(children?: T[]);
 }
 

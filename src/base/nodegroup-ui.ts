@@ -189,12 +189,12 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get firstChild() {
-        return this.children[0] || null;
+        return <NodeUI> this.children[0] || null;
     }
 
     get lastChild() {
         const children = this.children;
-        return children[children.length - 1] || null;
+        return <NodeUI> children[children.length - 1] || null;
     }
 
     set childIndex(value) {

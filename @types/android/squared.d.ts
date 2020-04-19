@@ -11,11 +11,12 @@ type View = base.View;
 
 declare namespace base {
     class Application<T extends View>  extends squared.base.ApplicationUI<T> {
-        viewModel: Undef<AppViewModelAndroid>;
         readonly userSettings: UserSettingsAndroid;
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;
         readonly fileHandler: File<T>;
+        set viewModel(value);
+        get viewModel(): Undef<AppViewModelAndroid>;
         resolveTarget(target: Null<HTMLElement | string>): Undef<T>;
     }
 
@@ -24,8 +25,6 @@ declare namespace base {
         public static setFlexDimension<T extends View>(node: T, horizontal: boolean): void;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
-        readonly userSettings: UserSettingsAndroid;
-        readonly screenDimension: Dimension;
         renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute): string;
         renderSpace(options: RenderSpaceAttribute): string;
         checkFrameHorizontal(data: LayoutUI<T>): boolean;
@@ -36,6 +35,8 @@ declare namespace base {
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
         createNodeWrapper(node: T, parent: T, options?: WrapperOptions<T>): T;
+        get userSettings(): UserSettingsAndroid;
+        get screenDimension(): Dimension;
     }
 
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
@@ -48,14 +49,14 @@ declare namespace base {
         public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
-        readonly userSettings: UserSettingsAndroid;
+        get userSettings(): UserSettingsAndroid;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
     }
 
     class File<T extends View> extends squared.base.FileUI<T> {
         resource: Resource<T>;
-        readonly userSettings: UserSettingsAndroid;
+        get userSettings(): UserSettingsAndroid;
         resourceAllToXml(options?: FileOutputOptions): {};
         resourceStringToXml(options?: FileOutputOptions): string[];
         resourceStringArrayToXml(options?: FileOutputOptions): string[];
@@ -75,28 +76,9 @@ declare namespace base {
         public static getControlName(containerType: number, api?: number): string;
         public static availablePercent(nodes: View[], dimension: DimensionAttr, boxSize: number): number;
         tagName: string;
-        anchored: boolean;
         api: number;
-        localSettings: LocalSettingsAndroidUI;
-        readonly layoutWidth: string;
-        readonly layoutHeight: string;
         readonly constraint: Constraint;
         readonly documentId: string;
-        readonly imageOrSvgElement: boolean;
-        readonly layoutFrame: boolean;
-        readonly layoutLinear: boolean;
-        readonly layoutGrid: boolean;
-        readonly layoutRelative: boolean;
-        readonly layoutConstraint: boolean;
-        readonly anchorTarget: View;
-        readonly inlineWidth: boolean;
-        readonly inlineHeight: boolean;
-        readonly blockWidth: boolean;
-        readonly blockHeight: boolean;
-        readonly flexibleWidth: boolean;
-        readonly flexibleHeight: boolean;
-        readonly support: SupportAndroid;
-        readonly target: Null<HTMLElement>;
         android(attr: string, value?: string, overwrite?: boolean): string;
         app(attr: string, value?: string, overwrite?: boolean): string;
         applyOptimizations(): void;
@@ -115,6 +97,27 @@ declare namespace base {
         setLayoutHeight(value: string, overwrite?: boolean): void;
         setSingleLine(ellipsize?: boolean): void;
         hasFlex(direction: "row" | "column"): boolean;
+        set anchored(value);
+        get anchored(): boolean;
+        set localSettings(value);
+        get localSettings(): LocalSettingsAndroidUI;
+        get anchorTarget(): View;
+        get imageOrSvgElement(): boolean;
+        get layoutFrame(): boolean;
+        get layoutLinear(): boolean;
+        get layoutGrid(): boolean;
+        get layoutRelative(): boolean;
+        get layoutConstraint(): boolean;
+        get layoutWidth(): string;
+        get layoutHeight(): string;
+        get inlineWidth(): boolean;
+        get inlineHeight(): boolean;
+        get blockWidth(): boolean;
+        get blockHeight(): boolean;
+        get flexibleWidth(): boolean;
+        get flexibleHeight(): boolean;
+        get target(): Null<HTMLElement>;
+        get support(): SupportAndroid;
     }
 
     class ViewGroup extends View {}

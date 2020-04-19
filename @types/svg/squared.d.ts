@@ -116,20 +116,17 @@ declare class SvgElement {
     parent?: SvgContainer;
     viewport?: Svg;
     readonly element: SVGGraphicsElement;
-    readonly instanceType: number;
     build(options?: SvgBuildOptions): void;
     synchronize(options?: SvgSynchronizeOptions): void;
+    get instanceType(): number;
     constructor(element: SVGGraphicsElement);
 }
 
 declare class SvgContainer extends squared.lib.base.Container<SvgView> implements SvgElement {
-    clipRegion: string;
     aspectRatio: SvgAspectRatio;
     parent?: SvgContainer;
     viewport?: Svg;
     readonly element: SVGSVGElement | SVGGElement | SVGUseElement;
-    readonly requireRefit: boolean;
-    readonly instanceType: number;
     append(item: SvgView, viewport?: Svg): this;
     refitX(value: number): number;
     refitY(value: number): number;
@@ -140,20 +137,14 @@ declare class SvgContainer extends squared.lib.base.Container<SvgView> implement
     clipViewBox(x: number, y: number, width: number, height: number, precision?: number, documentRoot?: boolean): void;
     build(options?: SvgBuildOptions): void;
     synchronize(options?: SvgSynchronizeOptions): void;
+    set clipRegion(value);
+    get clipRegion(): string;
+    get requireRefit(): boolean;
+    get instanceType(): number;
     constructor(element: SVGSVGElement | SVGGElement | SVGUseElement);
 }
 
 declare class Svg extends SvgContainer implements SvgViewBox {
-    name: string;
-    opacity: string;
-    visible: boolean;
-    transforms: SvgTransform[];
-    animations: SvgAnimation[];
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    viewBox: DOMRect;
     precision?: number;
     transformed?: SvgTransform[];
     readonly element: SVGSVGElement;
@@ -174,22 +165,31 @@ declare class Svg extends SvgContainer implements SvgViewBox {
     getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
     getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
     animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
+    set name(value);
+    get name(): string;
+    set x(value);
+    get x(): number;
+    set y(value);
+    get y(): number;
+    set width(value);
+    get width(): number;
+    set height(value);
+    get height(): number;
+    get transforms(): SvgTransform[];
+    get animations(): SvgAnimation[];
+    get viewBox(): DOMRect;
+    get visible(): boolean;
+    get opacity(): string;
     constructor(element: SVGSVGElement, documentRoot?: boolean);
 }
 
 declare class SvgG extends SvgContainer implements SvgView, SvgPaint {
-    name: string;
-    opacity: string;
-    visible: boolean;
-    transforms: SvgTransform[];
-    animations: SvgAnimation[];
     color: string;
     fill: string;
     fillPattern: string;
     fillOpacity: string;
     fillRule: string;
     stroke: string;
-    strokeWidth: string;
     strokePattern: string;
     strokeOpacity: string;
     strokeLinecap: string;
@@ -211,15 +211,17 @@ declare class SvgG extends SvgContainer implements SvgView, SvgPaint {
     setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
     getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
     convertLength(value: string, dimension?: string | number): number;
+    set name(value);
+    get name(): string;
+    set strokeWidth(value);
+    get strokeWidth(): string;
+    get transforms(): SvgTransform[];
+    get animations(): SvgAnimation[];
+    get visible(): boolean;
+    get opacity(): string;
 }
 
 declare class SvgShape extends SvgElement implements SvgView, SvgSynchronize {
-    name: string;
-    opacity: string;
-    visible: boolean;
-    transforms: SvgTransform[];
-    animations: SvgAnimation[];
-    path?: SvgPath;
     transformed?: SvgTransform[];
     readonly element: SVGGeometryElement | SVGUseElement;
     synchronize(options?: SvgSynchronizeOptions): void;
@@ -230,24 +232,22 @@ declare class SvgShape extends SvgElement implements SvgView, SvgSynchronize {
     getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
     animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
     setPath(): void;
+    set name(value);
+    get name(): string;
+    set path(value);
+    get path(): Undef<SvgPath>;
+    get transforms(): SvgTransform[];
+    get animations(): SvgAnimation[];
+    get visible(): boolean;
+    get opacity(): string;
     constructor(element: SVGGraphicsElement, initialize?: boolean);
 }
 
 declare class SvgImage extends SvgElement implements SvgView, SvgViewRect, SvgBaseVal, SvgTransformable {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    name: string;
-    opacity: string;
-    visible: boolean;
-    transforms: SvgTransform[];
-    animations: SvgAnimation[];
     rotateAngle?: number;
     transformed?: SvgTransform[];
     translationOffset?: Point;
     readonly element: SVGImageElement | SVGUseElement;
-    readonly href: string;
     setRect(): void;
     setBaseValue(attr: string, value?: any): boolean;
     getBaseValue(attr: string, fallback?: any): any;
@@ -256,21 +256,31 @@ declare class SvgImage extends SvgElement implements SvgView, SvgViewRect, SvgBa
     getTransforms(element?: SVGGraphicsElement): SvgTransform[];
     getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
     extract(exclude?: number[]): void;
+    set name(value);
+    get name(): string;
+    set x(value);
+    get x(): number;
+    set y(value);
+    get y(): number;
+    set width(value);
+    get width(): number;
+    set height(value);
+    get height(): number;
+    get href(): string;
+    get transforms(): SvgTransform[];
+    get animations(): SvgAnimation[];
+    get visible(): boolean;
+    get opacity(): string;
     constructor(element: SVGImageElement | SVGUseElement, imageElement?: SVGImageElement);
 }
 
 declare class SvgUse extends SvgShape implements SvgViewRect, SvgBaseVal, SvgPaint {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
     color: string;
     fill: string;
     fillPattern: string;
     fillOpacity: string;
     fillRule: string;
     stroke: string;
-    strokeWidth: string;
     strokePattern: string;
     strokeOpacity: string;
     strokeLinecap: string;
@@ -296,6 +306,16 @@ declare class SvgUse extends SvgShape implements SvgViewRect, SvgBaseVal, SvgPai
     getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
     convertLength(value: string, dimension?: string|number): number;
     synchronize(options?: SvgSynchronizeOptions): void;
+    set x(value);
+    get x(): number;
+    set y(value);
+    get y(): number;
+    set width(value);
+    get width(): number;
+    set height(value);
+    get height(): number;
+    set strokeWidth(value);
+    get strokeWidth(): string;
     constructor(element: SVGUseElement, shapeElement: SVGGraphicsElement, initialize?: boolean);
 }
 
@@ -305,15 +325,12 @@ declare class SvgPath implements SvgBaseVal, SvgPaint, SvgTransformable {
     name: string;
     value: string;
     baseValue: string;
-    instanceType: number;
-    transforms: SvgTransform[];
     color: string;
     fill: string;
     fillPattern: string;
     fillOpacity: string;
     fillRule: string;
     stroke: string;
-    strokeWidth: string;
     strokePattern: string;
     strokeOpacity: string;
     strokeLinecap: string;
@@ -328,8 +345,6 @@ declare class SvgPath implements SvgBaseVal, SvgPaint, SvgTransformable {
     transformed?: SvgTransform[];
     transformResidual?: SvgTransform[][];
     readonly element: SVGGeometryElement;
-    readonly pathLength: number;
-    readonly totalLength: number;
     setPaint(d?: string[], precision?: number): void;
     setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
     getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
@@ -345,27 +360,22 @@ declare class SvgPath implements SvgBaseVal, SvgPaint, SvgTransformable {
     extendLength(data: SvgPathExtendData, precision?: number): Undef<SvgPathExtendData>;
     flattenStrokeDash(valueArray: number[], valueOffset: number, totalLength: number, pathLength?: number): SvgPathExtendData;
     extractStrokeDash(animations?: SvgAnimation[], precision?: number): [Undef<SvgAnimation[]>, Undef<SvgStrokeDash[]>, string, string];
+    set strokeWidth(value);
+    get strokeWidth(): string;
+    get transforms(): SvgTransform[];
+    get pathLength(): number;
+    get totalLength(): number;
+    get instanceType(): number;
     constructor(element: SVGGeometryElement);
 }
 
 declare class SvgUseSymbol extends SvgContainer implements SvgViewBox, SvgPaint {
-    name: string;
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    viewBox: DOMRect;
-    opacity: string;
-    visible: boolean;
-    transforms: SvgTransform[];
-    animations: SvgAnimation[];
     color: string;
     fill: string;
     fillPattern: string;
     fillOpacity: string;
     fillRule: string;
     stroke: string;
-    strokeWidth: string;
     strokePattern: string;
     strokeOpacity: string;
     strokeLinecap: string;
@@ -396,20 +406,38 @@ declare class SvgUseSymbol extends SvgContainer implements SvgViewBox, SvgPaint 
     getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
     getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
     animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
+    set name(value);
+    get name(): string;
+    set x(value);
+    get x(): number;
+    set y(value);
+    get y(): number;
+    set width(value);
+    get width(): number;
+    set height(value);
+    get height(): number;
+    set strokeWidth(value);
+    get strokeWidth(): string;
+    get viewBox(): DOMRect;
+    get transforms(): SvgTransform[];
+    get animations(): SvgAnimation[];
+    get visible(): boolean;
+    get opacity(): string;
     constructor(element: SVGUseElement, symbolElement: SVGSymbolElement);
 }
 
 declare class SvgPattern extends SvgContainer implements SvgView {
-    name: string;
-    opacity: string;
-    visible: boolean;
-    transforms: SvgTransform[];
-    animations: SvgAnimation[];
     transformed?: SvgTransform[];
     readonly element: SVGGraphicsElement;
     readonly patternElement: SVGPatternElement;
     getTransforms(element?: SVGGraphicsElement): SvgTransform[];
     getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+    set name(value);
+    get name(): string;
+    get transforms(): SvgTransform[];
+    get animations(): SvgAnimation[];
+    get visible(): boolean;
+    get opacity(): string;
     constructor(element: SVGGraphicsElement, patternElement: SVGPatternElement);
 }
 
@@ -420,7 +448,6 @@ declare class SvgShapePattern extends SvgPattern implements SvgPaint {
     fillOpacity: string;
     fillRule: string;
     stroke: string;
-    strokeWidth: string;
     strokePattern: string;
     strokeOpacity: string;
     strokeLinecap: string;
@@ -440,8 +467,6 @@ declare class SvgShapePattern extends SvgPattern implements SvgPaint {
     readonly patternContentUnits: number;
     readonly patternWidth: number;
     readonly patternHeight: number;
-    readonly tileWidth: number;
-    readonly tileHeight: number;
     setPaint(d?: string[], precision?: number): void;
     setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
     getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
@@ -450,14 +475,16 @@ declare class SvgShapePattern extends SvgPattern implements SvgPaint {
     patternRefitX(value: number): number;
     patternRefitY(value: number): number;
     patternRefitPoints(values: SvgPoint[]): SvgPoint[];
+    set strokeWidth(value);
+    get strokeWidth(): string;
+    get offsetX(): number;
+    get offsetY(): number;
+    get tileWidth(): number;
+    get tileHeight(): number;
     constructor(element: SVGGraphicsElement, patternElement: SVGPatternElement);
 }
 
 declare class SvgUsePattern extends SvgShapePattern implements SvgViewRect {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
     transformed?: SvgTransform[];
     readonly element: SVGUseElement;
     readonly shapeElement: SVGGeometryElement;
@@ -466,38 +493,56 @@ declare class SvgUsePattern extends SvgShapePattern implements SvgViewRect {
     getBaseValue(attr: string, fallback?: any): any;
     refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
     verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+    set x(value);
+    get x(): number;
+    set y(value);
+    get y(): number;
+    set width(value);
+    get width(): number;
+    set height(value);
+    get height(): number;
     constructor(element: SVGUseElement, shapeElement: SVGGeometryElement, patternElement: SVGPatternElement);
 }
 
 declare class SvgAnimation {
     public static convertClockTime(value: string): number;
-    attributeName: string;
-    delay: number;
-    to: string;
     baseValue: string;
     fillMode: number;
-    fillBackwards: boolean;
-    fillForwards: boolean;
-    fillFreeze: boolean;
-    duration: number;
     paused: boolean;
     synchronizeState: number;
-    group: SvgAnimationGroup;
-    setterType: boolean;
-    parent?: SvgView | SvgPath;
     replaceValue?: string;
     id?: number;
     companion?: NumberValue<SvgAnimation>;
     readonly element: Null<SVGGraphicsElement>;
     readonly animationElement: Null<SVGAnimationElement>;
-    readonly instanceType: number;
-    readonly fillReplace: boolean;
-    readonly dataset: ObjectMapNested<any>;
-    readonly parentContainer?: SvgContainer;
     setAttribute(attr: string, equality?: string): void;
     addState(...values: number[]): void;
     removeState(...values: number[]): void;
     hasState(...values: number[]): boolean;
+    set attributeName(value);
+    get attributeName(): string;
+    set delay(value);
+    get delay(): number;
+    set duration(value);
+    get duration(): number;
+    set to(value);
+    get to(): string;
+    set setterType(value);
+    get setterType(): boolean;
+    set fillBackwards(value);
+    get fillBackwards(): boolean;
+    set fillForwards(value);
+    get fillForwards(): boolean;
+    set fillFreeze(value);
+    get fillFreeze(): boolean;
+    set parent(value);
+    get parent(): Undef<SvgView | SvgPath>;
+    set group(value);
+    get group(): SvgAnimationGroup;
+    get parentContainer(): Undef<SvgContainer>;
+    get fillReplace(): boolean;
+    get instanceType(): number;
+    get dataset(): ObjectMapNested<any>;
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimationElement);
 }
 
@@ -508,31 +553,39 @@ declare class SvgAnimate extends SvgAnimation {
     public static toFractionList(value: string, delimiter?: string, ordered?: boolean): number[];
     type: number;
     from: string;
-    values: string[];
-    keyTimes: number[];
-    iterationCount: number;
-    timingFunction: string;
-    reverse: boolean;
-    alternate: boolean;
     additiveSum: boolean;
     accumulateSum: boolean;
-    length: number;
-    keySplines?: string[];
     by?: number;
     end?: number;
     synchronized?: NumberValue;
     readonly animationElement: Null<SVGAnimateElement>;
-    readonly playable: boolean;
-    readonly valueTo: string;
-    readonly valueFrom: string;
-    readonly fromToType: boolean;
-    readonly evaluateStart: boolean;
-    readonly evaluateEnd: boolean;
     setCalcMode(attributeName?: string, mode?: string): void;
     convertToValues(keyTimes?: number[]): void;
     setGroupOrdering(value: SvgAnimationAttribute[]): void;
     getIntervalEndTime(leadTime: number, complete?: boolean): number;
     getTotalDuration(minimum?: boolean): number;
+    set iterationCount(value);
+    get iterationCount(): number;
+    set values(value);
+    get values(): string[];
+    set keyTimes(value);
+    get keyTimes(): number[];
+    set keySplines(value);
+    get keySplines(): Undef<string[]>;
+    set timingFunction(value);
+    get timingFunction(): string;
+    set reverse(value);
+    get reverse(): boolean;
+    set alternate(value);
+    get alternate(): boolean;
+    set length(value);
+    get length(): number;
+    get valueTo(): string;
+    get valueFrom(): string;
+    get playable(): boolean;
+    get fromToType(): boolean;
+    get evaluateStart(): boolean;
+    get evaluateEnd(): boolean;
     constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateElement);
 }
 
@@ -557,12 +610,11 @@ declare class SvgAnimateMotion extends SvgAnimateTransform {
     rotateData?: NumberValue[];
     framesPerSecond?: number;
     readonly animationElement: Null<SVGAnimateMotionElement>;
-    readonly keyPoints: number[];
-    readonly offsetLength: number;
-    readonly offsetPath?: SvgOffsetPath[];
-    readonly rotateValues?: number[];
     addKeyPoint(item: NumberValue): void;
-    constructor(element?: SVGGraphicsElement, animationElement?: SVGAnimateMotionElement);
+    get offsetPath(): Undef<SvgOffsetPath[]>;
+    get rotateValues(): Undef<number[]>;
+    get keyPoints(): number[];
+    get offsetLength(): number;
 }
 
 declare class SvgAnimationIntervalMap {

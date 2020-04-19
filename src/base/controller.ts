@@ -12,8 +12,8 @@ export default abstract class Controller<T extends squared.base.Node> implements
     public abstract includeElement(element: Element): boolean;
     public abstract sortInitialCache(cache?: squared.base.NodeList<T>): void;
 
-    public abstract get userSettings(): UserSettings;
     public abstract get afterInsertNode(): BindGeneric<T, void>;
+    public abstract get userSettings(): UserSettings;
 
     public preventNodeCascade(element: Element) {
         return false;

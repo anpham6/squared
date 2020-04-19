@@ -8,7 +8,6 @@ const { isTextNode } = $lib.dom;
 const { setElementCache } = $lib.session;
 
 export default class Controller<T extends View> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
-    public afterInsertNode?: BindGeneric<T, void>;
     public readonly localSettings: ControllerSettings = {
         mimeType: {
             font: '*',

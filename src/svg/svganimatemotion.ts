@@ -354,14 +354,6 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         return keyPoints.length > 0 && keyPoints.length === super.keyTimes.length;
     }
 
-    get offsetPath() {
-        return this._offsetPath;
-    }
-
-    get playable() {
-        return !this.paused && this.duration !== -1 && isString(this.path);
-    }
-
     set keyTimes(value) {
         if (!isString(this.path)) {
             super.keyTimes = value;
@@ -392,16 +384,6 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
             });
         }
         return super.values;
-    }
-
-    get rotateValues() {
-        this.setOffsetPath();
-        const path = this._offsetPath;
-        return path && objectMap(path, item => item.rotate);
-    }
-
-    get keyPoints() {
-        return this._keyPoints;
     }
 
     set reverse(value) {
@@ -483,6 +465,24 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
     get parent() {
         return super.parent;
+    }
+
+    get offsetPath() {
+        return this._offsetPath;
+    }
+
+    get playable() {
+        return !this.paused && this.duration !== -1 && isString(this.path);
+    }
+
+    get rotateValues() {
+        this.setOffsetPath();
+        const path = this._offsetPath;
+        return path && objectMap(path, item => item.rotate);
+    }
+
+    get keyPoints() {
+        return this._keyPoints;
     }
 
     get offsetLength() {

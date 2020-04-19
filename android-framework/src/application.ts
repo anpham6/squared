@@ -30,7 +30,7 @@ export default class Application<T extends View> extends squared.base.Applicatio
         return undefined;
     }
 
-    set viewModel(value: Undef<AppViewModelAndroid>) {
+    set viewModel(value) {
         this._viewModel = value;
     }
     get viewModel() {

@@ -87,7 +87,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     private readonly _extensionManager: ExtensionManager<T>;
 
     protected constructor(
-        public framework: number,
+        public readonly framework: number,
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<T>,
         ResourceConstructor: Constructor<T>,

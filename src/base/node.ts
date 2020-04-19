@@ -730,7 +730,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     private _data = {};
     private _documentBody = false;
     private _inlineText = false;
-    private _parent?: T;
+    private _parent: Null<T> = null;
     private _dataset?: {};
     private _textStyle?: StringMap;
 

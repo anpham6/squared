@@ -1385,7 +1385,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    set textContent(value: string) {
+    set textContent(value) {
         this._cached.textContent = value;
     }
     get textContent() {
@@ -1445,7 +1445,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    set multiline(value: boolean) {
+    set multiline(value) {
         this._cached.multiline = value;
         this._cached.baselineElement = undefined;
     }
@@ -1535,13 +1535,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return null;
     }
 
-    get firstChild(): Null<Node> {
-        return this.naturalChildren[0] || null;
+    get firstChild(): Null<NodeUI> {
+        return <NodeUI> this.naturalChildren[0] || null;
     }
 
-    get lastChild(): Null<Node> {
+    get lastChild(): Null<NodeUI> {
         const children = this.naturalChildren;
-        return children[children.length - 1] || null;
+        return <NodeUI> children[children.length - 1] || null;
     }
 
     get onlyChild() {
