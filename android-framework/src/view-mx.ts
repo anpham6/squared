@@ -312,7 +312,7 @@ function constraintPercentValue(node: T, horizontal: boolean, percent: number) {
 function constraintPercentWidth(node: T, percent = 1) {
     const value = node.percentWidth;
     if (value > 0) {
-        if ((node.renderParent as T).hasPX('width', false) && !(node.actualParent || node.documentParent).layoutElement) {
+        if ((node.renderParent as T).hasPX('width', false) && !((node.actualParent || node.documentParent) as T).layoutElement) {
             if (value < 1) {
                 node.setLayoutWidth(formatPX(node.actualWidth));
             }
@@ -330,7 +330,7 @@ function constraintPercentWidth(node: T, percent = 1) {
 function constraintPercentHeight(node: T, percent = 1) {
     const value = node.percentHeight;
     if (value > 0) {
-        if ((node.renderParent as T).hasPX('height', false) && !(node.actualParent || node.documentParent).layoutElement) {
+        if ((node.renderParent as T).hasPX('height', false) && !((node.actualParent || node.documentParent) as T).layoutElement) {
             if (value < 1) {
                 node.setLayoutHeight(formatPX(node.actualHeight));
             }
@@ -661,7 +661,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (!this.pageFlow && REGEX_CLIPNONE.test(this.css('clip'))) {
                 this.hide({ hidden: true });
             }
-            const actualParent = this.actualParent || this.documentParent;
+            const actualParent = this.actualParent as T || this.documentParent;
             const renderParent = this.renderParent as T;
             const flexibleWidth = !renderParent.inlineWidth;
             const flexibleHeight = !renderParent.inlineHeight;
@@ -853,7 +853,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 this.setLayoutWidth(layoutWidth || 'wrap_content');
             }
-            if (this.layoutHeight === '') {
+            if (layoutHeight === '') {
                 if (this.hasPX('height') && (!this.inlineStatic || this.cssInitial('height') === '')) {
                     const height = this.css('height');
                     let value = -1;

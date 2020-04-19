@@ -836,7 +836,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             else if (Math.ceil(this.bounds.top) >= previous.bounds.bottom) {
                                 if (siblings.every(item => item.inlineDimension)) {
                                     const actualParent = this.actualParent;
-                                    if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: item => item.layoutElement, startSelf: true })) {
+                                    if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
                                         const length = actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length;
                                         if (length === siblings.length + 1) {
                                             const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
@@ -1288,6 +1288,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get pseudoElement() {
         return this._element?.className === '__squared.pseudo';
+    }
+
+    get layoutElement() {
+        let result = this._cached.layoutElement;
+        if (result === undefined) {
+            result = this.flexElement || this.gridElement;
+            this._cached.layoutElement = result;
+        }
+        return result;
     }
 
     set documentParent(value) {

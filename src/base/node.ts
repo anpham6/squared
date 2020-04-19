@@ -1744,7 +1744,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get svgElement() {
         let result = this._cached.svgElement;
         if (result === undefined) {
-            result = !this.htmlElement && !this.plainText && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.src);
+            result = !this.htmlElement && !this.plainText && this._element instanceof SVGElement || this.imageElement && FILE.SVG.test(this.toElementString('src'));
             this._cached.svgElement = result;
         }
         return result;
@@ -1826,15 +1826,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     break;
             }
             this._cached.inputElement = result;
-        }
-        return result;
-    }
-
-    get layoutElement() {
-        let result = this._cached.layoutElement;
-        if (result === undefined) {
-            result = this.flexElement || this.gridElement;
-            this._cached.layoutElement = result;
         }
         return result;
     }
@@ -2521,10 +2512,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.textContent = result;
         }
         return result;
-    }
-
-    get src() {
-        return this.htmlElement && (<HTMLImageElement> this._element).src || '';
     }
 
     get overflowX() {

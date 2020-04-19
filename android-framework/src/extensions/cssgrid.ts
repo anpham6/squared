@@ -1030,7 +1030,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public postOptimize(node: T) {
         const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
-            if (node.blockStatic && !node.hasPX('minWidth', false) && node.actualParent?.layoutElement === false) {
+            if (node.blockStatic && !node.hasPX('minWidth', false) && (node.actualParent as T)?.layoutElement === false) {
                 const { gap, length, unit } = mainData.column;
                 let minWidth = gap * (length - 1);
                 for (const value of unit) {

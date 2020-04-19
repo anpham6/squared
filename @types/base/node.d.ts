@@ -14,7 +14,6 @@ export interface CachedValue<T> {
     naturalElement?: boolean;
     textElement?: boolean;
     tableElement?: boolean;
-    layoutElement?: boolean;
     flexElement?: boolean;
     gridElement?: boolean;
     naturalChild?: boolean;
@@ -132,6 +131,7 @@ export interface SupportUI {
 }
 
 export interface CachedValueUI<T> extends CachedValue<T> {
+    layoutElement?: boolean;
     leftTopAxis?: boolean;
     autoPosition?: boolean;
     positiveAxis?: boolean;

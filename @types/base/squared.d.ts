@@ -323,7 +323,6 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     readonly textElement: boolean;
     readonly tableElement: boolean;
     readonly inputElement: boolean;
-    readonly layoutElement: boolean;
     readonly pseudoElement: boolean;
     readonly documentBody: boolean;
     readonly dataset: DOMStringMap;
@@ -384,7 +383,6 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     readonly backgroundImage: string;
     readonly visibleStyle: VisibleStyle;
     readonly fontSize: number;
-    readonly src: string;
     readonly overflowX: boolean;
     readonly overflowY: boolean;
     readonly verticalAlign: string;
@@ -495,6 +493,7 @@ declare class NodeUI extends Node implements LayoutType {
     companion?: NodeUI;
     labelFor?: NodeUI;
     horizontalRows?: NodeUI[][];
+    readonly layoutElement: boolean;
     readonly renderChildren: NodeUI[];
     readonly nodeGroup: boolean;
     readonly textEmpty: boolean;
