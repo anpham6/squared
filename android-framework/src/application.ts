@@ -3,6 +3,8 @@ import { UserSettingsAndroid } from '../../@types/android/application';
 
 type View = android.base.View;
 
+const isTargeted = (node: View, target: Null<HTMLElement | string>) => node.element === target || node.elementId === target || node.controlId === target;
+
 export default class Application<T extends View> extends squared.base.ApplicationUI<T> implements android.base.Application<T> {
     public systemName = 'android';
     public userSettings!: UserSettingsAndroid;
@@ -15,12 +17,12 @@ export default class Application<T extends View> extends squared.base.Applicatio
     public resolveTarget(target: Null<HTMLElement | string>) {
         if (target) {
             for (const node of this.processing.cache) {
-                if (node.element === target || node.elementId === target || node.controlId === target) {
+                if (isTargeted(node, target)) {
                     return node;
                 }
             }
             for (const node of this.session.cache) {
-                if (node.element === target || node.elementId === target || node.controlId === target) {
+                if (isTargeted(node, target)) {
                     return node;
                 }
             }

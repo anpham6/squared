@@ -167,9 +167,9 @@ function getOpenCellIndex(iteration: number, length: number, available: Undef<nu
 
 function getOpenRowIndex(cells: number[][]) {
     const length = cells.length;
-    for (let i = 0; i < length; ++i) {
-        const cell = cells[i];
-        for (const value of cell) {
+    let i = 0;
+    while (i < length) {
+        for (const value of cells[i++]) {
             if (value === 0) {
                 return i;
             }

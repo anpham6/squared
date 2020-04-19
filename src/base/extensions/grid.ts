@@ -42,15 +42,19 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        if (node.length > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
+        const length = node.length;
+        if (length > 1 && !node.layoutElement && node.tagName !== 'TABLE' && !node.has('listStyle')) {
             if (node.display === 'table') {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }
             else if (node.percentWidth === 0 || !node.find(item => item.percentWidth > 0, { cascade: true })) {
                 let minLength = false;
                 let itemCount = 0;
-                for (const item of node) {
-                    if (item.pageFlow && !item.visibleStyle.background && item.blockStatic && item.percentWidth === 0 && !item.autoMargin.leftRight && !item.autoMargin.left) {
+                const children = node.children;
+                let i = 0;
+                while (i < length) {
+                    const item = children[i++];
+                    if (item.pageFlow && item.blockStatic && !item.visibleStyle.background && item.percentWidth === 0 && !item.autoMargin.leftRight && !item.autoMargin.left) {
                         if (item.length > 1) {
                             minLength = true;
                         }

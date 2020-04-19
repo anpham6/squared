@@ -442,7 +442,6 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     parseUnit(value: string, dimension?: DimensionAttr, parent?: boolean, screenDimension?: Dimension): number;
     has(attr: string, options?: HasOptions): boolean;
     hasPX(attr: string, percent?: boolean, initial?: boolean): boolean;
-    hasFlex(direction: "row" | "column"): boolean;
     setBounds(cache?: boolean): Undef<BoxRectDimension>;
     resetBounds(): void;
     querySelector(value: string): Null<Node>;

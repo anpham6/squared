@@ -1675,8 +1675,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public hasFlex(direction: "row" | "column") {
-            if (super.hasFlex(direction)) {
-                const parent = this.actualParent as T;
+            const parent = this.actualParent as T;
+            if (parent?.flexdata[direction] === true) {
                 if (direction === 'column' && !parent.hasHeight) {
                     const grandParent = parent.actualParent;
                     if (grandParent) {

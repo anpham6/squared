@@ -114,6 +114,7 @@ declare namespace base {
         setLayoutWidth(value: string, overwrite?: boolean): void;
         setLayoutHeight(value: string, overwrite?: boolean): void;
         setSingleLine(ellipsize?: boolean): void;
+        hasFlex(direction: "row" | "column"): boolean;
     }
 
     class ViewGroup extends View {}

@@ -559,11 +559,6 @@ function deleteStyleCache(element: HTMLElement, attr: string, sessionId: string)
     }
 }
 
-function flexParent(node: T, direction: "row" | "column") {
-    const parent = node.actualParent;
-    return parent?.flexElement === true && parent.flexdata[direction] === true;
-}
-
 function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin: string, attrMax: string) {
     const valueA = styleMap[attr];
     const baseValue = node.parseUnit(valueA, attr);
@@ -1340,10 +1335,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public hasPX(attr: string, percent = true, initial = false) {
         return isLength((initial && this._initial?.styleMap || this._styleMap)[attr], percent);
-    }
-
-    public hasFlex(direction: "row" | "column") {
-        return flexParent(this, direction);
     }
 
     public setBounds(cache = true) {
@@ -2808,7 +2799,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         break;
                 }
             }
-            else if (this.inlineStatic || this.display === 'table-cell' || flexParent(this, 'row')) {
+            else if (this.inlineStatic || this.display === 'table-cell' || this.actualParent?.flexdata.row === true) {
                 result = this.bounds.width;
             }
             else {
@@ -2830,7 +2821,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get actualHeight() {
         let result = this._cached.actualHeight;
         if (result === undefined) {
-            if (!this.inlineStatic && this.display !== 'table-cell' && !flexParent(this, 'column')) {
+            if (!this.inlineStatic && this.display !== 'table-cell' && !(this.actualParent?.flexdata.column === true)) {
                 result = this.height;
                 if (result > 0) {
                     if (this.contentBox && !this.tableElement) {
