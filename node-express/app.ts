@@ -440,10 +440,18 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 }
                 delete processing[filepath];
             };
-            const errorRequest = () => {
+            const errorRequest = (stream?: fs.WriteStream) => {
                 if (!notFound[uri]) {
                     finalize('');
                     notFound[uri] = true;
+                }
+                if (stream) {
+                    try {
+                        stream.close();
+                        fs.unlinkSync(filepath);
+                    }
+                    catch {
+                    }
                 }
                 delete processing[filepath];
             };
@@ -463,11 +471,13 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
-                                errorRequest();
+                                errorRequest(stream);
                                 writeError(uri, statusCode + ' ' + response.statusMessage);
                             }
                         })
-                        .on('error', errorRequest)
+                        .on('error', () => {
+                            errorRequest(stream);
+                        })
                         .pipe(stream);
                 }
                 else {
