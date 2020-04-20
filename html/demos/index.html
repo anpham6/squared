@@ -121,14 +121,20 @@
                             minHeight: '25px'
                         }
                     });
-                    squared.parseDocument('squared_ui');
-                    squared.close();
+                    const time = new Date().getTime();
+                    squared.parseDocument('squared_ui')
+                        .then(() => {
+                            squared.close();
 
-                    var views = squared.system.writeLayoutAllXml();
-                    document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+                            var views = squared.system.writeLayoutAllXml();
+                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
 
-                    var resource = squared.system.writeResourceAllXml();
-                    document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                            var resource = squared.system.writeResourceAllXml();
+                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                        })
+                        .finally(() => {
+                            console.log(new Date().getTime() - time);
+                        });
                 });
             });
         });

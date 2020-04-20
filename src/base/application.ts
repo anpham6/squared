@@ -16,10 +16,11 @@ const { capitalize, convertCamelCase, isString, objectMap, resolvePath } = $lib.
 const { CHAR, FILE, STRING, XML } = $lib.regex;
 const { getElementCache, setElementCache } = $lib.session;
 
+const PromiseHandler = $lib.base.PromiseHandler;
+
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 
 type PreloadImage = HTMLImageElement | string;
-type ResultCatch = (error: Error) => void;
 
 const REGEX_MEDIATEXT = /all|screen/;
 const REGEX_BACKGROUND = /^background/;
@@ -143,8 +144,9 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.closed = false;
     }
 
-    public parseDocument(...elements: any[]): PromiseObject {
+    public parseDocument(...elements: any[]) {
         const { controllerHandler: controller, resourceHandler: resource } = this;
+        const promiseResult = new PromiseHandler(this);
         this.initializing = false;
         this.rootElements.clear();
         const sessionId = controller.generateSessionId;
@@ -166,9 +168,6 @@ export default abstract class Application<T extends Node> implements squared.bas
             });
             preloaded.length = 0;
         };
-        let THEN: Undef<FunctionVoid>;
-        let CATCH: Undef<ResultCatch>;
-        let FINALLY: Undef<FunctionVoid>;
         const resumeThread = () => {
             removePreloaded();
             this.extensions.forEach(ext => ext.beforeParseDocument());
@@ -184,12 +183,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             catch {
             }
-            if (typeof THEN === 'function') {
-                THEN.call(this);
-            }
-            if (typeof FINALLY === 'function') {
-                FINALLY.call(this);
-            }
+            promiseResult.success();
         };
         if (elements.length === 0) {
             elements.push(document.body);
@@ -307,67 +301,25 @@ export default abstract class Application<T extends Node> implements squared.bas
                     target = <HTMLImageElement> error.target;
                 }
                 const message = target instanceof HTMLImageElement ? target.src : '';
-                if (typeof CATCH === 'function') {
+                if (!promiseResult.hasCatch && (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`))) {
+                    resumeThread();
+                }
+                else {
                     if (!(error instanceof Error)) {
                         error = new Error(message ? `FAIL: ${message}` : 'Unable to preload images.');
                     }
                     removePreloaded();
-                    CATCH.call(this, error);
-                }
-                else if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
-                    resumeThread();
-                    return;
-                }
-                else {
-                    removePreloaded();
-                }
-                if (typeof FINALLY === 'function') {
-                    FINALLY.call(this);
+                    promiseResult.throw(error);
                 }
             });
         }
         else {
             resumeThread();
         }
-        const Result = class {
-            public complete = false;
-            constructor(public thisArg: any) {
-            }
-            public then(callback: FunctionVoid) {
-                if (imageElements.length) {
-                    THEN = callback;
-                }
-                else {
-                    callback.call(this.thisArg);
-                    if (typeof FINALLY === 'function') {
-                        FINALLY.call(this.thisArg);
-                    }
-                    else {
-                        this.complete = true;
-                    }
-                }
-                return this;
-            }
-            public catch(callback: ResultCatch) {
-                CATCH = callback;
-                return this;
-            }
-            public finally(callback: FunctionVoid) {
-                if (this.complete) {
-                    if (typeof callback === 'function') {
-                        callback.call(this.thisArg);
-                    }
-                }
-                else {
-                    FINALLY = callback;
-                }
-                return this;
-            }
-        };
-        return new Result(this);
+        return promiseResult;
     }
 
-    public async parseDocumentAsync(...elements: any[]): Promise<PromiseObject> {
+    public async parseDocumentAsync(...elements: any[]): Promise<squared.lib.base.PromiseHandler> {
         return await this.parseDocument(...elements);
     }
 

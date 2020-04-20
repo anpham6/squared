@@ -36,9 +36,3 @@ interface Dimension {
     width: number;
     height: number;
 }
-
-interface PromiseObject {
-    then(callback: FunctionType<void>): void;
-    catch(callback: (error: Error) => void): void;
-    finally(callback: FunctionVoid): void;
-}

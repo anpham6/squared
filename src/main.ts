@@ -2,6 +2,7 @@ import { AppFramework } from '../@types/base/internal';
 import { FileActionOptions, UserSettings } from '../@types/base/application';
 
 import Container from './lib/base/container';
+import PromiseHandler from './lib/base/promisehandler';
 
 import * as client from './lib/client';
 import * as color from './lib/color';
@@ -78,7 +79,7 @@ export function setViewModel(data?: {}) {
     }
 }
 
-export function parseDocument(...elements: (HTMLElement | string)[]): PromiseObject {
+export function parseDocument(...elements: (HTMLElement | string)[]): PromiseHandler {
     if (main) {
         const extensionManager = main.extensionManager;
         for (const item of extensionsQueue) {
@@ -100,21 +101,10 @@ export function parseDocument(...elements: (HTMLElement | string)[]): PromiseObj
     else if (settings.showErrorMessages) {
         alert('ERROR: Framework not installed.');
     }
-    return new class {
-        public then(callback: FunctionVoid) {
-            return this;
-        }
-        public catch(callback: (error: Error) => void) {
-            callback(new Error('Framework not installed.'));
-            return this;
-        }
-        public finally(callback: FunctionVoid) {
-            return this;
-        }
-    }();
+    return new PromiseHandler();
 }
 
-export async function parseDocumentAsync(...elements: (HTMLElement | string)[]): Promise<PromiseObject> {
+export async function parseDocumentAsync(...elements: (HTMLElement | string)[]): Promise<PromiseHandler> {
     return await parseDocument(...elements);
 }
 
@@ -245,7 +235,8 @@ export function toString() {
 
 const lib = {
     base: {
-        Container
+        Container,
+        PromiseHandler
     },
     client,
     color,

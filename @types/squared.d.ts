@@ -1,14 +1,15 @@
 import { FileActionOptions, UserSettings } from './base/application';
 import { BackgroundPositionOptions, CalculateOptions, CalculateVarAsStringOptions, CalculateVarOptions, ContainerOptions, ContainerFindOptions, DelimitStringOptions, MIMEOrAll, KeyframesData } from './lib/squared';
 
+type PromiseHandler = squared.lib.base.PromiseHandler;
 type ExtensionRequest = string | squared.base.Extension<squared.base.Node>;
 
 export const settings: UserSettings;
 export const system: FunctionMap<any>;
 export function setFramework(value: {}, cached?: boolean): void;
 export function setViewModel(data?: {}): void;
-export function parseDocument(...elements: (string | HTMLElement)[]): PromiseObject;
-export function parseDocumentAsync(...elements: (string | HTMLElement)[]): Promise<PromiseObject>;
+export function parseDocument(...elements: (string | HTMLElement)[]): PromiseHandler;
+export function parseDocumentAsync(...elements: (string | HTMLElement)[]): Promise<PromiseHandler>;
 export function include(value: ExtensionRequest, options?: {}): boolean;
 export function includeAsync(value: ExtensionRequest | string, options?: {}): boolean;
 export function exclude(value: ExtensionRequest | string): boolean;
@@ -54,6 +55,22 @@ export namespace lib {
             get isEmpty(): boolean;
             get length(): number;
             constructor(children?: T[]);
+        }
+
+        class PromiseHandler {
+            status: number;
+            then(resolve: Null<FunctionVoid>): this;
+            catch(reject: Null<(error: Error) => void>): this;
+            finally(complete: FunctionVoid): this;
+            success(): void;
+            throw(error?: Error): void;
+            finalize(): void;
+            get hasThen(): boolean;
+            get hasCatch(): boolean;
+            get hasFinally(): boolean;
+            get waiting(): boolean;
+            get complete(): boolean;
+            constructor(thisArg?: {});
         }
     }
 

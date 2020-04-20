@@ -8,6 +8,8 @@ import { CssGridData, CssGridDirectionData, GridCellData } from './extension';
 
 import { FontFaceData, MIMEOrAll } from '../lib/squared';
 
+type PromiseHandler = squared.lib.base.PromiseHandler;
+
 declare interface FileActions {
     copyToDisk(directory: string, options?: FileActionOptions): void;
     appendToArchive(pathname: string, options?: FileActionOptions): void;
@@ -30,8 +32,8 @@ declare class Application<T extends Node> implements FileActions {
     readonly rootElements: Set<HTMLElement>;
     readonly Node: Constructor<T>;
     reset(): void;
-    parseDocument(...elements: (string | HTMLElement)[]): PromiseObject;
-    parseDocumentAsync(...elements: (string | HTMLElement)[]): Promise<PromiseObject>;
+    parseDocument(...elements: (string | HTMLElement)[]): PromiseHandler;
+    parseDocumentAsync(...elements: (string | HTMLElement)[]): Promise<PromiseHandler>;
     createCache(documentRoot: HTMLElement): Undef<T>;
     createNode(options: {}): T;
     insertNode(element: Element, parent?: T, pseudoElt?: string): Undef<T>;
