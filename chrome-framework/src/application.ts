@@ -1,4 +1,4 @@
-import { NodeOptionsChrome, UserSettingsChrome } from '../../@types/chrome/application';
+import { NodeOptions, UserSettings } from '../../@types/chrome/application';
 
 import Resource from './resource';
 
@@ -11,11 +11,11 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     public extensions: chrome.base.Extension<T>[] = [];
     public systemName = 'chrome';
     public queryState = 0;
-    public userSettings!: UserSettingsChrome;
+    public userSettings!: UserSettings;
 
     public finalize() {}
 
-    public createNode(options: NodeOptionsChrome) {
+    public createNode(options: NodeOptions) {
         return new this.Node(this.nextId, this.processing.sessionId, options.element);
     }
 

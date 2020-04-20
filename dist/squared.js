@@ -1,4 +1,4 @@
-/* squared 1.6.3
+/* squared 1.6.4
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -6257,21 +6257,19 @@
         });
     }
     function include(value, options) {
-        if (main) {
-            if (typeof value === 'string') {
-                value = value.trim();
-                value = main.builtInExtensions[value] || retrieve(value);
+        if (typeof value === 'string') {
+            value = value.trim();
+            value = (main === null || main === void 0 ? void 0 : main.builtInExtensions[value]) || retrieve(value);
+        }
+        if (value instanceof squared.base.Extension) {
+            extensionsExternal.add(value);
+            if (!((main === null || main === void 0 ? void 0 : main.extensionManager.include(value)) === true)) {
+                extensionsQueue.add(value);
             }
-            if (value instanceof squared.base.Extension) {
-                extensionsExternal.add(value);
-                if (!main.extensionManager.include(value)) {
-                    extensionsQueue.add(value);
-                }
-                if (options) {
-                    configure(value, options);
-                }
-                return true;
+            if (options) {
+                configure(value, options);
             }
+            return true;
         }
         return false;
     }
@@ -6292,18 +6290,15 @@
     function configure(value, options) {
         if (isPlainObject(options)) {
             if (typeof value === 'string') {
-                if (main) {
-                    value = value.trim();
-                    const extension = main.extensionManager.retrieve(value) || findSet(extensionsQueue, item => item.name === value);
-                    if (extension) {
-                        Object.assign(extension.options, options);
-                        return true;
-                    }
-                    else {
-                        optionsQueue.set(value, options);
-                        return true;
-                    }
+                value = value.trim();
+                const extension = (main === null || main === void 0 ? void 0 : main.extensionManager.retrieve(value)) || findSet(extensionsQueue, item => item.name === value);
+                if (extension) {
+                    Object.assign(extension.options, options);
                 }
+                else {
+                    optionsQueue.set(value, options);
+                }
+                return true;
             }
             else if (value instanceof squared.base.Extension) {
                 Object.assign(value.options, options);

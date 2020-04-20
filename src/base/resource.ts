@@ -1,4 +1,4 @@
-import { ControllerSettings, UserSettings } from '../../@types/base/application';
+import { UserSettings } from '../../@types/base/application';
 import { ResourceAssetMap } from '../../@types/base/resource';
 import { FontFaceData } from '../../@types/lib/squared';
 
@@ -25,7 +25,6 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public readonly abstract application: squared.base.Application<T>;
     public readonly abstract cache: squared.base.NodeList<T>;
     public readonly abstract fileSeparator: string;
-    public abstract controllerSettings: ControllerSettings;
 
     public abstract get userSettings(): UserSettings;
 
@@ -139,6 +138,10 @@ export default abstract class Resource<T extends squared.base.Node> implements s
     public setFileHandler(instance: squared.base.File<T>) {
         instance.resource = this;
         this.fileHandler = instance;
+    }
+
+    get controllerSettings() {
+        return this.application.controllerHandler.localSettings;
     }
 
     get mimeTypeMap() {

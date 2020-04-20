@@ -1,4 +1,4 @@
-/* android-framework 1.6.3
+/* android-framework 1.6.4
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -324,7 +324,7 @@ var android = (function () {
     const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
     const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, randomUUID, resolvePath, safeNestedArray, spliceArray, trimString } = $lib.util;
     const STORED = squared.base.ResourceUI.STORED;
-    const REGEX_NONWORD = /[^\w+]/g;
+    const REGEX_NONWORD = /[^\w]+/g;
     let CACHE_IMAGE = {};
     function formatObject(obj, numberAlias = false) {
         var _a;
@@ -378,7 +378,6 @@ var android = (function () {
             STORED.dimens = new Map();
             STORED.drawables = new Map();
             STORED.animators = new Map();
-            this.controllerSettings = application.controllerHandler.localSettings;
             const mimeType = this.controllerSettings.mimeType.image;
             if (mimeType !== '*') {
                 this._imageFormat = spliceArray(mimeType.slice(0), value => value === 'image/svg+xml');
@@ -597,11 +596,11 @@ var android = (function () {
             }
             return asset;
         }
-        get randomUUID() {
-            return '__' + randomUUID('_');
-        }
         get userSettings() {
             return this.application.userSettings;
+        }
+        get randomUUID() {
+            return '__' + randomUUID('_');
         }
     }
 

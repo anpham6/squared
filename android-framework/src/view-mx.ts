@@ -1,6 +1,6 @@
 import { NodeTemplate } from '../../@types/base/application';
 import { AutoMargin, BoxType, HideUIOptions, TranslateUIOptions } from '../../@types/base/node';
-import { CachedValueAndroidUI, Constraint, LocalSettingsAndroidUI, SupportAndroid } from '../../@types/android/node';
+import { CachedValueUI, Constraint, LocalSettingsUI, SupportUI } from '../../@types/android/node';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
@@ -597,10 +597,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         };
 
         protected _namespaces = ['android', 'app'];
-        protected _cached: CachedValueAndroidUI<T> = {};
+        protected _cached: CachedValueUI<T> = {};
         protected _containerType = 0;
         protected _controlName = '';
-        protected _localSettings!: LocalSettingsAndroidUI;
+        protected _localSettings!: LocalSettingsUI;
         protected _documentParent?: T;
         protected _boxAdjustment = newBoxModel();
         protected _boxReset = newBoxModel();
@@ -2283,7 +2283,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         get support() {
             let result = this._cached.support;
             if (result === undefined) {
-                result = <SupportAndroid> {
+                result = <SupportUI> {
                     positionTranslation: this.layoutConstraint,
                     positionRelative: this.layoutRelative,
                     maxDimension: this.textElement || this.imageOrSvgElement
@@ -2292,7 +2292,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this._cached.support = result;
                 }
             }
-            return <SupportAndroid> result;
+            return <SupportUI> result;
         }
 
         set renderExclude(value) {

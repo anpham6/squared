@@ -1,5 +1,5 @@
 import { NodeXmlTemplate } from '../../@types/base/application';
-import { UserSettingsAndroid } from '../../@types/android/application';
+import { UserUISettings } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
@@ -82,7 +82,7 @@ export default class BottomNavigation<T extends View> extends squared.base.Exten
 
     public setStyleTheme() {
         const options = createStyleAttribute(this.options.resource);
-        assignEmptyValue(options, 'name', (<UserSettingsAndroid> this.application.userSettings).manifestThemeName);
+        assignEmptyValue(options, 'name', (<UserUISettings> this.application.userSettings).manifestThemeName);
         assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
         Resource.addTheme(options);
     }

@@ -1,4 +1,4 @@
-import { ResourceStoredMapAndroid, StyleAttribute } from '../../../../@types/android/application';
+import { ResourceStoredMap, StyleAttribute } from '../../../../@types/android/application';
 import { ResourceFontsOptions } from '../../../../@types/android/extension';
 
 import Resource from '../../resource';
@@ -21,7 +21,7 @@ type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
-const STORED = <ResourceStoredMapAndroid> Resource.STORED;
+const STORED = <ResourceStoredMap> Resource.STORED;
 const REGEX_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
 const REGEX_DOUBLEQUOTE = /"/g;
 const FONT_ANDROID = {

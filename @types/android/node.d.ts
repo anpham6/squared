@@ -1,13 +1,13 @@
-import { CachedValueUI, ExcludeUIOptions, LocalSettingsUI, SupportUI } from '../base/node';
+import * as node from '../base/node';
 
-export interface LocalSettingsAndroidUI extends LocalSettingsUI {
+export interface LocalSettingsUI extends node.LocalSettingsUI {
     supportRTL: boolean;
     floatPrecision: number;
 }
 
-export interface CachedValueAndroidUI<T> extends CachedValueUI<T> {}
+export interface CachedValueUI<T> extends node.CachedValueUI<T> {}
 
-export interface SupportAndroid extends SupportUI {
+export interface SupportUI extends node.SupportUI {
     maxDimension: boolean;
 }
 
@@ -26,15 +26,7 @@ export interface RenderSpaceAttribute extends ViewAttribute {
     rowSpan?: number;
 }
 
-export interface Constraint {
-    current: ObjectMap<{ documentId: string; horizontal: boolean }>;
-    horizontal: boolean;
-    vertical: boolean;
-    barrier?: ObjectMap<string>;
-    guideline?: ObjectMapNested<ObjectMapNested<number>>;
-}
-
-export interface WrapperOptions<T> extends ExcludeUIOptions {
+export interface WrapperOptions<T> extends node.ExcludeUIOptions {
     children?: T[];
     containerType?: number;
     alignmentType?: number;
@@ -42,4 +34,12 @@ export interface WrapperOptions<T> extends ExcludeUIOptions {
     resetMargin?: boolean;
     inheritDataset?: boolean;
     inheritContentBox?: boolean;
+}
+
+export interface Constraint {
+    current: ObjectMap<{ documentId: string; horizontal: boolean }>;
+    horizontal: boolean;
+    vertical: boolean;
+    barrier?: ObjectMap<string>;
+    guideline?: ObjectMapNested<ObjectMapNested<number>>;
 }

@@ -1,9 +1,9 @@
-import { ControllerUISettings, FileCopyingOptions, FileArchivingOptions, UserUISettings } from '../base/application';
-import { ResourceStoredMap } from '../base/resource';
+import * as application from '../base/application';
+import * as resource from '../base/resource';
 
 type View = android.base.View;
 
-export interface UserSettingsAndroid extends UserUISettings {
+export interface UserUISettings extends application.UserUISettings {
     targetAPI: number;
     resolutionDPI: number;
     resolutionScreenWidth: number;
@@ -19,7 +19,7 @@ export interface UserSettingsAndroid extends UserUISettings {
     outputMainFileName: string;
 }
 
-export interface ControllerSettingsAndroid extends ControllerUISettings {
+export interface ControllerUISettings extends application.ControllerUISettings {
     deviations: {
         textMarginBoundarySize: number;
         subscriptBottomOffset: number;
@@ -28,7 +28,7 @@ export interface ControllerSettingsAndroid extends ControllerUISettings {
     };
 }
 
-export interface ResourceStoredMapAndroid extends ResourceStoredMap {
+export interface ResourceStoredMap extends resource.ResourceStoredMap {
     styles: Map<string, StyleAttribute>;
     themes: Map<string, Map<string, StyleAttribute>>;
     dimens: Map<string, string>;
@@ -36,16 +36,7 @@ export interface ResourceStoredMapAndroid extends ResourceStoredMap {
     animators: Map<string, string>;
 }
 
-export interface StyleAttribute {
-    name: string;
-    parent: string;
-    items: StringMap | StringValue[];
-    output?: {
-        path: string;
-        file: string;
-    };
-    ids?: number[];
-}
+export interface FileOutputOptions extends application.FileCopyingOptions, application.FileArchivingOptions {}
 
 export interface GuidelineOptions {
     orientation?: string;
@@ -61,6 +52,15 @@ export interface RenderNodeStaticAttribute {
     content?: string;
 }
 
-export interface FileOutputOptions extends FileCopyingOptions, FileArchivingOptions {}
+export interface StyleAttribute {
+    name: string;
+    parent: string;
+    items: StringMap | StringValue[];
+    output?: {
+        path: string;
+        file: string;
+    };
+    ids?: number[];
+}
 
 export type CustomizationResult = (result: {}, api?: number, node?: View) => boolean;

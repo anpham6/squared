@@ -1,4 +1,4 @@
-import { ResourceStoredMapAndroid } from '../../../../@types/android/application';
+import { ResourceStoredMap } from '../../../../@types/android/application';
 
 import Resource from '../../resource';
 
@@ -9,7 +9,7 @@ const $lib = squared.lib;
 const { XML } = $lib.regex;
 const { convertUnderscore, fromLastIndexOf, safeNestedArray, safeNestedMap } = $lib.util;
 
-const STORED = <ResourceStoredMapAndroid> Resource.STORED;
+const STORED = <ResourceStoredMap> Resource.STORED;
 const REGEX_UNIT = /\dpx$/;
 const REGEX_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/;
 

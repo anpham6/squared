@@ -1,8 +1,9 @@
-import { MIMEOrAll } from '../lib/squared';
 import { FileAsset } from '../base/file';
-import { AppViewModelAndroid } from './internal';
-import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMapAndroid, StyleAttribute, UserSettingsAndroid } from './application';
-import { Constraint, LocalSettingsAndroidUI, RenderSpaceAttribute, SupportAndroid, ViewAttribute, WrapperOptions } from './node';
+import { AppViewModel } from './internal';
+import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMap, StyleAttribute, UserUISettings } from './application';
+import { Constraint, LocalSettingsUI, RenderSpaceAttribute, SupportUI, ViewAttribute, WrapperOptions } from './node';
+
+import { MIMEOrAll } from '../lib/squared';
 
 import * as squared from '../squared';
 import LayoutUI = squared.base.LayoutUI;
@@ -11,12 +12,12 @@ type View = base.View;
 
 declare namespace base {
     class Application<T extends View>  extends squared.base.ApplicationUI<T> {
-        readonly userSettings: UserSettingsAndroid;
+        readonly userSettings: UserUISettings;
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;
         readonly fileHandler: File<T>;
         set viewModel(value);
-        get viewModel(): Undef<AppViewModelAndroid>;
+        get viewModel(): Undef<AppViewModel>;
         resolveTarget(target: Null<HTMLElement | string>): Undef<T>;
     }
 
@@ -35,12 +36,12 @@ declare namespace base {
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
         createNodeWrapper(node: T, parent: T, options?: WrapperOptions<T>): T;
-        get userSettings(): UserSettingsAndroid;
+        get userSettings(): UserUISettings;
         get screenDimension(): Dimension;
     }
 
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
-        public static STORED: ResourceStoredMapAndroid;
+        public static STORED: ResourceStoredMap;
         public static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         public static formatName(value: string): string;
         public static addTheme(theme: StyleAttribute, path?: string, file?: string): boolean;
@@ -49,14 +50,14 @@ declare namespace base {
         public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
-        get userSettings(): UserSettingsAndroid;
+        get userSettings(): UserUISettings;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
     }
 
     class File<T extends View> extends squared.base.FileUI<T> {
         resource: Resource<T>;
-        get userSettings(): UserSettingsAndroid;
+        get userSettings(): UserUISettings;
         resourceAllToXml(options?: FileOutputOptions): {};
         resourceStringToXml(options?: FileOutputOptions): string[];
         resourceStringArrayToXml(options?: FileOutputOptions): string[];
@@ -100,7 +101,7 @@ declare namespace base {
         set anchored(value);
         get anchored(): boolean;
         set localSettings(value);
-        get localSettings(): LocalSettingsAndroidUI;
+        get localSettings(): LocalSettingsUI;
         get anchorTarget(): View;
         get imageOrSvgElement(): boolean;
         get layoutFrame(): boolean;
@@ -117,7 +118,7 @@ declare namespace base {
         get flexibleWidth(): boolean;
         get flexibleHeight(): boolean;
         get target(): Null<HTMLElement>;
-        get support(): SupportAndroid;
+        get support(): SupportUI;
     }
 
     class ViewGroup extends View {}

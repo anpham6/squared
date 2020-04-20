@@ -1,6 +1,6 @@
-import { AppViewModel } from '../base/internal';
+import * as internal from '../base/internal';
 
-export interface AppViewModelAndroid extends AppViewModel {
+export interface AppViewModel extends internal.AppViewModel {
     import?: string[];
     variable?: { name: string; type: string }[];
 }

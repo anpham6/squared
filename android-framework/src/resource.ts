@@ -1,6 +1,6 @@
-import { MIMEOrAll } from '../../@types/lib/squared';
-import { ResourceStoredMapAndroid, StyleAttribute } from '../../@types/android/application';
+import { ResourceStoredMap, StyleAttribute } from '../../@types/android/application';
 import { ViewAttribute } from '../../@types/android/node';
+import { MIMEOrAll } from '../../@types/lib/squared';
 
 import { RESERVED_JAVA } from './lib/constant';
 
@@ -13,8 +13,8 @@ const { extractURL, getSrcSet } = $lib.css;
 const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
 const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, randomUUID, resolvePath, safeNestedArray, spliceArray, trimString } = $lib.util;
 
-const STORED = <ResourceStoredMapAndroid> squared.base.ResourceUI.STORED;
-const REGEX_NONWORD = /[^\w+]/g;
+const STORED = <ResourceStoredMap> squared.base.ResourceUI.STORED;
+const REGEX_NONWORD = /[^\w]+/g;
 let CACHE_IMAGE: StringMap = {};
 
 function formatObject(obj: {}, numberAlias = false) {
@@ -218,7 +218,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         STORED.dimens = new Map();
         STORED.drawables = new Map();
         STORED.animators = new Map();
-        this.controllerSettings = application.controllerHandler.localSettings;
         const mimeType = this.controllerSettings.mimeType.image;
         if (mimeType !== '*') {
             this._imageFormat = spliceArray(mimeType.slice(0), value => value === 'image/svg+xml');
@@ -302,11 +301,11 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return asset;
     }
 
-    get randomUUID() {
-        return '__' + randomUUID('_');
-    }
-
     get userSettings() {
         return this.application.userSettings;
+    }
+
+    get randomUUID() {
+        return '__' + randomUUID('_');
     }
 }

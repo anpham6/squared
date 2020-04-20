@@ -1,4 +1,4 @@
-import { UserSettingsChrome } from './application';
+import { NodeOptions, UserSettings } from './application';
 import { ChromeAsset } from './file';
 
 import * as squared from '../squared';
@@ -12,29 +12,30 @@ declare function querySelectorAll(value: string): Promise<Null<View>>;
 
 declare namespace base {
     class Application<T extends View> extends squared.base.Application<T> {
-        userSettings: UserSettingsChrome;
+        userSettings: UserSettings;
         queryState: number;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
+        createNode(options: NodeOptions): T;
     }
 
     class Controller<T extends View> extends squared.base.Controller<T> {
         application: Application<T>;
         get elementMap(): Map<Element, T>;
-        get userSettings(): UserSettingsChrome;
+        get userSettings(): UserSettings;
         cacheElement(node: T): void;
         cacheElementList(list: squared.base.NodeList<T>): void;
     }
 
     class Resource<T extends View> extends squared.base.Resource<T> {
         application: Application<T>;
-        get userSettings(): UserSettingsChrome;
+        get userSettings(): UserSettings;
     }
 
     class File<T extends View> extends squared.base.File<T> {
         resource: Resource<T>;
         get application(): Application<T>;
-        get userSettings(): UserSettingsChrome;
+        get userSettings(): UserSettings;
         get outputFileExclusions(): RegExp[];
         getHtmlPage(name?: string, ignoreExtensions?: boolean): ChromeAsset[];
         getScriptAssets(ignoreExtensions?: boolean): ChromeAsset[];

@@ -1,4 +1,4 @@
-/* squared.base 1.6.3
+/* squared.base 1.6.4
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -135,6 +135,9 @@
         setFileHandler(instance) {
             instance.resource = this;
             this.fileHandler = instance;
+        }
+        get controllerSettings() {
+            return this.application.controllerHandler.localSettings;
         }
         get mimeTypeMap() {
             return this.controllerSettings.mimeType;
@@ -6135,7 +6138,7 @@
         afterCreateCache(node) {
             const systemName = capitalize$2(this.systemName);
             const dataset = node.dataset;
-            const filename = dataset['filename' + systemName];
+            const filename = dataset['filename' + systemName] || dataset.filename;
             const iteration = dataset['iteration' + systemName];
             const prefix = isString$3(filename) && filename.replace(new RegExp(`\\.${this._controllerSettings.layout.fileExtension}$`), '') || node.elementId || `document_${this.length}`;
             const suffix = (iteration ? parseInt(iteration) : -1) + 1;
@@ -9376,6 +9379,9 @@
                     .replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
             }
             return value;
+        }
+        get controllerSettings() {
+            return this.application.controllerHandler.localSettings;
         }
     }
     ResourceUI.STORED = {

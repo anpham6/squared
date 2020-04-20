@@ -147,7 +147,6 @@ declare class Resource<T extends Node> implements Resource<T> {
     public static KEY_NAME: string;
     public static ASSETS: ResourceAssetMap;
     public static canCompressImage(filename: string): boolean;
-    controllerSettings: ControllerSettings;
     fileHandler?: File<T>;
     readonly application: Application<T>;
     readonly cache: NodeList<T>;
@@ -163,6 +162,7 @@ declare class Resource<T extends Node> implements Resource<T> {
     addRawData(uri: string, mimeType: string, encoding: string, content: string): string;
     getRawData(uri: string): Undef<RawAsset>;
     setFileHandler(instance: File<T>): void;
+    get controllerSettings(): ControllerSettings;
     get userSettings(): UserSettings;
     get mimeTypeMap(): ObjectMap<MIMEOrAll>;
     get randomUUID(): string;
@@ -180,12 +180,12 @@ declare class ResourceUI<T extends NodeUI> extends Resource<T> {
     public static isInheritedStyle<T extends NodeUI>(node: T, attr: string): boolean;
     public static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
     public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
-    controllerSettings: ControllerUISettings;
     finalize(layouts: FileAsset[]): void;
     writeRawImage(filename: string, base64: string): Undef<Partial<RawAsset>>;
     setBoxStyle(node: T): void;
     setFontStyle(node: T): void;
     setValueString(node: T): void;
+    get controllerSettings(): ControllerUISettings;
     get userSettings(): UserUISettings;
 }
 

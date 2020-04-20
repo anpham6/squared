@@ -1,7 +1,7 @@
 import { FileAsset } from '../../@types/base/file';
 import { ChromeFramework } from '../../@types/chrome/internal';
-import { UserSettingsChrome } from '../../@types/chrome/application';
-import { FileCopyingOptionsChrome, FileArchivingOptionsChrome } from '../../@types/chrome/file';
+import { UserSettings } from '../../@types/chrome/application';
+import { FileCopyingOptions, FileArchivingOptions } from '../../@types/chrome/file';
 
 import Application from './application';
 import Controller from './controller';
@@ -26,7 +26,7 @@ import SETTINGS from './settings';
 import * as enumeration from './lib/enumeration';
 import * as constant from './lib/constant';
 
-type FileOptions = FileArchivingOptionsChrome | FileCopyingOptionsChrome;
+type FileOptions = FileArchivingOptions | FileCopyingOptions;
 
 const { flatArray, isString, isObject } = squared.lib.util;
 
@@ -35,7 +35,7 @@ let initialized = false;
 let application: Application<View>;
 let controller: Controller<View>;
 let file: Undef<File<View>>;
-let userSettings: UserSettingsChrome;
+let userSettings: UserSettings;
 let elementMap: Map<Element, View>;
 
 function getCachedElement(element: HTMLElement, cache: boolean) {
@@ -218,60 +218,60 @@ const appBase: ChromeFramework<View> = {
         clearElementMap() {
             controller?.elementMap.clear();
         },
-        copyHtmlPage(directory: string, options?: FileCopyingOptionsChrome) {
+        copyHtmlPage(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
                 file?.copying(createAssetsOptions(file.getHtmlPage(options?.name), options, directory));
             }
         },
-        copyScriptAssets(directory: string, options?: FileCopyingOptionsChrome) {
+        copyScriptAssets(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
                 file?.copying(createAssetsOptions(file.getScriptAssets(), options, directory));
             }
         },
-        copyLinkAssets(directory: string, options?: FileCopyingOptionsChrome) {
+        copyLinkAssets(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
                 file?.copying(createAssetsOptions(file.getLinkAssets(options?.rel), options, directory));
             }
         },
-        copyImageAssets(directory: string, options?: FileCopyingOptionsChrome) {
+        copyImageAssets(directory: string, options?: FileCopyingOptions) {
             if (file && isString(directory)) {
                 file.copying(createAssetsOptions(file.getImageAssets(), options, directory));
             }
         },
-        copyVideoAssets(directory: string, options?: FileCopyingOptionsChrome) {
+        copyVideoAssets(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
                 file?.copying(createAssetsOptions(file.getVideoAssets(), options, directory));
             }
         },
-        copyAudioAssets(directory: string, options?: FileCopyingOptionsChrome) {
+        copyAudioAssets(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
                 file?.copying(createAssetsOptions(file.getAudioAssets(), options, directory));
             }
         },
-        copyFontAssets(directory: string, options?: FileCopyingOptionsChrome) {
+        copyFontAssets(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
                 file?.copying(createAssetsOptions(file.getFontAssets(), options, directory));
             }
         },
-        saveHtmlPage(filename?: string, options?: FileArchivingOptionsChrome) {
+        saveHtmlPage(filename?: string, options?: FileArchivingOptions) {
             file?.archiving(createAssetsOptions(file.getHtmlPage(options?.name), options, undefined, (filename || userSettings.outputArchiveName) + '-html'));
         },
-        saveScriptAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+        saveScriptAssets(filename?: string, options?: FileArchivingOptions) {
             file?.archiving(createAssetsOptions(file.getScriptAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-script'));
         },
-        saveLinkAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+        saveLinkAssets(filename?: string, options?: FileArchivingOptions) {
             file?.archiving(createAssetsOptions(file.getLinkAssets(options?.rel), options, undefined, (filename || userSettings.outputArchiveName) + '-link'));
         },
-        saveImageAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+        saveImageAssets(filename?: string, options?: FileArchivingOptions) {
             file?.archiving(createAssetsOptions(file.getImageAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-image'));
         },
-        saveVideoAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+        saveVideoAssets(filename?: string, options?: FileArchivingOptions) {
             file?.archiving(createAssetsOptions(file.getVideoAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-video'));
         },
-        saveAudioAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+        saveAudioAssets(filename?: string, options?: FileArchivingOptions) {
             file?.archiving(createAssetsOptions(file.getAudioAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-audio'));
         },
-        saveFontAssets(filename?: string, options?: FileArchivingOptionsChrome) {
+        saveFontAssets(filename?: string, options?: FileArchivingOptions) {
             file?.archiving(createAssetsOptions(file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
         }
     },
@@ -347,7 +347,7 @@ const appBase: ChromeFramework<View> = {
         }
         return null;
     },
-    saveAsWebPage: async (filename?: string, options?: FileArchivingOptionsChrome) => {
+    saveAsWebPage: async (filename?: string, options?: FileArchivingOptions) => {
         if (file) {
             if (!isObject(options)) {
                 options = {};

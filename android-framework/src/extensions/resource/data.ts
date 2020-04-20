@@ -1,5 +1,5 @@
 import { LayoutRoot } from '../../../../@types/base/application';
-import { AppViewModelAndroid } from '../../../../@types/android/internal';
+import { AppViewModel } from '../../../../@types/android/internal';
 
 import { getDataSet } from '../../lib/util';
 
@@ -11,7 +11,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
     public readonly eventOnly = true;
 
     public beforeCascade(documentRoot: LayoutRoot<T>[]) {
-        const viewModel = <AppViewModelAndroid> this.application.viewModel;
+        const viewModel = <AppViewModel> this.application.viewModel;
         if (viewModel) {
             const controller = this.controller;
             const applied = new Set<T>();

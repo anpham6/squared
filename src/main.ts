@@ -109,21 +109,19 @@ export async function parseDocumentAsync(...elements: (HTMLElement | string)[]):
 }
 
 export function include(value: ExtensionRequest, options?: {}) {
-    if (main) {
-        if (typeof value === 'string') {
-            value = value.trim();
-            value = main.builtInExtensions[value] || retrieve(value);
+    if (typeof value === 'string') {
+        value = value.trim();
+        value = main?.builtInExtensions[value] || retrieve(value);
+    }
+    if (value instanceof squared.base.Extension) {
+        extensionsExternal.add(value);
+        if (!(main?.extensionManager.include(value) === true)) {
+            extensionsQueue.add(value);
         }
-        if (value instanceof squared.base.Extension) {
-            extensionsExternal.add(value);
-            if (!main.extensionManager.include(value)) {
-                extensionsQueue.add(value);
-            }
-            if (options) {
-                configure(value, options);
-            }
-            return true;
+        if (options) {
+            configure(value, options);
         }
+        return true;
     }
     return false;
 }
@@ -146,18 +144,15 @@ export function exclude(value: ExtensionRequest) {
 export function configure(value: ExtensionRequest, options: {}) {
     if (util.isPlainObject(options)) {
         if (typeof value === 'string') {
-            if (main) {
-                value = value.trim();
-                const extension = main.extensionManager.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
-                if (extension) {
-                    Object.assign(extension.options, options);
-                    return true;
-                }
-                else {
-                    optionsQueue.set(value, options);
-                    return true;
-                }
+            value = value.trim();
+            const extension = main?.extensionManager.retrieve(value) || util.findSet(extensionsQueue, item => item.name === value);
+            if (extension) {
+                Object.assign(extension.options, options);
             }
+            else {
+                optionsQueue.set(value, options);
+            }
+            return true;
         }
         else if (value instanceof squared.base.Extension) {
             Object.assign(value.options, options);

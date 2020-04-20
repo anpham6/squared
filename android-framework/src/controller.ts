@@ -1,7 +1,7 @@
 import { LayoutType, NodeGroupUIOptions, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
 import { FileAsset, ImageAsset } from '../../@types/base/file';
-import { ControllerSettingsAndroid, GuidelineOptions, RenderNodeStaticAttribute } from '../../@types/android/application';
-import { LocalSettingsAndroidUI, RenderSpaceAttribute, ViewAttribute, WrapperOptions } from '../../@types/android/node';
+import { ControllerUISettings, GuidelineOptions, RenderNodeStaticAttribute } from '../../@types/android/application';
+import { LocalSettingsUI, RenderSpaceAttribute, ViewAttribute, WrapperOptions } from '../../@types/android/node';
 
 import Resource from './resource';
 import View from './view';
@@ -460,7 +460,7 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly = fa
 }
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
-    public readonly localSettings: ControllerSettingsAndroid = {
+    public readonly localSettings: ControllerUISettings = {
         layout: {
             pathName: 'res/layout',
             fileExtension: 'xml',
@@ -525,7 +525,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     protected _screenDimension!: Dimension;
 
-    private _defaultViewSettings!: LocalSettingsAndroidUI;
+    private _defaultViewSettings!: LocalSettingsUI;
     private _targetAPI!: number;
 
     constructor(

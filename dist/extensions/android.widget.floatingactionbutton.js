@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 1.6.3
+/* android.widget.floatingactionbutton 1.6.4
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};

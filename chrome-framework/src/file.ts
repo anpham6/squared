@@ -1,5 +1,5 @@
 import { FileAsset } from '../../@types/base/file';
-import { ChromeAsset, FileArchivingOptionsChrome, FileCopyingOptionsChrome } from '../../@types/chrome/file';
+import { ChromeAsset, FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/file';
 
 import Resource from './resource';
 
@@ -99,7 +99,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         this._outputFileExclusions = undefined;
     }
 
-    public copyToDisk(directory: string, options?: FileCopyingOptionsChrome) {
+    public copyToDisk(directory: string, options?: FileCopyingOptions) {
         this.copying({
             ...options,
             assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
@@ -107,7 +107,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         });
     }
 
-    public appendToArchive(pathname: string, options?: FileArchivingOptionsChrome) {
+    public appendToArchive(pathname: string, options?: FileArchivingOptions) {
         this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
@@ -116,7 +116,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         });
     }
 
-    public saveToArchive(filename: string, options?: FileArchivingOptionsChrome) {
+    public saveToArchive(filename: string, options?: FileArchivingOptions) {
         this.archiving({
             ...options,
             assets: <FileAsset[]> this.getAssetsAll(options).concat(options?.assets || []),
@@ -337,7 +337,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
-    protected getAssetsAll(options: FileArchivingOptionsChrome = {}) {
+    protected getAssetsAll(options: FileArchivingOptions = {}) {
         const { name, rel } = options;
         const saveAsWebPage = options.saveAsWebPage === true;
         const result = this.getHtmlPage(name, saveAsWebPage).concat(this.getLinkAssets(rel, saveAsWebPage));

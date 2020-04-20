@@ -1,5 +1,5 @@
 import { NodeXmlTemplate } from '../../@types/base/application';
-import { UserSettingsAndroid } from '../../@types/android/application';
+import { UserUISettings } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
@@ -132,7 +132,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
     }
 
     public setStyleTheme(api: number) {
-        const settings = <UserSettingsAndroid> this.application.userSettings;
+        const settings = <UserUISettings> this.application.userSettings;
         const options = createStyleAttribute(this.options.resource);
         assignEmptyValue(options, 'name', settings.manifestThemeName);
         assignEmptyValue(options, 'parent', settings.manifestParentThemeName);

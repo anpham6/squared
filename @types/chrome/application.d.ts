@@ -1,11 +1,11 @@
-import { UserSettings } from '../base/application';
+import * as application from '../base/application';
 
-export interface UserSettingsChrome extends UserSettings {
+export interface UserSettings extends application.UserSettings {
     compressImages: boolean;
     excludePlainText: boolean;
     outputFileExclusions: string[];
 }
 
-export interface NodeOptionsChrome {
+export interface NodeOptions {
     element: Element;
 }

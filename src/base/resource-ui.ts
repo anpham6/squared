@@ -1,4 +1,4 @@
-import { ControllerUISettings, UserUISettings } from '../../@types/base/application';
+import { UserUISettings } from '../../@types/base/application';
 import { ResourceStoredMap } from '../../@types/base/resource';
 import { FileAsset, RawAsset } from '../../@types/base/file';
 
@@ -680,7 +680,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public fileHandler?: squared.base.FileUI<T>;
-    public abstract controllerSettings: ControllerUISettings;
 
     public abstract get userSettings(): UserUISettings;
 
@@ -1043,5 +1042,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         .replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
         }
         return value;
+    }
+
+    get controllerSettings() {
+        return (<squared.base.ControllerUI<T>> this.application.controllerHandler).localSettings;
     }
 }

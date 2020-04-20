@@ -1,4 +1,4 @@
-/* chrome-framework 1.6.3
+/* chrome-framework 1.6.4
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -9,7 +9,6 @@ var chrome = (function () {
             super();
             this.application = application;
             this.cache = cache;
-            this.controllerSettings = application.controllerHandler.localSettings;
         }
         get userSettings() {
             return this.application.userSettings;

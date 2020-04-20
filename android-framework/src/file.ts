@@ -1,6 +1,6 @@
 import { FileArchivingOptions, FileCopyingOptions } from '../../@types/base/application';
 import { FileAsset } from '../../@types/base/file';
-import { FileOutputOptions, ResourceStoredMapAndroid } from '../../@types/android/application';
+import { FileOutputOptions, ResourceStoredMap } from '../../@types/android/application';
 
 import Resource from './resource';
 
@@ -28,7 +28,7 @@ type ItemValue = {
 };
 
 const ASSETS = Resource.ASSETS;
-const STORED = <ResourceStoredMapAndroid> Resource.STORED;
+const STORED = <ResourceStoredMap> Resource.STORED;
 const REGEX_FILENAME = /^(.+)\/(.+?\.\w+)$/;
 const REGEX_DRAWABLE_UNIT = /"(-?[\d.]+)px"/g;
 const REGEX_THEME_UNIT = />(-?[\d.]+)px</g;

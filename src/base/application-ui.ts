@@ -527,7 +527,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public afterCreateCache(node: T) {
         const systemName = capitalize(this.systemName);
         const dataset = node.dataset;
-        const filename = dataset['filename' + systemName];
+        const filename = dataset['filename' + systemName] || dataset.filename;
         const iteration = dataset['iteration' + systemName];
         const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._controllerSettings.layout.fileExtension}$`), '') || node.elementId || `document_${this.length}`;
         const suffix = (iteration ? parseInt(iteration) : -1) + 1;

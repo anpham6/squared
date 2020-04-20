@@ -1,5 +1,5 @@
 import { SvgLinearGradient, SvgMatrix, SvgPoint, SvgRadialGradient, SvgTransform } from '../../../../@types/svg/object';
-import { ResourceStoredMapAndroid } from '../../../../@types/android/application';
+import { ResourceStoredMap } from '../../../../@types/android/application';
 import { ResourceSvgOptions } from '../../../../@types/android/extension';
 import { GradientTemplate } from '../../../../@types/android/resource';
 
@@ -150,7 +150,7 @@ interface AnimateGroup {
     pathData?: string;
 }
 
-const STORED = <ResourceStoredMapAndroid> Resource.STORED;
+const STORED = <ResourceStoredMap> Resource.STORED;
 const INTERPOLATOR_ANDROID = {
     accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',
     accelerate:	'@android:anim/accelerate_interpolator',
