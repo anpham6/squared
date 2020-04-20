@@ -615,6 +615,23 @@ See /android/widget/*.html for usage instructions in the squared-apache <https:/
 
 <img src="html/demos/images/android/menu.png" alt="toolbar: menu" />
 
+### CHROME: Extension configuration
+
+Most extensions have a few settings which can be configured. Compression and quality default settings are at their maximum level.
+
+```javascript
+chrome.extension.options = { // internal representation
+    mimeTypes: ['image/jpeg', 'image/bmp', 'image/gif', 'image/tiff'],
+    replaceWith: true,
+    pickSmaller: false
+};
+
+squared.configure('chrome.convert.png', {
+    replaceWith: false,
+    pickSmaller: true
+});
+```
+
 ### LICENSE
 
 MIT

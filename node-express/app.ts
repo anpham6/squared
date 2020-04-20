@@ -1,5 +1,7 @@
 import { CompressionFormat, RequestAsset, Settings } from '../@types/node-express/node';
 
+import got from 'got';
+
 import express = require('express');
 import bodyParser = require('body-parser');
 import path = require('path');
@@ -10,8 +12,6 @@ import decompress = require('decompress');
 import uuid = require('uuid');
 import jimp = require('jimp');
 import tinify = require('tinify');
-
-import got from 'got';
 
 interface AsyncStatus {
     archiving: boolean;
@@ -26,7 +26,6 @@ interface CompressOutput {
     brotli?: number;
 }
 
-let squared: Settings | undefined;
 let DISK_READ = false;
 let DISK_WRITE = false;
 let UNC_READ = false;
@@ -40,19 +39,8 @@ const app = express();
 const port = process.env.PORT || '3000';
 const env: string = app.get('env');
 
-app.set('port', port);
-app.use(bodyParser.json({ limit: squared?.request_post_limit || '100mb' }));
-app.use(bodyParser.urlencoded({ extended: true }));
-
 try {
-    squared = require('./squared.settings.json');
-}
-catch (err) {
-    console.log(`FAIL: ${err}`);
-}
-
-if (squared) {
-    const { disk_read, disk_write, unc_read, unc_write, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, routing } = squared;
+    const { disk_read, disk_write, unc_read, unc_write, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, routing } = <Settings> require('./squared.settings.json');
     DISK_READ = disk_read === true;
     DISK_WRITE = disk_write === true;
     UNC_READ = unc_read === true;
@@ -80,11 +68,17 @@ if (squared) {
     if (Array.isArray(routing)) {
         routing.forEach(route => app.use(route.path, express.static(path.join(__dirname, route.mount))));
     }
+    app.use(bodyParser.json({ limit: request_post_limit || '100mb' }));
 }
-else {
+catch (err) {
+    app.use(bodyParser.json({ limit: '100mb' }));
     app.use('/dist', express.static(path.join(__dirname, 'dist')));
     app.use('/', express.static(path.join(__dirname, 'html')));
+    console.log(`FAIL: ${err}`);
 }
+
+app.set('port', port);
+app.use(bodyParser.urlencoded({ extended: true }));
 
 if (env === 'development') {
     app.use('/build', express.static(path.join(__dirname, 'build')));

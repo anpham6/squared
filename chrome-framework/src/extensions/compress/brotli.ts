@@ -5,7 +5,7 @@ import Extension from '../../extension';
 
 const { safeNestedArray } = squared.lib.util;
 
-type View = android.base.View;
+type View = chrome.base.View;
 
 export default class Brotli<T extends View> extends Extension<T> {
     public readonly options: CompressOptions = {

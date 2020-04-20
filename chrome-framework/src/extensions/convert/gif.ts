@@ -3,7 +3,7 @@ import { ConvertOptions } from '../../../../@types/chrome/extension';
 
 import Extension from '../../extension';
 
-type View = android.base.View;
+type View = chrome.base.View;
 
 export default class Gif<T extends View> extends Extension<T> {
     public readonly options: ConvertOptions = {

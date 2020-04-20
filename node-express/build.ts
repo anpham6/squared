@@ -27,7 +27,7 @@ for (let i = 2; i < ARGV.length; i += 2) {
             break;
         }
         case '-m':
-        case '-modules': {
+        case '-modules':
             arg.split(',').forEach(value => {
                 const module = value.toLowerCase();
                 switch (module) {
@@ -37,7 +37,6 @@ for (let i = 2; i < ARGV.length; i += 2) {
                 }
             });
             break;
-        }
         case '-e':
         case '-extensions':
             arg.split(',').forEach(value => {
@@ -73,7 +72,6 @@ if (framework) {
 if (output) {
     try {
         let content = '';
-        let fail = '';
         for (let value of files) {
             if (value) {
                 value = path.resolve(`dist/${value}.min.js`);
@@ -81,31 +79,25 @@ if (output) {
                     content += fs.readFileSync(value);
                 }
                 else {
-                    fail = value;
-                    break;
+                    throw Error(value);
                 }
             }
         }
         for (const value of extensions) {
             content += fs.readFileSync(value);
         }
-        if (fail === '') {
-            const dirname = path.dirname(output);
-            if (!fs.existsSync(dirname)) {
-                fs.mkdirpSync(dirname);
+        const dirname = path.dirname(output);
+        if (!fs.existsSync(dirname)) {
+            fs.mkdirpSync(dirname);
+        }
+        fs.writeFile(output, content, err => {
+            if (err) {
+                throw err;
             }
-            fs.writeFile(output, content, err => {
-                if (err) {
-                    throw err;
-                }
-                else {
-                    console.log(`WRITE: Bundle created (${output})`);
-                }
-            });
-        }
-        else {
-            throw Error(fail);
-        }
+            else {
+                console.log(`WRITE: Bundle created (${output})`);
+            }
+        });
     }
     catch (err) {
         console.log(`FAIL: Build incomplete (${err})`);
