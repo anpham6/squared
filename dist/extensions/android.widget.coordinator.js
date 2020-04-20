@@ -1,4 +1,4 @@
-/* android.widget.coordinator 1.6.2
+/* android.widget.coordinator 1.6.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -19,7 +19,7 @@ this.android.widget.coordinator = (function () {
             const extensionManager = this.application.extensionManager;
             const options = createViewAttribute(this.options[node.elementId]);
             Resource.formatOptions(options, extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-            const element = Coordinator.findNestedElement(node.element, "android.widget.toolbar" /* TOOLBAR */);
+            const element = Coordinator.findNestedElement(node, "android.widget.toolbar" /* TOOLBAR */);
             if (element) {
                 const toolbar = getElementAsNode(element, node.sessionId);
                 if (toolbar) {

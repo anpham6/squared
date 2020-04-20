@@ -1,4 +1,4 @@
-/* android.widget.bottomnavigation 1.6.2
+/* android.widget.bottomnavigation 1.6.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -7,7 +7,7 @@ this.android.widget.bottomnavigation = (function () {
     'use strict';
 
     const $lib = android.lib;
-    const { assignEmptyValue, iterateArray, safeNestedMap } = squared.lib.util;
+    const { assignEmptyValue, capitalize, iterateArray, safeNestedMap } = squared.lib.util;
     const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $lib.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $lib.enumeration;
@@ -61,7 +61,7 @@ this.android.widget.bottomnavigation = (function () {
                     renderParent.setLayoutHeight('match_parent');
                 }
             }
-            const menu = (_a = BottomNavigation.findNestedElement(node.element, "android.widget.menu" /* MENU */)) === null || _a === void 0 ? void 0 : _a.dataset.layoutName;
+            const menu = (_a = BottomNavigation.findNestedElement(node, "android.widget.menu" /* MENU */)) === null || _a === void 0 ? void 0 : _a.dataset['layoutName' + capitalize(this.application.systemName)];
             if (menu) {
                 const options = createViewAttribute(this.options[node.elementId]);
                 const app = safeNestedMap(options, 'app');

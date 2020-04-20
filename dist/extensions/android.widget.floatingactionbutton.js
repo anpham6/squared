@@ -1,4 +1,4 @@
-/* android.widget.floatingactionbutton 1.6.2
+/* android.widget.floatingactionbutton 1.6.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -28,14 +28,14 @@ this.android.widget.floatingactionbutton = (function () {
         processNode(node, parent) {
             const resource = this.resource;
             const element = node.element;
-            const target = node.dataset.target;
+            const target = node.target;
             const options = createViewAttribute(this.options[element.id]);
             const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1)));
             assignEmptyValue(options, 'android', 'backgroundTint', colorName !== '' ? `@color/${colorName}` : '?attr/colorAccent');
             if (!node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                 assignEmptyValue(options, 'android', 'focusable', 'false');
             }
-            let src = '';
+            let src;
             switch (element.tagName) {
                 case 'IMG':
                     src = resource.addImageSrc(element, PREFIX_DIALOG);
@@ -49,17 +49,16 @@ this.android.widget.floatingactionbutton = (function () {
                     src = resource.addImageSrc(node.backgroundImage, PREFIX_DIALOG);
                     break;
             }
-            if (src !== '') {
+            if (src) {
                 assignEmptyValue(safeNestedMap(options, 'app'), 'srcCompat', `@drawable/${src}`);
             }
             const controlName = node.api < 29 /* Q */ ? SUPPORT_ANDROID.FLOATING_ACTION_BUTTON : SUPPORT_ANDROID_X.FLOATING_ACTION_BUTTON;
             node.setControlType(controlName, CONTAINER_NODE.BUTTON);
             node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
             Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
-            let outerParent = this.application.resolveTarget(target);
             if (!node.pageFlow) {
                 const { leftRight, topBottom } = node.autoMargin;
-                const offsetParent = outerParent || parent;
+                const offsetParent = this.application.resolveTarget(target) || parent;
                 if (leftRight) {
                     node.mergeGravity('layout_gravity', 'center_horizontal');
                 }
@@ -86,16 +85,17 @@ this.android.widget.floatingactionbutton = (function () {
                 node.positioned = true;
             }
             else if (target) {
+                const box = node.documentParent.box;
+                const linear = node.linear;
                 const horizontalBias = getHorizontalBias(node);
                 const verticalBias = getVerticalBias(node);
-                const documentParent = node.documentParent;
                 if (horizontalBias < 0.5) {
                     node.mergeGravity('layout_gravity', node.localizeString('left'));
-                    node.modifyBox(16 /* MARGIN_LEFT */, node.linear.left - documentParent.box.left);
+                    node.modifyBox(16 /* MARGIN_LEFT */, linear.left - box.left);
                 }
                 else if (horizontalBias > 0.5) {
                     node.mergeGravity('layout_gravity', node.localizeString('right'));
-                    node.modifyBox(4 /* MARGIN_RIGHT */, documentParent.box.right - node.linear.right);
+                    node.modifyBox(4 /* MARGIN_RIGHT */, box.right - linear.right);
                 }
                 else {
                     node.mergeGravity('layout_gravity', 'center_horizontal');
@@ -103,11 +103,11 @@ this.android.widget.floatingactionbutton = (function () {
                 if (verticalBias < 0.5) {
                     node.app('layout_dodgeInsetEdges', 'top');
                     node.mergeGravity('layout_gravity', 'top');
-                    node.modifyBox(2 /* MARGIN_TOP */, node.linear.top - documentParent.box.top);
+                    node.modifyBox(2 /* MARGIN_TOP */, linear.top - box.top);
                 }
                 else if (verticalBias > 0.5) {
                     node.mergeGravity('layout_gravity', 'bottom');
-                    node.modifyBox(8 /* MARGIN_BOTTOM */, documentParent.box.bottom - node.linear.bottom);
+                    node.modifyBox(8 /* MARGIN_BOTTOM */, box.bottom - linear.bottom);
                 }
                 else {
                     node.mergeGravity('layout_gravity', 'center_vertical');
@@ -129,15 +129,10 @@ this.android.widget.floatingactionbutton = (function () {
                 }
                 node.app('layout_anchor', anchor);
                 node.exclude({ procedure: NODE_PROCEDURE.ALIGNMENT });
-                node.render(outerParent);
             }
-            else {
-                node.render(parent);
-                outerParent = undefined;
-            }
+            node.render(parent);
             node.apply(options);
             return {
-                outerParent,
                 output: {
                     type: 1 /* XML */,
                     node,

@@ -1,4 +1,4 @@
-/* android.widget.menu 1.6.2
+/* android.widget.menu 1.6.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -7,7 +7,7 @@ this.android.widget.menu = (function () {
     'use strict';
 
     const $lib = android.lib;
-    const { appendSeparator, isNumber, sameArray, safeNestedMap } = squared.lib.util;
+    const { appendSeparator, capitalize, isNumber, sameArray, safeNestedMap } = squared.lib.util;
     const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { EXT_ANDROID } = $lib.constant;
     const { CONTAINER_NODE } = $lib.enumeration;
@@ -119,14 +119,14 @@ this.android.widget.menu = (function () {
                 this.addDescendant(item);
                 return false;
             });
-            node.dataset.pathname = appendSeparator(this.controller.userSettings.outputDirectory, 'res/menu');
+            node.dataset['pathname' + capitalize(this.application.systemName)] = appendSeparator(this.controller.userSettings.outputDirectory, 'res/menu');
             return {
+                outerParent,
                 output: {
                     type: 1 /* XML */,
                     node,
                     controlName: NAVIGATION.MENU
                 },
-                outerParent,
                 complete: true
             };
         }

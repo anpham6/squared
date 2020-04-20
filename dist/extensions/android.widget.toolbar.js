@@ -1,4 +1,4 @@
-/* android.widget.toolbar 1.6.2
+/* android.widget.toolbar 1.6.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -10,7 +10,7 @@ this.android.widget.toolbar = (function () {
     const $libA = android.lib;
     const { formatPX } = $lib.css;
     const { getElementAsNode } = $lib.session;
-    const { assignEmptyValue, safeNestedMap, includes, isString, iterateArray } = $lib.util;
+    const { assignEmptyValue, capitalize, includes, isString, iterateArray, safeNestedMap } = $lib.util;
     const { NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
     const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
@@ -24,21 +24,22 @@ this.android.widget.toolbar = (function () {
         }
         init(element) {
             if (this.included(element)) {
+                const application = this.application;
                 iterateArray(element.children, (item) => {
                     if (item.tagName === 'NAV') {
-                        const use = item.dataset.use;
+                        const use = application.getDatasetName('use', item);
                         if (!includes(use, EXT_ANDROID.EXTERNAL)) {
-                            item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
+                            application.setDatasetName('use', item, (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL);
                             return true;
                         }
                     }
                     return;
                 });
-                const target = element.dataset.target;
+                const target = element.dataset.androidTarget;
                 if (target) {
                     const targetElement = document.getElementById(target);
-                    if (targetElement && element.parentElement !== targetElement && !includes(targetElement.dataset.use, "android.widget.coordinator" /* COORDINATOR */)) {
-                        this.application.rootElements.add(element);
+                    if (targetElement && !includes(application.getDatasetName('use', targetElement), "android.widget.coordinator" /* COORDINATOR */)) {
+                        application.rootElements.add(element);
                     }
                 }
             }
@@ -49,13 +50,12 @@ this.android.widget.toolbar = (function () {
             const resource = this.resource;
             const settings = application.userSettings;
             const element = node.element;
-            const target = node.dataset.target;
             const options = Object.assign({}, this.options[element.id]);
             const toolbarOptions = createViewAttribute(options.self);
             const appBarOptions = createViewAttribute(options.appBar);
             const collapsingToolbarOptions = createViewAttribute(options.collapsingToolbar);
             const numberResourceValue = application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue');
-            const hasMenu = Toolbar.findNestedElement(element, "android.widget.menu" /* MENU */);
+            const hasMenu = Toolbar.findNestedElement(node, "android.widget.menu" /* MENU */);
             const backgroundImage = node.has('backgroundImage');
             const appBarChildren = [];
             const collapsingToolbarChildren = [];
@@ -76,10 +76,10 @@ this.android.widget.toolbar = (function () {
                         }
                     }
                 }
-                if (!dataset.target) {
+                if (!dataset.androidTarget) {
                     const targetNode = getElementAsNode(item, node.sessionId);
                     if (targetNode) {
-                        switch (dataset.targetModule) {
+                        switch (dataset.androidTargetModule) {
                             case 'appBar':
                                 appBarChildren.push(targetNode);
                                 break;
@@ -137,7 +137,7 @@ this.android.widget.toolbar = (function () {
                 else {
                     assignEmptyValue(appBarOptions, 'android', 'theme', '@style/ThemeOverlay.AppCompat.Dark.ActionBar');
                 }
-                appBarNode = this.createPlaceholder(node, appBarChildren, target);
+                appBarNode = this.createPlaceholder(node, appBarChildren, node.target);
                 appBarNode.parent = parent;
                 let id = android.id;
                 if (isString(id)) {
@@ -154,7 +154,7 @@ this.android.widget.toolbar = (function () {
                     }
                     assignEmptyValue(app, 'layout_scrollFlags', 'scroll|exitUntilCollapsed');
                     assignEmptyValue(app, 'toolbarId', node.documentId);
-                    collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren, target);
+                    collapsingToolbarNode = this.createPlaceholder(node, collapsingToolbarChildren);
                     if (collapsingToolbarNode) {
                         collapsingToolbarNode.parent = appBarNode;
                         android = collapsingToolbarOptions.android;
@@ -164,8 +164,6 @@ this.android.widget.toolbar = (function () {
                             delete android.id;
                         }
                         collapsingToolbarNode.setControlType(collapsingToolbarName, CONTAINER_NODE.BLOCK);
-                        const controlId = collapsingToolbarNode.controlId;
-                        collapsingToolbarNode.each(item => item.dataset.target = controlId);
                     }
                 }
             }
@@ -174,7 +172,7 @@ this.android.widget.toolbar = (function () {
                 appBarNode.setLayoutWidth('match_parent');
                 appBarNode.setLayoutHeight('wrap_content');
                 appBarNode.apply(Resource.formatOptions(appBarOptions, numberResourceValue));
-                appBarNode.render(target ? application.resolveTarget(target) : parent);
+                appBarNode.render(parent);
                 outputAs = {
                     type: 1 /* XML */,
                     node: appBarNode,
@@ -240,7 +238,7 @@ this.android.widget.toolbar = (function () {
                 node.render(node.parent);
             }
             else {
-                node.render(target ? application.resolveTarget(target) : parent);
+                node.render(parent);
             }
             node.setLayoutWidth('match_parent');
             node.apply(Resource.formatOptions(toolbarOptions, numberResourceValue));
@@ -274,7 +272,7 @@ this.android.widget.toolbar = (function () {
         }
         postOptimize(node) {
             var _a, _b;
-            const menu = (_a = Toolbar.findNestedElement(node.element, "android.widget.menu" /* MENU */)) === null || _a === void 0 ? void 0 : _a.dataset.layoutName;
+            const menu = (_a = Toolbar.findNestedElement(node, "android.widget.menu" /* MENU */)) === null || _a === void 0 ? void 0 : _a.dataset['layoutName' + capitalize(this.application.systemName)];
             if (menu) {
                 const toolbarOptions = createViewAttribute((_b = this.options[node.elementId]) === null || _b === void 0 ? void 0 : _b.self);
                 const app = safeNestedMap(toolbarOptions, 'app');
@@ -311,20 +309,21 @@ this.android.widget.toolbar = (function () {
         }
         createPlaceholder(node, children, target) {
             const delegate = children.length > 0;
-            const placeholder = this.application.createNode({ parent: node, children, delegate, cascade: true });
-            placeholder.inherit(node, 'base');
+            const container = this.application.createNode({ parent: node, children, delegate, cascade: true });
+            container.inherit(node, 'base');
             if (delegate) {
                 let containerIndex = Number.POSITIVE_INFINITY;
                 children.forEach(item => containerIndex = Math.min(containerIndex, item.containerIndex));
-                placeholder.containerIndex = containerIndex;
+                container.containerIndex = containerIndex;
             }
             if (target) {
-                placeholder.dataset.target = target;
+                container.dataset.androidTarget = target.id;
+                container.innerWrapped = node;
             }
-            placeholder.exclude({ resource: NODE_RESOURCE.ALL });
-            placeholder.positioned = true;
-            placeholder.renderExclude = false;
-            return placeholder;
+            container.exclude({ resource: NODE_RESOURCE.ALL });
+            container.positioned = true;
+            container.renderExclude = false;
+            return container;
         }
     }
 

@@ -1,4 +1,4 @@
-/* chrome-framework 1.6.2
+/* chrome-framework 1.6.3
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -22,6 +22,7 @@ var chrome = (function () {
             super(...arguments);
             this.builtInExtensions = {};
             this.extensions = [];
+            this.systemName = 'chrome';
             this.queryState = 0;
         }
         finalize() { }

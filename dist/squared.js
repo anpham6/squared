@@ -1,4 +1,4 @@
-/* squared 1.6.2
+/* squared 1.6.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -962,8 +962,7 @@
                 let valueA = a;
                 let valueB = b;
                 for (const name of attr.split('.')) {
-                    const vA = valueA[name];
-                    const vB = valueB[name];
+                    const vA = valueA[name], vB = valueB[name];
                     if (vA !== undefined && vB !== undefined) {
                         valueA = vA;
                         valueB = vB;
@@ -1470,6 +1469,116 @@
         }
         get length() {
             return this._children.length;
+        }
+    }
+
+    class PromiseHandler {
+        constructor(thisArg) {
+            this.thisArg = thisArg;
+            this.status = 0;
+        }
+        then(resolve) {
+            this._then = resolve;
+            if (this.status === 2 /* THEN_WAITING */) {
+                this.status = 1 /* PENDING */;
+                this.success();
+            }
+            return this;
+        }
+        catch(reject) {
+            this._catch = reject;
+            if (this.status === 4 /* CATCH_WAITING */) {
+                this.status = 1 /* PENDING */;
+                this.throw(this._error);
+            }
+            return this;
+        }
+        finally(complete) {
+            this._finally = complete;
+            switch (this.status) {
+                case 6 /* FINALLY_WAITING */:
+                    this.status = 3 /* THEN_COMPLETE */;
+                case 3 /* THEN_COMPLETE */:
+                case 5 /* CATCH_COMPLETE */:
+                    this.finalize();
+                    this.status = 7 /* FINALLY_COMPLETE */;
+                    break;
+            }
+            return this;
+        }
+        success() {
+            if (this.complete || this.waiting) {
+                return;
+            }
+            if (this._then === undefined && this.status !== 1 /* PENDING */) {
+                this.status = 2 /* THEN_WAITING */;
+            }
+            else {
+                if (this.hasThen) {
+                    this._then.call(this.thisArg);
+                }
+                this.status = 3 /* THEN_COMPLETE */;
+                this.finalize();
+            }
+        }
+        throw(error) {
+            if (this.complete || this.waiting) {
+                return;
+            }
+            if (this._catch === undefined && this.status !== 1 /* PENDING */) {
+                this._error = error;
+                this.status = 4 /* CATCH_WAITING */;
+            }
+            else {
+                if (this.hasCatch) {
+                    this._catch.call(this.thisArg, error);
+                }
+                this.status = 5 /* CATCH_COMPLETE */;
+                this.finalize();
+            }
+        }
+        finalize() {
+            switch (this.status) {
+                case 7 /* FINALLY_COMPLETE */:
+                    return;
+                case 3 /* THEN_COMPLETE */:
+                case 5 /* CATCH_COMPLETE */:
+                    if (this.hasFinally) {
+                        this._finally.call(this.thisArg);
+                        this.status = 7 /* FINALLY_COMPLETE */;
+                        break;
+                    }
+                default:
+                    this.status = 6 /* FINALLY_WAITING */;
+                    break;
+            }
+        }
+        get hasThen() {
+            return typeof this._then === 'function';
+        }
+        get hasCatch() {
+            return typeof this._catch === 'function';
+        }
+        get hasFinally() {
+            return typeof this._finally === 'function';
+        }
+        get waiting() {
+            switch (this.status) {
+                case 2 /* THEN_WAITING */:
+                case 4 /* CATCH_WAITING */:
+                case 6 /* FINALLY_WAITING */:
+                    return true;
+            }
+            return false;
+        }
+        get complete() {
+            switch (this.status) {
+                case 3 /* THEN_COMPLETE */:
+                case 5 /* CATCH_COMPLETE */:
+                case 7 /* FINALLY_COMPLETE */:
+                    return true;
+            }
+            return false;
         }
     }
 
@@ -4904,16 +5013,14 @@
         }
         else if (length > 1) {
             result.sort((a, b) => {
-                const pxA = a.pixelRatio;
-                const pxB = b.pixelRatio;
+                const pxA = a.pixelRatio, pxB = b.pixelRatio;
                 if (pxA > 0 && pxB > 0) {
                     if (pxA !== pxB) {
                         return pxA < pxB ? -1 : 1;
                     }
                 }
                 else {
-                    const widthA = a.width;
-                    const widthB = b.width;
+                    const widthA = a.width, widthB = b.width;
                     if (widthA !== widthB && widthA > 0 && widthB > 0) {
                         return widthA < widthB ? -1 : 1;
                     }
@@ -6142,18 +6249,7 @@
         else if (settings.showErrorMessages) {
             alert('ERROR: Framework not installed.');
         }
-        return new class {
-            then(callback) {
-                return this;
-            }
-            catch(callback) {
-                callback(new Error('Framework not installed.'));
-                return this;
-            }
-            finally(callback) {
-                return this;
-            }
-        }();
+        return new PromiseHandler();
     }
     function parseDocumentAsync(...elements) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -6276,7 +6372,8 @@
     }
     const lib = {
         base: {
-            Container
+            Container,
+            PromiseHandler
         },
         client,
         color,

@@ -266,8 +266,13 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get fillReplace() {
-        const fillMode = this.fillMode;
-        return fillMode === 0 || fillMode === FILL_MODE.BACKWARDS;
+        switch (this.fillMode) {
+            case 0:
+            case FILL_MODE.BACKWARDS:
+                return true;
+            default:
+                return false;
+        }
     }
 
     get parentContainer() {

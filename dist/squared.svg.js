@@ -1,4 +1,4 @@
-/* squared.svg 1.6.2
+/* squared.svg 1.6.3
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -188,8 +188,7 @@
                     while ((match = pattern.exec(transform)) !== null) {
                         const index = match.index;
                         const attr = match[1];
-                        const isX = attr.endsWith('X');
-                        const isY = attr.endsWith('Y');
+                        const isX = attr.endsWith('X'), isY = attr.endsWith('Y');
                         if (attr.startsWith('rotate')) {
                             const angle = convertAngle(match[2], match[3]);
                             const matrix = MATRIX.rotate(angle);
@@ -710,10 +709,8 @@
                 value = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, precision);
             }
             else if (SVG.rect(element)) {
-                let x = element.x.baseVal.value;
-                let y = element.y.baseVal.value;
-                let width = element.width.baseVal.value;
-                let height = element.height.baseVal.value;
+                let x = element.x.baseVal.value, y = element.y.baseVal.value;
+                let width = element.width.baseVal.value, height = element.height.baseVal.value;
                 if (parent === null || parent === void 0 ? void 0 : parent.requireRefit) {
                     x = parent.refitX(x);
                     y = parent.refitY(y);
@@ -962,8 +959,7 @@
                     const relative = key === key.toLowerCase();
                     const points = [];
                     for (let i = 0; i < length; i += 2) {
-                        let x = coordinates[i];
-                        let y = coordinates[i + 1];
+                        let x = coordinates[i], y = coordinates[i + 1];
                         if (relative && previousPoint) {
                             x += previousPoint.x;
                             y += previousPoint.y;
@@ -990,8 +986,7 @@
         }
         static getPathPoints(values) {
             const result = [];
-            let x = 0;
-            let y = 0;
+            let x = 0, y = 0;
             values.forEach(item => {
                 const coordinates = item.coordinates;
                 const length = coordinates.length;
@@ -1154,10 +1149,8 @@
             const result = SvgBuild.clonePoints(values);
             transforms.slice(0).reverse().forEach(item => {
                 const m = item.matrix;
-                let x1 = 0;
-                let y1 = 0;
-                let x2 = 0;
-                let y2 = 0;
+                let x1 = 0, y1 = 0;
+                let x2 = 0, y2 = 0;
                 if (origin) {
                     const { x, y } = origin;
                     const method = item.method;
@@ -1246,8 +1239,7 @@
         }
         static minMaxPoints(values, radius = false) {
             let { x: minX, y: minY } = values[0];
-            let maxX = minX;
-            let maxY = minY;
+            let maxX = minX, maxY = minY;
             const length = values.length;
             let i = 0;
             while (++i < length) {
@@ -1256,8 +1248,7 @@
                     const { rx, ry } = values[i];
                     if (rx !== undefined && ry !== undefined) {
                         const { x: x1, y: y1 } = values[i - 1];
-                        let x2 = (x + x1) / 2;
-                        let y2 = (y + y1) / 2;
+                        let x2 = (x + x1) / 2, y2 = (y + y1) / 2;
                         if (x > x1) {
                             y2 -= ry;
                         }
@@ -1725,17 +1716,6 @@
         get fillFreeze() {
             return hasBit$1(this.fillMode, 2 /* FREEZE */);
         }
-        get fillReplace() {
-            const fillMode = this.fillMode;
-            return fillMode === 0 || fillMode === 8 /* BACKWARDS */;
-        }
-        get parentContainer() {
-            let result = this._parent;
-            while (result && !SvgBuild.isContainer(result)) {
-                result = result.parent;
-            }
-            return result;
-        }
         set parent(value) {
             this._parent = value;
         }
@@ -1751,6 +1731,22 @@
         set setterType(value) { }
         get setterType() {
             return true;
+        }
+        get fillReplace() {
+            switch (this.fillMode) {
+                case 0:
+                case 8 /* BACKWARDS */:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+        get parentContainer() {
+            let result = this._parent;
+            while (result && !SvgBuild.isContainer(result)) {
+                result = result.parent;
+            }
+            return result;
         }
         get dataset() {
             return this._dataset;
@@ -1847,8 +1843,7 @@
             }
         }
         static convertStepTimingFunction(attributeName, timingFunction, keyTimes, values, index, fontSize) {
-            const valueA = values[index];
-            const valueB = values[index + 1];
+            const valueA = values[index], valueB = values[index + 1];
             let currentValue;
             let nextValue;
             switch (attributeName) {
@@ -1913,8 +1908,7 @@
                             switch (attributeName) {
                                 case 'fill':
                                 case 'stroke': {
-                                    const rgbaA = currentValue[0].rgba;
-                                    const rgbaB = nextValue[0].rgba;
+                                    const rgbaA = currentValue[0].rgba, rgbaB = nextValue[0].rgba;
                                     const rgb = getHexCode(SvgAnimate.getSplitValue(rgbaA.r, rgbaB.r, percent), SvgAnimate.getSplitValue(rgbaA.g, rgbaB.g, percent), SvgAnimate.getSplitValue(rgbaA.b, rgbaB.b, percent));
                                     const a = getHexCode(SvgAnimate.getSplitValue(rgbaA.a, rgbaB.a, percent));
                                     result.push(`#${rgb + (a !== 'FF' ? a : '')}`);
@@ -2187,13 +2181,6 @@
             }
             return this._values;
         }
-        get valueTo() {
-            const values = this._values;
-            return (values === null || values === void 0 ? void 0 : values[values.length - 1]) || '';
-        }
-        get valueFrom() {
-            return this.values[0] || '';
-        }
         set keyTimes(value) {
             const values = this._values;
             if ((values === undefined || values.length === value.length) && value.every(fraction => fraction >= 0 && fraction <= 1)) {
@@ -2271,24 +2258,6 @@
         get alternate() {
             return this._alternate;
         }
-        get playable() {
-            return !this.paused && this.duration > 0 && this.keyTimes.length > 0;
-        }
-        get fillReplace() {
-            return super.fillReplace || this.iterationCount === -1;
-        }
-        get fromToType() {
-            const keyTimes = this.keyTimes;
-            return keyTimes.length === 2 && keyTimes[0] === 0 && keyTimes[1] === 1;
-        }
-        get evaluateStart() {
-            const keyTimes = this.keyTimes;
-            return keyTimes.length > 0 && keyTimes[0] > 0;
-        }
-        get evaluateEnd() {
-            const keyTimes = this.keyTimes;
-            return keyTimes.length > 0 && keyTimes[keyTimes.length - 1] < 1;
-        }
         set setterType(value) {
             this._setterType = value;
         }
@@ -2310,6 +2279,31 @@
         get length() {
             var _a;
             return ((_a = this._values) === null || _a === void 0 ? void 0 : _a.length) || 0;
+        }
+        get valueTo() {
+            const values = this._values;
+            return (values === null || values === void 0 ? void 0 : values[values.length - 1]) || '';
+        }
+        get valueFrom() {
+            return this.values[0] || '';
+        }
+        get playable() {
+            return !this.paused && this.duration > 0 && this.keyTimes.length > 0;
+        }
+        get fillReplace() {
+            return super.fillReplace || this.iterationCount === -1;
+        }
+        get fromToType() {
+            const keyTimes = this.keyTimes;
+            return keyTimes.length === 2 && keyTimes[0] === 0 && keyTimes[1] === 1;
+        }
+        get evaluateStart() {
+            const keyTimes = this.keyTimes;
+            return keyTimes.length > 0 && keyTimes[0] > 0;
+        }
+        get evaluateEnd() {
+            const keyTimes = this.keyTimes;
+            return keyTimes.length > 0 && keyTimes[keyTimes.length - 1] < 1;
         }
         get instanceType() {
             return 16392 /* SVG_ANIMATE */;
@@ -3478,8 +3472,7 @@
     }
     function sortIncomplete(incomplete, maxTime = Number.POSITIVE_INFINITY) {
         incomplete.sort((a, b) => {
-            const delayA = a.delay;
-            const delayB = a.delay;
+            const delayA = a.delay, delayB = a.delay;
             if (maxTime !== Number.POSITIVE_INFINITY) {
                 if (maxTime === delayA && maxTime !== delayB) {
                     return -1;
@@ -3520,8 +3513,7 @@
             if (durationB <= maxTime) {
                 return -1;
             }
-            const delayA = a.delay;
-            const delayB = b.delay;
+            const delayA = a.delay, delayB = b.delay;
             if (delayA === delayB) {
                 return a.group.id < b.group.id ? 1 : -1;
             }
@@ -5277,12 +5269,6 @@
             const keyPoints = this.keyPoints;
             return keyPoints.length > 0 && keyPoints.length === super.keyTimes.length;
         }
-        get offsetPath() {
-            return this._offsetPath;
-        }
-        get playable() {
-            return !this.paused && this.duration !== -1 && isString$3(this.path);
-        }
         set keyTimes(value) {
             if (!isString$3(this.path)) {
                 super.keyTimes = value;
@@ -5312,14 +5298,6 @@
                 });
             }
             return super.values;
-        }
-        get rotateValues() {
-            this.setOffsetPath();
-            const path = this._offsetPath;
-            return path && objectMap$2(path, item => item.rotate);
-        }
-        get keyPoints() {
-            return this._keyPoints;
         }
         set reverse(value) {
             if (value !== super.reverse) {
@@ -5398,6 +5376,20 @@
         }
         get parent() {
             return super.parent;
+        }
+        get offsetPath() {
+            return this._offsetPath;
+        }
+        get playable() {
+            return !this.paused && this.duration !== -1 && isString$3(this.path);
+        }
+        get rotateValues() {
+            this.setOffsetPath();
+            const path = this._offsetPath;
+            return path && objectMap$2(path, item => item.rotate);
+        }
+        get keyPoints() {
+            return this._keyPoints;
         }
         get offsetLength() {
             let result = this._offsetLength;
@@ -6300,16 +6292,14 @@
                 const { align, alignX, alignY, parent } = this.aspectRatio;
                 const { width, height } = this;
                 const [left, top, right, bottom] = SvgBuild.minMaxPoints(values, true);
-                let x1 = 0;
-                let y1 = 0;
+                let x1 = 0, y1 = 0;
                 if (alignX) {
                     x1 = parent.x * -1;
                 }
                 if (alignY) {
                     y1 = parent.y * -1;
                 }
-                let x = x1;
-                let y = y1;
+                let x = x1, y = y1;
                 const xMid = () => (width / 2) - ((right + left) / 2);
                 const xMax = () => (width - left) - right + x1;
                 const yMid = () => (height / 2) - ((top + bottom) / 2);
@@ -6594,10 +6584,8 @@
                                 const height = bottom - top;
                                 switch (name) {
                                     case 'inset': {
-                                        let x1 = 0;
-                                        let x2 = 0;
-                                        let y1 = this.convertLength(match[1], height);
-                                        let y2 = 0;
+                                        let x1 = 0, y1 = this.convertLength(match[1], height);
+                                        let x2 = 0, y2 = 0;
                                         if (match[4]) {
                                             x1 = left + this.convertLength(match[4], width);
                                             x2 = right - this.convertLength(match[2], width);
@@ -6627,8 +6615,7 @@
                                     }
                                     case 'polygon': {
                                         const points = objectMap$3(match[1].split(XML$3.SEPARATOR), values => {
-                                            let x = left;
-                                            let y = top;
+                                            let x = left, y = top;
                                             values.trim().split(' ').forEach((value, index) => {
                                                 if (index === 0) {
                                                     x += this.convertLength(value, width);
@@ -6986,8 +6973,7 @@
     const { equal: equal$1, lessEqual, multipleOf: multipleOf$1, offsetAngleX, offsetAngleY: offsetAngleY$1, relativeAngle: relativeAngle$1, truncateFraction: truncateFraction$2 } = $lib$b.math;
     const { cloneArray, convertInt, convertFloat: convertFloat$2 } = $lib$b.util;
     function updatePathLocation(path, attr, x, y) {
-        const commandA = path[0];
-        const commandB = path[path.length - 1];
+        const commandA = path[0], commandB = path[path.length - 1];
         if (x !== undefined) {
             switch (attr) {
                 case 'x':
@@ -7286,10 +7272,8 @@
                 }
             }
             else if (SVG.rect(element)) {
-                let x = this.getBaseValue('x');
-                let y = this.getBaseValue('y');
-                let width = this.getBaseValue('width');
-                let height = this.getBaseValue('height');
+                let x = this.getBaseValue('x'), y = this.getBaseValue('y');
+                let width = this.getBaseValue('width'), height = this.getBaseValue('height');
                 if (requireRefit || (transforms === null || transforms === void 0 ? void 0 : transforms.length)) {
                     let points = [
                         { x, y },
@@ -8091,10 +8075,8 @@
                 this.drawRegion = SvgBuild.getBoxRect(d);
                 const { drawRegion, fillOpacity, patternWidth, patternHeight, tileWidth, tileHeight } = this;
                 const boundingBox = this.patternUnits === 2 /* OBJECT_BOUNDING_BOX */;
-                let offsetX = this.offsetX % tileWidth;
-                let offsetY = this.offsetY % tileHeight;
-                let boundingX = 0;
-                let boundingY = 0;
+                let offsetX = this.offsetX % tileWidth, offsetY = this.offsetY % tileHeight;
+                let boundingX = 0, boundingY = 0;
                 let width = drawRegion.right;
                 let remainingHeight = drawRegion.bottom;
                 if (boundingBox) {

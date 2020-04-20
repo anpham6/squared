@@ -1,10 +1,9 @@
-import { FileActionOptions, UserSettings } from './base/application';
 import { BackgroundPositionOptions, CalculateOptions, CalculateVarAsStringOptions, CalculateVarOptions, ContainerOptions, ContainerFindOptions, DelimitStringOptions, MIMEOrAll, KeyframesData } from './lib/squared';
 
-type PromiseHandler = squared.lib.base.PromiseHandler;
-type ExtensionRequest = string | squared.base.Extension<squared.base.Node>;
+type ExtensionRequest = string | {};
+type PromiseHandler = lib.base.PromiseHandler;
 
-export const settings: UserSettings;
+export const settings: StandardMap;
 export const system: FunctionMap<any>;
 export function setFramework(value: {}, cached?: boolean): void;
 export function setViewModel(data?: {}): void;
@@ -18,11 +17,11 @@ export function retrieve(value: string): Null<{}>;
 export function ready(): boolean;
 export function close(): void;
 export function reset(): void;
-export function copyToDisk(value: string, options?: FileActionOptions): void;
-export function appendToArchive(value: string, options?: FileActionOptions): void;
-export function saveToArchive(value?: string, options?: FileActionOptions): void;
-export function createFrom(value: string, options: FileActionOptions): void;
-export function appendFromArchive(value: string, options: FileActionOptions): void;
+export function copyToDisk(value: string, options?: {}): void;
+export function appendToArchive(value: string, options?: {}): void;
+export function saveToArchive(value?: string, options?: {}): void;
+export function createFrom(value: string, options: {}): void;
+export function appendFromArchive(value: string, options: {}): void;
 export function toString(): string;
 
 export namespace lib {

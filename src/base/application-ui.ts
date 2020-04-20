@@ -322,12 +322,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 content,
                 index
             };
-            const layouts = this._layouts;
-            if (index !== undefined && index >= 0 && index < layouts.length) {
-                layouts.splice(index, 0, layout);
+            if (index === undefined || !(index >= 0 && index < this._layouts.length)) {
+                this._layouts.push(layout);
             }
             else {
-                layouts.push(layout);
+                this._layouts.splice(index, 0, layout);
             }
         }
     }
@@ -355,18 +354,18 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index = -1) {
+    public addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number) {
         if (template) {
             if (!node.renderExclude) {
                 if (node.renderParent) {
                     const renderTemplates = safeNestedArray(<StandardMap> parent, 'renderTemplates');
-                    if (index >= 0 && index < parent.renderChildren.length) {
-                        parent.renderChildren.splice(index, 0, node);
-                        renderTemplates.splice(index, 0, template);
-                    }
-                    else {
+                    if (index === undefined || !(index >= 0 && index < parent.renderChildren.length)) {
                         parent.renderChildren.push(node);
                         renderTemplates.push(template);
+                    }
+                    else {
+                        parent.renderChildren.splice(index, 0, node);
+                        renderTemplates.splice(index, 0, template);
                     }
                 }
             }
@@ -406,6 +405,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (node) {
             const controllerHandler = this.controllerHandler;
             const cache = <NodeList<T>> this._cache;
+            const excluded = this.processing.excluded;
             const parent = node.parent as T;
             const preAlignment: ObjectIndex<StringMap> = {};
             const direction = new Set<HTMLElement>();
@@ -448,7 +448,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             });
-            this.processing.excluded.each(item => {
+            excluded.each(item => {
                 if (!item.pageFlow) {
                     item.cssTry('display', 'none');
                 }
@@ -494,7 +494,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     data.item.cssFinally('display');
                 });
             }
-            this.processing.excluded.each(item => {
+            excluded.each(item => {
                 if (!item.lineBreak) {
                     item.setBounds();
                     item.saveAsInitial();
@@ -648,8 +648,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const length = children.length;
         if (length) {
             const cache = this._cache;
-            let siblingsLeading: T[] = [];
-            let siblingsTrailing: T[] = [];
+            let siblingsLeading: T[] = [], siblingsTrailing: T[] = [];
             if (length > 1) {
                 let trailing = children[0];
                 let floating = false;
@@ -1142,14 +1141,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
         const clearMap = this.session.clearMap;
         const layerIndex: Array<T[] | T[][]> = [];
-        const inlineAbove: T[] = [];
-        const inlineBelow: T[] = [];
-        const leftAbove: T[] = [];
-        const rightAbove: T[] = [];
-        let leftBelow: Undef<T[]>;
-        let rightBelow: Undef<T[]>;
-        let leftSub: Undef<T[] | T[][]>;
-        let rightSub: Undef<T[] | T[][]>;
+        const inlineAbove: T[] = [], inlineBelow: T[] = [];
+        const leftAbove: T[] = [], rightAbove: T[] = [];
+        let leftBelow: Undef<T[]>, rightBelow: Undef<T[]>;
+        let leftSub: Undef<T[] | T[][]>, rightSub: Undef<T[] | T[][]>;
         let clearedFloat = false;
         layout.each((node, index) => {
             if (index > 0) {

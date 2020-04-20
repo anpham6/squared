@@ -10,8 +10,7 @@ export default class SvgElement implements squared.svg.SvgElement {
     public parent?: SvgContainer;
     public viewport?: Svg;
 
-    constructor(public readonly element: SVGGraphicsElement) {
-    }
+    constructor(public readonly element: SVGGraphicsElement) {}
 
     public build(options?: SvgBuildOptions) {}
     public synchronize(options?: SvgSynchronizeOptions) {}

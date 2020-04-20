@@ -97,7 +97,6 @@ export default class PromiseHandler implements squared.lib.base.PromiseHandler {
                     this.status = PROMISE_STATUS.FINALLY_COMPLETE;
                     break;
                 }
-                break;
             default:
                 this.status = PROMISE_STATUS.FINALLY_WAITING;
                 break;

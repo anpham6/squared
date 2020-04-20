@@ -1,4 +1,4 @@
-/* android.widget.drawer 1.6.2
+/* android.widget.drawer 1.6.3
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -8,7 +8,7 @@ this.android.widget.drawer = (function () {
 
     const $lib = squared.lib;
     const $libA = android.lib;
-    const { assignEmptyValue, cloneObject, safeNestedMap, includes, iterateArray } = $lib.util;
+    const { assignEmptyValue, capitalize, cloneObject, safeNestedMap, includes, iterateArray } = $lib.util;
     const { getElementAsNode } = $lib.session;
     const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
     const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
@@ -25,16 +25,17 @@ this.android.widget.drawer = (function () {
         }
         init(element) {
             if (this.included(element)) {
+                const application = this.application;
                 const result = iterateArray(element.children, (item) => {
                     if (item.tagName === 'NAV') {
-                        const use = item.dataset.use;
+                        const use = application.getDatasetName('use', item);
                         if (!includes(use, EXT_ANDROID.EXTERNAL)) {
-                            item.dataset.use = (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL;
+                            application.setDatasetName('use', item, (use ? use + ', ' : '') + EXT_ANDROID.EXTERNAL);
                         }
                     }
                 });
                 if (result) {
-                    this.application.rootElements.add(element);
+                    application.rootElements.add(element);
                     return true;
                 }
             }
@@ -42,7 +43,7 @@ this.android.widget.drawer = (function () {
         }
         processNode(node, parent) {
             const options = createViewAttribute(this.options.self);
-            if (Drawer.findNestedElement(node.element, "android.widget.menu" /* MENU */)) {
+            if (Drawer.findNestedElement(node, "android.widget.menu" /* MENU */)) {
                 assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                 this.setStyleTheme(node.api);
             }
@@ -76,11 +77,11 @@ this.android.widget.drawer = (function () {
         }
         afterParseDocument() {
             var _a, _b;
+            const systemName = capitalize(this.application.systemName);
             for (const node of this.subscribers) {
-                const element = node.element;
                 const options = createViewAttribute(this.options.navigationView);
-                const menu = (_a = Drawer.findNestedElement(element, "android.widget.menu" /* MENU */)) === null || _a === void 0 ? void 0 : _a.dataset.layoutName;
-                const headerLayout = (_b = Drawer.findNestedElement(element, EXT_ANDROID.EXTERNAL)) === null || _b === void 0 ? void 0 : _b.dataset.layoutName;
+                const menu = (_a = Drawer.findNestedElement(node, "android.widget.menu" /* MENU */)) === null || _a === void 0 ? void 0 : _a.dataset['layoutName' + systemName];
+                const headerLayout = (_b = Drawer.findNestedElement(node, EXT_ANDROID.EXTERNAL)) === null || _b === void 0 ? void 0 : _b.dataset['layoutName' + systemName];
                 const app = safeNestedMap(options, 'app');
                 if (menu) {
                     assignEmptyValue(app, 'menu', `@menu/${menu}`);
@@ -102,7 +103,7 @@ this.android.widget.drawer = (function () {
             }
         }
         postOptimize(node) {
-            const element = Drawer.findNestedElement(node.element, "android.widget.coordinator" /* COORDINATOR */);
+            const element = Drawer.findNestedElement(node, "android.widget.coordinator" /* COORDINATOR */);
             if (element) {
                 const coordinator = getElementAsNode(element, node.sessionId);
                 if ((coordinator === null || coordinator === void 0 ? void 0 : coordinator.inlineHeight) && coordinator.some((item) => item.positioned)) {
