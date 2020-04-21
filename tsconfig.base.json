@@ -6,6 +6,6 @@
     "include": [
       "@types/index.d.ts",
       "@types/base/index.d.ts",
-      "src/**/*"
+      "src/**/*.ts"
     ]
   }

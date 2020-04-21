@@ -1,5 +1,4 @@
 import { terser } from 'rollup-plugin-terser';
-import async from 'rollup-plugin-async';
 import options from '../rollup+terser.config';
 
 export default {
@@ -11,7 +10,6 @@ export default {
         format: 'iife'
     },
     plugins: [
-        async(),
         terser(options)
     ]
 };

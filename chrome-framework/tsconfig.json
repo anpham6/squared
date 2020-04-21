@@ -5,9 +5,8 @@
   },
   "include": [
     "../@types/index.d.ts",
-    "../@types/base/index.d.ts",
     "../@types/chrome/index.d.ts",
-    "**/*"
+    "**/*.ts"
   ],
   "exclude": []
 }

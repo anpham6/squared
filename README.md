@@ -75,7 +75,12 @@ Library files are in the /dist folder. A minimum of *three* files are required t
 
 Usable combinations: 1-2-4 + 1-2-4-5 + 1-2-3-4-5 + 1-3
 
-There are ES6 minified versions (*.min.js) and also ES6 non-minified versions. Browsers which do not support at least ES6 (under 5%) are not being supported to take advantage of async/await and also for code readability.
+There are ES2017 minified versions (*.min.js) and also ES2017 non-minified versions. Past versions until 1.6.5 were using ES2015 (ES6).
+
+ES2015 - ES6 classes + Fetch (94%)  
+ES2017 - Async/Await (91%)  
+
+Browsers without ES2017 are not being supported to fully take advantage of async/await.
 
 NOTE: Calling "save" or "write" methods before the images have completely loaded can sometimes cause them to be excluded from the generated layout. In these cases you should use the "parseDocument" promise method "then" to set a callback for your commands.
 

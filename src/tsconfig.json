@@ -6,7 +6,7 @@
   "include": [
     "../@types/index.d.ts",
     "main.ts",
-    "lib/**/*"
+    "lib/**/*.ts"
   ],
   "exclude": []
 }

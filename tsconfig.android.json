@@ -7,7 +7,7 @@
       "@types/index.d.ts",
       "@types/base/index.d.ts",
       "@types/android/index.d.ts",
-      "src/**/*",
-      "android-framework/**/*"
+      "src/**/*.ts",
+      "android-framework/**/*.ts"
     ]
   }
