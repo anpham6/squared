@@ -1,4 +1,4 @@
-/* squared.base 1.6.4
+/* squared.base 1.6.5
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -441,7 +441,7 @@
         }
         parseDocumentAsync(...elements) {
             return __awaiter(this, void 0, void 0, function* () {
-                return yield this.parseDocument(...elements);
+                return this.parseDocument(...elements);
             });
         }
         createCache(documentRoot) {
@@ -1019,7 +1019,7 @@
                             .then((response) => response.json())
                             .then((result) => {
                             if (result) {
-                                if (typeof options.callback === 'function') {
+                                if (result.success && typeof options.callback === 'function') {
                                     options.callback(result);
                                 }
                                 if (this.userSettings.showErrorMessages) {
@@ -1060,7 +1060,7 @@
                             .then((response) => response.json())
                             .then((result) => {
                             if (result) {
-                                if (typeof options.callback === 'function') {
+                                if (result.success && typeof options.callback === 'function') {
                                     options.callback(result);
                                 }
                                 const zipname = result.zipname;
@@ -1185,7 +1185,7 @@
                         }
                         break;
                     }
-                    case ':first-of-type': {
+                    case ':first-of-type':
                         for (const item of parent.naturalElements) {
                             if (item.tagName === tagName) {
                                 if (item !== child) {
@@ -1195,7 +1195,6 @@
                             }
                         }
                         break;
-                    }
                     case ':nth-child(n)':
                     case ':nth-last-child(n)':
                         break;
@@ -1254,13 +1253,12 @@
                             return false;
                         }
                         break;
-                    case ':placeholder-shown': {
+                    case ':placeholder-shown':
                         if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && child.toElementString('placeholder') !== '')) {
                             return false;
                         }
                         break;
-                    }
-                    case ':default': {
+                    case ':default':
                         switch (tagName) {
                             case 'INPUT': {
                                 const element = child.element;
@@ -1312,9 +1310,8 @@
                                 return false;
                         }
                         break;
-                    }
                     case ':in-range':
-                    case ':out-of-range': {
+                    case ':out-of-range':
                         if (tagName === 'INPUT') {
                             const element = child.element;
                             const value = parseFloat(element.value);
@@ -1338,7 +1335,6 @@
                             return false;
                         }
                         break;
-                    }
                     case ':indeterminate':
                         if (tagName === 'INPUT') {
                             const element = child.element;
@@ -1371,7 +1367,7 @@
                             return false;
                         }
                         break;
-                    case ':target': {
+                    case ':target':
                         if (location.hash === '') {
                             return false;
                         }
@@ -1382,7 +1378,6 @@
                             }
                         }
                         break;
-                    }
                     case ':scope':
                         if (!last || adjacent === '>' && child !== this) {
                             return false;
@@ -2305,9 +2300,7 @@
         }
         has(attr, options) {
             var _a;
-            let map;
-            let not;
-            let type;
+            let map, not, type;
             if (options) {
                 ({ map, not, type } = options);
             }
@@ -2339,10 +2332,7 @@
                             }
                         }
                         if (type) {
-                            if (hasBit$1(type, 2 /* LENGTH */) && isLength(value) || hasBit$1(type, 4 /* PERCENT */) && isPercent(value)) {
-                                return true;
-                            }
-                            return false;
+                            return hasBit$1(type, 2 /* LENGTH */) && isLength(value) || hasBit$1(type, 4 /* PERCENT */) && isPercent(value);
                         }
                         return true;
                 }
@@ -4478,8 +4468,7 @@
             return this;
         }
         hide(options) {
-            let remove;
-            let replacement;
+            let remove, replacement;
             if (options) {
                 ({ remove, replacement } = options);
             }
@@ -7107,12 +7096,11 @@
                                 case 'block':
                                 case 'inline':
                                 case 'inherit':
-                                case 'initial': {
+                                case 'initial':
                                     if (!checkDimension(false)) {
                                         return undefined;
                                     }
                                     break;
-                                }
                             }
                         }
                     }
@@ -11453,7 +11441,7 @@
                             }
                             break;
                         }
-                        case 'TH': {
+                        case 'TH':
                             if (td.cssInitial('textAlign') === '') {
                                 td.css('textAlign', 'center');
                             }
@@ -11464,7 +11452,6 @@
                                 setBorderStyle$1(td, 'borderBottom', node);
                             }
                             break;
-                        }
                     }
                     const columnWidth = td.cssInitial('width');
                     const reevaluate = mapWidth[j] === undefined || mapWidth[j] === 'auto';
@@ -12646,7 +12633,7 @@
                             }
                             else if (!node.baselineAltered) {
                                 const horizontalRows = renderParent.horizontalRows;
-                                const validSibling = (item) => item.pageFlow && item.blockDimension && !item.floating;
+                                const validSibling = (item) => item.pageFlow && item.blockDimension && !item.floating && !item.excluded;
                                 let horizontal;
                                 if (horizontalRows && horizontalRows.length > 1) {
                                     found: {
@@ -12708,9 +12695,6 @@
                                         }
                                         else if (item.lineBreak || item.block) {
                                             maxBottom = Number.NEGATIVE_INFINITY;
-                                        }
-                                        else if (item.excluded) {
-                                            continue;
                                         }
                                         else if (validSibling(item)) {
                                             maxBottom = Math.max(item.actualRect('bottom'), maxBottom);

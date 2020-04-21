@@ -1,4 +1,4 @@
-/* android-framework 1.6.4
+/* android-framework 1.6.5
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -68,7 +68,6 @@ var android = (function () {
         EXTERNAL: 'android.external',
         SUBSTITUTE: 'android.substitute',
         DELEGATE_BACKGROUND: 'android.delegate.background',
-        DELEGATE_CSS_GRID: 'android.delegate.css-grid',
         DELEGATE_MAXWIDTHHEIGHT: 'android.delegate.max-width-height',
         DELEGATE_NEGATIVEX: 'android.delegate.negative-x',
         DELEGATE_PERCENT: 'android.delegate.percent',
@@ -1742,16 +1741,15 @@ var android = (function () {
                     const length = horizontalRows.length;
                     for (let i = 0; i < length; ++i) {
                         const row = horizontalRows[i];
-                        const q = row.length;
                         const nextRow = horizontalRows[i + 1];
                         const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < length - 1 && !!((_a = nextRow.find(item => item.baselineActive)) === null || _a === void 0 ? void 0 : _a.has('lineHeight')));
                         const first = row[0];
-                        const singleItem = q === 1;
-                        const singleLine = singleItem && !first.multiline;
-                        const baseline = !singleItem && row.find(item => item.baselineActive && item.renderChildren.length === 0);
+                        const onlyChild = row.length === 1;
+                        const singleLine = onlyChild && !first.multiline;
+                        const baseline = !onlyChild && row.find(item => item.baselineActive && item.renderChildren.length === 0);
                         const top = singleLine || !previousMultiline && (i > 0 || length === 1) || first.lineBreakLeading;
                         const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
-                        if (baseline && q > 1) {
+                        if (baseline) {
                             if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
                                 setMarginOffset(baseline, lineHeight, false, top, bottom);
                             }
@@ -1763,11 +1761,11 @@ var android = (function () {
                         else {
                             row.forEach((item) => {
                                 if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
-                                    setMarginOffset(item, lineHeight, singleItem, top, bottom);
+                                    setMarginOffset(item, lineHeight, onlyChild, top, bottom);
                                 }
                             });
                         }
-                        previousMultiline = singleItem && first.multiline;
+                        previousMultiline = onlyChild && first.multiline;
                     }
                 }
             }
@@ -1935,7 +1933,7 @@ var android = (function () {
                 });
                 return i > 0 ? Math.max(0, percent) : 1;
             }
-            static getControlName(containerType, api = 29 /* Q */) {
+            static getControlName(containerType, api = 29 /* LATEST */) {
                 const name = CONTAINER_NODE[containerType];
                 return api >= 29 /* Q */ && CONTAINER_ANDROID_X[name] || CONTAINER_ANDROID[name];
             }
@@ -2529,7 +2527,7 @@ var android = (function () {
                         }
                         if (this.positionStatic && !this.blockWidth && (left < 0 || right < 0)) {
                             switch (this.cssAscend('textAlign')) {
-                                case 'center': {
+                                case 'center':
                                     if (left < right) {
                                         right += Math.abs(left);
                                         right /= 2;
@@ -2541,7 +2539,6 @@ var android = (function () {
                                         right = 0;
                                     }
                                     break;
-                                }
                                 case 'right':
                                 case 'end':
                                     if (left < 0) {
@@ -2860,6 +2857,7 @@ var android = (function () {
                             else {
                                 value -= this.right;
                             }
+                            break;
                         case 'right':
                             if (!this.hasPX('left')) {
                                 value -= this.right;
@@ -3292,7 +3290,7 @@ var android = (function () {
                 });
                 result.sort((a, b) => a > b ? 1 : -1);
                 if (requireId) {
-                    result.unshift('android:id="' + (id || `@+id/${this.controlId}`) + '"');
+                    result.unshift(`android:id="${id || '@+id/' + this.controlId}"`);
                 }
                 return result;
             }
@@ -3409,8 +3407,7 @@ var android = (function () {
                     finalizeGravity(this, 'layout_gravity');
                     finalizeGravity(this, 'gravity');
                     if (this.imageElement) {
-                        const layoutWidth = this.layoutWidth;
-                        const layoutHeight = this.layoutHeight;
+                        const { layoutWidth, layoutHeight } = this;
                         if (layoutWidth === 'wrap_content' && layoutHeight !== 'wrap_content' ||
                             layoutWidth !== 'wrap_content' && layoutHeight === 'wrap_content' ||
                             layoutWidth === 'match_parent' || layoutHeight === 'match_parent' ||
@@ -3673,8 +3670,7 @@ var android = (function () {
                 constraint.vertical = value;
             }
             get anchored() {
-                const { horizontal, vertical } = this.constraint;
-                return horizontal === true && vertical === true;
+                return this.constraint.horizontal && this.constraint.vertical;
             }
             get imageOrSvgElement() {
                 return this.imageElement || this.svgElement;
@@ -4719,10 +4715,7 @@ var android = (function () {
                 let A = true;
                 let B = true;
                 for (const node of layout) {
-                    if (clearMap.has(node)) {
-                        continue;
-                    }
-                    else {
+                    if (!clearMap.has(node)) {
                         const inputElement = node.inputElement || node.controlElement;
                         if (A && !(node.floating || node.autoMargin.horizontal || node.inlineDimension && !inputElement || node.imageOrSvgElement || node.marginTop < 0)) {
                             A = false;
@@ -7826,6 +7819,7 @@ var android = (function () {
         }
     }
 
+    var LayoutUI = squared.base.LayoutUI;
     const { lib: $lib$6, base: $base$2 } = squared;
     const $base_lib$1 = $base$2.lib;
     const { formatPercent, formatPX: formatPX$3, isLength: isLength$2, isPercent: isPercent$2 } = $lib$6.css;
@@ -7833,9 +7827,8 @@ var android = (function () {
     const { CHAR: CHAR$2 } = $lib$6.regex;
     const { conditionArray, flatMultiArray, hasValue, isArray } = $lib$6.util;
     const { BOX_STANDARD: BOX_STANDARD$4, NODE_ALIGNMENT: NODE_ALIGNMENT$3, NODE_PROCEDURE: NODE_PROCEDURE$4, NODE_RESOURCE: NODE_RESOURCE$3 } = $base_lib$1.enumeration;
-    const LayoutUI = $base$2.LayoutUI;
-    const CSS_GRID = $base_lib$1.constant.EXT_NAME.CSS_GRID;
     const CssGrid = $base$2.extensions.CssGrid;
+    const CSS_GRID = $base_lib$1.constant.EXT_NAME.CSS_GRID;
     const REGEX_JUSTIFYSELF = /start|left|center|right|end/;
     const REGEX_JUSTIFYLEFT = /(start|left|baseline)$/;
     const REGEX_JUSTIFYRIGHT = /(right|end)$/;
@@ -7927,7 +7920,7 @@ var android = (function () {
                         }
                         break;
                     }
-                    case 'space-between': {
+                    case 'space-between':
                         if (itemCount > 1) {
                             const [marginSize, marginExcess] = getMarginSize(itemCount - 1, gridSize);
                             for (let i = 0; i < itemCount; ++i) {
@@ -7954,12 +7947,11 @@ var android = (function () {
                                     }
                                 }
                             }
-                            break;
                         }
                         else {
                             return;
                         }
-                    }
+                        break;
                     case 'space-evenly': {
                         const [marginSize, marginExcess] = getMarginSize(itemCount + 1, gridSize);
                         for (let i = 0; i < itemCount; ++i) {
@@ -8140,8 +8132,43 @@ var android = (function () {
         }
         return 0;
     }
+    const getLayoutDimension = (value) => value === 'space-between' ? 'match_parent' : 'wrap_content';
     class CssGrid$1 extends squared.base.extensions.CssGrid {
         processNode(node, parent) {
+            let container;
+            let renderAs;
+            let outputAs;
+            if (CssGrid.isJustified(node) || CssGrid.isAligned(node)) {
+                container = this.controller.createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE$3.ASSET });
+                container.inherit(node, 'styleMap', 'boxStyle');
+                node.resetBox(30 /* MARGIN */, container);
+                node.resetBox(480 /* PADDING */, container);
+                node.data(CSS_GRID, 'unsetContentBox', true);
+                if (CssGrid.isJustified(node)) {
+                    node.setLayoutWidth(getLayoutDimension(node.css('justifyContent')));
+                }
+                else {
+                    if (node.hasPX('width', false)) {
+                        node.setLayoutWidth('match_parent');
+                    }
+                    else {
+                        container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
+                    }
+                }
+                if (CssGrid.isAligned(node)) {
+                    node.setLayoutHeight(getLayoutDimension(node.css('alignContent')));
+                }
+                else {
+                    if (node.hasPX('height', false)) {
+                        node.setLayoutHeight('match_parent');
+                    }
+                    else {
+                        container.setLayoutHeight('wrap_content');
+                    }
+                }
+                renderAs = container;
+                outputAs = this.application.renderNode(new LayoutUI(parent, container, CONTAINER_NODE.CONSTRAINT, 4096 /* SINGLE */, container.children));
+            }
             super.processNode(node, parent);
             const mainData = node.data(CSS_GRID, 'mainData');
             if (mainData) {
@@ -8149,8 +8176,9 @@ var android = (function () {
                 const unit = column.unit;
                 const columnCount = column.length;
                 const layout = LayoutUI.create({
-                    parent,
+                    parent: container || parent,
                     node,
+                    containerType: CONTAINER_NODE.GRID,
                     alignmentType: 4 /* AUTO_LAYOUT */,
                     children: node.children,
                     rowCount: row.length,
@@ -8188,17 +8216,17 @@ var android = (function () {
                         node.lockAttr('android', 'layout_width');
                         node.data(CSS_GRID, 'constraintData', constraintData);
                         layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
-                        return {
-                            output: this.application.renderNode(layout),
-                            include: true,
-                            complete: true
-                        };
                     }
                 }
-                checkAutoDimension(column, true);
-                checkAutoDimension(row, false);
-                layout.setContainerType(CONTAINER_NODE.GRID);
+                if (layout.containerType === CONTAINER_NODE.GRID) {
+                    checkAutoDimension(column, true);
+                    checkAutoDimension(row, false);
+                }
                 return {
+                    parent: container,
+                    renderAs,
+                    outputAs,
+                    outerParent: container,
                     output: this.application.renderNode(layout),
                     include: true,
                     complete: true
@@ -8507,7 +8535,7 @@ var android = (function () {
             if (mainData) {
                 const controller = this.controller;
                 const { alignContent, children, column, emptyRows, justifyContent, row, rowDirection, rowData } = mainData;
-                const wrapped = node.data(EXT_ANDROID.DELEGATE_CSS_GRID, 'unsetContentBox') === true;
+                const wrapped = node.data(CSS_GRID, 'unsetContentBox') === true;
                 const insertId = children[children.length - 1].id;
                 if (CssGrid.isJustified(node)) {
                     setContentSpacing(node, mainData, justifyContent, true, 'width', wrapped, 16 /* MARGIN_LEFT */, 4 /* MARGIN_RIGHT */, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);
@@ -10512,56 +10540,7 @@ var android = (function () {
     }
 
     var LayoutUI$9 = squared.base.LayoutUI;
-    const $base$5 = squared.base;
-    const { BOX_STANDARD: BOX_STANDARD$b, NODE_ALIGNMENT: NODE_ALIGNMENT$d, NODE_RESOURCE: NODE_RESOURCE$6 } = $base$5.lib.enumeration;
-    const CssGrid$3 = $base$5.extensions.CssGrid;
-    const getLayoutDimension = (value) => value === 'space-between' ? 'match_parent' : 'wrap_content';
-    class Grid$2 extends squared.base.ExtensionUI {
-        is(node) {
-            return node.gridElement;
-        }
-        condition(node) {
-            return CssGrid$3.isJustified(node) || CssGrid$3.isAligned(node);
-        }
-        processNode(node, parent) {
-            const container = this.controller.createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE$6.ASSET });
-            container.inherit(node, 'styleMap', 'boxStyle');
-            node.resetBox(30 /* MARGIN */, container);
-            node.resetBox(480 /* PADDING */, container);
-            node.data(EXT_ANDROID.DELEGATE_CSS_GRID, 'unsetContentBox', true);
-            if (CssGrid$3.isJustified(node)) {
-                node.setLayoutWidth(getLayoutDimension(node.css('justifyContent')));
-            }
-            else {
-                if (node.hasPX('width', false)) {
-                    node.setLayoutWidth('match_parent');
-                }
-                else {
-                    container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
-                }
-            }
-            if (CssGrid$3.isAligned(node)) {
-                node.setLayoutHeight(getLayoutDimension(node.css('alignContent')));
-            }
-            else {
-                if (node.hasPX('height', false)) {
-                    node.setLayoutHeight('match_parent');
-                }
-                else {
-                    container.setLayoutHeight('wrap_content');
-                }
-            }
-            return {
-                parent: container,
-                renderAs: container,
-                outputAs: this.application.renderNode(new LayoutUI$9(parent, container, CONTAINER_NODE.CONSTRAINT, 4096 /* SINGLE */, container.children)),
-                include: true
-            };
-        }
-    }
-
-    var LayoutUI$a = squared.base.LayoutUI;
-    const { NODE_ALIGNMENT: NODE_ALIGNMENT$e } = squared.base.lib.enumeration;
+    const { NODE_ALIGNMENT: NODE_ALIGNMENT$d } = squared.base.lib.enumeration;
     class MaxWidthHeight extends squared.base.ExtensionUI {
         is(node) {
             return !node.inputElement && !node.support.maxDimension;
@@ -10610,15 +10589,15 @@ var android = (function () {
                 return {
                     parent: container,
                     renderAs: container,
-                    outputAs: this.application.renderNode(new LayoutUI$a(parent, container, container.containerType, 4096 /* SINGLE */, container.children))
+                    outputAs: this.application.renderNode(new LayoutUI$9(parent, container, container.containerType, 4096 /* SINGLE */, container.children))
                 };
             }
             return undefined;
         }
     }
 
-    var LayoutUI$b = squared.base.LayoutUI;
-    const { BOX_STANDARD: BOX_STANDARD$c, NODE_ALIGNMENT: NODE_ALIGNMENT$f } = squared.base.lib.enumeration;
+    var LayoutUI$a = squared.base.LayoutUI;
+    const { BOX_STANDARD: BOX_STANDARD$b, NODE_ALIGNMENT: NODE_ALIGNMENT$e } = squared.base.lib.enumeration;
     function outsideX(node, parent) {
         if (node.pageFlow) {
             return node === parent.firstStaticChild && node.inlineFlow && !node.centerAligned && !node.rightAligned && node.marginLeft < 0 && Math.abs(node.marginLeft) <= parent.marginLeft + parent.paddingLeft && !parent.some(item => item.multiline);
@@ -10685,7 +10664,7 @@ var android = (function () {
             return {
                 parent: container,
                 renderAs: container,
-                outputAs: this.application.renderNode(new LayoutUI$b(parent, container, container.containerType, 8 /* HORIZONTAL */ | 4096 /* SINGLE */, container.children)),
+                outputAs: this.application.renderNode(new LayoutUI$a(parent, container, container.containerType, 8 /* HORIZONTAL */ | 4096 /* SINGLE */, container.children)),
                 subscribe: true
             };
         }
@@ -10745,8 +10724,8 @@ var android = (function () {
         }
     }
 
-    var LayoutUI$c = squared.base.LayoutUI;
-    const { BOX_STANDARD: BOX_STANDARD$d, NODE_ALIGNMENT: NODE_ALIGNMENT$g } = squared.base.lib.enumeration;
+    var LayoutUI$b = squared.base.LayoutUI;
+    const { BOX_STANDARD: BOX_STANDARD$c, NODE_ALIGNMENT: NODE_ALIGNMENT$f } = squared.base.lib.enumeration;
     const checkMarginLeft = (node, item) => item.marginLeft < 0 && (node.originalRoot || item.linear.left < Math.floor(node.box.left));
     const checkMarginRight = (node, item) => item.marginRight < 0 && (node.originalRoot || item.linear.right > Math.ceil(node.box.right));
     const checkMarginTop = (node, item) => item.marginTop < 0 && (node.originalRoot || item.linear.top < Math.floor(node.box.top));
@@ -10890,7 +10869,7 @@ var android = (function () {
                 return {
                     parent: container,
                     renderAs: container,
-                    outputAs: this.application.renderNode(new LayoutUI$c(parent, container, CONTAINER_NODE.CONSTRAINT, 32 /* ABSOLUTE */, container.children)),
+                    outputAs: this.application.renderNode(new LayoutUI$b(parent, container, CONTAINER_NODE.CONSTRAINT, 32 /* ABSOLUTE */, container.children)),
                     subscribe: true
                 };
             }
@@ -10954,9 +10933,9 @@ var android = (function () {
         }
     }
 
-    var LayoutUI$d = squared.base.LayoutUI;
+    var LayoutUI$c = squared.base.LayoutUI;
     const { CSS_UNIT: CSS_UNIT$3 } = squared.lib.css;
-    const { NODE_ALIGNMENT: NODE_ALIGNMENT$h } = squared.base.lib.enumeration;
+    const { NODE_ALIGNMENT: NODE_ALIGNMENT$g } = squared.base.lib.enumeration;
     function hasPercentWidth(node) {
         const value = node.percentWidth;
         return value > 0 && value < 1;
@@ -10996,15 +10975,15 @@ var android = (function () {
             return {
                 parent: container,
                 renderAs: container,
-                outputAs: this.application.renderNode(new LayoutUI$d(parent, container, CONTAINER_NODE.CONSTRAINT, 4096 /* SINGLE */, container.children))
+                outputAs: this.application.renderNode(new LayoutUI$c(parent, container, CONTAINER_NODE.CONSTRAINT, 4096 /* SINGLE */, container.children))
             };
         }
     }
 
-    const $base$6 = squared.base;
+    const $base$5 = squared.base;
     const { getElementAsNode: getElementAsNode$1 } = squared.lib.session;
-    const { NODE_ALIGNMENT: NODE_ALIGNMENT$i, NODE_RESOURCE: NODE_RESOURCE$7, NODE_TEMPLATE: NODE_TEMPLATE$5 } = $base$6.lib.enumeration;
-    const NodeUI$2 = $base$6.NodeUI;
+    const { NODE_ALIGNMENT: NODE_ALIGNMENT$h, NODE_RESOURCE: NODE_RESOURCE$6, NODE_TEMPLATE: NODE_TEMPLATE$5 } = $base$5.lib.enumeration;
+    const NodeUI$2 = $base$5.NodeUI;
     function setBaselineIndex(children, container) {
         let valid = false;
         const length = children.length;
@@ -11075,7 +11054,7 @@ var android = (function () {
                     container.android('orientation', 'vertical');
                 }
                 container.inherit(node, 'alignment');
-                container.exclude({ resource: NODE_RESOURCE$7.ASSET });
+                container.exclude({ resource: NODE_RESOURCE$6.ASSET });
                 container.render(parent);
                 if (!setBaselineIndex(radiogroup, container)) {
                     container.css('verticalAlign', 'middle');
@@ -11148,7 +11127,7 @@ var android = (function () {
 
     const $lib$c = squared.lib;
     const { formatPX: formatPX$9 } = $lib$c.css;
-    const { BOX_STANDARD: BOX_STANDARD$e, NODE_RESOURCE: NODE_RESOURCE$8, NODE_TEMPLATE: NODE_TEMPLATE$6 } = squared.base.lib.enumeration;
+    const { BOX_STANDARD: BOX_STANDARD$d, NODE_RESOURCE: NODE_RESOURCE$7, NODE_TEMPLATE: NODE_TEMPLATE$6 } = squared.base.lib.enumeration;
     class ScrollBar extends squared.base.ExtensionUI {
         is(node) {
             return node.length > 0;
@@ -11216,10 +11195,10 @@ var android = (function () {
                     }
                     else {
                         container.inherit(node, 'base');
-                        container.exclude({ resource: NODE_RESOURCE$8.BOX_STYLE });
+                        container.exclude({ resource: NODE_RESOURCE$7.BOX_STYLE });
                     }
                     container.setControlType(overflow[i], CONTAINER_NODE.BLOCK);
-                    container.exclude({ resource: NODE_RESOURCE$8.ASSET });
+                    container.exclude({ resource: NODE_RESOURCE$7.ASSET });
                     container.resetBox(480 /* PADDING */);
                     container.childIndex = node.childIndex;
                     scrollView.push(container);
@@ -11276,7 +11255,7 @@ var android = (function () {
                         item.innerWrapped = parent;
                     }
                 } while (scrollView.length);
-                node.exclude({ resource: NODE_RESOURCE$8.BOX_STYLE });
+                node.exclude({ resource: NODE_RESOURCE$7.BOX_STYLE });
                 node.resetBox(30 /* MARGIN */, item);
                 node.parent = parent;
                 return { parent };
@@ -11381,15 +11360,15 @@ var android = (function () {
     };
 
     const $lib$d = squared.lib;
-    const $base$7 = squared.base;
+    const $base$6 = squared.base;
     const { reduceRGBA } = $lib$d.color;
     const { extractURL: extractURL$1, formatPercent: formatPercent$1, formatPX: formatPX$a, getBackgroundPosition: getBackgroundPosition$1 } = $lib$d.css;
     const { truncate: truncate$6 } = $lib$d.math;
     const { CHAR: CHAR$3, XML: XML$1 } = $lib$d.regex;
     const { delimitString, flatArray, isEqual, objectMap: objectMap$2, resolvePath: resolvePath$1 } = $lib$d.util;
     const { applyTemplate: applyTemplate$1 } = $lib$d.xml;
-    const { BOX_STANDARD: BOX_STANDARD$f, NODE_RESOURCE: NODE_RESOURCE$9 } = $base$7.lib.enumeration;
-    const NodeUI$3 = $base$7.NodeUI;
+    const { BOX_STANDARD: BOX_STANDARD$e, NODE_RESOURCE: NODE_RESOURCE$8 } = $base$6.lib.enumeration;
+    const NodeUI$3 = $base$6.NodeUI;
     function getBorderStyle(border, direction = -1, halfSize = false) {
         const { style, color } = border;
         const width = roundFloat(border.width);
@@ -11402,8 +11381,7 @@ var android = (function () {
                 result.dashGap = result.dashWidth;
                 break;
             case 'dashed': {
-                let dashWidth;
-                let dashGap;
+                let dashWidth, dashGap;
                 switch (width) {
                     case 1:
                     case 2:
@@ -11809,7 +11787,7 @@ var android = (function () {
                 themeBackground = true;
             };
             const deleteBodyWrapper = (body, wrapper) => {
-                if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE$9.BOX_SPACING) && body.percentWidth === 0) {
+                if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE$8.BOX_SPACING) && body.percentWidth === 0) {
                     switch (body.cssInitial('maxWidth')) {
                         case '':
                         case 'auto':
@@ -13057,7 +13035,7 @@ var android = (function () {
     const $lib$f = squared.lib;
     const { XML: XML$3 } = $lib$f.regex;
     const { capitalize: capitalize$4, convertInt: convertInt$3, convertWord: convertWord$1, safeNestedArray: safeNestedArray$4, safeNestedMap: safeNestedMap$1, objectMap: objectMap$3, spliceArray: spliceArray$1, trimBoth } = $lib$f.util;
-    const { NODE_RESOURCE: NODE_RESOURCE$a } = squared.base.lib.enumeration;
+    const { NODE_RESOURCE: NODE_RESOURCE$9 } = squared.base.lib.enumeration;
     const STORED$3 = Resource.STORED;
     const REGEX_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
     const REGEX_DOUBLEQUOTE = /"/g;
@@ -13166,7 +13144,7 @@ var android = (function () {
             const groupMap = {};
             let cache = [];
             this.cache.each(node => {
-                if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE$a.FONT_STYLE)) {
+                if (node.data(Resource.KEY_NAME, 'fontStyle') && node.hasResource(NODE_RESOURCE$9.FONT_STYLE)) {
                     safeNestedArray$4(nameMap, node.containerName).push(node);
                 }
             });
@@ -13588,7 +13566,7 @@ var android = (function () {
     const { measureTextWidth } = $lib$g.dom;
     const { capitalizeString, lowerCaseString, isNumber: isNumber$2, isString: isString$4 } = $lib$g.util;
     const { STRING_SPACE: STRING_SPACE$1, replaceCharacterData } = $lib$g.xml;
-    const { NODE_RESOURCE: NODE_RESOURCE$b } = squared.base.lib.enumeration;
+    const { NODE_RESOURCE: NODE_RESOURCE$a } = squared.base.lib.enumeration;
     class ResourceStrings extends squared.base.ExtensionUI {
         constructor() {
             super(...arguments);
@@ -13607,7 +13585,7 @@ var android = (function () {
                 }
             };
             this.cacheProcessing.each(node => {
-                if (node.hasResource(NODE_RESOURCE$b.VALUE_STRING)) {
+                if (node.hasResource(NODE_RESOURCE$a.VALUE_STRING)) {
                     switch (node.tagName) {
                         case 'SELECT': {
                             const name = this.createOptionArray(node.element, node.controlId);
@@ -15694,7 +15672,6 @@ var android = (function () {
             'android.delegate.positive-x',
             'android.delegate.max-width-height',
             'android.delegate.percent',
-            'android.delegate.css-grid',
             'android.delegate.scrollbar',
             'android.delegate.radiogroup',
             'squared.accessibility',
@@ -15796,7 +15773,6 @@ var android = (function () {
             },
             delegate: {
                 Background: Background,
-                CssGrid: Grid$2,
                 MaxWidthHeight: MaxWidthHeight,
                 NegativeX: NegativeX,
                 Percent: Percent,
@@ -16025,7 +16001,6 @@ var android = (function () {
                 [EA.EXTERNAL]: new External(EA.EXTERNAL, framework),
                 [EA.SUBSTITUTE]: new Substitute(EA.SUBSTITUTE, framework),
                 [EA.DELEGATE_BACKGROUND]: new Background(EA.DELEGATE_BACKGROUND, framework),
-                [EA.DELEGATE_CSS_GRID]: new Grid$2(EA.DELEGATE_CSS_GRID, framework),
                 [EA.DELEGATE_MAXWIDTHHEIGHT]: new MaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, framework),
                 [EA.DELEGATE_NEGATIVEX]: new NegativeX(EA.DELEGATE_NEGATIVEX, framework),
                 [EA.DELEGATE_PERCENT]: new Percent(EA.DELEGATE_PERCENT, framework),

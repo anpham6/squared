@@ -1,4 +1,4 @@
-/* squared.svg 1.6.4
+/* squared.svg 1.6.5
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -3631,8 +3631,7 @@
                 return result;
             }
             animateSequentially(animations, transforms, path, options) {
-                let keyTimeMode = 2 /* FROMTO_ANIMATE */ | 16 /* FROMTO_TRANSFORM */;
-                let precision;
+                let keyTimeMode = 2 /* FROMTO_ANIMATE */ | 16 /* FROMTO_TRANSFORM */, precision;
                 if (options) {
                     if (options.keyTimeMode) {
                         keyTimeMode = options.keyTimeMode;
@@ -6151,23 +6150,20 @@
             return super.append(item);
         }
         build(options) {
-            const viewport = getViewport(this);
-            const container = getNearestViewBox$1(this);
-            let element;
-            let precision;
-            let initialize = true;
-            let requireClip = false;
+            let element, precision;
             if (options) {
                 element = options.symbolElement || options.patternElement || options.element || this.element;
                 precision = options.precision;
                 options = Object.assign(Object.assign({}, options), { symbolElement: undefined, patternElement: undefined, element: undefined });
-                if (options.initialize === false) {
-                    initialize = false;
-                }
             }
             else {
                 element = this.element;
             }
+            const initialize = (options === null || options === void 0 ? void 0 : options.initialize) === false;
+            const viewport = getViewport(this);
+            const container = getNearestViewBox$1(this);
+            const aspectRatio = this.aspectRatio;
+            let requireClip = false;
             this.clear();
             iterateArray$2(element.children, (item) => {
                 let svg;
@@ -6221,7 +6217,6 @@
                     svg.build(options);
                 }
             });
-            const aspectRatio = this.aspectRatio;
             if (SvgBuild.asSvg(this) && (this.documentRoot || aspectRatio.meetOrSlice)) {
                 if (this.documentRoot) {
                     const { x, y } = aspectRatio;
@@ -7161,8 +7156,7 @@
             this.draw(transforms, options);
         }
         draw(transforms, options) {
-            let residual;
-            let precision;
+            let residual, precision;
             if (options) {
                 ({ residual, precision } = options);
             }
@@ -7392,7 +7386,7 @@
                                 }
                                 switch (name) {
                                     case 'M':
-                                    case 'L': {
+                                    case 'L':
                                         if (trailing > 0) {
                                             let beforeEndPoint;
                                             if (length === 1) {
@@ -7429,7 +7423,6 @@
                                             }
                                         }
                                         break;
-                                    }
                                     case 'H':
                                     case 'V': {
                                         const coordinates = pathEnd.coordinates;

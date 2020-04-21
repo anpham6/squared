@@ -1,4 +1,4 @@
-/* squared 1.6.4
+/* squared 1.6.5
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -29,18 +29,18 @@
         SVG: /\.svg$/i
     };
     const UNIT = {
-        DECIMAL: new RegExp(`^${STRING.DECIMAL}$`),
-        LENGTH: new RegExp(`^${STRING.LENGTH}$`),
-        PERCENT: new RegExp(`^${STRING.PERCENT}$`),
-        LENGTH_PERCENTAGE: new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`)
+        DECIMAL: new RegExp(`^\\s*(${STRING.DECIMAL})\\s*$`),
+        LENGTH: new RegExp(`^\\s*${STRING.LENGTH}\\s*$`),
+        PERCENT: new RegExp(`^\\s*(${STRING.PERCENT})\\s*$`),
+        LENGTH_PERCENTAGE: new RegExp(`^\\s*${STRING.LENGTH_PERCENTAGE}\\s*$`)
     };
     const CSS = {
         PX: /\dpx$/,
-        ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
-        TIME: new RegExp(`^${STRING.CSS_TIME}$`),
-        CALC: new RegExp(`^${STRING.CSS_CALC}$`),
+        ANGLE: new RegExp(`^\\s*${STRING.CSS_ANGLE}\\s*$`),
+        TIME: new RegExp(`^\\s*${STRING.CSS_TIME}\\s*$`),
+        CALC: new RegExp(`^\\s*${STRING.CSS_CALC}\\s*$`),
         VAR: /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/,
-        URL: /^url\((?:"(.+)"|(.+))\)$/,
+        URL: /^\s*url\((?:"(.+)"|(.+))\)\s*$/,
         CUSTOM_PROPERTY: /^\s*var\(.+\)\s*$/,
         HEX: /[A-Za-z\d]{3,8}/,
         RGBA: /rgba?\((\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+))?\)/,
@@ -554,9 +554,9 @@
         }
         return 'M'.repeat(parseInt(digits.join(''))) + result;
     }
-    function convertEnum(value, base, derived) {
-        for (const key of Object.keys(base)) {
-            if (value === base[key]) {
+    function convertEnum(value, source, derived) {
+        for (const key of Object.keys(source)) {
+            if (value === source[key]) {
                 return derived[key];
             }
         }
@@ -709,7 +709,7 @@
         return (value & offset) === offset;
     }
     function isNumber(value) {
-        return typeof value === 'string' && UNIT.DECIMAL.test(value.trim());
+        return UNIT.DECIMAL.test(value);
     }
     function isString(value) {
         return typeof value === 'string' && value.trim() !== '';
@@ -1328,8 +1328,7 @@
             return partitionArray(this._children, predicate);
         }
         extract(predicate, options) {
-            let also;
-            let error;
+            let also, error;
             if (options) {
                 ({ also, error } = options);
             }
@@ -1358,8 +1357,7 @@
             return flatMap(this._children, predicate);
         }
         findIndex(predicate, options) {
-            let also;
-            let error;
+            let also, error;
             if (options) {
                 ({ also, error } = options);
             }
@@ -1379,9 +1377,7 @@
             return -1;
         }
         find(predicate, options) {
-            let error;
-            let also;
-            let cascade;
+            let error, also, cascade;
             if (options) {
                 ({ also, error, cascade } = options);
             }
@@ -1419,8 +1415,7 @@
             return this.find(predicate, options) !== undefined;
         }
         cascade(predicate, options) {
-            let error;
-            let also;
+            let error, also;
             if (options) {
                 ({ also, error } = options);
             }
@@ -3058,7 +3053,7 @@
     const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
     const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
     const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
-    const REGEX_SRCSET = /^(.*?)\s+(?:([\d.]+)([xw]))?$/;
+    const REGEX_SRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
     const REGEX_OPERATOR = /\s+([+-]\s+|\s*[*/])\s*/;
     const REGEX_INTEGER = /^\s*-?\d+\s*$/;
     const REGEX_DIVIDER = /\s*\/\s*/;
@@ -4485,14 +4480,7 @@
         return value;
     }
     function calculateVarAsString(element, value, options) {
-        value = value.trim();
-        const optionsVar = Object.assign({}, options);
-        let orderedSize;
-        let dimension;
-        let separator;
-        let unitType;
-        let checkUnit;
-        let errorString;
+        let orderedSize, dimension, separator, unitType, checkUnit, errorString;
         if (options) {
             if (Array.isArray(options.orderedSize)) {
                 orderedSize = options.orderedSize;
@@ -4502,6 +4490,8 @@
             }
             ({ separator, unitType, checkUnit, errorString } = options);
         }
+        value = value.trim();
+        const optionsVar = Object.assign({}, options);
         let unit;
         switch (unitType) {
             case 32 /* INTEGER */:
@@ -4846,7 +4836,7 @@
                                 result.horizontal = position;
                                 horizontal++;
                                 break;
-                            case 'center': {
+                            case 'center':
                                 if (length === 4) {
                                     return false;
                                 }
@@ -4888,7 +4878,6 @@
                                     }
                                 }
                                 break;
-                            }
                             case 'top':
                             case 'bottom':
                                 result.vertical = position;
@@ -6253,7 +6242,7 @@
     }
     function parseDocumentAsync(...elements) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield parseDocument(...elements);
+            return parseDocument(...elements);
         });
     }
     function include(value, options) {

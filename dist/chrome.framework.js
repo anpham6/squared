@@ -1,4 +1,4 @@
-/* chrome-framework 1.6.4
+/* chrome-framework 1.6.5
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -813,27 +813,25 @@ var chrome = (function () {
             let incomplete = false;
             const length = query.length;
             const result = new Array(length);
-            yield (() => __awaiter(this, void 0, void 0, function* () {
-                for (let i = 0; i < length; ++i) {
-                    const element = query[i];
-                    const item = elementMap.get(element);
-                    if (item) {
-                        result[i] = item;
-                    }
-                    else {
-                        application.queryState = 2 /* MULTIPLE */;
-                        yield application.parseDocumentAsync(element).then(() => {
-                            const awaited = elementMap.get(element);
-                            if (awaited) {
-                                result[i] = awaited;
-                            }
-                            else {
-                                incomplete = true;
-                            }
-                        });
-                    }
+            for (let i = 0; i < length; ++i) {
+                const element = query[i];
+                const item = elementMap.get(element);
+                if (item) {
+                    result[i] = item;
                 }
-            }))();
+                else {
+                    application.queryState = 2 /* MULTIPLE */;
+                    yield application.parseDocumentAsync(element).then(() => {
+                        const awaited = elementMap.get(element);
+                        if (awaited) {
+                            result[i] = awaited;
+                        }
+                        else {
+                            incomplete = true;
+                        }
+                    });
+                }
+            }
             if (incomplete) {
                 flatArray(result);
             }
@@ -981,6 +979,20 @@ var chrome = (function () {
             },
             saveFontAssets(filename, options) {
                 file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
+            },
+            saveAsWebPage: (filename, options) => {
+                if (file) {
+                    if (!isObject(options)) {
+                        options = {};
+                    }
+                    options.saveAsWebPage = true;
+                    const preloadImages = userSettings.preloadImages;
+                    userSettings.preloadImages = true;
+                    application.parseDocument(document.body).then(() => {
+                        file.saveToArchive(filename || userSettings.outputArchiveName, options);
+                        userSettings.preloadImages = preloadImages;
+                    });
+                }
             }
         },
         create() {
@@ -1023,7 +1035,7 @@ var chrome = (function () {
             if (application) {
                 const element = document.getElementById(value);
                 if (element) {
-                    return yield findElementAsync(element, cache);
+                    return findElementAsync(element, cache);
                 }
             }
             return null;
@@ -1032,7 +1044,7 @@ var chrome = (function () {
             if (application) {
                 const element = document.querySelector(value);
                 if (element) {
-                    return yield findElementAsync(element, cache);
+                    return findElementAsync(element, cache);
                 }
             }
             return null;
@@ -1044,14 +1056,14 @@ var chrome = (function () {
                     if (!cache) {
                         elementMap.clear();
                     }
-                    return yield findElementAllAsync(query);
+                    return findElementAllAsync(query);
                 }
             }
             return null;
         }),
         getElement: (element, cache = false) => __awaiter(void 0, void 0, void 0, function* () {
             if (application) {
-                return yield findElementAsync(element, cache);
+                return findElementAsync(element, cache);
             }
             return null;
         }),
