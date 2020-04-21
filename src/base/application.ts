@@ -320,7 +320,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public async parseDocumentAsync(...elements: any[]): Promise<squared.lib.base.PromiseHandler> {
-        return await this.parseDocument(...elements);
+        return this.parseDocument(...elements);
     }
 
     public createCache(documentRoot: HTMLElement) {

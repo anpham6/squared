@@ -757,7 +757,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                         else if (!node.baselineAltered) {
                             const horizontalRows = renderParent.horizontalRows;
-                            const validSibling = (item: T) => item.pageFlow && item.blockDimension && !item.floating;
+                            const validSibling = (item: T) => item.pageFlow && item.blockDimension && !item.floating && !item.excluded;
                             let horizontal: Undef<T[]>;
                             if (horizontalRows && horizontalRows.length > 1) {
                                 found: {
@@ -819,9 +819,6 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     }
                                     else if (item.lineBreak || item.block) {
                                         maxBottom = Number.NEGATIVE_INFINITY;
-                                    }
-                                    else if (item.excluded) {
-                                        continue;
                                     }
                                     else if (validSibling(item)) {
                                         maxBottom = Math.max(item.actualRect('bottom'), maxBottom);

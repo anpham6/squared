@@ -101,27 +101,25 @@ async function findElementAllAsync(query: NodeListOf<Element>) {
     let incomplete = false;
     const length = query.length;
     const result: View[] = new Array(length);
-    await (async () => {
-        for (let i = 0; i < length; ++i) {
-            const element = <HTMLElement> query[i];
-            const item = elementMap.get(element);
-            if (item) {
-                result[i] = item;
-            }
-            else {
-                application.queryState = enumeration.APP_QUERYSTATE.MULTIPLE;
-                await application.parseDocumentAsync(element).then(() => {
-                    const awaited = elementMap.get(element);
-                    if (awaited) {
-                        result[i] = awaited;
-                    }
-                    else {
-                        incomplete = true;
-                    }
-                });
-            }
+    for (let i = 0; i < length; ++i) {
+        const element = <HTMLElement> query[i];
+        const item = elementMap.get(element);
+        if (item) {
+            result[i] = item;
         }
-    })();
+        else {
+            application.queryState = enumeration.APP_QUERYSTATE.MULTIPLE;
+            await application.parseDocumentAsync(element).then(() => {
+                const awaited = elementMap.get(element);
+                if (awaited) {
+                    result[i] = awaited;
+                }
+                else {
+                    incomplete = true;
+                }
+            });
+        }
+    }
     if (incomplete) {
         flatArray<View>(result);
     }
@@ -315,7 +313,7 @@ const appBase: ChromeFramework<View> = {
         if (application) {
             const element = document.getElementById(value);
             if (element) {
-                return await findElementAsync(element, cache);
+                return findElementAsync(element, cache);
             }
         }
         return null;
@@ -324,7 +322,7 @@ const appBase: ChromeFramework<View> = {
         if (application) {
             const element = document.querySelector(value);
             if (element) {
-                return await findElementAsync(<HTMLElement> element, cache);
+                return findElementAsync(<HTMLElement> element, cache);
             }
         }
         return null;
@@ -336,14 +334,14 @@ const appBase: ChromeFramework<View> = {
                 if (!cache) {
                     elementMap.clear();
                 }
-                return await findElementAllAsync(query);
+                return findElementAllAsync(query);
             }
         }
         return null;
     },
     getElement: async (element: HTMLElement, cache = false) => {
         if (application) {
-            return await findElementAsync(element, cache);
+            return findElementAsync(element, cache);
         }
         return null;
     },

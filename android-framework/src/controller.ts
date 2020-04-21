@@ -1,7 +1,7 @@
 import { LayoutType, NodeGroupUIOptions, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
 import { FileAsset, ImageAsset } from '../../@types/base/file';
-import { ControllerUISettings, GuidelineOptions, RenderNodeStaticAttribute } from '../../@types/android/application';
-import { LocalSettingsUI, RenderSpaceAttribute, ViewAttribute, WrapperOptions } from '../../@types/android/node';
+import { ControllerUISettings, GuidelineOptions, RenderNodeStaticAttribute, RenderSpaceAttribute } from '../../@types/android/application';
+import { LocalSettingsUI, ViewAttribute, WrapperOptions } from '../../@types/android/node';
 
 import Resource from './resource';
 import View from './view';
@@ -1004,10 +1004,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             let A = true;
             let B = true;
             for (const node of layout) {
-                if (clearMap.has(node)) {
-                    continue;
-                }
-                else {
+                if (!clearMap.has(node)) {
                     const inputElement = node.inputElement || node.controlElement;
                     if (A && !(node.floating || node.autoMargin.horizontal || node.inlineDimension && !inputElement || node.imageOrSvgElement || node.marginTop < 0)) {
                         A = false;

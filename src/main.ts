@@ -105,7 +105,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]): PromiseHan
 }
 
 export async function parseDocumentAsync(...elements: (HTMLElement | string)[]): Promise<PromiseHandler> {
-    return await parseDocument(...elements);
+    return parseDocument(...elements);
 }
 
 export function include(value: ExtensionRequest, options?: {}) {

@@ -17,15 +17,6 @@ export interface ViewAttribute extends ObjectMap<any> {
     documentId?: string;
 }
 
-export interface RenderSpaceAttribute extends ViewAttribute {
-    width?: string;
-    height?: string;
-    column?: number;
-    columnSpan?: number;
-    row?: number;
-    rowSpan?: number;
-}
-
 export interface WrapperOptions<T> extends node.ExcludeUIOptions {
     children?: T[];
     containerType?: number;

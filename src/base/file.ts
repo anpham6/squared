@@ -85,7 +85,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                     .then((response: Response) => response.json())
                     .then((result: FileActionResult) => {
                         if (result) {
-                            if (typeof options.callback === 'function') {
+                            if (result.success && typeof options.callback === 'function') {
                                 options.callback(result);
                             }
                             if (this.userSettings.showErrorMessages) {
@@ -129,7 +129,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                     .then((response: Response) => response.json())
                     .then((result: FileActionResult) => {
                         if (result) {
-                            if (typeof options.callback === 'function') {
+                            if (result.success && typeof options.callback === 'function') {
                                 options.callback(result);
                             }
                             const zipname = result.zipname;

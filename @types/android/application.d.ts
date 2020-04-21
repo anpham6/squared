@@ -1,3 +1,5 @@
+import { ViewAttribute } from './node';
+
 import * as application from '../base/application';
 import * as resource from '../base/resource';
 
@@ -42,6 +44,15 @@ export interface GuidelineOptions {
     orientation?: string;
     percent?: boolean;
     opposing?: boolean;
+}
+
+export interface RenderSpaceAttribute extends ViewAttribute {
+    width?: string;
+    height?: string;
+    column?: number;
+    columnSpan?: number;
+    row?: number;
+    rowSpan?: number;
 }
 
 export interface RenderNodeStaticAttribute {

@@ -103,23 +103,6 @@ export interface AutoMargin {
     topBottom?: boolean;
 }
 
-export interface QueryData {
-    all?: boolean;
-    tagName?: string;
-    id?: string;
-    adjacent?: string;
-    classList?: string[];
-    attrList?: QueryAttribute[];
-    pseudoList?: string[];
-    notList?: string[];
-}
-
-export interface QueryAttribute extends StringValue {
-    symbol?: string;
-    endsWith?: boolean;
-    caseInsensitive: boolean;
-}
-
 export interface LocalSettingsUI {
     systemName: string;
     screenDimension: Dimension;
@@ -197,4 +180,21 @@ export interface TranslateUIOptions {
     contain?: boolean;
     oppose?: boolean;
     relative?: boolean;
+}
+
+export interface QueryData {
+    all?: boolean;
+    tagName?: string;
+    id?: string;
+    adjacent?: string;
+    classList?: string[];
+    attrList?: QueryAttribute[];
+    pseudoList?: string[];
+    notList?: string[];
+}
+
+export interface QueryAttribute extends StringValue {
+    symbol?: string;
+    endsWith?: boolean;
+    caseInsensitive: boolean;
 }

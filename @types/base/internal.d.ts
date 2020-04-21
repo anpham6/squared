@@ -1,6 +1,6 @@
 
 import { Application, Extension, Node, NodeList, NodeUI } from './squared';
-import { NodeTemplate, UserSettings } from './application';
+import { UserSettings } from './application';
 
 export interface AppFramework<T extends Node> {
     base: {};

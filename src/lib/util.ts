@@ -640,7 +640,7 @@ export function hasBit(value: number, offset: number) {
 }
 
 export function isNumber(value: string) {
-    return typeof value === 'string' && UNIT.DECIMAL.test(value.trim());
+    return UNIT.DECIMAL.test(value);
 }
 
 export function isString(value: any): value is string {

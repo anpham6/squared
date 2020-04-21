@@ -1,11 +1,6 @@
-export interface GradientColorStop {
-    color: string;
-    offset: string;
-}
-
 export interface GradientTemplate {
     type: string;
-    item: GradientColorStop[] | false;
+    item: { color: string; offset: string }[] | false;
     startColor?: string;
     endColor?: string;
     centerColor?: string;

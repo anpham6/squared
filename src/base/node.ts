@@ -1321,10 +1321,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                     }
                     if (type) {
-                        if (hasBit(type, CSS_UNIT.LENGTH) && isLength(value) || hasBit(type, CSS_UNIT.PERCENT) && isPercent(value)) {
-                            return true;
-                        }
-                        return false;
+                        return hasBit(type, CSS_UNIT.LENGTH) && isLength(value) || hasBit(type, CSS_UNIT.PERCENT) && isPercent(value);
                     }
                     return true;
             }

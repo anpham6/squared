@@ -23,19 +23,19 @@ export const FILE = {
 };
 
 export const UNIT = {
-    DECIMAL: new RegExp(`^${STRING.DECIMAL}$`),
-    LENGTH: new RegExp(`^${STRING.LENGTH}$`),
-    PERCENT: new RegExp(`^${STRING.PERCENT}$`),
-    LENGTH_PERCENTAGE: new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`)
+    DECIMAL: new RegExp(`^\\s*(${STRING.DECIMAL})\\s*$`),
+    LENGTH: new RegExp(`^\\s*${STRING.LENGTH}\\s*$`),
+    PERCENT: new RegExp(`^\\s*(${STRING.PERCENT})\\s*$`),
+    LENGTH_PERCENTAGE: new RegExp(`^\\s*${STRING.LENGTH_PERCENTAGE}\\s*$`)
 };
 
 export const CSS = {
     PX: /\dpx$/,
-    ANGLE: new RegExp(`^${STRING.CSS_ANGLE}$`),
-    TIME: new RegExp(`^${STRING.CSS_TIME}$`),
-    CALC: new RegExp(`^${STRING.CSS_CALC}$`),
+    ANGLE: new RegExp(`^\\s*${STRING.CSS_ANGLE}\\s*$`),
+    TIME: new RegExp(`^\\s*${STRING.CSS_TIME}\\s*$`),
+    CALC: new RegExp(`^\\s*${STRING.CSS_CALC}\\s*$`),
     VAR: /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/,
-    URL: /^url\((?:"(.+)"|(.+))\)$/,
+    URL: /^\s*url\((?:"(.+)"|(.+))\)\s*$/,
     CUSTOM_PROPERTY: /^\s*var\(.+\)\s*$/,
     HEX: /[A-Za-z\d]{3,8}/,
     RGBA: /rgba?\((\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+))?\)/,

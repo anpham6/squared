@@ -109,10 +109,7 @@ const SEPARATOR = path.sep;
 
 function getFileOutput(file: RequestAsset, dirname: string) {
     const pathname = path.join(dirname, file.moveTo || '', file.pathname);
-    return {
-        pathname,
-        filepath: path.join(pathname, file.filename)
-    };
+    return { pathname, filepath: path.join(pathname, file.filename) };
 }
 
 function getCompressOutput(file: RequestAsset): CompressOutput {
@@ -178,13 +175,16 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
         case '@application/xhtml+xml': {
             let html = fs.readFileSync(filepath).toString('utf8');
             assets.forEach(item => {
-                const uri = item.uri;
-                if (item !== file && uri) {
+                if (item === file) {
+                    return;
+                }
+                const { uri, moveTo, rootDir } = item;
+                if (uri) {
                     const separator = uri.indexOf('\\') !== -1 ? '\\' : '/';
                     const location = appendSeparator(item.pathname, item.filename, separator);
-                    const value = pathJoinForward(item.moveTo || '', location);
-                    if (item.rootDir) {
-                        html = replacePathName(html, item.rootDir + location, value);
+                    const value = (moveTo ? path.join(moveTo, location) : location).replace(/\\/g, '/');
+                    if (rootDir) {
+                        html = replacePathName(html, rootDir + location, value);
                     }
                     else {
                         html = replacePathName(html, uri, value);
@@ -196,8 +196,16 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             return;
         }
     }
-    const replace = mimeType.charAt(0) === '@';
-    const smaller = mimeType.charAt(0) === '%';
+    const afterConvert = (output: string) => {
+        switch (mimeType.charAt(0)) {
+            case '@':
+                status.filesToRemove.push(filepath);
+                break;
+            case '%':
+                status.filesToCompare.push(filepath, output);
+                break;
+        }
+    };
     if (/^[@%]?png:image\//.test(mimeType)) {
         if (!mimeType.endsWith('/png')) {
             status.delayed++;
@@ -209,12 +217,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                             writeError(png, err);
                         }
                         else {
-                            if (replace) {
-                                status.filesToRemove.push(filepath);
-                            }
-                            else if (smaller) {
-                                status.filesToCompare.push(filepath, png);
-                            }
+                            afterConvert(png);
                             if (hasCompressPng(file.compress)) {
                                 compressImage(png, finalize);
                                 return;
@@ -240,12 +243,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                             writeError(jpg, err);
                         }
                         else {
-                            if (replace) {
-                                status.filesToRemove.push(filepath);
-                            }
-                            else if (smaller) {
-                                status.filesToCompare.push(filepath, jpg);
-                            }
+                            afterConvert(jpg);
                             if (hasCompressPng(file.compress)) {
                                 compressImage(jpg, finalize);
                                 return;
@@ -270,11 +268,8 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                         if (err) {
                             writeError(bmp, err);
                         }
-                        else if (replace) {
-                            status.filesToRemove.push(filepath);
-                        }
-                        else if (smaller) {
-                            status.filesToCompare.push(filepath, bmp);
+                        else {
+                            afterConvert(bmp);
                         }
                         finalize(bmp);
                     });
@@ -562,7 +557,7 @@ function removeUnusedFiles(dirname: string, status: AsyncStatus, files: Set<stri
     }
     filesToRemove.forEach(value => {
         try {
-            fs.unlink(value);
+            fs.unlinkSync(value);
             files.delete(value.substring(dirname.length + 1));
         }
         catch (err) {
@@ -586,12 +581,11 @@ function replacePathName(source: string, segment: string, value: string) {
 
 const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
 const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
-const pathJoinForward = (leading: string, trailing: string) => path.join(leading, trailing).replace(/\\/g, '/');
 const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value);
 const isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
 const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
-const hasCompressPng = (compress: CompressionFormat[] | undefined) => TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
-const getCompressFormat = (compress: CompressionFormat[] | undefined, format: string) => compress && compress.find(item => item.format === format);
+const hasCompressPng = (compress: Undef<CompressionFormat[]>) => TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
+const getCompressFormat = (compress: Undef<CompressionFormat[]>, format: string) => compress && compress.find(item => item.format === format);
 const getFileSize = (filepath: string) => fs.statSync(filepath).size;
 
 app.post('/api/assets/copy', (req, res) => {
@@ -636,7 +630,7 @@ app.post('/api/assets/copy', (req, res) => {
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
                 removeUnusedFiles(dirname, status, files);
-                res.json({ success: status.delayed === 0, files: Array.from(files) });
+                res.json({ success: files.size > 0, files: Array.from(files) });
                 status.delayed = Number.POSITIVE_INFINITY;
             }
         };
@@ -666,12 +660,21 @@ app.post('/api/assets/archive', (req, res) => {
         res.json({ application: `DIRECTORY: ${dirname}`, system: err });
         return;
     }
+    const files = new Set<string>();
+    const status: AsyncStatus = {
+        archiving: true,
+        delayed: 0,
+        filesToRemove: [],
+        filesToCompare: []
+    };
+    let cleared = false;
+    let zipname = '';
+    let format: archiver.Format;
+    let formatGzip = false;
     let append_to = req.query.append_to as string;
     if (path.isAbsolute(append_to)) {
         append_to = path.normalize(append_to);
     }
-    let format: archiver.Format;
-    let formatGzip = false;
     switch (req.query.format) {
         case 'gz':
         case 'tgz':
@@ -683,23 +686,13 @@ app.post('/api/assets/archive', (req, res) => {
             format = 'zip';
             break;
     }
-    const files = new Set<string>();
-    const status: AsyncStatus = {
-        archiving: true,
-        delayed: 0,
-        filesToRemove: [],
-        filesToCompare: []
-    };
-    let success = false;
-    let cleared = false;
-    let zipname = '';
     const resumeThread = (unzip_to = '') => {
         const archive = archiver(format, { zlib: { level: GZIP_LEVEL } });
         zipname = path.join(dirname_zip, (req.query.filename || zipname || 'squared') + '.' + format);
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
             const bytes = archive.pointer();
-            const response = { success, zipname, bytes, files: Array.from(files) };
+            const response = { success: files.size > 0, zipname, bytes, files: Array.from(files) };
             if (formatGzip) {
                 const gz = req.query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
                 createGzipWriteStream(zipname, gz)
@@ -728,7 +721,6 @@ app.post('/api/assets/archive', (req, res) => {
                 files.add(filepath.substring(dirname.length + 1));
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
-                success = status.delayed === 0;
                 removeUnusedFiles(dirname, status, files);
                 archive.directory(dirname, false);
                 archive.finalize();

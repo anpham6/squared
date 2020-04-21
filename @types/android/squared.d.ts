@@ -1,11 +1,12 @@
 import { FileAsset } from '../base/file';
 import { AppViewModel } from './internal';
-import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, ResourceStoredMap, StyleAttribute, UserUISettings } from './application';
-import { Constraint, LocalSettingsUI, RenderSpaceAttribute, SupportUI, ViewAttribute, WrapperOptions } from './node';
+import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, RenderSpaceAttribute, ResourceStoredMap, StyleAttribute, UserUISettings } from './application';
+import { Constraint, LocalSettingsUI, SupportUI, ViewAttribute, WrapperOptions } from './node';
 
 import { MIMEOrAll } from '../lib/squared';
 
 import * as squared from '../squared';
+
 import LayoutUI = squared.base.LayoutUI;
 
 type View = base.View;

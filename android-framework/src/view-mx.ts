@@ -2414,8 +2414,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             constraint.vertical = value;
         }
         get anchored() {
-            const { horizontal, vertical } = this.constraint;
-            return horizontal === true && vertical === true;
+            return this.constraint.horizontal && this.constraint.vertical;
         }
 
         get imageOrSvgElement() {
