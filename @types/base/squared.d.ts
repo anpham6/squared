@@ -3,10 +3,9 @@ import { ControllerSettings, ControllerUISettings, ExtensionDependency, Extensio
 import { AutoMargin, AscendOptions, BoxOptions, BoxType, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './node';
 import { ResourceAssetMap, ResourceStoredMap } from './resource';
 import { Asset, FileAsset, ImageAsset, RawAsset } from './file';
-
 import { CssGridData, CssGridDirectionData, GridCellData } from './extension';
 
-import { FontFaceData, MIMEOrAll } from '../lib/squared';
+import { FontFaceData, MIMEOrAll } from '../lib/data';
 
 type PromiseHandler = squared.lib.base.PromiseHandler;
 

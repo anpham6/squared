@@ -210,23 +210,20 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     public build(options?: SvgBuildOptions) {
-        const viewport = getViewport(this);
-        const container = getNearestViewBox(this);
-        let element: SVGGraphicsElement | SVGSymbolElement;
-        let precision: Undef<number>;
-        let initialize = true;
-        let requireClip = false;
+        let element: SVGGraphicsElement | SVGSymbolElement, precision: Undef<number>;
         if (options) {
             element = options.symbolElement || options.patternElement || options.element || this.element;
             precision = options.precision;
             options = { ...options, symbolElement: undefined, patternElement: undefined, element: undefined };
-            if (options.initialize === false) {
-                initialize = false;
-            }
         }
         else {
             element = this.element;
         }
+        const initialize = options?.initialize === false;
+        const viewport = getViewport(this);
+        const container = getNearestViewBox(this);
+        const aspectRatio = this.aspectRatio;
+        let requireClip = false;
         this.clear();
         iterateArray(element.children, (item: SVGElement) => {
             let svg: Undef<SvgView>;
@@ -280,7 +277,6 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 svg.build(options);
             }
         });
-        const aspectRatio = this.aspectRatio;
         if (SvgBuild.asSvg(this) && (this.documentRoot || aspectRatio.meetOrSlice)) {
             if (this.documentRoot) {
                 const { x, y } = aspectRatio;

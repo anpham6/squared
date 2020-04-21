@@ -1,4 +1,4 @@
-import { BackgroundPositionOptions, CalculateOptions, CalculateVarOptions, CalculateVarAsStringOptions, KeyframesData } from '../../@types/lib/squared';
+import { BackgroundPositionOptions, CalculateOptions, CalculateVarOptions, CalculateVarAsStringOptions, KeyframesData } from '../../@types/lib/data';
 
 import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
@@ -1478,14 +1478,7 @@ export function parseVar(element: CSSElement, value: string) {
 }
 
 export function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions) {
-    value = value.trim();
-    const optionsVar = <CalculateVarOptions> Object.assign({}, options);
-    let orderedSize: Undef<number[]>;
-    let dimension: Undef<DimensionAttr[]>;
-    let separator: Undef<string>;
-    let unitType: Undef<number>;
-    let checkUnit: Undef<boolean>;
-    let errorString: Undef<RegExp>;
+    let orderedSize: Undef<number[]>, dimension: Undef<DimensionAttr[]>,  separator: Undef<string>,  unitType: Undef<number>, checkUnit: Undef<boolean>, errorString: Undef<RegExp>;
     if (options) {
         if (Array.isArray(options.orderedSize)) {
             orderedSize = options.orderedSize;
@@ -1495,6 +1488,8 @@ export function calculateVarAsString(element: CSSElement, value: string, options
         }
         ({ separator, unitType, checkUnit, errorString } = options);
     }
+    value = value.trim();
+    const optionsVar = <CalculateVarOptions> Object.assign({}, options);
     let unit: string;
     switch (unitType) {
         case CSS_UNIT.INTEGER:

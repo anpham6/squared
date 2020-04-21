@@ -1,4 +1,4 @@
-import { MIMEOrAll } from '../lib/squared';
+import { MIMEOrAll } from '../lib/data';
 
 export interface CompressOptions {
     level?: number;

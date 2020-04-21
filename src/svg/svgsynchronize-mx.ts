@@ -846,8 +846,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
         }
 
         public animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions) {
-            let keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | SYNCHRONIZE_MODE.FROMTO_TRANSFORM;
-            let precision: Undef<number>;
+            let keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | SYNCHRONIZE_MODE.FROMTO_TRANSFORM, precision: Undef<number>;
             if (options) {
                 if (options.keyTimeMode) {
                     keyTimeMode = options.keyTimeMode;

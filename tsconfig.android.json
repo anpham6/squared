@@ -6,6 +6,8 @@
     "include": [
       "@types/index.d.ts",
       "@types/base/index.d.ts",
-      "src/**/*"
+      "@types/android/index.d.ts",
+      "src/**/*",
+      "android-framework/**/*"
     ]
   }

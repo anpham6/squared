@@ -3,7 +3,7 @@ import { AppViewModel } from './internal';
 import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, RenderSpaceAttribute, ResourceStoredMap, StyleAttribute, UserUISettings } from './application';
 import { Constraint, LocalSettingsUI, SupportUI, ViewAttribute, WrapperOptions } from './node';
 
-import { MIMEOrAll } from '../lib/squared';
+import { MIMEOrAll } from '../lib/data';
 
 import * as squared from '../squared';
 

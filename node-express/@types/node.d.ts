@@ -1,4 +1,4 @@
-import * as file from '../base/file';
+import * as file from '../../@types/base/file';
 
 declare namespace node {
     interface Settings {
@@ -12,7 +12,7 @@ declare namespace node {
         brotli_quality?: string;
         jpeg_quality?: string;
         tinypng_api_key?: string;
-        routing?: { mount: string, path: string }[];
+        routing?: { mount: string; path: string }[];
     }
 
     interface CompressionFormat extends file.CompressionFormat {}

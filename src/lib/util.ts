@@ -1,4 +1,4 @@
-import { DelimitStringOptions, MIMEOrAll } from '../../@types/lib/squared';
+import { DelimitStringOptions, MIMEOrAll } from '../../@types/lib/data';
 
 import { CHAR, COMPONENT, UNIT, XML } from './regex';
 

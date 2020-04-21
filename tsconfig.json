@@ -18,8 +18,9 @@
     "allowUmdGlobalAccess": true
   },
   "exclude": [
+    "node_modules",
     "build",
     "dist",
-    "node_modules"
+    "node-express"
   ]
 }

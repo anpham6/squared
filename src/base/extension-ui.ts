@@ -2,7 +2,7 @@ import { ExtensionResult, LayoutRoot } from '../../@types/base/application';
 
 import Extension from './extension';
 
-type NodeUI = squared.base.NodeUI
+type NodeUI = squared.base.NodeUI;
 
 const $lib = squared.lib;
 

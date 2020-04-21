@@ -1,4 +1,4 @@
-import { ContainerFindOptions, ContainerOptions } from '../../../@types/lib/squared';
+import { ContainerFindOptions, ContainerOptions } from '../../../@types/lib/data';
 
 import { flatMap, iterateArray, objectMap, partitionArray, sameArray } from '../util';
 
@@ -127,8 +127,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerOptions<T>): T[] {
-        let also: Undef<BindGeneric<T, void>>;
-        let error: Undef<IteratorPredicate<T, boolean>>;
+        let also: Undef<BindGeneric<T, void>>, error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ also, error } = options);
         }
@@ -160,8 +159,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerOptions<T>) {
-        let also: Undef<BindGeneric<T, void>>;
-        let error: Undef<IteratorPredicate<T, boolean>>;
+        let also: Undef<BindGeneric<T, void>>, error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ also, error } = options);
         }
@@ -182,9 +180,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
-        let error: Undef<IteratorPredicate<T, boolean>>;
-        let also: Undef<BindGeneric<T, void>>;
-        let cascade: Undef<boolean>;
+        let error: Undef<IteratorPredicate<T, boolean>>, also: Undef<BindGeneric<T, void>>, cascade: Undef<boolean>;
         if (options) {
             ({ also, error, cascade } = options);
         }
@@ -224,8 +220,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public cascade(predicate?: (item: T) => boolean, options?: ContainerOptions<T>) {
-        let error: Undef<IteratorPredicate<T, boolean>>;
-        let also: Undef<BindGeneric<T, void>>;
+        let error: Undef<IteratorPredicate<T, boolean>>, also: Undef<BindGeneric<T, void>>;
         if (options) {
             ({ also, error } = options);
         }

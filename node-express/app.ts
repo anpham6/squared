@@ -1,4 +1,4 @@
-import { CompressionFormat, RequestAsset, Settings } from '../@types/node-express/node';
+import { CompressionFormat, RequestAsset, Settings } from './@types/node';
 
 import got from 'got';
 

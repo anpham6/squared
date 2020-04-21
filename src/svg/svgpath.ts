@@ -224,8 +224,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
     }
 
     public draw(transforms?: SvgTransform[], options?: SvgBuildOptions) {
-        let residual: Undef<SvgTransformResidual>;
-        let precision: Undef<number>;
+        let residual: Undef<SvgTransformResidual>, precision: Undef<number>;
         if (options) {
             ({ residual, precision } = options);
         }
