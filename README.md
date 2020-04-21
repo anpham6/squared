@@ -105,7 +105,6 @@ squared.settings = {
         'android.delegate.positive-x',
         'android.delegate.max-width-height',
         'android.delegate.percent',
-        'android.delegate.css-grid',
         'android.delegate.scrollbar',
         'android.delegate.radiogroup',
         'squared.accessibility',
@@ -311,10 +310,10 @@ squared.saveToArchive('archive1', {
 
 ```javascript
 // async methods
-await chrome.getElementById(value: string, cache?: boolean) // cache: default "true"
-await chrome.querySelector(value: string, cache?: boolean)
-await chrome.querySelectorAll(value: string, cache?: boolean)
-await chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "false"
+chrome.getElementById(value: string, cache?: boolean) // cache: default "true"
+chrome.querySelector(value: string, cache?: boolean)
+chrome.querySelectorAll(value: string, cache?: boolean)
+chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "false"
 
 chrome.saveAsWebPage(filename?: string, options?: {}): void // create archive with html and web page assets asynchronously
 ```
@@ -348,6 +347,8 @@ squared.system.saveImageAssets(filename?: string, options?: {})
 squared.system.saveVideoAssets(filename?: string, options?: {})
 squared.system.saveAudioAssets(filename?: string, options?: {})
 squared.system.saveFontAssets(filename?: string, options?: {})
+
+squared.system.saveAsWebPage(filename?: string, options?: {}) // synchronous
 ```
 
 ### ALL: Excluding Procedures / Applied Attributes

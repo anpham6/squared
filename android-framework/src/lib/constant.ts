@@ -4,7 +4,6 @@ export const EXT_ANDROID = {
     EXTERNAL: 'android.external',
     SUBSTITUTE: 'android.substitute',
     DELEGATE_BACKGROUND: 'android.delegate.background',
-    DELEGATE_CSS_GRID: 'android.delegate.css-grid',
     DELEGATE_MAXWIDTHHEIGHT: 'android.delegate.max-width-height',
     DELEGATE_NEGATIVEX: 'android.delegate.negative-x',
     DELEGATE_PERCENT: 'android.delegate.percent',

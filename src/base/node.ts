@@ -103,7 +103,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                     }
                     break;
                 }
-                case ':first-of-type': {
+                case ':first-of-type':
                     for (const item of parent.naturalElements) {
                         if (item.tagName === tagName) {
                             if (item !== child) {
@@ -113,7 +113,6 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                         }
                     }
                     break;
-                }
                 case ':nth-child(n)':
                 case ':nth-last-child(n)':
                     break;
@@ -172,13 +171,12 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                         return false;
                     }
                     break;
-                case ':placeholder-shown': {
+                case ':placeholder-shown':
                     if (!((tagName === 'INPUT' || tagName === 'TEXTAREA') && child.toElementString('placeholder') !== '')) {
                         return false;
                     }
                     break;
-                }
-                case ':default': {
+                case ':default':
                     switch (tagName) {
                         case 'INPUT': {
                             const element = <HTMLInputElement> child.element;
@@ -230,9 +228,8 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                             return false;
                     }
                     break;
-                }
                 case ':in-range':
-                case ':out-of-range': {
+                case ':out-of-range':
                     if (tagName === 'INPUT') {
                         const element = <HTMLInputElement> child.element;
                         const value = parseFloat(element.value);
@@ -256,7 +253,6 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                         return false;
                     }
                     break;
-                }
                 case ':indeterminate':
                     if (tagName === 'INPUT') {
                         const element = <HTMLInputElement> child.element;
@@ -289,7 +285,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                         return false;
                     }
                     break;
-                case ':target': {
+                case ':target':
                     if (location.hash === '') {
                         return false;
                     }
@@ -300,7 +296,6 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                         }
                     }
                     break;
-                }
                 case ':scope':
                     if (!last || adjacent === '>' && child !== this) {
                         return false;

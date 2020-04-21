@@ -273,7 +273,7 @@ declare namespace util {
     function convertFloat(value: string): number;
     function convertAlpha(value: number): string;
     function convertRoman(value: number): string;
-    function convertEnum(value: number, base: {}, derived: {}): string;
+    function convertEnum(value: number, source: {}, derived: {}): string;
     function randomUUID(separator?: string): string;
     function formatString(value: string, ...params: string[]): string;
     function delimitString(options: DelimitStringOptions, ...appending: string[]): string;

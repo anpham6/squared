@@ -72,8 +72,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
             result.dashGap = result.dashWidth;
             break;
         case 'dashed': {
-            let dashWidth: number;
-            let dashGap: number;
+            let dashWidth: number, dashGap: number;
             switch (width) {
                 case 1:
                 case 2:

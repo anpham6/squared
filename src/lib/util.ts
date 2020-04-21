@@ -479,9 +479,9 @@ export function convertRoman(value: number) {
     return 'M'.repeat(parseInt(digits.join(''))) + result;
 }
 
-export function convertEnum(value: number, base: {}, derived: {}): string {
-    for (const key of Object.keys(base)) {
-        if (value === base[key]) {
+export function convertEnum(value: number, source: {}, derived: {}): string {
+    for (const key of Object.keys(source)) {
+        if (value === source[key]) {
             return derived[key];
         }
     }

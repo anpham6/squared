@@ -455,7 +455,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             }
                             switch (name) {
                                 case 'M':
-                                case 'L': {
+                                case 'L':
                                     if (trailing > 0) {
                                         let beforeEndPoint: Undef<SvgPoint>;
                                         if (length === 1) {
@@ -492,7 +492,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         }
                                     }
                                     break;
-                                }
                                 case 'H':
                                 case 'V': {
                                     const coordinates = pathEnd.coordinates;

@@ -8,7 +8,6 @@ export function setViewModel(data?: {}): void;
 export function parseDocument(...elements: (string | HTMLElement)[]): PromiseHandler;
 export function parseDocumentAsync(...elements: (string | HTMLElement)[]): Promise<PromiseHandler>;
 export function include(value: ExtensionRequest, options?: {}): boolean;
-export function includeAsync(value: ExtensionRequest | string, options?: {}): boolean;
 export function exclude(value: ExtensionRequest | string): boolean;
 export function configure(value: ExtensionRequest | string, options: {}): boolean;
 export function retrieve(value: string): Null<{}>;

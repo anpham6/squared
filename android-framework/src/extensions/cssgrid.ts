@@ -1,11 +1,13 @@
-import { NodeXmlTemplate } from '../../../@types/base/application';
+import { NodeTemplate, NodeXmlTemplate } from '../../../@types/base/application';
 import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@types/base/extension';
 import { RenderSpaceAttribute } from '../../../@types/android/application';
 
 import Resource from '../resource';
 
-import { CONTAINER_ANDROID, EXT_ANDROID, STRING_ANDROID } from '../lib/constant';
+import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
+
+import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
@@ -19,10 +21,9 @@ const { conditionArray, flatMultiArray, hasValue, isArray } = $lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 
-const LayoutUI = $base.LayoutUI;
-const CSS_GRID = $base_lib.constant.EXT_NAME.CSS_GRID;
-
 const CssGrid = $base.extensions.CssGrid;
+
+const CSS_GRID = $base_lib.constant.EXT_NAME.CSS_GRID;
 
 const REGEX_JUSTIFYSELF = /start|left|center|right|end/;
 const REGEX_JUSTIFYLEFT = /(start|left|baseline)$/;
@@ -123,7 +124,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                     }
                     break;
                 }
-                case 'space-between': {
+                case 'space-between':
                     if (itemCount > 1) {
                         const [marginSize, marginExcess] = getMarginSize(itemCount - 1, gridSize);
                         for (let i = 0; i < itemCount; ++i) {
@@ -150,12 +151,11 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                                 }
                             }
                         }
-                        break;
                     }
                     else {
                         return;
                     }
-                }
+                    break;
                 case 'space-evenly': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount + 1, gridSize);
                     for (let i = 0; i < itemCount; ++i) {
@@ -342,8 +342,52 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     return 0;
 }
 
+const getLayoutDimension = (value: string) => value === 'space-between' ? 'match_parent' : 'wrap_content';
+
 export default class <T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T) {
+        let container: Undef<T>;
+        let renderAs: Undef<T>;
+        let outputAs: Undef<NodeTemplate<T>>;
+        if (CssGrid.isJustified(node) || CssGrid.isAligned(node)) {
+            container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET });
+            container.inherit(node, 'styleMap', 'boxStyle');
+            node.resetBox(BOX_STANDARD.MARGIN, container);
+            node.resetBox(BOX_STANDARD.PADDING, container);
+            node.data(CSS_GRID, 'unsetContentBox', true);
+            if (CssGrid.isJustified(node)) {
+                node.setLayoutWidth(getLayoutDimension(node.css('justifyContent')));
+            }
+            else {
+                if (node.hasPX('width', false)) {
+                    node.setLayoutWidth('match_parent');
+                }
+                else {
+                    container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
+                }
+            }
+            if (CssGrid.isAligned(node)) {
+                node.setLayoutHeight(getLayoutDimension(node.css('alignContent')));
+            }
+            else {
+                if (node.hasPX('height', false)) {
+                    node.setLayoutHeight('match_parent');
+                }
+                else {
+                    container.setLayoutHeight('wrap_content');
+                }
+            }
+            renderAs = container;
+            outputAs = this.application.renderNode(
+                new LayoutUI(
+                    parent,
+                    container,
+                    CONTAINER_NODE.CONSTRAINT,
+                    NODE_ALIGNMENT.SINGLE,
+                    container.children as T[]
+                )
+            );
+        }
         super.processNode(node, parent);
         const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
@@ -351,8 +395,9 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const unit = column.unit;
             const columnCount = column.length;
             const layout = LayoutUI.create({
-                parent,
+                parent: container || parent,
                 node,
+                containerType: CONTAINER_NODE.GRID,
                 alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT,
                 children: node.children as T[],
                 rowCount: row.length,
@@ -390,17 +435,17 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                     node.lockAttr('android', 'layout_width');
                     node.data(CSS_GRID, 'constraintData', constraintData);
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
-                    return {
-                        output: this.application.renderNode(layout),
-                        include: true,
-                        complete: true
-                    };
                 }
             }
-            checkAutoDimension(column, true);
-            checkAutoDimension(row, false);
-            layout.setContainerType(CONTAINER_NODE.GRID);
+            if (layout.containerType === CONTAINER_NODE.GRID) {
+                checkAutoDimension(column, true);
+                checkAutoDimension(row, false);
+            }
             return {
+                parent: container,
+                renderAs,
+                outputAs,
+                outerParent: container,
                 output: this.application.renderNode(layout),
                 include: true,
                 complete: true
@@ -718,7 +763,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         if (mainData) {
             const controller = <android.base.Controller<T>> this.controller;
             const { alignContent, children, column, emptyRows, justifyContent, row, rowDirection, rowData } = mainData;
-            const wrapped = node.data(EXT_ANDROID.DELEGATE_CSS_GRID, 'unsetContentBox') === true;
+            const wrapped = node.data(CSS_GRID, 'unsetContentBox') === true;
             const insertId = children[children.length - 1].id;
             if (CssGrid.isJustified(node)) {
                 setContentSpacing(node, mainData, justifyContent, true, 'width', wrapped, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);

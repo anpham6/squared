@@ -10,7 +10,7 @@ const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|m
 const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
 const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
 const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
-const REGEX_SRCSET = /^(.*?)\s+(?:([\d.]+)([xw]))?$/;
+const REGEX_SRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
 const REGEX_OPERATOR = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEX_INTEGER = /^\s*-?\d+\s*$/;
 const REGEX_DIVIDER = /\s*\/\s*/;
@@ -1838,7 +1838,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                             result.horizontal = position;
                             horizontal++;
                             break;
-                        case 'center': {
+                        case 'center':
                             if (length === 4) {
                                 return false;
                             }
@@ -1880,7 +1880,6 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                                 }
                             }
                             break;
-                        }
                         case 'top':
                         case 'bottom':
                             result.vertical = position;

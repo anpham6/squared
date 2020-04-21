@@ -403,16 +403,15 @@ function setLineHeight(node: T, renderParent: T) {
                 const length = horizontalRows.length;
                 for (let i = 0; i < length; ++i) {
                     const row = horizontalRows[i];
-                    const q = row.length;
                     const nextRow = horizontalRows[i + 1];
                     const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < length - 1 && !!nextRow.find(item => item.baselineActive)?.has('lineHeight'));
                     const first = row[0];
-                    const singleItem = q === 1;
-                    const singleLine = singleItem && !first.multiline;
-                    const baseline = !singleItem && row.find(item => item.baselineActive && item.renderChildren.length === 0);
+                    const onlyChild = row.length === 1;
+                    const singleLine = onlyChild && !first.multiline;
+                    const baseline = !onlyChild && row.find(item => item.baselineActive && item.renderChildren.length === 0);
                     const top = singleLine || !previousMultiline && (i > 0 || length === 1) || first.lineBreakLeading;
                     const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
-                    if (baseline && q > 1) {
+                    if (baseline) {
                         if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
                             setMarginOffset(baseline as T, lineHeight, false, top, bottom);
                         }
@@ -424,11 +423,11 @@ function setLineHeight(node: T, renderParent: T) {
                     else {
                         row.forEach((item: T) => {
                             if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
-                                setMarginOffset(item, lineHeight, singleItem, top, bottom);
+                                setMarginOffset(item, lineHeight, onlyChild, top, bottom);
                             }
                         });
                     }
-                    previousMultiline = singleItem && first.multiline;
+                    previousMultiline = onlyChild && first.multiline;
                 }
             }
         }
@@ -575,7 +574,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return i > 0 ? Math.max(0, percent) : 1;
         }
 
-        public static getControlName(containerType: number, api = BUILD_ANDROID.Q): string {
+        public static getControlName(containerType: number, api = BUILD_ANDROID.LATEST): string {
             const name = CONTAINER_NODE[containerType];
             return api >= BUILD_ANDROID.Q && CONTAINER_ANDROID_X[name] || CONTAINER_ANDROID[name];
         }
@@ -1230,7 +1229,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (this.positionStatic && !this.blockWidth && (left < 0 || right < 0)) {
                         switch (this.cssAscend('textAlign')) {
-                            case 'center': {
+                            case 'center':
                                 if (left < right) {
                                     right += Math.abs(left);
                                     right /= 2;
@@ -1242,7 +1241,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     right = 0;
                                 }
                                 break;
-                            }
                             case 'right':
                             case 'end':
                                 if (left < 0) {
@@ -1567,6 +1565,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else {
                             value -= this.right;
                         }
+                        break;
                     case 'right':
                         if (!this.hasPX('left')) {
                             value -= this.right;
@@ -2016,7 +2015,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             });
             result.sort((a, b) => a > b ? 1 : -1);
             if (requireId) {
-                result.unshift('android:id="' + (id || `@+id/${this.controlId}`) + '"');
+                result.unshift(`android:id="${id || '@+id/' + this.controlId}"`);
             }
             return result;
         }
@@ -2135,8 +2134,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 finalizeGravity(this, 'layout_gravity');
                 finalizeGravity(this, 'gravity');
                 if (this.imageElement) {
-                    const layoutWidth = this.layoutWidth;
-                    const layoutHeight = this.layoutHeight;
+                    const { layoutWidth, layoutHeight } = this;
                     if (layoutWidth === 'wrap_content' && layoutHeight !== 'wrap_content' ||
                         layoutWidth !== 'wrap_content' && layoutHeight === 'wrap_content' ||
                         layoutWidth === 'match_parent' || layoutHeight === 'match_parent' ||

@@ -7,7 +7,6 @@ const settings: UserUISettings = {
         'android.delegate.positive-x',
         'android.delegate.max-width-height',
         'android.delegate.percent',
-        'android.delegate.css-grid',
         'android.delegate.scrollbar',
         'android.delegate.radiogroup',
         'squared.accessibility',

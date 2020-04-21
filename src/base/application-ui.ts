@@ -1527,12 +1527,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             case 'block':
                             case 'inline':
                             case 'inherit':
-                            case 'initial': {
+                            case 'initial':
                                 if (!checkDimension(false)) {
                                     return undefined;
                                 }
                                 break;
-                            }
                         }
                     }
                 }

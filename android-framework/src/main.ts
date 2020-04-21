@@ -25,7 +25,6 @@ import WhiteSpace from './extensions/whitespace';
 import ConstraintGuideline from './extensions/constraint/guideline';
 
 import DelegateBackground from './extensions/delegate/background';
-import DelegateCssGrid from './extensions/delegate/cssgrid';
 import DelegateMaxWidthHeight from './extensions/delegate/max-width-height';
 import DelegateNegativeX from './extensions/delegate/negative-x';
 import DelegatePositiveX from './extensions/delegate/positive-x';
@@ -109,7 +108,6 @@ const appBase: AppFramework<View> = {
         },
         delegate: {
             Background: DelegateBackground,
-            CssGrid: DelegateCssGrid,
             MaxWidthHeight: DelegateMaxWidthHeight,
             NegativeX: DelegateNegativeX,
             Percent: DelegatePercent,
@@ -338,7 +336,6 @@ const appBase: AppFramework<View> = {
             [EA.EXTERNAL]: new External(EA.EXTERNAL, framework),
             [EA.SUBSTITUTE]: new Substitute(EA.SUBSTITUTE, framework),
             [EA.DELEGATE_BACKGROUND]: new DelegateBackground(EA.DELEGATE_BACKGROUND, framework),
-            [EA.DELEGATE_CSS_GRID]: new DelegateCssGrid(EA.DELEGATE_CSS_GRID, framework),
             [EA.DELEGATE_MAXWIDTHHEIGHT]: new DelegateMaxWidthHeight(EA.DELEGATE_MAXWIDTHHEIGHT, framework),
             [EA.DELEGATE_NEGATIVEX]: new DelegateNegativeX(EA.DELEGATE_NEGATIVEX, framework),
             [EA.DELEGATE_PERCENT]: new DelegatePercent(EA.DELEGATE_PERCENT, framework),

@@ -219,7 +219,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         break;
                     }
-                    case 'TH': {
+                    case 'TH':
                         if (td.cssInitial('textAlign') === '') {
                             td.css('textAlign', 'center');
                         }
@@ -230,7 +230,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             setBorderStyle(td, 'borderBottom', node);
                         }
                         break;
-                    }
                 }
                 const columnWidth = td.cssInitial('width');
                 const reevaluate = mapWidth[j] === undefined || mapWidth[j] === 'auto';

@@ -271,6 +271,20 @@ const appBase: ChromeFramework<View> = {
         },
         saveFontAssets(filename?: string, options?: FileArchivingOptions) {
             file?.archiving(createAssetsOptions(file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
+        },
+        saveAsWebPage: (filename?: string, options?: FileArchivingOptions) => {
+            if (file) {
+                if (!isObject(options)) {
+                    options = {};
+                }
+                options.saveAsWebPage = true;
+                const preloadImages = userSettings.preloadImages;
+                userSettings.preloadImages = true;
+                application.parseDocument(document.body).then(() => {
+                    file!.saveToArchive(filename || userSettings.outputArchiveName, options);
+                    userSettings.preloadImages = preloadImages;
+                });
+            }
         }
     },
     create() {
