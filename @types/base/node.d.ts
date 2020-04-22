@@ -173,6 +173,7 @@ export interface HideUIOptions<T> {
     collapse?: boolean;
     remove?: boolean;
     replacement?: T;
+    beforeReplace?: BindGeneric<T, void>;
 }
 
 export interface TranslateUIOptions {

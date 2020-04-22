@@ -541,12 +541,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public hide(options?: HideUIOptions<T>) {
-        let remove: Undef<boolean>, replacement: Undef<T>;
-        if (options) {
-            ({ remove, replacement } = options);
-        }
-        if (remove) {
-            this.removeTry(replacement);
+        if (options?.remove) {
+            this.removeTry(options.replacement, options.beforeReplace);
         }
         this.rendered = true;
         this.visible = false;

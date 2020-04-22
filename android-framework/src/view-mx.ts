@@ -376,6 +376,81 @@ function ascendFlexibleHeight(node: T) {
     return !!parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight === true;
 }
 
+function replaceLayoutPosition(node: T, parentId: string) {
+    const left = node.anchorChain('left').shift();
+    const right = node.anchorChain('right').shift();
+    const top = node.anchorChain('top').shift();
+    const bottom = node.anchorChain('bottom').shift();
+    if (left && right) {
+        left.anchor('rightLeft', right.documentId, true);
+        right.anchor('leftRight', left.documentId, true);
+    }
+    else if (left) {
+        left.anchorDelete('rightLeft');
+        if (node.alignParent('right')) {
+            left.anchor('right', parentId);
+            transferHorizontalStyle(node, left);
+        }
+    }
+    else if (right) {
+        right.anchorDelete('leftRight');
+        if (node.alignParent('left')) {
+            right.anchor('left', parentId);
+            transferHorizontalStyle(node, right);
+        }
+    }
+    if (top && bottom) {
+        top.anchor('bottomTop', bottom.documentId, true);
+        bottom.anchor('topBottom', top.documentId, true);
+    }
+    else if (top) {
+        top.anchorDelete('bottomTop');
+        if (node.alignParent('bottom')) {
+            top.anchor('bottom', parentId);
+            transferVerticalStyle(node, top);
+        }
+    }
+    else if (bottom) {
+        bottom.anchorDelete('topBottom');
+        if (node.alignParent('top')) {
+            bottom.anchor('top', parentId);
+            transferVerticalStyle(node, bottom);
+        }
+    }
+}
+
+function transferHorizontalStyle(node: T, sibling: T) {
+    sibling.app('layout_constraintHorizontal_bias', node.app('layout_constraintHorizontal_bias'));
+    sibling.app('layout_constraintHorizontal_chainStyle', node.app('layout_constraintHorizontal_chainStyle'));
+}
+
+function transferVerticalStyle(node: T, sibling: T) {
+    sibling.app('layout_constraintVertical_bias', node.app('layout_constraintVertical_bias'));
+    sibling.app('layout_constraintVertical_chainStyle', node.app('layout_constraintVertical_chainStyle'));
+}
+
+function transferLayoutAlignment(node: T, replacement: T) {
+    replacement.anchorClear();
+    for (const name of node.unsafe('namespaces') as string[]) {
+        const data = node.namespace(name);
+        for (const attr in data) {
+            switch (attr) {
+                case 'layout_width':
+                case 'layout_height':
+                    continue;
+                default:
+                    if (attr.includes('margin')) {
+                        continue;
+                    }
+                    break;
+            }
+            if (attr.startsWith('layout_')) {
+                replacement.attr(name, attr, data[attr], true);
+            }
+        }
+    }
+}
+
 const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
 const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
 
@@ -1663,7 +1738,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public removeTry(replacement?: T, beforeReplace?: BindGeneric<Undef<T>, void>) {
             if (replacement && !beforeReplace) {
-                beforeReplace = () => replacement.anchorClear();
+                beforeReplace = () => this.anchorClear(replacement);
             }
             return super.removeTry(replacement, beforeReplace);
         }
@@ -1920,15 +1995,27 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
         }
 
-        public anchorClear() {
+        public anchorClear(update?: T | true) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
+                    if (update === true) {
+                        replaceLayoutPosition(node, 'parent');
+                    }
+                    else if (update) {
+                        transferLayoutAlignment(node, update);
+                    }
                     node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT));
                     node.delete('app', 'layout_constraintHorizontal_bias', 'layout_constraintHorizontal_chainStyle', 'layout_constraintVertical_bias', 'layout_constraintVertical_chainStyle');
                 }
                 else if (renderParent.layoutRelative) {
+                    if (update === true) {
+                        replaceLayoutPosition(node, 'true');
+                    }
+                    else if (update) {
+                        transferLayoutAlignment(node, update);
+                    }
                     node.anchorDelete(...Object.keys(LAYOUT_RELATIVE_PARENT));
                     node.anchorDelete(...Object.keys(LAYOUT_RELATIVE));
                 }

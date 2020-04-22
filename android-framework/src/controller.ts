@@ -567,7 +567,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const parent = this.application.resolveTarget(target);
                 if (parent) {
-                    const template = <NodeTemplate<T>> node.removeTry();
+                    const template = <NodeTemplate<T>> node.removeTry(undefined, () => node.anchorClear(true));
                     if (template) {
                         const renderChildren = parent.renderChildren;
                         const renderTemplates = safeNestedArray(<StandardMap> parent, 'renderTemplates');
@@ -2127,9 +2127,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (options.inheritDataset && node.naturalElement) {
             Object.assign(container.dataset, node.dataset);
         }
-        if (node.renderParent && node.removeTry()) {
-            node.rendered = false;
-        }
         if (node.documentParent.layoutElement) {
             const android = node.namespace('android');
             for (const attr in android) {
@@ -2138,6 +2135,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     delete android[attr];
                 }
             }
+        }
+        if (node.renderParent && node.removeTry(undefined, () => node.anchorClear(true))) {
+            node.rendered = false;
         }
         return container;
     }
