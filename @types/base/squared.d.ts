@@ -1,6 +1,6 @@
 import { AppHandler, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, AppViewModel } from './internal';
 import { ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileCopyingOptions, LayoutOptions, LayoutResult, LayoutRoot, LayoutType, NodeGroupUIOptions, NodeTemplate, NodeUIOptions, UserSettings, UserUISettings } from './application';
-import { AutoMargin, AscendOptions, BoxOptions, BoxType, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './node';
+import { AutoMargin, AscendOptions, BoxOptions, BoxType, ReplaceTryUIOptions, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, RemoveTryUIOptions, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './node';
 import { ResourceAssetMap, ResourceStoredMap } from './resource';
 import { Asset, FileAsset, ImageAsset, RawAsset } from './file';
 import { CssGridData, CssGridDirectionData, GridCellData } from './extension';
@@ -518,8 +518,8 @@ declare class NodeUI extends Node implements LayoutType {
     hasSection(value: number): boolean;
     exclude(options: ExcludeUIOptions): void;
     hide(options?: HideUIOptions<NodeUI>): void;
-    appendTry(node: NodeUI, replacement: NodeUI, append?: boolean): boolean;
-    removeTry(replacement?: NodeUI, beforeReplace?: BindGeneric<Undef<NodeUI>, void>): Undef<NodeTemplate<NodeUI>>;
+    replaceTry(options: ReplaceTryUIOptions<NodeUI>): boolean;
+    removeTry(options?: RemoveTryUIOptions<NodeUI>): Undef<NodeTemplate<NodeUI>>;
     sort(predicate?: (a: NodeUI, b: NodeUI) => number): this;
     render(parent?: NodeUI): void;
     renderEach(predicate: IteratorPredicate<NodeUI, void>): this;

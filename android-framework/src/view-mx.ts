@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { AutoMargin, BoxType, HideUIOptions, TranslateUIOptions } from '../../@types/base/node';
+import { AutoMargin, BoxType, HideUIOptions, RemoveTryUIOptions, TranslateUIOptions } from '../../@types/base/node';
 import { CachedValueUI, Constraint, LocalSettingsUI, SupportUI } from '../../@types/android/node';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
@@ -429,8 +429,8 @@ function transferVerticalStyle(node: T, sibling: T) {
     sibling.app('layout_constraintVertical_chainStyle', node.app('layout_constraintVertical_chainStyle'));
 }
 
-function transferLayoutAlignment(node: T, replacement: T) {
-    replacement.anchorClear();
+function transferLayoutAlignment(node: T, replaceWith: T) {
+    replaceWith.anchorClear();
     for (const name of node.unsafe('namespaces') as string[]) {
         const data = node.namespace(name);
         for (const attr in data) {
@@ -445,7 +445,7 @@ function transferLayoutAlignment(node: T, replacement: T) {
                     break;
             }
             if (attr.startsWith('layout_')) {
-                replacement.attr(name, attr, data[attr], true);
+                replaceWith.attr(name, attr, data[attr], true);
             }
         }
     }
@@ -1736,11 +1736,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return localizeString(value, this._localization, this.api);
         }
 
-        public removeTry(replacement?: T, beforeReplace?: BindGeneric<Undef<T>, void>) {
-            if (replacement && !beforeReplace) {
-                beforeReplace = () => this.anchorClear(replacement);
+        public removeTry(options: RemoveTryUIOptions<T> = {}) {
+            if (!options.beforeReplace) {
+                const updating = options.replaceWith || options.alignSiblings;
+                if (updating) {
+                    options.beforeReplace = () => this.anchorClear(updating);
+                }
             }
-            return super.removeTry(replacement, beforeReplace);
+            return super.removeTry(options);
         }
 
         public hasFlex(direction: "row" | "column") {

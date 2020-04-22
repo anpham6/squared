@@ -25,6 +25,8 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         const scrollView: T[] = [];
         const horizontalScroll = CONTAINER_ANDROID.HORIZONTAL_SCROLL;
         const verticalScroll = node.api < BUILD_ANDROID.Q ? CONTAINER_ANDROID.VERTICAL_SCROLL : CONTAINER_ANDROID_X.VERTICAL_SCROLL;
+        const children: T[] = [];
+        let boxWidth = NaN;
         if (node.overflowX && node.overflowY) {
             overflow.push(horizontalScroll, verticalScroll);
         }
@@ -35,8 +37,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             overflow.push(verticalScroll);
         }
         if (overflow.includes(horizontalScroll)) {
-            const children: T[] = [];
-            let boxWidth = node.actualWidth - node.contentBoxWidth;
+            boxWidth = node.actualWidth - node.contentBoxWidth;
             let valid = true;
             let contentWidth = 0;
             node.each((child: T) => {
@@ -62,13 +63,6 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
             else {
                 overflow.shift();
             }
-            if (overflow.length) {
-                children.forEach(child => {
-                    if (child.textElement) {
-                        child.css('maxWidth', formatPX(boxWidth));
-                    }
-                });
-            }
         }
         const length = overflow.length;
         if (length) {
@@ -76,7 +70,9 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 const container = this.application.createNode({ parent });
                 if (i === 0) {
                     container.inherit(node, 'base', 'initial', 'styleMap');
-                    parent.appendTry(node, container);
+                    if (!parent.replaceTry({ child: node, replaceWith: container })) {
+                        return undefined;
+                    }
                 }
                 else {
                     container.inherit(node, 'base');
@@ -131,6 +127,11 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     }
                 );
             }
+            children.forEach(child => {
+                if (child.textElement) {
+                    child.css('maxWidth', formatPX(boxWidth));
+                }
+            });
             let first = true;
             let item: T;
             do {

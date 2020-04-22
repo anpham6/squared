@@ -1,5 +1,5 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { BoxOptions, BoxType, CachedValueUI, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, SiblingOptions, SupportUI, TranslateUIOptions } from '../../@types/base/node';
+import { ReplaceTryUIOptions, BoxOptions, BoxType, CachedValueUI, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, RemoveTryUIOptions, SiblingOptions, SupportUI, TranslateUIOptions } from '../../@types/base/node';
 
 import Node from './node';
 
@@ -542,7 +542,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public hide(options?: HideUIOptions<T>) {
         if (options?.remove) {
-            this.removeTry(options.replacement, options.beforeReplace);
+            this.removeTry(options);
         }
         this.rendered = true;
         this.visible = false;
@@ -720,26 +720,27 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public appendTry(node: T, replacement: T, append = true) {
+    public replaceTry(options: ReplaceTryUIOptions<T>) {
+        const { child, replaceWith } = options;
         const children = this.children as T[];
         const length = children.length;
         for (let i = 0; i < length; ++i) {
             const item = children[i];
-            if (item === node || item === node.innerMostWrapped || item === node.outerMostWrapper) {
-                children[i] = replacement;
-                replacement.parent = this;
-                replacement.containerIndex = node.containerIndex;
+            if (item === child || item === child.outerMostWrapper) {
+                children[i] = replaceWith;
+                replaceWith.parent = this;
+                replaceWith.containerIndex = child.containerIndex;
                 return true;
             }
         }
-        if (append) {
-            replacement.parent = this;
+        if (options.notFoundAppend) {
+            replaceWith.parent = this;
             return true;
         }
         return false;
     }
 
-    public removeTry(replacement?: T, beforeReplace?: BindGeneric<Undef<T>, void>) {
+    public removeTry(options?: RemoveTryUIOptions<T>) {
         const renderParent = this.renderParent;
         if (renderParent) {
             const { renderTemplates, renderChildren } = renderParent;
@@ -748,25 +749,25 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (index !== -1) {
                     const template = renderTemplates[index];
                     if (template.node === this) {
-                        if (replacement) {
-                            const parent = replacement.renderParent;
-                            if (parent === this) {
-                                const templates = parent.renderTemplates;
-                                if (templates) {
-                                    const replaceIndex = templates.findIndex(item => item.node === replacement);
+                        const replaceWith = options?.replaceWith;
+                        if (replaceWith) {
+                            const replaceParent = replaceWith.renderParent;
+                            if (replaceParent) {
+                                const replaceTemplates = replaceParent.renderTemplates;
+                                if (replaceTemplates) {
+                                    const replaceIndex = replaceTemplates.findIndex(item => item.node === replaceWith);
                                     if (replaceIndex !== -1) {
-                                        parent.renderChildren.splice(replaceIndex, 1);
-                                    }
-                                    if (renderParent.appendTry(this, replacement, false)) {
-                                        beforeReplace?.call(this, replacement);
-                                        renderTemplates[index] = templates[replaceIndex];
-                                        replacement.renderParent = renderParent;
-                                        renderChildren[index] = replacement;
+                                        options!.beforeReplace?.call(this, replaceWith);
+                                        renderChildren[index] = replaceWith;
+                                        renderTemplates[index] = replaceTemplates[replaceIndex];
+                                        replaceTemplates.splice(replaceIndex, 1);
+                                        replaceParent.renderChildren.splice(replaceIndex, 1);
+                                        replaceWith.renderParent = renderParent;
                                         if (this.documentRoot) {
-                                            replacement.documentRoot = true;
+                                            replaceWith.documentRoot = true;
                                             this.documentRoot = false;
                                         }
-                                        replacement.depth = this.depth;
+                                        replaceWith.depth = this.depth;
                                         this.renderParent = undefined;
                                         return template;
                                     }
@@ -774,7 +775,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                         else {
-                            beforeReplace?.call(this, replacement);
+                            options?.beforeReplace?.call(this, undefined);
                             renderChildren.splice(index, 1);
                             this.renderParent = undefined;
                             return renderTemplates.splice(index, 1)[0];

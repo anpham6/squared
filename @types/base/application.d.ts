@@ -138,10 +138,10 @@ export interface NodeUIOptions<T> {
     parent?: T;
     element?: Null<Element>;
     children?: T[];
+    innerWrap?: T;
     append?: boolean;
     delegate?: boolean;
     cascade?: boolean;
-    replace?: T;
 }
 
 export interface NodeGroupUIOptions<T> {

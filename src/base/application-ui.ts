@@ -387,10 +387,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (parent.naturalElement && (!element || element.parentElement === null)) {
                 node.actualParent = parent;
             }
-            const replace = options.replace;
-            if (replace && parent.appendTry(replace, node, false)) {
-                replace.parent = node;
-                node.innerWrapped = replace;
+            const child = options.innerWrap;
+            if (child && parent.replaceTry({ child, replaceWith: node })) {
+                child.parent = node;
+                node.innerWrapped = child;
             }
         }
         children?.forEach(item => item.parent = node);
@@ -971,7 +971,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (i === length - 1) {
                         parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
                     }
-                    if (nodeY.renderAs && parentY.appendTry(nodeY, nodeY.renderAs, false)) {
+                    if (nodeY.renderAs && parentY.replaceTry({ child: nodeY, replaceWith: nodeY.renderAs })) {
                         nodeY.hide();
                         nodeY = nodeY.renderAs as T;
                         if (nodeY.positioned) {

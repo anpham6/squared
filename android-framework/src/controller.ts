@@ -567,7 +567,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const parent = this.application.resolveTarget(target);
                 if (parent) {
-                    const template = <NodeTemplate<T>> node.removeTry(undefined, () => node.anchorClear(true));
+                    const template = <NodeTemplate<T>> node.removeTry({ alignSiblings: true });
                     if (template) {
                         const renderChildren = parent.renderChildren;
                         const renderTemplates = safeNestedArray(<StandardMap> parent, 'renderTemplates');
@@ -1292,7 +1292,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 if (!node.pageFlow && parent === absoluteParent && (node.left < 0 && parent.css('overflowX') === 'hidden' || node.top < 0 && parent.css('overflowY') === 'hidden')) {
                     const box = absoluteParent.box;
-                    const container = application.createNode({ parent, replace: node });
+                    const container = application.createNode({ parent, innerWrap: node });
                     container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                     container.inherit(node, 'base');
                     container.cssCopy(node, 'position', 'zIndex');
@@ -2068,7 +2068,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const { parent, delegate, cascade } = options;
         const group = new ViewGroup(this.cache.nextId, node, children, this.afterInsertNode) as T;
         if (parent) {
-            parent.appendTry(node, group);
+            parent.replaceTry({ child: node, replaceWith: group, notFoundAppend: true });
             group.init();
         }
         else {
@@ -2080,7 +2080,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public createNodeWrapper(node: T, parent: T, options: WrapperOptions<T> = {}) {
         const { children, containerType, alignmentType, resource, procedure, section } = options;
-        const container = this.application.createNode({ parent, children, append: true, replace: node, delegate: true, cascade: options.cascade === true || !!children && children.length > 0 && !node.originalRoot });
+        const container = this.application.createNode({ parent, children, append: true, innerWrap: node, delegate: true, cascade: options.cascade === true || !!children && children.length > 0 && !node.originalRoot });
         container.inherit(node, 'base', 'alignment');
         if (node.documentRoot) {
             container.documentRoot = true;
@@ -2136,7 +2136,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
         }
-        if (node.renderParent && node.removeTry(undefined, () => node.anchorClear(true))) {
+        if (node.renderParent && node.removeTry({ alignSiblings: true })) {
             node.rendered = false;
         }
         return container;

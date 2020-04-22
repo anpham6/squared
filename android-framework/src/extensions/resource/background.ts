@@ -519,7 +519,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '100%': {
                         const children = wrapper.renderChildren;
                         if (children.length === 1) {
-                            wrapper.removeTry(children[0]);
+                            wrapper.removeTry({ replaceWith: children[0] });
                         }
                         break;
                     }

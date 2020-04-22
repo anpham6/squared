@@ -168,12 +168,22 @@ export interface ExcludeUIOptions {
     section?: number;
 }
 
-export interface HideUIOptions<T> {
+export interface ReplaceTryUIOptions<T> {
+    child: T;
+    replaceWith: T;
+    notFoundAppend?: boolean;
+}
+
+export interface RemoveTryUIOptions<T> {
+    replaceWith?: T;
+    alignSiblings?: boolean;
+    beforeReplace?: BindGeneric<Undef<T>, void>;
+}
+
+export interface HideUIOptions<T> extends RemoveTryUIOptions<T> {
     hidden?: boolean;
     collapse?: boolean;
     remove?: boolean;
-    replacement?: T;
-    beforeReplace?: BindGeneric<T, void>;
 }
 
 export interface TranslateUIOptions {

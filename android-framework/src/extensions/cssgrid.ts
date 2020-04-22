@@ -686,7 +686,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 return [cellStart, cellSpan];
             };
             if (REGEX_ALIGNSELF.test(alignSelf) || REGEX_JUSTIFYSELF.test(justifySelf) || layoutConstraint) {
-                renderAs = this.application.createNode({ parent, replace: node });
+                renderAs = this.application.createNode({ parent, innerWrap: node });
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 renderAs.inherit(node, 'base', 'initial');

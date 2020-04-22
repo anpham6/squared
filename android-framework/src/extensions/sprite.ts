@@ -27,7 +27,7 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
             if (drawable !== '') {
                 const { width, height } = mainData.image;
                 const { top, left } = mainData.position;
-                const container = this.application.createNode({ parent, replace: node });
+                const container = this.application.createNode({ parent, innerWrap: node });
                 container.inherit(node, 'base', 'initial', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
                 container.exclude({ resource: NODE_RESOURCE.ASSET, procedure: NODE_PROCEDURE.CUSTOMIZATION, section: APP_SECTION.ALL });

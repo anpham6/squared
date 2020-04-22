@@ -28,9 +28,9 @@ export interface WrapperOptions<T> extends node.ExcludeUIOptions {
 }
 
 export interface Constraint {
-    current: ObjectMap<{ documentId: string; horizontal: boolean }>;
     horizontal: boolean;
     vertical: boolean;
+    current: ObjectMap<{ documentId: string; horizontal: boolean }>;
     barrier?: ObjectMap<string>;
     guideline?: ObjectMapNested<ObjectMapNested<number>>;
 }
