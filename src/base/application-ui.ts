@@ -1,6 +1,8 @@
-import { AppSessionUI } from '../../@types/base/internal';
-import { FileActionOptions, NodeUIOptions, ControllerUISettings, LayoutResult, LayoutRoot, NodeTemplate, UserUISettings } from '../../@types/base/application';
+import { FileActionOptions, CreateNodeOptions, LayoutResult, LayoutRoot, NodeTemplate } from '../../@types/base/application';
 import { FileAsset } from '../../@types/base/file';
+
+import { AppSession } from '../../@types/base/internal-ui';
+import { ControllerSettings, UserSettings } from '../../@types/base/application-ui';
 
 import Application from './application';
 import ControllerUI from './controller-ui';
@@ -133,7 +135,7 @@ const getRelativeOffset = (item: NodeUI, fromRight: boolean) => item.positionRel
 const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => !!item.use }).length > 0;
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
-    public readonly session: AppSessionUI<T> = {
+    public readonly session: AppSession<T> = {
         cache: new NodeList<T>(),
         excluded: new NodeList<T>(),
         extensionMap: new Map<number, ExtensionUI<T>[]>(),
@@ -145,10 +147,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly controllerHandler!: ControllerUI<T>;
     public readonly resourceHandler!: ResourceUI<T>;
     public readonly fileHandler!: FileUI<T>;
-    public abstract userSettings: UserUISettings;
+    public abstract userSettings: UserSettings;
 
     private readonly _layouts: FileAsset[] = [];
-    private readonly _controllerSettings!: ControllerUISettings;
+    private readonly _controllerSettings!: ControllerSettings;
     private readonly _excluded!: Set<string>;
 
     protected constructor(
@@ -378,7 +380,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return false;
     }
 
-    public createNode(options: NodeUIOptions<T>) {
+    public createNode(options: CreateNodeOptions<T>) {
         const processing = this.processing;
         const { element, parent, children } = options;
         const node = new this.Node(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode);

@@ -1,9 +1,13 @@
-import { AppHandler, AppProcessing, AppProcessingUI, AppSession, AppSessionUI, AppViewModel } from './internal';
-import { ControllerSettings, ControllerUISettings, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileCopyingOptions, LayoutOptions, LayoutResult, LayoutRoot, LayoutType, NodeGroupUIOptions, NodeTemplate, NodeUIOptions, UserSettings, UserUISettings } from './application';
-import { AutoMargin, AscendOptions, BoxOptions, BoxType, ReplaceTryUIOptions, ExcludeUIOptions, HasOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, RemoveTryUIOptions, SiblingOptions, SupportUI, TranslateUIOptions, VisibleStyle } from './node';
+import { AppHandler, AppProcessing, AppSession, AppViewModel } from './internal';
+import { ControllerSettings, CreateNodeOptions, CreateNodeGroupOptions, ExtensionDependency, ExtensionResult, FileActionOptions, FileArchivingOptions, FileCopyingOptions, LayoutOptions, LayoutResult, LayoutRoot, LayoutType, NodeTemplate, UserSettings } from './application';
+import { AutoMargin, AscendOptions, BoxOptions, BoxType, HasOptions, InitialData, SiblingOptions, VisibleStyle } from './node';
 import { ResourceAssetMap, ResourceStoredMap } from './resource';
 import { Asset, FileAsset, ImageAsset, RawAsset } from './file';
 import { CssGridData, CssGridDirectionData, GridCellData } from './extension';
+
+import { AppProcessing as AppProcessingUI, AppSession as AppSessionUI } from './internal-ui';
+import { ControllerSettings as ControllerUISettings, UserSettings as UserUISettings } from './application-ui';
+import { HideOptions, ExcludeOptions, LinearData, LocalSettings, RemoveTryOptions, ReplaceTryOptions, Support, TranslateOptions } from './node-ui';
 
 import { FontFaceData, MIMEOrAll } from '../lib/data';
 
@@ -72,7 +76,7 @@ declare class ApplicationUI<T extends NodeUI> extends Application<T> {
     readonly extensions: ExtensionUI<T>[];
     conditionElement(element: HTMLElement, pseudoElt?: string): boolean;
     useElement(element: HTMLElement): boolean;
-    createNode(options: NodeUIOptions<T>): T;
+    createNode(options: CreateNodeOptions<T>): T;
     renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
     addLayout(layout: LayoutUI<T>): void;
     addLayoutTemplate(parent: T, node: T, template: Undef<NodeTemplate<T>>, index?: number): void;
@@ -121,7 +125,7 @@ declare class ControllerUI<T extends NodeUI> extends Controller<T> {
     setConstraints(): void;
     renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
     renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
-    createNodeGroup(node: T, children: T[], options?: NodeGroupUIOptions<T>): T;
+    createNodeGroup(node: T, children: T[], options?: CreateNodeGroupOptions<T>): T;
     sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     addBeforeOutsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
     addBeforeInsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
@@ -463,7 +467,7 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
 
 declare class NodeUI extends Node implements LayoutType {
     public static refitScreen<T>(node: T, value: Dimension): Dimension;
-    public static linearData<T>(list: T[], cleared?: Map<T, string>): LinearDataUI<T>;
+    public static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData<T>;
     public static outerRegion<T>(node: T): BoxRectDimension;
     public static baseline<T>(list: T[], text?: boolean): Null<T>;
     public static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
@@ -476,7 +480,7 @@ declare class NodeUI extends Node implements LayoutType {
     lineBreakLeading: boolean;
     lineBreakTrailing: boolean;
     floatContainer: boolean;
-    localSettings: LocalSettingsUI;
+    localSettings: LocalSettings;
     renderParent?: NodeUI;
     renderExtension?: Extension<NodeUI>[];
     renderTemplates?: NodeTemplate<NodeUI>[];
@@ -516,10 +520,10 @@ declare class NodeUI extends Node implements LayoutType {
     hasProcedure(value: number): boolean;
     hasResource(value: number): boolean;
     hasSection(value: number): boolean;
-    exclude(options: ExcludeUIOptions): void;
-    hide(options?: HideUIOptions<NodeUI>): void;
-    replaceTry(options: ReplaceTryUIOptions<NodeUI>): boolean;
-    removeTry(options?: RemoveTryUIOptions<NodeUI>): Undef<NodeTemplate<NodeUI>>;
+    exclude(options: ExcludeOptions): void;
+    hide(options?: HideOptions<NodeUI>): void;
+    replaceTry(options: ReplaceTryOptions<NodeUI>): boolean;
+    removeTry(options?: RemoveTryOptions<NodeUI>): Undef<NodeTemplate<NodeUI>>;
     sort(predicate?: (a: NodeUI, b: NodeUI) => number): this;
     render(parent?: NodeUI): void;
     renderEach(predicate: IteratorPredicate<NodeUI, void>): this;
@@ -540,8 +544,8 @@ declare class NodeUI extends Node implements LayoutType {
     extractAttributes(depth: number): string;
     setCacheValue(attr: string, value: any): void;
     cssSet(attr: string, value: string, cache?: boolean): string;
-    translateX(value: number, options?: TranslateUIOptions): boolean;
-    translateY(value: number, options?: TranslateUIOptions): boolean;
+    translateX(value: number, options?: TranslateOptions): boolean;
+    translateY(value: number, options?: TranslateOptions): boolean;
     set naturalChild(value);
     get naturalChild(): boolean;
     set documentParent(value);
@@ -583,7 +587,7 @@ declare class NodeUI extends Node implements LayoutType {
     get controlElement(): boolean;
     get documentId(): string;
     get baselineHeight(): number;
-    get support(): SupportUI;
+    get support(): Support;
     get layoutElement(): boolean;
     get layoutHorizontal(): boolean;
     get layoutVertical(): boolean;

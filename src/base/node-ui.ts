@@ -1,5 +1,6 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { ReplaceTryUIOptions, BoxOptions, BoxType, CachedValueUI, ExcludeUIOptions, HideUIOptions, InitialData, LinearDataUI, LocalSettingsUI, RemoveTryUIOptions, SiblingOptions, SupportUI, TranslateUIOptions } from '../../@types/base/node';
+import { BoxOptions, BoxType, InitialData, SiblingOptions } from '../../@types/base/node';
+import { CachedValue, ExcludeOptions, HideOptions, LinearData, LocalSettings, RemoveTryOptions, ReplaceTryOptions, Support, TranslateOptions } from '../../@types/base/node-ui';
 
 import Node from './node';
 
@@ -216,7 +217,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result[0] || null;
     }
 
-    public static linearData<T extends NodeUI>(list: T[], cleared?: Map<T, string>): LinearDataUI<T> {
+    public static linearData<T extends NodeUI>(list: T[], cleared?: Map<T, string>): LinearData<T> {
         const floated = new Set<string>();
         let linearX = false, linearY = false;
         const length = list.length;
@@ -371,7 +372,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public lineBreakTrailing = false;
     public baselineActive = false;
     public baselineAltered = false;
-    public abstract localSettings: LocalSettingsUI;
+    public abstract localSettings: LocalSettings;
     public abstract renderParent?: T;
     public abstract renderExtension?: squared.base.ExtensionUI<T>[];
     public abstract renderTemplates?: NodeTemplate<T>[];
@@ -388,7 +389,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _preferInitial = true;
     protected _documentParent?: T;
     protected _controlName?: string;
-    protected abstract _cached: CachedValueUI<T>;
+    protected abstract _cached: CachedValue<T>;
     protected abstract _namespaces: string[];
     protected abstract _boxAdjustment: BoxModel;
     protected abstract _boxReset: BoxModel;
@@ -414,8 +415,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract alignParent(position: string): boolean;
     public abstract alignSibling(position: string, documentId?: string): string;
     public abstract actualRect(direction: string, dimension?: BoxType): number;
-    public abstract translateX(value: number, options?: TranslateUIOptions): boolean;
-    public abstract translateY(value: number, options?: TranslateUIOptions): boolean;
+    public abstract translateX(value: number, options?: TranslateOptions): boolean;
+    public abstract translateY(value: number, options?: TranslateOptions): boolean;
     public abstract localizeString(value: string): string;
 
     public abstract get controlElement(): boolean;
@@ -425,7 +426,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract get controlId(): string;
     public abstract get documentId(): string;
     public abstract get baselineHeight(): number;
-    public abstract get support(): SupportUI;
+    public abstract get support(): Support;
     public abstract set renderExclude(value: boolean);
     public abstract get renderExclude(): boolean;
     public abstract set positioned(value);
@@ -540,7 +541,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this;
     }
 
-    public hide(options?: HideUIOptions<T>) {
+    public hide(options?: HideOptions<T>) {
         if (options?.remove) {
             this.removeTry(options);
         }
@@ -674,7 +675,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return !hasBit(this._excludeSection, value);
     }
 
-    public exclude(options: ExcludeUIOptions) {
+    public exclude(options: ExcludeOptions) {
         const { resource, procedure, section } = options;
         if (resource && !hasBit(this._excludeResource, resource)) {
             this._excludeResource |= resource;
@@ -720,7 +721,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         }
     }
 
-    public replaceTry(options: ReplaceTryUIOptions<T>) {
+    public replaceTry(options: ReplaceTryOptions<T>) {
         const { child, replaceWith } = options;
         const children = this.children as T[];
         const length = children.length;
@@ -740,7 +741,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return false;
     }
 
-    public removeTry(options?: RemoveTryUIOptions<T>) {
+    public removeTry(options?: RemoveTryOptions<T>) {
         const renderParent = this.renderParent;
         if (renderParent) {
             const { renderTemplates, renderChildren } = renderParent;

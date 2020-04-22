@@ -10,12 +10,12 @@ export interface FontFaceData {
     srcLocal?: string;
 }
 
-export interface ContainerOptions<T> {
+export interface ContainerCascadeOptions<T> {
     also?: BindGeneric<T, void>;
     error?: IteratorPredicate<T, boolean>;
 }
 
-export interface ContainerFindOptions<T> extends ContainerOptions<T> {
+export interface ContainerFindOptions<T> extends ContainerCascadeOptions<T> {
     cascade?: boolean;
 }
 

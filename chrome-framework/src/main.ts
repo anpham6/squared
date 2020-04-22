@@ -1,7 +1,7 @@
 import { FileAsset } from '../../@types/base/file';
 import { ChromeFramework } from '../../@types/chrome/internal';
 import { UserSettings } from '../../@types/chrome/application';
-import { FileCopyingOptions, FileArchivingOptions } from '../../@types/chrome/file';
+import { FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/file';
 
 import Application from './application';
 import Controller from './controller';

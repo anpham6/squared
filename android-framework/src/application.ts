@@ -1,5 +1,5 @@
 import { AppViewModel } from '../../@types/android/internal';
-import { UserUISettings } from '../../@types/android/application';
+import { UserSettings } from '../../@types/android/application';
 
 type View = android.base.View;
 
@@ -7,7 +7,7 @@ const isTargeted = (node: View, target: Null<HTMLElement | string>) => node.elem
 
 export default class Application<T extends View> extends squared.base.ApplicationUI<T> implements android.base.Application<T> {
     public systemName = 'android';
-    public userSettings!: UserUISettings;
+    public userSettings!: UserSettings;
     public readonly controllerHandler!: android.base.Controller<T>;
     public readonly resourceHandler!: android.base.Resource<T>;
     public readonly fileHandler!: android.base.File<T>;

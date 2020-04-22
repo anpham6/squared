@@ -1,4 +1,4 @@
-import { UserUISettings } from '../../@types/base/application';
+import { UserSettings } from '../../@types/base/application-ui';
 import { ResourceStoredMap } from '../../@types/base/resource';
 import { FileAsset, RawAsset } from '../../@types/base/file';
 
@@ -681,7 +681,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public fileHandler?: squared.base.FileUI<T>;
 
-    public abstract get userSettings(): UserUISettings;
+    public abstract get userSettings(): UserSettings;
 
     public finalize(layouts: FileAsset[]) {}
 

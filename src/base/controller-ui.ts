@@ -1,4 +1,5 @@
-import { ControllerUISettings, LayoutResult, LayoutType, NodeGroupUIOptions, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate, UserUISettings } from '../../@types/base/application';
+import { LayoutResult, LayoutType, CreateNodeGroupOptions, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
+import { ControllerSettings, UserSettings } from '../../@types/base/application-ui';
 import { FileAsset } from '../../@types/base/file';
 
 import Controller from './controller';
@@ -29,7 +30,7 @@ function positionAbsolute(style: CSSStyleDeclaration) {
 const getNumberValue = (style: CSSStyleDeclaration, attr: string) => parseInt(style.getPropertyValue(attr));
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
-    public abstract readonly localSettings: ControllerUISettings;
+    public abstract readonly localSettings: ControllerSettings;
 
     private _requireFormat = false;
     private _beforeOutside: ObjectIndex<string[]> = {};
@@ -44,7 +45,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract processTraverseHorizontal(layout: LayoutUI, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
     public abstract processTraverseVertical(layout: LayoutUI, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
     public abstract processLayoutHorizontal(layout: LayoutUI): squared.base.LayoutUI<T>;
-    public abstract createNodeGroup(node: T, children: T[], options?: NodeGroupUIOptions<T>): T;
+    public abstract createNodeGroup(node: T, children: T[], options?: CreateNodeGroupOptions<T>): T;
     public abstract renderNode(layout: LayoutUI): Undef<NodeTemplate<T>>;
     public abstract renderNodeGroup(layout: LayoutUI): Undef<NodeTemplate<T>>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
@@ -52,7 +53,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public abstract optimize(nodes: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
 
-    public abstract get userSettings(): UserUISettings;
+    public abstract get userSettings(): UserSettings;
     public abstract get screenDimension(): Dimension;
     public abstract get containerTypeHorizontal(): LayoutType;
     public abstract get containerTypeVertical(): LayoutType;

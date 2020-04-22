@@ -1,5 +1,5 @@
 
-import { Application, Extension, Node, NodeList, NodeUI } from './squared';
+import { Application, Node, NodeList } from './squared';
 import { UserSettings } from './application';
 
 export interface AppFramework<T extends Node> {
@@ -27,20 +27,11 @@ export interface AppSession<T> {
     active: string[];
 }
 
-export interface AppSessionUI<T extends NodeUI> extends AppSession<T> {
-    cache: NodeList<T>;
-    excluded: NodeList<T>;
-    extensionMap: Map<number, Extension<T>[]>;
-    clearMap: Map<T, string>;
-}
-
 export interface AppProcessing<T extends Node> {
     cache: NodeList<T>;
     excluded: NodeList<T>;
     sessionId: string;
     node?: T;
 }
-
-export interface AppProcessingUI<T extends Node> extends AppProcessing<T> {}
 
 export interface AppViewModel extends StandardMap {}

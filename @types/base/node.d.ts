@@ -103,35 +103,6 @@ export interface AutoMargin {
     topBottom?: boolean;
 }
 
-export interface LocalSettingsUI {
-    systemName: string;
-    screenDimension: Dimension;
-}
-
-export interface SupportUI {
-    positionRelative: boolean;
-    positionTranslation: boolean;
-}
-
-export interface CachedValueUI<T> extends CachedValue<T> {
-    layoutElement?: boolean;
-    leftTopAxis?: boolean;
-    autoPosition?: boolean;
-    positiveAxis?: boolean;
-    renderExclude?: boolean;
-    containerName?: string;
-    baselineHeight?: number;
-    support?: SupportUI;
-    extensions?: string[];
-}
-
-export interface LinearDataUI<T> {
-    linearX: boolean;
-    linearY: boolean;
-    floated: Set<string>;
-    cleared?: Map<T, string>;
-}
-
 export interface SiblingOptions {
     floating?: boolean;
     pageFlow?: boolean;
@@ -160,37 +131,6 @@ export interface BoxOptions {
     adjustment?: number;
     accumulate?: boolean;
     negative?: boolean;
-}
-
-export interface ExcludeUIOptions {
-    resource?: number;
-    procedure?: number;
-    section?: number;
-}
-
-export interface ReplaceTryUIOptions<T> {
-    child: T;
-    replaceWith: T;
-    notFoundAppend?: boolean;
-}
-
-export interface RemoveTryUIOptions<T> {
-    replaceWith?: T;
-    alignSiblings?: boolean;
-    beforeReplace?: BindGeneric<Undef<T>, void>;
-}
-
-export interface HideUIOptions<T> extends RemoveTryUIOptions<T> {
-    hidden?: boolean;
-    collapse?: boolean;
-    remove?: boolean;
-}
-
-export interface TranslateUIOptions {
-    accumulate?: boolean;
-    contain?: boolean;
-    oppose?: boolean;
-    relative?: boolean;
 }
 
 export interface QueryData {

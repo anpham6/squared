@@ -1670,10 +1670,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     set parent(value) {
-        if (value && !value.contains(this)) {
-            this._parent?.remove(this);
-            this._parent = value;
-            value.append(this);
+        if (value) {
+            const parent = this._parent;
+            if (value !== parent) {
+                parent?.remove(this);
+                this._parent = value;
+            }
+            if (!value.contains(this)) {
+                value.append(this);
+            }
             if (this.depth === -1) {
                 this.depth = value.depth + 1;
             }

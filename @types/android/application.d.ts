@@ -1,11 +1,12 @@
 import { ViewAttribute } from './node';
 
 import * as application from '../base/application';
+import * as application_ui from '../base/application-ui';
 import * as resource from '../base/resource';
 
 type View = android.base.View;
 
-export interface UserUISettings extends application.UserUISettings {
+export interface UserSettings extends application_ui.UserSettings {
     targetAPI: number;
     resolutionDPI: number;
     resolutionScreenWidth: number;
@@ -21,7 +22,7 @@ export interface UserUISettings extends application.UserUISettings {
     outputMainFileName: string;
 }
 
-export interface ControllerUISettings extends application.ControllerUISettings {
+export interface ControllerSettings extends application_ui.ControllerSettings {
     deviations: {
         textMarginBoundarySize: number;
         subscriptBottomOffset: number;

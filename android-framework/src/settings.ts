@@ -1,6 +1,6 @@
-import { UserUISettings } from '../../@types/android/application';
+import { UserSettings } from '../../@types/android/application';
 
-const settings: UserUISettings = {
+const settings: UserSettings = {
     builtInExtensions: [
         'android.delegate.background',
         'android.delegate.negative-x',

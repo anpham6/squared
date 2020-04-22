@@ -1,5 +1,5 @@
 import { NodeXmlTemplate } from '../../@types/base/application';
-import { UserUISettings } from '../../@types/android/application';
+import { UserSettings } from '../../@types/android/application';
 
 import { WIDGET_NAME } from '../lib/constant';
 
@@ -65,7 +65,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
     public processNode(node: T, parent: T) {
         const application = this.application;
         const resource = <android.base.Resource<T>> this.resource;
-        const settings = <UserUISettings> application.userSettings;
+        const settings = <UserSettings> application.userSettings;
         const element = <HTMLElement> node.element;
         const options: StandardMap = { ...this.options[element.id] };
         const toolbarOptions = createViewAttribute(options.self);
@@ -309,7 +309,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         }
         const themeData: ToolbarThemeData = node.data(WIDGET_NAME.TOOLBAR, 'themeData');
         if (themeData) {
-            const settings = <UserUISettings> this.application.userSettings;
+            const settings = <UserSettings> this.application.userSettings;
             const options = createStyleAttribute(this.options.resource);
             const optionsActionBar = createStyleAttribute({ name: '.NoActionBar', output: options.output });
             const optionsAppBar = createStyleAttribute({ name: '.AppBarOverlay', output: options.output });

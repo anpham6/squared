@@ -1,4 +1,4 @@
-import { ContainerFindOptions, ContainerOptions } from '../../../@types/lib/data';
+import { ContainerCascadeOptions, ContainerFindOptions } from '../../../@types/lib/data';
 
 import { flatMap, iterateArray, objectMap, partitionArray, sameArray } from '../util';
 
@@ -126,7 +126,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return partitionArray(this._children, predicate);
     }
 
-    public extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerOptions<T>): T[] {
+    public extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[] {
         let also: Undef<BindGeneric<T, void>>, error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ also, error } = options);
@@ -158,7 +158,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return flatMap(this._children, predicate);
     }
 
-    public findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerOptions<T>) {
+    public findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>) {
         let also: Undef<BindGeneric<T, void>>, error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
             ({ also, error } = options);
@@ -219,7 +219,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this.find(predicate, options) !== undefined;
     }
 
-    public cascade(predicate?: (item: T) => boolean, options?: ContainerOptions<T>) {
+    public cascade(predicate?: (item: T) => boolean, options?: ContainerCascadeOptions<T>) {
         let error: Undef<IteratorPredicate<T, boolean>>, also: Undef<BindGeneric<T, void>>;
         if (options) {
             ({ also, error } = options);

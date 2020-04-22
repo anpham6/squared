@@ -1,5 +1,5 @@
 import { AppFramework } from '../../@types/base/internal';
-import { FileOutputOptions, UserUISettings } from '../../@types/android/application';
+import { FileOutputOptions, UserSettings } from '../../@types/android/application';
 
 import Application from './application';
 import Controller from './controller';
@@ -54,7 +54,7 @@ const framework = $lib.enumeration.APP_FRAMEWORK.ANDROID;
 let initialized = false;
 let application: Application<View>;
 let file: File<View>;
-let userSettings: UserUISettings;
+let userSettings: UserSettings;
 
 function autoClose() {
     if (initialized && !application.initializing && !application.closed && application.userSettings.autoCloseOnWrite) {

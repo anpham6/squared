@@ -9,7 +9,7 @@ export interface FileAsset extends Asset {
     filename: string;
     content?: string;
     compress?: CompressionFormat[];
-    exclusions?: FileExclude;
+    exclusions?: Exclusions;
 }
 
 export interface ImageAsset extends Omit<Asset, "index"> {
@@ -29,7 +29,7 @@ export interface RequestAsset extends ExternalAsset {
     moveTo?: string;
 }
 
-export interface FileExclude {
+export interface Exclusions {
     pathname?: string[];
     filename?: string[];
     extension?: string[];

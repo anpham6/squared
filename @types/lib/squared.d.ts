@@ -1,5 +1,5 @@
 
-import { BackgroundPositionOptions, CalculateOptions, CalculateVarAsStringOptions, CalculateVarOptions, ContainerOptions, ContainerFindOptions, DelimitStringOptions, MIMEOrAll, KeyframesData } from './data';
+import { BackgroundPositionOptions, CalculateOptions, CalculateVarAsStringOptions, CalculateVarOptions, ContainerCascadeOptions, ContainerFindOptions, DelimitStringOptions, MIMEOrAll, KeyframesData } from './data';
 
 declare namespace base {
     class Container<T> implements Iterable<T> {
@@ -20,10 +20,10 @@ declare namespace base {
         map<U>(predicate: IteratorPredicate<T, U>): U[];
         flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
         findIndex(predicate: IteratorPredicate<T, boolean>): number;
-        extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerOptions<T>): T[];
+        extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[];
         find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
         some(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): boolean;
-        cascade(predicate?: (item: T) => boolean, options?: ContainerOptions<T>): T[];
+        cascade(predicate?: (item: T) => boolean, options?: ContainerCascadeOptions<T>): T[];
         sort(predicate: (a: T, b: T) => number): this;
         concat(list: T[]): this;
         get children(): T[];

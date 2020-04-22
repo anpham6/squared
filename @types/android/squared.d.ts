@@ -1,7 +1,7 @@
 import { FileAsset } from '../base/file';
 import { AppViewModel } from './internal';
-import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, RenderSpaceAttribute, ResourceStoredMap, StyleAttribute, UserUISettings } from './application';
-import { Constraint, LocalSettingsUI, SupportUI, ViewAttribute, WrapperOptions } from './node';
+import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, RenderSpaceAttribute, ResourceStoredMap, StyleAttribute, UserSettings } from './application';
+import { Constraint, CreateNodeWrapperOptions, LocalSettings, Support, ViewAttribute } from './node';
 
 import { MIMEOrAll } from '../lib/data';
 
@@ -13,7 +13,7 @@ type View = base.View;
 
 declare namespace base {
     class Application<T extends View>  extends squared.base.ApplicationUI<T> {
-        readonly userSettings: UserUISettings;
+        readonly userSettings: UserSettings;
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;
         readonly fileHandler: File<T>;
@@ -36,8 +36,8 @@ declare namespace base {
         addGuideline(node: T, parent: T, options?: GuidelineOptions): void;
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
-        createNodeWrapper(node: T, parent: T, options?: WrapperOptions<T>): T;
-        get userSettings(): UserUISettings;
+        createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperOptions<T>): T;
+        get userSettings(): UserSettings;
         get screenDimension(): Dimension;
     }
 
@@ -51,14 +51,14 @@ declare namespace base {
         public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
-        get userSettings(): UserUISettings;
+        get userSettings(): UserSettings;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
     }
 
     class File<T extends View> extends squared.base.FileUI<T> {
         resource: Resource<T>;
-        get userSettings(): UserUISettings;
+        get userSettings(): UserSettings;
         resourceAllToXml(options?: FileOutputOptions): {};
         resourceStringToXml(options?: FileOutputOptions): string[];
         resourceStringArrayToXml(options?: FileOutputOptions): string[];
@@ -102,7 +102,7 @@ declare namespace base {
         set anchored(value);
         get anchored(): boolean;
         set localSettings(value);
-        get localSettings(): LocalSettingsUI;
+        get localSettings(): LocalSettings;
         get anchorTarget(): View;
         get imageOrSvgElement(): boolean;
         get layoutFrame(): boolean;
@@ -119,7 +119,7 @@ declare namespace base {
         get flexibleWidth(): boolean;
         get flexibleHeight(): boolean;
         get target(): Null<HTMLElement>;
-        get support(): SupportUI;
+        get support(): Support;
     }
 
     class ViewGroup extends View {}

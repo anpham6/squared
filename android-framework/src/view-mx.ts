@@ -1,6 +1,7 @@
 import { NodeTemplate } from '../../@types/base/application';
-import { AutoMargin, BoxType, HideUIOptions, RemoveTryUIOptions, TranslateUIOptions } from '../../@types/base/node';
-import { CachedValueUI, Constraint, LocalSettingsUI, SupportUI } from '../../@types/android/node';
+import { AutoMargin, BoxType } from '../../@types/base/node';
+import { HideOptions, RemoveTryOptions, TranslateOptions } from '../../@types/base/node-ui';
+import { CachedValue, Constraint, LocalSettings, Support } from '../../@types/android/node';
 
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
@@ -671,10 +672,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         };
 
         protected _namespaces = ['android', 'app'];
-        protected _cached: CachedValueUI<T> = {};
+        protected _cached: CachedValue<T> = {};
         protected _containerType = 0;
         protected _controlName = '';
-        protected _localSettings!: LocalSettingsUI;
+        protected _localSettings!: LocalSettings;
         protected _documentParent?: T;
         protected _boxAdjustment = newBoxModel();
         protected _boxReset = newBoxModel();
@@ -1668,7 +1669,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return value;
         }
 
-        public translateX(value: number, options: TranslateUIOptions = {}) {
+        public translateX(value: number, options: TranslateOptions = {}) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent?.layoutConstraint) {
@@ -1700,7 +1701,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public translateY(value: number, options: TranslateUIOptions = {}) {
+        public translateY(value: number, options: TranslateOptions = {}) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent?.layoutConstraint) {
@@ -1736,7 +1737,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return localizeString(value, this._localization, this.api);
         }
 
-        public removeTry(options: RemoveTryUIOptions<T> = {}) {
+        public removeTry(options: RemoveTryOptions<T> = {}) {
             if (!options.beforeReplace) {
                 const updating = options.replaceWith || options.alignSiblings;
                 if (updating) {
@@ -1787,7 +1788,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public hide(options?: HideUIOptions<T>) {
+        public hide(options?: HideOptions<T>) {
             if (options) {
                 if (options.hidden) {
                     this.android('visibility', 'invisible');
@@ -2371,7 +2372,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         get support() {
             let result = this._cached.support;
             if (result === undefined) {
-                result = <SupportUI> {
+                result = <Support> {
                     positionTranslation: this.layoutConstraint,
                     positionRelative: this.layoutRelative,
                     maxDimension: this.textElement || this.imageOrSvgElement
@@ -2380,7 +2381,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this._cached.support = result;
                 }
             }
-            return <SupportUI> result;
+            return <Support> result;
         }
 
         set renderExclude(value) {

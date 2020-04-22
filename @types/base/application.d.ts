@@ -1,5 +1,5 @@
 import { LayoutUI, NodeUI } from './squared';
-import { FileAsset, FileExclude } from './file';
+import { FileAsset, Exclusions } from './file';
 
 import { MIMEOrAll } from '../lib/data';
 
@@ -13,17 +13,6 @@ export interface UserSettings {
     outputArchiveName: string;
 }
 
-export interface UserUISettings extends UserSettings {
-    framesPerSecond: number;
-    supportNegativeLeftTop: boolean;
-    exclusionsDisabled: boolean;
-    showAttributes: boolean;
-    insertSpaces: number;
-    autoCloseOnWrite: boolean;
-    outputDirectory: string;
-    resolutionScreenWidth?: number;
-    resolutionScreenHeight?: number;
-}
 
 export interface ControllerSettings {
     mimeType: {
@@ -31,44 +20,6 @@ export interface ControllerSettings {
         image: MIMEOrAll;
         audio: MIMEOrAll;
         video: MIMEOrAll;
-    };
-}
-
-export interface ControllerUISettings extends ControllerSettings {
-    layout: {
-        pathName: string;
-        fileExtension: string;
-        baseTemplate: string;
-    };
-    directory: {
-        string: string;
-        font: string;
-        image: string;
-        video: string;
-        audio: string;
-    };
-    style: {
-        inputBorderColor: string;
-        inputBackgroundColor: string;
-        inputColorBorderColor: string;
-        meterForegroundColor?: string;
-        meterBackgroundColor?: string;
-        progressForegroundColor?: string;
-        progressBackgroundColor?: string;
-    };
-    svg: {
-        enabled: boolean;
-    };
-    unsupported: {
-        cascade: Set<string>;
-        excluded: Set<string>;
-        tagName: Set<string>;
-    };
-    precision: {
-        standardFloat: number;
-    };
-    deviations: {
-        textMarginBoundarySize: number;
     };
 }
 
@@ -134,7 +85,7 @@ export interface NodeIncludeTemplate<T> extends NodeTemplate<T> {
     content: string;
 }
 
-export interface NodeUIOptions<T> {
+export interface CreateNodeOptions<T> {
     parent?: T;
     element?: Null<Element>;
     children?: T[];
@@ -144,7 +95,7 @@ export interface NodeUIOptions<T> {
     cascade?: boolean;
 }
 
-export interface NodeGroupUIOptions<T> {
+export interface CreateNodeGroupOptions<T> {
     parent?: T;
     delegate?: boolean;
     cascade?: boolean;
@@ -152,7 +103,7 @@ export interface NodeGroupUIOptions<T> {
 
 export interface FileActionOptions {
     assets?: FileAsset[];
-    exclusions?: FileExclude;
+    exclusions?: Exclusions;
     callback?: CallbackResult;
 }
 

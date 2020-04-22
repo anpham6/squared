@@ -1,7 +1,7 @@
-import { LayoutType, NodeGroupUIOptions, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
+import { LayoutType, CreateNodeGroupOptions, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
 import { FileAsset, ImageAsset } from '../../@types/base/file';
-import { ControllerUISettings, GuidelineOptions, RenderNodeStaticAttribute, RenderSpaceAttribute } from '../../@types/android/application';
-import { LocalSettingsUI, ViewAttribute, WrapperOptions } from '../../@types/android/node';
+import { ControllerSettings, GuidelineOptions, RenderNodeStaticAttribute, RenderSpaceAttribute } from '../../@types/android/application';
+import { LocalSettings, ViewAttribute, CreateNodeWrapperOptions } from '../../@types/android/node';
 
 import Resource from './resource';
 import View from './view';
@@ -460,7 +460,7 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly = fa
 }
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
-    public readonly localSettings: ControllerUISettings = {
+    public readonly localSettings: ControllerSettings = {
         layout: {
             pathName: 'res/layout',
             fileExtension: 'xml',
@@ -525,7 +525,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     protected _screenDimension!: Dimension;
 
-    private _defaultViewSettings!: LocalSettingsUI;
+    private _defaultViewSettings!: LocalSettings;
     private _targetAPI!: number;
 
     constructor(
@@ -2064,7 +2064,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    public createNodeGroup(node: T, children: T[], options: NodeGroupUIOptions<T> = {}) {
+    public createNodeGroup(node: T, children: T[], options: CreateNodeGroupOptions<T> = {}) {
         const { parent, delegate, cascade } = options;
         const group = new ViewGroup(this.cache.nextId, node, children, this.afterInsertNode) as T;
         if (parent) {
@@ -2078,7 +2078,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return group;
     }
 
-    public createNodeWrapper(node: T, parent: T, options: WrapperOptions<T> = {}) {
+    public createNodeWrapper(node: T, parent: T, options: CreateNodeWrapperOptions<T> = {}) {
         const { children, containerType, alignmentType, resource, procedure, section } = options;
         const container = this.application.createNode({ parent, children, append: true, innerWrap: node, delegate: true, cascade: options.cascade === true || !!children && children.length > 0 && !node.originalRoot });
         container.inherit(node, 'base', 'alignment');
