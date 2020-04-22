@@ -1,5 +1,5 @@
-import { FileActionResult, FileArchivingOptions, FileCopyingOptions, UserSettings } from '../../@types/base/application';
-import { RawAsset } from '../../@types/base/file';
+import { FileArchivingOptions, FileCopyingOptions, UserSettings } from '../../@types/base/application';
+import { RawAsset, ResultOfFileAction } from '../../@types/base/file';
 
 const { fromLastIndexOf, isString } = squared.lib.util;
 
@@ -83,7 +83,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         }
                     )
                     .then((response: Response) => response.json())
-                    .then((result: FileActionResult) => {
+                    .then((result: ResultOfFileAction) => {
                         if (result) {
                             if (result.success && typeof options.callback === 'function') {
                                 options.callback(result);
@@ -120,6 +120,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         '/api/assets/archive' +
                         '?filename=' + encodeURIComponent(filename.trim()) +
                         '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
+                        '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
                         '&append_to=' + encodeURIComponent((options.appendTo || '').trim()), {
                             method: 'POST',
                             headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
@@ -127,7 +128,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         }
                     )
                     .then((response: Response) => response.json())
-                    .then((result: FileActionResult) => {
+                    .then((result: ResultOfFileAction) => {
                         if (result) {
                             if (result.success && typeof options.callback === 'function') {
                                 options.callback(result);

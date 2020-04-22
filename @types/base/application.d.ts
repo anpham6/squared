@@ -107,21 +107,13 @@ export interface FileActionOptions {
     callback?: CallbackResult;
 }
 
-export interface FileActionResult {
-    success: boolean;
-    zipname?: string;
-    bytes?: number;
-    files?: string[];
-    application?: string;
-    system?: string;
-}
-
 export interface FileCopyingOptions extends FileActionOptions {
     directory?: string;
 }
 
 export interface FileArchivingOptions extends FileActionOptions {
     filename?: string;
+    copyTo?: string;
     appendTo?: string;
     format?: string;
 }

@@ -1,4 +1,4 @@
-import { CompressionFormat, RequestAsset, Settings } from './@types/node';
+import { CompressionFormat, ResultOfFileAction, RequestAsset, Settings } from './@types/node';
 
 import got from 'got';
 
@@ -579,6 +579,32 @@ function replacePathName(source: string, segment: string, value: string) {
     return source;
 }
 
+function checkPermissions(res: express.Response<any>, dirname: string) {
+    if (isDirectoryUNC(dirname)) {
+        if (!UNC_WRITE) {
+            res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
+            return false;
+        }
+    }
+    else if (!DISK_WRITE) {
+        res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
+        return false;
+    }
+    try {
+        if (!fs.existsSync(dirname)) {
+            fs.mkdirpSync(dirname);
+        }
+        else if (!fs.lstatSync(dirname).isDirectory()) {
+            throw new Error('Root is not a directory');
+        }
+    }
+    catch (err) {
+        res.json({ application: `DIRECTORY: ${dirname}`, system: err });
+        return false;
+    }
+    return true;
+}
+
 const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
 const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
 const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value);
@@ -589,28 +615,10 @@ const getCompressFormat = (compress: Undef<CompressionFormat[]>, format: string)
 const getFileSize = (filepath: string) => fs.statSync(filepath).size;
 
 app.post('/api/assets/copy', (req, res) => {
-    const dirname = path.normalize(req.query.to as string);
+    let dirname = req.query.to as string;
     if (dirname) {
-        if (isDirectoryUNC(dirname)) {
-            if (!UNC_WRITE) {
-                res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
-                return;
-            }
-        }
-        else if (!DISK_WRITE) {
-            res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
-            return;
-        }
-        try {
-            if (!fs.existsSync(dirname)) {
-                fs.mkdirpSync(dirname);
-            }
-            else if (!fs.lstatSync(dirname).isDirectory()) {
-                throw new Error('Root is not a directory');
-            }
-        }
-        catch (err) {
-            res.json({ application: `DIRECTORY: ${dirname}`, system: err });
+        dirname = path.normalize(dirname);
+        if (!checkPermissions(res, dirname)) {
             return;
         }
         const files = new Set<string>();
@@ -630,7 +638,7 @@ app.post('/api/assets/copy', (req, res) => {
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
                 removeUnusedFiles(dirname, status, files);
-                res.json({ success: files.size > 0, files: Array.from(files) });
+                res.json(<ResultOfFileAction> { success: files.size > 0, files: Array.from(files) });
                 status.delayed = Number.POSITIVE_INFINITY;
             }
         };
@@ -650,11 +658,24 @@ app.post('/api/assets/copy', (req, res) => {
 });
 
 app.post('/api/assets/archive', (req, res) => {
+    let copy_to = req.query.to as string;
+    if (copy_to) {
+        copy_to = path.normalize(copy_to);
+    }
     const dirname = path.join(__dirname, 'temp' + SEPARATOR + uuid.v4());
-    const dirname_zip = dirname + '-zip';
+    let dirname_zip: string;
     try {
         fs.mkdirpSync(dirname);
-        fs.mkdirpSync(dirname_zip);
+        if (copy_to) {
+            if (!checkPermissions(res, copy_to)) {
+                return;
+            }
+            dirname_zip = copy_to;
+        }
+        else {
+            dirname_zip = dirname + '-zip';
+            fs.mkdirpSync(dirname_zip);
+        }
     }
     catch (err) {
         res.json({ application: `DIRECTORY: ${dirname}`, system: err });
@@ -691,17 +712,27 @@ app.post('/api/assets/archive', (req, res) => {
         zipname = path.join(dirname_zip, (req.query.filename || zipname || 'squared') + '.' + format);
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
+            const success = files.size > 0;
             const bytes = archive.pointer();
-            const response = { success: files.size > 0, zipname, bytes, files: Array.from(files) };
-            if (formatGzip) {
+            const response: ResultOfFileAction = { success, files: Array.from(files) };
+            if (!copy_to) {
+                response.zipname = zipname;
+                response.bytes = bytes;
+            }
+            if (formatGzip && success) {
                 const gz = req.query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
                 createGzipWriteStream(zipname, gz)
                     .on('finish', () => {
-                        response.zipname = gz;
-                        response.bytes = getFileSize(gz);
+                        const gz_bytes = getFileSize(gz);
+                        if (!copy_to) {
+                            response.zipname = gz;
+                            response.bytes = gz_bytes;
+                        }
                         res.json(response);
+                        console.log(`WRITE: ${gz} (${gz_bytes} bytes)`);
                     })
                     .on('error', err => {
+                        response.success = false;
                         writeError(gz, err);
                         res.json(response);
                     });

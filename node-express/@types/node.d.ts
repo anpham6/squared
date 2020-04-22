@@ -18,6 +18,8 @@ declare namespace node {
     interface CompressionFormat extends file.CompressionFormat {}
 
     interface RequestAsset extends Omit<file.RequestAsset, "exclusions"> {}
+
+    interface ResultOfFileAction extends file.ResultOfFileAction {}
 }
 
 export = node;

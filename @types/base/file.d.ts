@@ -40,3 +40,12 @@ export interface CompressionFormat {
     format: string;
     level?: number;
 }
+
+export interface ResultOfFileAction {
+    success: boolean;
+    zipname?: string;
+    bytes?: number;
+    files?: string[];
+    application?: string;
+    system?: string;
+}
