@@ -378,6 +378,45 @@ function segmentLeftAligned<T extends View>(children: T[]) {
     return partitionArray<T>(children, item => item.float === 'left' || item.autoMargin.right === true);
 }
 
+function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
+    const renderParent = node.renderParent as View;
+    if (renderParent.overflowY) {
+        return renderParent.box.width;
+    }
+    else {
+        const parent = <Null<View>> node.actualParent;
+        if (parent) {
+            if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === renderParent) {
+                const { left, width } = parent.box;
+                return width - (node.linear.left - left);
+            }
+            else if (parent.floatContainer) {
+                const { containerType, alignmentType } = this.containerTypeVerticalMargin;
+                const container = node.ascend({ condition: (item: View) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
+                if (container.length) {
+                    const { left, right, width } = node.box;
+                    let offsetLeft = 0, offsetRight = 0;
+                    parent.naturalChildren.forEach((item: View) => {
+                        const linear = item.linear;
+                        if (item.floating && !children.includes(item) && node.intersectY(linear)) {
+                            if (item.float === 'left') {
+                                if (Math.floor(linear.right) > left) {
+                                    offsetLeft = Math.max(offsetLeft, linear.right - left);
+                                }
+                            }
+                            else if (right > Math.ceil(linear.left)) {
+                                offsetRight = Math.max(offsetRight, right - linear.left);
+                            }
+                        }
+                    });
+                    return width - offsetLeft - offsetRight;
+                }
+            }
+        }
+    }
+    return undefined;
+}
+
 const isBaselineImage = (item: View) => item.imageOrSvgElement && item.baseline;
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
@@ -2169,45 +2208,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             const boxParent = node.nodeGroup ? node.documentParent : node;
-            const boxWidth = boxParent.actualBoxWidth((() => {
-                const renderParent = node.renderParent as T;
-                if (renderParent.overflowY) {
-                    return renderParent.box.width;
-                }
-                else {
-                    const parent = <Null<T>> node.actualParent;
-                    if (parent) {
-                        if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === renderParent) {
-                            const { left, width } = parent.box;
-                            return width - (node.linear.left - left);
-                        }
-                        else if (parent.floatContainer) {
-                            const { containerType, alignmentType } = this.containerTypeVerticalMargin;
-                            const container = node.ascend({ condition: (item: T) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
-                            if (container.length) {
-                                const { left, right, width } = node.box;
-                                let offsetLeft = 0, offsetRight = 0;
-                                parent.naturalChildren.forEach((item: T) => {
-                                    const linear = item.linear;
-                                    if (item.floating && !children.includes(item) && node.intersectY(linear)) {
-                                        if (item.float === 'left') {
-                                            if (Math.floor(linear.right) > left) {
-                                                offsetLeft = Math.max(offsetLeft, linear.right - left);
-                                            }
-                                        }
-                                        else if (right > Math.ceil(linear.left)) {
-                                            offsetRight = Math.max(offsetRight, right - linear.left);
-                                        }
-                                    }
-                                });
-                                return width - offsetLeft - offsetRight;
-                            }
-                        }
-                    }
-                }
-                return boxParent.box.width;
-                })()
-            );
+            const boxWidth = boxParent.actualBoxWidth(getBoxWidth.call(this, node, children));
             const clearMap = this.application.clearMap;
             const checkLineWrap = node.css('whiteSpace') !== 'nowrap';
             let rowWidth = 0;
@@ -2319,8 +2320,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     if (previous) {
-                        let maxWidth = 0;
-                        let baseWidth = 0;
                         let retainMultiline = false;
                         const checkFloatWrap = () => {
                             if (previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + item.actualWidth) < boxWidth)) {
@@ -2337,7 +2336,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             return false;
                         };
                         const checkWrapWidth = () => {
-                            baseWidth = rowWidth + item.marginLeft;
+                            let maxWidth = 0;
+                            let baseWidth = rowWidth + item.marginLeft;
                             if (previousRowLeft && !items.includes(previousRowLeft)) {
                                 baseWidth += previousRowLeft.linear.width;
                             }
@@ -2360,7 +2360,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 baseWidth -= item.contentBoxWidth;
                             }
                             maxWidth = Math.ceil(maxWidth);
-                            return true;
+                            return Math.floor(baseWidth) > maxWidth;
                         };
                         const startNewRow = () => {
                             if (previous.textElement) {
@@ -2376,7 +2376,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 return false;
                             }
                             else if (checkLineWrap) {
-                                if (checkWrapWidth() && Math.floor(baseWidth) > maxWidth) {
+                                if (checkWrapWidth()) {
                                     return true;
                                 }
                                 else if (item.actualParent?.tagName !== 'CODE') {
@@ -2394,7 +2394,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (textNewRow ||
                             item.nodeGroup && !item.hasAlign(NODE_ALIGNMENT.SEGMENTED) ||
                             Math.ceil(item.bounds.top) >= previous.bounds.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
-                            !item.textElement && !checkFloatWrap() && checkWrapWidth() && Math.floor(baseWidth) > maxWidth ||
+                            !item.textElement && checkWrapWidth() && !checkFloatWrap() ||
                             !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
                             cleared ||
                             previous.autoMargin.horizontal ||

@@ -1984,10 +1984,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             const value = this.css('height');
             if (isPercent(value)) {
-                result = this.pageFlow && (this.actualParent?.hasHeight || this.documentBody) ? parseFloat(value) > 0 : this.css('position') === 'fixed';
+                if (this.pageFlow) {
+                    result = this.actualParent?.hasHeight || this.documentBody;
+                }
+                else {
+                    result = this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom');
+                }
             }
             else {
-                result = this.height > 0;
+                result = this.height > 0 || this.hasPX('height', false);
             }
             this._cached.hasHeight = result;
         }

@@ -99,6 +99,8 @@ if (ENV === 'development') {
     app.use('/build', express.static(path.join(__dirname, 'build')));
     app.use('/books', express.static(path.join(__dirname, 'html/books')));
     app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
+    app.use('/demos-dev', express.static(path.join(__dirname, 'html/demos-dev')));
+    app.use('/common', express.static(path.join(__dirname, 'html/common')));
     app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 }
 

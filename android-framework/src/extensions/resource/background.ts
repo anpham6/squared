@@ -369,17 +369,42 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
     return result;
 }
 
-function createLayerList(boxStyle: BoxStyle, images?: BackgroundImageData[], borderOnly = true) {
+function createLayerList(boxStyle: BoxStyle, images?: BackgroundImageData[], borderOnly = true, corners?: ObjectMap<any>, stroke?: ObjectMap<any> | false, indentOffset?: string) {
     const item: StandardMap[] = [];
     const result: StandardMap[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
     if (solid) {
-        item.push({ shape: { 'android:shape': 'rectangle', solid } });
+        if (corners && !stroke) {
+            item.push({
+                top: indentOffset,
+                right: indentOffset,
+                left: indentOffset,
+                bottom: indentOffset,
+                shape: { 'android:shape': 'rectangle', solid, corners }
+            });
+            corners = undefined;
+        }
+        else {
+            item.push({ shape: { 'android:shape': 'rectangle', solid } });
+        }
     }
     if (images) {
         images.forEach(image => {
             const gradient = image.gradient;
             item.push(gradient ? { shape: { 'android:shape': 'rectangle', gradient } } : image);
+        });
+    }
+    if (stroke) {
+        item.push({
+            top: indentOffset,
+            right: indentOffset,
+            left: indentOffset,
+            bottom: indentOffset,
+            shape: {
+                'android:shape': 'rectangle',
+                corners,
+                stroke
+            }
         });
     }
     return result;
@@ -665,20 +690,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images?.length)) {
             const stroke = border ? getBorderStroke(border) : false;
             if (images?.length || indentWidth > 0 || borderOnly) {
-                layerListData = createLayerList(data, images, borderOnly);
-                if (corners || stroke) {
-                    layerListData[0].item.push({
-                        top: indentOffset,
-                        right: indentOffset,
-                        left: indentOffset,
-                        bottom: indentOffset,
-                        shape: {
-                            'android:shape': 'rectangle',
-                            corners,
-                            stroke
-                        }
-                    });
-                }
+                layerListData = createLayerList(data, images, borderOnly, corners, stroke, indentOffset);
             }
             else {
                 shapeData = createShapeData(stroke, !borderOnly && getBackgroundColor(data.backgroundColor), corners);
@@ -1041,6 +1053,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     case '100% 100%':
                     case '100% auto':
                     case 'auto 100%':
+                        if (node.ascend({ condition: item => item.hasPX('width'), startSelf: true }).length) {
+                            gravityX = '';
+                            gravityY = '';
+                        }
                     case 'contain':
                     case 'cover':
                     case 'round':

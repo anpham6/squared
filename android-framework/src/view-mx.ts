@@ -452,6 +452,237 @@ function transferLayoutAlignment(node: T, replaceWith: T) {
     }
 }
 
+function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment: BoxModel, margin: boolean) {
+    let top = 0, right = 0, bottom = 0, left = 0;
+    for (let i = 0; i < 4; ++i) {
+        const attr = attrs[i];
+        let value: number = boxReset[attr] === 0 ? this[attr] : 0;
+        if (value !== 0) {
+            switch (attr) {
+                case 'marginRight':
+                    if (this.inline) {
+                        const outer = this.documentParent.box.right;
+                        const inner = this.bounds.right;
+                        if (Math.floor(inner) > outer) {
+                            if (!this.onlyChild && !this.alignParent('left')) {
+                                this.setSingleLine(true);
+                            }
+                            continue;
+                        }
+                        else if (inner + value > outer) {
+                            value = clamp(outer - inner, 0, value);
+                        }
+                    }
+                    break;
+                case 'marginBottom':
+                    if (value < 0 && this.pageFlow && !this.blockStatic) {
+                        value = 0;
+                    }
+                    break;
+                case 'paddingTop':
+                    value = this.actualPadding(attr, value);
+                    break;
+                case 'paddingBottom':
+                    if (this.hasPX('height', false, true) && (!this.layoutElement && (this.layoutVertical || this.layoutFrame) || !this.pageFlow) || this.documentParent.gridElement && this.hasPX('height', false)) {
+                        continue;
+                    }
+                    else if (this.floatContainer) {
+                        let maxBottom = Number.NEGATIVE_INFINITY;
+                        this.naturalChildren.forEach(item => {
+                            if (item.floating) {
+                                maxBottom = Math.max(item.bounds.bottom, maxBottom);
+                            }
+                        });
+                        value = clamp(this.bounds.bottom - maxBottom, 0, value);
+                    }
+                    else {
+                        value = this.actualPadding(attr, value);
+                    }
+                    break;
+            }
+        }
+        if (boxAdjustment) {
+            value += boxAdjustment[attr];
+        }
+        switch (i) {
+            case 0:
+                top = value;
+                break;
+            case 1:
+                right = value;
+                break;
+            case 2:
+                bottom = value;
+                break;
+            case 3:
+                left = value;
+                break;
+        }
+    }
+    if (margin) {
+        if (this.floating) {
+            let node = <Undef<T>> (this.renderParent as T).renderChildren.find(item => !item.floating);
+            if (node) {
+                const boundsTop = Math.floor(this.bounds.top);
+                let actualNode: Undef<T>;
+                while (Math.floor(node.bounds.top) === boundsTop) {
+                    actualNode = node;
+                    const innerWrapped = node.innerWrapped as T;
+                    if (innerWrapped) {
+                        node = innerWrapped;
+                    }
+                    else {
+                        break;
+                    }
+                }
+                if (actualNode) {
+                    const [reset, adjustment] = actualNode.getBox(BOX_STANDARD.MARGIN_TOP);
+                    top += (reset === 0 ? actualNode.marginTop : 0) + adjustment;
+                }
+            }
+        }
+        if (this.positionStatic && !this.blockWidth && (left < 0 || right < 0)) {
+            switch (this.cssAscend('textAlign')) {
+                case 'center':
+                    if (left < right) {
+                        right += Math.abs(left);
+                        right /= 2;
+                        left = 0;
+                    }
+                    else {
+                        left += Math.abs(right);
+                        left /= 2;
+                        right = 0;
+                    }
+                    break;
+                case 'right':
+                case 'end':
+                    if (left < 0) {
+                        left = 0;
+                    }
+                    break;
+            }
+        }
+        switch (this.controlName) {
+            case CONTAINER_ANDROID.RADIO:
+            case CONTAINER_ANDROID.CHECKBOX:
+                top = Math.max(top - SPACING_CHECKBOX, 0);
+                bottom = Math.max(bottom - SPACING_CHECKBOX, 0);
+                break;
+            case CONTAINER_ANDROID.SELECT:
+                top = Math.max(top - SPACING_SELECT, 0);
+                bottom = Math.max(bottom - SPACING_SELECT, 0);
+                break;
+        }
+        if (top < 0) {
+            if (!this.pageFlow) {
+                if (bottom >= 0 && this.leftTopAxis && (this.hasPX('top') || !this.hasPX('bottom')) && this.translateY(top)) {
+                    top = 0;
+                }
+            }
+            else if (this.blockDimension && !this.inputElement && this.translateY(top)) {
+                this.anchorChain('bottom').forEach(item => item.translateY(top));
+                top = 0;
+            }
+        }
+        if (bottom < 0) {
+            if (!this.pageFlow) {
+                if (top >= 0 && this.leftTopAxis && this.hasPX('bottom') && !this.hasPX('top') && this.translateY(-bottom)) {
+                    bottom = 0;
+                }
+            }
+            else if (this.blockDimension && !this.inputElement && (this.renderParent as T).layoutConstraint) {
+                this.anchorChain('bottom').forEach(item => item.translateY(-bottom));
+                bottom = 0;
+            }
+        }
+        if (left < 0) {
+            if (!this.pageFlow) {
+                if (right >= 0 && this.leftTopAxis && (this.hasPX('left') || !this.hasPX('right')) && this.translateX(left)) {
+                    left = 0;
+                }
+            }
+            else if (this.float === 'right') {
+                const siblings = this.anchorChain('left');
+                left = Math.min(-left, -this.bounds.width);
+                siblings.forEach(item => item.translateX(-left));
+                left = 0;
+            }
+            else if (this.blockDimension && this.translateX(left)) {
+                this.anchorChain('right').forEach(item => item.translateX(left));
+                left = 0;
+            }
+        }
+        if (right < 0) {
+            if (!this.pageFlow) {
+                if (left >= 0 && this.leftTopAxis && this.hasPX('right') && !this.hasPX('left') && this.translateX(-right)) {
+                    right = 0;
+                }
+            }
+            else if (this.rightAligned) {
+                if (this.translateX(-right)) {
+                    right = 0;
+                }
+            }
+            else if (this.blockDimension && (this.renderParent as T).layoutConstraint) {
+                this.anchorChain('right').forEach(item => item.translateX(right));
+                right = 0;
+            }
+        }
+    }
+    else if (this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE)) {
+        top += this.borderTopWidth;
+        bottom += this.borderBottomWidth;
+        right += this.borderRightWidth;
+        left += this.borderLeftWidth;
+    }
+    if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
+        let mergeAll = 0;
+        let mergeHorizontal = 0;
+        let mergeVertical = 0;
+        if ((!margin || !(this.renderParent as T).layoutGrid) && this.api >= BUILD_ANDROID.OREO) {
+            if (top === right && right === bottom && bottom === left) {
+                mergeAll = top;
+            }
+            else {
+                if (left === right) {
+                    mergeHorizontal = left;
+                }
+                if (top === bottom) {
+                    mergeVertical = top;
+                }
+            }
+        }
+        if (mergeAll !== 0) {
+            this.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, formatPX(mergeAll));
+        }
+        else {
+            if (mergeHorizontal !== 0) {
+                this.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, formatPX(mergeHorizontal));
+            }
+            else {
+                if (left !== 0) {
+                    this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_LEFT : STRING_ANDROID.PADDING_LEFT), formatPX(left));
+                }
+                if (right !== 0) {
+                    this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_RIGHT : STRING_ANDROID.PADDING_RIGHT), formatPX(right));
+                }
+            }
+            if (mergeVertical !== 0) {
+                this.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, formatPX(mergeVertical));
+            }
+            else {
+                if (top !== 0) {
+                    this.android(margin ? STRING_ANDROID.MARGIN_TOP : STRING_ANDROID.PADDING_TOP, formatPX(top));
+                }
+                if (bottom !== 0) {
+                    this.android(margin ? STRING_ANDROID.MARGIN_BOTTOM : STRING_ANDROID.PADDING_BOTTOM, formatPX(bottom));
+                }
+            }
+        }
+    }
+}
+
 const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
 const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
 
@@ -978,8 +1209,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                 }
                             }
-                            if (layoutHeight === '' && (this.documentRoot || flexibleHeight && this.onlyChild || this.css('position') === 'fixed')) {
-                                layoutHeight = 'match_parent';
+                            if (layoutHeight === '') {
+                                if (!this.pageFlow) {
+                                    if (this.css('position') === 'fixed') {
+                                        layoutHeight = 'match_parent';
+                                    }
+                                    else if (renderParent.layoutConstraint && (this.hasPX('top') || this.hasPX('bottom'))) {
+                                        layoutHeight = '0px';
+                                    }
+                                }
+                                else if (this.documentRoot || flexibleHeight && this.onlyChild) {
+                                    layoutHeight = 'match_parent';
+                                }
                             }
                         }
                         if (layoutHeight === '' && this.hasHeight) {
@@ -1225,241 +1466,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public setBoxSpacing() {
-            const boxReset = this._boxReset;
-            const boxAdjustment = this._boxAdjustment;
-            const renderParent = this.renderParent as T;
-            const setBoxModel = (attrs: string[], margin: boolean, unmergeable: boolean) => {
-                let top = 0, right = 0, bottom = 0, left = 0;
-                for (let i = 0; i < 4; ++i) {
-                    const attr = attrs[i];
-                    let value: number = boxReset[attr] === 0 ? this[attr] : 0;
-                    if (value !== 0) {
-                        switch (attr) {
-                            case 'marginRight':
-                                if (this.inline) {
-                                    const outer = this.documentParent.box.right;
-                                    const inner = this.bounds.right;
-                                    if (Math.floor(inner) > outer) {
-                                        if (!this.onlyChild && !this.alignParent('left')) {
-                                            this.setSingleLine(true);
-                                        }
-                                        continue;
-                                    }
-                                    else if (inner + value > outer) {
-                                        value = clamp(outer - inner, 0, value);
-                                    }
-                                }
-                                break;
-                            case 'marginBottom':
-                                if (value < 0 && this.pageFlow && !this.blockStatic) {
-                                    value = 0;
-                                }
-                                break;
-                            case 'paddingTop':
-                                value = this.actualPadding(attr, value);
-                                break;
-                            case 'paddingBottom':
-                                if (this.hasPX('height', false, true) && (!this.layoutElement && (this.layoutVertical || this.layoutFrame) || !this.pageFlow) || this.documentParent.gridElement && this.hasPX('height', false)) {
-                                    continue;
-                                }
-                                else if (this.floatContainer) {
-                                    let maxBottom = Number.NEGATIVE_INFINITY;
-                                    this.naturalChildren.forEach(item => {
-                                        if (item.floating) {
-                                            maxBottom = Math.max(item.bounds.bottom, maxBottom);
-                                        }
-                                    });
-                                    value = clamp(this.bounds.bottom - maxBottom, 0, value);
-                                }
-                                else {
-                                    value = this.actualPadding(attr, value);
-                                }
-                                break;
-                        }
-                    }
-                    if (boxAdjustment) {
-                        value += boxAdjustment[attr];
-                    }
-                    switch (i) {
-                        case 0:
-                            top = value;
-                            break;
-                        case 1:
-                            right = value;
-                            break;
-                        case 2:
-                            bottom = value;
-                            break;
-                        case 3:
-                            left = value;
-                            break;
-                    }
-                }
-                if (margin) {
-                    if (this.floating) {
-                        let node = <Undef<T>> renderParent.renderChildren.find(item => !item.floating);
-                        if (node) {
-                            const boundsTop = Math.floor(this.bounds.top);
-                            let actualNode: Undef<T>;
-                            while (Math.floor(node.bounds.top) === boundsTop) {
-                                actualNode = node;
-                                const innerWrapped = node.innerWrapped as T;
-                                if (innerWrapped) {
-                                    node = innerWrapped;
-                                }
-                                else {
-                                    break;
-                                }
-                            }
-                            if (actualNode) {
-                                const [reset, adjustment] = actualNode.getBox(BOX_STANDARD.MARGIN_TOP);
-                                top += (reset === 0 ? actualNode.marginTop : 0) + adjustment;
-                            }
-                        }
-                    }
-                    if (this.positionStatic && !this.blockWidth && (left < 0 || right < 0)) {
-                        switch (this.cssAscend('textAlign')) {
-                            case 'center':
-                                if (left < right) {
-                                    right += Math.abs(left);
-                                    right /= 2;
-                                    left = 0;
-                                }
-                                else {
-                                    left += Math.abs(right);
-                                    left /= 2;
-                                    right = 0;
-                                }
-                                break;
-                            case 'right':
-                            case 'end':
-                                if (left < 0) {
-                                    left = 0;
-                                }
-                                break;
-                        }
-                    }
-                    switch (this.controlName) {
-                        case CONTAINER_ANDROID.RADIO:
-                        case CONTAINER_ANDROID.CHECKBOX:
-                            top = Math.max(top - SPACING_CHECKBOX, 0);
-                            bottom = Math.max(bottom - SPACING_CHECKBOX, 0);
-                            break;
-                        case CONTAINER_ANDROID.SELECT:
-                            top = Math.max(top - SPACING_SELECT, 0);
-                            bottom = Math.max(bottom - SPACING_SELECT, 0);
-                            break;
-                    }
-                    if (top < 0) {
-                        if (!this.pageFlow) {
-                            if (bottom >= 0 && this.leftTopAxis && (this.hasPX('top') || !this.hasPX('bottom')) && this.translateY(top)) {
-                                top = 0;
-                            }
-                        }
-                        else if (this.blockDimension && !this.inputElement && this.translateY(top)) {
-                            this.anchorChain('bottom').forEach(item => item.translateY(top));
-                            top = 0;
-                        }
-                    }
-                    if (bottom < 0) {
-                        if (!this.pageFlow) {
-                            if (top >= 0 && this.leftTopAxis && this.hasPX('bottom') && !this.hasPX('top') && this.translateY(-bottom)) {
-                                bottom = 0;
-                            }
-                        }
-                        else if (this.blockDimension && !this.inputElement && renderParent.layoutConstraint) {
-                            this.anchorChain('bottom').forEach(item => item.translateY(-bottom));
-                            bottom = 0;
-                        }
-                    }
-                    if (left < 0) {
-                        if (!this.pageFlow) {
-                            if (right >= 0 && this.leftTopAxis && (this.hasPX('left') || !this.hasPX('right')) && this.translateX(left)) {
-                                left = 0;
-                            }
-                        }
-                        else if (this.float === 'right') {
-                            const siblings = this.anchorChain('left');
-                            left = Math.min(-left, -this.bounds.width);
-                            siblings.forEach(item => item.translateX(-left));
-                            left = 0;
-                        }
-                        else if (this.blockDimension && this.translateX(left)) {
-                            this.anchorChain('right').forEach(item => item.translateX(left));
-                            left = 0;
-                        }
-                    }
-                    if (right < 0) {
-                        if (!this.pageFlow) {
-                            if (left >= 0 && this.leftTopAxis && this.hasPX('right') && !this.hasPX('left') && this.translateX(-right)) {
-                                right = 0;
-                            }
-                        }
-                        else if (this.rightAligned) {
-                            if (this.translateX(-right)) {
-                                right = 0;
-                            }
-                        }
-                        else if (this.blockDimension && renderParent.layoutConstraint) {
-                            this.anchorChain('right').forEach(item => item.translateX(right));
-                            right = 0;
-                        }
-                    }
-                }
-                else if (this.visibleStyle.borderWidth && !this.is(CONTAINER_NODE.LINE)) {
-                    top += this.borderTopWidth;
-                    bottom += this.borderBottomWidth;
-                    right += this.borderRightWidth;
-                    left += this.borderLeftWidth;
-                }
-                if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
-                    let mergeAll = 0;
-                    let mergeHorizontal = 0;
-                    let mergeVertical = 0;
-                    if (!unmergeable && this.api >= BUILD_ANDROID.OREO) {
-                        if (top === right && right === bottom && bottom === left) {
-                            mergeAll = top;
-                        }
-                        else {
-                            if (left === right) {
-                                mergeHorizontal = left;
-                            }
-                            if (top === bottom) {
-                                mergeVertical = top;
-                            }
-                        }
-                    }
-                    if (mergeAll !== 0) {
-                        this.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, formatPX(mergeAll));
-                    }
-                    else {
-                        if (mergeHorizontal !== 0) {
-                            this.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, formatPX(mergeHorizontal));
-                        }
-                        else {
-                            if (left !== 0) {
-                                this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_LEFT : STRING_ANDROID.PADDING_LEFT), formatPX(left));
-                            }
-                            if (right !== 0) {
-                                this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_RIGHT : STRING_ANDROID.PADDING_RIGHT), formatPX(right));
-                            }
-                        }
-                        if (mergeVertical !== 0) {
-                            this.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, formatPX(mergeVertical));
-                        }
-                        else {
-                            if (top !== 0) {
-                                this.android(margin ? STRING_ANDROID.MARGIN_TOP : STRING_ANDROID.PADDING_TOP, formatPX(top));
-                            }
-                            if (bottom !== 0) {
-                                this.android(margin ? STRING_ANDROID.MARGIN_BOTTOM : STRING_ANDROID.PADDING_BOTTOM, formatPX(bottom));
-                            }
-                        }
-                    }
-                }
-            };
-            setBoxModel(BOX_MARGIN, true, renderParent.layoutGrid);
-            setBoxModel(BOX_PADDING, false, false);
+            setBoxModel.call(this, BOX_MARGIN, this._boxReset, this._boxAdjustment, true);
+            setBoxModel.call(this, BOX_PADDING, this._boxReset, this._boxAdjustment, false);
         }
 
         public apply(options: {}) {

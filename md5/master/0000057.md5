@@ -1,7 +1,10 @@
 ea4fc296b9abc6d32559458d5e22a208  ./app/src/main/res/drawable/body_linearlayout_1.xml
-ee72bea0abbff95d06062177d623b53b  ./app/src/main/res/drawable/img_imageview_1_viewbox.xml
+72d98a707c26d1892dc278833399a3be  ./app/src/main/res/drawable/img_imageview_1_viewbox.xml
+6ae630ef69039e27a0156bdf1abaa5cf  ./app/src/main/res/drawable/img_imageview_2_viewbox.xml
+756daa8d3121d0f29adb7f159da9a848  ./app/src/main/res/drawable/img_imageview_3_viewbox.xml
+f423429b3bb5efd2d1914355b451302a  ./app/src/main/res/drawable/img_imageview_4_viewbox.xml
 a5a19058c8770fd03c6eebaf18469a85  ./app/src/main/res/drawable/linearlayout_1_gradient_1.xml
-b53addf9dc512d67db29a9f5739fb322  ./app/src/main/res/layout/activity_main.xml
+c3f1a19f82ee9f14d921be98373f9431  ./app/src/main/res/layout/activity_main.xml
 7826d342f5cc53fd7db62a48d17b44f8  ./app/src/main/res/values/colors.xml
 2182bf9e13bb75c26ee3524b85e8e46e  ./app/src/main/res/values/dimens.xml
 015bb74969981d4375aeb420630cebbd  ./app/src/main/res/values/strings.xml

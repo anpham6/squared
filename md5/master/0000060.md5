@@ -1,8 +1,11 @@
 a56d13086a22c55a260f3179215f9527  ./app/src/main/res/drawable/body_constraintlayout_1.xml
 a5a19058c8770fd03c6eebaf18469a85  ./app/src/main/res/drawable/constraintlayout_1_gradient_1.xml
-ee72bea0abbff95d06062177d623b53b  ./app/src/main/res/drawable/img_imageview_1_viewbox.xml
+72d98a707c26d1892dc278833399a3be  ./app/src/main/res/drawable/img_imageview_1_viewbox.xml
+6ae630ef69039e27a0156bdf1abaa5cf  ./app/src/main/res/drawable/img_imageview_2_viewbox.xml
+756daa8d3121d0f29adb7f159da9a848  ./app/src/main/res/drawable/img_imageview_3_viewbox.xml
+f423429b3bb5efd2d1914355b451302a  ./app/src/main/res/drawable/img_imageview_4_viewbox.xml
 20b57d7566095b52d96b230601d7109d  ./app/src/main/res/drawable/nav_framelayout_1.xml
-9de8cfd1495d8f7d34c7a2e99b5b080c  ./app/src/main/res/layout/activity_main.xml
+83c9776917da137ff9fffe5cda9d6446  ./app/src/main/res/layout/activity_main.xml
 5b4f8e4aa08f2621ad680b4ba3aa3521  ./app/src/main/res/values/colors.xml
 c8cdc7472e4bbd12d6b8ee14d7e159c9  ./app/src/main/res/values/dimens.xml
 bf6247a9e275d3d3671d3531a0a68c0a  ./app/src/main/res/values/strings.xml

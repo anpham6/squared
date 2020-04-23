@@ -295,7 +295,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     if (to.key !== 1) {
                                         offsetRotate.push({ key: 1, value: rotate });
                                     }
-                                    for (let j = 0; j < offsetRotate.length; ++j) {
+                                    for (let j = 1; j < offsetRotate.length; ++j) {
                                         const previous = offsetRotate[j - 1];
                                         const item = offsetRotate[j];
                                         const previousValue = convertRotate(previous.value);

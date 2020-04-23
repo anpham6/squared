@@ -200,6 +200,18 @@ function getOuterFrameChild(item: Undef<View>) {
     return undefined;
 }
 
+function setLayoutWeight(node: View, horizontal: boolean, dimension: string, attr: string, value: number) {
+    if (node[dimension] === 0) {
+        node.app(attr, truncate(value, node.localSettings.floatPrecision));
+        if (horizontal) {
+            node.setLayoutWidth('0px');
+        }
+        else {
+            node.setLayoutHeight('0px');
+        }
+    }
+}
+
 const setBoxPercentage = (parent: View, node: View, attr: DimensionAttr) => node.flexbox.basis = (node.bounds[attr] / parent.box[attr] * 100) + '%';
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
@@ -376,17 +388,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 const { orientation, orientationInverse, WHL, HWL, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_horizontal : MAP_vertical;
                 const [dimension, dimensionInverse] = horizontal ? [node.hasHeight, node.hasWidth] : [node.hasWidth, node.hasHeight];
                 const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
-                const setLayoutWeight = (chain: T, value: number) => {
-                    if (chain[WHL] === 0) {
-                        chain.app(orientationWeight, truncate(value, chain.localSettings.floatPrecision));
-                        if (horizontal) {
-                            chain.setLayoutWidth('0px');
-                        }
-                        else {
-                            chain.setLayoutHeight('0px');
-                        }
-                    }
-                };
                 for (let i = 0; i < length; ++i) {
                     const seg = partition[i];
                     const q = seg.length;
@@ -463,7 +464,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                         if (opposing) {
                             if (parentEnd && q > 1 && dimensionInverse) {
-                                setLayoutWeight(chain, 1);
+                                setLayoutWeight(chain, horizontal, WHL, orientationWeight, 1);
                             }
                             chain.anchor(TL, 'parent');
                         }
@@ -658,7 +659,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         continue;
                     }
                     if (growAll) {
-                        seg.forEach(item => setLayoutWeight(item, item.flexbox.grow));
+                        seg.forEach(item => setLayoutWeight(item, horizontal, WHL, orientationWeight, item.flexbox.grow));
                     }
                     else if (growAvailable > 0) {
                         layoutWeight.forEach(item => {
@@ -672,7 +673,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             else if (autoMargin.topBottom) {
                                 ratio = 2;
                             }
-                            setLayoutWeight(item, Math.max(item.flexbox.grow, (growAvailable * ratio) / layoutWeight.length));
+                            setLayoutWeight(item, horizontal, WHL, orientationWeight, Math.max(item.flexbox.grow, (growAvailable * ratio) / layoutWeight.length));
                         });
                     }
                     if (marginBottom > 0) {

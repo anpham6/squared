@@ -11,3 +11,4 @@ build.js
 md5sum.js
 *.zip
 .DS_Store
+md5/chrome.txt
