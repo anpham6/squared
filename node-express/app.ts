@@ -25,6 +25,8 @@ interface CompressOutput {
     brotli?: number;
 }
 
+const app = express();
+
 let DISK_READ = false;
 let DISK_WRITE = false;
 let UNC_READ = false;
@@ -33,13 +35,11 @@ let GZIP_LEVEL = 9;
 let BROTLI_QUALITY = 11;
 let JPEG_QUALITY = 100;
 let TINIFY_API_KEY = false;
-
-const app = express();
-const port = process.env.PORT || '3000';
-const env: string = app.get('env');
+let ENV: string = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
+let PORT = '3000';
 
 try {
-    const { disk_read, disk_write, unc_read, unc_write, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, routing } = <Settings> require('./squared.settings.json');
+    const { disk_read, disk_write, unc_read, unc_write, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, env, port, routing } = <Settings> require('./squared.settings.json');
     DISK_READ = disk_read === true;
     DISK_WRITE = disk_write === true;
     UNC_READ = unc_read === true;
@@ -47,6 +47,15 @@ try {
     const gzip = parseInt(gzip_level as string);
     const brotli = parseInt(brotli_quality as string);
     const jpeg = parseInt(jpeg_quality as string);
+    if (!process.env.NODE_ENV && env?.startsWith('prod')) {
+        ENV = 'production';
+    }
+    if (port) {
+        const value = parseInt((ENV === 'production' ? port.production : port.development) as string);
+        if (!isNaN(value) && value >= 0) {
+            PORT = value.toString();
+        }
+    }
     if (!isNaN(gzip)) {
         GZIP_LEVEL = gzip;
     }
@@ -65,7 +74,12 @@ try {
         });
     }
     if (Array.isArray(routing)) {
-        routing.forEach(route => app.use(route.path, express.static(path.join(__dirname, route.mount))));
+        routing.forEach(route => {
+            const { path: dirname, mount } = route;
+            if (dirname && mount) {
+                app.use(dirname, express.static(path.join(__dirname, mount)));
+            }
+        });
     }
     app.use(bodyParser.json({ limit: request_post_limit || '100mb' }));
 }
@@ -76,10 +90,12 @@ catch (err) {
     console.log(`FAIL: ${err}`);
 }
 
-app.set('port', port);
+PORT = process.env.PORT || PORT;
+
+app.set('port', PORT);
 app.use(bodyParser.urlencoded({ extended: true }));
 
-if (env === 'development') {
+if (ENV === 'development') {
     app.use('/build', express.static(path.join(__dirname, 'build')));
     app.use('/books', express.static(path.join(__dirname, 'html/books')));
     app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
@@ -849,4 +865,4 @@ app.get('/api/browser/download', (req, res) => {
     }
 });
 
-app.listen(port, () => console.log(`${env.toUpperCase()}: Express server listening on port ${port}`));
+app.listen(PORT, () => console.log(`${ENV.toUpperCase()}: Express server listening on port ${PORT}`));

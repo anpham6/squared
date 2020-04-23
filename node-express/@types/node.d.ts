@@ -12,7 +12,9 @@ declare namespace node {
         brotli_quality?: string;
         jpeg_quality?: string;
         tinypng_api_key?: string;
-        routing?: { mount: string; path: string }[];
+        env?: string;
+        port?: { development?: string; production?: string };
+        routing?: { mount?: string; path?: string }[];
     }
 
     interface CompressionFormat extends file.CompressionFormat {}

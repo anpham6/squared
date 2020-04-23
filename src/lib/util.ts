@@ -656,7 +656,7 @@ export function isObject(value: any): value is {} {
 }
 
 export function isPlainObject(value: any): value is {} {
-    return isObject(value) && value.constructor === Object;
+    return isObject(value) && (value.constructor === Object || Object.getPrototypeOf(Object(value)) === null);
 }
 
 export function isEqual(source: any, other: any) {
