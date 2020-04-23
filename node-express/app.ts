@@ -1,12 +1,11 @@
-import { CompressionFormat, RequestAsset, Settings } from './@types/node';
+import { CompressionFormat, ResultOfFileAction, RequestAsset, Settings } from './@types/node';
 
-import got from 'got';
-
+import path = require('path');
+import fs = require('fs-extra');
+import zlib = require('zlib');
 import express = require('express');
 import bodyParser = require('body-parser');
-import path = require('path');
-import zlib = require('zlib');
-import fs = require('fs-extra');
+import request = require('request');
 import archiver = require('archiver');
 import decompress = require('decompress');
 import uuid = require('uuid');
@@ -26,6 +25,8 @@ interface CompressOutput {
     brotli?: number;
 }
 
+const app = express();
+
 let DISK_READ = false;
 let DISK_WRITE = false;
 let UNC_READ = false;
@@ -34,13 +35,11 @@ let GZIP_LEVEL = 9;
 let BROTLI_QUALITY = 11;
 let JPEG_QUALITY = 100;
 let TINIFY_API_KEY = false;
-
-const app = express();
-const port = process.env.PORT || '3000';
-const env: string = app.get('env');
+let ENV: string = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
+let PORT = '3000';
 
 try {
-    const { disk_read, disk_write, unc_read, unc_write, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, routing } = <Settings> require('./squared.settings.json');
+    const { disk_read, disk_write, unc_read, unc_write, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, env, port, routing } = <Settings> require('./squared.settings.json');
     DISK_READ = disk_read === true;
     DISK_WRITE = disk_write === true;
     UNC_READ = unc_read === true;
@@ -48,6 +47,15 @@ try {
     const gzip = parseInt(gzip_level as string);
     const brotli = parseInt(brotli_quality as string);
     const jpeg = parseInt(jpeg_quality as string);
+    if (!process.env.NODE_ENV && env?.startsWith('prod')) {
+        ENV = 'production';
+    }
+    if (port) {
+        const value = parseInt((ENV === 'production' ? port.production : port.development) as string);
+        if (!isNaN(value) && value >= 0) {
+            PORT = value.toString();
+        }
+    }
     if (!isNaN(gzip)) {
         GZIP_LEVEL = gzip;
     }
@@ -66,7 +74,12 @@ try {
         });
     }
     if (Array.isArray(routing)) {
-        routing.forEach(route => app.use(route.path, express.static(path.join(__dirname, route.mount))));
+        routing.forEach(route => {
+            const { path: dirname, mount } = route;
+            if (dirname && mount) {
+                app.use(dirname, express.static(path.join(__dirname, mount)));
+            }
+        });
     }
     app.use(bodyParser.json({ limit: request_post_limit || '100mb' }));
 }
@@ -77,29 +90,33 @@ catch (err) {
     console.log(`FAIL: ${err}`);
 }
 
-app.set('port', port);
+PORT = process.env.PORT || PORT;
+
+app.set('port', PORT);
 app.use(bodyParser.urlencoded({ extended: true }));
 
-if (env === 'development') {
+if (ENV === 'development') {
     app.use('/build', express.static(path.join(__dirname, 'build')));
     app.use('/books', express.static(path.join(__dirname, 'html/books')));
     app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
+    app.use('/demos-dev', express.static(path.join(__dirname, 'html/demos-dev')));
+    app.use('/common', express.static(path.join(__dirname, 'html/common')));
     app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
 }
 
 if (process.argv) {
     const argv = process.argv;
-    const all = argv.indexOf('--access-all') !== -1;
-    if (all || argv.indexOf('--disk-read') !== -1 || argv.indexOf('--access-disk') !== -1) {
+    const all = argv.includes('--access-all');
+    if (all || argv.includes('--disk-read') || argv.includes('--access-disk')) {
         DISK_READ = true;
     }
-    if (all || argv.indexOf('--disk-write') !== -1 || argv.indexOf('--access-disk') !== -1) {
+    if (all || argv.includes('--disk-write') || argv.includes('--access-disk')) {
         DISK_WRITE = true;
     }
-    if (all || argv.indexOf('--unc-read') !== -1 || argv.indexOf('--access-unc') !== -1) {
+    if (all || argv.includes('--unc-read') || argv.includes('--access-unc')) {
         UNC_READ = true;
     }
-    if (all || argv.indexOf('--unc-write') !== -1 || argv.indexOf('--access-unc') !== -1) {
+    if (all || argv.includes('--unc-write') || argv.includes('--access-unc')) {
         UNC_WRITE = true;
     }
 }
@@ -138,7 +155,7 @@ function createBrotliWriteStream(source: string, filename: string, quality?: num
         .pipe(
             zlib.createBrotliCompress({
                 params: {
-                    [zlib.constants.BROTLI_PARAM_MODE]: /text\//.test(mimeType) ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
+                    [zlib.constants.BROTLI_PARAM_MODE]: mimeType.includes('text/') ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
                     [zlib.constants.BROTLI_PARAM_QUALITY]: quality || BROTLI_QUALITY,
                     [zlib.constants.BROTLI_PARAM_SIZE_HINT]: getFileSize(source)
                 }
@@ -180,7 +197,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 }
                 const { uri, moveTo, rootDir } = item;
                 if (uri) {
-                    const separator = uri.indexOf('\\') !== -1 ? '\\' : '/';
+                    const separator = uri.includes('\\') ? '\\' : '/';
                     const location = appendSeparator(item.pathname, item.filename, separator);
                     const value = (moveTo ? path.join(moveTo, location) : location).replace(/\\/g, '/');
                     if (rootDir) {
@@ -409,7 +426,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 return;
             }
             const checkQueue = () => {
-                if (completed.indexOf(filepath) !== -1) {
+                if (completed.includes(filepath)) {
                     writeBuffer(assets, file, filepath, status, finalize);
                     finalize('');
                     return true;
@@ -435,7 +452,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 }
                 delete processing[filepath];
             };
-            const errorRequest = (stream?: fs.WriteStream) => {
+            const errorRequest = (message: Error | string, stream?: fs.WriteStream) => {
                 if (!notFound[uri]) {
                     finalize('');
                     notFound[uri] = true;
@@ -448,6 +465,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                     catch {
                     }
                 }
+                writeError(uri, message);
                 delete processing[filepath];
             };
             try {
@@ -462,17 +480,14 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                         }
                     });
                     status.delayed++;
-                    got.stream(uri)
+                    request(uri)
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
-                                errorRequest(stream);
-                                writeError(uri, statusCode + ' ' + response.statusMessage);
+                                errorRequest(statusCode + ' ' + response.statusMessage, stream);
                             }
                         })
-                        .on('error', () => {
-                            errorRequest(stream);
-                        })
+                        .on('error', err => errorRequest(err, stream))
                         .pipe(stream);
                 }
                 else {
@@ -508,8 +523,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 }
             }
             catch (err) {
-                errorRequest();
-                writeError(uri, err);
+                errorRequest(err);
             }
         }
     });
@@ -579,6 +593,32 @@ function replacePathName(source: string, segment: string, value: string) {
     return source;
 }
 
+function checkPermissions(res: express.Response<any>, dirname: string) {
+    if (isDirectoryUNC(dirname)) {
+        if (!UNC_WRITE) {
+            res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
+            return false;
+        }
+    }
+    else if (!DISK_WRITE) {
+        res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
+        return false;
+    }
+    try {
+        if (!fs.existsSync(dirname)) {
+            fs.mkdirpSync(dirname);
+        }
+        else if (!fs.lstatSync(dirname).isDirectory()) {
+            throw new Error('Root is not a directory');
+        }
+    }
+    catch (err) {
+        res.json({ application: `DIRECTORY: ${dirname}`, system: err });
+        return false;
+    }
+    return true;
+}
+
 const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
 const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
 const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value);
@@ -589,28 +629,10 @@ const getCompressFormat = (compress: Undef<CompressionFormat[]>, format: string)
 const getFileSize = (filepath: string) => fs.statSync(filepath).size;
 
 app.post('/api/assets/copy', (req, res) => {
-    const dirname = path.normalize(req.query.to as string);
+    let dirname = req.query.to as string;
     if (dirname) {
-        if (isDirectoryUNC(dirname)) {
-            if (!UNC_WRITE) {
-                res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
-                return;
-            }
-        }
-        else if (!DISK_WRITE) {
-            res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
-            return;
-        }
-        try {
-            if (!fs.existsSync(dirname)) {
-                fs.mkdirpSync(dirname);
-            }
-            else if (!fs.lstatSync(dirname).isDirectory()) {
-                throw new Error('Root is not a directory');
-            }
-        }
-        catch (err) {
-            res.json({ application: `DIRECTORY: ${dirname}`, system: err });
+        dirname = path.normalize(dirname);
+        if (!checkPermissions(res, dirname)) {
             return;
         }
         const files = new Set<string>();
@@ -630,7 +652,7 @@ app.post('/api/assets/copy', (req, res) => {
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
                 removeUnusedFiles(dirname, status, files);
-                res.json({ success: files.size > 0, files: Array.from(files) });
+                res.json(<ResultOfFileAction> { success: files.size > 0, files: Array.from(files) });
                 status.delayed = Number.POSITIVE_INFINITY;
             }
         };
@@ -650,11 +672,24 @@ app.post('/api/assets/copy', (req, res) => {
 });
 
 app.post('/api/assets/archive', (req, res) => {
+    let copy_to = req.query.to as string;
+    if (copy_to) {
+        copy_to = path.normalize(copy_to);
+    }
     const dirname = path.join(__dirname, 'temp' + SEPARATOR + uuid.v4());
-    const dirname_zip = dirname + '-zip';
+    let dirname_zip: string;
     try {
         fs.mkdirpSync(dirname);
-        fs.mkdirpSync(dirname_zip);
+        if (copy_to) {
+            if (!checkPermissions(res, copy_to)) {
+                return;
+            }
+            dirname_zip = copy_to;
+        }
+        else {
+            dirname_zip = dirname + '-zip';
+            fs.mkdirpSync(dirname_zip);
+        }
     }
     catch (err) {
         res.json({ application: `DIRECTORY: ${dirname}`, system: err });
@@ -691,17 +726,27 @@ app.post('/api/assets/archive', (req, res) => {
         zipname = path.join(dirname_zip, (req.query.filename || zipname || 'squared') + '.' + format);
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
+            const success = files.size > 0;
             const bytes = archive.pointer();
-            const response = { success: files.size > 0, zipname, bytes, files: Array.from(files) };
-            if (formatGzip) {
+            const response: ResultOfFileAction = { success, files: Array.from(files) };
+            if (!copy_to) {
+                response.zipname = zipname;
+                response.bytes = bytes;
+            }
+            if (formatGzip && success) {
                 const gz = req.query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
                 createGzipWriteStream(zipname, gz)
                     .on('finish', () => {
-                        response.zipname = gz;
-                        response.bytes = getFileSize(gz);
+                        const gz_bytes = getFileSize(gz);
+                        if (!copy_to) {
+                            response.zipname = gz;
+                            response.bytes = gz_bytes;
+                        }
                         res.json(response);
+                        console.log(`WRITE: ${gz} (${gz_bytes} bytes)`);
                     })
                     .on('error', err => {
+                        response.success = false;
                         writeError(gz, err);
                         res.json(response);
                     });
@@ -767,7 +812,7 @@ app.post('/api/assets/archive', (req, res) => {
                 if (isFileURI(append_to)) {
                     const stream = fs.createWriteStream(zippath);
                     stream.on('finish', copySuccess);
-                    got.stream(append_to)
+                    request(append_to)
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
@@ -822,4 +867,4 @@ app.get('/api/browser/download', (req, res) => {
     }
 });
 
-app.listen(port, () => console.log(`${env.toUpperCase()}: Express server listening on port ${port}`));
+app.listen(PORT, () => console.log(`${ENV.toUpperCase()}: Express server listening on port ${PORT}`));

@@ -12,7 +12,6 @@ module.exports = {
     ],
     "ignorePatterns": [],
     "rules": {
-        "no-console": "off",
-        "@typescript-eslint/prefer-includes": "off"
+        "no-console": "off"
     }
 };

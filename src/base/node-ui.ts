@@ -753,19 +753,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     const template = renderTemplates[index];
                     if (template.node === this) {
                         if (replacement) {
-                            const parent = replacement.renderParent;
-                            if (parent === this) {
-                                const templates = parent.renderTemplates;
-                                if (templates) {
-                                    const replaceIndex = templates.findIndex(item => item.node === replacement);
+                            const replaceParent = replacement.renderParent;
+                            if (replaceParent) {
+                                const replaceTemplates = replaceParent.renderTemplates;
+                                if (replaceTemplates) {
+                                    const replaceIndex = replaceTemplates.findIndex(item => item.node === replacement);
                                     if (replaceIndex !== -1) {
-                                        parent.renderChildren.splice(replaceIndex, 1);
-                                    }
-                                    if (renderParent.appendTry(this, replacement, false)) {
                                         beforeReplace?.call(this, replacement);
-                                        renderTemplates[index] = templates[replaceIndex];
-                                        replacement.renderParent = renderParent;
                                         renderChildren[index] = replacement;
+                                        renderTemplates[index] = replaceTemplates[replaceIndex];
+                                        replaceTemplates.splice(replaceIndex, 1);
+                                        replaceParent.renderChildren.splice(replaceIndex, 1);
+                                        replacement.renderParent = renderParent;
                                         if (this.documentRoot) {
                                             replacement.documentRoot = true;
                                             this.documentRoot = false;
@@ -778,7 +777,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                         else {
-                            beforeReplace?.call(this, replacement);
+                            beforeReplace?.call(this, undefined);
                             renderChildren.splice(index, 1);
                             this.renderParent = undefined;
                             return renderTemplates.splice(index, 1)[0];

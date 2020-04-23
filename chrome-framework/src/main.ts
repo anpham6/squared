@@ -98,26 +98,25 @@ function findElementAll(query: NodeListOf<Element>) {
 }
 
 async function findElementAllAsync(query: NodeListOf<Element>) {
+    application.queryState = enumeration.APP_QUERYSTATE.MULTIPLE;
     let incomplete = false;
     const length = query.length;
     const result: View[] = new Array(length);
     for (let i = 0; i < length; ++i) {
         const element = <HTMLElement> query[i];
-        const item = elementMap.get(element);
+        let item = elementMap.get(element);
         if (item) {
             result[i] = item;
         }
         else {
-            application.queryState = enumeration.APP_QUERYSTATE.MULTIPLE;
-            await application.parseDocumentAsync(element).then(() => {
-                const awaited = elementMap.get(element);
-                if (awaited) {
-                    result[i] = awaited;
-                }
-                else {
-                    incomplete = true;
-                }
-            });
+            await application.parseDocumentAsync(element);
+            item = elementMap.get(element);
+            if (item) {
+                result[i] = item;
+            }
+            else {
+                incomplete = true;
+            }
         }
     }
     if (incomplete) {

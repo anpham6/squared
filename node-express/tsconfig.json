@@ -1,14 +1,15 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "target": "es6",
     "module": "CommonJS",
     "outDir": "../build",
-    "lib": ["es6"]
+    "lib": ["dom", "es6"]
   },
   "include": [
     "../@types/type.d.ts",
     "@types/index.d.ts",
-    "*.ts"
+    "**/*.ts"
   ],
   "exclude": []
 }

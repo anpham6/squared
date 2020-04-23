@@ -1,5 +1,5 @@
 import { LayoutUI, NodeUI } from './squared';
-import { FileAsset, FileExclude } from './file';
+import { FileAsset, Exclusions } from './file';
 
 import { MIMEOrAll } from '../lib/data';
 
@@ -152,17 +152,8 @@ export interface NodeGroupUIOptions<T> {
 
 export interface FileActionOptions {
     assets?: FileAsset[];
-    exclusions?: FileExclude;
+    exclusions?: Exclusions;
     callback?: CallbackResult;
-}
-
-export interface FileActionResult {
-    success: boolean;
-    zipname?: string;
-    bytes?: number;
-    files?: string[];
-    application?: string;
-    system?: string;
 }
 
 export interface FileCopyingOptions extends FileActionOptions {

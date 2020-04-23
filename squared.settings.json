@@ -9,6 +9,11 @@
   "brotli_quality": "11",
   "jpeg_quality": "100",
   "tinypng_api_key": "",
+  "env": "development",
+  "port": {
+    "production": "80",
+    "development": "3000"
+  },
   "routing": [
     { "mount": "html", "path": "/" },
     { "mount": "dist", "path": "/dist" }

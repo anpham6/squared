@@ -219,7 +219,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         else {
             element = this.element;
         }
-        const initialize = options?.initialize !== true;
+        const initialize = options?.initialize !== false;
         const viewport = getViewport(this);
         const container = getNearestViewBox(this);
         const aspectRatio = this.aspectRatio;
