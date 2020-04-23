@@ -1,6 +1,25 @@
 import { ContainerCascadeOptions, ContainerFindOptions } from '../../../@types/lib/data';
 
+import ListIterator from './listiterator';
+
 import { flatMap, iterateArray, objectMap, partitionArray, sameArray } from '../util';
+
+class Iter<T> implements Iterator<T> {
+    public index = -1;
+    public length: number;
+
+    constructor(public children: T[]) {
+        this.length = children.length;
+    }
+
+    public next() {
+        const i = ++this.index;
+        if (i < this.length) {
+            return { value: this.children[i] };
+        }
+        return <IteratorResult<T>> { done: true };
+    }
+}
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[];
@@ -10,21 +29,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public [Symbol.iterator]() {
-        const data = <IteratorResult<T>> { done: false };
-        const list = this._children;
-        const length = list.length;
-        let i = 0;
-        return {
-            next(): IteratorResult<T> {
-                if (i < length) {
-                    data.value = list[i++];
-                }
-                else {
-                    data.done = true;
-                }
-                return data;
-            }
-        };
+        return new Iter(this._children);
     }
 
     public item(index?: number, value?: T): Undef<T> {
@@ -262,6 +267,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     public concat(list: T[]) {
         this._children = this._children.concat(list);
         return this;
+    }
+
+    public iter() {
+        return new ListIterator(this._children);
     }
 
     get children() {

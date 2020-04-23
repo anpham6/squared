@@ -26,10 +26,31 @@ declare namespace base {
         cascade(predicate?: (item: T) => boolean, options?: ContainerCascadeOptions<T>): T[];
         sort(predicate: (a: T, b: T) => number): this;
         concat(list: T[]): this;
+        iter(): ListIterator<T>;
         get children(): T[];
         get isEmpty(): boolean;
         get length(): number;
         constructor(children?: T[]);
+    }
+
+    class ArrayIterator<T> {
+        public index: number;
+        public length: number;
+        public next(): Undef<T>;
+        public hasNext(): boolean;
+        public remove(): void;
+        public forEachRemaining(action: BindGeneric<T, void>): void;
+        constructor(children: T[]);
+    }
+
+    class ListIterator<T> extends ArrayIterator<T> {
+        add(item: T): void;
+        set(item: T): void;
+        nextIndex(): number;
+        hasPrevious(): boolean;
+        previous(): Undef<T>;
+        previousIndex(): number;
+        constructor(children: T[]);
     }
 
     class PromiseHandler {

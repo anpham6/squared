@@ -2,66 +2,68 @@ import fs = require('fs-extra');
 import path = require('path');
 import glob = require('glob');
 
-const ARGV = process.argv;
+const isFile = (value: string) => fs.lstatSync(value).isFile();
 
 const files: string[] = ['squared', ''];
 const extensions: string[] = [];
 let framework: Undef<string>;
 let output: Undef<string>;
-
-const isFile = (value: string) => fs.lstatSync(value).isFile();
-
-for (let i = 2; i < ARGV.length; i += 2) {
-    const arg = ARGV[i + 1];
-    switch (ARGV[i]) {
-        case '-f':
-        case '-framework': {
-            const name = arg.toLowerCase();
-            switch (name) {
-                case 'android':
-                case 'chrome':
-                    files[1] = 'squared.base';
-                    framework = `${name}.framework`;
-                    break;
-            }
-            break;
-        }
-        case '-m':
-        case '-modules':
-            arg.split(',').forEach(value => {
-                const module = value.toLowerCase();
-                switch (module) {
-                    case 'svg':
-                        files.push(`squared.${module}`);
+{
+    const ARGV = process.argv;
+    let i = 2;
+    while (i < ARGV.length) {
+        const type = ARGV[i++];
+        const command = ARGV[i++];
+        switch (type) {
+            case '-f':
+            case '-framework': {
+                const name = command.toLowerCase();
+                switch (name) {
+                    case 'android':
+                    case 'chrome':
+                        files[1] = 'squared.base';
+                        framework = `${name}.framework`;
                         break;
                 }
-            });
-            break;
-        case '-e':
-        case '-extensions':
-            arg.split(',').forEach(value => {
-                const include: string[] = [];
-                if (value.includes('*')) {
-                    glob.sync(path.resolve(`dist/extensions/${value}`)).forEach(filepath => {
-                        if (filepath.endsWith('.min.js')) {
-                            include.push(filepath);
+                break;
+            }
+            case '-m':
+            case '-modules':
+                for (const value of command.split(',')) {
+                    const module = value.toLowerCase();
+                    switch (module) {
+                        case 'svg':
+                            files.push(`squared.${module}`);
+                            break;
+                    }
+                }
+                break;
+            case '-e':
+            case '-extensions':
+                for (const value of command.split(',')) {
+                    const include: string[] = [];
+                    if (value.includes('*')) {
+                        glob.sync(path.resolve(`dist/extensions/${value}`)).forEach(filepath => {
+                            if (filepath.endsWith('.min.js')) {
+                                include.push(filepath);
+                            }
+                        });
+                    }
+                    else {
+                        include.push(path.resolve(`dist/extensions/${value}.min.js`));
+                    }
+                    include.forEach(filepath => {
+                        if (isFile(filepath)) {
+                            extensions.push(filepath);
                         }
                     });
                 }
-                else {
-                    include.push(path.resolve(`dist/extensions/${value}.min.js`));
-                }
-                include.forEach(filepath => {
-                    if (isFile(filepath)) {
-                        extensions.push(filepath);
-                    }
-                });
-            });
-            break;
-        case '-o':
-        case '-output':
-            output = path.resolve(arg);
-            break;
+                break;
+            case '-o':
+            case '-output':
+                output = path.resolve(command);
+                break;
+        }
     }
 }
 

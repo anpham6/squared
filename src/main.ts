@@ -2,6 +2,8 @@ import { AppFramework } from '../@types/base/internal';
 import { FileActionOptions, UserSettings } from '../@types/base/application';
 
 import Container from './lib/base/container';
+import ArrayIterator from './lib/base/arrayiterator';
+import ListIterator from './lib/base/listiterator';
 import PromiseHandler from './lib/base/promisehandler';
 
 import * as client from './lib/client';
@@ -231,6 +233,8 @@ export function toString() {
 const lib = {
     base: {
         Container,
+        ArrayIterator,
+        ListIterator,
         PromiseHandler
     },
     client,
