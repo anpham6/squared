@@ -1,4 +1,4 @@
-/* android-framework 1.6.5
+/* android-framework 1.6.6
    https://github.com/anpham6/squared */
 
 var android = (function () {
@@ -7484,33 +7484,35 @@ var android = (function () {
                     switch (node.containerName) {
                         case 'INPUT_RADIO':
                         case 'INPUT_CHECKBOX': {
-                            const id = node.elementId;
-                            [node.nextSibling, node.previousSibling].some((sibling) => {
-                                if ((sibling === null || sibling === void 0 ? void 0 : sibling.pageFlow) && !sibling.visibleStyle.backgroundImage && sibling.visible) {
-                                    let valid = false;
-                                    if (id && id === sibling.toElementString('htmlFor')) {
-                                        valid = true;
-                                    }
-                                    else if (sibling.textElement) {
-                                        const parent = sibling.actualParent;
-                                        if (parent.tagName === 'LABEL') {
-                                            parent.renderAs = node;
+                            if (!node.rightAligned && !node.centerAligned) {
+                                const id = node.elementId;
+                                [node.nextSibling, node.previousSibling].some((sibling) => {
+                                    if ((sibling === null || sibling === void 0 ? void 0 : sibling.pageFlow) && !sibling.visibleStyle.backgroundImage && sibling.visible) {
+                                        let valid = false;
+                                        if (id && id === sibling.toElementString('htmlFor')) {
                                             valid = true;
                                         }
-                                        else if (sibling.plainText) {
-                                            valid = true;
+                                        else if (sibling.textElement) {
+                                            const parent = sibling.actualParent;
+                                            if (parent.tagName === 'LABEL') {
+                                                parent.renderAs = node;
+                                                valid = true;
+                                            }
+                                            else if (sibling.plainText) {
+                                                valid = true;
+                                            }
+                                        }
+                                        if (valid) {
+                                            sibling.labelFor = node;
+                                            if (!this.options.displayLabel) {
+                                                sibling.hide();
+                                            }
+                                            return true;
                                         }
                                     }
-                                    if (valid) {
-                                        sibling.labelFor = node;
-                                        if (!this.options.displayLabel) {
-                                            sibling.hide();
-                                        }
-                                        return true;
-                                    }
-                                }
-                                return false;
-                            });
+                                    return false;
+                                });
+                            }
                             break;
                         }
                         case 'INPUT_IMAGE':
@@ -10984,7 +10986,7 @@ var android = (function () {
     const { getElementAsNode: getElementAsNode$1 } = squared.lib.session;
     const { NODE_ALIGNMENT: NODE_ALIGNMENT$h, NODE_RESOURCE: NODE_RESOURCE$6, NODE_TEMPLATE: NODE_TEMPLATE$5 } = $base$5.lib.enumeration;
     const NodeUI$2 = $base$5.NodeUI;
-    function setBaselineIndex(children, container) {
+    function setBaselineIndex(children, container, name) {
         let valid = false;
         const length = children.length;
         let i = 0;
@@ -10997,7 +10999,7 @@ var android = (function () {
                 container.android('baselineAlignedChildIndex', i.toString());
                 valid = true;
             }
-            item.positioned = true;
+            item.data(name, 'siblings', children);
         }
         return valid;
     }
@@ -11007,7 +11009,7 @@ var android = (function () {
             return node.is(CONTAINER_NODE.RADIO);
         }
         condition(node) {
-            return getInputName(node.element) !== '' && !node.positioned;
+            return getInputName(node.element) !== '' && !node.data(this.name, 'siblings');
         }
         processNode(node, parent) {
             var _a, _b;
@@ -11056,7 +11058,7 @@ var android = (function () {
                 container.inherit(node, 'alignment');
                 container.exclude({ resource: NODE_RESOURCE$6.ASSET });
                 container.render(parent);
-                if (!setBaselineIndex(radiogroup, container)) {
+                if (!setBaselineIndex(radiogroup, container, this.name)) {
                     container.css('verticalAlign', 'middle');
                     container.setCacheValue('baseline', false);
                     container.setCacheValue('verticalAlign', 'middle');
@@ -11108,7 +11110,7 @@ var android = (function () {
                             if (template) {
                                 template.controlName = controlName;
                             }
-                            setBaselineIndex(radiogroup, group);
+                            setBaselineIndex(radiogroup, group, this.name);
                             return undefined;
                         }
                     }
@@ -11663,17 +11665,42 @@ var android = (function () {
         }
         return result;
     }
-    function createLayerList(boxStyle, images, borderOnly = true) {
+    function createLayerList(boxStyle, images, borderOnly = true, corners, stroke, indentOffset) {
         const item = [];
         const result = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
         const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
         if (solid) {
-            item.push({ shape: { 'android:shape': 'rectangle', solid } });
+            if (corners && !stroke) {
+                item.push({
+                    top: indentOffset,
+                    right: indentOffset,
+                    left: indentOffset,
+                    bottom: indentOffset,
+                    shape: { 'android:shape': 'rectangle', solid, corners }
+                });
+                corners = undefined;
+            }
+            else {
+                item.push({ shape: { 'android:shape': 'rectangle', solid } });
+            }
         }
         if (images) {
             images.forEach(image => {
                 const gradient = image.gradient;
                 item.push(gradient ? { shape: { 'android:shape': 'rectangle', gradient } } : image);
+            });
+        }
+        if (stroke) {
+            item.push({
+                top: indentOffset,
+                right: indentOffset,
+                left: indentOffset,
+                bottom: indentOffset,
+                shape: {
+                    'android:shape': 'rectangle',
+                    corners,
+                    stroke
+                }
             });
         }
         return result;
@@ -11939,20 +11966,7 @@ var android = (function () {
             if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || (images === null || images === void 0 ? void 0 : images.length))) {
                 const stroke = border ? getBorderStroke(border) : false;
                 if ((images === null || images === void 0 ? void 0 : images.length) || indentWidth > 0 || borderOnly) {
-                    layerListData = createLayerList(data, images, borderOnly);
-                    if (corners || stroke) {
-                        layerListData[0].item.push({
-                            top: indentOffset,
-                            right: indentOffset,
-                            left: indentOffset,
-                            bottom: indentOffset,
-                            shape: {
-                                'android:shape': 'rectangle',
-                                corners,
-                                stroke
-                            }
-                        });
-                    }
+                    layerListData = createLayerList(data, images, borderOnly, corners, stroke, indentOffset);
                 }
                 else {
                     shapeData = createShapeData(stroke, !borderOnly && getBackgroundColor(data.backgroundColor), corners);
@@ -12301,6 +12315,10 @@ var android = (function () {
                         case '100% 100%':
                         case '100% auto':
                         case 'auto 100%':
+                            if (node.ascend({ condition: item => item.hasPX('width'), startSelf: true }).length) {
+                                gravityX = '';
+                                gravityY = '';
+                            }
                         case 'contain':
                         case 'cover':
                         case 'round':
@@ -12542,7 +12560,7 @@ var android = (function () {
                             }
                         }
                         if (!autoFit && !documentBody) {
-                            if (dimenWidth > boundsWidth) {
+                            if (width === 0 && dimenWidth > boundsWidth) {
                                 width = boundsWidth - (offsetX ? Math.min(position.left, 0) : 0);
                                 let fill = true;
                                 if (tileModeY === 'repeat' && gravityX !== '') {
@@ -12602,7 +12620,7 @@ var android = (function () {
                                 }
                                 resizedWidth = true;
                             }
-                            if (dimenHeight > boundsHeight) {
+                            if (height === 0 && dimenHeight > boundsHeight) {
                                 height = boundsHeight;
                                 let fill = true;
                                 if (tileModeX === 'repeat' && gravityY !== '') {

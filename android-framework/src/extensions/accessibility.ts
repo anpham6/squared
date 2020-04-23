@@ -28,33 +28,35 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                 switch (node.containerName) {
                     case 'INPUT_RADIO':
                     case 'INPUT_CHECKBOX': {
-                        const id = node.elementId;
-                        [node.nextSibling, node.previousSibling].some((sibling: Null<T>) => {
-                            if (sibling?.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
-                                let valid = false;
-                                if (id && id === sibling.toElementString('htmlFor')) {
-                                    valid = true;
-                                }
-                                else if (sibling.textElement) {
-                                    const parent = sibling.actualParent as T;
-                                    if (parent.tagName === 'LABEL') {
-                                        parent.renderAs = node;
+                        if (!node.rightAligned && !node.centerAligned) {
+                            const id = node.elementId;
+                            [node.nextSibling, node.previousSibling].some((sibling: Null<T>) => {
+                                if (sibling?.pageFlow && !sibling.visibleStyle.backgroundImage && sibling.visible) {
+                                    let valid = false;
+                                    if (id && id === sibling.toElementString('htmlFor')) {
                                         valid = true;
                                     }
-                                    else if (sibling.plainText) {
-                                        valid = true;
+                                    else if (sibling.textElement) {
+                                        const parent = sibling.actualParent as T;
+                                        if (parent.tagName === 'LABEL') {
+                                            parent.renderAs = node;
+                                            valid = true;
+                                        }
+                                        else if (sibling.plainText) {
+                                            valid = true;
+                                        }
+                                    }
+                                    if (valid) {
+                                        sibling.labelFor = node;
+                                        if (!this.options.displayLabel) {
+                                            sibling.hide();
+                                        }
+                                        return true;
                                     }
                                 }
-                                if (valid) {
-                                    sibling.labelFor = node;
-                                    if (!this.options.displayLabel) {
-                                        sibling.hide();
-                                    }
-                                    return true;
-                                }
-                            }
-                            return false;
-                        });
+                                return false;
+                            });
+                        }
                         break;
                     }
                     case 'INPUT_IMAGE':

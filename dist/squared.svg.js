@@ -1,4 +1,4 @@
-/* squared.svg 1.6.5
+/* squared.svg 1.6.6
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -5671,7 +5671,7 @@
                                         if (to.key !== 1) {
                                             offsetRotate.push({ key: 1, value: rotate });
                                         }
-                                        for (let j = 0; j < offsetRotate.length; ++j) {
+                                        for (let j = 1; j < offsetRotate.length; ++j) {
                                             const previous = offsetRotate[j - 1];
                                             const item = offsetRotate[j];
                                             const previousValue = convertRotate(previous.value);
@@ -6159,7 +6159,7 @@
             else {
                 element = this.element;
             }
-            const initialize = (options === null || options === void 0 ? void 0 : options.initialize) === false;
+            const initialize = (options === null || options === void 0 ? void 0 : options.initialize) !== false;
             const viewport = getViewport(this);
             const container = getNearestViewBox$1(this);
             const aspectRatio = this.aspectRatio;

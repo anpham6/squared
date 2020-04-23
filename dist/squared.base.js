@@ -1,4 +1,4 @@
-/* squared.base 1.6.5
+/* squared.base 1.6.6
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -2970,10 +2970,15 @@
             if (result === undefined) {
                 const value = this.css('height');
                 if (isPercent(value)) {
-                    result = this.pageFlow && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody) ? parseFloat(value) > 0 : this.css('position') === 'fixed';
+                    if (this.pageFlow) {
+                        result = ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody;
+                    }
+                    else {
+                        result = this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom');
+                    }
                 }
                 else {
-                    result = this.height > 0;
+                    result = this.height > 0 || this.hasPX('height', false);
                 }
                 this._cached.hasHeight = result;
             }
@@ -4647,19 +4652,18 @@
                         const template = renderTemplates[index];
                         if (template.node === this) {
                             if (replacement) {
-                                const parent = replacement.renderParent;
-                                if (parent === this) {
-                                    const templates = parent.renderTemplates;
-                                    if (templates) {
-                                        const replaceIndex = templates.findIndex(item => item.node === replacement);
+                                const replaceParent = replacement.renderParent;
+                                if (replaceParent) {
+                                    const replaceTemplates = replaceParent.renderTemplates;
+                                    if (replaceTemplates) {
+                                        const replaceIndex = replaceTemplates.findIndex(item => item.node === replacement);
                                         if (replaceIndex !== -1) {
-                                            parent.renderChildren.splice(replaceIndex, 1);
-                                        }
-                                        if (renderParent.appendTry(this, replacement, false)) {
                                             beforeReplace === null || beforeReplace === void 0 ? void 0 : beforeReplace.call(this, replacement);
-                                            renderTemplates[index] = templates[replaceIndex];
-                                            replacement.renderParent = renderParent;
                                             renderChildren[index] = replacement;
+                                            renderTemplates[index] = replaceTemplates[replaceIndex];
+                                            replaceTemplates.splice(replaceIndex, 1);
+                                            replaceParent.renderChildren.splice(replaceIndex, 1);
+                                            replacement.renderParent = renderParent;
                                             if (this.documentRoot) {
                                                 replacement.documentRoot = true;
                                                 this.documentRoot = false;
@@ -4672,7 +4676,7 @@
                                 }
                             }
                             else {
-                                beforeReplace === null || beforeReplace === void 0 ? void 0 : beforeReplace.call(this, replacement);
+                                beforeReplace === null || beforeReplace === void 0 ? void 0 : beforeReplace.call(this, undefined);
                                 renderChildren.splice(index, 1);
                                 this.renderParent = undefined;
                                 return renderTemplates.splice(index, 1)[0];

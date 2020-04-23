@@ -1,4 +1,4 @@
-/* chrome-framework 1.6.5
+/* chrome-framework 1.6.6
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -810,26 +810,25 @@ var chrome = (function () {
     }
     function findElementAllAsync(query) {
         return __awaiter(this, void 0, void 0, function* () {
+            application.queryState = 2 /* MULTIPLE */;
             let incomplete = false;
             const length = query.length;
             const result = new Array(length);
             for (let i = 0; i < length; ++i) {
                 const element = query[i];
-                const item = elementMap.get(element);
+                let item = elementMap.get(element);
                 if (item) {
                     result[i] = item;
                 }
                 else {
-                    application.queryState = 2 /* MULTIPLE */;
-                    yield application.parseDocumentAsync(element).then(() => {
-                        const awaited = elementMap.get(element);
-                        if (awaited) {
-                            result[i] = awaited;
-                        }
-                        else {
-                            incomplete = true;
-                        }
-                    });
+                    yield application.parseDocumentAsync(element);
+                    item = elementMap.get(element);
+                    if (item) {
+                        result[i] = item;
+                    }
+                    else {
+                        incomplete = true;
+                    }
                 }
             }
             if (incomplete) {
