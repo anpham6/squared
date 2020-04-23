@@ -10,17 +10,17 @@ System.import('/build/src/main.js').then(result => {
             const time = new Date().getTime();
             squared.parseDocument().then(function() {
                 squared.settings.outputEmptyCopyDirectory = true;
-                squared.copyToDisk('C:/Users/An/git/flexbox', {
+                squared.copyToDisk('/Users/anpham/git/flexbox', {
                     assets: [
                         {
                             pathname: 'app/src/main/res/drawable',
                             filename: 'ic_launcher_background.xml',
-                            uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_background.xml'
+                            uri: '/Users/anpham/git/squared/html/demos/images/ic_launcher_background.xml'
                         },
                         {
                             pathname: 'app/src/main/res/drawable-v24',
                             filename: 'ic_launcher_foreground.xml',
-                            uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_foreground.xml'
+                            uri: '/Users/anpham/git/squared/html/demos/images/ic_launcher_foreground.xml'
                         }
                     ]
                 });
@@ -42,17 +42,17 @@ System.import('/build/src/main.js').then(result => {
                 const time = new Date().getTime();
                 squared.parseDocument().then(function() {
                     squared.settings.outputEmptyCopyDirectory = true;
-                    squared.copyToDisk('C:/Users/An/git/flexbox', {
+                    squared.copyToDisk('/Users/anpham/git/flexbox', {
                         assets: [
                             {
                                 pathname: 'app/src/main/res/drawable',
                                 filename: 'ic_launcher_background.xml',
-                                uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_background.xml'
+                                uri: '/Users/anpham/git/squared/html/demos/images/ic_launcher_background.xml'
                             },
                             {
                                 pathname: 'app/src/main/res/drawable-v24',
                                 filename: 'ic_launcher_foreground.xml',
-                                uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_foreground.xml'
+                                uri: '/Users/anpham/git/squared/html/demos/images/ic_launcher_foreground.xml'
                             }
                         ]
                     });
@@ -68,17 +68,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const time = new Date().getTime();
     squared.parseDocument().then(function() {
         squared.settings.outputEmptyCopyDirectory = true;
-        squared.copyToDisk('C:/Users/An/git/flexbox', {
+        squared.copyToDisk('/Users/anpham/git/flexbox', {
             assets: [
                 {
                     pathname: 'app/src/main/res/drawable',
                     filename: 'ic_launcher_background.xml',
-                    uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_background.xml'
+                    uri: '/Users/anpham/git/squared/html/demos/images/ic_launcher_background.xml'
                 },
                 {
                     pathname: 'app/src/main/res/drawable-v24',
                     filename: 'ic_launcher_foreground.xml',
-                    uri: 'C:/Users/An/git/squared/html/demos/images/ic_launcher_foreground.xml'
+                    uri: '/Users/anpham/git/squared/html/demos/images/ic_launcher_foreground.xml'
                 }
             ]
         });
