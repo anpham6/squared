@@ -2,7 +2,7 @@ import fs = require('fs-extra');
 import path = require('path');
 import parse  = require('csv-parse');
 import puppeteer = require('puppeteer');
-import recursive = require("recursive-readdir");
+import recursive = require('recursive-readdir');
 import md5 = require('md5');
 import diff = require('diff');
 import colors = require('colors');
@@ -14,9 +14,10 @@ let data: Undef<string>;
 let build: Undef<string>;
 let master: Undef<string>;
 let snapshot: Undef<string>;
+let executablePath: Undef<string>;
 let width = 1280;
 let height = 960;
-let executablePath: Undef<string>;
+let flags = 1;
 
 let i = 2;
 while (i < ARGV.length) {
@@ -33,6 +34,14 @@ while (i < ARGV.length) {
         case '-build':
             build = ARGV[i++];
             break;
+        case '-f':
+        case '-flags': {
+            const mask = parseInt(ARGV[i++]);
+            if (!isNaN(mask)) {
+                flags = mask;
+            }
+            break;
+        }
         case '-o':
         case '-output':
             snapshot = ARGV[i++];
@@ -58,8 +67,8 @@ while (i < ARGV.length) {
     }
 }
 
-if (snapshot) {
-    if (master) {
+if (master) {
+    if (snapshot) {
         const masterDir = path.resolve(__dirname, master);
         const snapshotDir = path.resolve(__dirname, snapshot);
         if (fs.existsSync(masterDir) && fs.existsSync(snapshotDir)) {
@@ -101,91 +110,92 @@ if (snapshot) {
             console.log(`FAIL: Path not found (${masterDir} | ${snapshotDir})`);
         }
     }
-    else if (host && data && build) {
-        try {
-            if (snapshot) {
+}
+else if (host && data && build && snapshot) {
+    try {
+        parse(fs.readFileSync(path.resolve(__dirname, data)), (error, csv: string[][]) => {
+            if (error) {
+                throw error;
+            }
+            else {
                 const items: { name: string; filepath: string }[] = [];
-                parse(fs.readFileSync(path.resolve(__dirname, data)), (error, csv: string[][]) => {
-                    if (error) {
-                        throw error;
-                    }
-                    else {
-                        (async () => {
-                            try {
-                                const browser = await puppeteer.launch({
-                                    executablePath,
-                                    defaultViewport: { width, height }
-                                });
-                                console.log(`VERSION: ${await browser.version()}`);
-                                const tempDir = path.resolve(__dirname, 'temp', build!);
+                (async () => {
+                    try {
+                        const browser = await puppeteer.launch({
+                            executablePath,
+                            defaultViewport: { width, height }
+                        });
+                        console.log(`VERSION: ${await browser.version()}`);
+                        const tempDir = path.resolve(__dirname, 'temp', build!);
+                        try {
+                            fs.emptyDirSync(tempDir);
+                        }
+                        catch (err) {
+                            console.log(`WARN: ${err}`);
+                        }
+                        for (const row of csv) {
+                            const [flag, filename, url] = row;
+                            const id = parseInt(flag);
+                            if (id > 0 && (flags & id) === id) {
+                                const name = filename.substring(0, filename.lastIndexOf('.'));
+                                const filepath = path.resolve(__dirname, 'temp', build!, name);
+                                const href = host + url + '?copyTo=' + encodeURIComponent(filepath);
                                 try {
-                                    fs.emptyDirSync(tempDir);
+                                    const page = await browser.newPage();
+                                    page.on('error', err => {
+                                        console.log(`WARN: ${err}`);
+                                        page.close();
+                                    });
+                                    await page.goto(href);
+                                    items.push({ name, filepath });
+                                    console.log(`SUCCESS: ${href}`);
                                 }
                                 catch (err) {
-                                    console.log(`WARN: ${err}`);
+                                    console.log(`FAIL: ${href} (${err})`);
                                 }
-                                for (const row of csv) {
-                                    const [active, filename, url] = row;
-                                    if (parseInt(active) === 0) {
-                                        continue;
-                                    }
-                                    const name = filename.substring(0, filename.lastIndexOf('.'));
-                                    const filepath = path.resolve(__dirname, 'temp', build!, name);
-                                    const href = host + url + '?copyTo=' + encodeURIComponent(filepath);
-                                    try {
-                                        const page = await browser.newPage();
-                                        page.on('error', err => {
-                                            console.log(`WARN: ${err}`);
-                                            page.close();
-                                        });
-                                        await page.goto(href);
-                                        items.push({ name, filepath });
-                                        console.log(`SUCCESS: ${href}`);
-                                    }
-                                    catch (err) {
-                                        console.log(`FAIL: ${href} (${err})`);
-                                    }
-                                }
-                                const pathname = path.resolve(__dirname, snapshot!);
-                                if (!fs.existsSync(pathname)) {
-                                    fs.mkdirpSync(pathname);
-                                }
-                                for (const item of items) {
-                                    const filepath = item.filepath;
-                                    recursive(filepath, (err, files) => {
-                                        if (!err) {
-                                            files.sort();
-                                            let output = '';
-                                            for (const file of files) {
-                                                output += md5(fs.readFileSync(file)) + '  .' + file.replace(filepath, '').replace(/[\\]/g, '/') + '\n';
-                                            }
-                                            fs.writeFileSync(path.resolve(pathname, item.name + '.md5'), output);
-                                        }
-                                    });
-                                }
-                                browser.close();
                             }
-                            catch (err) {
-                                console.log(`WARN: ${err}`);
-                            }
-                        })();
+                        }
+                        const pathname = path.resolve(__dirname, snapshot!);
+                        if (!fs.existsSync(pathname)) {
+                            fs.mkdirpSync(pathname);
+                        }
+                        for (const item of items) {
+                            const filepath = item.filepath;
+                            recursive(filepath, (err, files) => {
+                                if (!err) {
+                                    files.sort();
+                                    let output = '';
+                                    for (const file of files) {
+                                        output += md5(fs.readFileSync(file)) + '  .' + file.replace(filepath, '').replace(/[\\]/g, '/') + '\n';
+                                    }
+                                    fs.writeFileSync(path.resolve(pathname, item.name + '.md5'), output);
+                                }
+                            });
+                        }
+                        browser.close();
                     }
-                });
+                    catch (err) {
+                        console.log(`WARN: ${err}`);
+                    }
+                })();
             }
-        }
-        catch (err) {
-            console.log(`FAIL: Build incomplete (${err})`);
-        }
+        });
     }
-    else {
-        if (!host) {
-            console.log(`FAIL: Host required (-h http://localhost:3000)`);
-        }
-        if (!data) {
-            console.log(`FAIL: CSV data required (-d ./path/data.csv)`);
-        }
-        if (!build) {
-            console.log(`FAIL: Build name required (-b snapshot)`);
-        }
+    catch (err) {
+        console.log(`FAIL: Build incomplete (${err})`);
+    }
+}
+else {
+    if (!host) {
+        console.log('REQUIRED: Host (-h http://localhost:3000)');
+    }
+    if (!data) {
+        console.log('REQUIRED: CSV data (-d ./path/data.csv)');
+    }
+    if (!build) {
+        console.log('REQUIRED: Build name (-b snapshot)');
+    }
+    if (!snapshot) {
+        console.log('REQUIRED: Output directory (-o ./temp/snapshot)');
     }
 }
