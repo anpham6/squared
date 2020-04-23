@@ -91,54 +91,10 @@
             background-color: #ccc;
         }
     </style>
-    <script src="/node_modules/systemjs/dist/system.js"></script>
-    <script src="/demos/common/transform.js"></script>
-    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
-    <script src="/demos/common/dev.js"></script>
-    <script>
-        System.import('/build/src/main.js').then(result => {
-            squared = result;
-            System.import('/build/src/base/main.js').then(result => {
-                squared.base = result;
-                System.import('/build/android-framework/src/main.js').then(result => {
-                    android = result.default;
-                    squared.setFramework(android);
-                    squared.setViewModel({
-                        import: ['android.util.SparseArray', 'java.util.Map', 'java.util.List'],
-                        variable: [
-                            { name: 'user', type: 'com.example.User' },
-                            { name: 'list', type: 'List&lt;String>' },
-                            { name: 'sparse', type: 'SparseArray&lt;String>' },
-                            { name: 'map', type: 'Map&lt;String, String>' },
-                            { name: 'index', type: 'int' },
-                            { name: 'key', type: 'String' }
-                        ]
-                    });
-                    squared.system.customize(squared.settings.targetAPI, 'Button', {
-                        android: {
-                            layout_height: 'wrap_content',
-                            minWidth: '35px',
-                            minHeight: '25px'
-                        }
-                    });
-                    const time = new Date().getTime();
-                    squared.parseDocument('squared_ui')
-                        .then(() => {
-                            squared.close();
-
-                            var views = squared.system.writeLayoutAllXml();
-                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
-
-                            var resource = squared.system.writeResourceAllXml();
-                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
-                        })
-                        .finally(() => {
-                            console.log(new Date().getTime() - time);
-                        });
-                });
-            });
-        });
-    </script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../books/squared.js"></script>
 </head>
 <body>
     <!-- START: DEMO -->
@@ -148,7 +104,7 @@
             <ul>
                 <li>
                     <label for="order" style="font-style: italic;">Order:</label>
-                    <input id="order" type="text" name="order" class="null-allowed" data-viewmodel-android-text="user.firstName" />
+                    <input id="order" type="text" name="order" class="null-allowed" />
                 </li>
                 <li>
                     <label>Date (<a href="#">Add</a>):</label>
@@ -404,7 +360,7 @@
                 <li>
                     <label>Topic (<a href="#">Add</a>):</label>
                     <div class="entry-topic">
-                        <input type="text" name="topic0" data-viewmodel-android-text="map[key]" />
+                        <input type="text" name="topic0" />
                         <select name="prominence0">
                             <option value="0">0</option>
                             <option value="1">1</option>
@@ -602,26 +558,5 @@
         </form>
     </div>
     <!-- END: DEMO -->
-
-    <div>
-        <div class="output">
-            <pre id="output"></pre>
-            <div>
-                <button onclick="copy('output');">Copy</button>
-                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
-                <button onclick="squared.saveToArchive();">Save All</button>
-                <button onclick="squared.copyToDisk('C:/Users/An/git/flexbox');">Copy All</button>
-                <button onclick="squared.appendToArchive('http://localhost:3000/demos/base_project.zip');">Append URL</button>
-                <button onclick="squared.appendToArchive('C:/Users/An/git/squared/html/demos/base_project.zip');">Append Local</button>
-            </div>
-        </div>
-        <div class="output">
-            <pre id="resource"></pre>
-            <div>
-                <button onclick="copy('resource');">Copy</button>
-                <button onclick="squared.system.saveResourceAllXml();">Save</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

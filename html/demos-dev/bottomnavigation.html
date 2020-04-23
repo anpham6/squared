@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        #squared_ui {
+            position: relative;
+            background-color: #fff;
+        }
+        #bottomnavigation_demo {
+            position: absolute;
+            width: 100%;
+            left: 0;
+            bottom: 0;
+            margin: 0;
+            background-color: #fff;
+            border-top: solid 1px #aaa;
+        }
+        #bottomnavigation_demo nav {
+            display: flex;
+        }
+        #bottomnavigation_demo div {
+            font-size: 10px;
+            text-align: center;
+            padding: 8px;
+            flex: 1;
+        }
+        #bottomnavigation_demo div:hover {
+            background-color: azure;
+            cursor: pointer;
+        }
+        #bottomnavigation_demo div img {
+            width: 20px;
+            height: 20px;
+        }
+        .content {
+            font-size: 12px;
+            color: #fff;
+            background-color: #aaa;
+            padding: 8px;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/src/svg/main.js').then(result => {
+                    squared.svg = result;
+                    System.import('/build/android-framework/src/main.js').then(result => {
+                        android = result.default;
+                        squared.setFramework(android);
+                        Promise.all([
+                            System.import('/build/android-widget/menu/main.js'),
+                            System.import('/build/android-widget/bottomnavigation/main.js')
+                        ]).then(() => {
+                            squared.configure('android.widget.bottomnavigation', {
+                                bottomnavigation_demo: {
+                                    android: {
+                                        background: '?android:attr/windowBackground'
+                                    },
+                                    app: {
+                                        itemIconTint: '#000000',
+                                        itemTextColor: '#000000'
+                                    }
+                                },
+                                resource: {
+                                    parent: 'Theme.AppCompat.Light.NoActionBar'
+                                }
+                            });
+                            squared.parseDocument('squared_ui').then(function() {
+                                squared.close();
+
+                                var views = squared.system.writeLayoutAllXml();
+                                document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                                var resource = squared.system.writeResourceAllXml();
+                                document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui">
+        <div style="width: 300px; padding: 20px;">
+            <h3>title</h3>
+            <div class="content">
+                content content content content content content content content content content
+                content content content content content content content content content content
+                content content content content content content content content content content
+                content content content content content content content content content content
+                content content content content content content content content content content
+                content content content content content content content content content content
+                content content content content content content content content content content
+                content content content content content content content content content content
+                content content content content content content content content content content
+            </div>
+        </div>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <div id="bottomnavigation_demo" data-use-android="android.widget.bottomnavigation">
+            <nav id="bottomnavigation_menu" data-use-android="android.widget.menu">
+                <div>
+                    <img src="images/icons8-chrome.png" /><br />
+                    <label>Chrome</label>
+                </div>
+                <div>
+                    <img src="images/icons8-google-docs.png" /><br />
+                    <label>Docs</label>
+                </div>
+                <div>
+                    <img src="images/icons8-google-news.png" /><br />
+                    <label>News</label>
+                </div>
+                <div>
+                    <img src="images/icons8-google-play.png" /><br />
+                    <label>Play</label>
+                </div>
+                <div>
+                    <img src="images/icons8-google-plus.png" /><br />
+                    <label>Plus</label>
+                </div>
+            </nav>
+        </div>
+    </div>
+    <!-- END: DEMO -->
+    
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
+                <button onclick="squared.saveToArchive();">Save All</button>
+                <button onclick="squared.copyToDisk('D:/git/bottomnavigation');">Copy All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.saveResourceAllXml();">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        #squared_ui {
+            padding: 10px;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/src/svg/main.js').then(result => {
+                    squared.svg = result;
+                    System.import('/build/android-framework/src/main.js').then(result => {
+                        android = result.default;
+                        squared.setFramework(android);
+                        squared.parseDocument('squared_ui');
+                        squared.close();
+
+                        var views = squared.system.writeLayoutAllXml();
+                        document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                        var resource = squared.system.writeResourceAllXml();
+                        document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui" style="width: 300px;">
+        <svg width="120" height="120" viewBox="0 0 240 240">
+            <g fill="grey">
+                <path d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" />
+                <animateTransform attributeName="transform" type="scale" dur="10s" keyTimes="0;0.5;1" repeatCount="1" values="1.5;2 2.1;1" />
+            </g>
+        </svg>
+        <svg width="120" height="120" viewBox="0 0 240 240">
+            <g fill="grey">
+                <path d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" />
+                <animateTransform attributeName="transform" type="translate" dur="10s" keyTimes="0;0.25;1" repeatCount="1" values="25;50;100 150" />
+            </g>
+        </svg>
+        <svg width="120" height="120" viewBox="0 0 240 240">
+            <g fill="grey">
+                <path d="M 50,30 A 20,20 0,0,1 90,30 A 20,20 0,0,1 130,30 Q 130,60 90,90 Q 50,60 50,30 z" />
+                <animateTransform attributeName="transform" type="rotate" dur="10s" keyTimes="0;0.75;1" repeatCount="1" values="-10 50 100;-90 60 120;-180 70 140" />
+            </g>
+        </svg>
+        <svg viewBox="0 0 100 100">
+            <clipPath id="myClip">
+                <circle cx="40" cy="35" r="35">
+                    <animate attributeName="r" values="10; 100" keyTimes="0; 1" dur="10s" repeatCount="1" />
+                </circle>
+            </clipPath>
+            <path id="heart" d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" />
+            <use clip-path="url(#myClip)" href="#heart" fill="red">
+                <animate attributeName="x" values="0; 50" keyTimes="0; 1" begin="5s" dur="10s" repeatCount="1" />
+                <animate attributeName="y" values="0; 30; 50" keyTimes="0; 0.5; 1" begin="5s" dur="10s" repeatCount="1" />
+            </use>
+        </svg>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
+                <button onclick="squared.saveToArchive();">Save All</button>
+                <button onclick="squared.copyToDisk('C:/Users/An/git/flexbox');">Copy All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.saveResourceAllXml();">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

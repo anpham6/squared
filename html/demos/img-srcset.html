@@ -13,34 +13,10 @@
             background-color: darkgrey;
         }
     </style>
-    <script src="/node_modules/systemjs/dist/system.js"></script>
-    <script src="/demos/common/transform.js"></script>
-    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
-    <script src="/demos/common/dev.js"></script>
-    <script>
-        System.import('/build/src/main.js').then(result => {
-            squared = result;
-            System.import('/build/src/base/main.js').then(result => {
-                squared.base = result;
-                System.import('/build/src/svg/main.js').then(result => {
-                    squared.svg = result;
-                    System.import('/build/android-framework/src/main.js').then(result => {
-                        android = result.default;
-                        squared.setFramework(android);
-                        squared.parseDocument('squared_ui').then(function() {
-                            squared.close();
-
-                            var views = squared.system.writeLayoutAllXml();
-                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
-
-                            var resource = squared.system.writeResourceAllXml();
-                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
-                        });
-                    });
-                });
-            });
-        });
-    </script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../books/squared.js"></script>
 </head>
 <body>
     <!-- START: DEMO -->
@@ -51,45 +27,40 @@
         <br /><br />
         <div class="data-uri"></div>
         <br />
-        <img id="android" src="images/android.png" srcset="images/android-ldpi.png 100w,
-                                                           images/android.png 200w,
-                                                           images/android-hdpi.png 133w,
-                                                           images/android-xhdpi.png 266w,
-                                                           images/android-xxhdpi.png 400w,
-                                                           images/android-xxxhdpi.png 533w"
-
-                                                    sizes="(min-width: 900px) 100px,
-                                                           (max-width: 900px) and (min-width: 400px) 5em,
-                                                           ( not (orientation: portrait) ) 300px,
-                                                           ( (orientation: landscape) or (min-width: 1000px) ) 5vw, 
-                                                           10vw" />
+        <img id="android" src="../demos-dev/images/android.png" srcset="../demos-dev/images/android-ldpi.png 0.75x,
+                                                                        ../demos-dev/images/android.png 1x,
+                                                                        ../demos-dev/images/android-hdpi.png 1.5x,
+                                                                        ../demos-dev/images/android-xhdpi.png 2x,
+                                                                        ../demos-dev/images/android-xxhdpi.png 3x,
+                                                                        ../demos-dev/images/android-xxxhdpi.png 4x" />
         <br /><br />
-        <img id="pencil" src="images/pencil.png" srcset="images/pencil-ldpi.png 0.75x,
-                                                         images/pencil.png,
-                                                         images/pencil-hdpi.png 1.5x,
-                                                         images/pencil-xhdpi.png 2x,
-                                                         images/pencil-xxhdpi.png 3x,
-                                                         images/pencil-xxxhdpi.png 4x" />
+        <img id="pencil" src="../demos-dev/images/pencil.png" srcset="../demos-dev/images/pencil-ldpi.png 0.75x,
+                                                                      ../demos-dev/images/pencil.png,
+                                                                      ../demos-dev/images/pencil-hdpi.png 1.5x,
+                                                                      ../demos-dev/images/pencil-xhdpi.png 2x,
+                                                                      ../demos-dev/images/pencil-xxhdpi.png 3x,
+                                                                      ../demos-dev/images/pencil-xxxhdpi.png 4x" />
+        <br /><br />
+        <!--<audio controls>
+            <source
+                src="https://archive.org/download/ElephantsDream/ED-CM-5.1-DVD-C.mp3"
+                type="audio/mpeg">
+            <source
+                src="https://archive.org/download/ElephantsDream/ED-CM-5.1-DVD-C.ogg"
+                type="audio/ogg">
+            Your browser doesn't support HTML5 video tag.
+        </audio>
+        <br /><br />
+        <video width="400" controls poster="https://upload.wikimedia.org/wikipedia/commons/e/e8/Elephants_Dream_s5_both.jpg">
+            <source
+                src="https://archive.org/download/ElephantsDream/ed_1024_512kb.mp4"
+                type="video/mp4">
+            <source
+                src="https://archive.org/download/ElephantsDream/ed_hd.ogv"
+                type="video/ogg">
+            Your browser doesn't support HTML5 video tag.
+        </video>-->
     </div>
     <!-- END: DEMO -->
-
-    <div>
-        <div class="output">
-            <pre id="output"></pre>
-            <div>
-                <button onclick="copy('output');">Copy</button>
-                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
-                <button onclick="squared.saveToArchive();">Save All</button>
-                <button onclick="squared.copyToDisk('C:/Users/An/git/flexbox');">Copy All</button>
-            </div>
-        </div>
-        <div class="output">
-            <pre id="resource"></pre>
-            <div>
-                <button onclick="copy('resource');">Copy</button>
-                <button onclick="squared.system.saveResourceAllXml();">Save</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

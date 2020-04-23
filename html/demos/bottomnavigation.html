@@ -43,53 +43,10 @@
             padding: 8px;
         }
     </style>
-    <script src="/node_modules/systemjs/dist/system.js"></script>
-    <script src="/demos/common/transform.js"></script>
-    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
-    <script src="/demos/common/dev.js"></script>
-    <script>
-        System.import('/build/src/main.js').then(result => {
-            squared = result;
-            System.import('/build/src/base/main.js').then(result => {
-                squared.base = result;
-                System.import('/build/src/svg/main.js').then(result => {
-                    squared.svg = result;
-                    System.import('/build/android-framework/src/main.js').then(result => {
-                        android = result.default;
-                        squared.setFramework(android);
-                        Promise.all([
-                            System.import('/build/android-widget/menu/main.js'),
-                            System.import('/build/android-widget/bottomnavigation/main.js')
-                        ]).then(() => {
-                            squared.configure('android.widget.bottomnavigation', {
-                                bottomnavigation_demo: {
-                                    android: {
-                                        background: '?android:attr/windowBackground'
-                                    },
-                                    app: {
-                                        itemIconTint: '#000000',
-                                        itemTextColor: '#000000'
-                                    }
-                                },
-                                resource: {
-                                    parent: 'Theme.AppCompat.Light.NoActionBar'
-                                }
-                            });
-                            squared.parseDocument('squared_ui').then(function() {
-                                squared.close();
-
-                                var views = squared.system.writeLayoutAllXml();
-                                document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
-
-                                var resource = squared.system.writeResourceAllXml();
-                                document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
-                            });
-                        });
-                    });
-                });
-            });
-        });
-    </script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../books/squared.js"></script>
 </head>
 <body>
     <!-- START: DEMO -->
@@ -116,46 +73,26 @@
         <div id="bottomnavigation_demo" data-use-android="android.widget.bottomnavigation">
             <nav id="bottomnavigation_menu" data-use-android="android.widget.menu">
                 <div>
-                    <img src="../demos/images/icons8-chrome.png" /><br />
+                    <img src="../demos-dev/images/icons8-chrome.png" /><br />
                     <label>Chrome</label>
                 </div>
                 <div>
-                    <img src="../demos/images/icons8-google-docs.png" /><br />
+                    <img src="../demos-dev/images/icons8-google-docs.png" /><br />
                     <label>Docs</label>
                 </div>
                 <div>
-                    <img src="../demos/images/icons8-google-news.png" /><br />
+                    <img src="../demos-dev/images/icons8-google-news.png" /><br />
                     <label>News</label>
                 </div>
                 <div>
-                    <img src="../demos/images/icons8-google-play.png" /><br />
+                    <img src="../demos-dev/images/icons8-google-play.png" /><br />
                     <label>Play</label>
                 </div>
                 <div>
-                    <img src="../demos/images/icons8-google-plus.png" /><br />
+                    <img src="../demos-dev/images/icons8-google-plus.png" /><br />
                     <label>Plus</label>
                 </div>
             </nav>
-        </div>
-    </div>
-    <!-- END: DEMO -->
-    
-    <div>
-        <div class="output">
-            <pre id="output"></pre>
-            <div>
-                <button onclick="copy('output');">Copy</button>
-                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
-                <button onclick="squared.saveToArchive();">Save All</button>
-                <button onclick="squared.copyToDisk('D:/git/bottomnavigation');">Copy All</button>
-            </div>
-        </div>
-        <div class="output">
-            <pre id="resource"></pre>
-            <div>
-                <button onclick="copy('resource');">Copy</button>
-                <button onclick="squared.system.saveResourceAllXml();">Save</button>
-            </div>
         </div>
     </div>
 </body>

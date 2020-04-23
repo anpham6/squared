@@ -12,6 +12,7 @@ const $lib = squared.lib;
 const { USER_AGENT, isUserAgent } = $lib.client;
 const { parseColor } = $lib.color;
 const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = $lib.css;
+const { getNamedItem } = $lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = $lib.math;
 const { CHAR, ESCAPE, STRING, XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
@@ -800,7 +801,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             let inlined = false;
             switch (element.tagName) {
                 case 'INPUT':
-                    value = element.value;
+                    value = getNamedItem(element, 'value');
                     switch (element.type) {
                         case 'radio':
                         case 'checkbox': {

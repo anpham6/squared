@@ -6,8 +6,7 @@ android-widget/
 build/
 chrome-framework/
 dist/bundles/
-html/books/
-html/demos/
+html/
 node_modules/
 node-express/
 node-md5/
@@ -20,3 +19,4 @@ rollup*
 tsconfig.*
 build.js
 !app.js
+!html/index.html

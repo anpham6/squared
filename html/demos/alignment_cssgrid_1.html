@@ -148,63 +148,10 @@
             grid-area: s4;
         }*/
     </style>
-    <script src="/node_modules/systemjs/dist/system.js"></script>
-    <script src="/demos/common/transform.js"></script>
-    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
-    <script src="/demos/common/dev.js"></script>
-    <script>
-        System.import('/build/src/main.js').then(result => {
-            squared = result;
-            System.import('/build/src/base/main.js').then(result => {
-                squared.base = result;
-                System.import('/build/android-framework/src/main.js').then(result => {
-                    android = result.default;
-                    System.import('/build/chrome-framework/src/main.js').then(result => {
-                        chrome = result.default;
-                        squared.setFramework(android);
-                        squared.parseDocument().then(() => {
-                            squared.saveToArchive('jimp', {
-                                callback: result => {
-                                    console.log(result);
-                                },
-                                assets: [
-                                    {
-                                        pathname: 'images',
-                                        filename: 'swatch.jpg',
-                                        mimeType: '%png:image/jpeg',
-                                        compress: [{ format: 'jpeg', level: 50 }],
-                                        uri: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/swatch.jpg'
-                                    },
-                                    {
-                                        pathname: 'images',
-                                        filename: 'swatch.jpg',
-                                        mimeType: '%bmp:image/jpeg',
-                                        uri: 'https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/swatch.jpg'
-                                    },
-                                    {
-                                        pathname: 'images',
-                                        filename: 'pencil.png',
-                                        mimeType: '%jpeg:image/png',
-                                        uri: 'http://localhost:3000/demos/images/pencil.png'
-                                    },
-                                    {
-                                        pathname: 'images',
-                                        filename: 'pencil.png',
-                                        mimeType: '%bmp:image/png',
-                                        uri: 'http://localhost:3000/demos/images/pencil.png'
-                                    }
-                                ]
-                            });
-                            squared.setFramework(chrome);
-                            squared.settings.preloadImages = false;
-                            squared.settings.outputFileExclusions = ['android.framework.js', 'chrome.framework.js'];
-                            chrome.saveAsWebPage();
-                        });
-                    });
-                });
-            });
-        });
-    </script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../books/squared.js"></script>
 </head>
 <body>
     <!-- START: DEMO -->

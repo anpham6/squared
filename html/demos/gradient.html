@@ -44,34 +44,11 @@
             background: radial-gradient(at top right, red, yellow, green);
         }
     </style>
-    <script src="/node_modules/systemjs/dist/system.js"></script>
-    <script src="/demos/common/transform.js"></script>
-    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
-    <script src="/demos/common/dev.js"></script>
-    <script>
-        System.import('/build/src/main.js').then(result => {
-            squared = result;
-            System.import('/build/src/base/main.js').then(result => {
-                squared.base = result;
-                System.import('/build/src/svg/main.js').then(result => {
-                    squared.svg = result;
-                    System.import('/build/android-framework/src/main.js').then(result => {
-                        android = result.default;
-                        squared.setFramework(android);
-                        squared.parseDocument('squared_ui').then(function() {
-                            squared.close();
-
-                            var views = squared.system.writeLayoutAllXml();
-                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
-
-                            var resource = squared.system.writeResourceAllXml();
-                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
-                        });
-                    });
-                });
-            });
-        });
-    </script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/squared.svg.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../books/squared.js"></script>
 </head>
 <body>
     <!-- START: DEMO -->
@@ -79,7 +56,7 @@
         <table data-android-include="gradient_content" data-android-include-merge="true">
             <tr>
                 <td style="background: radial-gradient(red, yellow, green);">Chrome</td>
-                <td><img src="../demos/images/icons8-chrome.png" /></td>
+                <td><img src="../demos-dev/images/icons8-chrome.png" /></td>
             </tr>
             <tr>
                 <td colspan="2">https://www.google.com/chrome</td>
@@ -89,7 +66,7 @@
         <table>
             <tr>
                 <td style="background: radial-gradient(closest-side at 30% 30%, red, yellow, green);">Docs</td>
-                <td><img src="../demos/images/icons8-google-docs.png" /></td>
+                <td><img src="../demos-dev/images/icons8-google-docs.png" /></td>
             </tr>
             <tr>
                 <td colspan="2">https://docs.google.com</td>
@@ -99,7 +76,7 @@
         <table data-android-include="gradient_nested" data-android-include-merge="true" data-android-include-end="true">
             <tr>
                 <td style="background: radial-gradient(closest-corner at 30% 30%, red, yellow, green);">News</td>
-                <td><img src="../demos/images/icons8-google-news.png" /></td>
+                <td><img src="../demos-dev/images/icons8-google-news.png" /></td>
             </tr>
             <tr>
                 <td colspan="2">https://news.google.com</td>
@@ -109,7 +86,7 @@
         <table data-android-include-end="true">
             <tr>
                 <td style="background: radial-gradient(farthest-side at bottom left, red, yellow, green);">Play</td>
-                <td><img src="../demos/images/icons8-google-play.png" /></td>
+                <td><img src="../demos-dev/images/icons8-google-play.png" /></td>
             </tr>
             <tr>
                 <td colspan="2">https://play.google.com</td>
@@ -119,7 +96,7 @@
         <table data-android-include="gradient_single" data-android-include-end="true">
             <tr>
                 <td style="background: radial-gradient(farthest-corner at bottom left, red, yellow, green);">Plus</td>
-                <td><img src="../demos/images/icons8-google-plus.png" /></td>
+                <td><img src="../demos-dev/images/icons8-google-plus.png" /></td>
             </tr>
             <tr>
                 <td colspan="2">https://plus.google.com</td>
@@ -127,24 +104,5 @@
         </table>
     </div>
     <!-- END: DEMO -->
-
-    <div>
-        <div class="output">
-            <pre id="output"></pre>
-            <div>
-                <button onclick="copy('output');">Copy</button>
-                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
-                <button onclick="squared.saveToArchive();">Save All</button>
-                <button onclick="squared.copyToDisk('C:/Users/An/git/flexbox');">Copy All</button>
-            </div>
-        </div>
-        <div class="output">
-            <pre id="resource"></pre>
-            <div>
-                <button onclick="copy('resource');">Copy</button>
-                <button onclick="squared.system.saveResourceAllXml();">Save</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

@@ -1298,7 +1298,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                     if (!autoFit && !documentBody) {
-                        if (dimenWidth > boundsWidth) {
+                        if (width === 0 && dimenWidth > boundsWidth) {
                             width = boundsWidth - (offsetX ? Math.min(position.left, 0) : 0);
                             let fill = true;
                             if (tileModeY === 'repeat' && gravityX !== '') {
@@ -1358,7 +1358,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                             resizedWidth = true;
                         }
-                        if (dimenHeight > boundsHeight) {
+                        if (height === 0 && dimenHeight > boundsHeight) {
                             height = boundsHeight;
                             let fill = true;
                             if (tileModeX === 'repeat' && gravityY !== '') {

@@ -13,7 +13,7 @@ const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
 
 const NodeUI = $base.NodeUI;
 
-function setBaselineIndex(children: View[], container: View) {
+function setBaselineIndex(children: View[], container: View, name: string) {
     let valid = false;
     const length = children.length;
     let i = 0;
@@ -26,7 +26,7 @@ function setBaselineIndex(children: View[], container: View) {
             container.android('baselineAlignedChildIndex', i.toString());
             valid = true;
         }
-        item.positioned = true;
+        item.data(name, 'siblings', children);
     }
     return valid;
 }
@@ -39,7 +39,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
     }
 
     public condition(node: T) {
-        return getInputName(<HTMLInputElement> node.element) !== '' && !node.positioned;
+        return getInputName(<HTMLInputElement> node.element) !== '' && !node.data(this.name, 'siblings');
     }
 
     public processNode(node: T, parent: T) {
@@ -88,7 +88,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             container.inherit(node, 'alignment');
             container.exclude({ resource: NODE_RESOURCE.ASSET });
             container.render(parent);
-            if (!setBaselineIndex(radiogroup, container)) {
+            if (!setBaselineIndex(radiogroup, container, this.name)) {
                 container.css('verticalAlign', 'middle');
                 container.setCacheValue('baseline', false);
                 container.setCacheValue('verticalAlign', 'middle');
@@ -140,7 +140,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                         if (template) {
                             template.controlName = controlName;
                         }
-                        setBaselineIndex(radiogroup, group);
+                        setBaselineIndex(radiogroup, group, this.name);
                         return undefined;
                     }
                 }

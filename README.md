@@ -479,13 +479,13 @@ const options = {
             pathname: 'images',
             filename: 'pencil.png',
             mimeType: 'jpeg:image/png',
-            uri: 'http://localhost:3000/demos/images/pencil.png'
+            uri: 'http://localhost:3000/common/images/pencil.png'
         },
         {
             pathname: 'images',
             filename: 'pencil.png',
             mimeType: 'bmp:image/png',
-            uri: 'http://localhost:3000/demos/images/pencil.png'
+            uri: 'http://localhost:3000/common/images/pencil.png'
         }
     ]
 };
@@ -526,7 +526,7 @@ Some applications can benefit from using includes or merge tags to share common 
 <!-- res/layout/filename2.xml -->
 ```
 
-The attributes "android-include" and "android-include-end" can only be applied to elements which share the same parent container. See /demos/gradient.html for usage instructions.
+The attributes "android-include" and "android-include-end" can only be applied to elements which share the same parent container. See /demos-dev/gradient.html for usage instructions.
 
 ### ANDROID: Redirecting Output Location
 
@@ -609,17 +609,17 @@ See /android/widget/*.html for usage instructions in the squared-apache <https:/
 - android.widget.toolbar
 - android.widget.drawer
 
-<img src="html/demos/images/android/custom.viewpager.tablayout.png" alt="custom: viewpager + tablayout" />
+<img src="html/common/images/android/custom.viewpager.tablayout.png" alt="custom: viewpager + tablayout" />
 
-<img src="html/demos/images/android/drawer.png" alt="drawer: floating action button" />
+<img src="html/common/images/android/drawer.png" alt="drawer: floating action button" />
 
-<img src="html/demos/images/android/coordinator.scrolling.png" alt="coordinator: scrolling" />
+<img src="html/common/images/android/coordinator.scrolling.png" alt="coordinator: scrolling" />
 
-<img src="html/demos/images/android/bottomnavigation.png" alt="bottom navigation" />
+<img src="html/common/images/android/bottomnavigation.png" alt="bottom navigation" />
 
-<img src="html/demos/images/android/drawer.navigationview.png" alt="drawer: actionbar" />
+<img src="html/common/images/android/drawer.navigationview.png" alt="drawer: actionbar" />
 
-<img src="html/demos/images/android/menu.png" alt="toolbar: menu" />
+<img src="html/common/images/android/menu.png" alt="toolbar: menu" />
 
 ### CHROME: Extension configuration
 

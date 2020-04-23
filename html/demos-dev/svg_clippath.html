@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        #squared_ui {
+            padding: 10px;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/src/svg/main.js').then(result => {
+                    squared.svg = result;
+                    System.import('/build/android-framework/src/main.js').then(result => {
+                        android = result.default;
+                        squared.setFramework(android);
+                        squared.parseDocument('squared_ui');
+                        squared.close();
+
+                        var views = squared.system.writeLayoutAllXml();
+                        document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                        var resource = squared.system.writeResourceAllXml();
+                        document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui" style="width: 300px;">
+        <svg viewBox="0 0 100 100">
+            <clipPath id="myClip">
+                <circle cx="40" cy="35" r="35" />
+            </clipPath>
+            <path id="heart" d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" />
+            <use href="#heart" fill="red" style="clip-path: url(#myClip);" />
+            <use href="#heart" fill="yellow" style="clip-path: polygon(50% 0, 80% 40%, 40% 80%, 0 50%);" />
+            <use href="#heart" fill="green" style="clip-path: circle(10px at 50% 50%);" />
+            <use href="#heart" fill="blue" style="clip-path: ellipse(15px 10px at 25% 75%);" />
+        </svg>
+        <br /><br />
+        <svg viewBox="0 0 100 100" style="border: solid 1px;">
+            <path id="heart" d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" />
+            <use href="#heart" fill="green" style="clip-path: inset(15px 25px);" />
+            <use href="#heart" fill="purple" style="clip-path: inset(25% 10px 25% 1em);" />
+        </svg>
+        <br /><br />
+        <svg viewBox="0 0 100 100">
+            <path id="heart" d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" />
+            <g style="clip-path: polygon(0% 0%, 100% 0%, 100% 75%, 75% 75%, 75% 100%, 50% 75%, 0% 75%);">
+                <use href="#heart" fill="red" style="clip-path: polygon(50% 0%, 63% 38%, 100% 38%, 69% 59%, 82% 100%, 50% 75%, 18% 100%, 31% 59%, 0 38%, 37% 38%);" />
+            </g>
+        </svg>
+        <br /><br />
+        <svg viewBox="0 0 100 100">
+            <rect id="circle" x="0" y="0" width="50" height="50" />
+            <use href="#circle" fill="red" style="clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%);" />
+        </svg>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
+                <button onclick="squared.saveToArchive();">Save All</button>
+                <button onclick="squared.copyToDisk('C:/Users/An/git/flexbox');">Copy All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.saveResourceAllXml();">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

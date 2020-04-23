@@ -10,7 +10,7 @@
             width: 200px;
         }
         #menu_demo > div:first-child {
-            background: url(../demos/images/icons8-chrome.png) no-repeat;
+            background: url(../demos-dev/images/icons8-chrome.png) no-repeat;
             background-size: 24px;
             background-position: 12px 6px;
         }
@@ -23,7 +23,7 @@
             border: solid 1px #aaa;
         }
         nav {
-            display: none;
+            display: block;
         }
         nav div, nav li {
             font-size: 11px;
@@ -56,60 +56,25 @@
             float: right;
         }
     </style>
-    <script src="/node_modules/systemjs/dist/system.js"></script>
-    <script src="/demos/common/transform.js"></script>
-    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
-    <script src="/demos/common/dev.js"></script>
-    <script>
-        System.import('/build/src/main.js').then(result => {
-            squared = result;        
-            System.import('/build/src/base/main.js').then(result => {
-                squared.base = result;
-                System.import('/build/android-framework/src/main.js').then(result => {
-                    android = result.default;
-                    squared.setFramework(android);
-                    System.import('/build/android-widget/menu/main.js').then(() => {
-                        squared.parseDocument('squared_ui').then(function() {
-                            squared.close();
-
-                            var views = squared.system.writeLayoutAllXml();
-                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
-
-                            var resource = squared.system.writeResourceAllXml();
-                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
-                        });
-                    });
-                });
-            });
-        });
-        function toggleMenu() {
-            var submenu = document.getElementById('menu_demo_sub');
-            submenu.style.display = (submenu.style.display === 'block' ? 'none' : 'block');
-        }
-    </script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="../books/squared.js"></script>
 </head>
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui">
         <button onclick="document.getElementById('menu_demo').style.display = 'block';">Show Menu</button>
         <button onclick="document.getElementById('menu_demo').style.display = 'none';">Hide Menu</button>
-        <nav id="menu_demo" data-use-android="android.widget.menu">
-            <div title="Item 1"
-                data-id="@+id/menu_item_1"
-                data-show-as-action="always"
-                data-alphabetic-shortcut="A"
-                data-alphabetic-modifiers="CTRL|ALT">
+        <nav id="menu_demo">
+            <div title="Item 1">
                     &nbsp;
             </div>
-            <div
-                data-id="@+id/menu_item_2"
-                data-show-as-action="always"
-                data-numeric-shortcut="2"
-                data-numeric-modifiers="CTRL">
+            <div>
                     Item 2
             </div>
-            <div data-show-as-action="ifRoom">
-                <img src="../demos/images/icons8-google-docs.png" />
+            <div>
+                <img src="../demos-dev/images/icons8-google-docs.png" />
                 <label>Item 3</label>
             </div>
             <div>
@@ -139,24 +104,5 @@
         </nav>
     </div>
     <!-- END: DEMO -->
-
-    <div>
-        <div class="output">
-            <pre id="output"></pre>
-            <div>
-                <button onclick="copy('output');">Copy</button>
-                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
-                <button onclick="squared.saveToArchive();">Save All</button>
-                <button onclick="squared.copyToDisk('D:/git/menu');">Copy All</button>
-            </div>
-        </div>
-        <div class="output">
-            <pre id="resource"></pre>
-            <div>
-                <button onclick="copy('resource');">Copy</button>
-                <button onclick="squared.system.saveResourceAllXml();">Save</button>
-            </div>
-        </div>
-    </div>
 </body>
 </html>

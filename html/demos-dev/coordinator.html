@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Language" content="en">
+    <title>https://github.com/anpham6/squared</title>
+    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <style>
+        #squared_ui {
+            position: relative;
+            width: 300px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+        }
+        #squared_ui button, #squared_ui input[type=button] {
+            position: absolute;
+            width: 56px;
+            height: 56px;
+            background: slateblue center no-repeat;
+            border: none;
+            border-radius: 28px;
+            margin: 8px;
+            padding: 0;
+        }
+        #squared_ui #fab_web {
+            bottom: 64px;
+            right: 0;
+            background-image: url(images/icons8-web-24.png);
+        }
+        #squared_ui #fab_browse_page {
+            bottom: 0;
+            right: 0;
+            background-image: url(images/icons8-browse-page-24.png);
+        }
+        #squared_ui #fab_left {
+            bottom: 0;
+            left: 0;
+            background-image: url(images/icons8-left-24.png);
+        }
+        .content {
+            font-size: 12px;
+            color: #fff;
+            background-color: #aaa;
+            padding: 8px;
+        }
+    </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
+    <script src="/common/dev.js"></script>
+    <script>
+        System.import('/build/src/main.js').then(result => {
+            squared = result;
+            System.import('/build/src/base/main.js').then(result => {
+                squared.base = result;
+                System.import('/build/android-framework/src/main.js').then(result => {
+                    android = result.default;
+                    squared.setFramework(android);
+                    Promise.all([
+                        System.import('/build/android-widget/coordinator/main.js'),
+                        System.import('/build/android-widget/floatingactionbutton/main.js')
+                    ]).then(() => {
+                        squared.parseDocument('squared_ui').then(function() {
+                            squared.close();
+
+                            var views = squared.system.writeLayoutAllXml();
+                            document.getElementById('output').innerHTML = stringify(views).replace(/</g, '&lt;');
+
+                            var resource = squared.system.writeResourceAllXml();
+                            document.getElementById('resource').innerHTML = stringify(resource).replace(/</g, '&lt;');
+                        });
+                    });
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <!-- START: DEMO -->
+    <div id="squared_ui" data-use-android="android.widget.coordinator">
+        <div data-android-include="coordinator_content" data-android-include-end="true">
+            <div style="padding: 0 20px;">
+                <h3>title</h3>
+                <div class="content">
+                    content content content content content content content content content content
+                    content content content content content content content content content content
+                </div>
+            </div>
+            <div class="content" style="margin: 20px;">
+                content content content content content content content content content content
+                content content content content content content content content content content
+            </div>
+            <div class="content" style="margin: 0 20px 20px 20px;">
+                content content content content content content content content content content
+                content content content content content content content content content content
+            </div>
+        </div>
+        <button id="fab_web" data-use-android="android.widget.floatingactionbutton"></button>
+        <button id="fab_browse_page" data-use-android="android.widget.floatingactionbutton"></button>
+        <button id="fab_left" data-use-android="android.widget.floatingactionbutton"></button>
+    </div>
+    <!-- END: DEMO -->
+
+    <div>
+        <div class="output">
+            <pre id="output"></pre>
+            <div>
+                <button onclick="copy('output');">Copy</button>
+                <button onclick="squared.system.saveLayoutAllXml();">Save</button>
+                <button onclick="squared.saveToArchive();">Save All</button>
+                <button onclick="squared.copyToDisk('D:/git/coordinator');">Copy All</button>
+            </div>
+        </div>
+        <div class="output">
+            <pre id="resource"></pre>
+            <div>
+                <button onclick="copy('resource');">Copy</button>
+                <button onclick="squared.system.saveResourceAllXml();">Save</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
