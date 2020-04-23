@@ -1136,22 +1136,6 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             }
                             previousTransform = undefined;
                         };
-                        const removeInvalid = (items: SvgAnimation[]) => {
-                            for (let i = 0; i < groupDelay.length; ++i) {
-                                const data = groupData[i];
-                                if (items.length) {
-                                    for (let j = 0; j < data.length; ++j) {
-                                        if (items.includes(data[j])) {
-                                            data.splice(j--, 1);
-                                        }
-                                    }
-                                }
-                                if (data.length === 0) {
-                                    groupData.splice(i, 1);
-                                    groupDelay.splice(i--, 1);
-                                }
-                            }
-                        };
                         const backwards = groupAttributeMap[attr].find(item => item.fillBackwards);
                         if (backwards) {
                             baseValue = getItemValue(backwards, backwards.values, 0, 0);
@@ -1195,7 +1179,20 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     }
                                 }
                             }
-                            removeInvalid(removeable);
+                            for (let i = 0; i < groupDelay.length; ++i) {
+                                const data = groupData[i];
+                                if (removeable.length) {
+                                    for (let j = 0; j < data.length; ++j) {
+                                        if (removeable.includes(data[j])) {
+                                            data.splice(j--, 1);
+                                        }
+                                    }
+                                }
+                                if (data.length === 0) {
+                                    groupData.splice(i, 1);
+                                    groupDelay.splice(i--, 1);
+                                }
+                            }
                             backwards.addState(SYNCHRONIZE_STATE.BACKWARDS);
                         }
                         if (!transforming) {
@@ -1474,9 +1471,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                             actualMaxTime = time;
                                                         }
                                                         else {
-                                                            const insertIntermediateValue = (splitTime: number) => {
-                                                                [maxTime, lastValue] = insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, k, l, splitTime, keyTimeMode, baseMap, repeatingInterpolatorMap, repeatingTransformOriginMap);
-                                                            };
+                                                            const insertIntermediateValue = (splitTime: number) => [maxTime, lastValue] = insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, k, l, splitTime, keyTimeMode, baseMap, repeatingInterpolatorMap, repeatingTransformOriginMap);
                                                             if (delay < 0 && maxTime === -1) {
                                                                 if (time > 0) {
                                                                     actualMaxTime = 0;
@@ -1646,20 +1641,20 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         const startTime = maxTime + 1;
                                         let j = Math.floor(durationTotal / duration);
                                         let joined = false;
-                                        const insertIntermediateValue = (time: number, index: number) => insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, j, index, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                        const insertIntermediateValue = (index: number, time: number) => insertSplitValue(item, actualMaxTime, baseValue, keyTimes, values, keySplines, delay, j, index, time, keyTimeMode, repeatingMap[attr], repeatingInterpolatorMap, repeatingTransformOriginMap);
                                         do {
                                             const q = keyTimes.length;
                                             for (let k = 0; k < q; ++k) {
                                                 let time = getItemTime(delay, duration, keyTimes, j, k);
                                                 if (!joined && time >= maxTime) {
-                                                    [maxTime, baseValue] = insertIntermediateValue(maxTime, k);
+                                                    [maxTime, baseValue] = insertIntermediateValue(k, maxTime);
                                                     joined = true;
                                                 }
                                                 if (joined) {
                                                     if (time >= maxThreadTime) {
                                                         if (maxThreadTime > maxTime) {
                                                             const fillReplace = item.fillReplace || item.iterationCount === -1;
-                                                            [maxTime, baseValue] = insertIntermediateValue(maxThreadTime - (fillReplace ? 1 : 0), k);
+                                                            [maxTime, baseValue] = insertIntermediateValue(k, maxThreadTime - (fillReplace ? 1 : 0));
                                                             if (fillReplace) {
                                                                 baseValue = getItemValue(item, values, j, 0, baseValue);
                                                                 maxTime = setTimelineValue(baseMap, maxThreadTime, baseValue);

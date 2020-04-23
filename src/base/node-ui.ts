@@ -50,6 +50,24 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
     return valid;
 }
 
+function parseExclusions(attr: string, enumeration: {}, dataset: DOMStringMap, parentDataset: DOMStringMap, systemName: string) {
+    let exclude = dataset[attr + systemName] || dataset[attr] || '';
+    let offset = 0;
+    const value = parentDataset[attr + 'Child' + systemName] || parentDataset[attr + 'Child'];
+    if (value) {
+        exclude += (exclude !== '' ? '|' : '') + value;
+    }
+    if (exclude !== '') {
+        exclude.split('|').forEach(name => {
+            const i: number = enumeration[name.trim().toUpperCase()] || 0;
+            if (i > 0 && !hasBit(offset, i)) {
+                offset |= i;
+            }
+        });
+    }
+    return offset;
+}
+
 function traverseElementSibling(options: SiblingOptions = {}, element: Null<Element>, direction: "previousSibling" | "nextSibling", sessionId: string) {
     const { floating, pageFlow, lineBreak, excluded } = options;
     const result: T[] = [];
@@ -83,6 +101,7 @@ const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node
 const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth > 0;
 const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous));
 const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : Number.NEGATIVE_INFINITY;
+const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static refitScreen(node: T, value: Dimension): Dimension {
@@ -695,27 +714,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const parentDataset = element.parentElement?.dataset || {};
             if (Object.keys(dataset).length || Object.keys(parentDataset).length) {
                 systemName = capitalize(systemName || this.localSettings.systemName);
-                const parseExclusions = (attr: string, enumeration: {}) => {
-                    let exclude = dataset[attr + systemName] || dataset[attr] || '';
-                    let offset = 0;
-                    const value = parentDataset[attr + 'Child' + systemName] || parentDataset[attr + 'Child'];
-                    if (value) {
-                        exclude += (exclude !== '' ? '|' : '') + value;
-                    }
-                    if (exclude !== '') {
-                        exclude.split('|').forEach(name => {
-                            const i: number = enumeration[name.trim().toUpperCase()] || 0;
-                            if (i > 0 && !hasBit(offset, i)) {
-                                offset |= i;
-                            }
-                        });
-                    }
-                    return offset;
-                };
                 this.exclude({
-                    resource: parseExclusions('excludeResource', NODE_RESOURCE),
-                    procedure: parseExclusions('excludeProcedure', NODE_PROCEDURE),
-                    section: parseExclusions('excludeSection', APP_SECTION)
+                    resource: parseExclusions('excludeResource', NODE_RESOURCE, dataset, parentDataset, systemName),
+                    procedure: parseExclusions('excludeProcedure', NODE_PROCEDURE, dataset, parentDataset, systemName),
+                    section: parseExclusions('excludeSection', APP_SECTION, dataset, parentDataset, systemName)
                 });
             }
         }
@@ -824,7 +826,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                     if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
                                         const length = actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length;
                                         if (length === siblings.length + 1) {
-                                            const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
                                             let width = actualParent.box.width - getLayoutWidth(this);
                                             siblings.forEach(item => width -= getLayoutWidth(item));
                                             if (width >= 0) {
@@ -1030,8 +1031,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public resetBox(region: number, node?: T) {
-        const boxReset = this._boxReset;
         const applyReset = (attrs: string[], start: number) => {
+            const boxReset = this._boxReset;
             for (let i = 0; i < 4; ++i) {
                 const key = CSS_SPACING_KEYS[i + start];
                 if (hasBit(region, key)) {
@@ -1064,8 +1065,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public transferBox(region: number, node: T) {
-        const boxAdjustment = this._boxAdjustment;
         const applyReset = (attrs: string[], start: number) => {
+            const boxAdjustment = this._boxAdjustment;
             for (let i = 0; i < 4; ++i) {
                 const key = CSS_SPACING_KEYS[i + start];
                 if (hasBit(region, key)) {

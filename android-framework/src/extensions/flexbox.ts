@@ -54,7 +54,6 @@ const MAP_vertical = {
 function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
     const horizontal = attr === 'width';
     const hasDimension = horizontal ? 'hasWidth' : 'hasHeight';
-    const setPercentage = (item: View) => item.flexbox.basis = (item.bounds[attr] / parent.box[attr] * 100) + '%';
     let percent = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseWidth(parent.css('maxWidth')), parent.box.width);
     let result = 0;
     let growShrinkType = 0;
@@ -154,7 +153,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
                     }
                 });
             }
-            percentage.forEach(item => setPercentage(item));
+            percentage.forEach(child => setBoxPercentage(parent, child, attr));
         }
     }
     if (horizontal && growShrinkType === 0) {
@@ -162,7 +161,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
         while (i < length) {
             const item = items[i++];
             if (item.find(child => child.multiline && child.ascend({ condition: above => above[hasDimension], including: parent }).length === 0, { cascade: true })) {
-                items.forEach(child => setPercentage(child));
+                items.forEach(child => setBoxPercentage(parent, child, attr));
                 break;
             }
         }
@@ -200,6 +199,8 @@ function getOuterFrameChild(item: Undef<View>) {
     }
     return undefined;
 }
+
+const setBoxPercentage = (parent: View, node: View, attr: DimensionAttr) => node.flexbox.basis = (node.bounds[attr] / parent.box[attr] * 100) + '%';
 
 export default class <T extends View> extends squared.base.extensions.Flexbox<T> {
     public processNode(node: T, parent: T) {

@@ -964,11 +964,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 const requireBefore = item.delay > 0;
                                 let transforming = false;
                                 let transformOrigin: Undef<Point[]>;
-                                const resetBeforeValue = (propertyName: string, value: string) => {
-                                    if (isString(value) && beforeAnimator.findIndex(before => before.propertyName === propertyName) === -1) {
-                                        beforeAnimator.push(this.createPropertyValue(propertyName, value, '0', valueType));
-                                    }
-                                };
                                 const insertFillAfter = (propertyName: string, propertyValues?: PropertyValue[], startOffset?: number) => {
                                     if (!synchronized && item.fillReplace) {
                                         let valueTo = item.replaceValue;
@@ -1191,12 +1186,12 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         for (let j = 0; j < q; ++j) {
                                             const propertyName = propertyNames[j];
                                             if (resetBefore && beforeValues) {
-                                                resetBeforeValue(propertyName, beforeValues[j]);
+                                                this.resetBeforeValue(beforeAnimator, propertyName, beforeValues[j], valueType);
                                             }
                                             if (useKeyFrames && r > 1) {
                                                 if (supportedKeyFrames && valueType !== 'pathType') {
                                                     if (!resetBefore && requireBefore && beforeValues) {
-                                                        resetBeforeValue(propertyName, beforeValues[j]);
+                                                        this.resetBeforeValue(beforeAnimator, propertyName, beforeValues[j], valueType);
                                                     }
                                                     const propertyValuesHolder = animatorMap.get(keyName) || [];
                                                     const keyframe: KeyFrame[] = [];
@@ -1332,8 +1327,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                             }
                                         }
                                         if (requireBefore && transformOrigin?.length) {
-                                            resetBeforeValue('translateX', '0');
-                                            resetBeforeValue('translateY', '0');
+                                            this.resetBeforeValue(beforeAnimator, 'translateX', '0', valueType);
+                                            this.resetBeforeValue(beforeAnimator, 'translateY', '0', valueType);
                                         }
                                     }
                                 }
@@ -1957,5 +1952,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             }
         }
         return false;
+    }
+
+    private resetBeforeValue(animator: PropertyValue[], propertyName: string, value: string, valueType: string) {
+        if (isString(value) && animator.findIndex(before => before.propertyName === propertyName) === -1) {
+            animator.push(this.createPropertyValue(propertyName, value, '0', valueType));
+        }
     }
 }

@@ -100,8 +100,6 @@ function getSortOrderInvalid(above: View, below: View): number {
 
 function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTop: number) {
     const baselineHeight = baseline.baselineHeight;
-    const isBaselineImage = (item: View) => item.imageOrSvgElement && item.baseline;
-    const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
     let imageHeight = 0;
     let imageBaseline: Undef<View>;
     const length = nodes.length;
@@ -199,14 +197,13 @@ function causesLineBreak(element: Element) {
         if (!(position === 'absolute' || position === 'fixed')) {
             const display = style.getPropertyValue('display');
             const floating = style.getPropertyValue('float') !== 'none';
-            const hasWidth = () => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
             switch (display) {
                 case 'block':
                 case 'flex':
                 case 'grid':
-                    return !floating || hasWidth();
+                    return !floating || hasWidth(style);
             }
-            return (display.startsWith('inline-') || display === 'table') && hasWidth();
+            return (display.startsWith('inline-') || display === 'table') && hasWidth(style);
         }
     }
     return false;
@@ -362,6 +359,17 @@ function setInlineBlock(node: View) {
     node.setCacheValue('rightAligned', rightAligned);
 }
 
+function setVerticalLayout(node: View) {
+    node.addAlign(NODE_ALIGNMENT.VERTICAL);
+    node.removeAlign(NODE_ALIGNMENT.UNKNOWN);
+}
+
+function setAnchorOffset(node: View, horizontal: boolean, attr: string, documentId: string, position: string, adjustment: number) {
+    node.anchor(position, documentId, true);
+    node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
+    node.constraint[attr] = true;
+}
+
 function segmentRightAligned<T extends View>(children: T[]) {
     return partitionArray<T>(children, item => item.float === 'right' || item.autoMargin.left === true);
 }
@@ -370,6 +378,9 @@ function segmentLeftAligned<T extends View>(children: T[]) {
     return partitionArray<T>(children, item => item.float === 'left' || item.autoMargin.right === true);
 }
 
+const isBaselineImage = (item: View) => item.imageOrSvgElement && item.baseline;
+const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
+const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
 const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderInvalid(<View> a.node.innerMostWrapped, <View> b.node.innerMostWrapped);
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderStandard(<View> a.node.innerMostWrapped, <View> b.node.innerMostWrapped);
 const hasCleared = (layout: LayoutUI, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
@@ -780,15 +791,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const clearMap = this.application.clearMap;
         const floatSize = layout.floated.size;
         const length = layout.length;
-        const setVerticalLayout = () => {
-            parent.addAlign(NODE_ALIGNMENT.VERTICAL);
-            parent.removeAlign(NODE_ALIGNMENT.UNKNOWN);
-        };
         if (layout.some((item, index) => item.lineBreakTrailing && index < length - 1)) {
             if (!parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
                 const containerType = getVerticalLayout(layout);
                 if (isUnknownParent(parent, containerType, length)) {
-                    setVerticalLayout();
+                    setVerticalLayout(parent);
                     return undefined;
                 }
                 else {
@@ -806,7 +813,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else if (floatSize === 1 && layout.every((item, index) => index === 0 || index === length - 1 || clearMap.has(item))) {
             if (layout.same(node => node.float)) {
                 if (isUnknownParent(parent, CONTAINER_NODE.CONSTRAINT, length)) {
-                    setVerticalLayout();
+                    setVerticalLayout(parent);
                     return undefined;
                 }
                 else {
@@ -822,7 +829,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             else {
                 const containerType = getVerticalAlignedLayout(layout);
                 if (isUnknownParent(parent, containerType, length)) {
-                    setVerticalLayout();
+                    setVerticalLayout(parent);
                     return undefined;
                 }
                 else {
@@ -852,7 +859,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (!parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             const containerType = getVerticalAlignedLayout(layout);
             if (isUnknownParent(parent, containerType, length)) {
-                setVerticalLayout();
+                setVerticalLayout(parent);
                 return undefined;
             }
             else {
@@ -1810,11 +1817,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const TL = horizontal ? 'top' : 'left';
                     let nearest: Undef<T>;
                     let adjacent: Undef<T>;
-                    const setMarginOffset = (documentId: string, position: string, adjustment: number) => {
-                        node.anchor(position, documentId, true);
-                        node.setBox(horizontal ? BOX_STANDARD.MARGIN_LEFT : BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment });
-                        node.constraint[value] = true;
-                    };
                     i = 0;
                     while (i < length) {
                         const item = renderChildren[i++] as T;
@@ -1826,7 +1828,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (withinRange(bounds[TL], boundsA[TL]) || withinRange(linear[TL], itemA.linear[TL])) {
                             const offset = bounds[LT] - boundsA[RB];
                             if (offset >= 0) {
-                                setMarginOffset(item.documentId, horizontal ? 'leftRight' : 'topBottom', offset);
+                                setAnchorOffset(node, horizontal, value, item.documentId, horizontal ? 'leftRight' : 'topBottom', offset);
                                 return;
                             }
                         }
@@ -1845,7 +1847,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (nearest) {
                         const offset = bounds[LT] - nearest.bounds[LT] + adjustBodyMargin(node, LT);
                         if (offset >= 0) {
-                            setMarginOffset(nearest.documentId, LT, offset);
+                            setAnchorOffset(node, horizontal, value, nearest.documentId, LT, offset);
                             return;
                         }
                     }

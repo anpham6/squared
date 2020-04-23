@@ -251,6 +251,37 @@ function newBoxRectPosition(orientation: string[] = ['left', 'top']) {
     };
 }
 
+function checkCalculateNumber(operand: Undef<string>, operator: Undef<string>) {
+    if (operand) {
+        switch (operator) {
+            case '+':
+            case '-':
+                if (isNumber(operand)) {
+                    return false;
+                }
+                break;
+            case '*':
+            case '/':
+                if (!isNumber(operand)) {
+                    return false;
+                }
+                break;
+        }
+    }
+    return true;
+}
+
+function checkCalculateOperator(operand: Undef<string>, operator: Undef<string>) {
+    if (operand) {
+        switch (operator) {
+            case '+':
+            case '-':
+                return false;
+        }
+    }
+    return true;
+}
+
 const getInnerWidth = (dimension: Undef<Dimension>) => dimension?.width || window.innerWidth;
 const getInnerHeight = (dimension: Undef<Dimension>) => dimension?.height || window.innerHeight;
 const convertLength = (value: string, dimension: number, fontSize?: number, screenDimension?: Dimension) => isPercent(value) ? Math.round(convertFloat(value) / 100 * dimension) : parseUnit(value, fontSize, screenDimension);
@@ -2217,35 +2248,6 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                 if (valid) {
                     let operand: Undef<string>;
                     let operator: Undef<string>;
-                    const checkNumber = () => {
-                        if (operand) {
-                            switch (operator) {
-                                case '+':
-                                case '-':
-                                    if (isNumber(operand)) {
-                                        return false;
-                                    }
-                                    break;
-                                case '*':
-                                case '/':
-                                    if (!isNumber(operand)) {
-                                        return false;
-                                    }
-                                    break;
-                            }
-                        }
-                        return true;
-                    };
-                    const checkOperator = () => {
-                        if (operand) {
-                            switch (operator) {
-                                case '+':
-                                case '-':
-                                    return false;
-                            }
-                        }
-                        return true;
-                    };
                     let found = false;
                     const seg: number[] = [];
                     const evaluate: string[] = [];
@@ -2270,7 +2272,7 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                                         case CSS_UNIT.DECIMAL:
                                             break;
                                         default:
-                                            if (!checkNumber()) {
+                                            if (!checkCalculateNumber(operand, operator)) {
                                                 return NaN;
                                             }
                                             break;
@@ -2284,13 +2286,13 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                                     switch (unitType) {
                                         case CSS_UNIT.PERCENT:
                                             if (isNumber(partial)) {
-                                                if (!checkOperator()) {
+                                                if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
                                                 seg.push(parseFloat(partial));
                                             }
                                             else if (isPercent(partial)) {
-                                                if (!checkNumber()) {
+                                                if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
                                                 seg.push(parseFloat(partial));
@@ -2302,13 +2304,13 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                                             break;
                                         case CSS_UNIT.TIME:
                                             if (isNumber(partial)) {
-                                                if (!checkOperator()) {
+                                                if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
                                                 seg.push(parseFloat(partial));
                                             }
                                             else if (isTime(partial)) {
-                                                if (!checkNumber()) {
+                                                if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
                                                 seg.push(parseTime(partial));
@@ -2320,13 +2322,13 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                                             break;
                                         case CSS_UNIT.ANGLE:
                                             if (isNumber(partial)) {
-                                                if (!checkOperator()) {
+                                                if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
                                                 seg.push(parseFloat(partial));
                                             }
                                             else if (isAngle(partial)) {
-                                                if (!checkNumber()) {
+                                                if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
                                                 seg.push(parseAngle(partial));
@@ -2359,20 +2361,20 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                                             break;
                                         default:
                                             if (isNumber(partial)) {
-                                                if (!checkOperator()) {
+                                                if (!checkCalculateOperator(operand, operator)) {
                                                     return NaN;
                                                 }
                                                 seg.push(parseFloat(partial));
                                             }
                                             else if (isLength(partial)) {
-                                                if (!checkNumber()) {
+                                                if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
                                                 seg.push(parseUnit(partial, fontSize));
                                                 found = true;
                                             }
                                             else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
-                                                if (!checkNumber()) {
+                                                if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
                                                 seg.push(parseFloat(partial) / 100 * boundingSize);

@@ -285,37 +285,36 @@ function checkAutoDimension(data: CssGridDirectionData, horizontal: boolean) {
     }
 }
 
-function checkFlexibleParent(node: View) {
-    const condition = (item: View) => {
-        const parent = item.actualParent;
-        if (parent?.gridElement) {
-            const mainData: CssGridData<View> = parent.data(CSS_GRID, 'mainData');
-            const cellData: CssGridCellData = item.data(CSS_GRID, 'cellData');
-            if (mainData && cellData) {
-                const unit = mainData.column.unit;
-                const { columnStart, columnSpan } = cellData;
-                let valid = false;
-                let i = 0;
-                while (i < columnSpan) {
-                    const value = unit[columnStart + i++];
-                    if (CssGrid.isFr(value) || isPercent(value)) {
-                        valid = true;
-                    }
-                    else if (value === 'auto') {
-                        valid = false;
-                        break;
-                    }
+function isFlexibleParent(item: View) {
+    const parent = item.actualParent;
+    if (parent?.gridElement) {
+        const mainData: CssGridData<View> = parent.data(CSS_GRID, 'mainData');
+        const cellData: CssGridCellData = item.data(CSS_GRID, 'cellData');
+        if (mainData && cellData) {
+            const unit = mainData.column.unit;
+            const { columnStart, columnSpan } = cellData;
+            let valid = false;
+            let i = 0;
+            while (i < columnSpan) {
+                const value = unit[columnStart + i++];
+                if (CssGrid.isFr(value) || isPercent(value)) {
+                    valid = true;
                 }
-                return valid;
+                else if (value === 'auto') {
+                    valid = false;
+                    break;
+                }
             }
+            return valid;
         }
-        else if (item.hasFlex('row') && item.flexbox.grow > 0) {
-            return true;
-        }
-        return false;
-    };
-    return node.ascend({ condition, error: item => item.hasWidth }).length > 0;
+    }
+    else if (item.hasFlex('row') && item.flexbox.grow > 0) {
+        return true;
+    }
+    return false;
 }
+
+const checkFlexibleParent = (node: View) => node.ascend({ condition: isFlexibleParent, error: item => item.hasWidth }).length > 0;
 
 function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     const { gap, length, unit } = data;

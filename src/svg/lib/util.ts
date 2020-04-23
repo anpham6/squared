@@ -402,6 +402,11 @@ export function getDOMRect(element: SVGElement) {
     return <DOMRect> result;
 }
 
+function getViewportArea(min: boolean, viewBox: DOMRect) {
+    const { width, height } = viewBox;
+    return min ? Math.min(width, height) : hypotenuse(width, height);
+}
+
 export function calculateStyle(element: SVGElement, attr: string, value: string) {
     attr = convertCamelCase(attr);
     switch (attr) {
@@ -433,10 +438,6 @@ export function calculateStyle(element: SVGElement, attr: string, value: string)
         }
     }
     const viewBox = getNearestViewBox(element) || element.getBoundingClientRect();
-    const getViewportArea = (min: boolean) => {
-        const { width, height } = viewBox;
-        return min ? Math.min(width, height) : hypotenuse(width, height);
-    };
     switch (attr) {
         case 'cx':
         case 'x':
@@ -453,7 +454,7 @@ export function calculateStyle(element: SVGElement, attr: string, value: string)
             return !isNaN(result) ? result.toString() : '';
         }
         case 'r': {
-            const result = calculateVar(element, value, { boundingSize: getViewportArea(true), min: 0 });
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(true, viewBox), min: 0 });
             return !isNaN(result) ? result.toString() : '0';
         }
         case 'rx': {
@@ -471,11 +472,11 @@ export function calculateStyle(element: SVGElement, attr: string, value: string)
             return '0';
         }
         case 'strokeDashoffset': {
-            const result = calculateVar(element, value, { boundingSize: getViewportArea(true), unitType: CSS_UNIT.DECIMAL });
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(true, viewBox), unitType: CSS_UNIT.DECIMAL });
             return !isNaN(result) ? result.toString() : '';
         }
         case 'strokeWidth': {
-            const result = calculateVar(element, value, { boundingSize: getViewportArea(false), unitType: CSS_UNIT.DECIMAL, min: 0 });
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(false, viewBox), unitType: CSS_UNIT.DECIMAL, min: 0 });
             return !isNaN(result) ? result.toString() : '';
         }
     }

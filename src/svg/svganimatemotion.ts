@@ -13,6 +13,8 @@ const { getNamedItem } = $lib.dom;
 const { truncateFraction } = $lib.math;
 const { isEqual, isNumber, isString, iterateArray, objectMap } = $lib.util;
 
+const equalPoint = (item: Undef<SvgOffsetPath>, time: number, point: DOMPoint, rotate: number) => !!item && item.key === time && item.rotate === rotate && isEqual(item.value, point);
+
 export default class SvgAnimateMotion extends SvgAnimateTransform implements squared.svg.SvgAnimateMotion {
     public path = '';
     public distance = '0%';
@@ -177,7 +179,6 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     const result: SvgOffsetPath[] = [];
                     if (keyPoints.length > 1) {
                         let previous: Undef<SvgOffsetPath>;
-                        const equalPoint = (time: number, point: DOMPoint, rotate: number) => previous?.key === time && previous.rotate === rotate && isEqual(previous.value, point);
                         const q = keyTimes.length - 1;
                         for (let i = 0; i < q; ++i) {
                             const keyTime = keyTimes[i];
@@ -188,7 +189,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                             if (offsetDuration === 0) {
                                 const key = baseTime;
                                 const { value, rotate } = offsetPath[Math.floor(to * length)];
-                                if (!equalPoint(key, value, rotate)) {
+                                if (!equalPoint(previous, key, value, rotate)) {
                                     previous = { key, value, rotate };
                                     result.push(previous);
                                 }
@@ -198,7 +199,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                 let nextFrame = baseTime;
                                 if (from === to) {
                                     const { value, rotate } = offsetPath[Math.floor(from * length)];
-                                    if (equalPoint(baseTime, value, rotate)) {
+                                    if (equalPoint(previous, baseTime, value, rotate)) {
                                         j += increment;
                                         nextFrame += fps;
                                     }
@@ -229,7 +230,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                     const r = partial.length;
                                     const offsetInterval = offsetDuration / r;
                                     const item = partial[0];
-                                    if (equalPoint(baseTime, item.value, item.rotate)) {
+                                    if (equalPoint(previous, baseTime, item.value, item.rotate)) {
                                         ++j;
                                         nextFrame += fps;
                                     }

@@ -27,6 +27,38 @@ function positionAbsolute(style: CSSStyleDeclaration) {
     return false;
 }
 
+function setBorderStyle(styleMap: StringMap, defaultColor: string) {
+    if (!isString(styleMap.border) && !(BOX_BORDER[0][0] in styleMap || BOX_BORDER[1][0] in styleMap || BOX_BORDER[2][0] in styleMap || BOX_BORDER[3][0] in styleMap)) {
+        styleMap.border = `outset 1px ${defaultColor}`;
+        for (let i = 0; i < 4; ++i) {
+            const border = BOX_BORDER[i];
+            styleMap[border[0]] = 'outset';
+            styleMap[border[1]] = '1px';
+            styleMap[border[2]] = defaultColor;
+        }
+        return true;
+    }
+    return false;
+}
+
+function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: string) {
+    if (applied) {
+        const backgroundColor = styleMap.backgroundColor;
+        if (!isString(backgroundColor) || backgroundColor === 'initial') {
+            styleMap.backgroundColor = defaultColor;
+        }
+    }
+    if (!isString(styleMap.textAlign)) {
+        styleMap.textAlign = 'center';
+    }
+    if (!isString(styleMap.padding) && !BOX_PADDING.some(attr => !!styleMap[attr])) {
+        styleMap.paddingTop = '2px';
+        styleMap.paddingRight = '6px';
+        styleMap.paddingBottom = '3px';
+        styleMap.paddingLeft = '6px';
+    }
+}
+
 const getNumberValue = (style: CSSStyleDeclaration, attr: string) => parseInt(style.getPropertyValue(attr));
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
@@ -92,38 +124,6 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         }
         else {
             styleMap = getElementCache(element, 'styleMap', sessionId) || {};
-            const setBorderStyle = () => {
-                if (!isString(styleMap.border) && checkBorderAttribute()) {
-                    const inputBorderColor = this.localSettings.style.inputBorderColor;
-                    styleMap.border = `outset 1px ${inputBorderColor}`;
-                    for (let i = 0; i < 4; ++i) {
-                        const border = BOX_BORDER[i];
-                        styleMap[border[0]] = 'outset';
-                        styleMap[border[1]] = '1px';
-                        styleMap[border[2]] = inputBorderColor;
-                    }
-                    return true;
-                }
-                return false;
-            };
-            const setButtonStyle = (applied: boolean) => {
-                if (applied) {
-                    const backgroundColor = styleMap.backgroundColor;
-                    if (!isString(backgroundColor) || backgroundColor === 'initial') {
-                        styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
-                    }
-                }
-                if (!isString(styleMap.textAlign)) {
-                    styleMap.textAlign = 'center';
-                }
-                if (!isString(styleMap.padding) && !BOX_PADDING.some(attr => !!styleMap[attr])) {
-                    styleMap.paddingTop = '2px';
-                    styleMap.paddingRight = '6px';
-                    styleMap.paddingBottom = '3px';
-                    styleMap.paddingLeft = '6px';
-                }
-            };
-            const checkBorderAttribute = () => !(BOX_BORDER[0][0] in styleMap || BOX_BORDER[1][0] in styleMap || BOX_BORDER[2][0] in styleMap || BOX_BORDER[3][0] in styleMap);
             const tagName = element.tagName;
             if (isUserAgent(USER_AGENT.FIREFOX)) {
                 switch (tagName) {
@@ -206,13 +206,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                             styleMap.paddingLeft = formatPX(convertFloat(styleMap.paddingLeft) + 1);
                             break;
                         default: {
-                            const result = setBorderStyle();
+                            const style = this.localSettings.style;
+                            const result = setBorderStyle(styleMap, style.inputBorderColor);
                             switch (type) {
                                 case 'file':
                                 case 'reset':
                                 case 'submit':
                                 case 'button':
-                                    setButtonStyle(result);
+                                    setButtonStyle(styleMap, result, style.inputBackgroundColor);
                                     break;
                             }
                             break;
@@ -220,12 +221,14 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     }
                     break;
                 }
-                case 'BUTTON':
-                    setButtonStyle(setBorderStyle());
+                case 'BUTTON': {
+                    const style = this.localSettings.style;
+                    setButtonStyle(styleMap, setBorderStyle(styleMap, style.inputBorderColor), style.inputBackgroundColor);
                     break;
+                }
                 case 'TEXTAREA':
                 case 'SELECT':
-                    setBorderStyle();
+                    setBorderStyle(styleMap, this.localSettings.style.inputBorderColor);
                     break;
                 case 'BODY': {
                     const backgroundColor = styleMap.backgroundColor;
@@ -253,43 +256,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 case 'CANVAS':
                 case 'svg':
                 case 'IMG': {
-                    const setDimension = (attr: string, opposing: string) => {
-                        const dimension = styleMap[attr];
-                        if (!isString(dimension) || dimension === 'auto') {
-                            const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
-                            if (match) {
-                                const value = match[1];
-                                if (isLength(value)) {
-                                    styleMap[attr] = value + 'px';
-                                }
-                                else if (isPercent(value)) {
-                                    styleMap[attr] = value;
-                                }
-                            }
-                            else if (tagName === 'IFRAME') {
-                                if (attr === 'width') {
-                                    styleMap.width = '300px';
-                                }
-                                else {
-                                    styleMap.height = '150px';
-                                }
-                            }
-                            else {
-                                const value = styleMap[opposing];
-                                if (value && isLength(value)) {
-                                    const attrMax = `max${capitalize(attr)}`;
-                                    if (!isString(styleMap[attrMax]) || !isPercent(attrMax)) {
-                                        const image = this.application.resourceHandler.getImage((<HTMLImageElement> element).src);
-                                        if (image && image.width > 0 && image.height > 0) {
-                                            styleMap[attr] = formatPX(image[attr] * parseFloat(value) / image[opposing]);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    };
-                    setDimension('width', 'height');
-                    setDimension('height', 'width');
+                    this.setElementDimension(element, tagName, styleMap, 'width', 'height');
+                    this.setElementDimension(element, tagName, styleMap, 'height', 'width');
                     break;
                 }
             }
@@ -663,6 +631,42 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
 
     public getEnclosingXmlTag(controlName: string, attributes = '', content?: string) {
         return '<' + controlName + attributes + (content ? `>\n${content}</${controlName}>\n` : ' />\n');
+    }
+
+    private setElementDimension(element: Element, tagName: string, styleMap: StringMap, attr: string, opposing: string) {
+        const dimension = styleMap[attr];
+        if (!isString(dimension) || dimension === 'auto') {
+            const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
+            if (match) {
+                const value = match[1];
+                if (isLength(value)) {
+                    styleMap[attr] = value + 'px';
+                }
+                else if (isPercent(value)) {
+                    styleMap[attr] = value;
+                }
+            }
+            else if (tagName === 'IFRAME') {
+                if (attr === 'width') {
+                    styleMap.width = '300px';
+                }
+                else {
+                    styleMap.height = '150px';
+                }
+            }
+            else {
+                const value = styleMap[opposing];
+                if (value && isLength(value)) {
+                    const attrMax = `max${capitalize(attr)}`;
+                    if (!isString(styleMap[attrMax]) || !isPercent(attrMax)) {
+                        const image = this.application.resourceHandler.getImage((<HTMLImageElement> element).src);
+                        if (image && image.width > 0 && image.height > 0) {
+                            styleMap[attr] = formatPX(image[attr] * parseFloat(value) / image[opposing]);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     get generateSessionId() {

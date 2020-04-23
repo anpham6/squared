@@ -460,6 +460,22 @@ function setBorderStyle(layerList: ObjectMap<any>, borders: Undef<BorderAttribut
     }
 }
 
+function deleteBodyWrapper(body: View, wrapper: View) {
+    if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
+        switch (body.cssInitial('maxWidth')) {
+            case '':
+            case 'auto':
+            case '100%': {
+                const children = wrapper.renderChildren;
+                if (children.length === 1) {
+                    wrapper.removeTry({ replaceWith: children[0] });
+                }
+                break;
+            }
+        }
+    }
+}
+
 const roundFloat = (value: string) => Math.round(parseFloat(value));
 const getStrokeColor = (value: ColorData): ShapeStrokeData => ({ color: getColorValue(value), dashWidth: '', dashGap: '' });
 const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || border.style === 'ridge' || border.style === 'double' && roundFloat(border.width) > 1;
@@ -510,21 +526,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             });
             themeBackground = true;
-        };
-        const deleteBodyWrapper = (body: T, wrapper: T) => {
-            if (body !== wrapper && !wrapper.hasResource(NODE_RESOURCE.BOX_SPACING) && body.percentWidth === 0) {
-                switch (body.cssInitial('maxWidth')) {
-                    case '':
-                    case 'auto':
-                    case '100%': {
-                        const children = wrapper.renderChildren;
-                        if (children.length === 1) {
-                            wrapper.removeTry({ replaceWith: children[0] });
-                        }
-                        break;
-                    }
-                }
-            }
         };
         const setDrawableBackground = (node: T, value: string) => {
             if (value !== '') {

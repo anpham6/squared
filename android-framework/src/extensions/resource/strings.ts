@@ -16,6 +16,13 @@ const { STRING_SPACE, replaceCharacterData } = $lib.xml;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
+function setTextValue(node: View, attr: string, name: string, value: string, useNumber: boolean) {
+    name = Resource.addString(value, name, useNumber);
+    if (name !== '') {
+        node.android(attr, useNumber || !isNumber(name) ? `@string/${name}` : name, false);
+    }
+}
+
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false,
@@ -25,12 +32,6 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
 
     public afterResources() {
         const numberResourceValue = this.options.numberResourceValue;
-        const setTextValue = (node: T, attr: string, name: string, value: string) => {
-            name = Resource.addString(value, name, numberResourceValue);
-            if (name !== '') {
-                node.android(attr, numberResourceValue || !isNumber(name) ? `@string/${name}` : name, false);
-            }
-        };
         this.cacheProcessing.each(node => {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
@@ -134,7 +135,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
                                         value = STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + value;
                                     }
-                                    setTextValue(node, 'text', name, value);
+                                    setTextValue(node, 'text', name, value, numberResourceValue);
                                 }
                             }
                             if (node.inputElement) {
@@ -149,7 +150,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                                 const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
                                 if (isString(hintString)) {
-                                    setTextValue(node, 'hint', '', hintString);
+                                    setTextValue(node, 'hint', '', hintString, numberResourceValue);
                                 }
                             }
                         }
@@ -158,7 +159,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 if (node.styleElement) {
                     const title: string =  node.data(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
                     if (title !== '') {
-                        setTextValue(node, 'tooltipText', `${node.controlId.toLowerCase()}_title`, title);
+                        setTextValue(node, 'tooltipText', `${node.controlId.toLowerCase()}_title`, title, numberResourceValue);
                     }
                 }
             }

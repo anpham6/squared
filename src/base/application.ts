@@ -52,6 +52,31 @@ function parseSrcSet(value: string) {
     }
 }
 
+function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr: string, preloadImges: boolean, styleSheetHref?: string) {
+    const value = baseMap[attr];
+    if (value && value !== 'initial') {
+        let result = value;
+        REGEX_DATAURI.lastIndex = 0;
+        let match: Null<RegExpExecArray>;
+        while ((match = REGEX_DATAURI.exec(value)) !== null) {
+            if (match[2]) {
+                const mimeType = match[2].split(XML.DELIMITER);
+                resourceHandler.addRawData(match[1], mimeType[0].trim(), mimeType[1]?.trim() || 'utf8', match[3]);
+            }
+            else if (preloadImges) {
+                const uri = resolvePath(match[3], styleSheetHref);
+                if (uri !== '') {
+                    if (!resourceHandler.getImage(uri)) {
+                        addImageSrc(uri);
+                    }
+                    result = result.replace(match[0], `url("${uri}")`);
+                }
+            }
+        }
+        baseMap[attr] = result;
+    }
+}
+
 async function getImageSvgAsync(value: string) {
     return (await fetch(value, { method: 'GET', headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' }) })).text();
 }
@@ -440,47 +465,6 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     protected setStyleMap() {
-        let warning = false;
-        const applyStyleSheet = (item: CSSStyleSheet) => {
-            try {
-                const cssRules = item.cssRules;
-                if (cssRules) {
-                    const length = cssRules.length;
-                    let i = 0;
-                    while (i < length) {
-                        const rule = cssRules[i++];
-                        switch (rule.type) {
-                            case CSSRule.STYLE_RULE:
-                            case CSSRule.FONT_FACE_RULE:
-                                this.applyStyleRule(<CSSStyleRule> rule);
-                                break;
-                            case CSSRule.IMPORT_RULE:
-                                applyStyleSheet((<CSSImportRule> rule).styleSheet);
-                                break;
-                            case CSSRule.MEDIA_RULE:
-                                if (checkMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
-                                    this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
-                                }
-                                break;
-                            case CSSRule.SUPPORTS_RULE:
-                                if (CSS.supports && CSS.supports((<CSSConditionRule> rule).conditionText || parseConditionText('supports', rule.cssText))) {
-                                    this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
-                                }
-                                break;
-                        }
-                    }
-                }
-            }
-            catch (error) {
-                if (this.userSettings.showErrorMessages && !warning) {
-                    alert('CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' +
-                          'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
-                          'See the README for more detailed instructions.\n\n' +
-                          item.href + '\n\n' + error);
-                    warning = true;
-                }
-            }
-        };
         const styleSheets = document.styleSheets;
         const length = styleSheets.length;
         let i = 0;
@@ -493,7 +477,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             catch {
             }
             if (!isString(mediaText) || REGEX_MEDIATEXT.test(mediaText)) {
-                applyStyleSheet(<CSSStyleSheet> styleSheet);
+                this.applyStyleSheet(<CSSStyleSheet> styleSheet);
             }
         }
     }
@@ -511,34 +495,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const cssStyle = item.style;
                 const important: ObjectMap<boolean> = {};
                 const baseMap: StringMap = {};
-                const parseImageUrl = (attr: string) => {
-                    const value = baseMap[attr];
-                    if (value && value !== 'initial') {
-                        let result = value;
-                        REGEX_DATAURI.lastIndex = 0;
-                        let match: Null<RegExpExecArray>;
-                        while ((match = REGEX_DATAURI.exec(value)) !== null) {
-                            if (match[2]) {
-                                const mimeType = match[2].split(XML.DELIMITER);
-                                resourceHandler.addRawData(match[1], mimeType[0].trim(), mimeType[1]?.trim() || 'utf8', match[3]);
-                            }
-                            else if (this.userSettings.preloadImages) {
-                                const uri = resolvePath(match[3], styleSheetHref);
-                                if (uri !== '') {
-                                    if (!resourceHandler.getImage(uri)) {
-                                        addImageSrc(uri);
-                                    }
-                                    result = result.replace(match[0], `url("${uri}")`);
-                                }
-                            }
-                        }
-                        baseMap[attr] = result;
-                    }
-                };
+                const preloadImages = this.userSettings.preloadImages;
                 Array.from(cssStyle).forEach(attr => baseMap[convertCamelCase(attr)] = cssStyle[attr]);
-                parseImageUrl('backgroundImage');
-                parseImageUrl('listStyleImage');
-                parseImageUrl('content');
+                parseImageUrl(resourceHandler, baseMap, 'backgroundImage', preloadImages, styleSheetHref);
+                parseImageUrl(resourceHandler, baseMap, 'listStyleImage', preloadImages, styleSheetHref);
+                parseImageUrl(resourceHandler, baseMap, 'content', preloadImages, styleSheetHref);
                 REGEX_IMPORTANT.lastIndex = 0;
                 let match: Null<RegExpExecArray>;
                 while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
@@ -694,6 +655,46 @@ export default abstract class Application<T extends Node> implements squared.bas
         let i = 0;
         while (i < length) {
             this.applyStyleRule(<CSSStyleRule> rules[i++]);
+        }
+    }
+
+    protected applyStyleSheet(item: CSSStyleSheet) {
+        try {
+            const cssRules = item.cssRules;
+            if (cssRules) {
+                const length = cssRules.length;
+                let i = 0;
+                while (i < length) {
+                    const rule = cssRules[i++];
+                    switch (rule.type) {
+                        case CSSRule.STYLE_RULE:
+                        case CSSRule.FONT_FACE_RULE:
+                            this.applyStyleRule(<CSSStyleRule> rule);
+                            break;
+                        case CSSRule.IMPORT_RULE:
+                            this.applyStyleSheet((<CSSImportRule> rule).styleSheet);
+                            break;
+                        case CSSRule.MEDIA_RULE:
+                            if (checkMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
+                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
+                            }
+                            break;
+                        case CSSRule.SUPPORTS_RULE:
+                            if (CSS.supports && CSS.supports((<CSSConditionRule> rule).conditionText || parseConditionText('supports', rule.cssText))) {
+                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
+                            }
+                            break;
+                    }
+                }
+            }
+        }
+        catch (error) {
+            if (this.userSettings.showErrorMessages) {
+                alert('CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' +
+                      'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
+                      'See the README for more detailed instructions.\n\n' +
+                      item.href + '\n\n' + error);
+            }
         }
     }
 

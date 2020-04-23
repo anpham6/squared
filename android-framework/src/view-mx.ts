@@ -544,6 +544,36 @@ function finalizeGravity(node: T, attr: string) {
     }
 }
 
+function setFlexGrow(node: T, horizontal: boolean, grow: number, value?: number, shrink?: number) {
+    if (grow > 0) {
+        node.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', truncate(grow, node.localSettings.floatPrecision));
+        return true;
+    }
+    else if (value) {
+        if (shrink) {
+            if (shrink > 1) {
+                value /= shrink;
+            }
+            else if (shrink > 0) {
+                value *= 1 - shrink;
+            }
+        }
+        node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
+    }
+    return false;
+}
+
+function setCustomization(node: T, obj: Undef<ObjectMap<StringMap>>, overwrite: boolean) {
+    if (obj) {
+        for (const name in obj) {
+            const data = obj[name];
+            for (const attr in data) {
+                node.attr(name, attr, data[attr], overwrite);
+            }
+        }
+    }
+}
+
 const getGravityValues = (node: T, attr: string) => new Set<string>(node.android(attr).split('|'));
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
@@ -561,28 +591,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public static setFlexDimension<T extends View>(node: T, dimension: DimensionAttr) {
             const { grow, basis, shrink } = node.flexbox;
             const horizontal = dimension === 'width';
-            const setFlexGrow = (value: number) => {
-                if (grow > 0) {
-                    node.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', truncate(grow, node.localSettings.floatPrecision));
-                    return true;
-                }
-                else if (value > 0) {
-                    if (shrink > 1) {
-                        value /= shrink;
-                    }
-                    else if (shrink > 1) {
-                        value *= 1 - shrink;
-                    }
-                    node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
-                }
-                return false;
-            };
             if (isLength(basis)) {
-                setFlexGrow(node.parseUnit(basis, dimension));
+                setFlexGrow(node, horizontal, grow, node.parseUnit(basis, dimension), shrink);
                 setLayoutDimension(node, '0px', horizontal, true);
             }
             else if (basis !== '0%' && isPercent(basis)) {
-                setFlexGrow(0);
+                setFlexGrow(node, horizontal, grow);
                 const percent = parseFloat(basis) / 100;
                 if (horizontal) {
                     setConstraintPercent(node, percent, true, NaN);
@@ -594,7 +608,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             else {
                 let flexible = false;
                 if (node.hasFlex(horizontal ? 'row' : 'column')) {
-                    flexible = setFlexGrow(node.hasPX(dimension, false) ? horizontal ? node.actualWidth : node.actualHeight : 0);
+                    flexible = setFlexGrow(node, horizontal, grow, node.hasPX(dimension, false) ? (horizontal ? node.actualWidth : node.actualHeight) : 0, shrink);
                     if (flexible) {
                         setLayoutDimension(node, '0px', horizontal, true);
                     }
@@ -2240,25 +2254,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public applyCustomizations(overwrite = true) {
-            const setCustomization = (obj: Undef<ObjectMap<StringMap>>) => {
-                if (obj) {
-                    for (const name in obj) {
-                        const data = obj[name];
-                        for (const attr in data) {
-                            this.attr(name, attr, data[attr], overwrite);
-                        }
-                    }
-                }
-            };
             const { tagName, controlName } = this;
             let assign = API_ANDROID[0].assign;
-            setCustomization(assign[tagName]);
-            setCustomization(assign[controlName]);
+            setCustomization(this, assign[tagName], overwrite);
+            setCustomization(this, assign[controlName], overwrite);
             const api = API_ANDROID[this.api];
             if (api) {
                 assign = api.assign;
-                setCustomization(assign[tagName]);
-                setCustomization(assign[controlName]);
+                setCustomization(this, assign[tagName], overwrite);
+                setCustomization(this, assign[controlName], overwrite);
             }
         }
 

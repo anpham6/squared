@@ -15,6 +15,8 @@ import NodeList from './nodelist';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
+type LayoutMap = Map<number, Map<number, NodeUI>>;
+
 const $lib = squared.lib;
 
 const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = $lib.css;
@@ -129,10 +131,35 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
     return result;
 }
 
+function checkPseudoAfter(element: Element) {
+    const previousSibling = <Element> element.childNodes[element.childNodes.length - 1];
+    if (isTextNode(previousSibling)) {
+        return !/\s+$/.test(previousSibling.textContent as string);
+    }
+    return false;
+}
+
+function checkPseudoDimension(styleMap: StringMap, after: boolean, absolute: boolean) {
+    if ((after || convertFloat(styleMap.width) === 0) && convertFloat(styleMap.height) === 0) {
+        for (const attr in styleMap) {
+            if (/(padding|Width|Height)/.test(attr) && convertFloat(styleMap[attr]) > 0) {
+                return true;
+            }
+            else if (!absolute && attr.startsWith('margin') && convertFloat(styleMap[attr]) !== 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+    return true;
+}
+
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI): boolean => node.textElement && (node.blockStatic || node.multiline);
 const getRelativeOffset = (item: NodeUI, fromRight: boolean) => item.positionRelative ? (item.hasPX('left') ? item.left * (fromRight ? 1 : -1) : item.right * (fromRight ? -1 : 1)) : 0;
 const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => !!item.use }).length > 0;
+const setMapDepth = (map: LayoutMap, depth: number, id: number, node: NodeUI) => map.get(depth)?.set(id, node) || map.set(depth, new Map<number, NodeUI>([[id, node]]));
+const getMapIndex = (value: number) => (value * -1) - 2;
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
     public readonly session: AppSession<T> = {
@@ -724,13 +751,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let extensions = this.extensionsTraverse;
         {
             let maxDepth = 0;
-            const setMap = (depth: number, id: number, node: T) => mapY.get(depth)?.set(id, node) || mapY.set(depth, new Map<number, T>([[id, node]]));
-            const getIndex = (value: number) => (value * -1) - 2;
-            setMap(-1, 0, documentRoot.parent as T);
+            setMapDepth(mapY, -1, 0, documentRoot.parent as T);
             cache.each(node => {
                 if (node.length) {
                     const depth = node.depth;
-                    setMap(depth, node.id, node);
+                    setMapDepth(mapY, depth, node.id, node);
                     maxDepth = Math.max(depth, maxDepth);
                     if (node.floatContainer) {
                         const floated = new Set<string>();
@@ -787,16 +812,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             });
             let i = 0;
             while (i < maxDepth) {
-                mapY.set(getIndex(i++), new Map<number, T>());
+                mapY.set(getMapIndex(i++), new Map<number, T>());
             }
             cache.afterAppend = (node: T, cascade = false) => {
-                setMap(getIndex(node.depth), node.id, node);
+                setMapDepth(mapY, getMapIndex(node.depth), node.id, node);
                 if (cascade && node.length) {
                     node.cascade((item: T) => {
                         if (item.length) {
                             const depth = item.depth;
                             mapY.get(depth)?.delete(item.id);
-                            setMap(getIndex(depth), item.id, item);
+                            setMapDepth(mapY, getMapIndex(depth), item.id, item);
                         }
                         return false;
                     });
@@ -1471,32 +1496,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         absolute = true;
                         break;
                 }
-                const checkPseudoAfter = () => {
-                    if (!absolute && textContent !== '') {
-                        const previousSibling = <Element> element.childNodes[element.childNodes.length - 1];
-                        if (isTextNode(previousSibling)) {
-                            return !/\s+$/.test(previousSibling.textContent as string);
-                        }
-                    }
-                    return false;
-                };
                 if (textContent.trim() === '') {
-                    const checkDimension = (after: boolean) => {
-                        if ((after || convertFloat(styleMap.width) === 0) && convertFloat(styleMap.height) === 0) {
-                            for (const attr in styleMap) {
-                                if (/(padding|Width|Height)/.test(attr) && convertFloat(styleMap[attr]) > 0) {
-                                    return true;
-                                }
-                                else if (!absolute && attr.startsWith('margin') && convertFloat(styleMap[attr]) !== 0) {
-                                    return true;
-                                }
-                            }
-                            return false;
-                        }
-                        return true;
-                    };
                     if (pseudoElt === '::after') {
-                        if (!checkPseudoAfter() && !checkDimension(true)) {
+                        if ((absolute || textContent === '' || !checkPseudoAfter(element)) && !checkPseudoDimension(styleMap, true, absolute)) {
                             return undefined;
                         }
                     }
@@ -1530,7 +1532,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             case 'inline':
                             case 'inherit':
                             case 'initial':
-                                if (!checkDimension(false)) {
+                                if (!checkPseudoDimension(styleMap, false, absolute)) {
                                     return undefined;
                                 }
                                 break;

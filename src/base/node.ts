@@ -697,6 +697,7 @@ function getInitialValue(this: T, attr: string, modified?: boolean, computed?: b
 const canTextAlign = (node: T) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
 const soryById = (a: T, b: T) => a.id < b.id ? -1 : 1;
+const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public documentRoot = false;
@@ -2929,7 +2930,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get fontSize(): number {
         let result = this._fontSize;
         if (result === undefined) {
-            const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
             if (this.naturalChild && this.styleElement) {
                 const value = this.css('fontSize');
                 if (PX.test(value)) {
