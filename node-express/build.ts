@@ -41,7 +41,7 @@ for (let i = 2; i < ARGV.length; i += 2) {
         case '-extensions':
             arg.split(',').forEach(value => {
                 const include: string[] = [];
-                if (value.indexOf('*') !== -1) {
+                if (value.includes('*')) {
                     glob.sync(path.resolve(`dist/extensions/${value}`)).forEach(filepath => {
                         if (filepath.endsWith('.min.js')) {
                             include.push(filepath);

@@ -10,6 +10,7 @@ html/books/
 html/demos/
 node_modules/
 node-express/
+node-md5/
 src/
 temp/
 .eslint*

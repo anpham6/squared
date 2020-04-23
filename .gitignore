@@ -1,11 +1,13 @@
 .idea/
 .vscode/
 build/
+md5/debug/
 node_modules/
 temp/
 *.code-workspace
 package-lock.json
 app.js
 build.js
+md5sum.js
 *.zip
 .DS_Store

@@ -12,7 +12,7 @@ const $lib = squared.lib;
 const { findColorShade, parseColor } = $lib.color;
 const { extractURL, getSrcSet } = $lib.css;
 const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
-const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, randomUUID, resolvePath, safeNestedArray, spliceArray, trimString } = $lib.util;
+const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = $lib.util;
 
 const STORED = <ResourceStoredMap> squared.base.ResourceUI.STORED;
 const REGEX_NONWORD = /[^\w]+/g;
@@ -61,6 +61,9 @@ function formatObject(obj: {}, numberAlias = false) {
 }
 
 export default class Resource<T extends View> extends squared.base.ResourceUI<T> implements android.base.Resource<T> {
+    private static UUID_COUNTER = 0;
+    private static SYMBOL_COUNTER = 0;
+
     public static formatOptions(options: ViewAttribute, numberAlias = false) {
         for (const namespace in options) {
             const obj: StandardMap = options[namespace];
@@ -156,7 +159,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     name = `__${name}`;
                 }
                 else if (name === '') {
-                    name = `__symbol${Math.ceil(Math.random() * 100000)}`;
+                    name = `__symbol${++Resource.SYMBOL_COUNTER}`;
                 }
                 if (strings.has(name)) {
                     name = Resource.generateId('string', name);
@@ -228,6 +231,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public reset() {
         super.reset();
         CACHE_IMAGE = {};
+        Resource.UUID_COUNTER = 0;
+        Resource.SYMBOL_COUNTER = 0;
     }
 
     public addImageSrc(element: HTMLImageElement | string, prefix = '', imageSet?: ImageSrcSet[]) {
@@ -307,6 +312,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     get randomUUID() {
-        return '__' + randomUUID('_');
+        return '__' + (++Resource.UUID_COUNTER).toString().padStart(5, '0');
     }
 }

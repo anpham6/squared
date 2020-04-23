@@ -18,9 +18,11 @@
     "allowUmdGlobalAccess": true
   },
   "exclude": [
+    "md5",
     "node_modules",
     "build",
     "dist",
-    "node-express"
+    "node-express",
+    "node-md5"
   ]
 }

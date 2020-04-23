@@ -89,17 +89,17 @@ if (env === 'development') {
 
 if (process.argv) {
     const argv = process.argv;
-    const all = argv.indexOf('--access-all') !== -1;
-    if (all || argv.indexOf('--disk-read') !== -1 || argv.indexOf('--access-disk') !== -1) {
+    const all = argv.includes('--access-all');
+    if (all || argv.includes('--disk-read') || argv.includes('--access-disk')) {
         DISK_READ = true;
     }
-    if (all || argv.indexOf('--disk-write') !== -1 || argv.indexOf('--access-disk') !== -1) {
+    if (all || argv.includes('--disk-write') || argv.includes('--access-disk')) {
         DISK_WRITE = true;
     }
-    if (all || argv.indexOf('--unc-read') !== -1 || argv.indexOf('--access-unc') !== -1) {
+    if (all || argv.includes('--unc-read') || argv.includes('--access-unc')) {
         UNC_READ = true;
     }
-    if (all || argv.indexOf('--unc-write') !== -1 || argv.indexOf('--access-unc') !== -1) {
+    if (all || argv.includes('--unc-write') || argv.includes('--access-unc')) {
         UNC_WRITE = true;
     }
 }
@@ -138,7 +138,7 @@ function createBrotliWriteStream(source: string, filename: string, quality?: num
         .pipe(
             zlib.createBrotliCompress({
                 params: {
-                    [zlib.constants.BROTLI_PARAM_MODE]: /text\//.test(mimeType) ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
+                    [zlib.constants.BROTLI_PARAM_MODE]: mimeType.includes('text/') ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
                     [zlib.constants.BROTLI_PARAM_QUALITY]: quality || BROTLI_QUALITY,
                     [zlib.constants.BROTLI_PARAM_SIZE_HINT]: getFileSize(source)
                 }
@@ -180,7 +180,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 }
                 const { uri, moveTo, rootDir } = item;
                 if (uri) {
-                    const separator = uri.indexOf('\\') !== -1 ? '\\' : '/';
+                    const separator = uri.includes('\\') ? '\\' : '/';
                     const location = appendSeparator(item.pathname, item.filename, separator);
                     const value = (moveTo ? path.join(moveTo, location) : location).replace(/\\/g, '/');
                     if (rootDir) {
@@ -409,7 +409,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 return;
             }
             const checkQueue = () => {
-                if (completed.indexOf(filepath) !== -1) {
+                if (completed.includes(filepath)) {
                     writeBuffer(assets, file, filepath, status, finalize);
                     finalize('');
                     return true;
