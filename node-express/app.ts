@@ -1,12 +1,11 @@
 import { CompressionFormat, ResultOfFileAction, RequestAsset, Settings } from './@types/node';
 
-import got from 'got';
-
+import path = require('path');
+import fs = require('fs-extra');
+import zlib = require('zlib');
 import express = require('express');
 import bodyParser = require('body-parser');
-import path = require('path');
-import zlib = require('zlib');
-import fs = require('fs-extra');
+import request = require('request');
 import archiver = require('archiver');
 import decompress = require('decompress');
 import uuid = require('uuid');
@@ -435,7 +434,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 }
                 delete processing[filepath];
             };
-            const errorRequest = (stream?: fs.WriteStream) => {
+            const errorRequest = (message: Error | string, stream?: fs.WriteStream) => {
                 if (!notFound[uri]) {
                     finalize('');
                     notFound[uri] = true;
@@ -448,6 +447,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                     catch {
                     }
                 }
+                writeError(uri, message);
                 delete processing[filepath];
             };
             try {
@@ -462,17 +462,14 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                         }
                     });
                     status.delayed++;
-                    got.stream(uri)
+                    request(uri)
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
-                                errorRequest(stream);
-                                writeError(uri, statusCode + ' ' + response.statusMessage);
+                                errorRequest(statusCode + ' ' + response.statusMessage, stream);
                             }
                         })
-                        .on('error', () => {
-                            errorRequest(stream);
-                        })
+                        .on('error', err => errorRequest(err, stream))
                         .pipe(stream);
                 }
                 else {
@@ -508,8 +505,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 }
             }
             catch (err) {
-                errorRequest();
-                writeError(uri, err);
+                errorRequest(err);
             }
         }
     });
@@ -798,7 +794,7 @@ app.post('/api/assets/archive', (req, res) => {
                 if (isFileURI(append_to)) {
                     const stream = fs.createWriteStream(zippath);
                     stream.on('finish', copySuccess);
-                    got.stream(append_to)
+                    request(append_to)
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
