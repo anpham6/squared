@@ -6,7 +6,8 @@ android-widget/
 build/
 chrome-framework/
 dist/bundles/
-html/
+html/*
+md5/
 node_modules/
 node-express/
 node-md5/
@@ -18,5 +19,6 @@ temp/
 rollup*
 tsconfig.*
 build.js
+md5sum.js
 !app.js
 !html/index.html

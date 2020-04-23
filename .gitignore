@@ -1,7 +1,6 @@
 .idea/
 .vscode/
 build/
-md5/debug/
 node_modules/
 temp/
 *.code-workspace
@@ -11,4 +10,3 @@ build.js
 md5sum.js
 *.zip
 .DS_Store
-md5/chrome.txt

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Language" content="en">
     <title>https://github.com/anpham6/squared</title>
-    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <link rel="stylesheet" type="text/css" href="css/dev.css">
     <style>
         #squared_ui {
             padding: 10px;
@@ -36,14 +36,14 @@
     <script src="/dist/squared.base.js"></script>
     <script src="/dist/squared.svg.js"></script>
     <script src="/dist/android.framework.js"></script>
-    <script src="../books/squared.js"></script>
+    <script src="/common/loader.js"></script>
 </head>
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 300px;">
         <div class="example">
             <h2>URI in IMG-src</h2>
-            <img src="../demos-dev/images/image.svg" />
+            <img src="../common/images/image.svg" />
         </div>
         <div class="example">
             <h2>Base64 Data URI in SVG-as-img</h2>
@@ -79,14 +79,14 @@
             </clipPath>
             <path id="heart" d="M10,30 A20,20,0,0,1,50,30 A20,20,0,0,1,90,30 Q90,60,50,90 Q10,60,10,30 Z" />
             <use clip-path="url(#myClip)" href="#heart" fill="red" />
-            <image href="../demos-dev/images/icons8-google-docs.png" x="0" y="0" width="10" height="10" />
-            <image href="../demos-dev/images/icons8-google-news.png" x="10" y="10" width="10" height="10" transform="scale(0.5) translate(10, 10) rotate(90, 15, 25) translate(10, 10)" />
-            <image href="../demos-dev/images/icons8-google-play.png" x="20" y="20" width="10" height="10" transform="rotate(180, 15, 25)" />
-            <image href="../demos-dev/images/icons8-google-plus.png" x="30" y="30" width="10" height="10" transform="rotate(270, 15, 25)" />
-            <image href="../demos-dev/images/icons8-google-docs.png" x="0" y="0" width="10" height="10" />
-            <image href="../demos-dev/images/icons8-google-news.png" x="10" y="10" width="10" height="10" transform="scale(0.5) translate(10, 10) rotate(100, 15, 25) translate(10, 10)" />
-            <image href="../demos-dev/images/icons8-google-play.png" x="20" y="20" width="10" height="10" transform="scale(0.5) translate(10, 10) rotate(45, 15, 25)" />
-            <image href="../demos-dev/images/icons8-google-plus.png" x="30" y="30" width="10" height="10" transform="translate(10, 10) rotate(15, 0, 25) translate(10, 10)" />
+            <image href="../common/images/icons8-google-docs.png" x="0" y="0" width="10" height="10" />
+            <image href="../common/images/icons8-google-news.png" x="10" y="10" width="10" height="10" transform="scale(0.5) translate(10, 10) rotate(90, 15, 25) translate(10, 10)" />
+            <image href="../common/images/icons8-google-play.png" x="20" y="20" width="10" height="10" transform="rotate(180, 15, 25)" />
+            <image href="../common/images/icons8-google-plus.png" x="30" y="30" width="10" height="10" transform="rotate(270, 15, 25)" />
+            <image href="../common/images/icons8-google-docs.png" x="0" y="0" width="10" height="10" />
+            <image href="../common/images/icons8-google-news.png" x="10" y="10" width="10" height="10" transform="scale(0.5) translate(10, 10) rotate(100, 15, 25) translate(10, 10)" />
+            <image href="../common/images/icons8-google-play.png" x="20" y="20" width="10" height="10" transform="scale(0.5) translate(10, 10) rotate(45, 15, 25)" />
+            <image href="../common/images/icons8-google-plus.png" x="30" y="30" width="10" height="10" transform="translate(10, 10) rotate(15, 0, 25) translate(10, 10)" />
         </svg>
     </div>
     <!-- END: DEMO -->

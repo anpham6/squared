@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Language" content="en">
     <title>https://github.com/anpham6/squared</title>
-    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <link rel="stylesheet" type="text/css" href="css/dev.css">
     <style>
         #squared_ui {
             position: relative;
@@ -25,17 +25,17 @@
         #squared_ui #fab_web {
             bottom: 64px;
             right: 0;
-            background-image: url(../demos-dev/images/icons8-web-24.png);
+            background-image: url(../common/images/icons8-web-24.png);
         }
         #squared_ui #fab_browse_page {
             bottom: 0;
             right: 0;
-            background-image: url(../demos-dev/images/icons8-browse-page-24.png);
+            background-image: url(../common/images/icons8-browse-page-24.png);
         }
         #squared_ui #fab_left {
             bottom: 0;
             left: 0;
-            background-image: url(../demos-dev/images/icons8-left-24.png);
+            background-image: url(../common/images/icons8-left-24.png);
         }
         .content {
             font-size: 12px;
@@ -44,10 +44,13 @@
             padding: 8px;
         }
     </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
     <script src="/dist/squared.js"></script>
     <script src="/dist/squared.base.js"></script>
     <script src="/dist/android.framework.js"></script>
-    <script src="../books/squared.js"></script>
+    <script src="/common/loader.js"></script>
 </head>
 <body>
     <!-- START: DEMO -->

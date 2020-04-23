@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Language" content="en">
     <title>https://github.com/anpham6/squared</title>
-    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <link rel="stylesheet" type="text/css" href="css/dev.css">
     <style>
         #squared_ui {
             position: relative;
@@ -43,10 +43,13 @@
             padding: 8px;
         }
     </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
     <script src="/dist/squared.js"></script>
     <script src="/dist/squared.base.js"></script>
     <script src="/dist/android.framework.js"></script>
-    <script src="../books/squared.js"></script>
+    <script src="/common/loader.js"></script>
 </head>
 <body>
     <!-- START: DEMO -->
@@ -73,23 +76,23 @@
         <div id="bottomnavigation_demo" data-use-android="android.widget.bottomnavigation">
             <nav id="bottomnavigation_menu" data-use-android="android.widget.menu">
                 <div>
-                    <img src="../demos-dev/images/icons8-chrome.png" /><br />
+                    <img src="../common/images/icons8-chrome.png" /><br />
                     <label>Chrome</label>
                 </div>
                 <div>
-                    <img src="../demos-dev/images/icons8-google-docs.png" /><br />
+                    <img src="../common/images/icons8-google-docs.png" /><br />
                     <label>Docs</label>
                 </div>
                 <div>
-                    <img src="../demos-dev/images/icons8-google-news.png" /><br />
+                    <img src="../common/images/icons8-google-news.png" /><br />
                     <label>News</label>
                 </div>
                 <div>
-                    <img src="../demos-dev/images/icons8-google-play.png" /><br />
+                    <img src="../common/images/icons8-google-play.png" /><br />
                     <label>Play</label>
                 </div>
                 <div>
-                    <img src="../demos-dev/images/icons8-google-plus.png" /><br />
+                    <img src="../common/images/icons8-google-plus.png" /><br />
                     <label>Plus</label>
                 </div>
             </nav>

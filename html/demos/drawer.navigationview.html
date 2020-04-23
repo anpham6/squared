@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Language" content="en">
     <title>https://github.com/anpham6/squared</title>
-    <link rel="stylesheet" type="text/css" href="common/dev.css">
+    <link rel="stylesheet" type="text/css" href="css/dev.css">
     <style>
         #drawer_demo {
             display: block;
@@ -33,7 +33,7 @@
         #drawer_header {
             height: 120px;
             padding: 10px;
-            background: url(../demos-dev/images/android_background.jpg) slateblue;
+            background: url(../common/images/android_background.jpg) slateblue;
             background-size: 100% 100%;
         }
         #drawer_header span {
@@ -47,7 +47,7 @@
             border-top: solid 1px #ccc;
         }
         #toolbar_demo {
-            background: url(../demos-dev/images/android_header.jpg) #6A5ACD;
+            background: url(../common/images/android_header.jpg) #6A5ACD;
             background-size: 100% 100%;
         }
         #toolbar_demo img {
@@ -73,27 +73,30 @@
             float: left;
         }
     </style>
+    <script src="/node_modules/systemjs/dist/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/node_modules/systemjs-transform-babel/dist/babel-transform.js"></script>
     <script src="/dist/squared.js"></script>
     <script src="/dist/squared.base.js"></script>
     <script src="/dist/android.framework.js"></script>
-    <script src="../books/squared.js"></script>
+    <script src="/common/loader.js"></script>
 </head>
 <body>
     <!-- START: DEMO -->
     <div id="squared_ui" style="width: 200px;">
         <div id="toolbar_demo">
-            <img src="../demos-dev/images/icons8-menu-24.png" onclick="toggleDrawer(this, true);" />
-            <img src="../demos-dev/images/icons8-left-24.png" onclick="toggleDrawer(this, false);" style="display: none;" />
+            <img src="../common/images/icons8-menu-24.png" onclick="toggleDrawer(this, true);" />
+            <img src="../common/images/icons8-left-24.png" onclick="toggleDrawer(this, false);" style="display: none;" />
             <nav id="toolbar_menu">
                 <div
                     data-show-as-action="always"
                     title="Web">
-                    <img src="../demos-dev/images/icons8-web-24.png" />
+                    <img src="../common/images/icons8-web-24.png" />
                 </div>
                 <div 
                     data-show-as-action="always"
                     title="Browse Page">
-                    <img src="../demos-dev/images/icons8-browse-page-24.png" />
+                    <img src="../common/images/icons8-browse-page-24.png" />
                 </div>
             </nav>
         </div>
@@ -104,26 +107,26 @@
             </div>
             <nav id="drawer_menu">
                 <div>
-                    <img src="../demos-dev/images/icons8-chrome.png" />
+                    <img src="../common/images/icons8-chrome.png" />
                     <label>Chrome</label>
                 </div>
                 <div>
                     Google
                     <nav>
                         <div>
-                            <img src="../demos-dev/images/icons8-google-docs.png" />
+                            <img src="../common/images/icons8-google-docs.png" />
                             <label>Docs</label>
                         </div>
                         <div>
-                            <img src="../demos-dev/images/icons8-google-news.png" />
+                            <img src="../common/images/icons8-google-news.png" />
                             <label>News</label>
                         </div>
                         <div>
-                            <img src="../demos-dev/images/icons8-google-play.png" />
+                            <img src="../common/images/icons8-google-play.png" />
                             <label>Play</label>
                         </div>
                         <div>
-                            <img src="../demos-dev/images/icons8-google-plus.png" />
+                            <img src="../common/images/icons8-google-plus.png" />
                             <label>Plus</label>
                         </div>
                     </nav>
