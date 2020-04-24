@@ -1,4 +1,3 @@
-1,0000759.md5,/demos/video.html
 1,0000001.md5,/books/Beginning_Responsive_Web_Design/Chapter_1/button.html
 1,0000002.md5,/books/Beginning_Responsive_Web_Design/Chapter_1/gradient-panel.html
 1,0000003.md5,/books/Beginning_Responsive_Web_Design/Chapter_3/Mobile_First_Site/mobile-first.html
@@ -158,7 +157,7 @@
 1,0000157.md5,/books/CSS_Mastery/chapter-07/07-XX-grid-layout-align-items.html
 1,0000158.md5,/books/CSS_Mastery/chapter-07/07-XX-grid-layout-minmax.html
 1,0000159.md5,/books/CSS_Mastery/chapter-08/08-05-responsive-news.html
-2,0000160.md5,/books/CSS_Mastery/chapter-08/08-10-max-width-typography.html
+4,0000160.md5,/books/CSS_Mastery/chapter-08/08-10-max-width-typography.html
 1,0000161.md5,/books/CSS_Mastery/chapter-08/08-11-multi-column-text.html
 1,0000162.md5,/books/CSS_Mastery/chapter-08/08-13-responsive-flexbox-widget.html
 1,0000163.md5,/books/CSS_Mastery/chapter-08/08-17-responsive-news-grid.html
@@ -434,8 +433,8 @@
 1,0000433.md5,/books/HTML5_and_CSS3/examples/ch13/22_output.html
 1,0000434.md5,/books/HTML5_and_CSS3/examples/ch13/23_progress_and_meter.html
 1,0000435.md5,/books/HTML5_and_CSS3/examples/ch15/01_css3_font_face/index.html
-2,0000436.md5,/books/HTML5_and_CSS3/examples/ch15/02_google_web_fonts/index.html
-2,0000437.md5,/books/HTML5_and_CSS3/examples/ch15/03_adobe_edge_web_fonts/index.html
+4,0000436.md5,/books/HTML5_and_CSS3/examples/ch15/02_google_web_fonts/index.html
+4,0000437.md5,/books/HTML5_and_CSS3/examples/ch15/03_adobe_edge_web_fonts/index.html
 1,0000438.md5,/books/HTML5_and_CSS3/examples/ch20/07_bootstrap_grid/fixed.html
 1,0000439.md5,/books/HTML5_and_CSS3/examples/ch20/07_bootstrap_grid/fluid.html
 1,0000440.md5,/books/HTML5_and_CSS3/examples/ch20/07_bootstrap_grid/responsive.html
@@ -757,3 +756,4 @@
 1,0000756.md5,/demos/svg_viewbox.html
 1,0000757.md5,/demos/table.html
 1,0000758.md5,/demos/vertical-align.html
+2,0000759.md5,/demos/video.html

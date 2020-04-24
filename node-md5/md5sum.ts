@@ -2,7 +2,7 @@ import fs = require('fs-extra');
 import path = require('path');
 import parse  = require('csv-parse');
 import puppeteer = require('puppeteer');
-import recursive = require('recursive-readdir');
+import readdirp = require('readdirp');
 import md5 = require('md5');
 import diff = require('diff');
 import colors = require('colors');
@@ -78,9 +78,21 @@ let timeout = 5 * 60 * 1000;
     }
 }
 
-const failMessage = (message: string, err: any, listing?: string[]) => console.log('\n' + colors.red('FAIL') + `: ${message} (${err})\n` + (listing ? '\n' + listing.join('\n') + '\n' : ''));
-const warnMessage = (message: string, err: any) => console.log('\n' + colors.yellow('WARN') + `: ${message} (${err})\n`);
-const successMessage = (message: string, err: any) => console.log('\n' + colors.green('SUCCESS') + `: ${message} (${err})\n`);
+function formatTime(start: number) {
+    let time = Date.now() - start;
+    const h = Math.floor(time / (60 * 60 * 1000));
+    time -= h * (60 * 60 * 1000);
+    const m = Math.floor(time / (60 * 1000));
+    time -= m * (60 * 1000);
+    const s = Math.floor(time / 1000);
+    time -= s * 1000;
+    return `${h}h ${m}m ${s}s ${time}ms`;
+}
+
+const failMessage = (message: string, status: any, listing?: string[]) => console.log('\n' + colors.bold(colors.red('FAIL')) + `: ${message} (${status})\n` + (listing ? '\n' + listing.join('\n') + '\n' : ''));
+const warnMessage = (message: string, status: string) => console.log('\n' + colors.yellow('WARN') + `: ${message} (${status})`);
+const requiredMessage = (message: string, status: string) => console.log(colors.bold(colors.yellow('REQUIRED')) + `: ${message} (${colors.grey(status)})`);
+const successMessage = (message: string, status: string) => console.log('\n' + colors.bold(colors.green('SUCCESS')) + `: ${message} ` + colors.yellow('[') + colors.grey(status) + colors.yellow(']') + '\n');
 
 if (master) {
     if (snapshot) {
@@ -105,8 +117,8 @@ if (master) {
                                 process.stderr.write(colors.grey(part.value));
                             }
                         }
-                        failMessage('MD5 not matched', filename);
                         errors.push(filename);
+                        failMessage('MD5 not matched', filename);
                     }
                 }
                 else {
@@ -142,7 +154,7 @@ else if (host && data && build && snapshot) {
                             executablePath,
                             defaultViewport: { width, height }
                         });
-                        console.log(colors.blue('VERSION') + ': ' + colors.bold(await browser.version()));
+                        console.log(colors.blue('VERSION') + ': ' + colors.bold(await browser.version()) + '\n');
                         const tempDir = path.resolve(__dirname, 'temp', build!);
                         try {
                             fs.emptyDirSync(tempDir);
@@ -179,31 +191,27 @@ else if (host && data && build && snapshot) {
                         if (!fs.existsSync(pathname)) {
                             fs.mkdirpSync(pathname);
                         }
-                        for (let i = 0; i < items.length; ++i) {
-                            const item = items[i];
-                            const filepath = item.filepath;
-                            recursive(filepath, (err, files) => {
-                                if (!err) {
-                                    files.sort();
-                                    let output = '';
-                                    for (const file of files) {
-                                        output += md5(fs.readFileSync(file)) + '  .' + file.replace(filepath, '').replace(/[\\]/g, '/') + '\n';
-                                    }
-                                    fs.writeFileSync(path.resolve(pathname, `${item.name}.md5`), output);
-                                }
-                                if (i === items.length - 1) {
-                                    const message = '+' + colors.green(items.length.toString()) + ' -' + colors.red(failed.length.toString());
-                                    const timeElapsed = ((Date.now() - timeStart) / 60000).toPrecision(5) + 'm';
-                                    if (failed.length === 0) {
-                                        successMessage(message, timeElapsed);
-                                    }
-                                    else {
-                                        failMessage(message, timeElapsed);
-                                    }
-                                    process.exit();
-                                }
-                            });
+                        console.log('');
+                        for (const item of items) {
+                            const { name, filepath } = item;
+                            const files = await readdirp.promise(filepath);
+                            files.sort((a, b) => a.path < b.path ? -1 : 1);
+                            let output = '';
+                            for (const file of files) {
+                                output += md5(fs.readFileSync(file.fullPath)) + '  ./' + file.path.replace(/[\\]/g, '/') + '\n';
+                            }
+                            fs.writeFileSync(path.resolve(pathname, `${name}.md5`), output);
+                            process.stderr.write(colors.bgBlue(colors.bold(colors.white('>'))));
                         }
+                        console.log('');
+                        const message = '+' + colors.green(items.length.toString()) + ' -' + colors.red(failed.length.toString());
+                        if (failed.length === 0) {
+                            successMessage(message, formatTime(timeStart));
+                        }
+                        else {
+                            failMessage(message, formatTime(timeStart));
+                        }
+                        process.exit();
                     }
                     catch (err) {
                         failMessage('Unknown', err);
@@ -217,16 +225,18 @@ else if (host && data && build && snapshot) {
     }
 }
 else {
+    console.log('');
     if (!host) {
-        console.log('REQUIRED: Host (-h http://localhost:3000)');
+        requiredMessage('Host', '-h http://localhost:3000');
     }
     if (!data) {
-        console.log('REQUIRED: CSV data (-d ./path/data.csv)');
+        requiredMessage('CSV data', '-d ./path/data.csv');
     }
     if (!build) {
-        console.log('REQUIRED: Build name (-b snapshot)');
+        requiredMessage('Build name', '-b snapshot');
     }
     if (!snapshot) {
-        console.log('REQUIRED: Output directory (-o ./temp/snapshot)');
+        requiredMessage('Output directory', '-o ./temp/snapshot');
     }
+    console.log('');
 }

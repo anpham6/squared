@@ -618,9 +618,10 @@ function removeCompressionFormat(file: RequestAsset, format: string) {
 function removeUnusedFiles(dirname: string, status: AsyncStatus, files: Set<string>) {
     const { filesToCompare, filesToRemove } = status;
     const length = filesToCompare.length;
-    for (let i = 0; i < length; i += 2) {
-        const original = filesToCompare[i];
-        const transformed = filesToCompare[i + 1];
+    let i = 0;
+    while (i < length) {
+        const original = filesToCompare[i++];
+        const transformed = filesToCompare[i++];
         const smaller = getFileSize(original) > getFileSize(transformed) ? original : transformed;
         if (!filesToRemove.includes(smaller)) {
             filesToRemove.push(smaller);

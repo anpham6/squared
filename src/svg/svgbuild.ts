@@ -430,8 +430,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (length >= 2) {
                 const relative = key === key.toLowerCase();
                 const points: SvgPoint[] = [];
-                for (let i = 0; i < length; i += 2) {
-                    let x = coordinates[i], y = coordinates[i + 1];
+                let i = 0;
+                while (i < length) {
+                    let x = coordinates[i++], y = coordinates[i++];
                     if (relative && previousPoint) {
                         x += previousPoint.x;
                         y += previousPoint.y;
@@ -463,14 +464,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         values.forEach(item => {
             const coordinates = item.coordinates;
             const length = coordinates.length;
-            for (let i = 0; i < length; i += 2) {
+            let i = 0;
+            while (i < length) {
                 if (item.relative) {
-                    x += coordinates[i];
-                    y += coordinates[i + 1];
+                    x += coordinates[i++];
+                    y += coordinates[i++];
                 }
                 else {
-                    x = coordinates[i];
-                    y = coordinates[i + 1];
+                    x = coordinates[i++];
+                    y = coordinates[i++];
                 }
                 const pt: SvgPoint = { x, y };
                 if (item.key.toUpperCase() === 'A') {
@@ -513,11 +515,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         }
                         else {
                             const q = coordinates.length;
-                            for (let j = 0, k = 0; j < q; j += 2) {
+                            let j = 0, k = 0;
+                            while (j < q) {
                                 const pt = points.shift();
                                 if (pt) {
-                                    coordinates[j] = pt.x - location.x;
-                                    coordinates[j + 1] = pt.y - location.y;
+                                    coordinates[j++] = pt.x - location.x;
+                                    coordinates[j++] = pt.y - location.y;
                                     if (item.key === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
                                         item.radiusX = pt.rx;
                                         item.radiusY = pt.ry;
@@ -548,11 +551,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         case 'T':
                         case 'Z': {
                             const q = coordinates.length;
-                            for (let j = 0, k = 0; j < q; j += 2) {
+                            let j = 0, k = 0;
+                            while (j < q) {
                                 const pt = points.shift();
                                 if (pt) {
-                                    coordinates[j] = pt.x;
-                                    coordinates[j + 1] = pt.y;
+                                    coordinates[j++] = pt.x;
+                                    coordinates[j++] = pt.y;
                                     item.value[k++] = pt;
                                 }
                                 else {
@@ -771,8 +775,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         const length = values.length;
         if (length % 2 === 0) {
             const result: Point[] = new Array(length / 2);
-            for (let i = 0, k = 0; i < length; i += 2) {
-                result[k++] = { x: values[i], y: values[i + 1] };
+            let i = 0, k = 0;
+            while (i < length) {
+                result[k++] = { x: values[i++], y: values[i++] };
             }
             return result;
         }

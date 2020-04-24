@@ -191,8 +191,9 @@ function getBorderRadius(radius?: string[]): Undef<StringMap> {
         else {
             if (length === 8) {
                 const corners = new Array(4);
-                for (let i = 0, j = 0; i < length; i += 2) {
-                    corners[j++] = formatPX((parseFloat(radius[i]) + parseFloat(radius[i + 1])) / 2);
+                let i = 0, j = 0;
+                while (i < length) {
+                    corners[j++] = formatPX((parseFloat(radius[i++]) + parseFloat(radius[i++])) / 2);
                 }
                 return getCornerRadius(corners);
             }
