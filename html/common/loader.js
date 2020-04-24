@@ -69,7 +69,15 @@ document.addEventListener('DOMContentLoaded', function() {
     squared.parseDocument().then(function() {
         const copyTo = new URLSearchParams(location.search).get('copyTo');
         if (copyTo) {
-            squared.copyToDisk(copyTo);
+            squared.copyToDisk(copyTo, { 
+                callback: (result) => {
+                    const element = squared.lib.dom.createElement(document.body, 'div', { whiteSpace: 'pre' });
+                    if (result.success) {
+                        element.innerHTML = result.files.join('\n');
+                    }
+                    element.id = 'md5_complete';
+                }
+            });
         }
         else {
             squared.settings.outputEmptyCopyDirectory = true;

@@ -601,17 +601,17 @@ if (imageView1 != null) {
 
 See /android/widget/*.html for usage instructions in the squared-apache <https://github.com/anpham6/squared-apache> project.
 
-- android.external
-- android.substitute
+* android.external
+* android.substitute
 
-- android.constraint.guideline
+* android.constraint.guideline
 
-- android.widget.coordinator
-- android.widget.floatingactionbutton
-- android.widget.menu
-- android.widget.bottomnavigation
-- android.widget.toolbar
-- android.widget.drawer
+* android.widget.coordinator
+* android.widget.floatingactionbutton
+* android.widget.menu
+* android.widget.bottomnavigation
+* android.widget.toolbar
+* android.widget.drawer
 
 <img src="html/common/images/android/custom.viewpager.tablayout.png" alt="custom: viewpager + tablayout" />
 

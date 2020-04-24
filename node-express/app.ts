@@ -43,10 +43,10 @@ let ROUTING: Undef<Routing>;
 
 try {
     const { disk_read, disk_write, unc_read, unc_write, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, env, port, routing } = <Settings> require('./squared.settings.json');
-    DISK_READ = disk_read === true;
-    DISK_WRITE = disk_write === true;
-    UNC_READ = unc_read === true;
-    UNC_WRITE = unc_write === true;
+    DISK_READ = disk_read === true || disk_read === 'true';
+    DISK_WRITE = disk_write === true || disk_write === 'true';
+    UNC_READ = unc_read === true || unc_read === 'true';
+    UNC_WRITE = unc_write === true || unc_write === 'true';
     ROUTING = routing;
     const gzip = parseInt(gzip_level as string);
     const brotli = parseInt(brotli_quality as string);
@@ -158,12 +158,7 @@ try {
                 }
             }
         }
-        if (mounted > 0) {
-            console.log(`\n${mounted} directories were mounted.\n`);
-        }
-        else {
-            console.log('WARN: No directories were mounted.');
-        }
+        console.log(`\n${mounted} directories were mounted.\n`);
     }
     else {
         throw new Error('Routing not defined.');
@@ -674,8 +669,8 @@ function checkPermissions(res: express.Response<any>, dirname: string) {
             throw new Error('Root is not a directory.');
         }
     }
-    catch (err) {
-        res.json({ application: `DIRECTORY: ${dirname}`, system: err });
+    catch (system) {
+        res.json({ application: `DIRECTORY: ${dirname}`, system });
         return false;
     }
     return true;
@@ -729,9 +724,9 @@ app.post('/api/assets/copy', (req, res) => {
                 cleared = true;
             }
         }
-        catch (err) {
+        catch (system) {
             THREAD_COUNT--;
-            res.json({ application: 'FILE: Unknown', system: err });
+            res.json({ application: 'FILE: Unknown', system });
         }
     }
 });
@@ -756,8 +751,8 @@ app.post('/api/assets/archive', (req, res) => {
             fs.mkdirpSync(dirname_zip);
         }
     }
-    catch (err) {
-        res.json({ application: `DIRECTORY: ${dirname}`, system: err });
+    catch (system) {
+        res.json({ application: `DIRECTORY: ${dirname}`, system });
         return;
     }
     const files = new Set<string>();
@@ -852,9 +847,9 @@ app.post('/api/assets/archive', (req, res) => {
                 cleared = true;
             }
         }
-        catch (err) {
+        catch (system) {
             THREAD_COUNT--;
-            res.json({ application: 'FILE: Unknown', system: err });
+            res.json({ application: 'FILE: Unknown', system });
         }
     };
     if (append_to) {

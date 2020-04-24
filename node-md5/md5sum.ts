@@ -2,13 +2,12 @@ import fs = require('fs-extra');
 import path = require('path');
 import parse  = require('csv-parse');
 import puppeteer = require('puppeteer');
-import request = require('request');
 import recursive = require('recursive-readdir');
 import md5 = require('md5');
 import diff = require('diff');
 import colors = require('colors');
 
-type PageRequest = { name: string; filepath: string };
+type PageRequest = { name: string; filepath: string; files?: string[] };
 
 let host: Undef<string>;
 let data: Undef<string>;
@@ -19,7 +18,7 @@ let executablePath: Undef<string>;
 let width = 1280;
 let height = 960;
 let flags = 1;
-let timeout = 5;
+let timeout = 5 * 60 * 1000;
 {
     const ARGV = process.argv;
     let i = 2;
@@ -71,7 +70,7 @@ let timeout = 5;
             case '-timeout': {
                 const t = parseInt(ARGV[i++]);
                 if (!isNaN(t) && t > 0) {
-                    timeout = t;
+                    timeout = t * 60 * 1000;
                 }
                 break;
             }
@@ -165,7 +164,9 @@ else if (host && data && build && snapshot) {
                                         page.close();
                                     });
                                     await page.goto(href);
-                                    items.push({ name, filepath });
+                                    await page.waitFor('#md5_complete', { timeout });
+                                    const files = (await page.$eval('#md5_complete', e => e.innerHTML)).split('\n').sort();
+                                    items.push({ name, filepath, files });
                                     console.log(colors.yellow('OK') + ': ' + href);
                                 }
                                 catch (err) {
@@ -178,7 +179,8 @@ else if (host && data && build && snapshot) {
                         if (!fs.existsSync(pathname)) {
                             fs.mkdirpSync(pathname);
                         }
-                        for (const item of items) {
+                        for (let i = 0; i < items.length; ++i) {
+                            const item = items[i];
                             const filepath = item.filepath;
                             recursive(filepath, (err, files) => {
                                 if (!err) {
@@ -189,49 +191,19 @@ else if (host && data && build && snapshot) {
                                     }
                                     fs.writeFileSync(path.resolve(pathname, `${item.name}.md5`), output);
                                 }
+                                if (i === items.length - 1) {
+                                    const message = '+' + colors.green(items.length.toString()) + ' -' + colors.red(failed.length.toString());
+                                    const timeElapsed = ((Date.now() - timeStart) / 60000).toPrecision(5) + 'm';
+                                    if (failed.length === 0) {
+                                        successMessage(message, timeElapsed);
+                                    }
+                                    else {
+                                        failMessage(message, timeElapsed);
+                                    }
+                                    process.exit();
+                                }
                             });
                         }
-                        let waiting = 0;
-                        let direction = 1;
-                        let processing: Null<NodeJS.Timeout> = null;
-                        let expired: Null<NodeJS.Timeout> = null;
-                        const closeSession = (success: boolean) => {
-                            clearTimeout(expired!);
-                            clearTimeout(processing!);
-                            const message = '+' + colors.green(items.length.toString()) + ' -' + colors.red(failed.length.toString());
-                            const timeElapsed = ((Date.now() - timeStart) / 60000).toPrecision(5) + 'm';
-                            if (success && failed.length === 0) {
-                                successMessage(message, timeElapsed);
-                            }
-                            else {
-                                failMessage(message, timeElapsed);
-                            }
-                            process.exit();
-                        };
-                        expired = setTimeout(() => closeSession(false), timeout * 60 * 1000);
-                        processing = setInterval(() => {
-                            request(`${host}/api/thread/count`, (err, res, body) => {
-                                if (err) {
-                                    closeSession(false);
-                                    throw err;
-                                }
-                                else if (body === '0') {
-                                    closeSession(true);
-                                }
-                                else {
-                                    waiting += direction;
-                                    console.log(colors.yellow('WARN') + ': Waiting for file writing to complete' + colors.blue('.'.repeat(waiting)));
-                                    switch (waiting) {
-                                        case 10:
-                                            direction = -1;
-                                            break;
-                                        case 1:
-                                            direction = 1;
-                                            break;
-                                    }
-                                }
-                            });
-                        }, 500);
                     }
                     catch (err) {
                         failMessage('Unknown', err);
