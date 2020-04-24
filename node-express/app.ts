@@ -1,4 +1,4 @@
-import { CompressionFormat, ResultOfFileAction, RequestAsset, Settings } from './@types/node';
+import { CompressionFormat, Environment, ResultOfFileAction, RequestAsset, Settings } from './@types/node';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -35,7 +35,7 @@ let GZIP_LEVEL = 9;
 let BROTLI_QUALITY = 11;
 let JPEG_QUALITY = 100;
 let TINIFY_API_KEY = false;
-let ENV: string = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
+let ENV: Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
 let PORT = '3000';
 
 try {
@@ -51,7 +51,7 @@ try {
         ENV = 'production';
     }
     if (port) {
-        const value = parseInt((ENV === 'production' ? port.production : port.development) as string);
+        const value = parseInt(port[ENV] as string);
         if (!isNaN(value) && value >= 0) {
             PORT = value.toString();
         }
@@ -73,20 +73,32 @@ try {
             }
         });
     }
-    if (Array.isArray(routing)) {
-        routing.forEach(route => {
-            const { path: dirname, mount } = route;
-            if (dirname && mount) {
-                app.use(dirname, express.static(path.join(__dirname, mount)));
+    if (routing) {
+        for (const routes of [routing.shared, routing[ENV]]) {
+            if (Array.isArray(routes)) {
+                for (const route of routes) {
+                    const { path: dirname, mount } = route;
+                    if (dirname && mount) {
+                        app.use(dirname, express.static(path.join(__dirname, mount)));
+                    }
+                }
             }
-        });
+        }
+        app.use(bodyParser.json({ limit: request_post_limit || '100mb' }));
     }
-    app.use(bodyParser.json({ limit: request_post_limit || '100mb' }));
+    else {
+        throw new Error('Routing not defined.');
+    }
 }
 catch (err) {
     app.use(bodyParser.json({ limit: '100mb' }));
-    app.use('/dist', express.static(path.join(__dirname, 'dist')));
     app.use('/', express.static(path.join(__dirname, 'html')));
+    app.use('/dist', express.static(path.join(__dirname, 'dist')));
+    if (ENV === 'development') {
+        app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
+        app.use('/common', express.static(path.join(__dirname, 'html/common')));
+        app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
+    }
     console.log(`FAIL: ${err}`);
 }
 
@@ -94,15 +106,6 @@ PORT = process.env.PORT || PORT;
 
 app.set('port', PORT);
 app.use(bodyParser.urlencoded({ extended: true }));
-
-if (ENV === 'development') {
-    app.use('/build', express.static(path.join(__dirname, 'build')));
-    app.use('/books', express.static(path.join(__dirname, 'html/books')));
-    app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
-    app.use('/demos-dev', express.static(path.join(__dirname, 'html/demos-dev')));
-    app.use('/common', express.static(path.join(__dirname, 'html/common')));
-    app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
-}
 
 if (process.argv) {
     const argv = process.argv;
@@ -191,7 +194,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
         case '@text/css':
         case '@application/xhtml+xml': {
             let html = fs.readFileSync(filepath).toString('utf8');
-            assets.forEach(item => {
+            for (const item of assets) {
                 if (item === file) {
                     return;
                 }
@@ -208,7 +211,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                         html = replacePathName(html, separator + location, value);
                     }
                 }
-            });
+            }
             fs.writeFileSync(filepath, html);
             return;
         }
@@ -390,7 +393,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
     const notFound: ObjectMap<boolean> = {};
     const processing: ObjectMap<RequestAsset[]> = {};
     const completed: string[] = [];
-    assets.forEach(file => {
+    for (const file of assets) {
         const { pathname, filepath } = getFileOutput(file, dirname);
         const { content, base64, uri } = file;
         if (!emptyDir[pathname]) {
@@ -526,7 +529,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 errorRequest(err);
             }
         }
-    });
+    }
 }
 
 function replaceExtension(value: string, ext: string) {
@@ -569,7 +572,7 @@ function removeUnusedFiles(dirname: string, status: AsyncStatus, files: Set<stri
             filesToRemove.push(smaller);
         }
     }
-    filesToRemove.forEach(value => {
+    for (const value of filesToRemove) {
         try {
             fs.unlinkSync(value);
             files.delete(value.substring(dirname.length + 1));
@@ -577,7 +580,7 @@ function removeUnusedFiles(dirname: string, status: AsyncStatus, files: Set<stri
         catch (err) {
             writeError(value, err);
         }
-    });
+    }
 }
 
 function replacePathName(source: string, segment: string, value: string) {
@@ -609,7 +612,7 @@ function checkPermissions(res: express.Response<any>, dirname: string) {
             fs.mkdirpSync(dirname);
         }
         else if (!fs.lstatSync(dirname).isDirectory()) {
-            throw new Error('Root is not a directory');
+            throw new Error('Root is not a directory.');
         }
     }
     catch (err) {

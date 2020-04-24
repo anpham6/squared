@@ -1,6 +1,6 @@
 import * as file from '../../@types/base/file';
 
-declare namespace node {
+declare namespace Node {
     interface Settings {
         version?: string;
         disk_read?: boolean;
@@ -14,7 +14,18 @@ declare namespace node {
         tinypng_api_key?: string;
         env?: string;
         port?: { development?: string; production?: string };
-        routing?: { mount?: string; path?: string }[];
+        routing?: {
+            shared?: Route[];
+            production?: Route[];
+            development?: Route[];
+        };
+    }
+
+    type Environment = "production" | "development";
+
+    interface Route {
+        mount?: string;
+        path?: string;
     }
 
     interface CompressionFormat extends file.CompressionFormat {}
@@ -24,4 +35,4 @@ declare namespace node {
     interface ResultOfFileAction extends file.ResultOfFileAction {}
 }
 
-export = node;
+export = Node;
