@@ -1,20 +1,33 @@
 import * as file from '../../@types/base/file';
 
-declare namespace node {
+declare namespace Node {
     interface Settings {
         version?: string;
-        disk_read?: boolean;
-        disk_write?: boolean;
-        unc_read?: boolean;
-        unc_write?: boolean;
+        disk_read?: string | boolean;
+        disk_write?: string | boolean;
+        unc_read?: string | boolean;
+        unc_write?: string | boolean;
         request_post_limit?: string;
-        gzip_level?: string;
-        brotli_quality?: string;
-        jpeg_quality?: string;
+        gzip_level?: string | number;
+        brotli_quality?: string | number;
+        jpeg_quality?: string | number;
         tinypng_api_key?: string;
         env?: string;
         port?: { development?: string; production?: string };
-        routing?: { mount?: string; path?: string }[];
+        routing?: Routing;
+    }
+
+    type Environment = "production" | "development";
+
+    interface Routing {
+        shared?: Route[];
+        production?: Route[];
+        development?: Route[];
+    }
+
+    interface Route {
+        mount?: string;
+        path?: string;
     }
 
     interface CompressionFormat extends file.CompressionFormat {}
@@ -24,4 +37,4 @@ declare namespace node {
     interface ResultOfFileAction extends file.ResultOfFileAction {}
 }
 
-export = node;
+export = Node;

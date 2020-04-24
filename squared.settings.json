@@ -14,8 +14,18 @@
     "production": "80",
     "development": "3000"
   },
-  "routing": [
-    { "mount": "html", "path": "/" },
-    { "mount": "dist", "path": "/dist" }
-  ]
+  "routing": {
+    "shared": [
+      { "mount": "html", "path": "/" },
+      { "mount": "dist", "path": "/dist" }
+    ],
+    "production": [],
+    "development": [
+      { "mount": "build", "path": "/build" },
+      { "mount": "html/common", "path": "/common" },
+      { "mount": "html/books", "path": "/books" },
+      { "mount": "html/demos", "path": "/demos" },
+      { "mount": "html/demos-dev", "path": "/demos-dev" }
+    ]
+  }
 }
