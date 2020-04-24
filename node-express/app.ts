@@ -12,6 +12,8 @@ import uuid = require('uuid');
 import jimp = require('jimp');
 import tinify = require('tinify');
 
+let THREAD_COUNT = 0;
+
 interface AsyncStatus {
     archiving: boolean;
     delayed: number;
@@ -655,11 +657,13 @@ app.post('/api/assets/copy', (req, res) => {
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
                 removeUnusedFiles(dirname, status, files);
+                THREAD_COUNT--;
                 res.json(<ResultOfFileAction> { success: files.size > 0, files: Array.from(files) });
                 status.delayed = Number.POSITIVE_INFINITY;
             }
         };
         try {
+            THREAD_COUNT++;
             processAssets(dirname, <RequestAsset[]> req.body, status, finalize, req.query.empty === '1');
             if (status.delayed === 0) {
                 finalize();
@@ -669,6 +673,7 @@ app.post('/api/assets/copy', (req, res) => {
             }
         }
         catch (err) {
+            THREAD_COUNT--;
             res.json({ application: 'FILE: Unknown', system: err });
         }
     }
@@ -745,16 +750,19 @@ app.post('/api/assets/archive', (req, res) => {
                             response.zipname = gz;
                             response.bytes = gz_bytes;
                         }
+                        THREAD_COUNT--;
                         res.json(response);
                         console.log(`WRITE: ${gz} (${gz_bytes} bytes)`);
                     })
                     .on('error', err => {
                         response.success = false;
-                        writeError(gz, err);
+                        THREAD_COUNT--;
                         res.json(response);
+                        writeError(gz, err);
                     });
             }
             else {
+                THREAD_COUNT--;
                 res.json(response);
             }
             status.delayed = Number.POSITIVE_INFINITY;
@@ -778,6 +786,7 @@ app.post('/api/assets/archive', (req, res) => {
             if (unzip_to) {
                 archive.directory(unzip_to, false);
             }
+            THREAD_COUNT++;
             processAssets(dirname, <RequestAsset[]> req.body, status, finalize);
             if (status.delayed === 0) {
                 finalize();
@@ -787,6 +796,7 @@ app.post('/api/assets/archive', (req, res) => {
             }
         }
         catch (err) {
+            THREAD_COUNT--;
             res.json({ application: 'FILE: Unknown', system: err });
         }
     };
@@ -869,5 +879,7 @@ app.get('/api/browser/download', (req, res) => {
         res.json(null);
     }
 });
+
+app.get('/api/thread/count', (req, res) => res.send(THREAD_COUNT.toString()));
 
 app.listen(PORT, () => console.log(`${ENV.toUpperCase()}: Express server listening on port ${PORT}`));

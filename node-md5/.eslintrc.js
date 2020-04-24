@@ -1,7 +1,7 @@
 module.exports = {
     "env": {
-        'commonjs': true,
-        'node': true
+        "commonjs": true,
+        "node": true
     },
     "extends": [
         "eslint:recommended",
@@ -12,7 +12,6 @@ module.exports = {
     ],
     "ignorePatterns": [],
     "rules": {
-        "no-console": "off",
-        "@typescript-eslint/no-var-requires": "off"
+        "no-console": "off"
     }
 };
