@@ -14,14 +14,16 @@ declare namespace Node {
         tinypng_api_key?: string;
         env?: string;
         port?: { development?: string; production?: string };
-        routing?: {
-            shared?: Route[];
-            production?: Route[];
-            development?: Route[];
-        };
+        routing?: Routing;
     }
 
     type Environment = "production" | "development";
+
+    interface Routing {
+        shared?: Route[];
+        production?: Route[];
+        development?: Route[];
+    }
 
     interface Route {
         mount?: string;

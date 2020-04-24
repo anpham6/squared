@@ -291,24 +291,7 @@ squared.system.customize(squared.settings.targetAPI, 'Button', {
 ```
 
 ```javascript
-// NOTE: "exclusions" attribute and some compression formats are only available when using squared-apache
-squared.settings.outputArchiveFormat = '7z';
-squared.saveToArchive('archive1', {
-    assets: [
-        {
-            pathname: 'app/src/main/res/drawable',
-            filename: 'ic_launcher_background.xml',
-            uri: 'http://localhost:3000/examples/common/ic_launcher_background.xml',
-            compress: [{ format: 'gz', level: 9 }, { format: 'br' }, { format: 'bz2' }, { format: 'lzma' }, { format: 'zstd' }, { format: 'lz4' }]
-        }
-    ],
-    exclusions: { // All attributes are optional
-        pathname: ['app/build', 'app/libs'],
-        filename: ['ic_launcher_foreground.xml'],
-        extension: ['iml', 'pro'],
-        pattern: ['outputs', 'grad.+\\.', '\\.git']
-    }
-});
+squared.system.addXmlNs('aapt', 'http://schemas.android.com/aapt');
 ```
 
 ### CHROME: Public Methods
@@ -458,7 +441,7 @@ data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
 </layout>
 ```
 
-### ALL: Jimp (node-express) / ImageJ (squared-apache)
+### ALL: node-express / squared-apache
 
 Image conversion can be achieved using the mimeType property in a RequestAsset object. The supported formats are:
 
@@ -492,6 +475,27 @@ const options = {
 ```
 
 Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
+
+```javascript
+// NOTE: "exclusions" attribute and some compression formats are only available when using squared-apache
+squared.settings.outputArchiveFormat = '7z';
+squared.saveToArchive('archive1', {
+    assets: [
+        {
+            pathname: 'app/src/main/res/drawable',
+            filename: 'ic_launcher_background.xml',
+            uri: 'http://localhost:3000/common/images/ic_launcher_background.xml',
+            compress: [{ format: 'gz', level: 9 }, { format: 'br' }, { format: 'bz2' }, { format: 'lzma' }, { format: 'zstd' }, { format: 'lz4' }]
+        }
+    ],
+    exclusions: { // All attributes are optional
+        pathname: ['app/build', 'app/libs'],
+        filename: ['ic_launcher_foreground.xml'],
+        extension: ['iml', 'pro'],
+        pattern: ['outputs', 'grad.+\\.', '\\.git']
+    }
+});
+```
 
 ### ANDROID: Layout Includes / Merge Tag
 

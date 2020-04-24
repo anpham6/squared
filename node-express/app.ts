@@ -1,4 +1,4 @@
-import { CompressionFormat, Environment, ResultOfFileAction, RequestAsset, Settings } from './@types/node';
+import { CompressionFormat, Environment, ResultOfFileAction, RequestAsset, Routing, Settings } from './@types/node';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -39,6 +39,7 @@ let JPEG_QUALITY = 100;
 let TINIFY_API_KEY = false;
 let ENV: Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
 let PORT = '3000';
+let ROUTING: Undef<Routing>;
 
 try {
     const { disk_read, disk_write, unc_read, unc_write, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, env, port, routing } = <Settings> require('./squared.settings.json');
@@ -46,6 +47,7 @@ try {
     DISK_WRITE = disk_write === true;
     UNC_READ = unc_read === true;
     UNC_WRITE = unc_write === true;
+    ROUTING = routing;
     const gzip = parseInt(gzip_level as string);
     const brotli = parseInt(brotli_quality as string);
     const jpeg = parseInt(jpeg_quality as string);
@@ -75,18 +77,93 @@ try {
             }
         });
     }
-    if (routing) {
-        for (const routes of [routing.shared, routing[ENV]]) {
+    app.use(bodyParser.json({ limit: request_post_limit || '100mb' }));
+}
+catch (err) {
+    console.log(`FAIL: ${err}`);
+}
+{
+    PORT = process.env.PORT || PORT;
+    const ARGV = process.argv;
+    let i = 2;
+    while (i < ARGV.length) {
+        switch (ARGV[i++]) {
+            case '--access-all':
+                DISK_READ = true;
+                DISK_WRITE = true;
+                UNC_READ = true;
+                UNC_WRITE = true;
+                break;
+            case '--access-disk':
+                DISK_READ = true;
+                DISK_WRITE = true;
+                break;
+            case '--disk-read':
+                DISK_READ = true;
+                break;
+            case '--disk-write':
+                DISK_WRITE = true;
+                break;
+            case '--access-unc':
+                UNC_READ = true;
+                UNC_WRITE = true;
+                break;
+            case '--unc-read':
+                UNC_READ = true;
+                break;
+            case '--unc-write':
+                UNC_WRITE = true;
+                break;
+            case '-e':
+            case '-env':
+            case '--e':
+            case '--env':
+                switch (ARGV[i++]) {
+                    case 'prod':
+                    case 'production':
+                        ENV = 'production';
+                        break;
+                    case 'dev':
+                    case 'development':
+                        ENV = 'development';
+                        break;
+                }
+                break;
+            case '-p':
+            case '-port':
+            case '--p':
+            case '--port': {
+                const port = parseInt(ARGV[i++]);
+                if (!isNaN(port)) {
+                    PORT = port.toString();
+                }
+                break;
+            }
+        }
+    }
+}
+try {
+    if (ROUTING) {
+        let mounted = 0;
+        for (const routes of [ROUTING.shared, ROUTING[ENV]]) {
             if (Array.isArray(routes)) {
                 for (const route of routes) {
                     const { path: dirname, mount } = route;
                     if (dirname && mount) {
-                        app.use(dirname, express.static(path.join(__dirname, mount)));
+                        const pathname = path.join(__dirname, mount);
+                        app.use(dirname, express.static(pathname));
+                        console.log(`MOUNT: ${pathname} -> ${dirname}`);
+                        ++mounted;
                     }
                 }
             }
         }
-        app.use(bodyParser.json({ limit: request_post_limit || '100mb' }));
+        if (mounted > 0) {
+            console.log(`\n${mounted} directories were mounted.\n`);
+        }
+        else {
+            console.log('WARN: No directories were mounted.');
+        }
     }
     else {
         throw new Error('Routing not defined.');
@@ -103,27 +180,8 @@ catch (err) {
     console.log(`FAIL: ${err}`);
 }
 
-PORT = process.env.PORT || PORT;
-
 app.set('port', PORT);
 app.use(bodyParser.urlencoded({ extended: true }));
-
-if (process.argv) {
-    const argv = process.argv;
-    const all = argv.includes('--access-all');
-    if (all || argv.includes('--disk-read') || argv.includes('--access-disk')) {
-        DISK_READ = true;
-    }
-    if (all || argv.includes('--disk-write') || argv.includes('--access-disk')) {
-        DISK_WRITE = true;
-    }
-    if (all || argv.includes('--unc-read') || argv.includes('--access-unc')) {
-        UNC_READ = true;
-    }
-    if (all || argv.includes('--unc-write') || argv.includes('--access-unc')) {
-        UNC_WRITE = true;
-    }
-}
 
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
 const SEPARATOR = path.sep;
