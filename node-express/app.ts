@@ -97,7 +97,6 @@ catch (err) {
     app.use('/', express.static(path.join(__dirname, 'html')));
     app.use('/dist', express.static(path.join(__dirname, 'dist')));
     if (ENV === 'development') {
-        app.use('/node_modules', express.static(path.join(__dirname, 'node_modules')));
         app.use('/common', express.static(path.join(__dirname, 'html/common')));
         app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
     }

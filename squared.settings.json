@@ -21,7 +21,6 @@
     ],
     "production": [],
     "development": [
-      { "mount": "node_modules", "path": "/node_modules" },
       { "mount": "build", "path": "/build" },
       { "mount": "html/common", "path": "/common" },
       { "mount": "html/books", "path": "/books" },
