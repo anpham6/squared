@@ -130,7 +130,6 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                 also?.call(item, item);
                 result.push(item);
                 children.splice(i--, 1);
-                length--;
             }
         }
         return result;

@@ -120,7 +120,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     public resource!: android.base.Resource<T>;
 
     public copyToDisk(directory: string, options?: FileCopyingOptions) {
-        this.copying({
+        return this.copying({
             ...options,
             assets: this.getAssetsAll(options?.assets),
             directory
@@ -128,7 +128,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public appendToArchive(pathname: string, options?: FileArchivingOptions) {
-        this.archiving({
+        return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
             assets: this.getAssetsAll(options?.assets),
@@ -137,7 +137,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public saveToArchive(filename: string, options?: FileArchivingOptions) {
-        this.archiving({
+        return this.archiving({
             ...options,
             assets: this.getAssetsAll(options?.assets),
             filename

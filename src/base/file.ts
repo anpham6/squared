@@ -1,7 +1,10 @@
 import { FileArchivingOptions, FileCopyingOptions, UserSettings } from '../../@types/base/application';
 import { RawAsset, ResultOfFileAction } from '../../@types/base/file';
 
-const { fromLastIndexOf, isString } = squared.lib.util;
+const $lib = squared.lib;
+
+const { frameworkNotInstalled } = $lib.session;
+const { fromLastIndexOf, isString } = $lib.util;
 
 const isHttpProtocol = () => location.protocol.startsWith('http');
 
@@ -26,14 +29,14 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public readonly assets: RawAsset[] = [];
     public abstract resource: squared.base.Resource<T>;
 
-    public abstract copyToDisk(directory: string, options?: FileCopyingOptions): void;
-    public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): void;
-    public abstract saveToArchive(filename: string, options?: FileArchivingOptions): void;
+    public abstract copyToDisk(directory: string, options?: FileCopyingOptions): Promise<void>;
+    public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): Promise<void>;
+    public abstract saveToArchive(filename: string, options?: FileArchivingOptions): Promise<void>;
 
     public abstract get userSettings(): UserSettings;
 
     public createFrom(format: string, options: FileArchivingOptions) {
-        this.archiving({
+        return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
             format
@@ -41,7 +44,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
     }
 
     public appendFromArchive(filename: string, options: FileArchivingOptions) {
-        this.archiving({
+        return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
             appendTo: filename,
@@ -73,7 +76,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                 const body = assets ? assets.concat(this.assets) : this.assets;
                 if (body.length) {
                     body[0].exclusions = options.exclusions;
-                    fetch(
+                    return fetch(
                         '/api/assets/copy' +
                         '?to=' + encodeURIComponent(directory.trim()) +
                         '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0'), {
@@ -107,6 +110,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         else if (this.userSettings.showErrorMessages) {
             alert('SERVER (required): See README for instructions');
         }
+        return frameworkNotInstalled();
     }
 
     public archiving(options: FileArchivingOptions) {
@@ -116,7 +120,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                 const body = assets ? assets.concat(this.assets) : this.assets;
                 if (body.length) {
                     body[0].exclusions = options.exclusions;
-                    fetch(
+                    return fetch(
                         '/api/assets/archive' +
                         '?filename=' + encodeURIComponent(filename.trim()) +
                         '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
@@ -158,5 +162,6 @@ export default abstract class File<T extends squared.base.Node> implements squar
         else if (this.userSettings.showErrorMessages) {
             alert('SERVER (required): See README for instructions');
         }
+        return frameworkNotInstalled();
     }
 }

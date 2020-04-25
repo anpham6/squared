@@ -47,7 +47,7 @@ Option #2 (more features):
         squared.setFramework(android); // OR: chrome
 
         // Required: zero or more DOM elements
-        squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview-id' */, /* etc... */); // OR: parseDocumentAsync
+        squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview-id' */, /* etc... */);
         squared.close();
 
         // Optional: node-express / squared-apache
@@ -82,7 +82,7 @@ ES2017 - Async/Await (91%)
 
 Browsers without ES2017 are not being supported to fully take advantage of async/await.
 
-NOTE: Calling "save" or "write" methods before the images have completely loaded can sometimes cause them to be excluded from the generated layout. In these cases you should use the "parseDocument" promise method "then" to set a callback for your commands.
+NOTE: Calling "save" or "copy" methods before the images have completely loaded can sometimes cause them to be excluded from the generated layout. In these cases you should use the "parseDocument" promise method "then" to set a callback for your commands.
 
 ```javascript
 document.addEventListener('DOMContentLoaded', function() {
@@ -190,7 +190,7 @@ squared.settings = {
 
 ### ALL: Public Properties and Methods
 
-There is no official documentation as this project is still in early development. The entire source code is available on GitHub if you need further clarification.
+There is no official documentation as this project is still in early development. The entire source code is available on GitHub if you need further clarification. Most methods will return a Promise.
 
 ```javascript
 .settings // see user preferences section
@@ -198,25 +198,24 @@ There is no official documentation as this project is still in early development
 setFramework(module: {}, cached?: boolean) // install application interpreter
 setViewModel(data?: {}) // object data for layout bindings
 
-parseDocument() // see installation section
-parseDocumentAsync()
-
-ready() // boolean indicating if parseDocument can be called
-close() // close current session preceding write to disk or local output
-reset() // clear cached layouts and reopen new session
+parseDocument() // see installation section (Promise)
 
 // Required: node-express / squared-apache
 // NOTE: options: { assets?: RequestAsset[], exclusions?: {}, callback?: () => void }
 
-saveToArchive(filename?: string, options?: {}) // save entire project as a new archive
-createFrom(format: string, options: {}) // create new archive from only RequestAsset[]
+saveToArchive(filename?: string, options?: {}) // save entire project as a new archive (Promise)
+createFrom(format: string, options: {}) // create new archive from only RequestAsset[] (Promise)
 
 // Required (local archives): --disk-read | --unc-read | --access-all (command-line)
-appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive
-appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only RequestAsset[]
+appendToArchive(pathname: string, options?: {}) // append entire project to a copy of a preexisting archive (Promise)
+appendFromArchive(pathname: string, options: {}) // create new archive from a preexisting archive and from only RequestAsset[] (Promise)
 
 // Required (all): --disk-write | --unc-write | --access-all (command-line)
-copyToDisk(directory: string, options?: {}) // copy entire project to local directory
+copyToDisk(directory: string, options?: {}) // copy entire project to local directory (Promise)
+
+ready() // boolean indicating if parseDocument can be called
+close() // close current session preceding write to disk or local output
+reset() // clear cached layouts and reopen new session
 
 toString() // main layout file contents
 
@@ -297,13 +296,13 @@ squared.system.addXmlNs('aapt', 'http://schemas.android.com/aapt');
 ### CHROME: Public Methods
 
 ```javascript
-// async methods
+// Promise methods
 chrome.getElementById(value: string, cache?: boolean) // cache: default "true"
 chrome.querySelector(value: string, cache?: boolean)
 chrome.querySelectorAll(value: string, cache?: boolean)
 chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "false"
 
-chrome.saveAsWebPage(filename?: string, options?: {}): void // create archive with html and web page assets asynchronously
+chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets asynchronously
 ```
 
 ### Public System Methods

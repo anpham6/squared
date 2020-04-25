@@ -65,8 +65,9 @@ System.import('/build/src/main.js').then(result => {
 
 document.addEventListener('DOMContentLoaded', function() {
     squared.setFramework(android);
-    const time = new Date().getTime();
+    const time = Date.now();
     squared.parseDocument().then(function() {
+        console.log('SQ: ' + (Date.now() - time));
         const copyTo = new URLSearchParams(location.search).get('copyTo');
         if (copyTo) {
             squared.copyToDisk(copyTo, { 
@@ -82,6 +83,9 @@ document.addEventListener('DOMContentLoaded', function() {
         else {
             squared.settings.outputEmptyCopyDirectory = true;
             squared.copyToDisk('C:/Users/An/git/flexbox', {
+                callback: (result) => {
+                    console.log('CP: ' + (Date.now() - time));
+                },
                 assets: [
                     {
                         pathname: 'app/src/main/res/drawable',
@@ -96,6 +100,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 ]
             });
         }
-        console.log(new Date().getTime() - time);
+        console.log('NE: ' + (Date.now() - time));
     });
 });

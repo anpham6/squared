@@ -4,7 +4,6 @@ import { FileActionOptions, UserSettings } from '../@types/base/application';
 import Container from './lib/base/container';
 import ArrayIterator from './lib/base/arrayiterator';
 import ListIterator from './lib/base/listiterator';
-import PromiseHandler from './lib/base/promisehandler';
 import SymbolIterator from './lib/base/symboliterator';
 
 import * as client from './lib/client';
@@ -82,7 +81,7 @@ export function setViewModel(data?: {}) {
     }
 }
 
-export function parseDocument(...elements: (HTMLElement | string)[]): PromiseHandler {
+export function parseDocument(...elements: (HTMLElement | string)[]) {
     if (main) {
         const extensionManager = main.extensionManager;
         for (const item of extensionsQueue) {
@@ -104,11 +103,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]): PromiseHan
     else if (settings.showErrorMessages) {
         alert('ERROR: Framework not installed.');
     }
-    return new PromiseHandler();
-}
-
-export async function parseDocumentAsync(...elements: (HTMLElement | string)[]): Promise<PromiseHandler> {
-    return parseDocument(...elements);
+    return session.frameworkNotInstalled();
 }
 
 export function include(value: ExtensionRequest, options?: {}) {
@@ -197,34 +192,39 @@ export function close() {
 export function copyToDisk(value: string, options?: FileActionOptions) {
     if (checkWritable(main) && util.isString(value)) {
         main.finalize();
-        main.copyToDisk(value, options);
+        return main.copyToDisk(value, options);
     }
+    return session.frameworkNotInstalled();
 }
 
 export function appendToArchive(value: string, options?: FileActionOptions) {
     if (checkWritable(main) && util.isString(value)) {
         main.finalize();
-        main.appendToArchive(value, options);
+        return main.appendToArchive(value, options);
     }
+    return session.frameworkNotInstalled();
 }
 
 export function saveToArchive(value?: string, options?: FileActionOptions) {
     if (checkWritable(main)) {
         main.finalize();
-        main.saveToArchive(value, options);
+        return main.saveToArchive(value, options);
     }
+    return session.frameworkNotInstalled();
 }
 
 export function createFrom(value: string, options: FileActionOptions) {
     if (checkWritable(main) && util.isString(value) && util.isPlainObject(options) && options.assets?.length) {
-        main.createFrom(value, options);
+        return main.createFrom(value, options);
     }
+    return session.frameworkNotInstalled();
 }
 
 export function appendFromArchive(value: string, options: FileActionOptions) {
     if (checkWritable(main) && util.isString(value) && util.isPlainObject(options) && options.assets?.length) {
-        main.appendFromArchive(value, options);
+        return main.appendFromArchive(value, options);
     }
+    return session.frameworkNotInstalled();
 }
 
 export function toString() {
@@ -236,7 +236,6 @@ const lib = {
         Container,
         ArrayIterator,
         ListIterator,
-        PromiseHandler,
         SymbolIterator
     },
     client,

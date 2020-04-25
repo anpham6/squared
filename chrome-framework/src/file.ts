@@ -100,7 +100,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public copyToDisk(directory: string, options?: FileCopyingOptions) {
-        this.copying({
+        return this.copying({
             ...options,
             assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
             directory
@@ -108,7 +108,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public appendToArchive(pathname: string, options?: FileArchivingOptions) {
-        this.archiving({
+        return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
             assets: <FileAsset[]> this.getAssetsAll(options).concat(options?.assets || []),
@@ -117,7 +117,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public saveToArchive(filename: string, options?: FileArchivingOptions) {
-        this.archiving({
+        return this.archiving({
             ...options,
             assets: <FileAsset[]> this.getAssetsAll(options).concat(options?.assets || []),
             filename

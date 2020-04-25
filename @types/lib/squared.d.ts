@@ -58,22 +58,6 @@ declare namespace base {
         next(): IteratorResult<T>;
         constructor(children: T[]);
     }
-
-    class PromiseHandler {
-        status: number;
-        then(resolve: Null<FunctionVoid>): this;
-        catch(reject: Null<(error: Error) => void>): this;
-        finally(complete: FunctionVoid): this;
-        success(): void;
-        throw(error?: Error): void;
-        finalize(): void;
-        get hasThen(): boolean;
-        get hasCatch(): boolean;
-        get hasFinally(): boolean;
-        get waiting(): boolean;
-        get complete(): boolean;
-        constructor(thisArg?: {});
-    }
 }
 
 declare namespace color {
@@ -283,9 +267,11 @@ declare namespace session {
     function setElementCache(element: Element, attr: string, sessionId: string, data: any): void;
     function getElementCache(element: Element, attr: string, sessionId?: string): any;
     function deleteElementCache(element: Element, attr: string, sessionId: string): void;
+    function frameworkNotInstalled<T = void>(): Promise<T>;
 }
 
 declare namespace util {
+    function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>>
     function hasMimeType(formats: MIMEOrAll, value: string): boolean;
     function parseMimeType(value: string): string;
     function fromMimeType(value: string): string;

@@ -13,6 +13,20 @@ const NUMERALS = [
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
 
+export function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
+    return (...args: any[]) => {
+        return new Promise((resolve, reject) => {
+            try {
+                const result = fn.call(null, ...args);
+                return resolve(result);
+            }
+            catch (err) {
+                return reject(err);
+            }
+        });
+    };
+}
+
 export function hasMimeType(formats: MIMEOrAll, value: string) {
     return formats === '*' || formats.includes(parseMimeType(value));
 }
@@ -989,7 +1003,6 @@ export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolea
             if (++deleted === deleteCount) {
                 break;
             }
-            length--;
         }
     }
     return list;

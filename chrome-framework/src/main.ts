@@ -28,7 +28,10 @@ import * as constant from './lib/constant';
 
 type FileOptions = FileArchivingOptions | FileCopyingOptions;
 
-const { flatArray, isString, isObject } = squared.lib.util;
+const { util, session } = squared.lib;
+
+const { flatArray, isString, isObject, promisify } = util;
+const { frameworkNotInstalled } = session;
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
 let initialized = false;
@@ -50,18 +53,7 @@ function findElement(element: HTMLElement, cache: boolean) {
     let result = getCachedElement(element, cache);
     if (result === undefined) {
         application.queryState = enumeration.APP_QUERYSTATE.SINGLE;
-        application.parseDocument(element);
-        result = elementMap.get(element);
-        application.queryState = enumeration.APP_QUERYSTATE.NONE;
-    }
-    return result || null;
-}
-
-async function findElementAsync(element: HTMLElement, cache: boolean) {
-    let result = getCachedElement(element, cache);
-    if (result === undefined) {
-        application.queryState = enumeration.APP_QUERYSTATE.SINGLE;
-        await application.parseDocumentAsync(element);
+        (async () => { await application.parseDocument(element); })();
         result = elementMap.get(element);
         application.queryState = enumeration.APP_QUERYSTATE.NONE;
     }
@@ -73,52 +65,25 @@ function findElementAll(query: NodeListOf<Element>) {
     let incomplete = false;
     const length = query.length;
     const result: View[] = new Array(length);
-    for (let i = 0; i < length; ++i) {
-        const element = <HTMLElement> query[i];
-        let item = elementMap.get(element);
-        if (item) {
-            result[i] = item;
-        }
-        else {
-            application.parseDocument(element);
-            item = elementMap.get(element);
+    (async () => {
+        for (let i = 0; i < length; ++i) {
+            const element = <HTMLElement> query[i];
+            let item = elementMap.get(element);
             if (item) {
                 result[i] = item;
             }
             else {
-                incomplete = true;
+                await application.parseDocument(element);
+                item = elementMap.get(element);
+                if (item) {
+                    result[i] = item;
+                }
+                else {
+                    incomplete = true;
+                }
             }
         }
-    }
-    if (incomplete) {
-        flatArray<View>(result);
-    }
-    application.queryState = enumeration.APP_QUERYSTATE.NONE;
-    return result;
-}
-
-async function findElementAllAsync(query: NodeListOf<Element>) {
-    application.queryState = enumeration.APP_QUERYSTATE.MULTIPLE;
-    let incomplete = false;
-    const length = query.length;
-    const result: View[] = new Array(length);
-    for (let i = 0; i < length; ++i) {
-        const element = <HTMLElement> query[i];
-        let item = elementMap.get(element);
-        if (item) {
-            result[i] = item;
-        }
-        else {
-            await application.parseDocumentAsync(element);
-            item = elementMap.get(element);
-            if (item) {
-                result[i] = item;
-            }
-            else {
-                incomplete = true;
-            }
-        }
-    }
+    })();
     if (incomplete) {
         flatArray<View>(result);
     }
@@ -322,43 +287,43 @@ const appBase: ChromeFramework<View> = {
         }
         return appBase.create();
     },
-    getElementById: async (value: string, cache = true) => {
+    getElementById: (value: string, cache = true) => {
         if (application) {
             const element = document.getElementById(value);
             if (element) {
-                return findElementAsync(element, cache);
+                return promisify<Null<View>>(findElement)(element, cache);
             }
         }
-        return null;
+        return promisify<null>(() => { return null; })();
     },
-    querySelector: async (value: string, cache = true) => {
+    querySelector: (value: string, cache = true) => {
         if (application) {
             const element = document.querySelector(value);
             if (element) {
-                return findElementAsync(<HTMLElement> element, cache);
+                return promisify<Null<View>>(findElement)(<HTMLElement> element, cache);
             }
         }
-        return null;
+        return promisify<null>(() => { return null; })();
     },
-    querySelectorAll: async (value: string, cache = true) => {
+    querySelectorAll: (value: string, cache = true) => {
         if (application) {
             const query = document.querySelectorAll(value);
             if (query.length) {
                 if (!cache) {
                     elementMap.clear();
                 }
-                return findElementAllAsync(query);
+                return promisify<View[]>(findElementAll)(query);
             }
         }
-        return null;
+        return promisify<View[]>(() => { return []; })();
     },
-    getElement: async (element: HTMLElement, cache = false) => {
+    getElement: (element: HTMLElement, cache = false) => {
         if (application) {
-            return findElementAsync(element, cache);
+            return promisify<Null<View>>(findElement)(element, cache);
         }
-        return null;
+        return promisify<null>(() => { return null; })();
     },
-    saveAsWebPage: async (filename?: string, options?: FileArchivingOptions) => {
+    saveAsWebPage: (filename?: string, options?: FileArchivingOptions) => {
         if (file) {
             if (!isObject(options)) {
                 options = {};
@@ -366,11 +331,12 @@ const appBase: ChromeFramework<View> = {
             options.saveAsWebPage = true;
             const preloadImages = userSettings.preloadImages;
             userSettings.preloadImages = true;
-            await application.parseDocumentAsync(document.body).then(() => {
+            return application.parseDocument(document.body).then(() => {
                 file!.saveToArchive(filename || userSettings.outputArchiveName, options);
                 userSettings.preloadImages = preloadImages;
             });
         }
+        return frameworkNotInstalled();
     }
 };
 

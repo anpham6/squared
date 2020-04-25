@@ -12,11 +12,9 @@ const $lib = squared.lib;
 
 const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, checkMediaRule } = $lib.css;
 const { isTextNode } = $lib.dom;
-const { capitalize, convertCamelCase, isString, objectMap, resolvePath } = $lib.util;
+const { capitalize, convertCamelCase, isString, objectMap, promisify, resolvePath } = $lib.util;
 const { CHAR, FILE, STRING, XML } = $lib.regex;
-const { getElementCache, setElementCache } = $lib.session;
-
-const PromiseHandler = $lib.base.PromiseHandler;
+const { frameworkNotInstalled, getElementCache, setElementCache } = $lib.session;
 
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 
@@ -137,23 +135,23 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract get viewModel(): Undef<AppViewModel>;
 
     public copyToDisk(directory: string, options?: FileActionOptions) {
-        this.fileHandler?.copyToDisk(directory, options);
+        return this.fileHandler?.copyToDisk(directory, options) || frameworkNotInstalled();
     }
 
     public appendToArchive(pathname: string, options?: FileActionOptions) {
-        this.fileHandler?.appendToArchive(pathname, options);
+        return this.fileHandler?.appendToArchive(pathname, options) || frameworkNotInstalled();
     }
 
     public saveToArchive(filename?: string, options?: FileActionOptions) {
-        this.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, options);
+        return this.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, options) || frameworkNotInstalled();
     }
 
     public createFrom(format: string, options: FileActionOptions) {
-        this.fileHandler?.createFrom(format, options);
+        return this.fileHandler?.createFrom(format, options) || frameworkNotInstalled();
     }
 
     public appendFromArchive(filename: string, options: FileActionOptions) {
-        this.fileHandler?.appendFromArchive(filename, options);
+        return this.fileHandler?.appendFromArchive(filename, options) || frameworkNotInstalled();
     }
 
     public reset() {
@@ -169,9 +167,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.closed = false;
     }
 
-    public parseDocument(...elements: any[]) {
+    public parseDocument(...elements: any[]): Promise<unknown> {
         const { controllerHandler: controller, resourceHandler: resource } = this;
-        const promiseResult = new PromiseHandler(this);
         this.initializing = false;
         this.rootElements.clear();
         const sessionId = controller.generateSessionId;
@@ -208,7 +205,6 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             catch {
             }
-            promiseResult.success();
         };
         if (elements.length === 0) {
             elements.push(document.body);
@@ -291,61 +287,51 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             });
         }
-        if (imageElements.length) {
-            this.initializing = true;
-            Promise.all(objectMap(imageElements, image => {
-                return new Promise((resolve, reject) => {
-                    if (typeof image === 'string') {
-                        resolve(getImageSvgAsync(image));
-                    }
-                    else {
-                        image.addEventListener('load', () => resolve(image));
-                        image.addEventListener('error', () => reject(image));
-                    }
-                });
-            }))
-            .then((result: PreloadImage[]) => {
-                const length = result.length;
-                for (let i = 0; i < length; ++i) {
-                    const value = result[i];
-                    if (typeof value === 'string') {
-                        const uri = imageElements[i];
-                        if (typeof uri === 'string') {
-                            resource.addRawData(uri, 'image/svg+xml', 'utf8', value);
+        return promisify(async () => {
+            if (imageElements.length) {
+                this.initializing = true;
+                await Promise.all(objectMap(imageElements, image => {
+                    return new Promise((resolve, reject) => {
+                        if (typeof image === 'string') {
+                            resolve(getImageSvgAsync(image));
+                        }
+                        else {
+                            image.addEventListener('load', () => resolve(image));
+                            image.addEventListener('error', () => reject(image));
+                        }
+                    });
+                }))
+                .then((result: PreloadImage[]) => {
+                    const length = result.length;
+                    for (let i = 0; i < length; ++i) {
+                        const value = result[i];
+                        if (typeof value === 'string') {
+                            const uri = imageElements[i];
+                            if (typeof uri === 'string') {
+                                resource.addRawData(uri, 'image/svg+xml', 'utf8', value);
+                            }
+                        }
+                        else {
+                            resource.addImage(value);
                         }
                     }
-                    else {
-                        resource.addImage(value);
-                    }
-                }
-                resumeThread();
-            })
-            .catch((error: Error | Event | HTMLImageElement) => {
-                let target = error;
-                if (error instanceof Event) {
-                    target = <HTMLImageElement> error.target;
-                }
-                const message = target instanceof HTMLImageElement ? target.src : '';
-                if (!promiseResult.hasCatch && (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`))) {
                     resumeThread();
-                }
-                else {
-                    if (!(error instanceof Error)) {
-                        error = new Error(message ? `FAIL: ${message}` : 'Unable to preload images.');
+                })
+                .catch((error: Error | Event | HTMLImageElement) => {
+                    let target = error;
+                    if (error instanceof Event) {
+                        target = <HTMLImageElement> error.target;
                     }
-                    removePreloaded();
-                    promiseResult.throw(error);
-                }
-            });
-        }
-        else {
-            resumeThread();
-        }
-        return promiseResult;
-    }
-
-    public async parseDocumentAsync(...elements: any[]): Promise<squared.lib.base.PromiseHandler> {
-        return this.parseDocument(...elements);
+                    const message = target instanceof HTMLImageElement ? target.src : '';
+                    if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
+                        resumeThread();
+                    }
+                });
+            }
+            else {
+                resumeThread();
+            }
+        })();
     }
 
     public createCache(documentRoot: HTMLElement) {

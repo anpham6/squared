@@ -1,6 +1,10 @@
 import { getStyle } from './css';
 import { getRangeClientRect } from './dom';
-import { convertCamelCase, iterateArray } from './util';
+import { convertCamelCase, iterateArray, promisify } from './util';
+
+export function frameworkNotInstalled<T = void>() {
+    return promisify<T>(() => { throw new Error('Framework not installed.'); })();
+}
 
 export function actualClientRect(element: Element, sessionId?: string) {
     if (sessionId) {
