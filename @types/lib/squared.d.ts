@@ -52,12 +52,6 @@ declare namespace base {
         previousIndex(): number;
         constructor(children: T[]);
     }
-
-    class SymbolIterator<T> implements Iterator<T> {
-        readonly length: number;
-        next(): IteratorResult<T>;
-        constructor(children: T[]);
-    }
 }
 
 declare namespace color {

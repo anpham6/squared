@@ -4,7 +4,6 @@ import { FileActionOptions, UserSettings } from '../@types/base/application';
 import Container from './lib/base/container';
 import ArrayIterator from './lib/base/arrayiterator';
 import ListIterator from './lib/base/listiterator';
-import SymbolIterator from './lib/base/symboliterator';
 
 import * as client from './lib/client';
 import * as color from './lib/color';
@@ -232,8 +231,7 @@ const lib = {
     base: {
         Container,
         ArrayIterator,
-        ListIterator,
-        SymbolIterator
+        ListIterator
     },
     client,
     color,
