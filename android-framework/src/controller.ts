@@ -388,45 +388,6 @@ function segmentLeftAligned<T extends View>(children: T[]) {
     return partitionArray<T>(children, item => item.float === 'left' || item.autoMargin.right === true);
 }
 
-function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
-    const renderParent = node.renderParent as View;
-    if (renderParent.overflowY) {
-        return renderParent.box.width;
-    }
-    else {
-        const parent = <Null<View>> node.actualParent;
-        if (parent) {
-            if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === renderParent) {
-                const { left, width } = parent.box;
-                return width - (node.linear.left - left);
-            }
-            else if (parent.floatContainer) {
-                const { containerType, alignmentType } = this.containerTypeVerticalMargin;
-                const container = node.ascend({ condition: (item: View) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
-                if (container.length) {
-                    const { left, right, width } = node.box;
-                    let offsetLeft = 0, offsetRight = 0;
-                    parent.naturalChildren.forEach((item: View) => {
-                        const linear = item.linear;
-                        if (item.floating && !children.includes(item) && node.intersectY(linear)) {
-                            if (item.float === 'left') {
-                                if (Math.floor(linear.right) > left) {
-                                    offsetLeft = Math.max(offsetLeft, linear.right - left);
-                                }
-                            }
-                            else if (right > Math.ceil(linear.left)) {
-                                offsetRight = Math.max(offsetRight, right - linear.left);
-                            }
-                        }
-                    });
-                    return width - offsetLeft - offsetRight;
-                }
-            }
-        }
-    }
-    return undefined;
-}
-
 function relativeWrapWidth(node: View, bounds: BoxRectDimension, multiline: boolean, previousRowLeft: Undef<View>, rowWidth: number, data: RelativeLayoutData) {
     let maxWidth = 0;
     let baseWidth = rowWidth + node.marginLeft;
@@ -502,6 +463,45 @@ const getVerticalLayout = (layout: LayoutUI) => isConstraintLayout(layout, true)
 const getVerticalAlignedLayout = (layout: LayoutUI) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
 const getAnchorDirection = (reverse = false) => reverse ? { anchorStart: 'right', anchorEnd: 'left', chainStart: 'rightLeft', chainEnd: 'leftRight' } : { anchorStart: 'left', anchorEnd: 'right', chainStart: 'leftRight', chainEnd: 'rightLeft' };
 const isUnknownParent = (parent: View, value: number, length: number) => parent.containerType === value && parent.length === length && (parent.alignmentType === 0 || parent.hasAlign(NODE_ALIGNMENT.UNKNOWN));
+
+function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
+    const renderParent = node.renderParent as View;
+    if (renderParent.overflowY) {
+        return renderParent.box.width;
+    }
+    else {
+        const parent = <Null<View>> node.actualParent;
+        if (parent) {
+            if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === renderParent) {
+                const { left, width } = parent.box;
+                return width - (node.linear.left - left);
+            }
+            else if (parent.floatContainer) {
+                const { containerType, alignmentType } = this.containerTypeVerticalMargin;
+                const container = node.ascend({ condition: (item: View) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
+                if (container.length) {
+                    const { left, right, width } = node.box;
+                    let offsetLeft = 0, offsetRight = 0;
+                    parent.naturalChildren.forEach((item: View) => {
+                        const linear = item.linear;
+                        if (item.floating && !children.includes(item) && node.intersectY(linear)) {
+                            if (item.float === 'left') {
+                                if (Math.floor(linear.right) > left) {
+                                    offsetLeft = Math.max(offsetLeft, linear.right - left);
+                                }
+                            }
+                            else if (right > Math.ceil(linear.left)) {
+                                offsetRight = Math.max(offsetRight, right - linear.left);
+                            }
+                        }
+                    });
+                    return width - offsetLeft - offsetRight;
+                }
+            }
+        }
+    }
+    return undefined;
+}
 
 export function setHorizontalAlignment(node: View) {
     if (node.centerAligned) {

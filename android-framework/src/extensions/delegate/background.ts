@@ -43,22 +43,6 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         let renderParent = parent;
         let container: Undef<T>;
         let parentAs!: T;
-        const createFrameWrapper = (wrapper: T) => {
-            wrapper.setControlType(View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), CONTAINER_NODE.CONSTRAINT);
-            wrapper.addAlign(NODE_ALIGNMENT.VERTICAL);
-            wrapper.render(renderParent);
-            this.application.addLayoutTemplate(
-                renderParent,
-                wrapper,
-                <NodeXmlTemplate<T>> {
-                    type: NODE_TEMPLATE.XML,
-                    node: wrapper,
-                    controlName: wrapper.controlName
-                }
-            );
-            parentAs = wrapper;
-            renderParent = wrapper;
-        };
         const parentVisible = isParentVisible(node, parent);
         const fixed = node.css('backgroundAttachment') === 'fixed';
         if (backgroundColor !== '') {
@@ -82,7 +66,20 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         if (backgroundImage !== '' && (parentVisible || backgroundSeparate || backgroundRepeatY || parent.visibleStyle.background || hasMargin(node))) {
             if (container) {
                 if (backgroundSeparate || fixed) {
-                    createFrameWrapper(container);
+                    container.setControlType(View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), CONTAINER_NODE.CONSTRAINT);
+                    container.addAlign(NODE_ALIGNMENT.VERTICAL);
+                    container.render(renderParent);
+                    this.application.addLayoutTemplate(
+                        renderParent,
+                        container,
+                        <NodeXmlTemplate<T>> {
+                            type: NODE_TEMPLATE.XML,
+                            node: container,
+                            controlName: container.controlName
+                        }
+                    );
+                    parentAs = container;
+                    renderParent = container;
                     container = controller.createNodeWrapper(node, parentAs, { resource: NODE_RESOURCE.BOX_SPACING });
                 }
             }

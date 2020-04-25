@@ -92,6 +92,12 @@ function traverseElementSibling(options: SiblingOptions = {}, element: Null<Elem
     return result;
 }
 
+const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
+const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth > 0;
+const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous));
+const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : Number.NEGATIVE_INFINITY;
+const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
+
 function getDatasetName(this: NodeUI, attr: string) {
     const dataset = this.dataset;
     return dataset[attr + capitalize(this.localSettings.systemName)] || dataset[attr];
@@ -142,12 +148,6 @@ function applyBoxAdjustment(this: NodeUI, boxAdjustment: BoxModel, attrs: string
         }
     }
 }
-
-const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
-const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth > 0;
-const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous));
-const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : Number.NEGATIVE_INFINITY;
-const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
     public static refitScreen(node: T, value: Dimension): Dimension {

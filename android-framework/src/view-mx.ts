@@ -454,6 +454,129 @@ function transferLayoutAlignment(node: T, replaceWith: T) {
     }
 }
 
+function setLineHeight(node: T, renderParent: T) {
+    const lineHeight = node.lineHeight;
+    if (lineHeight > 0) {
+        const hasOwnStyle = node.has('lineHeight', { map: 'initial' });
+        if (node.multiline) {
+            setMultiline(node, lineHeight, hasOwnStyle);
+        }
+        else if (node.renderChildren.length) {
+            if (!hasOwnStyle && node.layoutHorizontal && node.alignSibling('baseline')) {
+                return;
+            }
+            else if (node.layoutVertical || node.layoutFrame) {
+                node.renderChildren.forEach((item: T) => {
+                    if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
+                        setMarginOffset(item, lineHeight, true, true, true);
+                    }
+                });
+            }
+            else {
+                const horizontalRows = node.horizontalRows || [node.renderChildren];
+                let previousMultiline = false;
+                const length = horizontalRows.length;
+                for (let i = 0; i < length; ++i) {
+                    const row = horizontalRows[i];
+                    const nextRow = horizontalRows[i + 1];
+                    const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < length - 1 && !!nextRow.find(item => item.baselineActive)?.has('lineHeight'));
+                    const first = row[0];
+                    const onlyChild = row.length === 1;
+                    const singleLine = onlyChild && !first.multiline;
+                    const baseline = !onlyChild && row.find(item => item.baselineActive && item.renderChildren.length === 0);
+                    const top = singleLine || !previousMultiline && (i > 0 || length === 1) || first.lineBreakLeading;
+                    const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
+                    if (baseline) {
+                        if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
+                            setMarginOffset(baseline as T, lineHeight, false, top, bottom);
+                        }
+                        else {
+                            previousMultiline = true;
+                            continue;
+                        }
+                    }
+                    else {
+                        row.forEach((item: T) => {
+                            if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
+                                setMarginOffset(item, lineHeight, onlyChild, top, bottom);
+                            }
+                        });
+                    }
+                    previousMultiline = onlyChild && first.multiline;
+                }
+            }
+        }
+        else if (hasOwnStyle || renderParent.lineHeight === 0) {
+            setMarginOffset(node, lineHeight, hasOwnStyle, true, true);
+        }
+    }
+}
+
+function finalizeGravity(node: T, attr: string) {
+    const direction = getGravityValues(node, attr);
+    if (direction.size > 1) {
+        checkMergableGravity('center', direction);
+        checkMergableGravity('fill', direction);
+    }
+    let result = '';
+    let x = '', y = '', z = '';
+    for (const value of direction.values()) {
+        if (isHorizontalAlign(value)) {
+            x = value;
+        }
+        else if (isVerticalAlign(value)) {
+            y = value;
+        }
+        else {
+            z += (z !== '' ? '|' : '') + value;
+        }
+    }
+    result = x !== '' && y !== '' ? x + '|' + y : x || y;
+    if (z !== '') {
+        result += (result !== '' ? '|' : '') + z;
+    }
+    if (result !== '') {
+        node.android(attr, result);
+    }
+    else {
+        node.delete('android', attr);
+    }
+}
+
+function setFlexGrow(node: T, horizontal: boolean, grow: number, value?: number, shrink?: number) {
+    if (grow > 0) {
+        node.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', truncate(grow, node.localSettings.floatPrecision));
+        return true;
+    }
+    else if (value) {
+        if (shrink) {
+            if (shrink > 1) {
+                value /= shrink;
+            }
+            else if (shrink > 0) {
+                value *= 1 - shrink;
+            }
+        }
+        node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
+    }
+    return false;
+}
+
+function setCustomization(node: T, obj: Undef<ObjectMap<StringMap>>, overwrite: boolean) {
+    if (obj) {
+        for (const name in obj) {
+            const data = obj[name];
+            for (const attr in data) {
+                node.attr(name, attr, data[attr], overwrite);
+            }
+        }
+    }
+}
+
+const getGravityValues = (node: T, attr: string) => new Set<string>(node.android(attr).split('|'));
+const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
+const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
+
 function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment: BoxModel, margin: boolean) {
     let top = 0, right = 0, bottom = 0, left = 0;
     for (let i = 0; i < 4; ++i) {
@@ -684,130 +807,6 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
         }
     }
 }
-
-const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
-const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
-
-function setLineHeight(node: T, renderParent: T) {
-    const lineHeight = node.lineHeight;
-    if (lineHeight > 0) {
-        const hasOwnStyle = node.has('lineHeight', { map: 'initial' });
-        if (node.multiline) {
-            setMultiline(node, lineHeight, hasOwnStyle);
-        }
-        else if (node.renderChildren.length) {
-            if (!hasOwnStyle && node.layoutHorizontal && node.alignSibling('baseline')) {
-                return;
-            }
-            else if (node.layoutVertical || node.layoutFrame) {
-                node.renderChildren.forEach((item: T) => {
-                    if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
-                        setMarginOffset(item, lineHeight, true, true, true);
-                    }
-                });
-            }
-            else {
-                const horizontalRows = node.horizontalRows || [node.renderChildren];
-                let previousMultiline = false;
-                const length = horizontalRows.length;
-                for (let i = 0; i < length; ++i) {
-                    const row = horizontalRows[i];
-                    const nextRow = horizontalRows[i + 1];
-                    const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < length - 1 && !!nextRow.find(item => item.baselineActive)?.has('lineHeight'));
-                    const first = row[0];
-                    const onlyChild = row.length === 1;
-                    const singleLine = onlyChild && !first.multiline;
-                    const baseline = !onlyChild && row.find(item => item.baselineActive && item.renderChildren.length === 0);
-                    const top = singleLine || !previousMultiline && (i > 0 || length === 1) || first.lineBreakLeading;
-                    const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
-                    if (baseline) {
-                        if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
-                            setMarginOffset(baseline as T, lineHeight, false, top, bottom);
-                        }
-                        else {
-                            previousMultiline = true;
-                            continue;
-                        }
-                    }
-                    else {
-                        row.forEach((item: T) => {
-                            if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
-                                setMarginOffset(item, lineHeight, onlyChild, top, bottom);
-                            }
-                        });
-                    }
-                    previousMultiline = onlyChild && first.multiline;
-                }
-            }
-        }
-        else if (hasOwnStyle || renderParent.lineHeight === 0) {
-            setMarginOffset(node, lineHeight, hasOwnStyle, true, true);
-        }
-    }
-}
-
-function finalizeGravity(node: T, attr: string) {
-    const direction = getGravityValues(node, attr);
-    if (direction.size > 1) {
-        checkMergableGravity('center', direction);
-        checkMergableGravity('fill', direction);
-    }
-    let result = '';
-    let x = '', y = '', z = '';
-    for (const value of direction.values()) {
-        if (isHorizontalAlign(value)) {
-            x = value;
-        }
-        else if (isVerticalAlign(value)) {
-            y = value;
-        }
-        else {
-            z += (z !== '' ? '|' : '') + value;
-        }
-    }
-    result = x !== '' && y !== '' ? x + '|' + y : x || y;
-    if (z !== '') {
-        result += (result !== '' ? '|' : '') + z;
-    }
-    if (result !== '') {
-        node.android(attr, result);
-    }
-    else {
-        node.delete('android', attr);
-    }
-}
-
-function setFlexGrow(node: T, horizontal: boolean, grow: number, value?: number, shrink?: number) {
-    if (grow > 0) {
-        node.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', truncate(grow, node.localSettings.floatPrecision));
-        return true;
-    }
-    else if (value) {
-        if (shrink) {
-            if (shrink > 1) {
-                value /= shrink;
-            }
-            else if (shrink > 0) {
-                value *= 1 - shrink;
-            }
-        }
-        node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
-    }
-    return false;
-}
-
-function setCustomization(node: T, obj: Undef<ObjectMap<StringMap>>, overwrite: boolean) {
-    if (obj) {
-        for (const name in obj) {
-            const data = obj[name];
-            for (const attr in data) {
-                node.attr(name, attr, data[attr], overwrite);
-            }
-        }
-    }
-}
-
-const getGravityValues = (node: T, attr: string) => new Set<string>(node.android(attr).split('|'));
 
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {

@@ -889,6 +889,25 @@ const COLOR_CSS3: ColorResult[] = [
 ];
 const CACHE_COLORDATA: ObjectMap<ColorData> = {};
 
+function hue2rgb(t: number, p: number, q: number) {
+    if (t < 0) {
+        t += 1;
+    }
+    else if (t > 1) {
+        t -= 1;
+    }
+    if (t < 1/6) {
+        return p + (q - p) * 6 * t;
+    }
+    else if (t < 1/2) {
+        return q;
+    }
+    else if (t < 2/3) {
+        return p + (q - p) * (2/3 - t) * 6;
+    }
+    return p;
+}
+
 const parseOpacity = (value: number) => clamp(value) * 255;
 
 export function findColorName(value: string) {
@@ -1168,27 +1187,9 @@ export function convertRGBA(value: HSLA): RGBA {
     else {
         const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
         const p = 2 * l - q;
-        const hue2rgb = (t: number) => {
-            if (t < 0) {
-                t += 1;
-            }
-            else if (t > 1) {
-                t -= 1;
-            }
-            if (t < 1/6) {
-                return p + (q - p) * 6 * t;
-            }
-            else if (t < 1/2) {
-                return q;
-            }
-            else if (t < 2/3) {
-                return p + (q - p) * (2/3 - t) * 6;
-            }
-            return p;
-        };
-        r = hue2rgb(h + 1/3);
-        g = hue2rgb(h);
-        b = hue2rgb(h - 1/3);
+        r = hue2rgb(h + 1/3, p, q);
+        g = hue2rgb(h, p, q);
+        b = hue2rgb(h - 1/3, p, q);
     }
     r = Math.round(Math.min(r, 1) * 255);
     g = Math.round(Math.min(g, 1) * 255);

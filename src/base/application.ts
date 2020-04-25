@@ -181,7 +181,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const preloadImages = this.userSettings.preloadImages;
         const imageElements: PreloadImage[] = [];
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
-        const removePreloaded = () => {
+        const resumeThread = () => {
             this.initializing = false;
             preloaded.forEach(image => {
                 if (image.parentElement) {
@@ -189,9 +189,6 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             });
             preloaded.length = 0;
-        };
-        const resumeThread = () => {
-            removePreloaded();
             this.extensions.forEach(ext => ext.beforeParseDocument());
             for (const element of this.rootElements) {
                 const node = this.createCache(element);
