@@ -696,15 +696,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (Array.isArray(values)) {
             const length = values.length;
             const result: SvgPoint[] = new Array(length);
-            let i = -1;
-            while (++i < length) {
+            let i = 0;
+            while (i < length) {
                 const { x, y, rx, ry } = values[i];
                 const item: SvgPoint = { x, y };
                 if (rx !== undefined && ry !== undefined) {
                     item.rx = rx;
                     item.ry = ry;
                 }
-                result[i] = item;
+                result[i++] = item;
             }
             return result;
         }
@@ -724,8 +724,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         let { x: minX, y: minY } = values[0];
         let maxX = minX, maxY = minY;
         const length = values.length;
-        let i = 0;
-        while (++i < length) {
+        for (let i = 1; i < length; ++i) {
             const { x, y } = values[i];
             if (radius && i > 0) {
                 const { rx, ry } = values[i];

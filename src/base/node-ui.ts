@@ -97,6 +97,52 @@ function getDatasetName(this: NodeUI, attr: string) {
     return dataset[attr + capitalize(this.localSettings.systemName)] || dataset[attr];
 }
 
+function applyBoxReset(this: NodeUI, boxReset: BoxModel, attrs: string[], region: number, start: number, node?: NodeUI) {
+    for (let i = 0; i < 4; ++i) {
+        const key = CSS_SPACING_KEYS[i + start];
+        if (hasBit(region, key)) {
+            const name = attrs[i];
+            boxReset[name] = 1;
+            if (node) {
+                const previous = this.registerBox(key);
+                if (previous) {
+                    previous.resetBox(key, node);
+                }
+                else {
+                    if (this.naturalChild) {
+                        const value = this[name];
+                        if (value >= 0) {
+                            node.modifyBox(key, value);
+                        }
+                    }
+                    this.transferBox(key, node);
+                }
+            }
+        }
+    }
+}
+
+function applyBoxAdjustment(this: NodeUI, boxAdjustment: BoxModel, attrs: string[], region: number, start: number, node: NodeUI) {
+    for (let i = 0; i < 4; ++i) {
+        const key = CSS_SPACING_KEYS[i + start];
+        if (hasBit(region, key)) {
+            const previous = this.registerBox(key);
+            if (previous) {
+                previous.transferBox(key, node);
+            }
+            else {
+                const name = attrs[i];
+                const value: number = boxAdjustment[name];
+                if (value !== 0) {
+                    node.modifyBox(key, value, false);
+                    boxAdjustment[name] = 0;
+                }
+                this.registerBox(key, node);
+            }
+        }
+    }
+}
+
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth > 0;
 const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous));
@@ -1031,66 +1077,20 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public resetBox(region: number, node?: T) {
-        const applyReset = (attrs: string[], start: number) => {
-            const boxReset = this._boxReset;
-            for (let i = 0; i < 4; ++i) {
-                const key = CSS_SPACING_KEYS[i + start];
-                if (hasBit(region, key)) {
-                    const name = attrs[i];
-                    boxReset[name] = 1;
-                    if (node) {
-                        const previous = this.registerBox(key);
-                        if (previous) {
-                            previous.resetBox(key, node);
-                        }
-                        else {
-                            if (this.naturalChild) {
-                                const value = this[name];
-                                if (value >= 0) {
-                                    node.modifyBox(key, value);
-                                }
-                            }
-                            this.transferBox(key, node);
-                        }
-                    }
-                }
-            }
-        };
         if (hasBit(BOX_STANDARD.MARGIN, region)) {
-            applyReset(BOX_MARGIN, 0);
+            applyBoxReset.call(this, this._boxReset, BOX_MARGIN, region, 0, node);
         }
         if (hasBit(BOX_STANDARD.PADDING, region)) {
-            applyReset(BOX_PADDING, 4);
+            applyBoxReset.call(this, this._boxReset, BOX_PADDING, region, 4, node);
         }
     }
 
     public transferBox(region: number, node: T) {
-        const applyReset = (attrs: string[], start: number) => {
-            const boxAdjustment = this._boxAdjustment;
-            for (let i = 0; i < 4; ++i) {
-                const key = CSS_SPACING_KEYS[i + start];
-                if (hasBit(region, key)) {
-                    const previous = this.registerBox(key);
-                    if (previous) {
-                        previous.transferBox(key, node);
-                    }
-                    else {
-                        const name = attrs[i];
-                        const value: number = boxAdjustment[name];
-                        if (value !== 0) {
-                            node.modifyBox(key, value, false);
-                            boxAdjustment[name] = 0;
-                        }
-                        this.registerBox(key, node);
-                    }
-                }
-            }
-        };
         if (hasBit(BOX_STANDARD.MARGIN, region)) {
-            applyReset(BOX_MARGIN, 0);
+            applyBoxAdjustment.call(this, this._boxAdjustment, BOX_MARGIN, region, 0, node);
         }
         if (hasBit(BOX_STANDARD.PADDING, region)) {
-            applyReset(BOX_PADDING, 4);
+            applyBoxAdjustment.call(this, this._boxAdjustment, BOX_PADDING, region, 4, node);
         }
     }
 

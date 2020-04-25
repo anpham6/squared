@@ -88,74 +88,76 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
     }
     else {
         const height = node.height;
-        const setBoxPadding = (offset: number, padding = false) => {
-            let upper = Math.round(offset);
-            if (upper > 0) {
-                const boxPadding = (inlineStyle || height > lineHeight) && (node.styleText || padding) && !node.inline && !(node.inputElement && !isLength(styleValue, true));
-                if (top) {
-                    if (boxPadding) {
-                        if (upper > 0) {
-                            node.modifyBox(BOX_STANDARD.PADDING_TOP, upper);
-                        }
-                    }
-                    else if (inlineStyle || !node.baselineAltered) {
-                        upper -= node.paddingTop;
-                        if (upper > 0) {
-                            node.modifyBox(BOX_STANDARD.MARGIN_TOP, upper);
-                        }
-                    }
-                }
-                if (bottom) {
-                    offset = Math.floor(offset);
-                    if (boxPadding) {
-                        if (offset > 0) {
-                            node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
-                        }
-                    }
-                    else {
-                        offset -= node.paddingBottom;
-                        if (offset > 0) {
-                            node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                        }
-                    }
-                }
-            }
-        };
         if (lineHeight === height) {
             node.mergeGravity('gravity', 'center_vertical', false);
         }
-        else if (height > 0) {
-            if (node.styleText) {
-                setBoxPadding(getLineSpacingExtra(node, lineHeight));
-            }
-            else {
-                const offset = (lineHeight / 2) - node.paddingTop;
-                if (offset > 0) {
-                    node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+        else {
+            const setBoxPadding = (offset: number, padding = false) => {
+                let upper = Math.round(offset);
+                if (upper > 0) {
+                    const boxPadding = (inlineStyle || height > lineHeight) && (node.styleText || padding) && !node.inline && !(node.inputElement && !isLength(styleValue, true));
+                    if (top) {
+                        if (boxPadding) {
+                            if (upper > 0) {
+                                node.modifyBox(BOX_STANDARD.PADDING_TOP, upper);
+                            }
+                        }
+                        else if (inlineStyle || !node.baselineAltered) {
+                            upper -= node.paddingTop;
+                            if (upper > 0) {
+                                node.modifyBox(BOX_STANDARD.MARGIN_TOP, upper);
+                            }
+                        }
+                    }
+                    if (bottom) {
+                        offset = Math.floor(offset);
+                        if (boxPadding) {
+                            if (offset > 0) {
+                                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
+                            }
+                        }
+                        else {
+                            offset -= node.paddingBottom;
+                            if (offset > 0) {
+                                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                            }
+                        }
+                    }
+                }
+            };
+            if (height > 0) {
+                if (node.styleText) {
+                    setBoxPadding(getLineSpacingExtra(node, lineHeight));
+                }
+                else {
+                    const offset = (lineHeight / 2) - node.paddingTop;
+                    if (offset > 0) {
+                        node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+                    }
                 }
             }
-        }
-        else if (node.textElement) {
-            setBoxPadding(getLineSpacingExtra(node, lineHeight));
-        }
-        else if (node.inputElement) {
-            const element = createElement(document.body, 'div', { ...node.textStyle, visibility: 'hidden' });
-            element.innerText = 'AgjpyZ';
-            const rowHeight = actualTextRangeRect(<Element> element).height;
-            document.body.removeChild(element);
-            let rows = 1;
-            switch (node.tagName)  {
-                case 'SELECT':
-                    rows = node.toElementInt('size', 1);
-                    break;
-                case 'TEXTAREA':
-                    rows = node.toElementInt('rows', 1);
-                    break;
+            else if (node.textElement) {
+                setBoxPadding(getLineSpacingExtra(node, lineHeight));
             }
-            setBoxPadding((lineHeight - rowHeight * Math.max(rows, 1)) / 2, true);
-        }
-        else {
-            setBoxPadding((lineHeight - node.bounds.height) / 2);
+            else if (node.inputElement) {
+                const element = createElement(document.body, 'div', { ...node.textStyle, visibility: 'hidden' });
+                element.innerText = 'AgjpyZ';
+                const rowHeight = actualTextRangeRect(<Element> element).height;
+                document.body.removeChild(element);
+                let rows = 1;
+                switch (node.tagName)  {
+                    case 'SELECT':
+                        rows = node.toElementInt('size', 1);
+                        break;
+                    case 'TEXTAREA':
+                        rows = node.toElementInt('rows', 1);
+                        break;
+                }
+                setBoxPadding((lineHeight - rowHeight * Math.max(rows, 1)) / 2, true);
+            }
+            else {
+                setBoxPadding((lineHeight - node.bounds.height) / 2);
+            }
         }
     }
 }

@@ -520,9 +520,7 @@ export function delimitString(options: DelimitStringOptions, ...appending: strin
     const not = options.not || [];
     const remove = options.remove || false;
     const values = value !== '' ? value.split(delimiter) : [];
-    const length = appending.length;
-    let i = -1;
-    while (++i < length) {
+    for (let i = 0; i < appending.length; ++i) {
         const append = appending[i];
         if (append !== '') {
             if (values.includes(not[i])) {
@@ -952,13 +950,10 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
 }
 
 export function flatArray<T>(list: any[]): T[] {
-    let length = list.length;
-    let i = -1;
-    while (++i < length) {
+    for (let i = 0; i < list.length; ++i) {
         const item = list[i];
         if (item === undefined || item === null) {
             list.splice(i--, 1);
-            length--;
         }
     }
     return list;
@@ -983,10 +978,8 @@ export function flatMultiArray<T>(list: any[]): T[] {
 }
 
 export function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number) {
-    let length = list.length;
-    let i = -1;
     let deleted = 0;
-    while (++i < length) {
+    for (let i = 0; i < list.length; ++i) {
         const item = list[i];
         if (predicate(item, i, list)) {
             if (callback) {
@@ -1083,8 +1076,7 @@ export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPr
 
 export function conditionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>) {
     const length = list.length;
-    let i = -1;
-    while (++i < length) {
+    for (let i = 0; i < length; ++i) {
         const item = list[i];
         if (predicate(item, i, list)) {
             const value = callback(item, i, list);

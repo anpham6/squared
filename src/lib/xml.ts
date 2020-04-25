@@ -108,8 +108,7 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
         indent += '\t'.repeat(depth);
     }
     let length = children.length;
-    let i = -1;
-    while (++i < length) {
+    for (let i = 0; i < length; ++i) {
         const item = children[i];
         const include: Undef<string> = tag['#'] && item[tag['#']];
         const closed = !nested && !include;
@@ -193,8 +192,7 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
     let output = '';
     let indent = startIndent;
     const length = lines.length;
-    let i = -1;
-    while (++i < length) {
+    for (let i = 0; i < length; ++i) {
         const line = lines[i];
         let previous = indent;
         if (i > 0) {
@@ -239,11 +237,9 @@ export function replaceCharacterData(value: string, tab = false) {
         .replace(REGEX_FORMAT.NBSP, '&#160;')
         .replace(ESCAPE.NONENTITY, '&amp;');
     const char: { i: number; text: string }[] = [];
-    let length = value.length;
-    let i = -1;
-    while (++i < length) {
-        const ch = value.charAt(i);
-        switch (ch) {
+    const length = value.length;
+    for (let i = 0; i < length; ++i) {
+        switch (value.charAt(i)) {
             case "'":
                 char.push({ i, text: "\\'" });
                 break;
@@ -269,13 +265,11 @@ export function replaceCharacterData(value: string, tab = false) {
                 break;
         }
     }
-    length = char.length;
-    if (length) {
+    if (char.length) {
         const parts = value.split('');
-        let text: string;
         let j = 0;
-        while (j < length) {
-            ({ i, text } = char[j++]);
+        while (j < char.length) {
+            const { i, text } = char[j++];
             parts[i] = text;
         }
         return parts.join('');

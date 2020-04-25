@@ -57,8 +57,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         const children = this._children;
         items.forEach(item => {
             const length = children.length;
-            let i = -1;
-            while (++i < length) {
+            for (let i = 0; i < length; ++i) {
                 if (children[i] === item) {
                     children.splice(i, 1);
                     result.push(item);
@@ -138,9 +137,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         }
         const result: T[] = [];
         const children = this._children;
-        let length = children.length;
-        let i = -1;
-        while (++i < length) {
+        for (let i = 0; i < children.length; ++i) {
             const item = children[i];
             if (error && error(item, i, children)) {
                 break;
@@ -170,8 +167,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         }
         const children = this._children;
         const length = children.length;
-        let i = -1;
-        while (++i < length) {
+        for (let i = 0; i < length; ++i) {
             const item = children[i];
             if (error && error(item, i, children)) {
                 return -1;
@@ -193,8 +189,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         const recurse = (container: Container<T>): Undef<T> => {
             const children = container.children;
             const length = children.length;
-            let i = -1;
-            while (++i < length) {
+            for (let i = 0; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
                     invalid = true;
@@ -234,8 +229,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
             let result: T[] = [];
             const children = container.children;
             const length = children.length;
-            let i = -1;
-            while (++i < length) {
+            for (let i = 0; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
                     invalid = true;
