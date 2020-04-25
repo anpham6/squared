@@ -18,7 +18,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T, parent: T) {
         let items: T[] = [];
         const rows: T[][] = [items];
-        let maxSize = Number.POSITIVE_INFINITY;
+        let maxSize = Infinity;
         let multiline = false;
         node.each((item: T) => {
             if (item.css('columnSpan') === 'all') {
@@ -53,12 +53,12 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
         const columnWidth = node.parseWidth(node.css('columnWidth'));
         let columnGap = node.parseWidth(node.css('columnGap'));
         let columnSized: number;
-        const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Number.POSITIVE_INFINITY;
+        const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Infinity;
         if (columnGap > 0) {
             columnSized = Math.floor(getColumnSizing());
         }
         else {
-            columnGap = (columnWidth > 0 && !isNaN(maxSize) && maxSize !== Number.POSITIVE_INFINITY ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
+            columnGap = (columnWidth > 0 && !isNaN(maxSize) && maxSize !== Infinity ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
             columnSized = Math.ceil(getColumnSizing());
         }
         node.data(EXT_NAME.COLUMN, 'mainData', <ColumnData<T>> {

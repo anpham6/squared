@@ -424,7 +424,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                                     return false;
                                 }
                                 else if (element.name) {
-                                    if (iterateArray((child.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item: HTMLInputElement) => item.checked) === Number.POSITIVE_INFINITY) {
+                                    if (iterateArray((child.ascend({ condition: item => item.tagName === 'FORM' })[0]?.element || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item: HTMLInputElement) => item.checked) === Infinity) {
                                         return false;
                                     }
                                 }
@@ -472,7 +472,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                 case ':valid':
                 case ':invalid': {
                     const element = child.element;
-                    if (iterateArray((<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo), item => item === element) !== Number.POSITIVE_INFINITY) {
+                    if (iterateArray((<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo), item => item === element) !== Infinity) {
                         return false;
                     }
                     break;
@@ -714,7 +714,7 @@ function resetBounds(this: Node, cascade = true) {
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public documentRoot = false;
     public depth = -1;
-    public childIndex = Number.POSITIVE_INFINITY;
+    public childIndex = Infinity;
     public style!: CSSStyleDeclaration;
 
     public abstract queryMap?: T[][];
@@ -2571,7 +2571,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     const children = this.naturalChildren;
                     const length = children.length;
                     if (length) {
-                        let top = Number.POSITIVE_INFINITY, right = Number.NEGATIVE_INFINITY, bottom = Number.NEGATIVE_INFINITY, left = Number.POSITIVE_INFINITY;
+                        let top = Infinity, right = -Infinity, bottom = -Infinity, left = Infinity;
                         let numberOfLines = 0;
                         let i = 0;
                         while (i < length) {

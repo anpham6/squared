@@ -675,10 +675,10 @@ function queueIncomplete(incomplete: SvgAnimation[], item: SvgAnimate) {
     }
 }
 
-function sortIncomplete(incomplete: SvgAnimation[], maxTime = Number.POSITIVE_INFINITY) {
+function sortIncomplete(incomplete: SvgAnimation[], maxTime = Infinity) {
     incomplete.sort((a, b) => {
         const delayA = a.delay, delayB = a.delay;
-        if (maxTime !== Number.POSITIVE_INFINITY) {
+        if (maxTime !== Infinity) {
             if (maxTime === delayA && maxTime !== delayB) {
                 return -1;
             }
@@ -999,7 +999,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         }
                         let maxTime = -1;
                         let actualMaxTime = 0;
-                        let nextDelayTime = Number.POSITIVE_INFINITY;
+                        let nextDelayTime = Infinity;
                         let baseValue!: AnimateValue;
                         let previousTransform: Undef<SvgAnimate>;
                         let previousComplete: Undef<SvgAnimate>;
@@ -1291,7 +1291,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         maxTime = setTimelineValue(baseMap, delay - 1, baseValue);
                                         actualMaxTime = delay;
                                     }
-                                    nextDelayTime = Number.POSITIVE_INFINITY;
+                                    nextDelayTime = Infinity;
                                     const ordering = item.group.ordering;
                                     if (ordering && ordering.length > 1) {
                                         let checkDelay = true;
@@ -1332,7 +1332,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     else {
                                         for (let k = i + 1; k < length; ++k) {
                                             const value = groupDelay[k];
-                                            if (value !== Number.POSITIVE_INFINITY) {
+                                            if (value !== Infinity) {
                                                 const dataA = groupData[k];
                                                 if (dataA.length && !dataA.every(next => next.hasState(SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID))) {
                                                     nextDelayTime = value;
@@ -1343,7 +1343,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     }
                                     const actualStartTime = actualMaxTime;
                                     let startTime = maxTime + 1;
-                                    let maxThreadTime = Math.min(nextDelayTime, item.end || Number.POSITIVE_INFINITY);
+                                    let maxThreadTime = Math.min(nextDelayTime, item.end || Infinity);
                                     let setterInterrupt: Undef<SvgAnimation>;
                                     if (item.animationElement && setterData.length) {
                                         const interruptTime = Math.min(nextDelayTime, totalDuration, maxThreadTime);
@@ -1384,7 +1384,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                             baseValue = TRANSFORM.typeAsValue(item.type);
                                             setFreezeValue(actualMaxTime, baseValue, item.type);
                                         }
-                                        let parallel = delay === Number.POSITIVE_INFINITY || (maxTime !== -1 || item.hasState(SYNCHRONIZE_STATE.BACKWARDS)) && !(i === 0 && j === 0) || item.hasState(SYNCHRONIZE_STATE.RESUME);
+                                        let parallel = delay === Infinity || (maxTime !== -1 || item.hasState(SYNCHRONIZE_STATE.BACKWARDS)) && !(i === 0 && j === 0) || item.hasState(SYNCHRONIZE_STATE.RESUME);
                                         complete = true;
                                         threadTimeExceeded: {
                                             const forwardItem = getForwardItem(forwardMap, attr);
@@ -1589,7 +1589,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                         setFreezeValue(nextDuration, next.valueTo, next.type, next);
                                                     }
                                                 });
-                                                groupDelay[k] = Number.POSITIVE_INFINITY;
+                                                groupDelay[k] = Infinity;
                                                 dataA.length = 0;
                                             }
                                         }
@@ -1617,7 +1617,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     const item = <SvgAnimate> incomplete.shift();
                                     const { delay, duration } = item;
                                     const durationTotal = maxTime - delay;
-                                    let maxThreadTime = Number.POSITIVE_INFINITY;
+                                    let maxThreadTime = Infinity;
                                     const insertKeyTimes = () => {
                                         let [keyTimes, values, keySplines] = cloneKeyTimes(item);
                                         const interval = getStartIteration(actualMaxTime, delay, duration);
@@ -1682,7 +1682,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         break attributeEnd;
                                     }
                                     else {
-                                        maxThreadTime = Math.min(delay + item.duration * item.iterationCount, item.end || Number.POSITIVE_INFINITY);
+                                        maxThreadTime = Math.min(delay + item.duration * item.iterationCount, item.end || Infinity);
                                         if (maxThreadTime > maxTime) {
                                             insertKeyTimes();
                                             if (checkComplete(item)) {

@@ -71,22 +71,17 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('SQ: ' + (Date.now() - time));
             const copyTo = new URLSearchParams(location.search).get('copyTo');
             if (copyTo) {
-                squared.copyToDisk(copyTo, { 
-                    callback: (result) => {
-                        const element = squared.lib.dom.createElement(document.body, 'div', { whiteSpace: 'pre' });
-                        if (result.success) {
-                            element.innerHTML = result.files.join('\n');
-                        }
-                        element.id = 'md5_complete';
+                squared.copyToDisk(copyTo).then((result) => {
+                    const element = squared.lib.dom.createElement(document.body, 'div', { whiteSpace: 'pre' });
+                    if (result.success) {
+                        element.innerHTML = result.files.join('\n');
                     }
+                    element.id = 'md5_complete';
                 });
             }
             else {
                 squared.settings.outputEmptyCopyDirectory = true;
                 squared.copyToDisk('C:/Users/An/git/flexbox', {
-                    callback: (result) => {
-                        console.log('CP: ' + (Date.now() - time));
-                    },
                     assets: [
                         {
                             pathname: 'app/src/main/res/drawable',
@@ -99,7 +94,8 @@ document.addEventListener('DOMContentLoaded', function() {
                             uri: 'C:/Users/An/git/squared/html/common/images/ic_launcher_foreground.xml'
                         }
                     ]
-                });
+                })
+                .then(() => console.log('CP: ' + (Date.now() - time)));
             }
             console.log('NE: ' + (Date.now() - time));
         })

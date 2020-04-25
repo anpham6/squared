@@ -18,7 +18,6 @@ declare namespace base {
         same(predicate: IteratorPredicate<T, any>): boolean;
         partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
         map<U>(predicate: IteratorPredicate<T, U>): U[];
-        flatMap<U>(predicate: IteratorPredicate<T, U>): U[];
         findIndex(predicate: IteratorPredicate<T, boolean>): number;
         extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[];
         find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
@@ -316,8 +315,7 @@ declare namespace util {
     function safeNestedArray<T>(list: T[][] | ObjectMap<T[]>, index: number | string): T[];
     function safeNestedMap<T>(map: ObjectMapNested<T>, index: number | string): ObjectMap<T>;
     function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]): T[];
-    function flatArray<T>(list: any[]): T[];
-    function flatMultiArray<T>(list: any[]): T[];
+    function flatArray<T>(list: any[], depth?: number): T[];
     function spliceArray<T>(list: T[], predicate: IteratorPredicate<T, boolean>, callback?: IteratorPredicate<T, void>, deleteCount?: number): T[];
     function partitionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>): [T[], T[]];
     function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, any>): boolean;
@@ -326,7 +324,6 @@ declare namespace util {
     function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number): number;
     function conditionArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, boolean>, callback: IteratorPredicate<T, any>): void;
     function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[];
-    function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
     function objectMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[];
 }
 

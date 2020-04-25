@@ -17,7 +17,7 @@ const $base_lib = $base.lib;
 const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
 const { maxArray, truncate } = $lib.math;
 const { CHAR } = $lib.regex;
-const { conditionArray, flatMultiArray, hasValue, isArray } = $lib.util;
+const { conditionArray, flatArray, hasValue, isArray } = $lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
 
@@ -110,7 +110,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                 case 'space-around': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount * 2, gridSize);
                     for (let i = 0; i < itemCount; ++i) {
-                        for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
+                        for (const item of new Set(flatArray<View>(rowData[i], Infinity))) {
                             const marginStart = (i > 0 && i <= marginExcess ? 1 : 0) + marginSize;
                             if (!adjusted.has(item)) {
                                 item.modifyBox(MARGIN_START, marginStart);
@@ -128,7 +128,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                     if (itemCount > 1) {
                         const [marginSize, marginExcess] = getMarginSize(itemCount - 1, gridSize);
                         for (let i = 0; i < itemCount; ++i) {
-                            for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
+                            for (const item of new Set(flatArray<View>(rowData[i], Infinity))) {
                                 if (i < itemCount - 1) {
                                     const marginEnd = marginSize + (i < marginExcess ? 1 : 0);
                                     if (!adjusted.has(item)) {
@@ -159,7 +159,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                 case 'space-evenly': {
                     const [marginSize, marginExcess] = getMarginSize(itemCount + 1, gridSize);
                     for (let i = 0; i < itemCount; ++i) {
-                        for (const item of new Set(flatMultiArray<View>(rowData[i]))) {
+                        for (const item of new Set(flatArray<View>(rowData[i], Infinity))) {
                             let marginEnd = marginSize + (i < marginExcess ? 1 : 0);
                             if (!adjusted.has(item)) {
                                 if (wrapped) {
@@ -263,7 +263,7 @@ function checkRowSpan(node: View, mainData: CssGridData<View>, rowSpan: number, 
     if (rowSpan === 1 && mainData.rowSpanMultiple[rowStart]) {
         const rowData = mainData.rowData;
         const rowCount = rowData.length;
-        for (const item of flatMultiArray<View>(rowData[rowStart])) {
+        for (const item of flatArray<View>(rowData[rowStart], Infinity)) {
             if (item !== node) {
                 const data: CssGridCellData = item.data(CSS_GRID, 'cellData');
                 if (data && data.rowSpan > rowSpan && (rowStart === 0 || data.rowSpan < rowCount)) {
@@ -1053,7 +1053,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 const { unit: unitA, gap: gapA } = rowDirection ? row : column;
                                 const { unit: unitB, gap: gapB } = !rowDirection ? row : column;
                                 const dimensions = getCellDimensions(node, !rowDirection, [unitA[j]], 0);
-                                l = value === Number.POSITIVE_INFINITY ? unitB.length : 1;
+                                l = value === Infinity ? unitB.length : 1;
                                 createSpacer(i, rowDirection, unitB, gapB, dimensions[rowDirection ? 1 : 0], dimensions[rowDirection ? 3 : 2], i < length - 1 ? gapA : 0);
                             }
                         }

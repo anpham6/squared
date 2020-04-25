@@ -508,8 +508,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             let shape = 'ellipse';
                             let closestSide = top;
                             let farthestSide = top;
-                            let closestCorner = Number.POSITIVE_INFINITY;
-                            let farthestCorner = Number.NEGATIVE_INFINITY;
+                            let closestCorner = Infinity;
+                            let farthestCorner = -Infinity;
                             let radius = 0;
                             let radiusExtent = 0;
                             if (position) {
@@ -519,7 +519,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                         shape = 'circle';
                                     }
                                     else {
-                                        let minRadius = Number.POSITIVE_INFINITY;
+                                        let minRadius = Infinity;
                                         const radiusXY = name.split(' ');
                                         const length = radiusXY.length;
                                         for (let j = 0; j < length; ++j) {

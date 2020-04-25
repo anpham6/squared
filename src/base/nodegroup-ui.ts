@@ -202,7 +202,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
     get childIndex() {
         let result = super.childIndex;
-        if (result === Number.POSITIVE_INFINITY) {
+        if (result === Infinity) {
             this.each(node => result = Math.min(node.childIndex, result));
             super.childIndex = result;
         }
@@ -214,7 +214,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
     get containerIndex() {
         let result = super.containerIndex;
-        if (result === Number.POSITIVE_INFINITY) {
+        if (result === Infinity) {
             this.each(node => result = Math.min((<NodeUI> node).containerIndex, result));
             super.containerIndex = result;
         }

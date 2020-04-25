@@ -612,7 +612,7 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                         continue;
                     }
                     else if (this.floatContainer) {
-                        let maxBottom = Number.NEGATIVE_INFINITY;
+                        let maxBottom = -Infinity;
                         this.naturalChildren.forEach(item => {
                             if (item.floating) {
                                 maxBottom = Math.max(item.bounds.bottom, maxBottom);

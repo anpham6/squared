@@ -141,7 +141,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
             if (length) {
                 result = true;
                 if (length > 1) {
-                    let previousBottom = Number.POSITIVE_INFINITY;
+                    let previousBottom = Infinity;
                     const children = this.children;
                     let i = 0;
                     while (i < length) {

@@ -963,25 +963,15 @@ export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) 
     });
 }
 
-export function flatArray<T>(list: any[]): T[] {
-    for (let i = 0; i < list.length; ++i) {
-        const item = list[i];
-        if (item === undefined || item === null) {
-            list.splice(i--, 1);
-        }
-    }
-    return list;
-}
-
-export function flatMultiArray<T>(list: any[]): T[] {
-    let result: T[] = [];
+export function flatArray<T>(list: any[], depth = 0, current = 0): T[] {
+    let result: any[] = [];
     const length = list.length;
     let i = 0;
     while (i < length) {
         const item = list[i++];
-        if (Array.isArray(item)) {
+        if (current < depth && Array.isArray(item)) {
             if (item.length) {
-                result = result.concat(flatMultiArray<T>(item));
+                result = result.concat(flatArray<T>(item, depth, current + 1));
             }
         }
         else if (item !== undefined && item !== null) {
@@ -1059,7 +1049,7 @@ export function joinArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
     return trailing ? result : result.substring(0, result.length - char.length);
 }
 
-export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Number.POSITIVE_INFINITY) {
+export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {
     start = Math.max(start, 0);
     const length = Math.min(list.length, end);
     let i = start;
@@ -1067,13 +1057,13 @@ export function iterateArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate
         const item = list[i];
         const result = predicate(item, i++, list);
         if (result === true) {
-            return Number.POSITIVE_INFINITY;
+            return Infinity;
         }
     }
     return length;
 }
 
-export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Number.POSITIVE_INFINITY) {
+export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T, void | boolean>, start = 0, end = Infinity) {
     start = Math.max(start, 0);
     const length = Math.min(list.length, end);
     let i = length - 1;
@@ -1081,7 +1071,7 @@ export function iterateReverseArray<T>(list: ArrayLike<T>, predicate: IteratorPr
         const item = list[i];
         const result = predicate(item, i--, list);
         if (result === true) {
-            return Number.POSITIVE_INFINITY;
+            return Infinity;
         }
     }
     return length;
@@ -1098,20 +1088,6 @@ export function conditionArray<T>(list: ArrayLike<T>, predicate: IteratorPredica
             }
         }
     }
-}
-
-export function flatMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
-    const length = list.length;
-    const result: U[] = new Array(length);
-    let i = 0, j = 0;
-    while (i < length) {
-        const item = predicate(list[i], i++, list);
-        if (hasValue(item)) {
-            result[j++] = item;
-        }
-    }
-    result.length = j;
-    return result;
 }
 
 export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>): U[] {

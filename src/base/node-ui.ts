@@ -95,7 +95,7 @@ function traverseElementSibling(options: SiblingOptions = {}, element: Null<Elem
 const canCascadeChildren = (node: T) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const isBlockWrap = (node: T) => node.blockVertical || node.percentWidth > 0;
 const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous));
-const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : Number.NEGATIVE_INFINITY;
+const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
 const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
 
 function getDatasetName(this: NodeUI, attr: string) {
@@ -168,10 +168,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public static outerRegion(node: T): BoxRectDimension {
-        let top = Number.POSITIVE_INFINITY, right = Number.NEGATIVE_INFINITY, bottom = Number.NEGATIVE_INFINITY, left = Number.POSITIVE_INFINITY;
+        let top = Infinity, right = -Infinity, bottom = -Infinity, left = Infinity;
         let actualTop: number, actualRight: number, actualBottom: number, actualLeft: number;
-        let negativeRight = Number.NEGATIVE_INFINITY;
-        let negativeBottom = Number.NEGATIVE_INFINITY;
+        let negativeRight = -Infinity;
+        let negativeBottom = -Infinity;
         node.each((item: T) => {
             if (item.companion) {
                 actualTop = item.actualRect('top');
@@ -322,8 +322,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 linearX = x === n;
                 linearY = y === n;
                 if (linearX && floated.size) {
-                    let boxLeft = Number.POSITIVE_INFINITY, boxRight = Number.NEGATIVE_INFINITY;
-                    let floatLeft = Number.NEGATIVE_INFINITY, floatRight = Number.POSITIVE_INFINITY;
+                    let boxLeft = Infinity, boxRight = -Infinity;
+                    let floatLeft = -Infinity, floatRight = Infinity;
                     i = 0;
                     while (i < n) {
                         const node = nodes[i++];
@@ -460,8 +460,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _excludeSection = 0;
     private _excludeProcedure = 0;
     private _excludeResource = 0;
-    private _childIndex = Number.POSITIVE_INFINITY;
-    private _containerIndex = Number.POSITIVE_INFINITY;
+    private _childIndex = Infinity;
+    private _containerIndex = Infinity;
     private _visible = true;
     private _renderAs: Null<T> = null;
     private _locked: ObjectMapNested<boolean> = {};
@@ -881,7 +881,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 return NODE_TRAVERSE.FLOAT_WRAP;
                             }
                         }
-                        else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : Number.NEGATIVE_INFINITY), 0) / (this.actualParent as T).box.width >= 0.8) {
+                        else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : -Infinity), 0) / (this.actualParent as T).box.width >= 0.8) {
                             return NODE_TRAVERSE.FLOAT_INTERSECT;
                         }
                         else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
@@ -899,7 +899,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 else if (siblings[0].floating) {
                                     if (siblings.length > 1) {
                                         const float = siblings[0].float;
-                                        let maxBottom = Number.NEGATIVE_INFINITY;
+                                        let maxBottom = -Infinity;
                                         let contentWidth = 0;
                                         siblings.forEach(item => {
                                             if (item.floating) {
@@ -920,7 +920,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                                 }
                                             }
                                             const offset = bottom - maxBottom;
-                                            top = offset <= 0 || offset / (bottom - top) < 0.5 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+                                            top = offset <= 0 || offset / (bottom - top) < 0.5 ? -Infinity : Infinity;
                                         }
                                         else {
                                             top = Math.ceil(top);
@@ -1535,12 +1535,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get childIndex() {
         let result = this._childIndex;
-        if (result === Number.POSITIVE_INFINITY) {
+        if (result === Infinity) {
             let wrapped = this.innerWrapped;
             if (wrapped) {
                 do {
                     const index = wrapped.childIndex;
-                    if (index !== Number.POSITIVE_INFINITY) {
+                    if (index !== Infinity) {
                         result = index;
                         this._childIndex = result;
                         break;
@@ -1574,11 +1574,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get containerIndex() {
         let result = this._containerIndex;
-        if (result === Number.POSITIVE_INFINITY) {
+        if (result === Infinity) {
             let wrapped = this.innerWrapped;
             while (wrapped) {
                 const index = wrapped.containerIndex;
-                if (index !== Number.POSITIVE_INFINITY) {
+                if (index !== Infinity) {
                     result = index;
                     this._containerIndex = result;
                     break;

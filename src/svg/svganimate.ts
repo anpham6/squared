@@ -11,9 +11,22 @@ const { getHexCode, parseColor } = $lib.color;
 const { getFontSize, isLength, parseUnit } = $lib.css;
 const { getNamedItem } = $lib.dom;
 const { CHAR, XML } = $lib.regex;
-const { flatMap, isNumber, replaceMap, sortNumber, trimEnd } = $lib.util;
+const { hasValue, isNumber, replaceMap, sortNumber, trimEnd } = $lib.util;
 
 const REGEX_BEZIER = /^\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$/;
+
+function flatString<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
+    const length = list.length;
+    const result: U[] = [];
+    let i = 0;
+    while (i < length) {
+        const item = predicate(list[i], i++, list);
+        if (hasValue(item)) {
+            result.push(item);
+        }
+    }
+    return result;
+}
 
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
@@ -281,7 +294,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     this._keySplines = undefined;
                     break;
                 case 'spline':
-                    this.keySplines = flatMap(getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim());
+                    this.keySplines = flatString(getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim());
                 case 'linear':
                     if (keyTimesBase[0] !== 0 && keyTimesBase[keyTimesBase.length - 1] !== 1) {
                         const keyTimes: number[] = [];
@@ -353,9 +366,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             iterationCount = 1;
         }
         if (iterationCount !== -1) {
-            return Math.min(this.delay + this.duration * iterationCount, this.end || Number.POSITIVE_INFINITY);
+            return Math.min(this.delay + this.duration * iterationCount, this.end || Infinity);
         }
-        return Number.POSITIVE_INFINITY;
+        return Infinity;
     }
 
     set delay(value) {

@@ -309,7 +309,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     current = current.parentElement;
                 }
                 const controllerHandler = this.controllerHandler;
-                if (iterateArray(element.children, (item: HTMLElement) => controllerHandler.visibleElement(item)) === Number.POSITIVE_INFINITY) {
+                if (iterateArray(element.children, (item: HTMLElement) => controllerHandler.visibleElement(item)) === Infinity) {
                     return true;
                 }
                 return this.useElement(element);
@@ -897,7 +897,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 if (orientation) {
                                                     if (status < NODE_TRAVERSE.FLOAT_CLEAR && floatActive && !item.siblingsLeading.some((node: T) => node.lineBreak && !clearMap.has(node))) {
                                                          if (!item.floating || previous.floating && item.bounds.top < Math.floor(previous.bounds.bottom)) {
-                                                            let floatBottom = Number.NEGATIVE_INFINITY;
+                                                            let floatBottom = -Infinity;
                                                             if (!item.floating) {
                                                                 horizontal.forEach(node => {
                                                                     if (node.floating) {
@@ -1774,7 +1774,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const bottom = target.bounds.bottom;
         const boxWidth = parent.actualBoxWidth();
         if (leftAbove.length) {
-            let floatPosition = Number.NEGATIVE_INFINITY;
+            let floatPosition = -Infinity;
             let marginLeft = 0;
             let invalid = false;
             let spacing = false;
@@ -1790,7 +1790,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             });
-            if (floatPosition !== Number.NEGATIVE_INFINITY) {
+            if (floatPosition !== -Infinity) {
                 paddingNodes.forEach(child => {
                     if (Math.floor(child.linear.left) <= floatPosition || child.centerAligned) {
                         marginLeft = Math.max(marginLeft, child.marginLeft);
@@ -1806,7 +1806,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
         }
         if (rightAbove.length) {
-            let floatPosition = Number.POSITIVE_INFINITY;
+            let floatPosition = Infinity;
             let marginRight = 0;
             let invalid = false;
             let spacing = false;
@@ -1822,7 +1822,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             });
-            if (floatPosition !== Number.POSITIVE_INFINITY) {
+            if (floatPosition !== Infinity) {
                 paddingNodes.forEach(child => {
                     if (child.multiline || Math.ceil(child.linear.right) >= floatPosition) {
                         marginRight = Math.max(marginRight, child.marginRight);
@@ -1843,10 +1843,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         return this._layouts.sort((a, b) => {
             const indexA = a.index, indexB = b.index;
             if (indexA !== indexB) {
-                if (indexA === 0 || indexB === Number.POSITIVE_INFINITY || indexB === undefined && !(indexA === Number.POSITIVE_INFINITY)) {
+                if (indexA === 0 || indexB === Infinity || indexB === undefined && !(indexA === Infinity)) {
                     return -1;
                 }
-                else if (indexB === 0 || indexA === Number.POSITIVE_INFINITY || indexA === undefined && !(indexB === Number.POSITIVE_INFINITY)) {
+                else if (indexB === 0 || indexA === Infinity || indexA === undefined && !(indexB === Infinity)) {
                     return 1;
                 }
                 else if (indexA !== undefined && indexB !== undefined) {

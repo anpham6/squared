@@ -702,7 +702,7 @@ app.post('/api/assets/copy', (req, res) => {
         };
         let cleared = false;
         const finalize = (filepath?: string) => {
-            if (status.delayed === Number.POSITIVE_INFINITY) {
+            if (status.delayed === Infinity) {
                 return;
             }
             if (filepath) {
@@ -712,7 +712,7 @@ app.post('/api/assets/copy', (req, res) => {
                 removeUnusedFiles(dirname, status, files);
                 THREAD_COUNT--;
                 res.json(<ResultOfFileAction> { success: files.size > 0, files: Array.from(files) });
-                status.delayed = Number.POSITIVE_INFINITY;
+                status.delayed = Infinity;
             }
         };
         try {
@@ -818,12 +818,12 @@ app.post('/api/assets/archive', (req, res) => {
                 THREAD_COUNT--;
                 res.json(response);
             }
-            status.delayed = Number.POSITIVE_INFINITY;
+            status.delayed = Infinity;
             console.log(`WRITE: ${zipname} (${bytes} bytes)`);
         });
         archive.pipe(output);
         const finalize = (filepath?: string) => {
-            if (status.delayed === Number.POSITIVE_INFINITY) {
+            if (status.delayed === Infinity) {
                 return;
             }
             if (filepath) {

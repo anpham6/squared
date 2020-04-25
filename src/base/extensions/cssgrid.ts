@@ -1053,14 +1053,14 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 });
                             }
                             else if (!horizontal) {
-                                mainData.emptyRows[j] = [Number.POSITIVE_INFINITY];
+                                mainData.emptyRows[j] = [Infinity];
                             }
                         }
                     }
                     else {
                         rowMax[i] = parseFloat(unitHeight) || 0;
                         if (horizontal) {
-                            mainData.emptyRows[i] = [Number.POSITIVE_INFINITY];
+                            mainData.emptyRows[i] = [Infinity];
                         }
                     }
                 }

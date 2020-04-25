@@ -952,7 +952,7 @@ export function findColorShade(value: string) {
         }
         else if (q > 1) {
             const total = hsl.l + hsl.s;
-            let nearest = Number.POSITIVE_INFINITY;
+            let nearest = Infinity;
             let index = -1;
             for (i = 0; i < q; ++i) {
                 const { l, s } = result[i].hsl;

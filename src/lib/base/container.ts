@@ -2,7 +2,7 @@ import { ContainerCascadeOptions, ContainerFindOptions } from '../../../@types/l
 
 import ListIterator from './listiterator';
 
-import { flatMap, iterateArray, objectMap, partitionArray, sameArray } from '../util';
+import { iterateArray, objectMap, partitionArray, sameArray } from '../util';
 
 function* iterator<T>(children: T[]) {
     const length = children.length;
@@ -142,14 +142,6 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return result;
     }
 
-    public map<U>(predicate: IteratorPredicate<T, U>): U[] {
-        return objectMap(this._children, predicate);
-    }
-
-    public flatMap<U>(predicate: IteratorPredicate<T, U>): U[] {
-        return flatMap(this._children, predicate);
-    }
-
     public findIndex(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>) {
         let also: Undef<BindGeneric<T, void>>, error: Undef<IteratorPredicate<T, boolean>>;
         if (options) {
@@ -241,10 +233,12 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return recurse(this);
     }
 
+    public map<U>(predicate: IteratorPredicate<T, U>): U[] {
+        return objectMap(this._children, predicate);
+    }
+
     public sort(predicate: (a: T, b: T) => number) {
-        if (predicate) {
-            this._children.sort(predicate);
-        }
+        this._children.sort(predicate);
         return this;
     }
 

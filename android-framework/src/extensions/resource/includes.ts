@@ -84,7 +84,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 else {
                                     item.documentRoot = true;
                                 }
-                                application.saveDocument(name as string, content, '', Number.POSITIVE_INFINITY);
+                                application.saveDocument(name as string, content, '', Infinity);
                                 close.splice(j, 1);
                                 break;
                             }

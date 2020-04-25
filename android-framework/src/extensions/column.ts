@@ -105,13 +105,13 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                 }
                 else {
                     const columns: T[][] = [];
-                    let columnMin = Math.min(q, columnSized, columnCount || Number.POSITIVE_INFINITY);
+                    let columnMin = Math.min(q, columnSized, columnCount || Infinity);
                     let percentGap = 0;
                     if (columnMin > 1) {
                         const maxHeight = Math.floor(row.reduce((a, b) => a + b.bounds.height, 0) / columnMin);
                         let perRowCount = q >= columnMin ? Math.ceil(q / columnMin) : 1;
                         let rowReduce = multiline || perRowCount > 1 && (q % perRowCount !== 0 || !isNaN(columnCount) && perRowCount * columnCount % q > 1);
-                        let excessCount = rowReduce && q % columnMin !== 0 ? q - columnMin : Number.POSITIVE_INFINITY;
+                        let excessCount = rowReduce && q % columnMin !== 0 ? q - columnMin : Infinity;
                         let totalGap = 0;
                         for (let j = 0, k = 0, l = 0; j < q; ++j, ++l) {
                             const item = row[j];
@@ -146,7 +146,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                     l = -1;
                                 }
                             }
-                            else if (rowReduce && q - j === columnMin - k && excessCount !== Number.POSITIVE_INFINITY) {
+                            else if (rowReduce && q - j === columnMin - k && excessCount !== Infinity) {
                                 perRowCount = 1;
                             }
                         }

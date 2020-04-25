@@ -899,7 +899,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const documentBody = node.innerMostWrapped.documentBody;
             for (let i = length - 1, j = 0; i >= 0; --i) {
                 const value = images[i];
-                const imageData: BackgroundImageData = { order: Number.POSITIVE_INFINITY };
+                const imageData: BackgroundImageData = { order: Infinity };
                 if (typeof value === 'object' && !value.positioning) {
                     imageData.gravity = 'fill';
                     imageData.gradient = value;

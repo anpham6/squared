@@ -255,7 +255,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         this._group = value;
      }
     get group() {
-        return this._group || { id: Number.NEGATIVE_INFINITY, name: '' };
+        return this._group || { id: -Infinity, name: '' };
     }
 
     set setterType(value) {}

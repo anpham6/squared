@@ -372,7 +372,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             return style.getPropertyValue('visibility') === 'visible' || !positionAbsolute(style);
         }
         else if (!pseudoElt) {
-            if (iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item)) === Number.POSITIVE_INFINITY) {
+            if (iterateArray(element.children, (item: HTMLElement) => this.visibleElement(item)) === Infinity) {
                 return true;
             }
             if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none') {
@@ -501,7 +501,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     while (current && current !== parent);
                     node.css('opacity', opacity.toString());
                     node.parent = parent;
-                    node.containerIndex = Number.POSITIVE_INFINITY;
+                    node.containerIndex = Infinity;
                     altered.add(parent);
                     removed.add(actualParent);
                 }
@@ -515,7 +515,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const layers: Array<T[]> = [];
             let maxIndex = -1;
             node.each((item: T) => {
-                if (item.containerIndex === Number.POSITIVE_INFINITY) {
+                if (item.containerIndex === Infinity) {
                     node.some((adjacent: T) => {
                         let valid = adjacent.naturalElements.includes(item);
                         if (!valid) {

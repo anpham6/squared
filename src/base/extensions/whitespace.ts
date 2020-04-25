@@ -217,7 +217,7 @@ function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
 }
 
 function getMarginOffset<T extends NodeUI>(below: T, above: T, lineHeight: number, aboveLineBreak?: T): [number, T] {
-    let top = Number.POSITIVE_INFINITY;
+    let top = Infinity;
     if (below.nodeGroup && below.some(item => item.floating)) {
         below.renderChildren.forEach((item: T) => {
             if (!item.floating) {
@@ -229,7 +229,7 @@ function getMarginOffset<T extends NodeUI>(below: T, above: T, lineHeight: numbe
             }
         });
     }
-    if (top === Number.POSITIVE_INFINITY) {
+    if (top === Infinity) {
         top = below.linear.top;
     }
     if (aboveLineBreak) {
@@ -756,7 +756,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             let horizontal: Undef<T[]>;
                             if (horizontalRows && horizontalRows.length > 1) {
                                 found: {
-                                    let maxBottom = Number.NEGATIVE_INFINITY;
+                                    let maxBottom = -Infinity;
                                     const length = horizontalRows.length;
                                     for (let i = 0; i < length; ++i) {
                                         const row = horizontalRows[i] as T[];
@@ -779,7 +779,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 maxBottom = Math.max(innerWrapped.actualRect('bottom'), maxBottom);
                                             }
                                         });
-                                        if (maxBottom === Number.NEGATIVE_INFINITY) {
+                                        if (maxBottom === -Infinity) {
                                             break;
                                         }
                                     }
@@ -801,7 +801,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         actualChildren.push(item);
                                     }
                                 });
-                                let maxBottom = Number.NEGATIVE_INFINITY;
+                                let maxBottom = -Infinity;
                                 const parent = node.actualParent as T;
                                 const top = node.actualRect('top');
                                 const naturalChildren = parent.naturalChildren;
@@ -813,13 +813,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         break;
                                     }
                                     else if (item.lineBreak || item.block) {
-                                        maxBottom = Number.NEGATIVE_INFINITY;
+                                        maxBottom = -Infinity;
                                     }
                                     else if (validSibling(item)) {
                                         maxBottom = Math.max(item.actualRect('bottom'), maxBottom);
                                     }
                                 }
-                                if (maxBottom !== Number.NEGATIVE_INFINITY && top > maxBottom) {
+                                if (maxBottom !== -Infinity && top > maxBottom) {
                                     setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, maxBottom);
                                 }
                             }

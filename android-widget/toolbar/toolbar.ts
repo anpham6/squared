@@ -341,7 +341,7 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         const container = this.application.createNode({ parent: node, children, delegate, cascade: true });
         container.inherit(node, 'base');
         if (delegate) {
-            let containerIndex = Number.POSITIVE_INFINITY;
+            let containerIndex = Infinity;
             children.forEach(item => containerIndex = Math.min(containerIndex, item.containerIndex));
             container.containerIndex = containerIndex;
         }

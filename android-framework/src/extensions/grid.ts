@@ -156,7 +156,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
             }
         }
         if (!node.hasWidth) {
-            let maxRight = Number.NEGATIVE_INFINITY;
+            let maxRight = -Infinity;
             node.renderEach(item => {
                 if (item.inlineFlow || !item.blockStatic) {
                     maxRight = Math.max(maxRight, item.linear.right);
