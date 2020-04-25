@@ -5,6 +5,7 @@ import Container from './lib/base/container';
 import ArrayIterator from './lib/base/arrayiterator';
 import ListIterator from './lib/base/listiterator';
 import PromiseHandler from './lib/base/promisehandler';
+import SymbolIterator from './lib/base/symboliterator';
 
 import * as client from './lib/client';
 import * as color from './lib/color';
@@ -235,7 +236,8 @@ const lib = {
         Container,
         ArrayIterator,
         ListIterator,
-        PromiseHandler
+        PromiseHandler,
+        SymbolIterator
     },
     client,
     color,

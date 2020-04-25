@@ -1,25 +1,9 @@
 import { ContainerCascadeOptions, ContainerFindOptions } from '../../../@types/lib/data';
 
 import ListIterator from './listiterator';
+import SymbolIterator from './symboliterator';
 
 import { flatMap, iterateArray, objectMap, partitionArray, sameArray } from '../util';
-
-class Iter<T> implements Iterator<T> {
-    public index = -1;
-    public length: number;
-
-    constructor(public children: T[]) {
-        this.length = children.length;
-    }
-
-    public next() {
-        const i = ++this.index;
-        if (i < this.length) {
-            return { value: this.children[i] };
-        }
-        return <IteratorResult<T>> { done: true };
-    }
-}
 
 export default class Container<T> implements squared.lib.base.Container<T>, Iterable<T> {
     private _children: T[];
@@ -29,7 +13,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public [Symbol.iterator]() {
-        return new Iter(this._children);
+        return new SymbolIterator(this._children);
     }
 
     public item(index?: number, value?: T): Undef<T> {

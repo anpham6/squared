@@ -53,6 +53,12 @@ declare namespace base {
         constructor(children: T[]);
     }
 
+    class SymbolIterator<T> implements Iterator<T> {
+        readonly length: number;
+        next(): IteratorResult<T>;
+        constructor(children: T[]);
+    }
+
     class PromiseHandler {
         status: number;
         then(resolve: Null<FunctionVoid>): this;
