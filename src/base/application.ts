@@ -167,7 +167,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.closed = false;
     }
 
-    public parseDocument(...elements: any[]): Promise<unknown> {
+    public parseDocument(...elements: any[]) {
         const { controllerHandler: controller, resourceHandler: resource } = this;
         this.initializing = false;
         this.rootElements.clear();
@@ -287,51 +287,50 @@ export default abstract class Application<T extends Node> implements squared.bas
                 }
             });
         }
-        return promisify(async () => {
-            if (imageElements.length) {
-                this.initializing = true;
-                await Promise.all(objectMap(imageElements, image => {
-                    return new Promise((resolve, reject) => {
-                        if (typeof image === 'string') {
-                            resolve(getImageSvgAsync(image));
-                        }
-                        else {
-                            image.addEventListener('load', () => resolve(image));
-                            image.addEventListener('error', () => reject(image));
-                        }
-                    });
-                }))
-                .then((result: PreloadImage[]) => {
-                    const length = result.length;
-                    for (let i = 0; i < length; ++i) {
-                        const value = result[i];
-                        if (typeof value === 'string') {
-                            const uri = imageElements[i];
-                            if (typeof uri === 'string') {
-                                resource.addRawData(uri, 'image/svg+xml', 'utf8', value);
-                            }
-                        }
-                        else {
-                            resource.addImage(value);
-                        }
+        if (imageElements.length) {
+            this.initializing = true;
+            return Promise.all(objectMap(imageElements, image => {
+                return new Promise((resolve, reject) => {
+                    if (typeof image === 'string') {
+                        resolve(getImageSvgAsync(image));
                     }
-                    resumeThread();
-                })
-                .catch((error: Error | Event | HTMLImageElement) => {
-                    let target = error;
-                    if (error instanceof Event) {
-                        target = <HTMLImageElement> error.target;
-                    }
-                    const message = target instanceof HTMLImageElement ? target.src : '';
-                    if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
-                        resumeThread();
+                    else {
+                        image.addEventListener('load', () => resolve(image));
+                        image.addEventListener('error', () => reject(image));
                     }
                 });
-            }
-            else {
+            }))
+            .then((result: PreloadImage[]) => {
+                const length = result.length;
+                for (let i = 0; i < length; ++i) {
+                    const value = result[i];
+                    if (typeof value === 'string') {
+                        const uri = imageElements[i];
+                        if (typeof uri === 'string') {
+                            resource.addRawData(uri, 'image/svg+xml', 'utf8', value);
+                        }
+                    }
+                    else {
+                        resource.addImage(value);
+                    }
+                }
                 resumeThread();
-            }
-        })();
+                return undefined;
+            })
+            .catch((error: Error | Event | HTMLImageElement) => {
+                let target = error;
+                if (error instanceof Event) {
+                    target = <HTMLImageElement> error.target;
+                }
+                const message = target instanceof HTMLImageElement ? target.src : '';
+                if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
+                    resumeThread();
+                }
+            });
+        }
+        else {
+            return promisify(resumeThread)();
+        }
     }
 
     public createCache(documentRoot: HTMLElement) {

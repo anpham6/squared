@@ -437,6 +437,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const excluded = this.processing.excluded;
             const parent = node.parent as T;
             const preAlignment: ObjectIndex<StringMap> = {};
+            const parentReset = new Set<T>();
             const direction = new Set<HTMLElement>();
             const pseudoElements: T[] = [];
             let resetBounds = false;
@@ -465,8 +466,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     if (item.positionRelative) {
                         BOX_POSITION.forEach(attr => {
-                            if (item.hasPX(attr)) {
+                            if (item.hasPX(attr) && item[attr] !== 0) {
                                 saveAlignment(preAlignment, element, item.id, attr, 'auto', item.css(attr));
+                                parentReset.add(item.actualParent as T);
                             }
                         });
                     }
@@ -484,7 +486,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             });
             cache.each(item => {
                 if (!item.pseudoElement) {
-                    item.setBounds(preAlignment[item.id] === undefined && !resetBounds);
+                    item.setBounds(preAlignment[item.id] === undefined && !parentReset.has(item.actualParent as T) && !resetBounds);
                 }
                 else {
                     pseudoElements.push(item);
@@ -934,15 +936,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 break traverse;
                                             }
                                         }
-                                        else {
-                                            if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
-                                                if (!checkTraverseVertical(item, horizontal, vertical)) {
-                                                    break traverse;
-                                                }
-                                            }
-                                            else if (!checkTraverseHorizontal(item, horizontal, vertical)) {
+                                        else if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
+                                            if (!checkTraverseVertical(item, horizontal, vertical)) {
                                                 break traverse;
                                             }
+                                        }
+                                        else if (!checkTraverseHorizontal(item, horizontal, vertical)) {
+                                            break traverse;
                                         }
                                     }
                                     else {

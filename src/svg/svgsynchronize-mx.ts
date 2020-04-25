@@ -1315,16 +1315,14 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                             nextDelayTime = next.delay;
                                                             break nextDelay;
                                                         }
-                                                        else {
-                                                            if (next.getTotalDuration() <= totalDuration) {
-                                                                if (next.fillFreeze) {
-                                                                    sortSetterData(setterData, next);
-                                                                }
-                                                                next.addState(SYNCHRONIZE_STATE.COMPLETE);
+                                                        else if (next.getTotalDuration() <= totalDuration) {
+                                                            if (next.fillFreeze) {
+                                                                sortSetterData(setterData, next);
                                                             }
-                                                            else if (next.delay < totalDuration) {
-                                                                queueIncomplete(incomplete, next);
-                                                            }
+                                                            next.addState(SYNCHRONIZE_STATE.COMPLETE);
+                                                        }
+                                                        else if (next.delay < totalDuration) {
+                                                            queueIncomplete(incomplete, next);
                                                         }
                                                     }
                                                 }
@@ -1478,45 +1476,41 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                                     insertIntermediateValue(0);
                                                                 }
                                                             }
-                                                            else {
-                                                                if (time > maxThreadTime) {
-                                                                    if (parallel && maxTime + 1 < maxThreadTime) {
-                                                                        insertIntermediateValue(maxTime);
-                                                                    }
-                                                                    actualMaxTime = maxThreadTime;
-                                                                    insertIntermediateValue(maxThreadTime + (maxThreadTime === nextDelayTime && !baseMap.has(maxThreadTime - 1) ? -1 : 0));
-                                                                    complete = false;
-                                                                    break threadTimeExceeded;
+                                                            else if (time > maxThreadTime) {
+                                                                if (parallel && maxTime + 1 < maxThreadTime) {
+                                                                    insertIntermediateValue(maxTime);
+                                                                }
+                                                                actualMaxTime = maxThreadTime;
+                                                                insertIntermediateValue(maxThreadTime + (maxThreadTime === nextDelayTime && !baseMap.has(maxThreadTime - 1) ? -1 : 0));
+                                                                complete = false;
+                                                                break threadTimeExceeded;
+                                                            }
+                                                            else if (parallel) {
+                                                                if (item.hasState(SYNCHRONIZE_STATE.BACKWARDS)) {
+                                                                    actualMaxTime = actualStartTime;
+                                                                }
+                                                                if (delay >= maxTime) {
+                                                                    time = Math.max(delay, maxTime + 1);
+                                                                    actualMaxTime = delay;
+                                                                }
+                                                                else if (time === maxTime) {
+                                                                    actualMaxTime = time;
+                                                                    time = maxTime + 1;
                                                                 }
                                                                 else {
-                                                                    if (parallel) {
-                                                                        if (item.hasState(SYNCHRONIZE_STATE.BACKWARDS)) {
-                                                                            actualMaxTime = actualStartTime;
-                                                                        }
-                                                                        if (delay >= maxTime) {
-                                                                            time = Math.max(delay, maxTime + 1);
-                                                                            actualMaxTime = delay;
-                                                                        }
-                                                                        else if (time === maxTime) {
-                                                                            actualMaxTime = time;
-                                                                            time = maxTime + 1;
-                                                                        }
-                                                                        else {
-                                                                            insertIntermediateValue(maxTime);
-                                                                            actualMaxTime = Math.max(time, maxTime);
-                                                                        }
-                                                                        parallel = false;
-                                                                    }
-                                                                    else {
-                                                                        actualMaxTime = time;
-                                                                        if (k > 0 && l === 0 && item.accumulateSum) {
-                                                                            insertInterpolator(item, time, keySplines, l, keyTimeMode, repeatingInterpolatorMap, repeatingTransformOriginMap);
-                                                                            maxTime = time;
-                                                                            continue;
-                                                                        }
-                                                                        time = Math.max(time, maxTime + 1);
-                                                                    }
+                                                                    insertIntermediateValue(maxTime);
+                                                                    actualMaxTime = Math.max(time, maxTime);
                                                                 }
+                                                                parallel = false;
+                                                            }
+                                                            else {
+                                                                actualMaxTime = time;
+                                                                if (k > 0 && l === 0 && item.accumulateSum) {
+                                                                    insertInterpolator(item, time, keySplines, l, keyTimeMode, repeatingInterpolatorMap, repeatingTransformOriginMap);
+                                                                    maxTime = time;
+                                                                    continue;
+                                                                }
+                                                                time = Math.max(time, maxTime + 1);
                                                             }
                                                         }
                                                     }
@@ -1707,14 +1701,12 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         ({ key, value } = item);
                                     }
                                 }
+                                else if (transforming) {
+                                    key = Array.from(animateTimeRangeMap.values()).pop() as number;
+                                    value = TRANSFORM.typeAsValue(key);
+                                }
                                 else {
-                                    if (transforming) {
-                                        key = Array.from(animateTimeRangeMap.values()).pop() as number;
-                                        value = TRANSFORM.typeAsValue(key);
-                                    }
-                                    else {
-                                        value = baseValueMap[attr];
-                                    }
+                                    value = baseValueMap[attr];
                                 }
                                 if (value !== undefined && !isEqual(<AnimateValue> baseMap.get(maxTime), value)) {
                                     maxTime = setTimelineValue(baseMap, maxTime, value);
@@ -2119,25 +2111,23 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                             }
                                             object = animate;
                                         }
-                                        else {
-                                            if (path) {
-                                                const pathData = getPathData([[keyTimeFrom, dataFrom], [keyTimeTo, dataTo]], path, parent, forwardMap, precision);
-                                                if (pathData) {
-                                                    object = new SvgAnimate();
-                                                    object.attributeName = 'd';
-                                                    object.values = replaceMap(pathData, (item: NumberValue) => item.value.toString());
-                                                }
-                                                else {
-                                                    continue;
-                                                }
+                                        else if (path) {
+                                            const pathData = getPathData([[keyTimeFrom, dataFrom], [keyTimeTo, dataTo]], path, parent, forwardMap, precision);
+                                            if (pathData) {
+                                                object = new SvgAnimate();
+                                                object.attributeName = 'd';
+                                                object.values = replaceMap(pathData, (item: NumberValue) => item.value.toString());
                                             }
                                             else {
-                                                const animate = new SvgAnimateTransform();
-                                                animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
-                                                animate.values = [refitTransformPoints(dataFrom, parent), refitTransformPoints(dataTo, parent)];
-                                                value += i;
-                                                object = animate;
+                                                continue;
                                             }
+                                        }
+                                        else {
+                                            const animate = new SvgAnimateTransform();
+                                            animate.type = SVGTransform.SVG_TRANSFORM_TRANSLATE;
+                                            animate.values = [refitTransformPoints(dataFrom, parent), refitTransformPoints(dataTo, parent)];
+                                            value += i;
+                                            object = animate;
                                         }
                                         if (repeating) {
                                             object.delay = i === 0 ? keyTimeFrom : 0;

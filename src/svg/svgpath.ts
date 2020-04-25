@@ -877,10 +877,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                         finalValue = 1 - finalValue;
                                                     }
                                                 }
-                                                else {
-                                                    if (value === 0) {
-                                                        finalValue = 1;
-                                                    }
+                                                else if (value === 0) {
+                                                    finalValue = 1;
                                                 }
                                             }
                                         };

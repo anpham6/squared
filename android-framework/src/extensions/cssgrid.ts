@@ -250,13 +250,11 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
             height = percent;
         }
     }
+    else if (horizontal) {
+        width = 'wrap_content';
+    }
     else {
-        if (horizontal) {
-            width = 'wrap_content';
-        }
-        else {
-            height = 'wrap_content';
-        }
+        height = 'wrap_content';
     }
     return [width, height, columnWeight, rowWeight];
 }
@@ -357,24 +355,20 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             if (CssGrid.isJustified(node)) {
                 node.setLayoutWidth(getLayoutDimension(node.css('justifyContent')));
             }
+            else if (node.hasPX('width', false)) {
+                node.setLayoutWidth('match_parent');
+            }
             else {
-                if (node.hasPX('width', false)) {
-                    node.setLayoutWidth('match_parent');
-                }
-                else {
-                    container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
-                }
+                container.setLayoutWidth(node.blockStatic ? 'match_parent' : 'wrap_content');
             }
             if (CssGrid.isAligned(node)) {
                 node.setLayoutHeight(getLayoutDimension(node.css('alignContent')));
             }
+            else if (node.hasPX('height', false)) {
+                node.setLayoutHeight('match_parent');
+            }
             else {
-                if (node.hasPX('height', false)) {
-                    node.setLayoutHeight('match_parent');
-                }
-                else {
-                    container.setLayoutHeight('wrap_content');
-                }
+                container.setLayoutHeight('wrap_content');
             }
             renderAs = container;
             outputAs = this.application.renderNode(
@@ -634,15 +628,13 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 }
                                 columnWeight = false;
                             }
+                            else if (cellData.rowSpan === row.length) {
+                                item.setLayoutHeight('match_parent');
+                            }
                             else {
-                                if (cellData.rowSpan === row.length) {
-                                    item.setLayoutHeight('match_parent');
-                                }
-                                else {
-                                    item.setLayoutHeight('0px');
-                                    item.android('layout_rowWeight', truncate(sizeWeight, node.localSettings.floatPrecision));
-                                    item.mergeGravity('layout_gravity', 'fill_vertical');
-                                }
+                                item.setLayoutHeight('0px');
+                                item.android('layout_rowWeight', truncate(sizeWeight, node.localSettings.floatPrecision));
+                                item.mergeGravity('layout_gravity', 'fill_vertical');
                             }
                         }
                     }

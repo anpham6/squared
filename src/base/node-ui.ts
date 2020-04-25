@@ -408,18 +408,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 row.push(node);
                 siblings.push(active);
             }
+            else if (active.alignedVertically(siblings, cleared) > 0) {
+                if (row.length) {
+                    result.push(row);
+                }
+                row = [node];
+                siblings = [active];
+            }
             else {
-                if (active.alignedVertically(siblings, cleared) > 0) {
-                    if (row.length) {
-                        result.push(row);
-                    }
-                    row = [node];
-                    siblings = [active];
-                }
-                else {
-                    row.push(node);
-                    siblings.push(active);
-                }
+                row.push(node);
+                siblings.push(active);
             }
         }
         if (row.length) {
@@ -1013,21 +1011,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         this._boxReset[attr] = 1;
                     }
                 }
+                else if (node) {
+                    node.modifyBox(region, offset, negative);
+                }
                 else {
-                    if (node) {
-                        node.modifyBox(region, offset, negative);
+                    const boxAdjustment = this._boxAdjustment;
+                    if (!negative && (this._boxReset[attr] === 0 ? this[attr] : 0) + boxAdjustment[attr] + offset <= 0) {
+                        boxAdjustment[attr] = 0;
+                        if (this[attr] >= 0 && offset < 0) {
+                            this._boxReset[attr] = 1;
+                        }
                     }
                     else {
-                        const boxAdjustment = this._boxAdjustment;
-                        if (!negative && (this._boxReset[attr] === 0 ? this[attr] : 0) + boxAdjustment[attr] + offset <= 0) {
-                            boxAdjustment[attr] = 0;
-                            if (this[attr] >= 0 && offset < 0) {
-                                this._boxReset[attr] = 1;
-                            }
-                        }
-                        else {
-                            boxAdjustment[attr] += offset;
-                        }
+                        boxAdjustment[attr] += offset;
                     }
                 }
             }

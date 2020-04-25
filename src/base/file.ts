@@ -29,9 +29,9 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public readonly assets: RawAsset[] = [];
     public abstract resource: squared.base.Resource<T>;
 
-    public abstract copyToDisk(directory: string, options?: FileCopyingOptions): Promise<void>;
-    public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): Promise<void>;
-    public abstract saveToArchive(filename: string, options?: FileArchivingOptions): Promise<void>;
+    public abstract copyToDisk(directory: string, options?: FileCopyingOptions): Promise<void | ResultOfFileAction>;
+    public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): Promise<void | ResultOfFileAction>;
+    public abstract saveToArchive(filename: string, options?: FileArchivingOptions): Promise<void | ResultOfFileAction>;
 
     public abstract get userSettings(): UserSettings;
 
@@ -98,11 +98,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                                 }
                             }
                         }
-                    })
-                    .catch(err => {
-                        if (this.userSettings.showErrorMessages) {
-                            alert(`ERROR: ${err}`);
-                        }
+                        return result;
                     });
                 }
             }
@@ -150,11 +146,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                                 }
                             }
                         }
-                    })
-                    .catch(err => {
-                        if (this.userSettings.showErrorMessages) {
-                            alert(`ERROR: ${err}`);
-                        }
+                        return result;
                     });
                 }
             }

@@ -265,14 +265,12 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 if (i === 0) {
                                     item.anchor('top', 'parent');
                                 }
+                                else if (item !== anchorTop) {
+                                    item.anchor('top', anchorTop.documentId);
+                                }
                                 else {
-                                    if (item !== anchorTop) {
-                                        item.anchor('top', anchorTop.documentId);
-                                    }
-                                    else {
-                                        previousRow.anchor('bottomTop', item.documentId);
-                                        item.anchor('topBottom', previousRow.documentId);
-                                    }
+                                    previousRow.anchor('bottomTop', item.documentId);
+                                    item.anchor('topBottom', previousRow.documentId);
                                 }
                                 item.anchorStyle('vertical', 0, 'packed');
                                 item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1});

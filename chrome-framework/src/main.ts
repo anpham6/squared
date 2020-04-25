@@ -244,10 +244,12 @@ const appBase: ChromeFramework<View> = {
                 options.saveAsWebPage = true;
                 const preloadImages = userSettings.preloadImages;
                 userSettings.preloadImages = true;
-                application.parseDocument(document.body).then(() => {
-                    file!.saveToArchive(filename || userSettings.outputArchiveName, options);
-                    userSettings.preloadImages = preloadImages;
-                });
+                (async () => {
+                    await application.parseDocument(document.body).then(() => {
+                        file!.saveToArchive(filename || userSettings.outputArchiveName, options);
+                        userSettings.preloadImages = preloadImages;
+                    });
+                })();
             }
         }
     },
@@ -294,7 +296,7 @@ const appBase: ChromeFramework<View> = {
                 return promisify<Null<View>>(findElement)(element, cache);
             }
         }
-        return promisify<null>(() => { return null; })();
+        return frameworkNotInstalled();
     },
     querySelector: (value: string, cache = true) => {
         if (application) {
@@ -303,7 +305,7 @@ const appBase: ChromeFramework<View> = {
                 return promisify<Null<View>>(findElement)(<HTMLElement> element, cache);
             }
         }
-        return promisify<null>(() => { return null; })();
+        return frameworkNotInstalled();
     },
     querySelectorAll: (value: string, cache = true) => {
         if (application) {
@@ -315,13 +317,13 @@ const appBase: ChromeFramework<View> = {
                 return promisify<View[]>(findElementAll)(query);
             }
         }
-        return promisify<View[]>(() => { return []; })();
+        return frameworkNotInstalled();
     },
     getElement: (element: HTMLElement, cache = false) => {
         if (application) {
             return promisify<Null<View>>(findElement)(element, cache);
         }
-        return promisify<null>(() => { return null; })();
+        return frameworkNotInstalled();
     },
     saveAsWebPage: (filename?: string, options?: FileArchivingOptions) => {
         if (file) {

@@ -586,12 +586,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         }
                                     }
                                 }
-                                else {
-                                    if (vertical) {
-                                        const end = previousPlacement[3];
-                                        if (end > 0 && placement[1] === 0) {
-                                            placement[1] = end;
-                                        }
+                                else if (vertical) {
+                                    const end = previousPlacement[3];
+                                    if (end > 0 && placement[1] === 0) {
+                                        placement[1] = end;
                                     }
                                 }
                             }
@@ -627,10 +625,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     rowSpan = span;
                                 }
                             }
-                            else {
-                                if (columnSpan === -1) {
-                                    columnSpan = span;
-                                }
+                            else if (columnSpan === -1) {
+                                columnSpan = span;
                             }
                             return true;
                         }

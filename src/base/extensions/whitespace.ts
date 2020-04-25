@@ -338,15 +338,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                                 lastChild = current;
                             }
-                            else {
-                                if (lastChild) {
-                                    if (current.linear.bottom >= lastChild.linear.bottom) {
-                                        lastChild = current;
-                                    }
-                                }
-                                else {
+                            else if (lastChild) {
+                                if (current.linear.bottom >= lastChild.linear.bottom) {
                                     lastChild = current;
                                 }
+                            }
+                            else {
+                                lastChild = current;
                             }
                         }
                         if (isBlockElement(current, true)) {
@@ -499,14 +497,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                         inheritedTop = false;
                                                     }
                                                 }
-                                                else {
-                                                    if (!inheritedBottom || !isVerticalOverflow(previous)) {
-                                                        resetBox(previous, BOX_STANDARD.MARGIN_BOTTOM);
-                                                        if (previous.bounds.height === 0 && marginTop >= previous.marginTop) {
-                                                            resetBox(previous, BOX_STANDARD.MARGIN_TOP);
-                                                        }
-                                                        inheritedBottom = false;
+                                                else if (!inheritedBottom || !isVerticalOverflow(previous)) {
+                                                    resetBox(previous, BOX_STANDARD.MARGIN_BOTTOM);
+                                                    if (previous.bounds.height === 0 && marginTop >= previous.marginTop) {
+                                                        resetBox(previous, BOX_STANDARD.MARGIN_TOP);
                                                     }
+                                                    inheritedBottom = false;
                                                 }
                                             }
                                             else if (current.bounds.height === 0) {
@@ -572,14 +568,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                             if (marginTop < marginBottom) {
                                                 resetBox(current, BOX_STANDARD.MARGIN_TOP);
                                             }
+                                            else if (i === length - 1) {
+                                                current.setCacheValue('marginBottom', marginTop);
+                                                resetBox(current, BOX_STANDARD.MARGIN_TOP);
+                                            }
                                             else {
-                                                if (i === length - 1) {
-                                                    current.setCacheValue('marginBottom', marginTop);
-                                                    resetBox(current, BOX_STANDARD.MARGIN_TOP);
-                                                }
-                                                else {
-                                                    resetBox(current, BOX_STANDARD.MARGIN_BOTTOM);
-                                                }
+                                                resetBox(current, BOX_STANDARD.MARGIN_BOTTOM);
                                             }
                                         }
                                     }

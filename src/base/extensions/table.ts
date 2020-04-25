@@ -424,15 +424,13 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                     data.expand = false;
                                     data.downsized = false;
                                 }
+                                else if (mainData.layoutFixed) {
+                                    setAutoWidth(node, td, data);
+                                    data.downsized = true;
+                                }
                                 else {
-                                    if (mainData.layoutFixed) {
-                                        setAutoWidth(node, td, data);
-                                        data.downsized = true;
-                                    }
-                                    else {
-                                        setBoundsWidth(td);
-                                        data.expand = false;
-                                    }
+                                    setBoundsWidth(td);
+                                    data.expand = false;
                                 }
                             }
                             else {

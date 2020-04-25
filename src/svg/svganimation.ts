@@ -40,42 +40,40 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         if (isNumber(value)) {
             s = parseInt(value);
         }
+        else if (REGEX_MS.test(value)) {
+            ms = parseFloat(value);
+        }
+        else if (REGEX_S.test(value)) {
+            s = parseFloat(value);
+        }
+        else if (REGEX_MIN.test(value)) {
+            s = parseFloat(value) * 60;
+        }
+        else if (REGEX_H.test(value)) {
+            s = parseFloat(value) * 60 * 60;
+        }
         else {
-            if (REGEX_MS.test(value)) {
-                ms = parseFloat(value);
-            }
-            else if (REGEX_S.test(value)) {
-                s = parseFloat(value);
-            }
-            else if (REGEX_MIN.test(value)) {
-                s = parseFloat(value) * 60;
-            }
-            else if (REGEX_H.test(value)) {
-                s = parseFloat(value) * 60 * 60;
-            }
-            else {
-                const match = REGEX_CLOCK.exec(value);
-                if (match) {
-                    const hr = match[2];
-                    const mt = match[3];
-                    const sec = match[4];
-                    const mil = match[5];
-                    if (hr) {
-                        s += parseInt(hr) * 60 * 60;
-                    }
-                    if (mt) {
-                        s += parseInt(mt) * 60;
-                    }
-                    if (sec) {
-                        s += parseInt(sec);
-                    }
-                    if (mil) {
-                        ms = parseInt(mil) * (mil.length < 3 ? Math.pow(10, 3 - mil.length) : 1);
-                    }
-                    if (match[1]) {
-                        s *= -1;
-                        ms *= -1;
-                    }
+            const match = REGEX_CLOCK.exec(value);
+            if (match) {
+                const hr = match[2];
+                const mt = match[3];
+                const sec = match[4];
+                const mil = match[5];
+                if (hr) {
+                    s += parseInt(hr) * 60 * 60;
+                }
+                if (mt) {
+                    s += parseInt(mt) * 60;
+                }
+                if (sec) {
+                    s += parseInt(sec);
+                }
+                if (mil) {
+                    ms = parseInt(mil) * (mil.length < 3 ? Math.pow(10, 3 - mil.length) : 1);
+                }
+                if (match[1]) {
+                    s *= -1;
+                    ms *= -1;
                 }
             }
         }

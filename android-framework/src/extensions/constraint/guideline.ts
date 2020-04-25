@@ -99,13 +99,11 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                                 degrees = 180 - degrees;
                             }
                         }
+                        else if (x > y) {
+                            degrees = 270 - degrees;
+                        }
                         else {
-                            if (x > y) {
-                                degrees = 270 - degrees;
-                            }
-                            else {
-                                degrees += 180;
-                            }
+                            degrees += 180;
                         }
                     }
                     else if (y1 < y2) {
@@ -117,10 +115,8 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                                 degrees = 360 - degrees;
                             }
                         }
-                        else {
-                            if (x > y) {
-                                degrees = 90 - degrees;
-                            }
+                        else if (x > y) {
+                            degrees = 90 - degrees;
                         }
                     }
                     else {

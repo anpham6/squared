@@ -68,11 +68,9 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
                     break;
                 }
             }
-            else {
-                if (item.innerMostWrapped.autoMargin.vertical) {
-                    percent = false;
-                    break;
-                }
+            else if (item.innerMostWrapped.autoMargin.vertical) {
+                percent = false;
+                break;
             }
         }
         result += item.flexbox.grow;
@@ -101,12 +99,10 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
                             growShrinkType = 1;
                         }
                     }
-                    else {
-                        if (isNaN(maxRatio) || grow > maxRatio) {
-                            maxRatio = grow;
-                            largest = true;
-                            growShrinkType = 2;
-                        }
+                    else if (isNaN(maxRatio) || grow > maxRatio) {
+                        maxRatio = grow;
+                        largest = true;
+                        growShrinkType = 2;
                     }
                     if (largest) {
                         maxBasis = item;
@@ -492,24 +488,22 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     }
                                 }
                             }
-                            else {
-                                if (autoMargin.vertical) {
-                                    if (innerWrapped) {
-                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : (chain.localizeString(autoMargin.top ? 'bottom' : 'top')));
-                                        if (growAvailable > 0) {
-                                            chain.flexbox.basis = '0%';
-                                            layoutWeight.push(chain);
+                            else if (autoMargin.vertical) {
+                                if (innerWrapped) {
+                                    innerWrapped.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : (chain.localizeString(autoMargin.top ? 'bottom' : 'top')));
+                                    if (growAvailable > 0) {
+                                        chain.flexbox.basis = '0%';
+                                        layoutWeight.push(chain);
+                                    }
+                                }
+                                else if (!autoMargin.topBottom) {
+                                    if (autoMargin.top) {
+                                        if (previous) {
+                                            chain.anchorDelete(LRTB);
                                         }
                                     }
-                                    else if (!autoMargin.topBottom) {
-                                        if (autoMargin.top) {
-                                            if (previous) {
-                                                chain.anchorDelete(LRTB);
-                                            }
-                                        }
-                                        else if (next) {
-                                            chain.anchorDelete(RLBT);
-                                        }
+                                    else if (next) {
+                                        chain.anchorDelete(RLBT);
                                     }
                                 }
                             }
@@ -586,13 +580,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     chain.anchorParent(orientationInverse);
                                                 }
                                             }
+                                            else if (childContent) {
+                                                childContent.mergeGravity('layout_gravity', wrapReverse ? TL : BR);
+                                            }
                                             else {
-                                                if (childContent) {
-                                                    childContent.mergeGravity('layout_gravity', wrapReverse ? TL : BR);
-                                                }
-                                                else {
-                                                    chain.anchor(wrapReverse ? TL : BR, 'parent');
-                                                }
+                                                chain.anchor(wrapReverse ? TL : BR, 'parent');
                                             }
                                             break;
                                         default: {

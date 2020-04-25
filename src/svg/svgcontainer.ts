@@ -156,13 +156,11 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
                         aspectRatio.meetOrSlice = meetOrSlice;
                     }
                 }
-                else {
-                    if (parentRatio > ratio) {
-                        aspectRatio.position.x = (parentWidth - (parentHeight * ratio)) / 2;
-                    }
-                    else if (parentRatio < ratio) {
-                        aspectRatio.position.y = (parentHeight - (parentWidth * (1 / ratio))) / 2;
-                    }
+                else if (parentRatio > ratio) {
+                    aspectRatio.position.x = (parentWidth - (parentHeight * ratio)) / 2;
+                }
+                else if (parentRatio < ratio) {
+                    aspectRatio.position.y = (parentHeight - (parentWidth * (1 / ratio))) / 2;
                 }
             }
         }

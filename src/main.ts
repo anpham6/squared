@@ -100,9 +100,6 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
             return main.parseDocument(...elements);
         }
     }
-    else if (settings.showErrorMessages) {
-        alert('ERROR: Framework not installed.');
-    }
     return session.frameworkNotInstalled();
 }
 

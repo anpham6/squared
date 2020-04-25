@@ -1039,13 +1039,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (adjacent) {
                             map.get(adjacent)?.push(item) || map.set(adjacent, [item]);
                         }
+                        else if (node.zIndex < 0) {
+                            below.push(item);
+                        }
                         else {
-                            if (node.zIndex < 0) {
-                                below.push(item);
-                            }
-                            else {
-                                invalid.push(item);
-                            }
+                            invalid.push(item);
                         }
                     });
                     for (const [adjacent, children] of map.entries()) {

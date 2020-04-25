@@ -139,13 +139,11 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                 if (top !== 0) {
                                     top -= rect.top - bounds.top;
                                 }
+                                else if (previous?.positionRelative && previous.hasPX('top')) {
+                                    bottom += bounds.bottom - rect.bottom;
+                                }
                                 else {
-                                    if (previous?.positionRelative && previous.hasPX('top')) {
-                                        bottom += bounds.bottom - rect.bottom;
-                                    }
-                                    else {
-                                        bottom += rect.bottom - bounds.bottom;
-                                    }
+                                    bottom += rect.bottom - bounds.bottom;
                                 }
                             }
                             if (hasHorizontal && renderParent.layoutHorizontal && !node.alignSibling('leftRight')) {
@@ -153,13 +151,11 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                                 if (left !== 0) {
                                     left -= rect.left - bounds.left;
                                 }
+                                else if (previous?.positionRelative && previous.hasPX('right')) {
+                                    right += bounds.right - rect.right;
+                                }
                                 else {
-                                    if (previous?.positionRelative && previous.hasPX('right')) {
-                                        right += bounds.right - rect.right;
-                                    }
-                                    else {
-                                        right += rect.right - bounds.right;
-                                    }
+                                    right += rect.right - bounds.right;
                                 }
                             }
                         }

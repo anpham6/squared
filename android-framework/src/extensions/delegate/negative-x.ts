@@ -46,15 +46,13 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 }
                 firstChild = item;
             }
-            else {
-                if (item.hasPX('left')) {
-                    if (item.left < 0 && (isNaN(left) || linear.left < left)) {
-                        left = linear.left;
-                    }
+            else if (item.hasPX('left')) {
+                if (item.left < 0 && (isNaN(left) || linear.left < left)) {
+                    left = linear.left;
                 }
-                else if (item.right < 0 && (isNaN(right) || linear.right > right)) {
-                    right = linear.right;
-                }
+            }
+            else if (item.right < 0 && (isNaN(right) || linear.right > right)) {
+                right = linear.right;
             }
         });
         if (!node.pageFlow) {

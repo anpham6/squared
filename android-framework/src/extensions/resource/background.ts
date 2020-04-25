@@ -113,15 +113,13 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
                 else if (style === 'groove') {
                     offset += 0.25;
                 }
-                else {
-                    if (grayScale) {
-                        if (style === 'inset') {
-                            halfSize = !halfSize;
-                        }
-                    }
-                    else if (style === 'outset') {
+                else if (grayScale) {
+                    if (style === 'inset') {
                         halfSize = !halfSize;
                     }
+                }
+                else if (style === 'outset') {
+                    halfSize = !halfSize;
                 }
                 if (halfSize) {
                     switch (direction) {
@@ -188,18 +186,16 @@ function getBorderRadius(radius?: string[]): Undef<StringMap> {
         if (length === 1) {
             return { radius: radius[0] };
         }
+        else if (length === 8) {
+            const corners = new Array(4);
+            let i = 0, j = 0;
+            while (i < length) {
+                corners[j++] = formatPX((parseFloat(radius[i++]) + parseFloat(radius[i++])) / 2);
+            }
+            return getCornerRadius(corners);
+        }
         else {
-            if (length === 8) {
-                const corners = new Array(4);
-                let i = 0, j = 0;
-                while (i < length) {
-                    corners[j++] = formatPX((parseFloat(radius[i++]) + parseFloat(radius[i++])) / 2);
-                }
-                return getCornerRadius(corners);
-            }
-            else {
-                return getCornerRadius(radius);
-            }
+            return getCornerRadius(radius);
         }
     }
     return undefined;
@@ -787,14 +783,12 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                                         height = boundsHeight * (ratioHeight / ratioWidth);
                                                     }
                                                 }
+                                                else if (ratioHeight > 1) {
+                                                    height = boundsHeight;
+                                                    width /= ratioHeight;
+                                                }
                                                 else {
-                                                    if (ratioHeight > 1) {
-                                                        height = boundsHeight;
-                                                        width /= ratioHeight;
-                                                    }
-                                                    else {
-                                                        width = boundsWidth * (ratioWidth / ratioHeight);
-                                                    }
+                                                    width = boundsWidth * (ratioWidth / ratioHeight);
                                                 }
                                             }
                                             dimension.width = width;
