@@ -190,7 +190,7 @@ function convertBox(node: T, attr: string, margin: boolean) {
                                 case 'marginBottom':
                                     return vertical ? node.parseUnit(vertical, 'height', false) : node.parseUnit(horizontal, 'width', false);
                                 case 'marginRight':
-                                    if (node.actualParent?.lastChild !== node) {
+                                    if (node.actualParent!.lastChild !== node) {
                                         return node.parseUnit(horizontal, 'width', false);
                                     }
                                 case 'marginLeft':
@@ -204,7 +204,7 @@ function convertBox(node: T, attr: string, margin: boolean) {
             }
             break;
     }
-    return node.parseUnit(node.css(attr), 'width', node.actualParent?.gridElement !== true);
+    return node.parseUnit(node.css(attr), 'width', !(node.actualParent?.gridElement === true));
 }
 
 const canTextAlign = (node: T) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
@@ -1947,14 +1947,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 };
             }
             else {
-                result = {
-                    alignSelf: 'auto',
-                    justifySelf: 'auto',
-                    basis: 'auto',
-                    grow: 0,
-                    shrink: 1,
-                    order: 0
-                };
+                result = <FlexBox> {};
             }
             this._cached.flexbox = result;
         }
@@ -2342,7 +2335,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = ELEMENT_BLOCK.includes(this.tagName);
                     break;
                 case 'inline':
-                    if (this.tagName === 'svg' && this.actualParent?.htmlElement) {
+                    if (this.tagName === 'svg' && this.actualParent!.htmlElement) {
                         result = !this.hasPX('width') && convertFloat(getNamedItem(<SVGSVGElement> this._element, 'width')) === 0;
                         break;
                     }

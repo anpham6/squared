@@ -39,7 +39,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         const { backgroundColor, backgroundImage, visibleStyle } = node;
         const { backgroundColor: backgroundColorA, backgroundImage: backgroundImageA, backgroundRepeatX, backgroundRepeatY, borderWidth } = visibleStyle;
         const backgroundSeparate = isBackgroundSeparate(node, parent, backgroundColorA, backgroundImageA, backgroundRepeatX, backgroundRepeatY, borderWidth);
-        const hasHeight = node.hasHeight || node.actualParent?.hasHeight === true;
+        const hasHeight = node.hasHeight || node.actualParent!.hasHeight === true;
         let renderParent = parent;
         let container: Undef<T>;
         let parentAs!: T;

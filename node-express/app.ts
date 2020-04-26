@@ -144,6 +144,7 @@ catch (err) {
 }
 try {
     if (ROUTING) {
+        console.log('');
         let mounted = 0;
         for (const routes of [ROUTING.shared, ROUTING[ENV]]) {
             if (Array.isArray(routes)) {
@@ -250,7 +251,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             let html = fs.readFileSync(filepath).toString('utf8');
             for (const item of assets) {
                 if (item === file) {
-                    return;
+                    continue;
                 }
                 const { uri, moveTo, rootDir } = item;
                 if (uri) {
@@ -935,4 +936,4 @@ app.get('/api/browser/download', (req, res) => {
 
 app.get('/api/thread/count', (req, res) => res.send(THREAD_COUNT.toString()));
 
-app.listen(PORT, () => console.log(`${ENV.toUpperCase()}: Express server listening on port ${PORT}`));
+app.listen(PORT, () => console.log(`${ENV.toUpperCase()}: Express server listening on port ${PORT}\n`));

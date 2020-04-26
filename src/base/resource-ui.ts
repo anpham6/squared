@@ -2,8 +2,8 @@ import { UserSettings } from '../../@types/base/application-ui';
 import { ResourceStoredMap } from '../../@types/base/resource';
 import { FileAsset, RawAsset } from '../../@types/base/file';
 
-import NodeUI from './node-ui';
 import Resource from './resource';
+import NodeUI from './node-ui';
 
 import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
 
@@ -321,10 +321,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         images: new Map()
     };
 
-    public static isInheritedStyle(node: NodeUI, attr: string) {
-        return node.styleElement && node.style[attr] === node.actualParent?.style[attr] && (node.cssStyle[attr] === 'inherit' || node.cssInitial(attr) === '');
-    }
-
     public static isBackgroundVisible(object: Undef<BoxStyle>) {
         return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
     }
@@ -411,8 +407,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Dimension) {
         if (backgroundImage !== '') {
             const images: (string | Gradient)[] = [];
-            let i = 0;
             REGEX_BACKGROUNDIMAGE.lastIndex = 0;
+            let i = 0;
             let match: Null<RegExpExecArray>;
             while ((match = REGEX_BACKGROUNDIMAGE.exec(backgroundImage)) !== null) {
                 const value = match[0];

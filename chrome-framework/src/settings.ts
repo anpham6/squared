@@ -3,7 +3,6 @@ import { UserSettings } from '../../@types/chrome/application';
 const settings: UserSettings = {
     builtInExtensions: [],
     preloadImages: false,
-    compressImages: false,
     excludePlainText: true,
     createQuerySelectorMap: true,
     showErrorMessages: false,

@@ -435,7 +435,7 @@ function relativeNewRow(node: View, previous: View, previousRowLeft: Undef<View>
         if (relativeWrapWidth(node, bounds, multiline, previousRowLeft, rowWidth, data)) {
             return true;
         }
-        else if (node.actualParent?.tagName !== 'CODE') {
+        else if (!(node.actualParent?.tagName === 'CODE')) {
             return multiline && node.plainText || isMultiline(node);
         }
     }
@@ -1315,7 +1315,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const percentHeight = node.percentHeight > 0 ? height : -1;
                 let scaleType = 'fitXY';
                 let imageSet: Undef<ImageSrcSet[]>;
-                if (isString(element.srcset) || node.actualParent?.tagName === 'PICTURE') {
+                if (isString(element.srcset) || node.actualParent!.tagName === 'PICTURE') {
                     const mimeType = this.localSettings.mimeType.image;
                     imageSet = getSrcSet(element, mimeType === '*' ? undefined : mimeType);
                     if (imageSet.length) {

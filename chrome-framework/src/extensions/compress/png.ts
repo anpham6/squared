@@ -16,7 +16,7 @@ export default class Png<T extends View> extends Extension<T> {
         const mimeType = data.mimeType;
         if (mimeType) {
             const mimeTypes = this.options.mimeTypes;
-            if (mimeTypes === '*' && mimeType.startsWith('image/') || mimeTypes.includes(mimeType)) {
+            if (/^[@%]png:/.test(mimeType) || Array.isArray(mimeTypes) && mimeTypes.find(value => mimeType.endsWith(value)) || mimeTypes === '*' && mimeType.includes('image/')) {
                 safeNestedArray(<StandardMap> data, 'compress').push({ format: 'png' });
                 return true;
             }

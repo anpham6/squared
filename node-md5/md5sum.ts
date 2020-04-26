@@ -89,10 +89,11 @@ function formatTime(start: number) {
     return `${h}h ${m}m ${s}s ${time}ms`;
 }
 
-const failMessage = (message: string, status: any, listing?: string[]) => console.log('\n' + colors.bold(colors.red('FAIL')) + `: ${message} (${status})\n` + (listing ? '\n' + listing.join('\n') + '\n' : ''));
-const warnMessage = (message: string, status: string) => console.log('\n' + colors.yellow('WARN') + `: ${message} (${status})`);
-const requiredMessage = (message: string, status: string) => console.log(colors.bold(colors.yellow('REQUIRED')) + `: ${message} (${colors.grey(status)})`);
-const successMessage = (message: string, status: string) => console.log('\n' + colors.bold(colors.green('SUCCESS')) + `: ${message} ` + colors.yellow('[') + colors.grey(status) + colors.yellow(']') + '\n');
+const failMessage = (message: string, status: any) => console.log('\n' + colors.bold(colors.red('FAIL')) + `: ${message} ` + getStatus(status) + '\n');
+const warnMessage = (message: string, status: string) => console.log(colors.yellow('WARN') + `: ${message} (${colors.grey(status)})`);
+const requiredMessage = (message: string, status: string) => console.log(colors.bold(colors.yellow('REQUIRED')) + `: ${message} ` + getStatus(status));
+const successMessage = (message: string, status: string) => console.log('\n\n' + colors.bold(colors.green('SUCCESS')) + `: ${message} ` + getStatus(status) + '\n');
+const getStatus = (status: string) => colors.yellow('[') + colors.grey(status) + colors.yellow(']');
 
 if (master) {
     if (snapshot) {
@@ -100,6 +101,7 @@ if (master) {
         const snapshotDir = path.resolve(__dirname, snapshot);
         if (fs.existsSync(masterDir) && fs.existsSync(snapshotDir)) {
             const errors: string[] = [];
+            const notFound: string[] = [];
             for (const file of fs.readdirSync(masterDir)) {
                 const filename = path.basename(file);
                 const filepath = path.resolve(snapshotDir, path.basename(filename));
@@ -118,16 +120,26 @@ if (master) {
                             }
                         }
                         errors.push(filename);
-                        failMessage('MD5 not matched', filename);
+                        process.stderr.write(colors.bgBlue(colors.black('!')));
+                    }
+                    else {
+                        process.stderr.write(colors.bgBlue(colors.white('>')));
                     }
                 }
                 else {
-                    errors.push(filename);
-                    warnMessage('MD5 not found', filepath);
+                    notFound.push(filename);
+                    process.stderr.write(colors.bgBlue(colors.black('?')));
                 }
             }
-            if (errors.length) {
-                failMessage(errors.length + ' errors', snapshot, errors);
+            if (errors.length || notFound.length) {
+                console.log('\n');
+                for (const value of errors) {
+                    warnMessage('MD5 not matched', value);
+                }
+                for (const value of notFound) {
+                    warnMessage('MD5 not found', value);
+                }
+                failMessage(errors.length + ' errors', snapshot);
             }
             else {
                 successMessage('MD5 matched', master + ' -> ' + snapshot);
@@ -177,7 +189,7 @@ else if (host && data && build && snapshot) {
                                     });
                                     await page.goto(href);
                                     await page.waitFor('#md5_complete', { timeout });
-                                    const files = (await page.$eval('#md5_complete', e => e.innerHTML)).split('\n').sort();
+                                    const files = (await page.$eval('#md5_complete', element => element.innerHTML)).split('\n').sort();
                                     items.push({ name, filepath, files });
                                     console.log(colors.yellow('OK') + ': ' + href);
                                 }
@@ -193,22 +205,21 @@ else if (host && data && build && snapshot) {
                         }
                         console.log('');
                         for (const item of items) {
-                            const { name, filepath } = item;
-                            const files = await readdirp.promise(filepath);
+                            const files = await readdirp.promise(item.filepath);
                             files.sort((a, b) => a.path < b.path ? -1 : 1);
                             let output = '';
                             for (const file of files) {
                                 output += md5(fs.readFileSync(file.fullPath)) + '  ./' + file.path.replace(/[\\]/g, '/') + '\n';
                             }
-                            fs.writeFileSync(path.resolve(pathname, `${name}.md5`), output);
-                            process.stderr.write(colors.bgBlue(colors.bold(colors.white('>'))));
+                            fs.writeFileSync(path.resolve(pathname, `${item.name}.md5`), output);
+                            process.stderr.write(colors.bgBlue(colors.bold(item.files!.length !== files.length ? colors.black('!') : colors.white('>'))));
                         }
-                        console.log('');
                         const message = '+' + colors.green(items.length.toString()) + ' -' + colors.red(failed.length.toString());
                         if (failed.length === 0) {
                             successMessage(message, formatTime(timeStart));
                         }
                         else {
+                            console.log('');
                             failMessage(message, formatTime(timeStart));
                         }
                         process.exit();

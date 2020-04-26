@@ -16,7 +16,7 @@ export default class Jpeg<T extends View> extends Extension<T> {
         const mimeType = data.mimeType;
         if (mimeType) {
             const options = this.options;
-            if (options.mimeTypes.includes(mimeType)) {
+            if (options.mimeTypes.find(value => mimeType.endsWith(value))) {
                 let command = '';
                 if (options.replaceWith) {
                     command = '@';

@@ -166,15 +166,15 @@ squared.settings = {
 ```javascript
 squared.settings = {
     builtInExtensions: [ // default is none
-        'chrome.compress.png',
-        'chrome.compress.jpeg',
-        'chrome.compress.brotli',
-        'chrome.compress.gzip',
         'chrome.convert.png',
         'chrome.convert.jpeg',
         'chrome.convert.bmp',
         'chrome.convert.gif', // squared-apache: gif | tiff
-        'chrome.convert.tiff'
+        'chrome.convert.tiff',
+        'chrome.compress.png',
+        'chrome.compress.jpeg',
+        'chrome.compress.brotli',
+        'chrome.compress.gzip'
     ],
     preloadImages: false,
     compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>

@@ -5,13 +5,13 @@ import { AppSession } from '../../@types/base/internal-ui';
 import { ControllerSettings, UserSettings } from '../../@types/base/application-ui';
 
 import Application from './application';
+import NodeList from './nodelist';
 import ControllerUI from './controller-ui';
 import ExtensionUI from './extension-ui';
 import FileUI from './file-ui';
 import LayoutUI from './layout-ui';
 import NodeUI from './node-ui';
 import ResourceUI from './resource-ui';
-import NodeList from './nodelist';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
@@ -280,8 +280,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public reset() {
         super.reset();
+        const iterationName = 'iteration' + capitalize(this.systemName);
         for (const element of this.rootElements) {
-            element.dataset.iteration = '';
+            delete element.dataset[iterationName];
         }
         const session = this.session;
         session.cache.reset();
@@ -437,7 +438,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const excluded = this.processing.excluded;
             const parent = node.parent as T;
             const preAlignment: ObjectIndex<StringMap> = {};
-            const parentReset = new Set<T>();
             const direction = new Set<HTMLElement>();
             const pseudoElements: T[] = [];
             let resetBounds = false;
@@ -468,7 +468,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         BOX_POSITION.forEach(attr => {
                             if (item.hasPX(attr) && item[attr] !== 0) {
                                 saveAlignment(preAlignment, element, item.id, attr, 'auto', item.css(attr));
-                                parentReset.add(item.actualParent as T);
+                                resetBounds = true;
                             }
                         });
                     }
@@ -486,7 +486,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             });
             cache.each(item => {
                 if (!item.pseudoElement) {
-                    item.setBounds(preAlignment[item.id] === undefined && !parentReset.has(item.actualParent as T) && !resetBounds);
+                    item.setBounds(!resetBounds && preAlignment[item.id] === undefined);
                 }
                 else {
                     pseudoElements.push(item);
@@ -1857,16 +1857,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         });
     }
 
-    get clearMap() {
-        return this.session.clearMap;
-    }
-
     get extensionsCascade() {
         return this.extensions.filter(item => !!item.init);
     }
 
     get extensionsTraverse() {
         return this.extensions.filter(item => !item.eventOnly);
+    }
+
+    get clearMap() {
+        return this.session.clearMap;
     }
 
     get length() {

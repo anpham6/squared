@@ -177,7 +177,6 @@ declare class ResourceUI<T extends NodeUI> extends Resource<T> {
     public static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
     public static parseBackgroundImage(node: NodeUI, value: string, screenDimension?: Dimension): Undef<string | Gradient>[];
     public static getBackgroundSize<T extends NodeUI>(node: T, value: string, screenDimension?: Dimension): Undef<Dimension>;
-    public static isInheritedStyle<T extends NodeUI>(node: T, attr: string): boolean;
     public static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
     public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
     finalize(layouts: FileAsset[]): void;
