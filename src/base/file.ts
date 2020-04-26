@@ -29,9 +29,9 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public readonly assets: RawAsset[] = [];
     public abstract resource: squared.base.Resource<T>;
 
-    public abstract copyToDisk(directory: string, options?: FileCopyingOptions): Promise<void | ResultOfFileAction>;
-    public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): Promise<void | ResultOfFileAction>;
-    public abstract saveToArchive(filename: string, options?: FileArchivingOptions): Promise<void | ResultOfFileAction>;
+    public abstract copyToDisk(directory: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
+    public abstract appendToArchive(pathname: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+    public abstract saveToArchive(filename: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
 
     public abstract get userSettings(): UserSettings;
 
@@ -136,8 +136,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                             const zipname = result.zipname;
                             if (isString(zipname)) {
                                 fetch('/api/browser/download?filepath=' + encodeURIComponent(zipname))
-                                    .then((response: Response) => response.blob())
-                                    .then((blob: Blob) => File.downloadFile(blob, fromLastIndexOf(zipname, '/', '\\')));
+                                    .then(async (download: Response) => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
                             }
                             else if (this.userSettings.showErrorMessages) {
                                 const { application, system } = result;

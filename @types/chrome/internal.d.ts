@@ -9,5 +9,5 @@ export interface ChromeFramework<T extends View> extends AppFramework<T> {
     getElementById: (value: string, cache?: boolean) => Promise<Null<View>>;
     querySelector: (value: string) => Promise<Null<View>>;
     querySelectorAll: (value: string) => Promise<View[]>;
-    saveAsWebPage: (filename?: string, options?: FileArchivingOptions) => Promise<unknown>;
+    saveAsWebPage: (filename?: string, options?: FileArchivingOptions) => Promise<View[] | void>;
 }

@@ -1,6 +1,7 @@
 export interface GradientTemplate {
     type: string;
-    item: { color: string; offset: string }[] | false;
+    positioning: boolean;
+    item?: { color: string; offset: string }[];
     startColor?: string;
     endColor?: string;
     centerColor?: string;
@@ -13,5 +14,4 @@ export interface GradientTemplate {
     centerY?: string;
     gradientRadius?: string;
     tileMode?: string;
-    positioning: boolean;
 }

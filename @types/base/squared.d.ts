@@ -12,11 +12,11 @@ import { HideOptions, ExcludeOptions, LinearData, LocalSettings, RemoveTryOption
 import { FontFaceData, MIMEOrAll } from '../lib/data';
 
 declare interface FileActionAsync {
-    copyToDisk(directory: string, options?: FileActionOptions): Promise<void | ResultOfFileAction>;
-    appendToArchive(pathname: string, options?: FileActionOptions): Promise<void | ResultOfFileAction>;
-    saveToArchive(filename?: string, options?: FileActionOptions): Promise<void | ResultOfFileAction>;
-    createFrom(format: string, options: FileActionOptions): Promise<void | ResultOfFileAction>;
-    appendFromArchive(filename: string, options: FileActionOptions): Promise<void | ResultOfFileAction>;
+    copyToDisk(directory: string, options?: FileActionOptions): Promise<ResultOfFileAction | void>;
+    appendToArchive(pathname: string, options?: FileActionOptions): Promise<ResultOfFileAction | void>;
+    saveToArchive(filename?: string, options?: FileActionOptions): Promise<ResultOfFileAction | void>;
+    createFrom(format: string, options: FileActionOptions): Promise<ResultOfFileAction | void>;
+    appendFromArchive(filename: string, options: FileActionOptions): Promise<ResultOfFileAction | void>;
 }
 
 declare class Application<T extends Node> implements FileActionAsync {
@@ -33,7 +33,7 @@ declare class Application<T extends Node> implements FileActionAsync {
     readonly rootElements: Set<HTMLElement>;
     readonly Node: Constructor<T>;
     reset(): void;
-    parseDocument(...elements: (string | HTMLElement)[]): Promise<unknown>;
+    parseDocument(...elements: (string | HTMLElement)[]): Promise<T[]>;
     createCache(documentRoot: HTMLElement): Undef<T>;
     createNode(options: {}): T;
     insertNode(element: Element, parent?: T, pseudoElt?: string): Undef<T>;
@@ -42,11 +42,11 @@ declare class Application<T extends Node> implements FileActionAsync {
     setDatasetName(attr: string, element: HTMLElement, value: string): void;
     finalize(): void;
     toString(): string;
-    copyToDisk(directory: string, options?: FileCopyingOptions): Promise<void | ResultOfFileAction>;
-    appendToArchive(pathname: string, options?: FileCopyingOptions): Promise<void | ResultOfFileAction>;
-    saveToArchive(filename?: string, options?: FileArchivingOptions): Promise<void | ResultOfFileAction>;
-    createFrom(format: string, options: FileArchivingOptions): Promise<void | ResultOfFileAction>;
-    appendFromArchive(filename: string, options: FileArchivingOptions): Promise<void | ResultOfFileAction>;
+    copyToDisk(directory: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
+    appendToArchive(pathname: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
+    saveToArchive(filename?: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+    createFrom(format: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+    appendFromArchive(filename: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
     set viewModel(data: Undef<AppViewModel>);
     get viewModel(): Undef<AppViewModel>;
     get controllerHandler(): Controller<T>;
@@ -253,13 +253,13 @@ declare class File<T extends Node> implements FileActionAsync {
     readonly assets: FileAsset[];
     addAsset(data: Partial<RawAsset>): void;
     reset(): void;
-    copying(options: FileCopyingOptions): Promise<void | ResultOfFileAction>;
-    archiving(options: FileArchivingOptions): Promise<void | ResultOfFileAction>;
-    copyToDisk(directory: string, options?: FileCopyingOptions): Promise<void | ResultOfFileAction>;
-    appendToArchive(pathname: string, options?: FileCopyingOptions): Promise<void | ResultOfFileAction>;
-    saveToArchive(filename: string, options?: FileArchivingOptions): Promise<void | ResultOfFileAction>;
-    createFrom(format: string, options: FileArchivingOptions): Promise<void | ResultOfFileAction>;
-    appendFromArchive(filename: string, options: FileArchivingOptions): Promise<void | ResultOfFileAction>;
+    copying(options: FileCopyingOptions): Promise<ResultOfFileAction | void>;
+    archiving(options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+    copyToDisk(directory: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
+    appendToArchive(pathname: string, options?: FileCopyingOptions): Promise<ResultOfFileAction | void>;
+    saveToArchive(filename: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+    createFrom(format: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+    appendFromArchive(filename: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
     get userSettings(): UserSettings;
 }
 

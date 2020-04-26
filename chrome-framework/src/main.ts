@@ -233,22 +233,6 @@ const appBase: ChromeFramework<View> = {
         },
         saveFontAssets(filename?: string, options?: FileArchivingOptions) {
             file?.archiving(createAssetsOptions(file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
-        },
-        saveAsWebPage: (filename?: string, options?: FileArchivingOptions) => {
-            if (file) {
-                if (!isObject(options)) {
-                    options = {};
-                }
-                options.saveAsWebPage = true;
-                const preloadImages = userSettings.preloadImages;
-                userSettings.preloadImages = true;
-                (async () => {
-                    await application.parseDocument(document.body).then(() => {
-                        file!.saveToArchive(filename || userSettings.outputArchiveName, options);
-                        userSettings.preloadImages = preloadImages;
-                    });
-                })();
-            }
         }
     },
     create() {
@@ -328,12 +312,16 @@ const appBase: ChromeFramework<View> = {
             if (!isObject(options)) {
                 options = {};
             }
+            else {
+                options = { ...options };
+            }
             options.saveAsWebPage = true;
             const preloadImages = userSettings.preloadImages;
             userSettings.preloadImages = true;
-            return application.parseDocument(document.body).then(() => {
+            return application.parseDocument(document.body).then((response: View[]) => {
                 file!.saveToArchive(filename || userSettings.outputArchiveName, options);
                 userSettings.preloadImages = preloadImages;
+                return response;
             });
         }
         return frameworkNotInstalled();

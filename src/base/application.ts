@@ -75,10 +75,6 @@ function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr
     }
 }
 
-async function getImageSvgAsync(value: string) {
-    return (await fetch(value, { method: 'GET', headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' }) })).text();
-}
-
 const isSvg = (value: string) => FILE.SVG.test(value);
 const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
 
@@ -190,10 +186,12 @@ export default abstract class Application<T extends Node> implements squared.bas
             });
             preloaded.length = 0;
             this.extensions.forEach(ext => ext.beforeParseDocument());
+            const success: T[] = [];
             for (const element of this.rootElements) {
                 const node = this.createCache(element);
                 if (node) {
                     this.afterCreateCache(node);
+                    success.push(node);
                 }
             }
             this.extensions.forEach(ext => ext.afterParseDocument());
@@ -202,6 +200,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             catch {
             }
+            return success;
         };
         if (elements.length === 0) {
             elements.push(document.body);
@@ -289,7 +288,10 @@ export default abstract class Application<T extends Node> implements squared.bas
             return Promise.all(objectMap(imageElements, image => {
                 return new Promise((resolve, reject) => {
                     if (typeof image === 'string') {
-                        resolve(getImageSvgAsync(image));
+                        (async () => {
+                            const result = await fetch(image, { method: 'GET', headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' }) });
+                            resolve(await result.text());
+                        })();
                     }
                     else {
                         image.addEventListener('load', () => resolve(image));
@@ -311,8 +313,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                         resource.addImage(value);
                     }
                 }
-                resumeThread();
-                return undefined;
+                return resumeThread();
             })
             .catch((error: Error | Event | HTMLImageElement) => {
                 let target = error;
@@ -320,13 +321,11 @@ export default abstract class Application<T extends Node> implements squared.bas
                     target = <HTMLImageElement> error.target;
                 }
                 const message = target instanceof HTMLImageElement ? target.src : '';
-                if (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`)) {
-                    resumeThread();
-                }
+                return !this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`) ? resumeThread() : [];
             });
         }
         else {
-            return promisify(resumeThread)();
+            return promisify<T[]>(resumeThread)();
         }
     }
 

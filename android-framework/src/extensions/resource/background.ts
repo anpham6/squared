@@ -160,7 +160,7 @@ function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = fals
 
 function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = false, isInset = false) {
     if (border) {
-        let result: Undef<StandardMap>;
+        let result: StandardMap;
         if (isAlternatingBorder(border.style)) {
             const width = parseFloat(border.width);
             result = getBorderStyle(border, direction, !isInset);
@@ -293,7 +293,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
     const { colorStops, type } = gradient;
     const length = colorStops.length;
     let positioning = api >= BUILD_ANDROID.LOLLIPOP;
-    const result = <GradientTemplate> { type, item: false };
+    const result = <GradientTemplate> { type, positioning };
     switch (type) {
         case 'conic': {
             const center = (<ConicGradient> gradient).center;
@@ -325,6 +325,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
         case 'linear': {
             if (!positioning || borderRadius && colorStops[length - 1].offset === 1 && (length === 2 || length === 3 && colorStops[1].offset === 0.5)) {
                 result.angle = ((<LinearGradient> gradient).angle + 90).toString();
+                result.positioning = false;
                 positioning = false;
             }
             else {
@@ -367,7 +368,6 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
             result.centerColor = getColorValue(colorStops[Math.floor(length / 2)].color);
         }
     }
-    result.positioning = positioning;
     return result;
 }
 

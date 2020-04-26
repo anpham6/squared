@@ -178,7 +178,7 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
     return output;
 }
 
-export function formatTemplate(value: string, closeEmpty = true, startIndent = -1, char = '\t') {
+export function formatTemplate(value: string, closeEmpty = false, startIndent = -1, char = '\t') {
     const lines: XMLTagData[] = [];
     let match: Null<RegExpExecArray>;
     while ((match = REGEX_FORMAT.ITEM.exec(value)) !== null) {
@@ -186,24 +186,26 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
             tag: match[1],
             closing: !!match[2],
             tagName: match[3],
-            value: match[4].trim()
+            value: match[4]
         });
     }
     let output = '';
     let indent = startIndent;
+    let ignoreIndent = false;
     const length = lines.length;
     for (let i = 0; i < length; ++i) {
         const line = lines[i];
         let previous = indent;
         if (i > 0) {
+            let single = false;
             if (line.closing) {
                 --indent;
             }
             else {
-                ++previous;
+                const next = lines[i + 1];
+                single = next.closing && line.tagName === next.tagName;
                 if (!REGEX_FORMAT.CLOSETAG.exec(line.tag)) {
                     if (closeEmpty && line.value.trim() === '') {
-                        const next = lines[i + 1];
                         if (next?.closing && next.tagName === line.tagName) {
                             line.tag = line.tag.replace(REGEX_FORMAT.OPENTAG, ' />');
                             ++i;
@@ -216,12 +218,23 @@ export function formatTemplate(value: string, closeEmpty = true, startIndent = -
                         ++indent;
                     }
                 }
+                ++previous;
             }
-            let firstLine = true;
-            line.tag.trim().split('\n').forEach(partial => {
-                const depth = previous + (firstLine ? 0 : 1);
-                output += (depth > 0 ? char.repeat(depth) : '') + partial.trim() + '\n';
-                firstLine = false;
+            line.tag.trim().split('\n').forEach((partial, index, array) => {
+                if (ignoreIndent) {
+                    output += partial;
+                    ignoreIndent = false;
+                }
+                else {
+                    const depth = previous + Math.min(index, 1);
+                    output += (depth > 0 ? char.repeat(depth) : '') + partial.trim();
+                }
+                if (single && array.length === 1) {
+                    ignoreIndent = true;
+                }
+                else {
+                    output += '\n';
+                }
             });
         }
         else {

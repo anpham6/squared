@@ -17,11 +17,11 @@ export function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Prom
     return (...args: any[]) => {
         return new Promise((resolve, reject) => {
             try {
-                const result = fn.call(null, ...args);
-                return resolve(result);
+                const result: T = fn.call(null, ...args);
+                resolve(result);
             }
             catch (err) {
-                return reject(err);
+                reject(err);
             }
         });
     };
@@ -526,8 +526,8 @@ export function formatString(value: string, ...params: string[]) {
 }
 
 export function delimitString(options: DelimitStringOptions, ...appending: string[]) {
-    const value = options.value || '';
-    if (value === '' && appending.length === 1) {
+    const value = options.value;
+    if (!value && appending.length === 1) {
         return appending[0];
     }
     const delimiter = options.delimiter || '|';
@@ -825,10 +825,9 @@ export function searchObject(obj: StringMap, value: string | StringMap) {
         }
     }
     else {
-        const search =
-            /^\*.+\*$/.test(value) ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, '')) :
-             value.startsWith('*') ? (a: string) => a.endsWith(value.replace(/^\*/, '')) :
-               value.endsWith('*') ? (a: string) => a.startsWith(value.replace(/\*$/, '')) : (a: string): boolean => a === value;
+        const search = /^\*.+\*$/.test(value) ? (a: string) => a.includes(value.replace(/^\*/, '').replace(/\*$/, '')) :
+                        value.startsWith('*') ? (a: string) => a.endsWith(value.replace(/^\*/, '')) :
+                          value.endsWith('*') ? (a: string) => a.startsWith(value.replace(/\*$/, '')) : (a: string): boolean => a === value;
         for (const i in obj) {
             if (search(i)) {
                 result.push([i, obj[i]]);

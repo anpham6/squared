@@ -67,12 +67,13 @@ document.addEventListener('DOMContentLoaded', () => {
     squared.setFramework(android);
     const time = Date.now();
     squared.parseDocument()
-        .then(() => {
+        .then(response => {
             console.log('SQ: ' + (Date.now() - time));
+            console.log(response);
             const copyTo = new URLSearchParams(location.search).get('copyTo');
             if (copyTo) {
                 squared.copyToDisk(copyTo).then((result) => {
-                    const element = squared.lib.dom.createElement(document.body, 'div', { display: 'none' });
+                    const element = squared.lib.dom.createElement(document.body, 'div', { whiteSpace: 'pre', display: 'none' });
                     if (result.success) {
                         element.innerHTML = result.files.join('\n');
                     }
@@ -95,7 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     ]
                 })
-                .then(() => console.log('CP: ' + (Date.now() - time)));
+                .then(response => {
+                    console.log('CP: ' + (Date.now() - time))
+                    console.log(response);
+                });
             }
             console.log('NE: ' + (Date.now() - time));
         })

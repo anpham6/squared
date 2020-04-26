@@ -337,6 +337,6 @@ declare namespace xml {
     function replaceIndent(value: string, depth: number, pattern: RegExp): string;
     function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
     function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number): string;
-    function formatTemplate(value: string, closeEmpty?: boolean, startIndent?: number, char?: string): string;
+    function formatTemplate(value: string, closeEmpty?: boolean): string;
     function replaceCharacterData(value: string, tab?: boolean): string;
 }

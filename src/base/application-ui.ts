@@ -64,7 +64,7 @@ function getCounterValue(name: string, counterName: string, fallback = 1) {
 
 function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) {
     const counterIncrement: string | undefined = getElementCache(parent, `styleMap${pseudoElt}`, sessionId)?.counterIncrement;
-    return counterIncrement ? getCounterValue(counterIncrement, counterName, fallback) : undefined;
+    return counterIncrement && getCounterValue(counterIncrement, counterName, fallback);
 }
 
 function checkTraverseHorizontal(node: NodeUI, horizontal: NodeUI[], vertical: NodeUI[]) {
@@ -527,7 +527,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             excluded.each(item => {
                 if (!item.lineBreak) {
-                    item.setBounds();
+                    item.setBounds(!resetBounds);
                     item.saveAsInitial();
                 }
                 if (!item.pageFlow) {
@@ -769,7 +769,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     const clear = item.css('clear');
                                     if (clear !== 'none') {
                                         if (!floating) {
-                                            let previousFloat: Undef<T>[] | undefined;
+                                            let previousFloat: (T | undefined)[];
                                             switch (clear) {
                                                 case 'left':
                                                     previousFloat = [clearable.left];
@@ -777,11 +777,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 case 'right':
                                                     previousFloat = [clearable.right];
                                                     break;
-                                                case 'both':
+                                                default:
                                                     previousFloat = [clearable.left, clearable.right];
                                                     break;
                                             }
-                                            previousFloat?.forEach(previous => {
+                                            previousFloat.forEach(previous => {
                                                 if (previous) {
                                                     const float = previous.float;
                                                     if (floated.has(float) && Math.ceil(item.bounds.top) >= previous.bounds.bottom) {
@@ -980,15 +980,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                             }
                         }
-                        let complete = false;
+                        let complete = true;
                         if (layout) {
                             if (this.addLayout(layout)) {
-                                complete = true;
                                 parentY = nodeY.parent as T;
                             }
-                        }
-                        else {
-                            complete = true;
+                            else {
+                                complete = false;
+                            }
                         }
                         if (complete && segEnd === axisY[length - 1]) {
                             parentY.removeAlign(NODE_ALIGNMENT.UNKNOWN);
@@ -1775,8 +1774,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const boxWidth = parent.actualBoxWidth();
         if (leftAbove.length) {
             let floatPosition = -Infinity;
-            let marginLeft = 0;
-            let invalid = false;
             let spacing = false;
             leftAbove.forEach(child => {
                 if (child.bounds.top < bottom) {
@@ -1791,13 +1788,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             });
             if (floatPosition !== -Infinity) {
+                let marginLeft = -Infinity;
                 paddingNodes.forEach(child => {
                     if (Math.floor(child.linear.left) <= floatPosition || child.centerAligned) {
                         marginLeft = Math.max(marginLeft, child.marginLeft);
-                        invalid = true;
                     }
                 });
-                if (invalid) {
+                if (marginLeft !== -Infinity) {
                     const offset = floatPosition - parent.box.left - marginLeft - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0));
                     if (offset > 0 && offset < boxWidth) {
                         target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
@@ -1807,8 +1804,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         if (rightAbove.length) {
             let floatPosition = Infinity;
-            let marginRight = 0;
-            let invalid = false;
             let spacing = false;
             rightAbove.forEach(child => {
                 if (child.bounds.top < bottom) {
@@ -1823,13 +1818,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             });
             if (floatPosition !== Infinity) {
+                let marginRight = -Infinity;
                 paddingNodes.forEach(child => {
                     if (child.multiline || Math.ceil(child.linear.right) >= floatPosition) {
                         marginRight = Math.max(marginRight, child.marginRight);
-                        invalid = true;
                     }
                 });
-                if (invalid) {
+                if (marginRight !== -Infinity) {
                     const offset = parent.box.right - floatPosition - marginRight - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0));
                     if (offset > 0 && offset < boxWidth) {
                         target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));

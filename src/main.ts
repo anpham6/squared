@@ -99,7 +99,7 @@ export function parseDocument(...elements: (HTMLElement | string)[]) {
             return main.parseDocument(...elements);
         }
     }
-    return session.frameworkNotInstalled();
+    return session.frameworkNotInstalled<Node[]>();
 }
 
 export function include(value: ExtensionRequest, options?: {}) {

@@ -699,18 +699,6 @@ function convertPosition(this: T, attr: string) {
     return 0;
 }
 
-function resetBounds(this: Node, cascade = true) {
-    if (!this._preferInitial) {
-        this.resetBounds();
-        if (cascade) {
-            this.cascade(item => {
-                item.resetBounds();
-                return false;
-            });
-        }
-    }
-}
-
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
     public documentRoot = false;
     public depth = -1;
@@ -846,28 +834,26 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public unsetCache(...attrs: string[]) {
-        if (attrs.length) {
+        let length = attrs.length;
+        if (length) {
             const cached = this._cached;
             attrs.forEach(attr => {
                 switch (attr) {
                     case 'position':
-                        if (this._preferInitial) {
+                        if (!this._preferInitial) {
                             this.cascade(item => {
                                 if (!item.pageFlow) {
                                     item.unsetCache('absoluteParent');
                                 }
-                                item.resetBounds();
                                 return false;
                             });
                         }
                         this._cached = {};
-                        resetBounds.call(this);
-                        break;
+                        return;
                     case 'display':
                     case 'float':
                     case 'tagName':
                         this._cached = {};
-                        resetBounds.call(this);
                         return;
                     case 'width':
                         cached.actualWidth = undefined;
@@ -876,29 +862,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         cached.width = undefined;
                     case 'maxWidth':
                         cached.overflow = undefined;
-                        resetBounds.call(this);
                         break;
                     case 'height':
                         cached.actualHeight = undefined;
                         cached.percentHeight = undefined;
                     case 'minHeight':
                         cached.height = undefined;
-                        if (this._preferInitial) {
+                        if (!this._preferInitial) {
                             cached.blockVertical = undefined;
-                            cached.overflow = undefined;
-                            this.each(item => item.unsetCache('height', 'blockVertical', 'overflow', 'bottomAligned'));
+                            this.each(item => item.unsetCache('height', 'actualHeight', 'blockVertical', 'overflow', 'bottomAligned'));
                         }
                     case 'maxHeight':
                         cached.overflow = undefined;
-                        resetBounds.call(this);
                         break;
                     case 'verticalAlign':
                         cached.baseline = undefined;
-                        resetBounds.call(this);
                         break;
                     case 'left':
                     case 'right':
-                        resetBounds.call(this);
                     case 'textAlign':
                         cached.rightAligned = undefined;
                         cached.centerAligned = undefined;
@@ -906,48 +887,55 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'top':
                     case 'bottom':
                         cached.bottomAligned = undefined;
-                        resetBounds.call(this);
                         break;
                     case 'overflowX':
                     case 'overflowY':
                         cached.overflow = undefined;
-                        resetBounds.call(this);
                         break;
                     default:
                         if (attr.startsWith('margin')) {
                             cached.autoMargin = undefined;
                             cached.rightAligned = undefined;
                             cached.centerAligned = undefined;
-                            resetBounds.call(this);
                         }
                         else if (attr.startsWith('padding')) {
                             cached.contentBoxWidth = undefined;
                             cached.contentBoxHeight = undefined;
-                            resetBounds.call(this);
                         }
                         else if (attr.startsWith('border')) {
                             cached.visibleStyle = undefined;
                             cached.contentBoxWidth = undefined;
                             cached.contentBoxHeight = undefined;
-                            resetBounds.call(this);
                         }
                         else if (attr.startsWith('background')) {
                             cached.visibleStyle = undefined;
+                            --length;
                         }
                         else if (TEXT_STYLE.includes(attr)) {
                             cached.lineHeight = undefined;
                             this._textStyle = undefined;
-                            resetBounds.call(this);
+                        }
+                        else if (!/^(grid|flex|row|column|offset|scroll)/.test(attr)) {
+                            --length;
                         }
                         break;
                 }
-                cached[attr] = undefined;
+                if (attr in cached) {
+                    cached[attr] = undefined;
+                }
             });
         }
         else {
             this._cached = {};
             this._textStyle = undefined;
-            resetBounds.call(this);
+            length = 1;
+        }
+        if (length !== 0 && !this._preferInitial) {
+            this.resetBounds();
+            this.cascade(item => {
+                item.resetBounds();
+                return false;
+            });
         }
     }
 

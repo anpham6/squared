@@ -334,8 +334,6 @@ squared.system.saveImageAssets(filename?: string, options?: {})
 squared.system.saveVideoAssets(filename?: string, options?: {})
 squared.system.saveAudioAssets(filename?: string, options?: {})
 squared.system.saveFontAssets(filename?: string, options?: {})
-
-squared.system.saveAsWebPage(filename?: string, options?: {}) // synchronous
 ```
 
 ### ALL: Excluding Procedures / Applied Attributes
