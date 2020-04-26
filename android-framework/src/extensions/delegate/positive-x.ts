@@ -200,7 +200,12 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 if (item.hasPX('right')) {
                     if (!nested) {
                         item.translateX(-item.right);
-                        item.alignSibling('right', documentId);
+                        if (node.originalRoot) {
+                            item.anchor('right', 'parent');
+                        }
+                        else {
+                            item.alignSibling('right', documentId);
+                        }
                         item.constraint.horizontal = true;
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_RIGHT, node.borderRightWidth);
@@ -223,7 +228,12 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 if (item.hasPX('bottom')) {
                     if (!nested) {
                         item.translateY(-item.bottom);
-                        item.alignSibling('bottom', documentId);
+                        if (node.originalRoot) {
+                            item.anchor('bottom', 'parent');
+                        }
+                        else {
+                            item.alignSibling('bottom', documentId);
+                        }
                         item.constraint.vertical = true;
                     }
                     wrapper.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, node.borderBottomWidth);

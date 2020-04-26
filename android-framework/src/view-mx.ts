@@ -1692,18 +1692,22 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return value;
         }
 
-        public translateX(value: number, options: TranslateOptions = {}) {
+        public translateX(value: number, options?: TranslateOptions) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent?.layoutConstraint) {
+                let oppose: Undef<boolean>, accumulate: Undef<boolean>, contain: Undef<boolean>;
+                if (options) {
+                    ({ oppose, accumulate, contain } = options);
+                }
                 let x = convertInt(node.android('translationX'));
-                if (options.oppose === false && (x > 0 && value < 0 || x < 0 && value > 0)) {
+                if (oppose === false && (x > 0 && value < 0 || x < 0 && value > 0)) {
                     return false;
                 }
-                else if (options.accumulate !== false) {
+                else if (accumulate !== false) {
                     x += value;
                 }
-                if (options.contain) {
+                if (contain) {
                     const { left, right } = renderParent.box;
                     const { left: x1, right: x2 } = this.linear;
                     if (x1 + x < left) {
@@ -1724,18 +1728,22 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return false;
         }
 
-        public translateY(value: number, options: TranslateOptions = {}) {
+        public translateY(value: number, options?: TranslateOptions) {
             const node = this.anchorTarget;
             const renderParent = node.renderParent as T;
             if (renderParent?.layoutConstraint) {
+                let oppose: Undef<boolean>, accumulate: Undef<boolean>, contain: Undef<boolean>;
+                if (options) {
+                    ({ oppose, accumulate, contain } = options);
+                }
                 let y = convertInt(node.android('translationY'));
-                if (options.oppose === false && (y > 0 && value < 0 || y < 0 && value > 0)) {
+                if (oppose === false && (y > 0 && value < 0 || y < 0 && value > 0)) {
                     return false;
                 }
-                else if (options.accumulate !== false) {
+                else if (accumulate !== false) {
                     y += value;
                 }
-                if (options.contain) {
+                if (contain) {
                     const { top, bottom } = renderParent.box;
                     const { top: y1, bottom: y2 } = this.linear;
                     if (y1 + y < top) {
@@ -1760,8 +1768,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return localizeString(value, this._localization, this.api);
         }
 
-        public removeTry(options: RemoveTryOptions<T> = {}) {
-            if (!options.beforeReplace) {
+        public removeTry(options?: RemoveTryOptions<T>) {
+            if (options && !options.beforeReplace) {
                 const updating = options.replaceWith || options.alignSiblings;
                 if (updating) {
                     options.beforeReplace = () => this.anchorClear(updating);

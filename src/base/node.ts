@@ -951,12 +951,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public ascend(options: AscendOptions = {}) {
+    public ascend(options: AscendOptions) {
         let attr = options.attr;
         if (!isString(attr)) {
             attr = 'actualParent';
         }
-        else if (!/Parent$/i.test(attr)) {
+        else if (!/[pP]arent$/.test(attr)) {
             return [];
         }
         const { condition, including, error, every, excluding } = options;

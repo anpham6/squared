@@ -1708,17 +1708,20 @@ export function getParentBoxDimension(element: CSSElement) {
     return { width, height };
 }
 
-export function getBackgroundPosition(value: string, dimension: Dimension, options: BackgroundPositionOptions = {}) {
+export function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
     value = value.trim();
     if (value !== '') {
-        const { fontSize, imageDimension, imageSize, screenDimension } = options;
-        const { width, height } = dimension;
         const orientation = value.split(CHAR.SPACE);
         if (orientation.length === 1) {
             orientation.push('center');
         }
         const length = orientation.length;
         if (length <= 4) {
+            let fontSize: Undef<number>, imageDimension: Undef<Dimension>, imageSize: Undef<string>, screenDimension: Undef<Dimension>;
+            if (options) {
+                ({ fontSize, imageDimension, imageSize, screenDimension } = options);
+            }
+            const { width, height } = dimension;
             const result = newBoxRectPosition(orientation);
             const setImageOffset = (position: string, horizontal: boolean, direction: string, directionAsPercent: string) => {
                 if (imageDimension && !isLength(position)) {
@@ -2203,12 +2206,11 @@ export function convertPX(value: string, fontSize?: number) {
     return value ? parseUnit(value, fontSize) + 'px' : '0px';
 }
 
-export function calculate(value: string, options: CalculateOptions = {}) {
+export function calculate(value: string, options?: CalculateOptions) {
     value = value.trim();
     if (value === '') {
         return NaN;
     }
-    const { boundingSize, min, max, unitType, fontSize } = options;
     let length = value.length;
     if (value.charAt(0) !== '(' || value.charAt(length - 1) !== ')') {
         value = `(${value})`;
@@ -2246,8 +2248,11 @@ export function calculate(value: string, options: CalculateOptions = {}) {
                     }
                 }
                 if (valid) {
-                    let operand: Undef<string>;
-                    let operator: Undef<string>;
+                    let boundingSize: Undef<number>, min: Undef<number>, max: Undef<number>, unitType: Undef<number>, fontSize: Undef<number>;
+                    if (options) {
+                        ({ boundingSize, min, max, unitType, fontSize } = options);
+                    }
+                    let operand: Undef<string>, operator: Undef<string>;
                     let found = false;
                     const seg: number[] = [];
                     const evaluate: string[] = [];

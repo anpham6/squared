@@ -289,15 +289,16 @@ function checkBackgroundPosition(value: string, adjacent: string, fallback: stri
     return value;
 }
 
-function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIPOP, precision?: number) {
-    const type = gradient.type;
-    const result: GradientTemplate = { type, item: false, positioning: true };
-    const hasStop = api >= BUILD_ANDROID.LOLLIPOP;
+function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST, borderRadius?: string[], precision?: number) {
+    const { colorStops, type } = gradient;
+    const length = colorStops.length;
+    let positioning = api >= BUILD_ANDROID.LOLLIPOP;
+    const result = <GradientTemplate> { type, item: false };
     switch (type) {
         case 'conic': {
             const center = (<ConicGradient> gradient).center;
             result.type = 'sweep';
-            if (hasStop) {
+            if (positioning) {
                 result.centerX = (center.left * 2).toString();
                 result.centerY = (center.top * 2).toString();
             }
@@ -309,7 +310,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
         }
         case 'radial': {
             const { center, radius } = <RadialGradient> gradient;
-            if (hasStop) {
+            if (positioning) {
                 result.gradientRadius = radius.toString();
                 result.centerX = center.left.toString();
                 result.centerY = center.top.toString();
@@ -322,75 +323,65 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LOLLIP
             break;
         }
         case 'linear': {
-            const { angle, angleExtent, dimension } = <LinearGradient> gradient;
-            const { width, height } = <Dimension> dimension;
-            let positionX = angleExtent.x;
-            let positionY = angleExtent.y;
-            if (angle <= 90) {
-                positionY += height;
-                result.startX = '0';
-                result.startY = height.toString();
-            }
-            else if (angle <= 180) {
-                result.startX = '0';
-                result.startY = '0';
-            }
-            else if (angle <= 270) {
-                positionX += width;
-                result.startX = width.toString();
-                result.startY = '0';
+            if (!positioning || borderRadius && colorStops[length - 1].offset === 1 && (length === 2 || length === 3 && colorStops[1].offset === 0.5)) {
+                result.angle = ((<LinearGradient> gradient).angle + 90).toString();
+                positioning = false;
             }
             else {
-                positionX += width;
-                positionY += height;
-                result.startX = width.toString();
-                result.startY = height.toString();
+                const { angle, angleExtent, dimension } = <LinearGradient> gradient;
+                const { width, height } = <Dimension> dimension;
+                let { x, y } = angleExtent;
+                if (angle <= 90) {
+                    y += height;
+                    result.startX = '0';
+                    result.startY = height.toString();
+                }
+                else if (angle <= 180) {
+                    result.startX = '0';
+                    result.startY = '0';
+                }
+                else if (angle <= 270) {
+                    x += width;
+                    result.startX = width.toString();
+                    result.startY = '0';
+                }
+                else {
+                    x += width;
+                    y += height;
+                    result.startX = width.toString();
+                    result.startY = height.toString();
+                }
+                result.endX = truncate(x, precision);
+                result.endY = truncate(y, precision);
             }
-            result.endX = truncate(positionX, precision);
-            result.endY = truncate(positionY, precision);
             break;
         }
     }
-    const colorStops = gradient.colorStops;
-    if (hasStop) {
+    if (positioning) {
         result.item = convertColorStops(colorStops);
     }
     else {
-        const length = colorStops.length;
         result.startColor = getColorValue(colorStops[0].color);
         result.endColor = getColorValue(colorStops[length - 1].color);
         if (length > 2) {
             result.centerColor = getColorValue(colorStops[Math.floor(length / 2)].color);
         }
     }
+    result.positioning = positioning;
     return result;
 }
 
-function createLayerList(boxStyle: BoxStyle, images?: BackgroundImageData[], borderOnly = true, corners?: ObjectMap<any>, stroke?: ObjectMap<any> | false, indentOffset?: string) {
+function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [], borderOnly = true, stroke?: ObjectMap<any> | false, indentOffset?: string, corners?: ObjectMap<any>) {
     const item: StandardMap[] = [];
     const result: StandardMap[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
-    if (solid) {
-        if (corners && !stroke) {
-            item.push({
-                top: indentOffset,
-                right: indentOffset,
-                left: indentOffset,
-                bottom: indentOffset,
-                shape: { 'android:shape': 'rectangle', solid, corners }
-            });
-            corners = undefined;
-        }
-        else {
-            item.push({ shape: { 'android:shape': 'rectangle', solid } });
-        }
+    if (solid && !images.find(image => !!image.gradient)) {
+        item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
     }
-    if (images) {
-        images.forEach(image => {
-            const gradient = image.gradient;
-            item.push(gradient ? { shape: { 'android:shape': 'rectangle', gradient } } : image);
-        });
-    }
+    images.forEach(image => {
+        const gradient = image.gradient;
+        item.push(gradient ? { shape: { 'android:shape': 'rectangle', gradient, corners } } : image);
+    });
     if (stroke) {
         item.push({
             top: indentOffset,
@@ -687,7 +678,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images?.length)) {
             const stroke = border ? getBorderStroke(border) : false;
             if (images?.length || indentWidth > 0 || borderOnly) {
-                layerListData = createLayerList(data, images, borderOnly, corners, stroke, indentOffset);
+                layerListData = createLayerList(data, images, borderOnly, stroke, indentOffset, corners);
             }
             else {
                 shapeData = createShapeData(stroke, !borderOnly && getBackgroundColor(data.backgroundColor), corners);
@@ -831,7 +822,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                     else if (value.colorStops.length > 1) {
-                        const gradient = createBackgroundGradient(value, node.api);
+                        const gradient = createBackgroundGradient(value, node.api, data.borderRadius);
                         if (gradient) {
                             images[length] = gradient;
                             imageDimensions[length] = value.dimension;
@@ -903,6 +894,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 if (typeof value === 'object' && !value.positioning) {
                     imageData.gravity = 'fill';
                     imageData.gradient = value;
+                    imageData.order = j++;
+                    result.push(imageData);
                     continue;
                 }
                 const position = backgroundPosition[i];

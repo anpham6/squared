@@ -63,11 +63,11 @@ System.import('/build/src/main.js').then(result => {
     });
 });*/
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', () => {
     squared.setFramework(android);
     const time = Date.now();
     squared.parseDocument()
-        .then(function() {
+        .then(() => {
             console.log('SQ: ' + (Date.now() - time));
             const copyTo = new URLSearchParams(location.search).get('copyTo');
             if (copyTo) {

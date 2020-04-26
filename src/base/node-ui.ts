@@ -68,8 +68,11 @@ function parseExclusions(attr: string, enumeration: {}, dataset: DOMStringMap, p
     return offset;
 }
 
-function traverseElementSibling(options: SiblingOptions = {}, element: Null<Element>, direction: "previousSibling" | "nextSibling", sessionId: string) {
-    const { floating, pageFlow, lineBreak, excluded } = options;
+function traverseElementSibling(element: Null<Element>, direction: "previousSibling" | "nextSibling", sessionId: string, options?: SiblingOptions) {
+    let floating: Undef<boolean>, pageFlow: Undef<boolean>, lineBreak: Undef<boolean>, excluded: Undef<boolean>;
+    if (options) {
+        ({ floating, pageFlow, lineBreak, excluded } = options);
+    }
     const result: T[] = [];
     while (element) {
         const node = getElementAsNode<T>(element, sessionId);
@@ -987,12 +990,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return NODE_TRAVERSE.HORIZONTAL;
     }
 
-    public previousSiblings(options: SiblingOptions = {}) {
-        return traverseElementSibling(options, <Element> (this.nodeGroup ? this.firstChild?.element?.previousSibling : this.innerMostWrapped.element?.previousSibling), 'previousSibling', this.sessionId);
+    public previousSiblings(options?: SiblingOptions) {
+        return traverseElementSibling(<Element> (this.nodeGroup ? this.firstChild?.element?.previousSibling : this.innerMostWrapped.element?.previousSibling), 'previousSibling', this.sessionId, options);
     }
 
-    public nextSiblings(options: SiblingOptions = {}) {
-        return traverseElementSibling(options, <Element> (this.nodeGroup ? this.firstChild?.element?.nextSibling : this.innerMostWrapped.element?.nextSibling), 'nextSibling', this.sessionId);
+    public nextSiblings(options?: SiblingOptions) {
+        return traverseElementSibling(<Element> (this.nodeGroup ? this.firstChild?.element?.nextSibling : this.innerMostWrapped.element?.nextSibling), 'nextSibling', this.sessionId, options);
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {

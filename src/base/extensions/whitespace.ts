@@ -690,7 +690,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         }
                     }
                     else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE') {
-                        if (!actualParent.originalRoot) {
+                        if (!actualParent.documentRoot && !actualParent.documentBody) {
                             const previousStart = previousSiblings[previousSiblings.length - 1];
                             const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
                             const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);

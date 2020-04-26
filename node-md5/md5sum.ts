@@ -18,7 +18,7 @@ let executablePath: Undef<string>;
 let width = 1280;
 let height = 960;
 let flags = 1;
-let timeout = 5 * 60 * 1000;
+let timeout = 1 * 60 * 1000;
 {
     const ARGV = process.argv;
     let i = 2;
@@ -102,33 +102,38 @@ if (master) {
         if (fs.existsSync(masterDir) && fs.existsSync(snapshotDir)) {
             const errors: string[] = [];
             const notFound: string[] = [];
+            const stderr = process.stderr;
             for (const file of fs.readdirSync(masterDir)) {
                 const filename = path.basename(file);
                 const filepath = path.resolve(snapshotDir, path.basename(filename));
                 if (fs.existsSync(filepath)) {
+                    const masterpath = path.resolve(masterDir, file);
                     const output = diff.diffChars(
-                        fs.readFileSync(path.resolve(masterDir, file)).toString('utf-8'),
+                        fs.readFileSync(masterpath).toString('utf-8'),
                         fs.readFileSync(filepath).toString('utf-8')
                     );
                     if (output.length > 1) {
+                        stderr.write(colors.bgWhite(colors.black('-'.repeat(100))) + '\n\n');
+                        stderr.write(colors.white(masterpath) + '\n');
+                        stderr.write(colors.white(filepath) + '\n\n');
                         for (const part of output) {
                             if (part.removed) {
-                                process.stderr.write(colors.red(part.value));
+                                stderr.write(colors.yellow(part.value));
                             }
                             else if (!part.added) {
-                                process.stderr.write(colors.grey(part.value));
+                                stderr.write(colors.grey(part.value));
                             }
                         }
+                        console.log('');
                         errors.push(filename);
-                        process.stderr.write(colors.bgBlue(colors.black('!')));
                     }
                     else {
-                        process.stderr.write(colors.bgBlue(colors.white('>')));
+                        stderr.write(colors.bgBlue(colors.white('>')));
                     }
                 }
                 else {
                     notFound.push(filename);
-                    process.stderr.write(colors.bgBlue(colors.black('?')));
+                    stderr.write(colors.bgBlue(colors.black('?')));
                 }
             }
             if (errors.length || notFound.length) {
@@ -139,7 +144,7 @@ if (master) {
                 for (const value of notFound) {
                     warnMessage('MD5 not found', value);
                 }
-                failMessage(errors.length + ' errors', snapshot);
+                failMessage((errors.length + notFound.length) + ' errors', snapshot);
             }
             else {
                 successMessage('MD5 matched', master + ' -> ' + snapshot);
@@ -199,6 +204,7 @@ else if (host && data && build && snapshot) {
                                 }
                             }
                         }
+                        const stderr = process.stderr;
                         const pathname = path.resolve(__dirname, snapshot!);
                         if (!fs.existsSync(pathname)) {
                             fs.mkdirpSync(pathname);
@@ -212,7 +218,7 @@ else if (host && data && build && snapshot) {
                                 output += md5(fs.readFileSync(file.fullPath)) + '  ./' + file.path.replace(/[\\]/g, '/') + '\n';
                             }
                             fs.writeFileSync(path.resolve(pathname, `${item.name}.md5`), output);
-                            process.stderr.write(colors.bgBlue(colors.bold(item.files!.length !== files.length ? colors.black('!') : colors.white('>'))));
+                            stderr.write(colors.bgBlue(colors.bold(item.files!.length !== files.length ? colors.black('!') : colors.white('>'))));
                         }
                         const message = '+' + colors.green(items.length.toString()) + ' -' + colors.red(failed.length.toString());
                         if (failed.length === 0) {
