@@ -19,11 +19,13 @@ let width = 1280;
 let height = 960;
 let flags = 1;
 let timeout = 1 * 60 * 1000;
+let screenshot = false;
 {
     const ARGV = process.argv;
     let i = 2;
     while (i < ARGV.length) {
-        switch (ARGV[i++]) {
+        const value = ARGV[i++];
+        switch (value) {
             case '-h':
             case '-host':
                 host = ARGV[i++].replace(/\/+$/, '');
@@ -49,11 +51,16 @@ let timeout = 1 * 60 * 1000;
                 snapshot = ARGV[i++];
                 break;
             case '-v':
-            case '-viewport': {
-                const [w, h] = ARGV[i++].split('x').map(value => parseInt(value));
+            case '-viewport':
+            case '-s':
+            case '-screenshot': {
+                const [w, h] = ARGV[i++].split('x').map(dimension => parseInt(dimension));
                 if (!isNaN(w) && !isNaN(h)) {
                     width = w;
                     height = h;
+                    if (value.startsWith('-s')) {
+                        screenshot = true;
+                    }
                 }
                 break;
             }
@@ -113,18 +120,18 @@ if (master) {
                         fs.readFileSync(filepath).toString('utf-8')
                     );
                     if (output.length > 1) {
-                        stderr.write(colors.bgWhite(colors.black('-'.repeat(100))) + '\n\n');
-                        stderr.write(colors.white(masterpath) + '\n');
-                        stderr.write(colors.white(filepath) + '\n\n');
+                        const pngpath = filepath.replace('.md5', '.png');
+                        stderr.write('\n\n' + colors.bgWhite(colors.black('-'.repeat(100))) + '\n\n');
+                        stderr.write(colors.grey(masterpath) + '\n' + colors.yellow(filepath) + '\n' + (fs.existsSync(pngpath) ? colors.blue(pngpath) + '\n' : '') + '\n');
                         for (const part of output) {
                             if (part.removed) {
-                                stderr.write(colors.yellow(part.value));
-                            }
-                            else if (!part.added) {
                                 stderr.write(colors.grey(part.value));
                             }
+                            else if (!part.added) {
+                                stderr.write(colors.yellow(part.value));
+                            }
                         }
-                        console.log('');
+                        stderr.write('\n');
                         errors.push(filename);
                     }
                     else {
@@ -137,7 +144,7 @@ if (master) {
                 }
             }
             if (errors.length || notFound.length) {
-                console.log('\n');
+                stderr.write('\n');
                 for (const value of errors) {
                     warnMessage('MD5 not matched', value);
                 }
@@ -193,6 +200,9 @@ else if (host && data && build && snapshot) {
                                         page.close();
                                     });
                                     await page.goto(href);
+                                    if (screenshot) {
+                                        await page.screenshot({ path: filepath + '.png' });
+                                    }
                                     await page.waitFor('#md5_complete', { timeout });
                                     const files = (await page.$eval('#md5_complete', element => element.innerHTML)).split('\n').sort();
                                     items.push({ name, filepath, files });

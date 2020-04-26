@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const copyTo = new URLSearchParams(location.search).get('copyTo');
             if (copyTo) {
                 squared.copyToDisk(copyTo).then((result) => {
-                    const element = squared.lib.dom.createElement(document.body, 'div', { whiteSpace: 'pre' });
+                    const element = squared.lib.dom.createElement(document.body, 'div', { display: 'none' });
                     if (result.success) {
                         element.innerHTML = result.files.join('\n');
                     }
