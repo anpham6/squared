@@ -3,6 +3,7 @@ import { NodeTemplate, NodeIncludeTemplate } from '../../../../@types/base/appli
 import { getRootNs } from '../../lib/util';
 
 type View = android.base.View;
+type RenderIndex = Undef<NodeRenderIndex[]>;
 
 const { NODE_TEMPLATE } = squared.base.lib.enumeration;
 
@@ -20,8 +21,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
         this.cache.each((node: T) => {
             const renderTemplates = node.renderTemplates;
             if (renderTemplates) {
-                let open: Undef<NodeRenderIndex[]>;
-                let close: Undef<NodeRenderIndex[]>;
+                let open: RenderIndex, close: RenderIndex;
                 node.renderEach((item: T, index) => {
                     const dataset = item.dataset;
                     const name = dataset.androidInclude;

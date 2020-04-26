@@ -1,1 +1,0 @@
-export default class ExtensionManager<T extends chrome.base.View> extends squared.base.ExtensionManager<T> {}

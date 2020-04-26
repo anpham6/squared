@@ -371,7 +371,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
     return result;
 }
 
-function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [], borderOnly = true, stroke?: ObjectMap<any> | false, indentOffset?: string, corners?: ObjectMap<any>) {
+function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [], borderOnly = true, stroke?: ObjectMap<any> | false, corners?: ObjectMap<string> | false, indentOffset?: string) {
     const item: StandardMap[] = [];
     const result: StandardMap[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
     const solid = !borderOnly && getBackgroundColor(boxStyle.backgroundColor);
@@ -390,8 +390,8 @@ function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [],
             bottom: indentOffset,
             shape: {
                 'android:shape': 'rectangle',
-                corners,
-                stroke
+                stroke,
+                corners
             }
         });
     }
@@ -678,7 +678,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (border && !isAlternatingBorder(border.style, roundFloat(border.width)) && !(border.style === 'double' && parseInt(border.width) > 1) || !borderData && (corners || images?.length)) {
             const stroke = border ? getBorderStroke(border) : false;
             if (images?.length || indentWidth > 0 || borderOnly) {
-                layerListData = createLayerList(data, images, borderOnly, stroke, indentOffset, corners);
+                layerListData = createLayerList(data, images, borderOnly, stroke, corners, indentOffset);
             }
             else {
                 shapeData = createShapeData(stroke, !borderOnly && getBackgroundColor(data.backgroundColor), corners);
@@ -875,7 +875,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         );
                         const stored = resource.getImage(element.src);
                         if (!node.hasPX('width')) {
-                            const offsetStart = (stored?.width || 0) + position.left - (node.paddingLeft + node.borderLeftWidth);
+                            const offsetStart = (stored?.width || element.naturalWidth) + position.left - (node.paddingLeft + node.borderLeftWidth);
                             if (offsetStart > 0) {
                                 node.modifyBox(BOX_STANDARD.PADDING_LEFT, offsetStart);
                             }
@@ -902,8 +902,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const size = backgroundSize[i];
                 const padded = position.orientation.length === 4;
                 let dimension = imageDimensions[i];
-                let dimenWidth = NaN;
-                let dimenHeight = NaN;
+                let dimenWidth = NaN, dimenHeight = NaN;
                 if (dimension) {
                     if (!dimension.width || !dimension.height) {
                         dimension = undefined;
@@ -1084,14 +1083,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
                 let bitmap = svg[i] !== true;
                 let autoFit = node.is(CONTAINER_NODE.IMAGE) || typeof value !== 'string';
-                let resizedWidth = false;
-                let resizedHeight = false;
-                let unsizedWidth = false;
-                let unsizedHeight = false;
+                let resizedWidth = false, resizedHeight = false;
+                let unsizedWidth = false, unsizedHeight = false;
                 let recalibrate = true;
                 if (dimension) {
-                    let fittedWidth = boundsWidth;
-                    let fittedHeight = boundsHeight;
+                    let fittedWidth = boundsWidth, fittedHeight = boundsHeight;
                     if (size !== 'contain') {
                         if (!node.hasWidth) {
                             const innerWidth = window.innerWidth;
@@ -1112,8 +1108,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                     }
-                    const ratioWidth = dimenWidth / fittedWidth;
-                    const ratioHeight = dimenHeight / fittedHeight;
+                    const ratioWidth = dimenWidth / fittedWidth, ratioHeight = dimenHeight / fittedHeight;
                     const getImageWidth = () => dimenWidth * height / dimenHeight;
                     const getImageHeight = () => dimenHeight * width / dimenWidth;
                     const getImageRatioWidth = () => fittedWidth * (ratioWidth / ratioHeight);

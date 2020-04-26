@@ -61,7 +61,7 @@ declare class Application<T extends Node> implements FileActionAsync {
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<Controller<T>>,
         ResourceConstructor: Constructor<Resource<T>>,
-        ExtensionManagerConstructor: Constructor<ExtensionManager<T>>
+        ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>
     );
 }
 
@@ -89,7 +89,7 @@ declare class ApplicationUI<T extends NodeUI> extends Application<T> {
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<ControllerUI<T>>,
         ResourceConstructor: Constructor<ResourceUI<T>>,
-        ExtensionManagerConstructor: Constructor<ExtensionManager<T>>
+        ExtensionManagerConstructor?: Constructor<ExtensionManager<T>>
     );
 }
 

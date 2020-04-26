@@ -5,7 +5,6 @@ import { FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/fi
 
 import Application from './application';
 import Controller from './controller';
-import ExtensionManager from './extensionmanager';
 import File from './file';
 import Resource from './resource';
 import View from './view';
@@ -112,7 +111,6 @@ function createAssetsOptions(assets: FileAsset[], options?: FileOptions, directo
 const appBase: ChromeFramework<View> = {
     base: {
         Application,
-        ExtensionManager,
         Controller,
         File,
         Resource,
@@ -255,7 +253,7 @@ const appBase: ChromeFramework<View> = {
     },
     create() {
         const EC = constant.EXT_CHROME;
-        application = new Application<View>(framework, View, Controller, Resource, ExtensionManager);
+        application = new Application<View>(framework, View, Controller, Resource);
         controller = <Controller<View>> application.controllerHandler;
         file = new File();
         application.resourceHandler.setFileHandler(file);

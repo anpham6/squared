@@ -185,7 +185,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         nodeConstructor: Constructor<T>,
         ControllerConstructor: Constructor<T>,
         ResourceConstructor: Constructor<T>,
-        ExtensionManagerConstructor: Constructor<T>)
+        ExtensionManagerConstructor?: Constructor<T>)
     {
         super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
         const localSettings = this.controllerHandler.localSettings;

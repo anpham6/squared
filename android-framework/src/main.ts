@@ -3,7 +3,6 @@ import { FileOutputOptions, UserSettings } from '../../@types/android/applicatio
 
 import Application from './application';
 import Controller from './controller';
-import ExtensionManager from './extensionmanager';
 import File from './file';
 import Resource from './resource';
 import View from './view';
@@ -83,7 +82,6 @@ const lib = {
 
 const appBase: AppFramework<View> = {
     base: {
-        ExtensionManager,
         Controller,
         File,
         Resource,
@@ -317,7 +315,7 @@ const appBase: AppFramework<View> = {
     create() {
         const EN = $lib.constant.EXT_NAME;
         const EA = constant.EXT_ANDROID;
-        application = new Application<View>(framework, View, Controller, Resource, ExtensionManager);
+        application = new Application<View>(framework, View, Controller, Resource);
         file = new File();
         application.resourceHandler.setFileHandler(file);
         userSettings = { ...SETTINGS };
