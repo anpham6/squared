@@ -181,7 +181,7 @@ squared.settings = {
     excludePlainText: true,
     createQuerySelectorMap: true,
     showErrorMessages: false,
-    outputFileExclusions: ['squared.*', 'chrome.framework.*'],
+    outputFileExclusions: [], // ['squared.*', '*.mp4'] | <script|link> data-chrome-output-exclude="true" | default is none
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
@@ -621,6 +621,20 @@ See /android/widget/*.html for usage instructions in the squared-apache <https:/
 <img src="html/common/images/android/drawer.navigationview.png" alt="drawer: actionbar" />
 
 <img src="html/common/images/android/menu.png" alt="toolbar: menu" />
+
+### CHROME: Saving web page assets
+
+You can exclude unnecessary processing files using the dataset attribute in &lt;script&gt; or &lt;link&gt; tags.
+
+```xml
+    <script data-chrome-output-exclude="true" src="/dist/squared.js"></script>
+    <script data-chrome-output-exclude="true" src="/dist/squared.base.js"></script>
+    <script data-chrome-output-exclude="true" src="/dist/chrome.framework.js"></script>
+    <script data-chrome-output-exclude="true">
+        squared.setFramework(chrome);
+        chrome.saveAsWebPage();
+    </script>
+```
 
 ### CHROME: Extension configuration
 

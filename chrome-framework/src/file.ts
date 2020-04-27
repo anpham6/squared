@@ -153,16 +153,18 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public getScriptAssets(ignoreExtensions = false) {
         const result: ChromeAsset[] = [];
         document.querySelectorAll('script').forEach(element => {
-            const src = element.src.trim();
-            if (src !== '') {
-                const uri = resolvePath(src);
-                const data = parseUri(uri);
-                if (this.validFile(data)) {
-                    data.mimeType = element.type.trim() || parseMimeType(uri) || 'text/javascript';
-                    if (!ignoreExtensions) {
-                        processExtensions.call(this, data);
+            if (element.dataset.chromeOutputExclude !== 'true') {
+                const src = element.src.trim();
+                if (src !== '') {
+                    const uri = resolvePath(src);
+                    const data = parseUri(uri);
+                    if (this.validFile(data)) {
+                        data.mimeType = element.type.trim() || parseMimeType(uri) || 'text/javascript';
+                        if (!ignoreExtensions) {
+                            processExtensions.call(this, data);
+                        }
+                        result.push(data);
                     }
-                    result.push(data);
                 }
             }
         });
@@ -172,26 +174,28 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public getLinkAssets(rel?: string, ignoreExtensions = false) {
         const result: ChromeAsset[] = [];
         document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((element: HTMLLinkElement) => {
-            const href = element.href.trim();
-            if (href !== '') {
-                const uri = resolvePath(href);
-                const data = parseUri(uri);
-                if (this.validFile(data)) {
-                    switch (element.rel.trim()) {
-                        case 'stylesheet':
-                            data.mimeType = 'text/css';
-                            break;
-                        case 'icon':
-                            data.mimeType = 'image/x-icon';
-                            break;
-                        default:
-                            data.mimeType = element.type.trim() || parseMimeType(uri);
-                            break;
+            if (element.dataset.chromeOutputExclude !== 'true') {
+                const href = element.href.trim();
+                if (href !== '') {
+                    const uri = resolvePath(href);
+                    const data = parseUri(uri);
+                    if (this.validFile(data)) {
+                        switch (element.rel.trim()) {
+                            case 'stylesheet':
+                                data.mimeType = 'text/css';
+                                break;
+                            case 'icon':
+                                data.mimeType = 'image/x-icon';
+                                break;
+                            default:
+                                data.mimeType = element.type.trim() || parseMimeType(uri);
+                                break;
+                        }
+                        if (!ignoreExtensions) {
+                            processExtensions.call(this, data);
+                        }
+                        result.push(data);
                     }
-                    if (!ignoreExtensions) {
-                        processExtensions.call(this, data);
-                    }
-                    result.push(data);
                 }
             }
         });

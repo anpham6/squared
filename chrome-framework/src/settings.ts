@@ -6,7 +6,7 @@ const settings: UserSettings = {
     excludePlainText: true,
     createQuerySelectorMap: true,
     showErrorMessages: false,
-    outputFileExclusions: ['squared.*', 'chrome.framework.*'],
+    outputFileExclusions: [],
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
     outputArchiveFormat: 'zip'

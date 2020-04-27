@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Language" content="en">
     <title>https://github.com/anpham6/squared</title>
-    <link rel="stylesheet" type="text/css" href="css/dev.css">
+    <link rel="stylesheet" type="text/css" href="css/dev.css" />
     <style>
         body {
             font: 1em/1.4 Helvetica, Arial, sans-serif;
@@ -148,11 +148,11 @@
             grid-area: s4;
         }*/
     </style>
-    <script src="/common/system.js"></script>
-    <script src="/common/transform.js"></script>
-    <script src="/common/babel-transform.js"></script>
-    <script src="/common/dev.js"></script>
-    <script>
+    <script data-chrome-output-exclude="true" src="/common/system.js"></script>
+    <script data-chrome-output-exclude="true" src="/common/transform.js"></script>
+    <script data-chrome-output-exclude="true" src="/common/babel-transform.js"></script>
+    <script data-chrome-output-exclude="true" src="/common/dev.js"></script>
+    <script data-chrome-output-exclude="true">
         System.import('/build/src/main.js').then(result => {
             squared = result;
             System.import('/build/src/base/main.js').then(result => {
@@ -164,9 +164,7 @@
                         squared.setFramework(android);
                         squared.parseDocument().then(() => {
                             squared.saveToArchive('jimp', {
-                                callback: result => {
-                                    console.log(result);
-                                },
+                                callback: result => console.log(result),
                                 assets: [
                                     {
                                         pathname: 'images',
@@ -197,7 +195,6 @@
                             });
                             squared.setFramework(chrome);
                             squared.settings.preloadImages = false;
-                            squared.settings.outputFileExclusions = ['android.framework.js', 'chrome.framework.js'];
                             chrome.saveAsWebPage();
                         });
                     });

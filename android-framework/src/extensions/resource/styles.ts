@@ -102,7 +102,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     items.push({ key: match[1], value: match[2] });
                 }
             });
-            STORED.styles.set(name, { ...createStyleAttribute(), name, items });
+            STORED.styles.set(name, Object.assign(createStyleAttribute(), { name, items }));
         }
     }
 }

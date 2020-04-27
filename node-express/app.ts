@@ -244,11 +244,19 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
     if (!mimeType) {
         return;
     }
+    let html: Undef<string>;
+    if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
+        html = fs.readFileSync(filepath).toString('utf8');
+        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-output-exclude=["']?true["']?[\s\S]*?>[\s\S]+?<\/\1>\n*/ig, '');
+        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-output-exclude=["']?true["']?[\s\S]*?\/?>\n*/ig, '');
+    }
     switch (mimeType) {
         case '@text/html':
         case '@text/css':
         case '@application/xhtml+xml': {
-            let html = fs.readFileSync(filepath).toString('utf8');
+            if (html === undefined) {
+                html = fs.readFileSync(filepath).toString('utf8');
+            }
             for (const item of assets) {
                 if (item === file) {
                     continue;

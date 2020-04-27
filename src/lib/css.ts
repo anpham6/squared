@@ -1510,7 +1510,9 @@ export function parseVar(element: CSSElement, value: string) {
 
 export function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions) {
     let orderedSize: Undef<number[]>, dimension: Undef<DimensionAttr[]>,  separator: Undef<string>,  unitType: Undef<number>, checkUnit: Undef<boolean>, errorString: Undef<RegExp>;
+    const optionsVar = <CalculateVarOptions> {};
     if (options) {
+        Object.assign(optionsVar, options);
         if (Array.isArray(options.orderedSize)) {
             orderedSize = options.orderedSize;
         }
@@ -1520,7 +1522,6 @@ export function calculateVarAsString(element: CSSElement, value: string, options
         ({ separator, unitType, checkUnit, errorString } = options);
     }
     value = value.trim();
-    const optionsVar = <CalculateVarOptions> Object.assign({}, options);
     let unit: string;
     switch (unitType) {
         case CSS_UNIT.INTEGER:
