@@ -2995,4 +2995,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             y: (bounds.top + bounds.bottom) / 2
         };
     }
+
+    get use() {
+        return this.dataset.use;
+    }
+
+    get extensions() {
+        let result = this._cached.extensions;
+        if (result === undefined) {
+            const use = this.use?.trim();
+            result = use ? use.split(XML.SEPARATOR) : [];
+            this._cached.extensions = result;
+        }
+        return result;
+    }
 }

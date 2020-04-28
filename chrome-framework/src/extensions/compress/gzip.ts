@@ -3,9 +3,9 @@ import { CompressOptions } from '../../../../@types/chrome/extension';
 
 import Extension from '../../extension';
 
-const { safeNestedArray } = squared.lib.util;
-
 type View = chrome.base.View;
+
+const { safeNestedArray } = squared.lib.util;
 
 export default class Gzip<T extends View> extends Extension<T> {
     public readonly options: CompressOptions = {
@@ -13,14 +13,17 @@ export default class Gzip<T extends View> extends Extension<T> {
         mimeTypes: ['text/css', 'text/javascript', 'text/plain', 'text/csv', 'application/json', 'application/javascript', 'application/ld+json', 'application/xml']
     };
 
-    public processFile(data: ChromeAsset) {
-        const mimeType = data.mimeType;
-        if (mimeType) {
-            const { level, mimeTypes  } = this.options;
-            if (mimeTypes === '*' || mimeTypes.includes(mimeType)) {
-                safeNestedArray(<StandardMap> data, 'compress').push({ format: 'gz', level });
-                return true;
+    public processFile(data: ChromeAsset, override = false) {
+        if (!override) {
+            const mimeType = data.mimeType;
+            if (mimeType) {
+                const mimeTypes = this.options.mimeTypes;
+                override = mimeTypes === "*" || mimeTypes.includes(mimeType);
             }
+        }
+        if (override) {
+            safeNestedArray(<StandardMap> data, 'compress').push({ format: 'gz', level: this.options.level });
+            return true;
         }
         return false;
     }

@@ -10,7 +10,6 @@ export interface CachedValue<T> extends node.CachedValue<T> {
     containerName?: string;
     baselineHeight?: number;
     support?: Support;
-    extensions?: string[];
 }
 
 export interface LocalSettings {

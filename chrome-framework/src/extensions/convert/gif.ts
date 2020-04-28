@@ -12,11 +12,11 @@ export default class Gif<T extends View> extends Extension<T> {
         pickSmaller: false
     };
 
-    public processFile(data: ChromeAsset) {
+    public processFile(data: ChromeAsset, override = false) {
         const mimeType = data.mimeType;
         if (mimeType) {
             const options = this.options;
-            if (options.mimeTypes.find(value => mimeType.endsWith(value))) {
+            if (override || options.mimeTypes.find(value => mimeType.endsWith(value))) {
                 let command = '';
                 if (options.replaceWith) {
                     command = '@';

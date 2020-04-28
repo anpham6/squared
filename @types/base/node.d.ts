@@ -80,6 +80,7 @@ export interface CachedValue<T> {
     backgroundColor?: string;
     backgroundImage?: string;
     visibleStyle?: VisibleStyle;
+    extensions?: string[];
 }
 
 export interface VisibleStyle {

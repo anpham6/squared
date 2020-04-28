@@ -48,7 +48,7 @@ declare namespace base {
 
     class Extension<T extends View> extends squared.base.Extension<T> {
         application: Application<T>;
-        processFile(data: ChromeAsset): boolean;
+        processFile(data: ChromeAsset, override?: boolean): boolean;
     }
 
     class ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {}

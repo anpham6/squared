@@ -237,9 +237,9 @@ declare class ExtensionUI<T extends NodeUI> extends Extension<T> {
 
 declare class ExtensionManager<T extends Node> {
     readonly application: Application<T>;
-    include(ext: Extension<T>): boolean;
-    exclude(ext: Extension<T>): boolean;
-    retrieve(name: string): Null<Extension<T>>;
+    include(ext: Extension<T> | string): boolean;
+    exclude(ext: Extension<T> | string): boolean;
+    retrieve(name: string, checkBuiltIn?: boolean): Null<Extension<T>>;
     optionValue(name: string, attr: string): any;
     optionValueAsObject(name: string, attr: string): Null<{}>;
     optionValueAsString(name: string, attr: string): string;
@@ -459,6 +459,8 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     get cssStyle(): StringMap;
     get textStyle(): StringMap;
     get center(): Point;
+    get use(): Undef<string>;
+    get extensions(): string[];
     constructor(id: number, sessionId?: string, element?: Element);
 }
 
@@ -571,8 +573,6 @@ declare class NodeUI extends Node implements LayoutType {
     get childIndex(): number;
     set containerIndex(value);
     get containerIndex(): number;
-    set use(value);
-    get use(): Undef<string>;
     set containerType(value: number);
     get containerType(): number;
     set positioned(value);
@@ -581,6 +581,7 @@ declare class NodeUI extends Node implements LayoutType {
     get controlId(): string;
     set renderExclude(value: boolean);
     get renderExclude(): boolean;
+    set use(value: Undef<string>);
     get controlElement(): boolean;
     get documentId(): string;
     get baselineHeight(): number;
@@ -603,7 +604,6 @@ declare class NodeUI extends Node implements LayoutType {
     get innerMostWrapped(): NodeUI;
     get outerMostWrapper(): NodeUI;
     get preserveWhiteSpace(): boolean;
-    get extensions(): string[];
     constructor(id: number, sessionId?: string, element?: Element);
 }
 

@@ -245,15 +245,15 @@ function getUri(file: RequestAsset, uri: string) {
 }
 
 function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void) {
-    const mimeType = file.mimeType;
+    let mimeType = file.mimeType as string;
     if (!mimeType) {
         return;
     }
     let html: Undef<string>;
     if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
         html = fs.readFileSync(filepath).toString('utf8');
-        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-output-exclude=["']?true["']?[\s\S]*?>[\s\S]+?<\/\1>\n*/ig, '');
-        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-output-exclude=["']?true["']?[\s\S]*?\/?>\n*/ig, '');
+        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-file=["']?exclude["']?[\s\S]*?>[\s\S]+?<\/\1>\n*/ig, '');
+        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-file=["']?exclude["']?[\s\S]*?\/?>\n*/ig, '');
     }
     else if (mimeType.endsWith('text/css')) {
         const href = file.uri;
@@ -305,8 +305,8 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             return;
         }
     }
-    const afterConvert = (output: string) => {
-        switch (mimeType.charAt(0)) {
+    const afterConvert = (output: string, command: string) => {
+        switch (command.charAt(0)) {
             case '@':
                 status.filesToRemove.push(filepath);
                 break;
@@ -315,79 +315,85 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 break;
         }
     };
-    if (/^[@%]?png:image\//.test(mimeType)) {
-        if (!mimeType.endsWith('/png')) {
-            status.delayed++;
-            jimp.read(filepath)
-                .then(image => {
-                    const png = replaceExtension(filepath, 'png');
-                    image.write(png, err => {
-                        if (err) {
-                            writeError(png, err);
-                        }
-                        else {
-                            afterConvert(png);
-                            if (hasCompressPng(file.compress)) {
-                                compressImage(png, finalize);
-                                return;
-                            }
-                        }
-                        finalize(png);
-                    });
-                })
-                .catch(err => {
-                    finalize('');
-                    writeError(filepath, err);
-                });
-        }
-    }
-    else if (/^[@%]?jpeg:image\//.test(mimeType)) {
-        if (!mimeType.endsWith('/jpeg')) {
-            status.delayed++;
-            jimp.read(filepath)
-                .then(image => {
-                    const jpg = replaceExtension(filepath, 'jpg');
-                    image.quality(JPEG_QUALITY).write(jpg, err => {
-                        if (err) {
-                            writeError(jpg, err);
-                        }
-                        else {
-                            afterConvert(jpg);
-                            if (hasCompressPng(file.compress)) {
-                                compressImage(jpg, finalize);
-                                return;
-                            }
-                        }
-                        finalize(jpg);
-                    });
-                })
-                .catch(err => {
-                    finalize('');
-                    writeError(filepath, err);
-                });
-        }
-    }
-    else if (/^[@%]?bmp:image\//.test(mimeType)) {
-        if (!mimeType.endsWith('/bmp')) {
-            status.delayed++;
-            jimp.read(filepath)
-                .then(image => {
-                    const bmp = replaceExtension(filepath, 'bmp');
-                    image.write(bmp, err => {
-                        if (err) {
-                            writeError(bmp, err);
-                        }
-                        else {
-                            afterConvert(bmp);
-                        }
-                        finalize(bmp);
-                    });
-                })
-                .catch(err => {
-                    finalize('');
-                    writeError(filepath, err);
-                });
-        }
+    if (mimeType.includes('image/')) {
+        const convert = mimeType.split(':');
+        mimeType = convert.pop() as string;
+        convert.forEach(value => {
+            if (/^[@%]?png/.test(value)) {
+                if (!mimeType.endsWith('/png')) {
+                    status.delayed++;
+                    jimp.read(filepath)
+                        .then(image => {
+                            const png = replaceExtension(filepath, 'png');
+                            image.write(png, err => {
+                                if (err) {
+                                    writeError(png, err);
+                                }
+                                else {
+                                    afterConvert(png, value);
+                                    if (hasCompressPng(file.compress)) {
+                                        compressImage(png, finalize);
+                                        return;
+                                    }
+                                }
+                                finalize(png);
+                            });
+                        })
+                        .catch(err => {
+                            finalize('');
+                            writeError(filepath, err);
+                        });
+                }
+            }
+            else if (/^[@%]?jpeg/.test(value)) {
+                if (!mimeType.endsWith('/jpeg')) {
+                    status.delayed++;
+                    jimp.read(filepath)
+                        .then(image => {
+                            const jpg = replaceExtension(filepath, 'jpg');
+                            image.quality(JPEG_QUALITY).write(jpg, err => {
+                                if (err) {
+                                    writeError(jpg, err);
+                                }
+                                else {
+                                    afterConvert(jpg, value);
+                                    if (hasCompressPng(file.compress)) {
+                                        compressImage(jpg, finalize);
+                                        return;
+                                    }
+                                }
+                                finalize(jpg);
+                            });
+                        })
+                        .catch(err => {
+                            finalize('');
+                            writeError(filepath, err);
+                        });
+                }
+            }
+            else if (/^[@%]?bmp/.test(value)) {
+                if (!mimeType.endsWith('/bmp')) {
+                    status.delayed++;
+                    jimp.read(filepath)
+                        .then(image => {
+                            const bmp = replaceExtension(filepath, 'bmp');
+                            image.write(bmp, err => {
+                                if (err) {
+                                    writeError(bmp, err);
+                                }
+                                else {
+                                    afterConvert(bmp, value);
+                                }
+                                finalize(bmp);
+                            });
+                        })
+                        .catch(err => {
+                            finalize('');
+                            writeError(filepath, err);
+                        });
+                }
+            }
+        });
     }
 }
 
@@ -515,7 +521,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
         }
         else if (uri) {
             if (notFound[uri]) {
-                return;
+                continue;
             }
             const checkQueue = () => {
                 if (completed.includes(filepath)) {
@@ -563,7 +569,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
             try {
                 if (isFileURI(uri)) {
                     if (checkQueue()) {
-                        return;
+                        continue;
                     }
                     const stream = fs.createWriteStream(filepath);
                     stream.on('finish', () => {
@@ -601,14 +607,14 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                     if (isFileUNC(uri)) {
                         if (UNC_READ) {
                             if (checkQueue()) {
-                                return;
+                                continue;
                             }
                             copyUri(uri, filepath);
                         }
                     }
                     else if (DISK_READ && path.isAbsolute(uri)) {
                         if (checkQueue()) {
-                            return;
+                            continue;
                         }
                         copyUri(uri, filepath);
                     }

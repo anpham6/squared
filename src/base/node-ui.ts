@@ -14,9 +14,8 @@ const $lib = squared.lib;
 const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = $lib.css;
 const { isTextNode } = $lib.dom;
 const { equal } = $lib.math;
-const { XML } = $lib.regex;
 const { getElementAsNode } = $lib.session;
-const { capitalize, cloneObject, convertWord, hasBit, isArray, iterateArray, safeNestedMap, searchObject, spliceArray, withinRange } = $lib.util;
+const { capitalize, cloneObject, convertWord, hasBit, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = $lib.util;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
@@ -1655,15 +1654,5 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     get use() {
         return getDatasetName.call(this, 'use');
-    }
-
-    get extensions() {
-        let result = this._cached.extensions;
-        if (result === undefined) {
-            const use = this.use;
-            result = use ? spliceArray(use.split(XML.SEPARATOR), value => value === '') : [];
-            this._cached.extensions = result;
-        }
-        return result;
     }
 }

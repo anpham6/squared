@@ -3,9 +3,16 @@ const { hasBit, isObject } = squared.lib.util;
 export default class ExtensionManager<T extends squared.base.Node> implements squared.base.ExtensionManager<T> {
     constructor(public readonly application: squared.base.Application<T>) {}
 
-    public include(ext: squared.base.Extension<T>) {
+    public include(ext: squared.base.Extension<T> | string) {
         const application = this.application;
         const extensions = application.extensions;
+        if (typeof ext === 'string') {
+            const item = this.retrieve(ext);
+            if (item === null) {
+                return false;
+            }
+            ext = item;
+        }
         let name = ext.name;
         const index = extensions.findIndex(item => item.name === name);
         if (index !== -1) {
@@ -19,9 +26,9 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
                     if (item.preload) {
                         name = item.name;
                         if (this.retrieve(name) === null) {
-                            const extension = application.builtInExtensions[name];
-                            if (extension) {
-                                this.include(extension);
+                            const item = application.builtInExtensions[name];
+                            if (item) {
+                                this.include(item);
                             }
                         }
                     }
@@ -36,11 +43,11 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
         return false;
     }
 
-    public exclude(ext: squared.base.Extension<T>) {
+    public exclude(ext: squared.base.Extension<T> | string) {
         const extensions = this.extensions;
         const length = extensions.length;
         for (let i = 0; i < length; ++i) {
-            if (extensions[i] === ext) {
+            if (extensions[i] === ext || typeof ext === 'string' && this.retrieve(ext)) {
                 extensions.splice(i, 1);
                 return true;
             }
@@ -48,7 +55,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
         return false;
     }
 
-    public retrieve(name: string) {
+    public retrieve(name: string, checkBuiltIn = false) {
         const extensions = this.extensions;
         const length = extensions.length;
         let i = 0;
@@ -58,7 +65,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
                 return ext;
             }
         }
-        return null;
+        return checkBuiltIn && this.application.builtInExtensions[name] || null;
     }
 
     public optionValue(name: string, attr: string) {

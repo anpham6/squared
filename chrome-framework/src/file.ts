@@ -18,14 +18,11 @@ function parseUri(uri: string): Undef<ChromeAsset> {
     const value = trimEnd(uri, '/');
     const match = COMPONENT.PROTOCOL.exec(value);
     if (match) {
-        let pathname = '';
-        let filename = '';
+        const host = match[2], port = match[3], path = match[4];
+        let pathname = '', filename = '';
         let rootDir = '';
         let moveTo: Undef<string>;
         let local: Undef<boolean>;
-        const host = match[2];
-        const port = match[3];
-        const path = match[4];
         const getDirectory = (start = 1) => {
             if (start > 1) {
                 rootDir = path.substring(0, start);
@@ -71,10 +68,10 @@ function parseUri(uri: string): Undef<ChromeAsset> {
     return undefined;
 }
 
-function resolveAssetSource(data: Set<string>, value: string) {
-    const src = resolvePath(value);
-    if (src !== '') {
-        data.add(src);
+function resolveAssetSource(data: Map<HTMLElement, string>, element: HTMLVideoElement | HTMLAudioElement | HTMLSourceElement) {
+    const value = resolvePath(element.src);
+    if (value !== '') {
+        data.set(element, value);
     }
 }
 
@@ -85,8 +82,26 @@ function convertFileMatch(value: string) {
     return new RegExp(`${value}$`);
 }
 
-function processExtensions(this: chrome.base.File<View>, data: ChromeAsset) {
-    this.application.extensions.forEach(ext => ext.processFile(data));
+function getExtensions(element: Null<HTMLElement>) {
+    const use = element?.dataset.use?.trim();
+    return use ? use.split(XML.SEPARATOR) : [];
+}
+
+function processExtensions(this: chrome.base.File<View>, data: ChromeAsset, extensions: string[], ignoreExtensions: boolean) {
+    const processed: chrome.base.Extension<View>[] = [];
+    if (!ignoreExtensions) {
+        this.application.extensions.forEach(ext => {
+            if (ext.processFile(data)) {
+                processed.push(ext);
+            }
+        });
+    }
+    for (const name of extensions) {
+        const ext = <chrome.base.Extension<View>> this.application.extensionManager.retrieve(name, true);
+        if (ext && !processed.includes(ext)) {
+            ext.processFile(data, true);
+        }
+    }
 }
 
 export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
@@ -141,9 +156,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             if (this.validFile(data)) {
                 data.mimeType = parseMimeType('html');
-                if (!ignoreExtensions) {
-                    processExtensions.call(this, data);
-                }
+                processExtensions.call(this, data, getExtensions(document.querySelector('html')), ignoreExtensions);
                 result.push(data);
             }
         }
@@ -153,16 +166,13 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public getScriptAssets(ignoreExtensions = false) {
         const result: ChromeAsset[] = [];
         document.querySelectorAll('script').forEach(element => {
-            if (element.dataset.chromeOutputExclude !== 'true') {
+            if (element.dataset.chromeFile !== 'exclude') {
                 const src = element.src.trim();
                 if (src !== '') {
-                    const uri = resolvePath(src);
-                    const data = parseUri(uri);
+                    const data = parseUri(resolvePath(src));
                     if (this.validFile(data)) {
-                        data.mimeType = element.type.trim() || parseMimeType(uri) || 'text/javascript';
-                        if (!ignoreExtensions) {
-                            processExtensions.call(this, data);
-                        }
+                        data.mimeType = element.type.trim() || parseMimeType(data.uri!) || 'text/javascript';
+                        processExtensions.call(this, data, getExtensions(element), ignoreExtensions);
                         result.push(data);
                     }
                 }
@@ -174,11 +184,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public getLinkAssets(rel?: string, ignoreExtensions = false) {
         const result: ChromeAsset[] = [];
         document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((element: HTMLLinkElement) => {
-            if (element.dataset.chromeOutputExclude !== 'true') {
+            if (element.dataset.chromeFile !== 'exclude') {
                 const href = element.href.trim();
                 if (href !== '') {
-                    const uri = resolvePath(href);
-                    const data = parseUri(uri);
+                    const data = parseUri(resolvePath(href));
                     if (this.validFile(data)) {
                         switch (element.rel.trim()) {
                             case 'stylesheet':
@@ -191,12 +200,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                                 data.mimeType = 'image/x-icon';
                                 break;
                             default:
-                                data.mimeType = element.type.trim() || parseMimeType(uri);
+                                data.mimeType = element.type.trim() || parseMimeType(data.uri!);
                                 break;
                         }
-                        if (!ignoreExtensions) {
-                            processExtensions.call(this, data);
-                        }
+                        processExtensions.call(this, data, getExtensions(element), ignoreExtensions);
                         result.push(data);
                     }
                 }
@@ -207,28 +214,41 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     public getImageAssets(ignoreExtensions = false) {
         const result: ChromeAsset[] = [];
-        const processUri = (uri: string) => {
+        const processUri = (element: Null<HTMLElement>, uri: string) => {
             if (uri !== '') {
                 const data = <ChromeAsset> parseUri(uri);
                 if (this.validFile(data) && !result.find(item => item.uri === uri)) {
-                    if (!ignoreExtensions) {
-                        processExtensions.call(this, data);
-                    }
+                    processExtensions.call(this, data, getExtensions(element), ignoreExtensions);
                     result.push(data);
                 }
             }
         };
-        for (const uri of ASSETS.image.keys()) {
-            processUri(uri);
-        }
-        document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => source.srcset.split(XML.SEPARATOR).forEach(uri => processUri(resolvePath(uri.split(CHAR.SPACE)[0]))));
-        document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(resolvePath(source.poster)));
-        document.querySelectorAll('img, input[type=image]').forEach((image: HTMLInputElement) => {
+        document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => source.srcset.split(XML.SEPARATOR).forEach(uri => processUri(source, resolvePath(uri.split(CHAR.SPACE)[0]))));
+        document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(source, resolvePath(source.poster)));
+        document.querySelectorAll('img, input[type=image]').forEach((image: HTMLImageElement) => {
             const src = image.src.trim();
             if (!src.startsWith('data:image/')) {
-                processUri(resolvePath(src));
+                processUri(image, resolvePath(src));
             }
         });
+        document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
+            const images: string[] = [];
+            let srcset = element.srcset.trim();
+            let match: Null<RegExpExecArray>;
+            while ((match = REGEX_SRCSET.exec(srcset)) !== null) {
+                images.push(match[1]);
+                srcset = spliceString(srcset, match.index, match[0].length);
+            }
+            images.push(srcset.trim().replace(REGEX_SRCSET_SPECIFIER, ''));
+            images.forEach(src => {
+                if (src !== '') {
+                    processUri(element, resolvePath(src));
+                }
+            });
+        });
+        for (const uri of ASSETS.image.keys()) {
+            processUri(null, uri);
+        }
         for (const [uri, rawData] of ASSETS.rawData) {
             const { pathname, base64, content, filename, mimeType } = rawData;
             let data: Undef<ChromeAsset>;
@@ -246,27 +266,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             if (this.validFile(data)) {
                 data.mimeType = mimeType;
-                if (!ignoreExtensions) {
-                    processExtensions.call(this, data);
-                }
+                processExtensions.call(this, data, [], ignoreExtensions);
                 result.push(data);
             }
         }
-        document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
-            const images: string[] = [];
-            let srcset = element.srcset.trim();
-            let match: Null<RegExpExecArray>;
-            while ((match = REGEX_SRCSET.exec(srcset)) !== null) {
-                images.push(match[1]);
-                srcset = spliceString(srcset, match.index, match[0].length);
-            }
-            images.push(srcset.trim().replace(REGEX_SRCSET_SPECIFIER, ''));
-            images.forEach(src => {
-                if (src !== '') {
-                    processUri(resolvePath(src));
-                }
-            });
-        });
         return result;
     }
 
@@ -286,9 +289,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 if (url) {
                     const data = parseUri(url);
                     if (this.validFile(data)) {
-                        if (!ignoreExtensions) {
-                            processExtensions.call(this, data);
-                        }
+                        processExtensions.call(this, data, [], ignoreExtensions);
                         result.push(data);
                     }
                 }
@@ -299,7 +300,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     protected validFile(data: Undef<ChromeAsset>): data is ChromeAsset {
         if (data) {
-            const fullpath = `${data.pathname}/${data.filename}`;
+            const fullpath = data.pathname + '/' + data.filename;
             return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
         }
         return false;
@@ -308,15 +309,13 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     protected getRawAssets(tagName: string, ignoreExtensions = false) {
         const result: ChromeAsset[] = [];
         document.querySelectorAll(tagName).forEach((element: HTMLVideoElement | HTMLAudioElement) => {
-            const items = new Set<string>();
-            resolveAssetSource(items, element.src);
-            element.querySelectorAll('source').forEach((source: HTMLSourceElement) => resolveAssetSource(items, source.src));
-            for (const uri of items) {
+            const items = new Map<HTMLElement, string>();
+            resolveAssetSource(items, element);
+            element.querySelectorAll('source').forEach((source: HTMLSourceElement) => resolveAssetSource(items, source));
+            for (const [item, uri] of items.entries()) {
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
-                    if (!ignoreExtensions) {
-                        processExtensions.call(this, data);
-                    }
+                    processExtensions.call(this, data, getExtensions(item), ignoreExtensions);
                     result.push(data);
                 }
             }
