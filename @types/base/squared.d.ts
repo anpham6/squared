@@ -35,6 +35,7 @@ declare class Application<T extends Node> implements FileActionAsync {
     reset(): void;
     parseDocument(...elements: (string | HTMLElement)[]): Promise<T[]>;
     createCache(documentRoot: HTMLElement): Undef<T>;
+    setStyleMap(cacheAssets: boolean): void;
     createNode(options: {}): T;
     insertNode(element: Element, parent?: T, pseudoElt?: string): Undef<T>;
     afterCreateCache(node: T): void;

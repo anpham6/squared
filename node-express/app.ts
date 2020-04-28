@@ -239,6 +239,11 @@ function checkVersion(major: number, minor: number, patch = 0) {
     return true;
 }
 
+function getUri(file: RequestAsset, uri: string) {
+    const location = appendSeparator(file.pathname, file.filename, getSeparator(uri));
+    return [(file.moveTo ? path.join(file.moveTo, location) : location).replace(/\\/g, '/'), location];
+}
+
 function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void) {
     const mimeType = file.mimeType;
     if (!mimeType) {
@@ -249,6 +254,29 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
         html = fs.readFileSync(filepath).toString('utf8');
         html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-output-exclude=["']?true["']?[\s\S]*?>[\s\S]+?<\/\1>\n*/ig, '');
         html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-output-exclude=["']?true["']?[\s\S]*?\/?>\n*/ig, '');
+    }
+    else if (mimeType.endsWith('text/css')) {
+        const href = file.uri;
+        if (href) {
+            html = fs.readFileSync(filepath).toString('utf8');
+            const pattern = /url\(\s*["']?\s*(.+)\s*["']?\s*\)/g;
+            let match: Null<RegExpMatchArray>;
+            while ((match = pattern.exec(html)) !== null) {
+                let url = match[1];
+                if (!isFileURI(url)) {
+                    url = parseRelativeUrl(url, href);
+                    if (url !== '') {
+                        const asset = assets.find(item => item.uri === url);
+                        if (asset) {
+                            if (asset.moveTo === '__serverroot__') {
+                                url = '../'.repeat(Math.max((file.rootDir + file.pathname).split('/').length - 2, 0)) + getUri(asset, url)[0];
+                            }
+                            html = html.replace(match[0], `url(${url})`);
+                        }
+                    }
+                }
+            }
+        }
     }
     switch (mimeType) {
         case '@text/html':
@@ -261,17 +289,15 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 if (item === file) {
                     continue;
                 }
-                const { uri, moveTo, rootDir } = item;
+                const { uri, rootDir } = item;
                 if (uri) {
-                    const separator = uri.includes('\\') ? '\\' : '/';
-                    const location = appendSeparator(item.pathname, item.filename, separator);
-                    const value = (moveTo ? path.join(moveTo, location) : location).replace(/\\/g, '/');
+                    const [value, location] = getUri(item, uri);
                     if (rootDir) {
                         html = replacePathName(html, rootDir + location, value);
                     }
                     else {
                         html = replacePathName(html, uri, value);
-                        html = replacePathName(html, separator + location, value);
+                        html = replacePathName(html, getSeparator(uri) + location, value);
                     }
                 }
             }
@@ -557,11 +583,11 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                         .pipe(stream);
                 }
                 else {
-                    const copyUri = () => {
+                    const copyUri = (from: string, to: string) => {
                         status.delayed++;
                         fs.copyFile(
-                            uri,
-                            filepath,
+                            from,
+                            to,
                             err => {
                                 if (!err) {
                                     processQueue();
@@ -577,14 +603,14 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                             if (checkQueue()) {
                                 return;
                             }
-                            copyUri();
+                            copyUri(uri, filepath);
                         }
                     }
                     else if (DISK_READ && path.isAbsolute(uri)) {
                         if (checkQueue()) {
                             return;
                         }
-                        copyUri();
+                        copyUri(uri, filepath);
                     }
                 }
             }
@@ -660,6 +686,37 @@ function replacePathName(source: string, segment: string, value: string) {
     return source;
 }
 
+function parseRelativeUrl(value: string, href: string) {
+    const match = /^([A-Za-z]{3,}:\/\/[A-Za-z\d\-.]+(?::\d+)?)(\/.*)/.exec(href);
+    if (match) {
+        const origin = match[1];
+        let pathname = match[2].split('/');
+        pathname.pop();
+        if (value.charAt(0) === '/') {
+            value = origin + value;
+        }
+        else if (value.startsWith('../')) {
+            const segments: string[] = [];
+            let levels = 0;
+            value.split('/').forEach(dir => {
+                if (dir === '..') {
+                    levels++;
+                }
+                else {
+                    segments.push(dir);
+                }
+            });
+            pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
+            value = origin + pathname.join('/');
+        }
+        else {
+            value = origin + pathname.join('/') + '/' + value;
+        }
+        return value;
+    }
+    return '';
+}
+
 function checkPermissions(res: express.Response<any>, dirname: string) {
     if (isDirectoryUNC(dirname)) {
         if (!UNC_WRITE) {
@@ -688,6 +745,7 @@ function checkPermissions(res: express.Response<any>, dirname: string) {
 
 const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
 const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
+const getSeparator = (uri: string) => uri.includes('\\') ? '\\' : '/';
 const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value);
 const isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
 const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);

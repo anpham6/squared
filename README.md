@@ -627,13 +627,13 @@ See /android/widget/*.html for usage instructions in the squared-apache <https:/
 You can exclude unnecessary processing files using the dataset attribute in &lt;script&gt; or &lt;link&gt; tags.
 
 ```xml
-    <script data-chrome-output-exclude="true" src="/dist/squared.js"></script>
-    <script data-chrome-output-exclude="true" src="/dist/squared.base.js"></script>
-    <script data-chrome-output-exclude="true" src="/dist/chrome.framework.js"></script>
-    <script data-chrome-output-exclude="true">
-        squared.setFramework(chrome);
-        chrome.saveAsWebPage();
-    </script>
+<script data-chrome-output-exclude="true" src="/dist/squared.js"></script>
+<script data-chrome-output-exclude="true" src="/dist/squared.base.js"></script>
+<script data-chrome-output-exclude="true" src="/dist/chrome.framework.js"></script>
+<script data-chrome-output-exclude="true">
+    squared.setFramework(chrome);
+    chrome.saveAsWebPage();
+</script>
 ```
 
 ### CHROME: Extension configuration

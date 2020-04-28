@@ -337,6 +337,24 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
+    public setStyleMap(caching = false) {
+        const styleSheets = document.styleSheets;
+        const length = styleSheets.length;
+        let i = 0;
+        while (i < length) {
+            const styleSheet = styleSheets[i++];
+            let mediaText: Undef<string>;
+            try {
+                mediaText = styleSheet.media.mediaText;
+            }
+            catch {
+            }
+            if (!isString(mediaText) || REGEX_MEDIATEXT.test(mediaText)) {
+                this.applyStyleSheet(<CSSStyleSheet> styleSheet, caching);
+            }
+        }
+    }
+
     public getDatasetName(attr: string, element: HTMLElement) {
         return element.dataset[attr + capitalize(this.systemName)] || element.dataset[attr];
     }
@@ -445,42 +463,27 @@ export default abstract class Application<T extends Node> implements squared.bas
         return result;
     }
 
-    protected setStyleMap() {
-        const styleSheets = document.styleSheets;
-        const length = styleSheets.length;
-        let i = 0;
-        while (i < length) {
-            const styleSheet = styleSheets[i++];
-            let mediaText: Undef<string>;
-            try {
-                mediaText = styleSheet.media.mediaText;
-            }
-            catch {
-            }
-            if (!isString(mediaText) || REGEX_MEDIATEXT.test(mediaText)) {
-                this.applyStyleSheet(<CSSStyleSheet> styleSheet);
-            }
-        }
-    }
-
-    protected applyStyleRule(item: CSSStyleRule) {
+    protected applyStyleRule(item: CSSStyleRule, caching: boolean) {
         const resourceHandler = this.resourceHandler;
         const sessionId = this.processing.sessionId;
         const styleSheetHref = item.parentStyleSheet?.href || undefined;
         const cssText = item.cssText;
         switch (item.type) {
             case CSSRule.SUPPORTS_RULE:
-                this.applyCSSRuleList((<CSSSupportsRule> (item as unknown)).cssRules);
+                this.applyCSSRuleList((<CSSSupportsRule> (item as unknown)).cssRules, caching);
                 break;
             case CSSRule.STYLE_RULE: {
                 const cssStyle = item.style;
                 const important: ObjectMap<boolean> = {};
                 const baseMap: StringMap = {};
-                const preloadImages = this.userSettings.preloadImages;
+                const preloadImages = this.userSettings.preloadImages || caching;
                 Array.from(cssStyle).forEach(attr => baseMap[convertCamelCase(attr)] = cssStyle[attr]);
                 parseImageUrl(resourceHandler, baseMap, 'backgroundImage', preloadImages, styleSheetHref);
                 parseImageUrl(resourceHandler, baseMap, 'listStyleImage', preloadImages, styleSheetHref);
                 parseImageUrl(resourceHandler, baseMap, 'content', preloadImages, styleSheetHref);
+                if (caching) {
+                    break;
+                }
                 REGEX_IMPORTANT.lastIndex = 0;
                 let match: Null<RegExpExecArray>;
                 while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
@@ -631,15 +634,15 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    protected applyCSSRuleList(rules: CSSRuleList) {
+    protected applyCSSRuleList(rules: CSSRuleList, caching: boolean) {
         const length = rules.length;
         let i = 0;
         while (i < length) {
-            this.applyStyleRule(<CSSStyleRule> rules[i++]);
+            this.applyStyleRule(<CSSStyleRule> rules[i++], caching);
         }
     }
 
-    protected applyStyleSheet(item: CSSStyleSheet) {
+    protected applyStyleSheet(item: CSSStyleSheet, caching: boolean) {
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
@@ -650,19 +653,19 @@ export default abstract class Application<T extends Node> implements squared.bas
                     switch (rule.type) {
                         case CSSRule.STYLE_RULE:
                         case CSSRule.FONT_FACE_RULE:
-                            this.applyStyleRule(<CSSStyleRule> rule);
+                            this.applyStyleRule(<CSSStyleRule> rule, caching);
                             break;
                         case CSSRule.IMPORT_RULE:
-                            this.applyStyleSheet((<CSSImportRule> rule).styleSheet);
+                            this.applyStyleSheet((<CSSImportRule> rule).styleSheet, caching);
                             break;
                         case CSSRule.MEDIA_RULE:
                             if (checkMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
-                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
+                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules, caching);
                             }
                             break;
                         case CSSRule.SUPPORTS_RULE:
                             if (CSS.supports && CSS.supports((<CSSConditionRule> rule).conditionText || parseConditionText('supports', rule.cssText))) {
-                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
+                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules, caching);
                             }
                             break;
                     }

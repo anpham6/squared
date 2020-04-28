@@ -27,6 +27,7 @@ export interface RequestAsset extends ExternalAsset {
     base64?: string;
     rootDir?: string;
     moveTo?: string;
+    parseContent?: boolean;
 }
 
 export interface Exclusions {

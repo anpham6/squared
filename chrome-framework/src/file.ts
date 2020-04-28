@@ -183,6 +183,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                         switch (element.rel.trim()) {
                             case 'stylesheet':
                                 data.mimeType = 'text/css';
+                                if (ignoreExtensions) {
+                                    data.parseContent = true;
+                                }
                                 break;
                             case 'icon':
                                 data.mimeType = 'image/x-icon';
@@ -207,7 +210,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         const processUri = (uri: string) => {
             if (uri !== '') {
                 const data = <ChromeAsset> parseUri(uri);
-                if (this.validFile(data)) {
+                if (this.validFile(data) && !result.find(item => item.uri === uri)) {
                     if (!ignoreExtensions) {
                         processExtensions.call(this, data);
                     }
@@ -215,45 +218,38 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
             }
         };
-        if (this.userSettings.preloadImages) {
-            for (const uri of ASSETS.image.keys()) {
-                processUri(uri);
+        for (const uri of ASSETS.image.keys()) {
+            processUri(uri);
+        }
+        document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => source.srcset.split(XML.SEPARATOR).forEach(uri => processUri(resolvePath(uri.split(CHAR.SPACE)[0]))));
+        document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(resolvePath(source.poster)));
+        document.querySelectorAll('img, input[type=image]').forEach((image: HTMLInputElement) => {
+            const src = image.src.trim();
+            if (!src.startsWith('data:image/')) {
+                processUri(resolvePath(src));
             }
-        }
-        else {
-            document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => source.srcset.split(XML.SEPARATOR).forEach(uri => processUri(resolvePath(uri.split(CHAR.SPACE)[0]))));
-            document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(resolvePath(source.poster)));
-            document.querySelectorAll('img, input[type=image]').forEach((image: HTMLInputElement) => {
-                const src = image.src.trim();
-                if (!src.startsWith('data:image/')) {
-                    processUri(resolvePath(src));
-                }
-            });
-        }
+        });
         for (const [uri, rawData] of ASSETS.rawData) {
-            const filename = rawData.filename;
-            if (filename) {
-                const { pathname, base64, content, mimeType } = rawData;
-                let data: Undef<ChromeAsset>;
-                if (pathname) {
-                    data = { pathname, filename, uri };
+            const { pathname, base64, content, filename, mimeType } = rawData;
+            let data: Undef<ChromeAsset>;
+            if (pathname) {
+                data = { pathname, filename, uri };
+            }
+            else if (base64) {
+                data = { pathname: '__generated__/base64', filename, base64 };
+            }
+            else if (content && mimeType) {
+                data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content };
+            }
+            else {
+                continue;
+            }
+            if (this.validFile(data)) {
+                data.mimeType = mimeType;
+                if (!ignoreExtensions) {
+                    processExtensions.call(this, data);
                 }
-                else if (base64) {
-                    data = { pathname: '__generated__/base64', filename, base64 };
-                }
-                else if (content && mimeType) {
-                    data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content };
-                }
-                else {
-                    continue;
-                }
-                if (this.validFile(data)) {
-                    data.mimeType = mimeType;
-                    if (!ignoreExtensions) {
-                        processExtensions.call(this, data);
-                    }
-                    result.push(data);
-                }
+                result.push(data);
             }
         }
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
@@ -261,19 +257,13 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             let srcset = element.srcset.trim();
             let match: Null<RegExpExecArray>;
             while ((match = REGEX_SRCSET.exec(srcset)) !== null) {
-                images.push(resolvePath(match[1]));
+                images.push(match[1]);
                 srcset = spliceString(srcset, match.index, match[0].length);
             }
-            srcset = srcset.trim();
-            if (srcset !== '') {
-                images.push(resolvePath(srcset.replace(REGEX_SRCSET_SPECIFIER, '')));
-            }
+            images.push(srcset.trim().replace(REGEX_SRCSET_SPECIFIER, ''));
             images.forEach(src => {
-                if (COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
-                    const data = parseUri(src);
-                    if (this.validFile(data)) {
-                        result.push(data);
-                    }
+                if (src !== '') {
+                    processUri(resolvePath(src));
                 }
             });
         });
