@@ -144,6 +144,7 @@ catch (err) {
 }
 try {
     if (ROUTING) {
+        console.log('');
         let mounted = 0;
         for (const routes of [ROUTING.shared, ROUTING[ENV]]) {
             if (Array.isArray(routes)) {
@@ -250,7 +251,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             let html = fs.readFileSync(filepath).toString('utf8');
             for (const item of assets) {
                 if (item === file) {
-                    return;
+                    continue;
                 }
                 const { uri, moveTo, rootDir } = item;
                 if (uri) {
@@ -480,7 +481,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
         }
         else if (uri) {
             if (notFound[uri]) {
-                return;
+                continue;
             }
             const checkQueue = () => {
                 if (completed.includes(filepath)) {
@@ -528,7 +529,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
             try {
                 if (isFileURI(uri)) {
                     if (checkQueue()) {
-                        return;
+                        continue;
                     }
                     const stream = fs.createWriteStream(filepath);
                     stream.on('finish', () => {
@@ -566,14 +567,14 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                     if (isFileUNC(uri)) {
                         if (UNC_READ) {
                             if (checkQueue()) {
-                                return;
+                                continue;
                             }
                             copyUri();
                         }
                     }
                     else if (DISK_READ && path.isAbsolute(uri)) {
                         if (checkQueue()) {
-                            return;
+                            continue;
                         }
                         copyUri();
                     }
