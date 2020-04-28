@@ -137,12 +137,12 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     get singleRowAligned() {
         let result = this._singleRow;
         if (result === undefined) {
-            const length = this.length;
+            const children = this.children;
+            const length = children.length;
             if (length) {
                 result = true;
                 if (length > 1) {
                     let previousBottom = Infinity;
-                    const children = this.children;
                     let i = 0;
                     while (i < length) {
                         const node = children[i++];
@@ -156,7 +156,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
                 this._singleRow = result;
             }
             else {
-                result = false;
+                return false;
             }
         }
         return result;

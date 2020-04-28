@@ -755,28 +755,29 @@ export function resolvePath(value: string, href?: string) {
     value = value.trim();
     if (!COMPONENT.PROTOCOL.test(value)) {
         const origin = location.origin;
-        let pathname = (href?.replace(origin, '') || location.pathname).split('/');
+        const pathname = (href?.replace(origin, '') || location.pathname).split('/');
         pathname.pop();
         if (value.charAt(0) === '/') {
-            value = origin + value;
+            return origin + value;
         }
         else if (value.startsWith('../')) {
-            const segments: string[] = [];
-            let levels = 0;
+            const trailing: string[] = [];
             value.split('/').forEach(dir => {
                 if (dir === '..') {
-                    ++levels;
+                    if (trailing.length === 0) {
+                        pathname.pop();
+                    }
+                    else {
+                        trailing.pop();
+                    }
                 }
                 else {
-                    segments.push(dir);
+                    trailing.push(dir);
                 }
             });
-            pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
-            value = origin + pathname.join('/');
+            value = trailing.join('/');
         }
-        else {
-            value = origin + pathname.join('/') + '/' + value;
-        }
+        return origin + pathname.join('/') + '/' + value;
     }
     return value;
 }

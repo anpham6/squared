@@ -21,14 +21,14 @@ export interface ExternalAsset extends Omit<FileAsset, "index"> {
     base64?: string;
 }
 
-export interface RawAsset extends ExternalAsset, Partial<ImageAsset> {}
-
 export interface RequestAsset extends ExternalAsset {
     base64?: string;
     rootDir?: string;
     moveTo?: string;
     parseContent?: boolean;
 }
+
+export interface RawAsset extends ExternalAsset, Partial<ImageAsset> {}
 
 export interface Exclusions {
     pathname?: string[];

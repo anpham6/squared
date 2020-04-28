@@ -249,25 +249,27 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         for (const uri of ASSETS.image.keys()) {
             processUri(null, uri);
         }
-        for (const [uri, rawData] of ASSETS.rawData) {
-            const { pathname, base64, content, filename, mimeType } = rawData;
-            let data: Undef<ChromeAsset>;
-            if (pathname) {
-                data = { pathname, filename, uri };
-            }
-            else if (base64) {
-                data = { pathname: '__generated__/base64', filename, base64 };
-            }
-            else if (content && mimeType) {
-                data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content };
-            }
-            else {
+        for (const rawData of ASSETS.rawData.values()) {
+            if (rawData.pathname) {
                 continue;
             }
-            if (this.validFile(data)) {
-                data.mimeType = mimeType;
-                processExtensions.call(this, data, [], ignoreExtensions);
-                result.push(data);
+            else {
+                const { base64, content, filename, mimeType } = rawData;
+                let data: Undef<ChromeAsset>;
+                if (base64) {
+                    data = { pathname: '__generated__/base64', filename, base64 };
+                }
+                else if (content && mimeType) {
+                    data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content };
+                }
+                else {
+                    continue;
+                }
+                if (this.validFile(data)) {
+                    data.mimeType = mimeType;
+                    processExtensions.call(this, data, [], ignoreExtensions);
+                    result.push(data);
+                }
             }
         }
         return result;

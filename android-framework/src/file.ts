@@ -256,10 +256,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                         fontName += fontWeight === '400' ? '_normal' : '_' + font[attr];
                     }
                     else {
-                        fontName += '_' + fontStyle;
-                        if (fontWeight !== '400') {
-                            fontName += '_' + font[attr];
-                        }
+                        fontName += '_' + fontStyle + (fontWeight !== '400' ? font[attr] : '');
                     }
                     itemArray.push({
                         font: `@font/${fontName}`,
@@ -316,7 +313,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     itemArray.push({
                         name: style.name,
                         parent: style.parent,
-                        item: objectMap(styleArray.sort((a, b) => a.key >= b.key ? 1 : -1), obj => (<ItemValue> { name: obj.key, innerText: obj.value }))
+                        item: objectMap(styleArray.sort((a, b) => a.key >= b.key ? 1 : -1), obj => ({ name: obj.key, innerText: obj.value }))
                     });
                 }
             });
@@ -435,7 +432,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                         const value = images[dpi];
                         result.push(
                             value,
-                            `${imageDirectory}-${dpi}`,
+                            imageDirectory + '-' + dpi,
                             name + '.' + fromLastIndexOf(value, '.').toLowerCase()
                         );
                     }

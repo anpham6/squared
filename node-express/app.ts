@@ -115,8 +115,6 @@ catch (err) {
                 UNC_WRITE = true;
                 break;
             case '-e':
-            case '-env':
-            case '--e':
             case '--env':
                 switch (ARGV[i++]) {
                     case 'prod':
@@ -130,8 +128,6 @@ catch (err) {
                 }
                 break;
             case '-p':
-            case '-port':
-            case '--p':
             case '--port': {
                 const port = parseInt(ARGV[i++]);
                 if (!isNaN(port)) {
@@ -245,21 +241,21 @@ function getUri(file: RequestAsset, uri: string) {
 }
 
 function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void) {
-    let mimeType = file.mimeType as string;
+    const mimeType = file.mimeType as string;
     if (!mimeType) {
         return;
     }
     let html: Undef<string>;
     if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
         html = fs.readFileSync(filepath).toString('utf8');
-        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-file=["']?exclude["']?[\s\S]*?>[\s\S]+?<\/\1>\n*/ig, '');
-        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-file=["']?exclude["']?[\s\S]*?\/?>\n*/ig, '');
+        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-file=(["']).*?exclude.*?\2[\s\S]*?>[\s\S]+?<\/\1>\n*/ig, '');
+        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-file=(["']).*?exclude.*?\2[\s\S]*?\/?>\n*/ig, '');
     }
     else if (mimeType.endsWith('text/css')) {
         const href = file.uri;
         if (href) {
             html = fs.readFileSync(filepath).toString('utf8');
-            const pattern = /url\(\s*["']?\s*(.+)\s*["']?\s*\)/g;
+            const pattern = /[uU][rR][lL]\(\s*(["'])?\s*(.+)\s*\1?\s*\)/g;
             let match: Null<RegExpMatchArray>;
             while ((match = pattern.exec(html)) !== null) {
                 let url = match[1];
@@ -268,8 +264,12 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                     if (url !== '') {
                         const asset = assets.find(item => item.uri === url);
                         if (asset) {
+                            const currentDir = file.rootDir + file.pathname;
                             if (asset.moveTo === '__serverroot__') {
-                                url = '../'.repeat(Math.max((file.rootDir + file.pathname).split('/').length - 2, 0)) + getUri(asset, url)[0];
+                                url = '../'.repeat(Math.max(currentDir.split('/').length - 2, 0)) + getUri(asset, url)[0];
+                            }
+                            else if (currentDir === asset.rootDir + asset.pathname) {
+                                url = asset.filename;
                             }
                             html = html.replace(match[0], `url(${url})`);
                         }
@@ -301,6 +301,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                     }
                 }
             }
+            html = html.replace(/\s+data-(?:use|chrome-[\w-]+)=(["']).+?\1/g, '');
             fs.writeFileSync(filepath, html);
             return;
         }
@@ -317,7 +318,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
     };
     if (mimeType.includes('image/')) {
         const convert = mimeType.split(':');
-        mimeType = convert.pop() as string;
+        convert.pop();
         convert.forEach(value => {
             if (/^[@%]?png/.test(value)) {
                 if (!mimeType.endsWith('/png')) {
@@ -680,12 +681,12 @@ function removeUnusedFiles(dirname: string, status: AsyncStatus, files: Set<stri
 }
 
 function replacePathName(source: string, segment: string, value: string) {
-    let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])\\s*=\\s*["']\\s*${segment}\\s*["']`, 'g');
+    let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${segment}\\s*\\2`, 'g');
     let match: RegExpExecArray | null = null;
     while ((match = pattern.exec(source)) !== null) {
-        source = source.replace(match[0], match[1].toLowerCase() + '="' + value + '"');
+        source = source.replace(match[0], match[1].toLowerCase() + `="${value}"`);
     }
-    pattern = new RegExp(`url\\(\\s*["']?\\s*${segment}\\s*["']?\\s*\\)`, 'g');
+    pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
     while ((match = pattern.exec(source)) !== null) {
         source = source.replace(match[0], `url(${value})`);
     }
@@ -693,32 +694,32 @@ function replacePathName(source: string, segment: string, value: string) {
 }
 
 function parseRelativeUrl(value: string, href: string) {
-    const match = /^([A-Za-z]{3,}:\/\/[A-Za-z\d\-.]+(?::\d+)?)(\/.*)/.exec(href);
+    const match = /^([A-Za-z]+:\/\/[A-Za-z\d.-]+(?::\d+)?)(\/.*)/.exec(href);
     if (match) {
         const origin = match[1];
-        let pathname = match[2].split('/');
+        const pathname = match[2].split('/');
         pathname.pop();
         if (value.charAt(0) === '/') {
-            value = origin + value;
+            return origin + value;
         }
         else if (value.startsWith('../')) {
-            const segments: string[] = [];
-            let levels = 0;
+            const trailing: string[] = [];
             value.split('/').forEach(dir => {
                 if (dir === '..') {
-                    ++levels;
+                    if (trailing.length === 0) {
+                        pathname.pop();
+                    }
+                    else {
+                        trailing.pop();
+                    }
                 }
                 else {
-                    segments.push(dir);
+                    trailing.push(dir);
                 }
             });
-            pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
-            value = origin + pathname.join('/');
+            value = trailing.join('/');
         }
-        else {
-            value = origin + pathname.join('/') + '/' + value;
-        }
-        return value;
+        return origin + pathname.join('/') + '/' + value;
     }
     return '';
 }

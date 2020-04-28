@@ -17,7 +17,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
         let valid = false;
         let inlineVertical = 0;
         let sameValue = 0;
-        const children = node.children;
+        const children = node.children as T[];
         const length = children.length;
         let i = 0;
         while (i < length) {
@@ -44,7 +44,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                 sameValue = NaN;
             }
         }
-        return valid && isNaN(sameValue) && inlineVertical > 1 && NodeUI.linearData(node.children as T[]).linearX;
+        return valid && isNaN(sameValue) && inlineVertical > 1 && NodeUI.linearData(children).linearX;
     }
 
     public processNode(node: T) {

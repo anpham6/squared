@@ -9,6 +9,8 @@ const { STRING, XML } = $lib.regex;
 const { extractURL } = $lib.css;
 const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = $lib.util;
 
+const REGEX_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
+
 export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
     public static KEY_NAME = 'squared.resource';
     public static ASSETS: ResourceAssetMap = {
@@ -40,7 +42,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         if (element?.complete) {
             const uri = element.src;
             if (uri.startsWith('data:image/')) {
-                const match = new RegExp(`^${STRING.DATAURI}$`).exec(uri);
+                const match = REGEX_DATAURI.exec(uri);
                 if (match) {
                     const mimeType = match[1].split(XML.DELIMITER);
                     this.addRawData(uri, mimeType[0].trim(), mimeType[1]?.trim() || 'base64', match[2], element.naturalWidth, element.naturalHeight);
@@ -88,11 +90,10 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         }
         const imageMimeType = this.mimeTypeMap.image;
         if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {
-            const origin = location.origin;
-            const ext = fromMimeType(mimeType);
-            const filename = uri.endsWith('.' + ext) ? fromLastIndexOf(uri, '/') : this.randomUUID + '.' + ext;
+            const ext = '.' + fromMimeType(mimeType);
+            const filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/') : this.randomUUID + ext;
             Resource.ASSETS.rawData.set(uri, {
-                pathname: uri.startsWith(origin) ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '',
+                pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
                 filename,
                 content,
                 base64,

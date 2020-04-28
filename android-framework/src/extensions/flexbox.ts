@@ -264,8 +264,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             if (autoMargin.horizontal || autoMargin.vertical && parent.hasHeight) {
                 const mainData: FlexboxData<T> = parent.data(FLEXBOX, 'mainData');
                 if (mainData) {
-                    const children = mainData.children;
-                    const index = children.findIndex(item => item === node);
+                    const index = mainData.children.findIndex(item => item === node);
                     if (index !== -1) {
                         const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent);
                         container.cssApply({

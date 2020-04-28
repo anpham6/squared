@@ -27,19 +27,19 @@ let screenshot = false;
         const value = ARGV[i++];
         switch (value) {
             case '-h':
-            case '-host':
+            case '--host':
                 host = ARGV[i++].replace(/\/+$/, '');
                 break;
             case '-d':
-            case '-data':
+            case '--data':
                 data = ARGV[i++];
                 break;
             case '-b':
-            case '-build':
+            case '--build':
                 build = ARGV[i++];
                 break;
             case '-f':
-            case '-flags': {
+            case '--flags': {
                 const f = parseInt(ARGV[i++]);
                 if (!isNaN(f)) {
                     flags = f;
@@ -47,13 +47,13 @@ let screenshot = false;
                 break;
             }
             case '-o':
-            case '-output':
+            case '--output':
                 snapshot = ARGV[i++];
                 break;
             case '-v':
-            case '-viewport':
+            case '--viewport':
             case '-s':
-            case '-screenshot': {
+            case '--screenshot': {
                 const [w, h] = ARGV[i++].split('x').map(dimension => parseInt(dimension));
                 if (!isNaN(w) && !isNaN(h)) {
                     width = w;
@@ -65,16 +65,16 @@ let screenshot = false;
                 break;
             }
             case '-e':
-            case '-executable':
+            case '--executable':
                 executablePath = decodeURIComponent(ARGV[i++]);
                 break;
             case '-c':
-            case '-compare':
+            case '--compare':
                 master = ARGV[i++];
                 snapshot = ARGV[i++];
                 break;
             case '-t':
-            case '-timeout': {
+            case '--timeout': {
                 const t = parseInt(ARGV[i++]);
                 if (!isNaN(t) && t > 0) {
                     timeout = t * 60 * 1000;
