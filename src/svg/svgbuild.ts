@@ -343,7 +343,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 case 'L':
                     if (coordinates.length >= 2) {
                         if (coordinates.length % 2 !== 0) {
-                            coordinates.length--;
+                            --coordinates.length;
                         }
                         break;
                     }
@@ -831,7 +831,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             else {
                 NAME_GRAPHICS.set(tagName, ++index);
-                return `${tagName}_${index}`;
+                return tagName + '_' + index;
             }
         }
         else {

@@ -927,7 +927,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 iterationTotal = Math.floor(iterationTotal);
                                                 const iterationOffset = iterationTotal * extendedLength;
                                                 if (iterationOffset === offsetRemaining) {
-                                                    iterationTotal--;
+                                                    --iterationTotal;
                                                 }
                                                 setFinalValue(iterationOffset, true);
                                             }
@@ -940,7 +940,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                                 values.push(increasing ? '0' : '1');
                                                 keyTime += getKeyTimeIncrement(extendedLength);
                                                 keyTimes.push(truncateFraction(keyTime));
-                                                iterationTotal--;
+                                                --iterationTotal;
                                             }
                                             insertFractionKeyTime();
                                             insertFinalKeyTime();

@@ -122,13 +122,13 @@ if (master) {
                     if (output.length > 1) {
                         const pngpath = filepath.replace('.md5', '.png');
                         stderr.write('\n\n' + colors.bgWhite(colors.black('-'.repeat(100))) + '\n\n');
-                        stderr.write(colors.grey(masterpath) + '\n' + colors.yellow(filepath) + '\n' + (fs.existsSync(pngpath) ? colors.blue(pngpath) + '\n' : '') + '\n');
+                        stderr.write(colors.yellow(masterpath) + '\n' + colors.grey(filepath) + '\n' + (fs.existsSync(pngpath) ? colors.blue(pngpath) + '\n' : '') + '\n');
                         for (const part of output) {
                             if (part.removed) {
-                                stderr.write(colors.grey(part.value));
+                                stderr.write(colors.yellow(part.value));
                             }
                             else if (!part.added) {
-                                stderr.write(colors.yellow(part.value));
+                                stderr.write(colors.grey(part.value));
                             }
                         }
                         stderr.write('\n');

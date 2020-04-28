@@ -190,7 +190,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                                         if (this.accumulateSum) {
                                             previousValues = currentValues;
                                         }
-                                        time--;
+                                        --time;
                                     }
                                     keyTimes.push(time / durationTotal);
                                     values.push(currentValues.join(' '));

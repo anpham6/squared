@@ -25,7 +25,7 @@ export default class Iterator<T> implements squared.lib.base.ArrayIterator<T> {
         if (iterating !== 0) {
             this.children.splice(this.index, 1);
             this.index -= iterating;
-            this.length--;
+            --this.length;
             this._iterating = 0;
         }
     }

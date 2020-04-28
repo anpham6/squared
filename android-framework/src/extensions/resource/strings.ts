@@ -63,7 +63,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     while (i < length) {
                                         switch (textContent.charCodeAt(i++)) {
                                             case 160:
-                                                leadingSpace++;
+                                                ++leadingSpace;
                                             case 32:
                                                 continue;
                                             default:

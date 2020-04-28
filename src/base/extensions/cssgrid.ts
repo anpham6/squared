@@ -403,7 +403,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             node.each((item: T, index) => {
                 if (!previous || item.linear[directionA] >= previous.linear[directionB] || columnIndex > 0 && columnIndex === columnMax) {
                     columnMax = Math.max(columnIndex, columnMax);
-                    rowIndex++;
+                    ++rowIndex;
                     columnIndex = 1;
                 }
                 const { gridRowEnd, gridColumnEnd } = item.cssAsObject('gridRowEnd', 'gridColumnEnd');
@@ -451,7 +451,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (!valid) {
                             mainData.emptyRows[rowIndex - 1] = available;
-                            rowIndex++;
+                            ++rowIndex;
                         }
                     }
                     while (!valid);
@@ -768,7 +768,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     fr += parseFloat(value);
                 }
                 else if (value === 'auto') {
-                    auto++;
+                    ++auto;
                 }
             });
             data.flexible = percent < 1 || fr > 0;
@@ -844,7 +844,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                     if (k === -1) {
                                         k = j;
                                     }
-                                    span++;
+                                    ++span;
                                 }
                                 if (rowItem || j === ITERATION - 1) {
                                     if (span >= COLUMN_SPAN) {

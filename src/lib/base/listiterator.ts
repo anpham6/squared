@@ -9,7 +9,7 @@ export default class ListIterator<T> extends ArrayIterator<T> implements squared
         const iterating = this._iterating;
         if (iterating !== 0) {
             this.children.splice(iterating === 1 ? Math.min(++this.index, this.length) : Math.max(--this.index, 0), 0, item);
-            this.length++;
+            ++this.length;
             this._iterating = 0;
         }
     }

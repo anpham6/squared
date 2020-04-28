@@ -131,7 +131,7 @@ export function getRangeClientRect(element: Element) {
                 bounds.top = top;
             }
             else if (top >= domRect[i - 1].bottom) {
-                numberOfLines++;
+                ++numberOfLines;
             }
             if (bottom > bounds.bottom) {
                 bounds.bottom = bottom;

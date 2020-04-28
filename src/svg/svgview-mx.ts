@@ -109,7 +109,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 let id = 0;
                 const addAnimation = (item: SvgAnimation, delay: number, name = '') => {
                     if (name === '') {
-                        id++;
+                        ++id;
                     }
                     item.delay = delay;
                     item.group = { id, name };
@@ -175,7 +175,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         const keyframes = KEYFRAME_MAP[animationName[i]];
                         const duration = SvgAnimation.convertClockTime(cssData['animation-duration'][i]);
                         if (keyframes && duration > 0) {
-                            id++;
+                            ++id;
                             const attrMap: AttributeMap = {};
                             const keyframeMap: AttributeMap = {};
                             const paused = cssData['animation-play-state'][i] === 'paused';

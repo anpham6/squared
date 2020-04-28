@@ -38,7 +38,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                         sameValue = NaN;
                     }
                 }
-                inlineVertical++;
+                ++inlineVertical;
             }
             else {
                 sameValue = NaN;

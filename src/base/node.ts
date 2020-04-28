@@ -1367,7 +1367,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 invalid: {
                     if (query === '*') {
                         selectors.push({ all: true });
-                        offset++;
+                        ++offset;
                     }
                     else {
                         let adjacent: Undef<string>;
@@ -1381,7 +1381,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 switch (ch) {
                                     case '+':
                                     case '~':
-                                        offset--;
+                                        --offset;
                                     case '>':
                                         if (adjacent || selectors.length === 0) {
                                             selectors.length = 0;
@@ -1502,7 +1502,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     attrList
                                 });
                             }
-                            offset++;
+                            ++offset;
                             adjacent = undefined;
                         }
                     }

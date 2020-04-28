@@ -120,10 +120,10 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 if (j > 0) {
                                     ++k;
                                     if (iteration) {
-                                        excessCount--;
+                                        --excessCount;
                                     }
                                     else {
-                                        excessCount++;
+                                        ++excessCount;
                                     }
                                 }
                                 l = 0;
@@ -138,7 +138,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             }
                             if (j > 0 && /^H\d/.test(item.tagName)) {
                                 if (column.length === 1 && j === q - 2) {
-                                    columnMin--;
+                                    --columnMin;
                                     excessCount = 0;
                                 }
                                 else if ((l + 1) % perRowCount === 0 && q - j > columnMin && !row[j + 1].multiline && row[j + 1].bounds.height < maxHeight) {

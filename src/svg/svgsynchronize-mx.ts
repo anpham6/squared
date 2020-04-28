@@ -569,7 +569,7 @@ function setTimelineValue(map: TimelineIndex, time: number, value: AnimateValue,
                     return time;
                 }
                 while (time > 0 && map.has(time)) {
-                    time++;
+                    ++time;
                 }
             }
             map.set(time, value);
@@ -587,7 +587,7 @@ function insertInterpolator(item: SvgAnimate, time: number, keySplines: Undef<st
         if (index === 0) {
             return;
         }
-        index--;
+        --index;
     }
     const value = keySplines?.[index];
     if (value) {
@@ -865,7 +865,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                 let setterTotal = 0;
                 const insertSetter = (item: SvgAnimation) => {
                     safeNestedArray(setterAttributeMap, item.attributeName).push(item);
-                    setterTotal++;
+                    ++setterTotal;
                 };
                 {
                     const excluded: SvgAnimate[] = [];
@@ -1516,7 +1516,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                     }
                                                     if (time > maxTime) {
                                                         if (l === length - 1 && !item.accumulateSum && (k < iterationTotal - 1 || item.fillReplace && (!forwardItem || value !== forwardItem.value))) {
-                                                            time--;
+                                                            --time;
                                                         }
                                                         maxTime = setTimelineValue(baseMap, time, value);
                                                         insertInterpolator(item, maxTime, keySplines, l, keyTimeMode, repeatingInterpolatorMap, repeatingTransformOriginMap);
@@ -1659,7 +1659,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                     else if (time > maxTime) {
                                                         actualMaxTime = time;
                                                         if (k === q - 1 && time < maxThreadTime) {
-                                                            time--;
+                                                            --time;
                                                         }
                                                         baseValue = getItemValue(item, values, j, k, baseValue);
                                                         maxTime = setTimelineValue(baseMap, time, baseValue);
@@ -1782,7 +1782,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                 }
                                                 if (joined && time > maxTime) {
                                                     if (j === length - 1 && time < repeatingEndTime) {
-                                                        time--;
+                                                        --time;
                                                     }
                                                     baseValue = getItemValue(item, values, i, j, baseValue);
                                                     maxTime = setTimelineValue(baseMap, time, baseValue);
@@ -1887,7 +1887,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                 for (let j = 0; j < length; ++j) {
                                     let time = getItemTime(0, item.duration, keyTimesBase, i, j);
                                     if (j === keyTimesBase.length - 1 && time < maxDuration) {
-                                        time--;
+                                        --time;
                                     }
                                     baseValue = getItemValue(item, values, i, j, baseValue);
                                     maxTime = setTimelineValue(timelineMap[attr], time, baseValue);
@@ -2022,7 +2022,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                 animate.delay = delay;
                                             }
                                             else if (delay === 1 && (duration + 1) % 10 === 0) {
-                                                duration++;
+                                                ++duration;
                                             }
                                             animate.duration = duration;
                                             animate.keySplines = keySplines;

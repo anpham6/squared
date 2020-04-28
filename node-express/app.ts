@@ -321,7 +321,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
         convert.forEach(value => {
             if (/^[@%]?png/.test(value)) {
                 if (!mimeType.endsWith('/png')) {
-                    status.delayed++;
+                    ++status.delayed;
                     jimp.read(filepath)
                         .then(image => {
                             const png = replaceExtension(filepath, 'png');
@@ -347,7 +347,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             }
             else if (/^[@%]?jpeg/.test(value)) {
                 if (!mimeType.endsWith('/jpeg')) {
-                    status.delayed++;
+                    ++status.delayed;
                     jimp.read(filepath)
                         .then(image => {
                             const jpg = replaceExtension(filepath, 'jpg');
@@ -373,7 +373,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             }
             else if (/^[@%]?bmp/.test(value)) {
                 if (!mimeType.endsWith('/bmp')) {
-                    status.delayed++;
+                    ++status.delayed;
                     jimp.read(filepath)
                         .then(image => {
                             const bmp = replaceExtension(filepath, 'bmp');
@@ -440,7 +440,7 @@ function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: stri
     const resumeThread = () => {
         transformBuffer(assets, file, filepath, status, finalize);
         if (gzip !== -1) {
-            status.delayed++;
+            ++status.delayed;
             const gz = `${filepath}.gz`;
             createGzipWriteStream(filepath, gz, gzip)
                 .on('finish', () => finalize(gz))
@@ -450,7 +450,7 @@ function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: stri
                 });
         }
         if (brotli !== -1 && checkVersion(11, 7)) {
-            status.delayed++;
+            ++status.delayed;
             const br = `${filepath}.br`;
             createBrotliWriteStream(filepath, br, brotli, file.mimeType)
                 .on('finish', () => finalize(br))
@@ -461,7 +461,7 @@ function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: stri
         }
     };
     if (jpeg !== -1) {
-        status.delayed++;
+        ++status.delayed;
         jimp.read(filepath)
             .then(image => {
                 image.quality(jpeg).write(filepath, err => {
@@ -506,7 +506,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
             emptyDir[pathname] = true;
         }
         if (content || base64) {
-            status.delayed++;
+            ++status.delayed;
             fs.writeFile(
                 filepath,
                 base64 || content,
@@ -532,7 +532,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 else {
                     const queue = processing[filepath];
                     if (queue) {
-                        status.delayed++;
+                        ++status.delayed;
                         queue.push(file);
                         return true;
                     }
@@ -577,7 +577,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                             processQueue();
                         }
                     });
-                    status.delayed++;
+                    ++status.delayed;
                     request(uri)
                         .on('response', response => {
                             const statusCode = response.statusCode;
@@ -590,7 +590,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 }
                 else {
                     const copyUri = (from: string, to: string) => {
-                        status.delayed++;
+                        ++status.delayed;
                         fs.copyFile(
                             from,
                             to,
@@ -706,7 +706,7 @@ function parseRelativeUrl(value: string, href: string) {
             let levels = 0;
             value.split('/').forEach(dir => {
                 if (dir === '..') {
-                    levels++;
+                    ++levels;
                 }
                 else {
                     segments.push(dir);
@@ -783,13 +783,13 @@ app.post('/api/assets/copy', (req, res) => {
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
                 removeUnusedFiles(dirname, status, files);
-                THREAD_COUNT--;
+                --THREAD_COUNT;
                 res.json(<ResultOfFileAction> { success: files.size > 0, files: Array.from(files) });
                 status.delayed = Infinity;
             }
         };
         try {
-            THREAD_COUNT++;
+            ++THREAD_COUNT;
             processAssets(dirname, <RequestAsset[]> req.body, status, finalize, req.query.empty === '1');
             if (status.delayed === 0) {
                 finalize();
@@ -799,7 +799,7 @@ app.post('/api/assets/copy', (req, res) => {
             }
         }
         catch (system) {
-            THREAD_COUNT--;
+            --THREAD_COUNT;
             res.json({ application: 'FILE: Unknown', system });
         }
     }
@@ -876,19 +876,19 @@ app.post('/api/assets/archive', (req, res) => {
                             response.zipname = gz;
                             response.bytes = gz_bytes;
                         }
-                        THREAD_COUNT--;
+                        --THREAD_COUNT;
                         res.json(response);
                         console.log(`WRITE: ${gz} (${gz_bytes} bytes)`);
                     })
                     .on('error', err => {
                         response.success = false;
-                        THREAD_COUNT--;
+                        --THREAD_COUNT;
                         res.json(response);
                         writeError(gz, err);
                     });
             }
             else {
-                THREAD_COUNT--;
+                --THREAD_COUNT;
                 res.json(response);
             }
             status.delayed = Infinity;
@@ -912,7 +912,7 @@ app.post('/api/assets/archive', (req, res) => {
             if (unzip_to) {
                 archive.directory(unzip_to, false);
             }
-            THREAD_COUNT++;
+            ++THREAD_COUNT;
             processAssets(dirname, <RequestAsset[]> req.body, status, finalize);
             if (status.delayed === 0) {
                 finalize();
@@ -922,7 +922,7 @@ app.post('/api/assets/archive', (req, res) => {
             }
         }
         catch (system) {
-            THREAD_COUNT--;
+            --THREAD_COUNT;
             res.json({ application: 'FILE: Unknown', system });
         }
     };

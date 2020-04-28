@@ -59,7 +59,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             minLength = true;
                         }
                         if (item.display === 'list-item' && !item.has('listStyleType')) {
-                            itemCount++;
+                            ++itemCount;
                         }
                     }
                     else {
@@ -211,7 +211,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         while (k < columnCount) {
                             const row = columns[k++][j] as any;
                             if (row.spacer === 1) {
-                                columnSpan++;
+                                ++columnSpan;
                                 row.spacer = 2;
                             }
                             else {
@@ -223,7 +223,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             while (k < rowCount) {
                                 const row = column[k++] as any;
                                 if (row.spacer === 1) {
-                                    rowSpan++;
+                                    ++rowSpan;
                                     row.spacer = 2;
                                 }
                                 else {
@@ -255,7 +255,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         assigned.add(item);
                     }
                     else if (item['spacer'] === 1) {
-                        spacer++;
+                        ++spacer;
                     }
                 }
             }

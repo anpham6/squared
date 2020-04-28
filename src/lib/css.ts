@@ -1871,7 +1871,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                         case 'left':
                         case 'right':
                             result.horizontal = position;
-                            horizontal++;
+                            ++horizontal;
                             break;
                         case 'center':
                             if (length === 4) {
@@ -1918,7 +1918,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                         case 'top':
                         case 'bottom':
                             result.vertical = position;
-                            vertical++;
+                            ++vertical;
                             break;
                         default:
                             return false;
@@ -2223,7 +2223,7 @@ export function calculate(value: string, options?: CalculateOptions) {
     for (let i = 0; i < length; ++i) {
         switch (value.charAt(i)) {
             case '(':
-                opened++;
+                ++opened;
                 opening[i] = true;
                 break;
             case ')':

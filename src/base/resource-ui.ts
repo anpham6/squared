@@ -339,7 +339,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 break;
             }
             else {
-                name = `${prefix}_${++i}`;
+                name = prefix + '_' + ++i;
             }
         }
         while (true);

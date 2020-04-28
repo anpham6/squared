@@ -311,10 +311,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 while (i < n) {
                     const node = nodes[i++];
                     if (node.alignedVertically(siblings, cleared) > 0) {
-                        y++;
+                        ++y;
                     }
                     else {
-                        x++;
+                        ++x;
                     }
                     if (x > 1 && y > 1) {
                         break;

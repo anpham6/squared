@@ -588,7 +588,7 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
                         const joined = result[result.length - 1];
                         if (value.substring(index - joined.length, index + 1) === joined + prefix) {
                             preceding = joined;
-                            result.length--;
+                            --result.length;
                         }
                     }
                 }
@@ -765,7 +765,7 @@ export function resolvePath(value: string, href?: string) {
             let levels = 0;
             value.split('/').forEach(dir => {
                 if (dir === '..') {
-                    levels++;
+                    ++levels;
                 }
                 else {
                     segments.push(dir);

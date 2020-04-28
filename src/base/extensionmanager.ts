@@ -26,9 +26,9 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
                     if (item.preload) {
                         name = item.name;
                         if (this.retrieve(name) === null) {
-                            const item = application.builtInExtensions[name];
-                            if (item) {
-                                this.include(item);
+                            const extension = application.builtInExtensions[name];
+                            if (extension) {
+                                this.include(extension);
                             }
                         }
                     }

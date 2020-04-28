@@ -862,7 +862,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 const item = axisY[l];
                                 if (item.pageFlow) {
                                     if (item.labelFor && !item.visible) {
-                                        m--;
+                                        --m;
                                         continue;
                                     }
                                     if (floatContainer) {
@@ -1479,7 +1479,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (content.endsWith('-quote')) {
                 let parent = element.parentElement;
                 while (parent?.tagName === 'Q') {
-                    nested++;
+                    ++nested;
                     parent = parent.parentElement;
                 }
             }

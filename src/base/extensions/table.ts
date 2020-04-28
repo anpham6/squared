@@ -140,7 +140,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 let colSpan = element.colSpan;
                 let j = 0;
                 while (row[j]) {
-                    j++;
+                    ++j;
                 }
                 const q = i + rowSpan;
                 let k = i;
@@ -150,7 +150,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     for (let l = j, m = 0; l < r; ++l) {
                         if (!item[l]) {
                             item[l] = td;
-                            m++;
+                            ++m;
                         }
                         else {
                             colSpan = m;

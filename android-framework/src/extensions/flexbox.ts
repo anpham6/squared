@@ -433,10 +433,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 const value = (<BoxRectDimension> chain.data(FLEXBOX, 'boundsData') || chain.bounds)[HWL];
                                 if (sizeCount === 0) {
                                     maxSize = value;
-                                    sizeCount++;
+                                    ++sizeCount;
                                 }
                                 else if (value === maxSize) {
-                                    sizeCount++;
+                                    ++sizeCount;
                                 }
                                 else if (value > maxSize) {
                                     maxSize = value;

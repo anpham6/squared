@@ -767,7 +767,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         imageData.length = 0;
         this._namespaceAapt = false;
         this._synchronizeMode = keyTimeMode;
-        const templateName = `${node.tagName}_${convertWord(node.controlId, true)}_viewbox`.toLowerCase();
+        const templateName = (node.tagName + '_' + convertWord(node.controlId, true) + '_viewbox').toLowerCase();
         svg.build({ exclude, residual: partitionTransforms, precision });
         svg.synchronize({ keyTimeMode, framesPerSecond: this.controller.userSettings.framesPerSecond, precision });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
@@ -1524,7 +1524,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     for (let i = 0; i < q; ++i) {
                                         const strokePath = i === 0 ? path : { ...path };
                                         const dash = strokeDash[i];
-                                        strokePath.name = `${name}_${i}`;
+                                        strokePath.name = name + '_' + i;
                                         if (animateData) {
                                             this._animateData.set(strokePath.name, {
                                                 element: animateData.element,
@@ -1802,7 +1802,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         });
                     }
                 }
-                index++;
+                ++index;
             }
         });
         const replaceData = Array.from(fillReplaceMap.values()).sort((a, b) => a.time < b.time ? -1 : 1);
@@ -1917,7 +1917,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         }
                     });
                 }
-                result++;
+                ++result;
             }
             else {
                 let name = getVectorName(target, 'clip_path', array.length > 1 ? index + 1 : -1);
@@ -1925,7 +1925,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     name = '';
                 }
                 clipArray.push({ name, pathData: value });
-                result++;
+                ++result;
             }
         });
         return result > 0;

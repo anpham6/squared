@@ -256,17 +256,17 @@ function setLeftTopAxis(node: View, parent: View, horizontal: boolean) {
             node.anchor(posA, 'parent');
             if (!node.hasPX(posB) && blockStatic) {
                 node.anchor(posB, 'parent');
-                expand++;
+                ++expand;
             }
             node.modifyBox(marginA, adjustAbsolutePaddingOffset(parent, paddingA, node[posA]));
-            expand++;
+            ++expand;
         }
         if (node.hasPX(posB)) {
             if (blockStatic || !hasDimension || !node.hasPX(posA)) {
                 node.anchor(posB, 'parent');
                 node.modifyBox(marginB, adjustAbsolutePaddingOffset(parent, paddingB, node[posB]));
             }
-            expand++;
+            ++expand;
         }
         if (expand === 0) {
             if (horizontal) {
@@ -1341,7 +1341,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         else if (node.multiline) {
                             multiline = true;
                         }
-                        pageFlow++;
+                        ++pageFlow;
                     }
                     return pageFlow > 0 && !layout.singleRowAligned;
                 }
@@ -2454,7 +2454,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             items = [item];
                             rows.push(items);
                             relativeData.items = items;
-                            relativeData.rowLength++;
+                            ++relativeData.rowLength;
                         }
                         else {
                             if (alignSibling !== '') {
@@ -2483,7 +2483,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         items = [item];
                         rows.push(items);
                         relativeData.items = items;
-                        relativeData.rowLength++;
+                        ++relativeData.rowLength;
                     }
                     if (item.float === 'left' && leftAlign) {
                         if (previousRowLeft) {
@@ -2950,7 +2950,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 else {
                                     item.anchor('baseline', documentId || 'parent');
-                                    baselineCount++;
+                                    ++baselineCount;
                                 }
                                 break;
                             default:
@@ -2960,7 +2960,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     else if (item.plainText) {
                         item.anchor('baseline', documentId || 'parent');
-                        baselineCount++;
+                        ++baselineCount;
                     }
                     else {
                         valid = constraintAlignTop(node, item);

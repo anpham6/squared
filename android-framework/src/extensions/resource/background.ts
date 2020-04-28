@@ -542,7 +542,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         };
         const setDrawableBackground = (node: T, value: string) => {
             if (value !== '') {
-                const drawable = '@drawable/' + Resource.insertStoredAsset('drawables', `${node.containerName.toLowerCase()}_${node.controlId}`, value);
+                const drawable = '@drawable/' + Resource.insertStoredAsset('drawables', node.containerName.toLowerCase() + '_' + node.controlId, value);
                 if (!themeBackground) {
                     if (node.tagName === 'HTML') {
                         setBodyBackground(settings.manifestThemeName, settings.manifestParentThemeName, drawable);
@@ -802,7 +802,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             const { base64, filename } = rawData;
                                             if (base64) {
                                                 images[length] = filename.substring(0, filename.lastIndexOf('.'));
-                                                imageDimensions[length] = rawData.width && rawData.height ? { width: rawData.width, height: rawData.height } : undefined;
+                                                imageDimensions[length] = rawData.width && rawData.height ? <Dimension> rawData : undefined;
                                                 resource.writeRawImage(filename, base64);
                                                 valid = true;
                                             }
@@ -838,7 +838,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             imageSize: backgroundSize[i],
                             screenDimension
                         });
-                        length++;
+                        ++length;
                     }
                     else {
                         backgroundRepeat[i] = undefined as any;
@@ -882,7 +882,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         imageDimensions[length] = stored;
                         backgroundPosition[length] = position;
-                        length++;
+                        ++length;
                     }
                 });
             }
@@ -1060,12 +1060,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (size !== '') {
                             size.split(' ').forEach((dimen, index) => {
                                 if (dimen === '100%') {
-                                    if (index === 0) {
-                                        gravityAlign = 'fill_horizontal';
-                                    }
-                                    else {
-                                        gravityAlign = delimitString({ value: gravityAlign }, 'fill_vertical');
-                                    }
+                                    gravityAlign = index === 0 ? 'fill_horizontal' : delimitString({ value: gravityAlign }, 'fill_vertical');
                                 }
                                 else if (dimen !== 'auto') {
                                     if (index === 0) {
