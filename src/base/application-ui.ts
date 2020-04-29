@@ -409,9 +409,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public createNode(options: CreateNodeOptions<T>) {
-        const processing = this.processing;
         const { element, parent, children } = options;
-        const node = new this.Node(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode);
+        const node = new this.Node(this.nextId, this.processing.sessionId, element);
+        this.controllerHandler.afterInsertNode(node);
         if (parent) {
             node.depth = parent.depth + 1;
             if (parent.naturalElement && (!element || element.parentElement === null)) {
@@ -425,7 +425,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         children?.forEach(item => item.parent = node);
         if (options.append !== false) {
-            processing.cache.append(node, options.delegate === true, options.cascade === true);
+            this.processing.cache.append(node, options.delegate === true, options.cascade === true);
         }
         return node;
     }

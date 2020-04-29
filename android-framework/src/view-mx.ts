@@ -19,7 +19,7 @@ const { actualTextRangeRect } = $lib.session;
 const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
 
 const { EXT_NAME } = $base.lib.constant;
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE } = $base.lib.enumeration;
+const { BOX_STANDARD, NODE_ALIGNMENT } = $base.lib.enumeration;
 
 const ResourceUI = $base.ResourceUI;
 
@@ -930,25 +930,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         private _positioned = false;
         private _controlId?: string;
         private _labelFor?: T;
+
         private __android: StringMap = {};
         private __app: StringMap = {};
-        private readonly _localization: boolean;
 
-        constructor(
-            id = 0,
-            sessionId = '0',
-            element?: Element,
-            afterInit?: BindGeneric<T, void>)
-        {
+        constructor(id = 0, sessionId?: string, element?: Element) {
             super(id, sessionId, element);
             this.init();
-            if (afterInit) {
-                afterInit(this);
-                this._localization = this.hasProcedure(NODE_PROCEDURE.LOCALIZATION) && this.localSettings.supportRTL;
-            }
-            else {
-                this._localization = false;
-            }
         }
 
         public setControlType(controlName: string, containerType?: number) {
@@ -1487,7 +1475,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
 
         public clone(id?: number, attributes = true, position = false): T {
             const node = new View(id || this.id, this.sessionId, this.element || undefined);
-            node.unsafe('localization', this._localization);
+            node.unsafe('localization', this.localSettings.supportRTL);
             node.localSettings = { ...this.localSettings };
             if (id !== undefined) {
                 node.setControlType(this.controlName, this.containerType);
@@ -1765,7 +1753,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public localizeString(value: string) {
-            return localizeString(value, this._localization, this.api);
+            return localizeString(value, this.localSettings.supportRTL, this.api);
         }
 
         public removeTry(options?: RemoveTryOptions<T>) {

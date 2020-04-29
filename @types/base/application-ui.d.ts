@@ -4,7 +4,6 @@ import * as application from './application';
 export interface UserSettings extends application.UserSettings {
     framesPerSecond: number;
     supportNegativeLeftTop: boolean;
-    exclusionsDisabled: boolean;
     showAttributes: boolean;
     insertSpaces: number;
     autoCloseOnWrite: boolean;

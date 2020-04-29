@@ -306,17 +306,17 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             return;
         }
     }
-    const afterConvert = (output: string, command: string) => {
-        switch (command.charAt(0)) {
-            case '@':
-                status.filesToRemove.push(filepath);
-                break;
-            case '%':
-                status.filesToCompare.push(filepath, output);
-                break;
-        }
-    };
     if (mimeType.includes('image/')) {
+        const afterConvert = (output: string, command: string) => {
+            switch (command.charAt(0)) {
+                case '@':
+                    status.filesToRemove.push(filepath);
+                    break;
+                case '%':
+                    status.filesToCompare.push(filepath, output);
+                    break;
+            }
+        };
         const convert = mimeType.split(':');
         convert.pop();
         convert.forEach(value => {

@@ -936,9 +936,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (template) {
                         const renderChildren = parent.renderChildren;
                         const renderTemplates = safeNestedArray(<StandardMap> parent, 'renderTemplates');
-                        let index = parseInt(node.dataset.androidTargetIndex as string);
-                        if (!isNaN(index) && index >= 0) {
-                            index = Math.min(index, renderChildren.length);
+                        const index = parseInt(node.dataset.androidTargetIndex as string);
+                        if (!isNaN(index) && index >= 0 && index < renderChildren.length) {
                             renderChildren.splice(index, 0, node);
                             renderTemplates.splice(index, 0, template);
                         }
@@ -2003,7 +2002,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 return '';
             }
         }
-        const node = new View(0, '0', undefined, this.afterInsertNode);
+        const node = new View();
+        this.afterInsertNode(node as T);
         node.setControlType(controlName);
         node.setLayoutWidth(width || 'wrap_content');
         node.setLayoutHeight(height || 'wrap_content');
@@ -2181,7 +2181,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public createNodeGroup(node: T, children: T[], options: CreateNodeGroupOptions<T> = {}) {
         const { parent, delegate, cascade } = options;
-        const group = new ViewGroup(this.cache.nextId, node, children, this.afterInsertNode) as T;
+        const group = new ViewGroup(this.cache.nextId, node, children) as T;
+        this.afterInsertNode(group);
         if (parent) {
             parent.replaceTry({ child: node, replaceWith: group, notFoundAppend: true });
             group.init();
@@ -3245,8 +3246,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return (node: T) => {
             node.localSettings = this._defaultViewSettings;
             node.api = this._targetAPI;
-            if (!this.userSettings.exclusionsDisabled) {
-                node.setExclusions();
+            node.setExclusions();
+            if (!node.hasProcedure(NODE_PROCEDURE.LOCALIZATION)) {
+                node.localSettings.supportRTL = false;
             }
         };
     }

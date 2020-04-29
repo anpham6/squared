@@ -45,7 +45,7 @@ declare namespace base {
         public static STORED: ResourceStoredMap;
         public static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         public static formatName(value: string): string;
-        public static addTheme(theme: StyleAttribute, path?: string, file?: string): boolean;
+        public static addTheme(theme: StyleAttribute): boolean;
         public static addString(value: string, name?: string, numberAlias?: boolean): string;
         public static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
         public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
@@ -67,10 +67,10 @@ declare namespace base {
         resourceStyleToXml(options?: FileOutputOptions): string[];
         resourceDimenToXml(options?: FileOutputOptions): string[];
         resourceDrawableToXml(options?: FileOutputOptions): string[];
+        resourceAnimToXml(options?: FileOutputOptions): string[];
         resourceDrawableImageToString(options?: FileOutputOptions): string[];
         resourceRawVideoToString(options?: FileOutputOptions): string[];
         resourceRawAudioToString(options?: FileOutputOptions): string[];
-        resourceAnimToXml(options?: FileOutputOptions): string[];
         layoutAllToXml(layouts: FileAsset[], options?: FileOutputOptions): {};
     }
 

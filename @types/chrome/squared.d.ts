@@ -54,7 +54,7 @@ declare namespace base {
     class ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {}
 
     class View extends squared.base.Node {
-        constructor(id: number, sessionId: string, element: Element, afterInit?: BindGeneric<View, void>);
+        constructor(id: number, sessionId: string, element: Element);
     }
 }
 

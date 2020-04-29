@@ -309,16 +309,14 @@ export default class Toolbar<T extends View> extends squared.base.ExtensionUI<T>
         }
         const themeData: ToolbarThemeData = node.data(WIDGET_NAME.TOOLBAR, 'themeData');
         if (themeData) {
-            const settings = <UserSettings> this.application.userSettings;
             const options = createStyleAttribute(this.options.resource);
             const optionsActionBar = createStyleAttribute({ name: '.NoActionBar', output: options.output });
             const optionsAppBar = createStyleAttribute({ name: '.AppBarOverlay', output: options.output });
             const optionsPopup = createStyleAttribute({ name: '.PopupOverlay', output: options.output });
-            const optionsActionBarItems = optionsActionBar.items;
-            assignEmptyValue(options, 'name', settings.manifestThemeName);
+            assignEmptyValue(options, 'name', (<UserSettings> this.application.userSettings).manifestThemeName);
             assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
-            assignEmptyValue(optionsActionBarItems, 'windowActionBar', 'false');
-            assignEmptyValue(optionsActionBarItems, 'windowNoTitle', 'true');
+            assignEmptyValue(optionsActionBar.items, 'windowActionBar', 'false');
+            assignEmptyValue(optionsActionBar.items, 'windowNoTitle', 'true');
             assignEmptyValue(optionsAppBar, 'parent', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
             assignEmptyValue(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
             Resource.addTheme(options);

@@ -10,7 +10,7 @@ import Resource from './resource';
 
 const $lib = squared.lib;
 
-const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, checkMediaRule } = $lib.css;
+const { checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = $lib.css;
 const { isTextNode } = $lib.dom;
 const { capitalize, convertCamelCase, isString, objectMap, promisify, resolvePath } = $lib.util;
 const { CHAR, FILE, STRING, XML } = $lib.regex;
@@ -376,7 +376,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         const extensions = this.extensionsCascade;
         const node = this.cascadeParentNode(element, 0, extensions.length ? extensions : undefined);
         if (node) {
-            const parent = new this.Node(0, processing.sessionId, element.parentElement || document.body, this._afterInsertNode);
+            const parent = new this.Node(0, processing.sessionId, element.parentElement || document.body);
+            this._afterInsertNode(parent);
             node.parent = parent;
             node.actualParent = parent;
             node.childIndex = 0;

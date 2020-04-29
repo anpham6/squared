@@ -39,7 +39,6 @@ const settings: UserSettings = {
     compressImages: false,
     convertImages: '',
     supportNegativeLeftTop: true,
-    exclusionsDisabled: false,
     customizationsOverwritePrivilege: true,
     showAttributes: true,
     createQuerySelectorMap: false,

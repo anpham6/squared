@@ -19,40 +19,38 @@ const REGEX_NONWORD = /[^\w]+/g;
 let CACHE_IMAGE: StringMap = {};
 
 function formatObject(obj: {}, numberAlias = false) {
-    if (obj) {
-        for (const attr in obj) {
-            if (isPlainObject(obj[attr])) {
-                formatObject(obj, numberAlias);
-            }
-            else {
-                let value: string = obj[attr]?.toString();
-                if (value) {
-                    switch (attr) {
-                        case 'text':
-                            if (value.startsWith('@string/')) {
-                                continue;
-                            }
-                            value = Resource.addString(value, '', numberAlias);
-                            if (value !== '') {
-                                obj[attr] = `@string/${value}`;
-                            }
-                            break;
-                        case 'src':
-                        case 'srcCompat':
-                            if (COMPONENT.PROTOCOL.test(value)) {
-                                value = Resource.addImage({ mdpi: value });
-                                if (value !== '') {
-                                    obj[attr] = `@drawable/${value}`;
-                                }
-                            }
+    for (const attr in obj) {
+        if (isPlainObject(obj[attr])) {
+            formatObject(obj, numberAlias);
+        }
+        else {
+            let value: string = obj[attr]?.toString();
+            if (value) {
+                switch (attr) {
+                    case 'text':
+                        if (value.startsWith('@string/')) {
                             continue;
-                    }
-                    const color = parseColor(value);
-                    if (color) {
-                        const colorName = Resource.addColor(color);
-                        if (colorName !== '') {
-                            obj[attr] = `@color/${colorName}`;
                         }
+                        value = Resource.addString(value, '', numberAlias);
+                        if (value !== '') {
+                            obj[attr] = `@string/${value}`;
+                        }
+                        break;
+                    case 'src':
+                    case 'srcCompat':
+                        if (COMPONENT.PROTOCOL.test(value)) {
+                            value = Resource.addImage({ mdpi: value });
+                            if (value !== '') {
+                                obj[attr] = `@drawable/${value}`;
+                            }
+                        }
+                        continue;
+                }
+                const color = parseColor(value);
+                if (color) {
+                    const colorName = Resource.addColor(color);
+                    if (colorName !== '') {
+                        obj[attr] = `@color/${colorName}`;
                     }
                 }
             }
@@ -81,18 +79,19 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return value.replace(REGEX_NONWORD, '_');
     }
 
-    public static addTheme(theme: StyleAttribute, path = 'res/values', file = 'themes.xml') {
+    public static addTheme(theme: StyleAttribute) {
         const themes = STORED.themes;
         const { items, output } = theme;
+        let path = 'res/values', file = 'themes.xml';
         if (output) {
             if (isString(output.path)) {
-                path = output.path.trim();
+                path = trimString(output.path.trim(), '/');
             }
             if (isString(output.file)) {
-                file = output.file.trim();
+                file = trimString(output.file.trim(), '/');
             }
         }
-        const filename = trimString(path, '/') + '/' + trimString(file, '/');
+        const filename = path + '/' + file;
         const storedFile = themes.get(filename) || new Map<string, StyleAttribute>();
         let name = theme.name;
         let appTheme = '';
@@ -131,9 +130,9 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         return true;
     }
 
-    public static addString(value: string, name = '', numberAlias = false) {
+    public static addString(value: string, name?: string, numberAlias = false) {
         if (value !== '') {
-            if (name === '') {
+            if (!name) {
                 name = value.trim();
             }
             const numeric = isNumber(value);
@@ -158,7 +157,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 if (numeric || CHAR.LEADINGNUMBER.test(name) || RESERVED_JAVA.includes(name)) {
                     name = `__${name}`;
                 }
-                else if (name === '') {
+                else if (!name) {
                     name = `__symbol${++Resource.SYMBOL_COUNTER}`;
                 }
                 if (strings.has(name)) {

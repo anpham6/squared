@@ -104,7 +104,7 @@ declare class Controller<T extends Node> implements AppHandler<T> {
     includeElement(element: Element): boolean;
     preventNodeCascade(element: Element): boolean;
     applyDefaultStyles(element: Element): void;
-    get afterInsertNode(): Undef<BindGeneric<T, void>>;
+    get afterInsertNode(): BindGeneric<T, void>;
     get userSettings(): UserSettings;
     get generateSessionId(): string;
 }
