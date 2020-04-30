@@ -14,7 +14,7 @@ const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
 const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
 
-function parseUri(uri: string): Undef<ChromeAsset> {
+function parseUri(uri: string, saveAs?: string): Undef<ChromeAsset> {
     const value = trimEnd(uri, '/');
     const match = COMPONENT.PROTOCOL.exec(value);
     if (match) {
@@ -23,6 +23,7 @@ function parseUri(uri: string): Undef<ChromeAsset> {
         let rootDir = '';
         let moveTo: Undef<string>;
         let local: Undef<boolean>;
+        let append: Undef<boolean>;
         const getDirectory = (start = 1) => {
             if (start > 1) {
                 rootDir = path.substring(0, start);
@@ -35,7 +36,20 @@ function parseUri(uri: string): Undef<ChromeAsset> {
         else {
             local = true;
         }
-        if (path && path !== '/') {
+        if (saveAs) {
+            let location = /saveAs:(.+)/.exec(saveAs)?.[1];
+            if (location) {
+                if (location.charAt(0) === '/') {
+                    moveTo = '__serverroot__';
+                    location = location.substring(1);
+                }
+                const parts = location.split('/');
+                filename = parts.pop() as string;
+                pathname = parts.join('/');
+                append = true;
+            }
+        }
+        else if (path && path !== '/') {
             filename = fromLastIndexOf(path, '/');
             if (local) {
                 const prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -62,6 +76,7 @@ function parseUri(uri: string): Undef<ChromeAsset> {
             pathname,
             filename,
             extension,
+            append,
             mimeType: extension && parseMimeType(extension)
         };
     }
@@ -166,10 +181,11 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public getScriptAssets(ignoreExtensions = false) {
         const result: ChromeAsset[] = [];
         document.querySelectorAll('script').forEach(element => {
-            if (element.dataset.chromeFile !== 'exclude') {
+            const file = element.dataset.chromeFile;
+            if (file !== 'exclude') {
                 const src = element.src.trim();
                 if (src !== '') {
-                    const data = parseUri(resolvePath(src));
+                    const data = parseUri(resolvePath(src), file);
                     if (this.validFile(data)) {
                         data.mimeType = element.type.trim() || parseMimeType(data.uri!) || 'text/javascript';
                         processExtensions.call(this, data, getExtensions(element), ignoreExtensions);
@@ -184,17 +200,15 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public getLinkAssets(rel?: string, ignoreExtensions = false) {
         const result: ChromeAsset[] = [];
         document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((element: HTMLLinkElement) => {
-            if (element.dataset.chromeFile !== 'exclude') {
+            const file = element.dataset.chromeFile;
+            if (file !== 'exclude') {
                 const href = element.href.trim();
                 if (href !== '') {
-                    const data = parseUri(resolvePath(href));
+                    const data = parseUri(resolvePath(href), file);
                     if (this.validFile(data)) {
                         switch (element.rel.trim()) {
                             case 'stylesheet':
                                 data.mimeType = 'text/css';
-                                if (ignoreExtensions) {
-                                    data.parseContent = true;
-                                }
                                 break;
                             case 'icon':
                                 data.mimeType = 'image/x-icon';

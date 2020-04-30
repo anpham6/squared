@@ -309,12 +309,7 @@ const appBase: ChromeFramework<View> = {
     },
     saveAsWebPage: (filename?: string, options?: FileArchivingOptions) => {
         if (file) {
-            if (!isObject(options)) {
-                options = {};
-            }
-            else {
-                options = { ...options };
-            }
+            options = !isObject(options) ? {} : { ...options };
             options.saveAsWebPage = true;
             const settings = application.userSettings;
             const restoreValue = settings.preloadImages;

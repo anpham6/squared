@@ -240,161 +240,189 @@ function getUri(file: RequestAsset, uri: string) {
     return [(file.moveTo ? path.join(file.moveTo, location) : location).replace(/\\/g, '/'), location];
 }
 
+function convertAssetUrls(assets: RequestAsset[], file: RequestAsset, filepath: string, html: string) {
+    for (const item of assets) {
+        if (item === file) {
+            continue;
+        }
+        const { uri, rootDir } = item;
+        if (uri) {
+            const [value, location] = getUri(item, uri);
+            if (rootDir) {
+                html = replacePathName(html, rootDir + location, value);
+            }
+            else {
+                html = replacePathName(
+                    replacePathName(html, uri, value),
+                    getSeparator(uri) + location,
+                    value
+                );
+            }
+        }
+    }
+    fs.writeFileSync(filepath, html);
+}
+
 function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void) {
-    const mimeType = file.mimeType as string;
+    const mimeType = file.mimeType;
     if (!mimeType) {
         return;
     }
-    let html: Undef<string>;
-    if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
-        html = fs.readFileSync(filepath).toString('utf8');
-        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-file=(["']).*?exclude.*?\2[\s\S]*?>[\s\S]+?<\/\1>\n*/ig, '');
-        html = html.replace(/\s*<(script|link)[\s\S]+?data-chrome-file=(["']).*?exclude.*?\2[\s\S]*?\/?>\n*/ig, '');
-    }
-    else if (mimeType.endsWith('text/css')) {
-        const href = file.uri;
-        if (href) {
-            html = fs.readFileSync(filepath).toString('utf8');
-            const pattern = /[uU][rR][lL]\(\s*(["'])?\s*(.+)\s*\1?\s*\)/g;
-            let match: Null<RegExpMatchArray>;
+    switch (mimeType) {
+        case '@text/html':
+        case '@application/xhtml+xml': {
+            const html = fs.readFileSync(filepath).toString('utf8');
+            let source = html;
+            const saved: string[] = [];
+            const pattern = /\s*<(script|link).*?(\s+data-chrome-file=(["']).*?saveAs:([^;"']+).*?\3).*?\/?>(?:[\s\S]*?<\/\1>\n*)?/ig;
+            let match: Null<RegExpExecArray>;
             while ((match = pattern.exec(html)) !== null) {
-                let url = match[1];
-                if (!isFileURI(url)) {
-                    url = parseRelativeUrl(url, href);
-                    if (url !== '') {
-                        const asset = assets.find(item => item.uri === url);
-                        if (asset) {
-                            const currentDir = file.rootDir + file.pathname;
-                            if (asset.moveTo === '__serverroot__') {
-                                url = '../'.repeat(Math.max(currentDir.split('/').length - 2, 0)) + getUri(asset, url)[0];
+                const filename = match[4];
+                if (saved.includes(filename)) {
+                    source = source.replace(match[0], '');
+                }
+                else {
+                    const content = match[0].replace(match[2], '');
+                    const script = match[1].toLowerCase() === 'script';
+                    const src = new RegExp(`\\s+${script ? 'src' : 'href'}=(["']).+\\1`, 'i').exec(content);
+                    if (src) {
+                        source = source.replace(match[0], content.replace(src[0], `${script ? ' src' : ' href'}="${filename}"`));
+                        saved.push(filename);
+                    }
+                }
+            }
+            convertAssetUrls(
+                assets,
+                file,
+                filepath,
+                source
+                    .replace(/\s*<(script|link).+?data-chrome-file=(["']).*?exclude.*?\2.*?>[\s\S]*?<\/\1>\n*/ig, '')
+                    .replace(/\s*<(script|link).+?data-chrome-file=(["']).*?exclude.*?\2.*?\/?>\n*/ig, '')
+                    .replace(/\s+data-(?:use|chrome-[\w-]+)=(["']).+?\1/g, '')
+            );
+            break;
+        }
+        case '@text/css': {
+            const href = file.uri;
+            if (href) {
+                let html = fs.readFileSync(filepath).toString('utf8');
+                const pattern = /[uU][rR][lL]\(\s*(["'])?\s*(.+)\s*\1?\s*\)/g;
+                let match: Null<RegExpMatchArray>;
+                while ((match = pattern.exec(html)) !== null) {
+                    let url = match[1];
+                    if (!isFileURI(url)) {
+                        url = parseRelativeUrl(url, href);
+                        if (url !== '') {
+                            const asset = assets.find(item => item.uri === url);
+                            if (asset) {
+                                const currentDir = file.rootDir + file.pathname;
+                                if (asset.moveTo === '__serverroot__') {
+                                    url = '../'.repeat(Math.max(currentDir.split('/').length - 2, 0)) + getUri(asset, url)[0];
+                                }
+                                else if (currentDir === asset.rootDir + asset.pathname) {
+                                    url = asset.filename;
+                                }
+                                html = html.replace(match[0], `url(${url})`);
                             }
-                            else if (currentDir === asset.rootDir + asset.pathname) {
-                                url = asset.filename;
-                            }
-                            html = html.replace(match[0], `url(${url})`);
                         }
                     }
                 }
+                convertAssetUrls(assets, file, filepath, html);
             }
+            break;
         }
-    }
-    switch (mimeType) {
-        case '@text/html':
-        case '@text/css':
-        case '@application/xhtml+xml': {
-            if (html === undefined) {
-                html = fs.readFileSync(filepath).toString('utf8');
-            }
-            for (const item of assets) {
-                if (item === file) {
-                    continue;
-                }
-                const { uri, rootDir } = item;
-                if (uri) {
-                    const [value, location] = getUri(item, uri);
-                    if (rootDir) {
-                        html = replacePathName(html, rootDir + location, value);
+        default:
+            if (mimeType.includes('image/')) {
+                const afterConvert = (output: string, command: string) => {
+                    switch (command.charAt(0)) {
+                        case '@':
+                            status.filesToRemove.push(filepath);
+                            break;
+                        case '%':
+                            status.filesToCompare.push(filepath, output);
+                            break;
                     }
-                    else {
-                        html = replacePathName(html, uri, value);
-                        html = replacePathName(html, getSeparator(uri) + location, value);
+                };
+                const convert = mimeType.split(':');
+                convert.pop();
+                convert.forEach(value => {
+                    if (/^[@%]?png/.test(value)) {
+                        if (!mimeType.endsWith('/png')) {
+                            ++status.delayed;
+                            jimp.read(filepath)
+                                .then(image => {
+                                    const png = replaceExtension(filepath, 'png');
+                                    image.write(png, err => {
+                                        if (err) {
+                                            writeError(png, err);
+                                        }
+                                        else {
+                                            afterConvert(png, value);
+                                            if (hasCompressPng(file.compress)) {
+                                                compressImage(png, finalize);
+                                                return;
+                                            }
+                                        }
+                                        finalize(png);
+                                    });
+                                })
+                                .catch(err => {
+                                    finalize('');
+                                    writeError(filepath, err);
+                                });
+                        }
                     }
-                }
+                    else if (/^[@%]?jpeg/.test(value)) {
+                        if (!mimeType.endsWith('/jpeg')) {
+                            ++status.delayed;
+                            jimp.read(filepath)
+                                .then(image => {
+                                    const jpg = replaceExtension(filepath, 'jpg');
+                                    image.quality(JPEG_QUALITY).write(jpg, err => {
+                                        if (err) {
+                                            writeError(jpg, err);
+                                        }
+                                        else {
+                                            afterConvert(jpg, value);
+                                            if (hasCompressPng(file.compress)) {
+                                                compressImage(jpg, finalize);
+                                                return;
+                                            }
+                                        }
+                                        finalize(jpg);
+                                    });
+                                })
+                                .catch(err => {
+                                    finalize('');
+                                    writeError(filepath, err);
+                                });
+                        }
+                    }
+                    else if (/^[@%]?bmp/.test(value)) {
+                        if (!mimeType.endsWith('/bmp')) {
+                            ++status.delayed;
+                            jimp.read(filepath)
+                                .then(image => {
+                                    const bmp = replaceExtension(filepath, 'bmp');
+                                    image.write(bmp, err => {
+                                        if (err) {
+                                            writeError(bmp, err);
+                                        }
+                                        else {
+                                            afterConvert(bmp, value);
+                                        }
+                                        finalize(bmp);
+                                    });
+                                })
+                                .catch(err => {
+                                    finalize('');
+                                    writeError(filepath, err);
+                                });
+                        }
+                    }
+                });
             }
-            html = html.replace(/\s+data-(?:use|chrome-[\w-]+)=(["']).+?\1/g, '');
-            fs.writeFileSync(filepath, html);
-            return;
-        }
-    }
-    if (mimeType.includes('image/')) {
-        const afterConvert = (output: string, command: string) => {
-            switch (command.charAt(0)) {
-                case '@':
-                    status.filesToRemove.push(filepath);
-                    break;
-                case '%':
-                    status.filesToCompare.push(filepath, output);
-                    break;
-            }
-        };
-        const convert = mimeType.split(':');
-        convert.pop();
-        convert.forEach(value => {
-            if (/^[@%]?png/.test(value)) {
-                if (!mimeType.endsWith('/png')) {
-                    ++status.delayed;
-                    jimp.read(filepath)
-                        .then(image => {
-                            const png = replaceExtension(filepath, 'png');
-                            image.write(png, err => {
-                                if (err) {
-                                    writeError(png, err);
-                                }
-                                else {
-                                    afterConvert(png, value);
-                                    if (hasCompressPng(file.compress)) {
-                                        compressImage(png, finalize);
-                                        return;
-                                    }
-                                }
-                                finalize(png);
-                            });
-                        })
-                        .catch(err => {
-                            finalize('');
-                            writeError(filepath, err);
-                        });
-                }
-            }
-            else if (/^[@%]?jpeg/.test(value)) {
-                if (!mimeType.endsWith('/jpeg')) {
-                    ++status.delayed;
-                    jimp.read(filepath)
-                        .then(image => {
-                            const jpg = replaceExtension(filepath, 'jpg');
-                            image.quality(JPEG_QUALITY).write(jpg, err => {
-                                if (err) {
-                                    writeError(jpg, err);
-                                }
-                                else {
-                                    afterConvert(jpg, value);
-                                    if (hasCompressPng(file.compress)) {
-                                        compressImage(jpg, finalize);
-                                        return;
-                                    }
-                                }
-                                finalize(jpg);
-                            });
-                        })
-                        .catch(err => {
-                            finalize('');
-                            writeError(filepath, err);
-                        });
-                }
-            }
-            else if (/^[@%]?bmp/.test(value)) {
-                if (!mimeType.endsWith('/bmp')) {
-                    ++status.delayed;
-                    jimp.read(filepath)
-                        .then(image => {
-                            const bmp = replaceExtension(filepath, 'bmp');
-                            image.write(bmp, err => {
-                                if (err) {
-                                    writeError(bmp, err);
-                                }
-                                else {
-                                    afterConvert(bmp, value);
-                                }
-                                finalize(bmp);
-                            });
-                        })
-                        .catch(err => {
-                            finalize('');
-                            writeError(filepath, err);
-                        });
-                }
-            }
-        });
+            break;
     }
 }
 
@@ -488,7 +516,50 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
     const emptyDir = {};
     const notFound: ObjectMap<boolean> = {};
     const processing: ObjectMap<RequestAsset[]> = {};
+    const appending: ObjectMap<RequestAsset[]> = {};
     const completed: string[] = [];
+    const errorRequest = (uri: string, filepath: string, message: Error | string, stream?: fs.WriteStream) => {
+        if (!notFound[uri]) {
+            finalize('');
+            notFound[uri] = true;
+        }
+        if (stream) {
+            try {
+                stream.close();
+                fs.unlinkSync(filepath);
+            }
+            catch {
+            }
+        }
+        writeError(uri, message);
+        delete processing[filepath];
+    };
+    const processQueue = (file: RequestAsset, filepath: string) => {
+        if (file.append) {
+            const queue = appending[filepath]?.pop();
+            if (queue) {
+                const uri = queue.uri!;
+                const stream = fs.createWriteStream(filepath, { flags: 'a' });
+                stream.on('finish', () => processQueue(queue, filepath));
+                request(uri)
+                    .on('response', response => {
+                        const statusCode = response.statusCode;
+                        if (statusCode >= 300) {
+                            errorRequest(uri, filepath, statusCode + ' ' + response.statusMessage, stream);
+                        }
+                    })
+                    .on('error', err => errorRequest(uri, filepath, err, stream))
+                    .pipe(stream);
+                return;
+            }
+        }
+        completed.push(filepath);
+        for (const item of (processing[filepath] || [file])) {
+            writeBuffer(assets, item, filepath, status, finalize);
+            finalize(filepath);
+        }
+        delete processing[filepath];
+    };
     for (const file of assets) {
         const { pathname, filepath } = getFileOutput(file, dirname);
         const { content, base64, uri } = file;
@@ -525,7 +596,17 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 continue;
             }
             const checkQueue = () => {
-                if (completed.includes(filepath)) {
+                if (file.append) {
+                    const queue = appending[filepath];
+                    if (queue) {
+                        queue.push(file);
+                    }
+                    else {
+                        appending[filepath] = [];
+                    }
+                    return false;
+                }
+                else if (completed.includes(filepath)) {
                     writeBuffer(assets, file, filepath, status, finalize);
                     finalize('');
                     return true;
@@ -543,30 +624,6 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                     }
                 }
             };
-            const processQueue = () => {
-                completed.push(filepath);
-                for (const item of (processing[filepath] || [file])) {
-                    writeBuffer(assets, item, filepath, status, finalize);
-                    finalize(filepath);
-                }
-                delete processing[filepath];
-            };
-            const errorRequest = (message: Error | string, stream?: fs.WriteStream) => {
-                if (!notFound[uri]) {
-                    finalize('');
-                    notFound[uri] = true;
-                }
-                if (stream) {
-                    try {
-                        stream.close();
-                        fs.unlinkSync(filepath);
-                    }
-                    catch {
-                    }
-                }
-                writeError(uri, message);
-                delete processing[filepath];
-            };
             try {
                 if (isFileURI(uri)) {
                     if (checkQueue()) {
@@ -575,7 +632,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                     const stream = fs.createWriteStream(filepath);
                     stream.on('finish', () => {
                         if (!notFound[uri]) {
-                            processQueue();
+                            processQueue(file, filepath);
                         }
                     });
                     ++status.delayed;
@@ -583,10 +640,10 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
-                                errorRequest(statusCode + ' ' + response.statusMessage, stream);
+                                errorRequest(uri, filepath, statusCode + ' ' + response.statusMessage, stream);
                             }
                         })
-                        .on('error', err => errorRequest(err, stream))
+                        .on('error', err => errorRequest(uri, filepath, err, stream))
                         .pipe(stream);
                 }
                 else {
@@ -597,7 +654,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                             to,
                             err => {
                                 if (!err) {
-                                    processQueue();
+                                    processQueue(file, filepath);
                                 }
                                 else {
                                     finalize('');
@@ -622,7 +679,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 }
             }
             catch (err) {
-                errorRequest(err);
+                errorRequest(uri, filepath, err);
             }
         }
     }

@@ -192,14 +192,14 @@ else if (host && data && build && snapshot) {
                             if (id > 0 && (flags & id) === id) {
                                 const name = filename.substring(0, filename.lastIndexOf('.'));
                                 const filepath = path.resolve(__dirname, 'temp', build!, name);
-                                const href = host + url + '?copyTo=' + encodeURIComponent(filepath);
+                                const href = host + url;
                                 try {
                                     const page = await browser.newPage();
                                     page.on('error', err => {
                                         failMessage(href, err);
                                         page.close();
                                     });
-                                    await page.goto(href);
+                                    await page.goto(href + '?copyTo=' + encodeURIComponent(filepath));
                                     if (screenshot) {
                                         await page.screenshot({ path: filepath + '.png' });
                                     }
@@ -227,7 +227,7 @@ else if (host && data && build && snapshot) {
                             for (const file of files) {
                                 output += md5(fs.readFileSync(file.fullPath)) + '  ./' + file.path.replace(/[\\]/g, '/') + '\n';
                             }
-                            fs.writeFileSync(path.resolve(pathname, `${item.name}.md5`), output);
+                            fs.writeFileSync(path.resolve(pathname, item.name + '.md5'), output);
                             stderr.write(colors.bgBlue(colors.bold(item.files!.length !== files.length ? colors.black('!') : colors.white('>'))));
                         }
                         const message = '+' + colors.green(items.length.toString()) + ' -' + colors.red(failed.length.toString());
