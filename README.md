@@ -317,7 +317,7 @@ squared.system.getElement(element: HTMLElement, cache?: boolean) // cache: defau
 squared.system.getElementMap()
 squared.system.clearElementMap()
 
-// NOTE: options: { assets?: RequestAsset[], callback?: () => void }
+// NOTE: options: { assets?: RequestAsset[], saveAs?: { script?: string; link?: string }, callback?: () => void }
 
 squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
 squared.system.copyScriptAssets(directory: string, options?: {})
@@ -632,6 +632,25 @@ You can exclude unnecessary processing files using the dataset attribute in &lt;
     squared.setFramework(chrome);
     chrome.saveAsWebPage();
 </script>
+```
+
+JS and CSS files can be bundled together using the "saveAs" action.
+
+```xml
+<script data-chrome-file="saveAs:js/bundle1.js" src="/dist/squared.js"></script>
+<script data-chrome-file="saveAs:js/bundle1.js" src="/dist/squared.base.js"></script>
+<script data-chrome-file="saveAs:js/bundle2.js" src="/dist/chrome.framework.js"></script>
+```
+
+```javascript
+const options = {
+    saveAs: {
+        script: 'js/bundle.js',
+        link: 'css/bundle.css'
+    }
+};
+squared.system.saveScriptAssets(filename?: string, options);
+squared.system.saveLinkAssets(filename?: string, options);
 ```
 
 ### CHROME: Extension configuration

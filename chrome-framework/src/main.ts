@@ -1,6 +1,5 @@
 import { FileAsset } from '../../@types/base/file';
 import { ChromeFramework } from '../../@types/chrome/internal';
-import { UserSettings } from '../../@types/chrome/application';
 import { FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/file';
 
 import Application from './application';
@@ -37,7 +36,6 @@ let initialized = false;
 let application: Application<View>;
 let controller: Controller<View>;
 let file: Undef<File<View>>;
-let userSettings: UserSettings;
 let elementMap: Map<Element, View>;
 
 function getCachedElement(element: HTMLElement, cache: boolean) {
@@ -180,59 +178,59 @@ const appBase: ChromeFramework<View> = {
         },
         copyHtmlPage(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
-                file?.copying(createAssetsOptions(file.getHtmlPage(options?.name), options, directory));
+                file?.copying(createAssetsOptions(file.getHtmlPage(options), options, directory));
             }
         },
         copyScriptAssets(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
-                file?.copying(createAssetsOptions(file.getScriptAssets(), options, directory));
+                file?.copying(createAssetsOptions(file.getScriptAssets(options), options, directory));
             }
         },
         copyLinkAssets(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
-                file?.copying(createAssetsOptions(file.getLinkAssets(options?.rel), options, directory));
+                file?.copying(createAssetsOptions(file.getLinkAssets(options), options, directory));
             }
         },
         copyImageAssets(directory: string, options?: FileCopyingOptions) {
             if (file && isString(directory)) {
-                file.copying(createAssetsOptions(file.getImageAssets(), options, directory));
+                file.copying(createAssetsOptions(file.getImageAssets(options), options, directory));
             }
         },
         copyVideoAssets(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
-                file?.copying(createAssetsOptions(file.getVideoAssets(), options, directory));
+                file?.copying(createAssetsOptions(file.getVideoAssets(options), options, directory));
             }
         },
         copyAudioAssets(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
-                file?.copying(createAssetsOptions(file.getAudioAssets(), options, directory));
+                file?.copying(createAssetsOptions(file.getAudioAssets(options), options, directory));
             }
         },
         copyFontAssets(directory: string, options?: FileCopyingOptions) {
             if (isString(directory)) {
-                file?.copying(createAssetsOptions(file.getFontAssets(), options, directory));
+                file?.copying(createAssetsOptions(file.getFontAssets(options), options, directory));
             }
         },
         saveHtmlPage(filename?: string, options?: FileArchivingOptions) {
-            file?.archiving(createAssetsOptions(file.getHtmlPage(options?.name), options, undefined, (filename || userSettings.outputArchiveName) + '-html'));
+            file?.archiving(createAssetsOptions(file.getHtmlPage(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-html'));
         },
         saveScriptAssets(filename?: string, options?: FileArchivingOptions) {
-            file?.archiving(createAssetsOptions(file.getScriptAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-script'));
+            file?.archiving(createAssetsOptions(file.getScriptAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-script'));
         },
         saveLinkAssets(filename?: string, options?: FileArchivingOptions) {
-            file?.archiving(createAssetsOptions(file.getLinkAssets(options?.rel), options, undefined, (filename || userSettings.outputArchiveName) + '-link'));
+            file?.archiving(createAssetsOptions(file.getLinkAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-link'));
         },
         saveImageAssets(filename?: string, options?: FileArchivingOptions) {
-            file?.archiving(createAssetsOptions(file.getImageAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-image'));
+            file?.archiving(createAssetsOptions(file.getImageAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-image'));
         },
         saveVideoAssets(filename?: string, options?: FileArchivingOptions) {
-            file?.archiving(createAssetsOptions(file.getVideoAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-video'));
+            file?.archiving(createAssetsOptions(file.getVideoAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-video'));
         },
         saveAudioAssets(filename?: string, options?: FileArchivingOptions) {
-            file?.archiving(createAssetsOptions(file.getAudioAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-audio'));
+            file?.archiving(createAssetsOptions(file.getAudioAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-audio'));
         },
         saveFontAssets(filename?: string, options?: FileArchivingOptions) {
-            file?.archiving(createAssetsOptions(file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
+            file?.archiving(createAssetsOptions(file.getFontAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-font'));
         }
     },
     create() {
@@ -242,7 +240,6 @@ const appBase: ChromeFramework<View> = {
         file = new File();
         application.resourceHandler.setFileHandler(file);
         elementMap = controller.elementMap;
-        userSettings = { ...SETTINGS };
         Object.assign(application.builtInExtensions, {
             [EC.COMPRESS_BROTLI]: new CompressBrotli(EC.COMPRESS_BROTLI, framework),
             [EC.COMPRESS_GZIP]: new CompressGzip(EC.COMPRESS_GZIP, framework),
@@ -258,7 +255,7 @@ const appBase: ChromeFramework<View> = {
         return {
             application,
             framework,
-            userSettings
+            userSettings: { ...SETTINGS }
         };
     },
     cached() {
@@ -266,7 +263,7 @@ const appBase: ChromeFramework<View> = {
             return {
                 application,
                 framework,
-                userSettings
+                userSettings: application.userSettings
             };
         }
         return appBase.create();
@@ -316,7 +313,7 @@ const appBase: ChromeFramework<View> = {
             settings.preloadImages = true;
             application.reset();
             return application.parseDocument(document.body).then((response: View[]) => {
-                file!.saveToArchive(filename || userSettings.outputArchiveName, options);
+                file!.saveToArchive(filename || application.userSettings.outputArchiveName, options);
                 settings.preloadImages = restoreValue;
                 return response;
             });

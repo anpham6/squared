@@ -1,4 +1,4 @@
-/* chrome-framework 1.6.5
+/* chrome-framework 1.7.0
    https://github.com/anpham6/squared */
 
 var chrome = (function () {
@@ -114,27 +114,23 @@ var chrome = (function () {
         }
     }
 
-    class ExtensionManager extends squared.base.ExtensionManager {
-    }
-
     const $lib$1 = squared.lib;
     const { CHAR, COMPONENT, FILE, XML } = $lib$1.regex;
-    const { appendSeparator, convertWord, fromLastIndexOf, objectMap, parseMimeType, resolvePath, safeNestedArray, spliceString, trimEnd } = $lib$1.util;
+    const { appendSeparator, convertWord, fromLastIndexOf, isString, objectMap, parseMimeType, resolvePath, spliceString, trimEnd } = $lib$1.util;
     const ASSETS = Resource.ASSETS;
     const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
     const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
-    function parseUri(uri) {
+    function parseUri(uri, saveAs) {
+        var _a;
         const value = trimEnd(uri, '/');
         const match = COMPONENT.PROTOCOL.exec(value);
         if (match) {
-            let pathname = '';
-            let filename = '';
+            const host = match[2], port = match[3], path = match[4];
+            let pathname = '', filename = '';
             let rootDir = '';
             let moveTo;
             let local;
-            const host = match[2];
-            const port = match[3];
-            const path = match[4];
+            let append;
             const getDirectory = (start = 1) => {
                 if (start > 1) {
                     rootDir = path.substring(0, start);
@@ -147,7 +143,20 @@ var chrome = (function () {
             else {
                 local = true;
             }
-            if (path && path !== '/') {
+            if (saveAs) {
+                let location = (_a = /saveAs:([^;"']+)/.exec(saveAs)) === null || _a === void 0 ? void 0 : _a[1];
+                if (location) {
+                    if (location.charAt(0) === '/') {
+                        moveTo = '__serverroot__';
+                        location = location.substring(1);
+                    }
+                    const parts = location.split('/');
+                    filename = decodeURIComponent(parts.pop());
+                    pathname = parts.join('/');
+                    append = true;
+                }
+            }
+            else if (path && path !== '/') {
                 filename = fromLastIndexOf(path, '/');
                 if (local) {
                     const prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -174,15 +183,16 @@ var chrome = (function () {
                 pathname,
                 filename,
                 extension,
+                append,
                 mimeType: extension && parseMimeType(extension)
             };
         }
         return undefined;
     }
-    function resolveAssetSource(data, value) {
-        const src = resolvePath(value);
-        if (src !== '') {
-            data.add(src);
+    function resolveAssetSource(data, element) {
+        const value = resolvePath(element.src);
+        if (value !== '') {
+            data.set(element, value);
         }
     }
     function convertFileMatch(value) {
@@ -191,8 +201,26 @@ var chrome = (function () {
             .replace(/\*/g, '.*?');
         return new RegExp(`${value}$`);
     }
-    function processExtensions(data) {
-        this.application.extensions.forEach(ext => ext.processFile(data));
+    function getExtensions(element) {
+        var _a;
+        const use = (_a = element === null || element === void 0 ? void 0 : element.dataset.use) === null || _a === void 0 ? void 0 : _a.trim();
+        return use ? use.split(XML.SEPARATOR) : [];
+    }
+    function processExtensions(data, extensions, options) {
+        const processed = [];
+        if ((options === null || options === void 0 ? void 0 : options.ignoreExtensions) !== true) {
+            this.application.extensions.forEach(ext => {
+                if (ext.processFile(data)) {
+                    processed.push(ext);
+                }
+            });
+        }
+        for (const name of extensions) {
+            const ext = this.application.extensionManager.retrieve(name, true);
+            if (ext && !processed.includes(ext)) {
+                ext.processFile(data, true);
+            }
+        }
     }
     class File extends squared.base.File {
         reset() {
@@ -200,19 +228,20 @@ var chrome = (function () {
             this._outputFileExclusions = undefined;
         }
         copyToDisk(directory, options) {
-            this.copying(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), directory }));
+            return this.copying(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll().concat((options === null || options === void 0 ? void 0 : options.assets) || []), directory }));
         }
         appendToArchive(pathname, options) {
-            this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { assets: this.getAssetsAll(options).concat((options === null || options === void 0 ? void 0 : options.assets) || []), appendTo: pathname }));
+            return this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { assets: this.getAssetsAll(options).concat((options === null || options === void 0 ? void 0 : options.assets) || []), appendTo: pathname }));
         }
         saveToArchive(filename, options) {
-            this.archiving(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll(options).concat((options === null || options === void 0 ? void 0 : options.assets) || []), filename }));
+            return this.archiving(Object.assign(Object.assign({}, options), { assets: this.getAssetsAll(options).concat((options === null || options === void 0 ? void 0 : options.assets) || []), filename }));
         }
-        getHtmlPage(name, ignoreExtensions = false) {
+        getHtmlPage(options) {
             const result = [];
             const href = location.href;
             const data = parseUri(href);
             if (data) {
+                const name = options === null || options === void 0 ? void 0 : options.name;
                 if (name) {
                     data.filename = name;
                 }
@@ -225,97 +254,114 @@ var chrome = (function () {
                 }
                 if (this.validFile(data)) {
                     data.mimeType = parseMimeType('html');
-                    if (!ignoreExtensions) {
-                        processExtensions.call(this, data);
-                    }
+                    processExtensions.call(this, data, getExtensions(document.querySelector('html')), options);
                     result.push(data);
                 }
             }
             return result;
         }
-        getScriptAssets(ignoreExtensions = false) {
+        getScriptAssets(options) {
+            var _a;
             const result = [];
+            const saveAs = (_a = options === null || options === void 0 ? void 0 : options.saveAs) === null || _a === void 0 ? void 0 : _a.script;
             document.querySelectorAll('script').forEach(element => {
-                const src = element.src.trim();
-                if (src !== '') {
-                    const uri = resolvePath(src);
-                    const data = parseUri(uri);
-                    if (this.validFile(data)) {
-                        data.mimeType = element.type.trim() || parseMimeType(uri) || 'text/javascript';
-                        if (!ignoreExtensions) {
-                            processExtensions.call(this, data);
+                let file = element.dataset.chromeFile;
+                if (file !== 'exclude') {
+                    if (!isString(file)) {
+                        file = saveAs;
+                    }
+                    const src = element.src.trim();
+                    if (src !== '') {
+                        const data = parseUri(resolvePath(src), file);
+                        if (this.validFile(data)) {
+                            data.mimeType = element.type.trim() || parseMimeType(data.uri) || 'text/javascript';
+                            processExtensions.call(this, data, getExtensions(element), options);
+                            result.push(data);
                         }
-                        result.push(data);
                     }
                 }
             });
             return result;
         }
-        getLinkAssets(rel, ignoreExtensions = false) {
+        getLinkAssets(options) {
+            var _a;
             const result = [];
+            const rel = options === null || options === void 0 ? void 0 : options.rel;
+            const saveAs = (_a = options === null || options === void 0 ? void 0 : options.saveAs) === null || _a === void 0 ? void 0 : _a.script;
             document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((element) => {
-                const href = element.href.trim();
-                if (href !== '') {
-                    const uri = resolvePath(href);
-                    const data = parseUri(uri);
-                    if (this.validFile(data)) {
-                        switch (element.rel.trim()) {
-                            case 'stylesheet':
-                                data.mimeType = 'text/css';
-                                break;
-                            case 'icon':
-                                data.mimeType = 'image/x-icon';
-                                break;
-                            default:
-                                data.mimeType = element.type.trim() || parseMimeType(uri);
-                                break;
+                let file = element.dataset.chromeFile;
+                if (file !== 'exclude') {
+                    if (!isString(file)) {
+                        file = saveAs;
+                    }
+                    const href = element.href.trim();
+                    if (href !== '') {
+                        const data = parseUri(resolvePath(href), file);
+                        if (this.validFile(data)) {
+                            switch (element.rel.trim()) {
+                                case 'stylesheet':
+                                    data.mimeType = 'text/css';
+                                    break;
+                                case 'icon':
+                                    data.mimeType = 'image/x-icon';
+                                    break;
+                                default:
+                                    data.mimeType = element.type.trim() || parseMimeType(data.uri);
+                                    break;
+                            }
+                            processExtensions.call(this, data, getExtensions(element), options);
+                            result.push(data);
                         }
-                        if (!ignoreExtensions) {
-                            processExtensions.call(this, data);
-                        }
-                        result.push(data);
                     }
                 }
             });
             return result;
         }
-        getImageAssets(ignoreExtensions = false) {
+        getImageAssets(options) {
             const result = [];
-            const processUri = (uri) => {
+            const processUri = (element, uri) => {
                 if (uri !== '') {
                     const data = parseUri(uri);
-                    if (this.validFile(data)) {
-                        if (!ignoreExtensions) {
-                            processExtensions.call(this, data);
-                        }
+                    if (this.validFile(data) && !result.find(item => item.uri === uri)) {
+                        processExtensions.call(this, data, getExtensions(element), options);
                         result.push(data);
                     }
                 }
             };
-            if (this.userSettings.preloadImages) {
-                for (const uri of ASSETS.image.keys()) {
-                    processUri(uri);
+            document.querySelectorAll('picture > source').forEach((source) => source.srcset.split(XML.SEPARATOR).forEach(uri => processUri(source, resolvePath(uri.split(CHAR.SPACE)[0]))));
+            document.querySelectorAll('video').forEach((source) => processUri(source, resolvePath(source.poster)));
+            document.querySelectorAll('img, input[type=image]').forEach((image) => {
+                const src = image.src.trim();
+                if (!src.startsWith('data:image/')) {
+                    processUri(image, resolvePath(src));
                 }
-            }
-            else {
-                document.querySelectorAll('picture > source').forEach((source) => source.srcset.split(XML.SEPARATOR).forEach(uri => processUri(resolvePath(uri.split(CHAR.SPACE)[0]))));
-                document.querySelectorAll('video').forEach((source) => processUri(resolvePath(source.poster)));
-                document.querySelectorAll('img, input[type=image]').forEach((image) => {
-                    const src = image.src.trim();
-                    if (!src.startsWith('data:image/')) {
-                        processUri(resolvePath(src));
+            });
+            document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element) => {
+                const images = [];
+                let srcset = element.srcset.trim();
+                let match;
+                while ((match = REGEX_SRCSET.exec(srcset)) !== null) {
+                    images.push(match[1]);
+                    srcset = spliceString(srcset, match.index, match[0].length);
+                }
+                images.push(srcset.trim().replace(REGEX_SRCSET_SPECIFIER, ''));
+                images.forEach(src => {
+                    if (src !== '') {
+                        processUri(element, resolvePath(src));
                     }
                 });
+            });
+            for (const uri of ASSETS.image.keys()) {
+                processUri(null, uri);
             }
-            for (const [uri, rawData] of ASSETS.rawData) {
-                const filename = rawData.filename;
-                if (filename) {
-                    const { pathname, base64, content, mimeType } = rawData;
+            for (const rawData of ASSETS.rawData.values()) {
+                if (rawData.pathname) {
+                    continue;
+                }
+                else {
+                    const { base64, content, filename, mimeType } = rawData;
                     let data;
-                    if (pathname) {
-                        data = { pathname, filename, uri };
-                    }
-                    else if (base64) {
+                    if (base64) {
                         data = { pathname: '__generated__/base64', filename, base64 };
                     }
                     else if (content && mimeType) {
@@ -326,50 +372,20 @@ var chrome = (function () {
                     }
                     if (this.validFile(data)) {
                         data.mimeType = mimeType;
-                        if (!ignoreExtensions) {
-                            processExtensions.call(this, data);
-                        }
+                        processExtensions.call(this, data, [], options);
                         result.push(data);
                     }
                 }
             }
-            document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element) => {
-                const images = [];
-                let srcset = element.srcset.trim();
-                let match;
-                while ((match = REGEX_SRCSET.exec(srcset)) !== null) {
-                    images.push(resolvePath(match[1]));
-                    srcset = spliceString(srcset, match.index, match[0].length);
-                }
-                srcset = srcset.trim();
-                if (srcset !== '') {
-                    images.push(resolvePath(srcset.replace(REGEX_SRCSET_SPECIFIER, '')));
-                }
-                images.forEach(src => {
-                    if (COMPONENT.PROTOCOL.test(src) && result.findIndex(item => item.uri === src) === -1) {
-                        const data = parseUri(src);
-                        if (this.validFile(data)) {
-                            result.push(data);
-                        }
-                    }
-                });
-            });
-            if (this.userSettings.compressImages) {
-                result.forEach(asset => {
-                    if (Resource.canCompressImage(asset.filename)) {
-                        safeNestedArray(asset, 'compress').unshift({ format: 'png' });
-                    }
-                });
-            }
             return result;
         }
-        getVideoAssets(ignoreExtensions = false) {
-            return this.getRawAssets('video', ignoreExtensions);
+        getVideoAssets(options) {
+            return this.getRawAssets('video', options);
         }
-        getAudioAssets(ignoreExtensions = false) {
-            return this.getRawAssets('audio', ignoreExtensions);
+        getAudioAssets(options) {
+            return this.getRawAssets('audio', options);
         }
-        getFontAssets(ignoreExtensions = false) {
+        getFontAssets(options) {
             const result = [];
             for (const fonts of ASSETS.fonts.values()) {
                 fonts.forEach(font => {
@@ -377,9 +393,7 @@ var chrome = (function () {
                     if (url) {
                         const data = parseUri(url);
                         if (this.validFile(data)) {
-                            if (!ignoreExtensions) {
-                                processExtensions.call(this, data);
-                            }
+                            processExtensions.call(this, data, [], options);
                             result.push(data);
                         }
                     }
@@ -389,23 +403,21 @@ var chrome = (function () {
         }
         validFile(data) {
             if (data) {
-                const fullpath = `${data.pathname}/${data.filename}`;
+                const fullpath = data.pathname + '/' + data.filename;
                 return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
             }
             return false;
         }
-        getRawAssets(tagName, ignoreExtensions = false) {
+        getRawAssets(tagName, options) {
             const result = [];
             document.querySelectorAll(tagName).forEach((element) => {
-                const items = new Set();
-                resolveAssetSource(items, element.src);
-                element.querySelectorAll('source').forEach((source) => resolveAssetSource(items, source.src));
-                for (const uri of items) {
+                const items = new Map();
+                resolveAssetSource(items, element);
+                element.querySelectorAll('source').forEach((source) => resolveAssetSource(items, source));
+                for (const [item, uri] of items.entries()) {
                     const data = parseUri(uri);
                     if (this.validFile(data)) {
-                        if (!ignoreExtensions) {
-                            processExtensions.call(this, data);
-                        }
+                        processExtensions.call(this, data, getExtensions(item), options);
                         result.push(data);
                     }
                 }
@@ -413,10 +425,12 @@ var chrome = (function () {
             return result;
         }
         getAssetsAll(options = {}) {
-            const { name, rel } = options;
             const saveAsWebPage = options.saveAsWebPage === true;
-            const result = this.getHtmlPage(name, saveAsWebPage).concat(this.getLinkAssets(rel, saveAsWebPage));
             if (saveAsWebPage) {
+                options = Object.assign(Object.assign({}, options), { ignoreExtensions: true });
+            }
+            const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
+            if (options.saveAsWebPage) {
                 result.forEach(item => {
                     const mimeType = item.mimeType;
                     switch (mimeType) {
@@ -428,11 +442,11 @@ var chrome = (function () {
                     }
                 });
             }
-            return result.concat(this.getScriptAssets(saveAsWebPage))
-                .concat(this.getImageAssets(saveAsWebPage))
-                .concat(this.getVideoAssets(saveAsWebPage))
-                .concat(this.getAudioAssets(saveAsWebPage))
-                .concat(this.getFontAssets(saveAsWebPage));
+            return result.concat(this.getScriptAssets(options))
+                .concat(this.getImageAssets(options))
+                .concat(this.getVideoAssets(options))
+                .concat(this.getAudioAssets(options))
+                .concat(this.getFontAssets(options));
         }
         get outputFileExclusions() {
             let result = this._outputFileExclusions;
@@ -451,24 +465,21 @@ var chrome = (function () {
     }
 
     class View extends squared.base.Node {
-        constructor(id, sessionId, element, afterInit) {
+        constructor(id, sessionId, element) {
             super(id, sessionId, element);
             this._cached = {};
             this._preferInitial = false;
             this.init();
-            if (afterInit) {
-                afterInit(this);
-            }
         }
     }
 
     class Extension extends squared.base.Extension {
-        processFile(data) {
+        processFile(data, override = false) {
             return false;
         }
     }
 
-    const { safeNestedArray: safeNestedArray$1 } = squared.lib.util;
+    const { safeNestedArray } = squared.lib.util;
     class Brotli extends Extension {
         constructor() {
             super(...arguments);
@@ -477,20 +488,23 @@ var chrome = (function () {
                 mimeTypes: ['text/css', 'text/javascript', 'text/plain', 'text/csv', 'application/json', 'application/javascript', 'application/ld+json', 'application/xml']
             };
         }
-        processFile(data) {
-            const mimeType = data.mimeType;
-            if (mimeType) {
-                const { level, mimeTypes } = this.options;
-                if (mimeTypes === "*" || mimeTypes.includes(mimeType)) {
-                    safeNestedArray$1(data, 'compress').push({ format: 'br', level });
-                    return true;
+        processFile(data, override = false) {
+            if (!override) {
+                const mimeType = data.mimeType;
+                if (mimeType) {
+                    const mimeTypes = this.options.mimeTypes;
+                    override = mimeTypes === "*" || mimeTypes.includes(mimeType);
                 }
+            }
+            if (override) {
+                safeNestedArray(data, 'compress').push({ format: 'br', level: this.options.level });
+                return true;
             }
             return false;
         }
     }
 
-    const { safeNestedArray: safeNestedArray$2 } = squared.lib.util;
+    const { safeNestedArray: safeNestedArray$1 } = squared.lib.util;
     class Gzip extends Extension {
         constructor() {
             super(...arguments);
@@ -499,20 +513,23 @@ var chrome = (function () {
                 mimeTypes: ['text/css', 'text/javascript', 'text/plain', 'text/csv', 'application/json', 'application/javascript', 'application/ld+json', 'application/xml']
             };
         }
-        processFile(data) {
-            const mimeType = data.mimeType;
-            if (mimeType) {
-                const { level, mimeTypes } = this.options;
-                if (mimeTypes === '*' || mimeTypes.includes(mimeType)) {
-                    safeNestedArray$2(data, 'compress').push({ format: 'gz', level });
-                    return true;
+        processFile(data, override = false) {
+            if (!override) {
+                const mimeType = data.mimeType;
+                if (mimeType) {
+                    const mimeTypes = this.options.mimeTypes;
+                    override = mimeTypes === "*" || mimeTypes.includes(mimeType);
                 }
+            }
+            if (override) {
+                safeNestedArray$1(data, 'compress').push({ format: 'gz', level: this.options.level });
+                return true;
             }
             return false;
         }
     }
 
-    const { safeNestedArray: safeNestedArray$3 } = squared.lib.util;
+    const { safeNestedArray: safeNestedArray$2 } = squared.lib.util;
     class Jpeg extends Extension {
         constructor() {
             super(...arguments);
@@ -521,20 +538,23 @@ var chrome = (function () {
                 mimeTypes: ['image/jpeg']
             };
         }
-        processFile(data) {
-            const mimeType = data.mimeType;
-            if (mimeType) {
-                const { level, mimeTypes } = this.options;
-                if (mimeTypes === '*' && mimeType.startsWith('image/') || mimeTypes.includes(mimeType)) {
-                    safeNestedArray$3(data, 'compress').push({ format: 'jpeg', level });
-                    return true;
+        processFile(data, override = false) {
+            if (!override) {
+                const mimeType = data.mimeType;
+                if (mimeType) {
+                    const mimeTypes = this.options.mimeTypes;
+                    override = /[@%]jpeg:/.test(mimeType) || Array.isArray(mimeTypes) && !!mimeTypes.find(value => mimeType.endsWith(value)) || mimeTypes === '*' && mimeType.includes('image/');
                 }
+            }
+            if (override) {
+                safeNestedArray$2(data, 'compress').push({ format: 'png' }, { format: 'jpeg', level: this.options.level });
+                return true;
             }
             return false;
         }
     }
 
-    const { safeNestedArray: safeNestedArray$4 } = squared.lib.util;
+    const { safeNestedArray: safeNestedArray$3 } = squared.lib.util;
     class Png extends Extension {
         constructor() {
             super(...arguments);
@@ -542,14 +562,17 @@ var chrome = (function () {
                 mimeTypes: ['image/png']
             };
         }
-        processFile(data) {
-            const mimeType = data.mimeType;
-            if (mimeType) {
-                const mimeTypes = this.options.mimeTypes;
-                if (mimeTypes === '*' && mimeType.startsWith('image/') || mimeTypes.includes(mimeType)) {
-                    safeNestedArray$4(data, 'compress').push({ format: 'png' });
-                    return true;
+        processFile(data, override = false) {
+            if (!override) {
+                const mimeType = data.mimeType;
+                if (mimeType) {
+                    const mimeTypes = this.options.mimeTypes;
+                    override = /[@%]png:/.test(mimeType) || Array.isArray(mimeTypes) && !!mimeTypes.find(value => mimeType.endsWith(value)) || mimeTypes === '*' && mimeType.includes('image/');
                 }
+            }
+            if (override) {
+                safeNestedArray$3(data, 'compress').push({ format: 'png' });
+                return true;
             }
             return false;
         }
@@ -564,11 +587,11 @@ var chrome = (function () {
                 pickSmaller: false
             };
         }
-        processFile(data) {
+        processFile(data, override = false) {
             const mimeType = data.mimeType;
             if (mimeType) {
                 const options = this.options;
-                if (options.mimeTypes.includes(mimeType)) {
+                if (override || options.mimeTypes.find(value => mimeType.endsWith(value))) {
                     let command = '';
                     if (options.replaceWith) {
                         command = '@';
@@ -593,11 +616,11 @@ var chrome = (function () {
                 pickSmaller: false
             };
         }
-        processFile(data) {
+        processFile(data, override = false) {
             const mimeType = data.mimeType;
             if (mimeType) {
                 const options = this.options;
-                if (options.mimeTypes.includes(mimeType)) {
+                if (override || options.mimeTypes.find(value => mimeType.endsWith(value))) {
                     let command = '';
                     if (options.replaceWith) {
                         command = '@';
@@ -622,11 +645,11 @@ var chrome = (function () {
                 pickSmaller: false
             };
         }
-        processFile(data) {
+        processFile(data, override = false) {
             const mimeType = data.mimeType;
             if (mimeType) {
                 const options = this.options;
-                if (options.mimeTypes.includes(mimeType)) {
+                if (override || options.mimeTypes.find(value => mimeType.endsWith(value))) {
                     let command = '';
                     if (options.replaceWith) {
                         command = '@';
@@ -651,11 +674,11 @@ var chrome = (function () {
                 pickSmaller: false
             };
         }
-        processFile(data) {
+        processFile(data, override = false) {
             const mimeType = data.mimeType;
             if (mimeType) {
                 const options = this.options;
-                if (options.mimeTypes.includes(mimeType)) {
+                if (override || options.mimeTypes.find(value => mimeType.endsWith(value))) {
                     let command = '';
                     if (options.replaceWith) {
                         command = '@';
@@ -680,11 +703,11 @@ var chrome = (function () {
                 pickSmaller: false
             };
         }
-        processFile(data) {
+        processFile(data, override = false) {
             const mimeType = data.mimeType;
             if (mimeType) {
                 const options = this.options;
-                if (options.mimeTypes.includes(mimeType)) {
+                if (override || options.mimeTypes.find(value => mimeType.endsWith(value))) {
                     let command = '';
                     if (options.replaceWith) {
                         command = '@';
@@ -703,11 +726,10 @@ var chrome = (function () {
     const settings = {
         builtInExtensions: [],
         preloadImages: false,
-        compressImages: false,
         excludePlainText: true,
         createQuerySelectorMap: true,
         showErrorMessages: false,
-        outputFileExclusions: ['squared.*', 'chrome.framework.*'],
+        outputFileExclusions: [],
         outputEmptyCopyDirectory: false,
         outputArchiveName: 'chrome-data',
         outputArchiveFormat: 'zip'
@@ -734,22 +756,14 @@ var chrome = (function () {
         EXT_CHROME: EXT_CHROME
     });
 
-    var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-        function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-        return new (P || (P = Promise))(function (resolve, reject) {
-            function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-            function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-            function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-            step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-    };
-    const { flatArray, isString, isObject } = squared.lib.util;
+    const { util, session } = squared.lib;
+    const { flatArray, isString: isString$1, isObject, promisify } = util;
+    const { frameworkNotInstalled } = session;
     const framework = 4 /* CHROME */;
     let initialized = false;
     let application;
     let controller;
     let file;
-    let userSettings;
     let elementMap;
     function getCachedElement(element, cache) {
         if (!cache) {
@@ -762,82 +776,41 @@ var chrome = (function () {
         let result = getCachedElement(element, cache);
         if (result === undefined) {
             application.queryState = 1 /* SINGLE */;
-            application.parseDocument(element);
+            (async () => { await application.parseDocument(element); })();
             result = elementMap.get(element);
             application.queryState = 0 /* NONE */;
         }
         return result || null;
-    }
-    function findElementAsync(element, cache) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let result = getCachedElement(element, cache);
-            if (result === undefined) {
-                application.queryState = 1 /* SINGLE */;
-                yield application.parseDocumentAsync(element);
-                result = elementMap.get(element);
-                application.queryState = 0 /* NONE */;
-            }
-            return result || null;
-        });
     }
     function findElementAll(query) {
         application.queryState = 2 /* MULTIPLE */;
         let incomplete = false;
         const length = query.length;
         const result = new Array(length);
-        for (let i = 0; i < length; ++i) {
-            const element = query[i];
-            let item = elementMap.get(element);
-            if (item) {
-                result[i] = item;
-            }
-            else {
-                application.parseDocument(element);
-                item = elementMap.get(element);
+        (async () => {
+            for (let i = 0; i < length; ++i) {
+                const element = query[i];
+                let item = elementMap.get(element);
                 if (item) {
                     result[i] = item;
                 }
                 else {
-                    incomplete = true;
+                    await application.parseDocument(element);
+                    item = elementMap.get(element);
+                    if (item) {
+                        result[i] = item;
+                    }
+                    else {
+                        incomplete = true;
+                    }
                 }
             }
-        }
+        })();
         if (incomplete) {
             flatArray(result);
         }
         application.queryState = 0 /* NONE */;
         return result;
-    }
-    function findElementAllAsync(query) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let incomplete = false;
-            const length = query.length;
-            const result = new Array(length);
-            for (let i = 0; i < length; ++i) {
-                const element = query[i];
-                const item = elementMap.get(element);
-                if (item) {
-                    result[i] = item;
-                }
-                else {
-                    application.queryState = 2 /* MULTIPLE */;
-                    yield application.parseDocumentAsync(element).then(() => {
-                        const awaited = elementMap.get(element);
-                        if (awaited) {
-                            result[i] = awaited;
-                        }
-                        else {
-                            incomplete = true;
-                        }
-                    });
-                }
-            }
-            if (incomplete) {
-                flatArray(result);
-            }
-            application.queryState = 0 /* NONE */;
-            return result;
-        });
     }
     function createAssetsOptions(assets, options, directory, filename) {
         if (isObject(options)) {
@@ -856,7 +829,6 @@ var chrome = (function () {
     const appBase = {
         base: {
             Application,
-            ExtensionManager,
             Controller,
             File,
             Resource,
@@ -925,84 +897,69 @@ var chrome = (function () {
                 controller === null || controller === void 0 ? void 0 : controller.elementMap.clear();
             },
             copyHtmlPage(directory, options) {
-                if (isString(directory)) {
-                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getHtmlPage(options === null || options === void 0 ? void 0 : options.name), options, directory));
+                if (isString$1(directory)) {
+                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getHtmlPage(options), options, directory));
                 }
             },
             copyScriptAssets(directory, options) {
-                if (isString(directory)) {
-                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getScriptAssets(), options, directory));
+                if (isString$1(directory)) {
+                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getScriptAssets(options), options, directory));
                 }
             },
             copyLinkAssets(directory, options) {
-                if (isString(directory)) {
-                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getLinkAssets(options === null || options === void 0 ? void 0 : options.rel), options, directory));
+                if (isString$1(directory)) {
+                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getLinkAssets(options), options, directory));
                 }
             },
             copyImageAssets(directory, options) {
-                if (file && isString(directory)) {
-                    file.copying(createAssetsOptions(file.getImageAssets(), options, directory));
+                if (file && isString$1(directory)) {
+                    file.copying(createAssetsOptions(file.getImageAssets(options), options, directory));
                 }
             },
             copyVideoAssets(directory, options) {
-                if (isString(directory)) {
-                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getVideoAssets(), options, directory));
+                if (isString$1(directory)) {
+                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getVideoAssets(options), options, directory));
                 }
             },
             copyAudioAssets(directory, options) {
-                if (isString(directory)) {
-                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getAudioAssets(), options, directory));
+                if (isString$1(directory)) {
+                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getAudioAssets(options), options, directory));
                 }
             },
             copyFontAssets(directory, options) {
-                if (isString(directory)) {
-                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getFontAssets(), options, directory));
+                if (isString$1(directory)) {
+                    file === null || file === void 0 ? void 0 : file.copying(createAssetsOptions(file.getFontAssets(options), options, directory));
                 }
             },
             saveHtmlPage(filename, options) {
-                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getHtmlPage(options === null || options === void 0 ? void 0 : options.name), options, undefined, (filename || userSettings.outputArchiveName) + '-html'));
+                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getHtmlPage(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-html'));
             },
             saveScriptAssets(filename, options) {
-                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getScriptAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-script'));
+                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getScriptAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-script'));
             },
             saveLinkAssets(filename, options) {
-                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getLinkAssets(options === null || options === void 0 ? void 0 : options.rel), options, undefined, (filename || userSettings.outputArchiveName) + '-link'));
+                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getLinkAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-link'));
             },
             saveImageAssets(filename, options) {
-                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getImageAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-image'));
+                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getImageAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-image'));
             },
             saveVideoAssets(filename, options) {
-                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getVideoAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-video'));
+                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getVideoAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-video'));
             },
             saveAudioAssets(filename, options) {
-                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getAudioAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-audio'));
+                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getAudioAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-audio'));
             },
             saveFontAssets(filename, options) {
-                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getFontAssets(), options, undefined, (filename || userSettings.outputArchiveName) + '-font'));
-            },
-            saveAsWebPage: (filename, options) => {
-                if (file) {
-                    if (!isObject(options)) {
-                        options = {};
-                    }
-                    options.saveAsWebPage = true;
-                    const preloadImages = userSettings.preloadImages;
-                    userSettings.preloadImages = true;
-                    application.parseDocument(document.body).then(() => {
-                        file.saveToArchive(filename || userSettings.outputArchiveName, options);
-                        userSettings.preloadImages = preloadImages;
-                    });
-                }
+                file === null || file === void 0 ? void 0 : file.archiving(createAssetsOptions(file.getFontAssets(options), options, undefined, (filename || application.userSettings.outputArchiveName) + '-font'));
             }
         },
         create() {
             const EC = EXT_CHROME;
-            application = new Application(framework, View, Controller, Resource, ExtensionManager);
+            application = new Application(framework, View, Controller, Resource);
             controller = application.controllerHandler;
             file = new File();
             application.resourceHandler.setFileHandler(file);
             elementMap = controller.elementMap;
-            userSettings = Object.assign({}, settings);
             Object.assign(application.builtInExtensions, {
                 [EC.COMPRESS_BROTLI]: new Brotli(EC.COMPRESS_BROTLI, framework),
                 [EC.COMPRESS_GZIP]: new Gzip(EC.COMPRESS_GZIP, framework),
@@ -1018,7 +975,7 @@ var chrome = (function () {
             return {
                 application,
                 framework,
-                userSettings
+                userSettings: Object.assign({}, settings)
             };
         },
         cached() {
@@ -1026,61 +983,63 @@ var chrome = (function () {
                 return {
                     application,
                     framework,
-                    userSettings
+                    userSettings: application.userSettings
                 };
             }
             return appBase.create();
         },
-        getElementById: (value, cache = true) => __awaiter(void 0, void 0, void 0, function* () {
+        getElementById: (value, cache = true) => {
             if (application) {
                 const element = document.getElementById(value);
                 if (element) {
-                    return findElementAsync(element, cache);
+                    return promisify(findElement)(element, cache);
                 }
             }
-            return null;
-        }),
-        querySelector: (value, cache = true) => __awaiter(void 0, void 0, void 0, function* () {
+            return frameworkNotInstalled();
+        },
+        querySelector: (value, cache = true) => {
             if (application) {
                 const element = document.querySelector(value);
                 if (element) {
-                    return findElementAsync(element, cache);
+                    return promisify(findElement)(element, cache);
                 }
             }
-            return null;
-        }),
-        querySelectorAll: (value, cache = true) => __awaiter(void 0, void 0, void 0, function* () {
+            return frameworkNotInstalled();
+        },
+        querySelectorAll: (value, cache = true) => {
             if (application) {
                 const query = document.querySelectorAll(value);
                 if (query.length) {
                     if (!cache) {
                         elementMap.clear();
                     }
-                    return findElementAllAsync(query);
+                    return promisify(findElementAll)(query);
                 }
             }
-            return null;
-        }),
-        getElement: (element, cache = false) => __awaiter(void 0, void 0, void 0, function* () {
+            return frameworkNotInstalled();
+        },
+        getElement: (element, cache = false) => {
             if (application) {
-                return findElementAsync(element, cache);
+                return promisify(findElement)(element, cache);
             }
-            return null;
-        }),
-        saveAsWebPage: (filename, options) => __awaiter(void 0, void 0, void 0, function* () {
+            return frameworkNotInstalled();
+        },
+        saveAsWebPage: (filename, options) => {
             if (file) {
-                if (!isObject(options)) {
-                    options = {};
-                }
+                options = !isObject(options) ? {} : Object.assign({}, options);
                 options.saveAsWebPage = true;
-                const preloadImages = userSettings.preloadImages;
-                userSettings.preloadImages = true;
-                yield application.parseDocumentAsync(document.body).then(() => {
-                    file.saveToArchive(filename || userSettings.outputArchiveName, options);
-                    userSettings.preloadImages = preloadImages;
+                const settings = application.userSettings;
+                const restoreValue = settings.preloadImages;
+                settings.preloadImages = true;
+                application.reset();
+                return application.parseDocument(document.body).then((response) => {
+                    file.saveToArchive(filename || application.userSettings.outputArchiveName, options);
+                    settings.preloadImages = restoreValue;
+                    return response;
                 });
             }
-        })
+            return frameworkNotInstalled();
+        }
     };
 
     return appBase;

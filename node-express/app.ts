@@ -277,7 +277,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             const pattern = /\s*<(script|link).*?(\s+data-chrome-file=(["']).*?saveAs:([^;"']+).*?\3).*?\/?>(?:[\s\S]*?<\/\1>\n*)?/ig;
             let match: Null<RegExpExecArray>;
             while ((match = pattern.exec(html)) !== null) {
-                const filename = match[4];
+                const filename = decodeURIComponent(match[4]);
                 if (saved.includes(filename)) {
                     source = source.replace(match[0], '');
                 }

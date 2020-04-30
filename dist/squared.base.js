@@ -1,4 +1,4 @@
-/* squared.base 1.6.5
+/* squared.base 1.7.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -6,6 +6,99 @@
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (global = global || self, factory((global.squared = global.squared || {}, global.squared.base = {})));
 }(this, (function (exports) { 'use strict';
+
+    const { hasBit, isObject } = squared.lib.util;
+    class ExtensionManager {
+        constructor(application) {
+            this.application = application;
+        }
+        include(ext) {
+            const application = this.application;
+            const extensions = application.extensions;
+            if (typeof ext === 'string') {
+                const item = this.retrieve(ext);
+                if (item === null) {
+                    return false;
+                }
+                ext = item;
+            }
+            let name = ext.name;
+            const index = extensions.findIndex(item => item.name === name);
+            if (index !== -1) {
+                extensions[index] = ext;
+                return true;
+            }
+            else {
+                const framework = ext.framework;
+                if (framework > 0) {
+                    ext.dependencies.forEach(item => {
+                        if (item.preload) {
+                            name = item.name;
+                            if (this.retrieve(name) === null) {
+                                const extension = application.builtInExtensions[name];
+                                if (extension) {
+                                    this.include(extension);
+                                }
+                            }
+                        }
+                    });
+                }
+                if ((framework === 0 || hasBit(framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
+                    ext.application = application;
+                    extensions.push(ext);
+                    return true;
+                }
+            }
+            return false;
+        }
+        exclude(ext) {
+            const extensions = this.extensions;
+            const length = extensions.length;
+            for (let i = 0; i < length; ++i) {
+                if (extensions[i] === ext || typeof ext === 'string' && this.retrieve(ext)) {
+                    extensions.splice(i, 1);
+                    return true;
+                }
+            }
+            return false;
+        }
+        retrieve(name, checkBuiltIn = false) {
+            const extensions = this.extensions;
+            const length = extensions.length;
+            let i = 0;
+            while (i < length) {
+                const ext = extensions[i++];
+                if (ext.name === name) {
+                    return ext;
+                }
+            }
+            return checkBuiltIn && this.application.builtInExtensions[name] || null;
+        }
+        optionValue(name, attr) {
+            var _a;
+            const options = (_a = this.retrieve(name)) === null || _a === void 0 ? void 0 : _a.options;
+            return isObject(options) ? options[attr] : undefined;
+        }
+        optionValueAsObject(name, attr) {
+            const value = this.optionValue(name, attr);
+            return isObject(value) ? value : null;
+        }
+        optionValueAsString(name, attr) {
+            const value = this.optionValue(name, attr);
+            return typeof value === 'string' ? value : '';
+        }
+        optionValueAsNumber(name, attr) {
+            const value = this.optionValue(name, attr);
+            return typeof value === 'number' ? value : NaN;
+        }
+        optionValueAsBoolean(name, attr) {
+            const value = this.optionValue(name, attr);
+            return typeof value === 'boolean' ? value : false;
+        }
+        get extensions() {
+            return this.application.extensions;
+        }
+    }
 
     class NodeList extends squared.lib.base.Container {
         constructor(children) {
@@ -34,6 +127,7 @@
     const { STRING, XML } = $lib.regex;
     const { extractURL } = $lib.css;
     const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = $lib.util;
+    const REGEX_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
     class Resource {
         reset() {
             const ASSETS = Resource.ASSETS;
@@ -46,7 +140,7 @@
             if (element === null || element === void 0 ? void 0 : element.complete) {
                 const uri = element.src;
                 if (uri.startsWith('data:image/')) {
-                    const match = new RegExp(`^${STRING.DATAURI}$`).exec(uri);
+                    const match = REGEX_DATAURI.exec(uri);
                     if (match) {
                         const mimeType = match[1].split(XML.DELIMITER);
                         this.addRawData(uri, mimeType[0].trim(), ((_a = mimeType[1]) === null || _a === void 0 ? void 0 : _a.trim()) || 'base64', match[2], element.naturalWidth, element.naturalHeight);
@@ -90,11 +184,10 @@
             }
             const imageMimeType = this.mimeTypeMap.image;
             if (imageMimeType === '*' || imageMimeType.includes(mimeType)) {
-                const origin = location.origin;
-                const ext = fromMimeType(mimeType);
-                const filename = uri.endsWith('.' + ext) ? fromLastIndexOf(uri, '/') : this.randomUUID + '.' + ext;
+                const ext = '.' + fromMimeType(mimeType);
+                const filename = uri.endsWith(ext) ? fromLastIndexOf(uri, '/') : this.randomUUID + ext;
                 Resource.ASSETS.rawData.set(uri, {
-                    pathname: uri.startsWith(origin) ? uri.substring(origin.length + 1, uri.lastIndexOf('/')) : '',
+                    pathname: uri.startsWith(location.origin) ? uri.substring(location.origin.length + 1, uri.lastIndexOf('/')) : '',
                     filename,
                     content,
                     base64,
@@ -157,22 +250,12 @@
     };
     Resource.canCompressImage = (filename) => /\.(png|jpg|jpeg)$/i.test(filename);
 
-    var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-        function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-        return new (P || (P = Promise))(function (resolve, reject) {
-            function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-            function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-            function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-            step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-    };
     const $lib$1 = squared.lib;
-    const { getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText, checkMediaRule } = $lib$1.css;
+    const { checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = $lib$1.css;
     const { isTextNode } = $lib$1.dom;
-    const { capitalize, convertCamelCase, isString, objectMap, resolvePath } = $lib$1.util;
+    const { capitalize, convertCamelCase, isString, objectMap, promisify, resolvePath } = $lib$1.util;
     const { CHAR, FILE, STRING: STRING$1, XML: XML$1 } = $lib$1.regex;
-    const { getElementCache, setElementCache } = $lib$1.session;
-    const PromiseHandler = $lib$1.base.PromiseHandler;
+    const { frameworkNotInstalled, getElementCache, setElementCache } = $lib$1.session;
     const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
     const REGEX_MEDIATEXT = /all|screen/;
     const REGEX_BACKGROUND = /^background/;
@@ -183,7 +266,7 @@
     const REGEX_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
     const REGEX_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
     const REGEX_URL = /\s*(url|local)\((?:["']([^'")]+)["']|([^)]+))\)(?:\s*format\(["']?([\w-]+)["']?\))?\s*/;
-    const REGEX_DATAURI = new RegExp(`url\\(["']?(${STRING$1.DATAURI})["']?\\),?\\s*`, 'g');
+    const REGEX_DATAURI$1 = new RegExp(`url\\(["']?(${STRING$1.DATAURI})["']?\\),?\\s*`, 'g');
     function addImageSrc(uri, width = 0, height = 0) {
         if (uri !== '') {
             const image = ASSET_IMAGE.get(uri);
@@ -201,10 +284,30 @@
             });
         }
     }
-    function getImageSvgAsync(value) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return (yield fetch(value, { method: 'GET', headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' }) })).text();
-        });
+    function parseImageUrl(resourceHandler, baseMap, attr, preloadImges, styleSheetHref) {
+        var _a;
+        const value = baseMap[attr];
+        if (value && value !== 'initial') {
+            let result = value;
+            REGEX_DATAURI$1.lastIndex = 0;
+            let match;
+            while ((match = REGEX_DATAURI$1.exec(value)) !== null) {
+                if (match[2]) {
+                    const mimeType = match[2].split(XML$1.DELIMITER);
+                    resourceHandler.addRawData(match[1], mimeType[0].trim(), ((_a = mimeType[1]) === null || _a === void 0 ? void 0 : _a.trim()) || 'utf8', match[3]);
+                }
+                else if (preloadImges) {
+                    const uri = resolvePath(match[3], styleSheetHref);
+                    if (uri !== '') {
+                        if (!resourceHandler.getImage(uri)) {
+                            addImageSrc(uri);
+                        }
+                        result = result.replace(match[0], `url("${uri}")`);
+                    }
+                }
+            }
+            baseMap[attr] = result;
+        }
     }
     const isSvg = (value) => FILE.SVG.test(value);
     const parseConditionText = (rule, value) => { var _a; return ((_a = new RegExp(`\\s*@${rule}([^{]+)`).exec(value)) === null || _a === void 0 ? void 0 : _a[1].trim()) || value; };
@@ -228,29 +331,29 @@
             this._cache = cache;
             this._controllerHandler = new ControllerConstructor(this, cache);
             this._resourceHandler = new ResourceConstructor(this, cache);
-            this._extensionManager = new ExtensionManagerConstructor(this, cache);
+            this._extensionManager = new (ExtensionManagerConstructor || ExtensionManager)(this, cache);
             this._afterInsertNode = this._controllerHandler.afterInsertNode;
             this.Node = nodeConstructor;
         }
         copyToDisk(directory, options) {
             var _a;
-            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyToDisk(directory, options);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.copyToDisk(directory, options)) || frameworkNotInstalled();
         }
         appendToArchive(pathname, options) {
             var _a;
-            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.appendToArchive(pathname, options);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.appendToArchive(pathname, options)) || frameworkNotInstalled();
         }
         saveToArchive(filename, options) {
             var _a;
-            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveToArchive(filename || this.userSettings.outputArchiveName, options);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.saveToArchive(filename || this.userSettings.outputArchiveName, options)) || frameworkNotInstalled();
         }
         createFrom(format, options) {
             var _a;
-            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.createFrom(format, options);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.createFrom(format, options)) || frameworkNotInstalled();
         }
         appendFromArchive(filename, options) {
             var _a;
-            (_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.appendFromArchive(filename, options);
+            return ((_a = this.fileHandler) === null || _a === void 0 ? void 0 : _a.appendFromArchive(filename, options)) || frameworkNotInstalled();
         }
         reset() {
             var _a;
@@ -267,7 +370,6 @@
         }
         parseDocument(...elements) {
             const { controllerHandler: controller, resourceHandler: resource } = this;
-            const promiseResult = new PromiseHandler(this);
             this.initializing = false;
             this.rootElements.clear();
             const sessionId = controller.generateSessionId;
@@ -280,7 +382,7 @@
             const preloadImages = this.userSettings.preloadImages;
             const imageElements = [];
             const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
-            const removePreloaded = () => {
+            const resumeThread = () => {
                 this.initializing = false;
                 preloaded.forEach(image => {
                     if (image.parentElement) {
@@ -288,14 +390,13 @@
                     }
                 });
                 preloaded.length = 0;
-            };
-            const resumeThread = () => {
-                removePreloaded();
                 this.extensions.forEach(ext => ext.beforeParseDocument());
+                const success = [];
                 for (const element of this.rootElements) {
                     const node = this.createCache(element);
                     if (node) {
                         this.afterCreateCache(node);
+                        success.push(node);
                     }
                 }
                 this.extensions.forEach(ext => ext.afterParseDocument());
@@ -304,7 +405,7 @@
                 }
                 catch (_a) {
                 }
-                promiseResult.success();
+                return success;
             };
             if (elements.length === 0) {
                 elements.push(document.body);
@@ -389,10 +490,13 @@
             }
             if (imageElements.length) {
                 this.initializing = true;
-                Promise.all(objectMap(imageElements, image => {
+                return Promise.all(objectMap(imageElements, image => {
                     return new Promise((resolve, reject) => {
                         if (typeof image === 'string') {
-                            resolve(getImageSvgAsync(image));
+                            (async () => {
+                                const result = await fetch(image, { method: 'GET', headers: new Headers({ 'Accept': 'application/xhtml+xml, image/svg+xml', 'Content-Type': 'image/svg+xml' }) });
+                                resolve(await result.text());
+                            })();
                         }
                         else {
                             image.addEventListener('load', () => resolve(image));
@@ -414,7 +518,7 @@
                             resource.addImage(value);
                         }
                     }
-                    resumeThread();
+                    return resumeThread();
                 })
                     .catch((error) => {
                     let target = error;
@@ -422,27 +526,12 @@
                         target = error.target;
                     }
                     const message = target instanceof HTMLImageElement ? target.src : '';
-                    if (!promiseResult.hasCatch && (!this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`))) {
-                        resumeThread();
-                    }
-                    else {
-                        if (!(error instanceof Error)) {
-                            error = new Error(message ? `FAIL: ${message}` : 'Unable to preload images.');
-                        }
-                        removePreloaded();
-                        promiseResult.throw(error);
-                    }
+                    return !this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`) ? resumeThread() : [];
                 });
             }
             else {
-                resumeThread();
+                return promisify(resumeThread)();
             }
-            return promiseResult;
-        }
-        parseDocumentAsync(...elements) {
-            return __awaiter(this, void 0, void 0, function* () {
-                return this.parseDocument(...elements);
-            });
         }
         createCache(documentRoot) {
             const node = this.createRootNode(documentRoot);
@@ -450,6 +539,23 @@
                 this.controllerHandler.sortInitialCache();
             }
             return node;
+        }
+        setStyleMap(caching = false) {
+            const styleSheets = document.styleSheets;
+            const length = styleSheets.length;
+            let i = 0;
+            while (i < length) {
+                const styleSheet = styleSheets[i++];
+                let mediaText;
+                try {
+                    mediaText = styleSheet.media.mediaText;
+                }
+                catch (_a) {
+                }
+                if (!isString(mediaText) || REGEX_MEDIATEXT.test(mediaText)) {
+                    this.applyStyleSheet(styleSheet, caching);
+                }
+            }
         }
         getDatasetName(attr, element) {
             return element.dataset[attr + capitalize(this.systemName)] || element.dataset[attr];
@@ -469,7 +575,8 @@
             const extensions = this.extensionsCascade;
             const node = this.cascadeParentNode(element, 0, extensions.length ? extensions : undefined);
             if (node) {
-                const parent = new this.Node(0, processing.sessionId, element.parentElement || document.body, this._afterInsertNode);
+                const parent = new this.Node(0, processing.sessionId, element.parentElement || document.body);
+                this._afterInsertNode(parent);
                 node.parent = parent;
                 node.actualParent = parent;
                 node.childIndex = 0;
@@ -554,65 +661,7 @@
             }
             return result;
         }
-        setStyleMap() {
-            let warning = false;
-            const applyStyleSheet = (item) => {
-                try {
-                    const cssRules = item.cssRules;
-                    if (cssRules) {
-                        const length = cssRules.length;
-                        let i = 0;
-                        while (i < length) {
-                            const rule = cssRules[i++];
-                            switch (rule.type) {
-                                case CSSRule.STYLE_RULE:
-                                case CSSRule.FONT_FACE_RULE:
-                                    this.applyStyleRule(rule);
-                                    break;
-                                case CSSRule.IMPORT_RULE:
-                                    applyStyleSheet(rule.styleSheet);
-                                    break;
-                                case CSSRule.MEDIA_RULE:
-                                    if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
-                                        this.applyCSSRuleList(rule.cssRules);
-                                    }
-                                    break;
-                                case CSSRule.SUPPORTS_RULE:
-                                    if (CSS.supports && CSS.supports(rule.conditionText || parseConditionText('supports', rule.cssText))) {
-                                        this.applyCSSRuleList(rule.cssRules);
-                                    }
-                                    break;
-                            }
-                        }
-                    }
-                }
-                catch (error) {
-                    if (this.userSettings.showErrorMessages && !warning) {
-                        alert('CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' +
-                            'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
-                            'See the README for more detailed instructions.\n\n' +
-                            item.href + '\n\n' + error);
-                        warning = true;
-                    }
-                }
-            };
-            const styleSheets = document.styleSheets;
-            const length = styleSheets.length;
-            let i = 0;
-            while (i < length) {
-                const styleSheet = styleSheets[i++];
-                let mediaText;
-                try {
-                    mediaText = styleSheet.media.mediaText;
-                }
-                catch (_a) {
-                }
-                if (!isString(mediaText) || REGEX_MEDIATEXT.test(mediaText)) {
-                    applyStyleSheet(styleSheet);
-                }
-            }
-        }
-        applyStyleRule(item) {
+        applyStyleRule(item, caching) {
             var _a, _b, _c, _d, _e, _f;
             const resourceHandler = this.resourceHandler;
             const sessionId = this.processing.sessionId;
@@ -620,41 +669,20 @@
             const cssText = item.cssText;
             switch (item.type) {
                 case CSSRule.SUPPORTS_RULE:
-                    this.applyCSSRuleList(item.cssRules);
+                    this.applyCSSRuleList(item.cssRules, caching);
                     break;
                 case CSSRule.STYLE_RULE: {
                     const cssStyle = item.style;
                     const important = {};
                     const baseMap = {};
-                    const parseImageUrl = (attr) => {
-                        var _a;
-                        const value = baseMap[attr];
-                        if (value && value !== 'initial') {
-                            let result = value;
-                            REGEX_DATAURI.lastIndex = 0;
-                            let match;
-                            while ((match = REGEX_DATAURI.exec(value)) !== null) {
-                                if (match[2]) {
-                                    const mimeType = match[2].split(XML$1.DELIMITER);
-                                    resourceHandler.addRawData(match[1], mimeType[0].trim(), ((_a = mimeType[1]) === null || _a === void 0 ? void 0 : _a.trim()) || 'utf8', match[3]);
-                                }
-                                else if (this.userSettings.preloadImages) {
-                                    const uri = resolvePath(match[3], styleSheetHref);
-                                    if (uri !== '') {
-                                        if (!resourceHandler.getImage(uri)) {
-                                            addImageSrc(uri);
-                                        }
-                                        result = result.replace(match[0], `url("${uri}")`);
-                                    }
-                                }
-                            }
-                            baseMap[attr] = result;
-                        }
-                    };
+                    const preloadImages = this.userSettings.preloadImages || caching;
                     Array.from(cssStyle).forEach(attr => baseMap[convertCamelCase(attr)] = cssStyle[attr]);
-                    parseImageUrl('backgroundImage');
-                    parseImageUrl('listStyleImage');
-                    parseImageUrl('content');
+                    parseImageUrl(resourceHandler, baseMap, 'backgroundImage', preloadImages, styleSheetHref);
+                    parseImageUrl(resourceHandler, baseMap, 'listStyleImage', preloadImages, styleSheetHref);
+                    parseImageUrl(resourceHandler, baseMap, 'content', preloadImages, styleSheetHref);
+                    if (caching) {
+                        break;
+                    }
                     REGEX_IMPORTANT.lastIndex = 0;
                     let match;
                     while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
@@ -805,11 +833,50 @@
                 }
             }
         }
-        applyCSSRuleList(rules) {
+        applyCSSRuleList(rules, caching) {
             const length = rules.length;
             let i = 0;
             while (i < length) {
-                this.applyStyleRule(rules[i++]);
+                this.applyStyleRule(rules[i++], caching);
+            }
+        }
+        applyStyleSheet(item, caching) {
+            try {
+                const cssRules = item.cssRules;
+                if (cssRules) {
+                    const length = cssRules.length;
+                    let i = 0;
+                    while (i < length) {
+                        const rule = cssRules[i++];
+                        switch (rule.type) {
+                            case CSSRule.STYLE_RULE:
+                            case CSSRule.FONT_FACE_RULE:
+                                this.applyStyleRule(rule, caching);
+                                break;
+                            case CSSRule.IMPORT_RULE:
+                                this.applyStyleSheet(rule.styleSheet, caching);
+                                break;
+                            case CSSRule.MEDIA_RULE:
+                                if (checkMediaRule(rule.conditionText || parseConditionText('media', rule.cssText))) {
+                                    this.applyCSSRuleList(rule.cssRules, caching);
+                                }
+                                break;
+                            case CSSRule.SUPPORTS_RULE:
+                                if (CSS.supports && CSS.supports(rule.conditionText || parseConditionText('supports', rule.cssText))) {
+                                    this.applyCSSRuleList(rule.cssRules, caching);
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+            catch (error) {
+                if (this.userSettings.showErrorMessages) {
+                    alert('CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' +
+                        'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
+                        'See the README for more detailed instructions.\n\n' +
+                        item.href + '\n\n' + error);
+                }
             }
         }
         get controllerHandler() {
@@ -843,6 +910,9 @@
         get generateSessionId() {
             return new Date().getTime().toString();
         }
+        get afterInsertNode() {
+            return (node) => { };
+        }
     }
 
     class Extension {
@@ -873,93 +943,9 @@
         }
     }
 
-    const { hasBit, isObject } = squared.lib.util;
-    class ExtensionManager {
-        constructor(application) {
-            this.application = application;
-        }
-        include(ext) {
-            const application = this.application;
-            const extensions = application.extensions;
-            let name = ext.name;
-            const index = extensions.findIndex(item => item.name === name);
-            if (index !== -1) {
-                extensions[index] = ext;
-                return true;
-            }
-            else {
-                const framework = ext.framework;
-                if (framework > 0) {
-                    ext.dependencies.forEach(item => {
-                        if (item.preload) {
-                            name = item.name;
-                            if (this.retrieve(name) === null) {
-                                const extension = application.builtInExtensions[name];
-                                if (extension) {
-                                    this.include(extension);
-                                }
-                            }
-                        }
-                    });
-                }
-                if ((framework === 0 || hasBit(framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
-                    ext.application = application;
-                    extensions.push(ext);
-                    return true;
-                }
-            }
-            return false;
-        }
-        exclude(ext) {
-            const extensions = this.extensions;
-            const length = extensions.length;
-            for (let i = 0; i < length; ++i) {
-                if (extensions[i] === ext) {
-                    extensions.splice(i, 1);
-                    return true;
-                }
-            }
-            return false;
-        }
-        retrieve(name) {
-            const extensions = this.extensions;
-            const length = extensions.length;
-            let i = 0;
-            while (i < length) {
-                const ext = extensions[i++];
-                if (ext.name === name) {
-                    return ext;
-                }
-            }
-            return null;
-        }
-        optionValue(name, attr) {
-            var _a;
-            const options = (_a = this.retrieve(name)) === null || _a === void 0 ? void 0 : _a.options;
-            return isObject(options) ? options[attr] : undefined;
-        }
-        optionValueAsObject(name, attr) {
-            const value = this.optionValue(name, attr);
-            return isObject(value) ? value : null;
-        }
-        optionValueAsString(name, attr) {
-            const value = this.optionValue(name, attr);
-            return typeof value === 'string' ? value : '';
-        }
-        optionValueAsNumber(name, attr) {
-            const value = this.optionValue(name, attr);
-            return typeof value === 'number' ? value : NaN;
-        }
-        optionValueAsBoolean(name, attr) {
-            const value = this.optionValue(name, attr);
-            return typeof value === 'boolean' ? value : false;
-        }
-        get extensions() {
-            return this.application.extensions;
-        }
-    }
-
-    const { fromLastIndexOf: fromLastIndexOf$1, isString: isString$1 } = squared.lib.util;
+    const $lib$2 = squared.lib;
+    const { frameworkNotInstalled: frameworkNotInstalled$1 } = $lib$2.session;
+    const { fromLastIndexOf: fromLastIndexOf$1, isString: isString$1 } = $lib$2.util;
     const isHttpProtocol = () => location.protocol.startsWith('http');
     class File {
         constructor() {
@@ -982,10 +968,10 @@
             setTimeout(() => window.URL.revokeObjectURL(url), 1);
         }
         createFrom(format, options) {
-            this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { format }));
+            return this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { format }));
         }
         appendFromArchive(filename, options) {
-            this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { appendTo: filename, format: filename.substring(filename.lastIndexOf('.') + 1) }));
+            return this.archiving(Object.assign(Object.assign({ filename: this.userSettings.outputArchiveName }, options), { appendTo: filename, format: filename.substring(filename.lastIndexOf('.') + 1) }));
         }
         addAsset(data) {
             if (data.content || data.uri || data.base64) {
@@ -1009,7 +995,7 @@
                     const body = assets ? assets.concat(this.assets) : this.assets;
                     if (body.length) {
                         body[0].exclusions = options.exclusions;
-                        fetch('/api/assets/copy' +
+                        return fetch('/api/assets/copy' +
                             '?to=' + encodeURIComponent(directory.trim()) +
                             '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0'), {
                             method: 'POST',
@@ -1019,7 +1005,7 @@
                             .then((response) => response.json())
                             .then((result) => {
                             if (result) {
-                                if (result.success && typeof options.callback === 'function') {
+                                if (typeof options.callback === 'function') {
                                     options.callback(result);
                                 }
                                 if (this.userSettings.showErrorMessages) {
@@ -1029,11 +1015,7 @@
                                     }
                                 }
                             }
-                        })
-                            .catch(err => {
-                            if (this.userSettings.showErrorMessages) {
-                                alert(`ERROR: ${err}`);
-                            }
+                            return result;
                         });
                     }
                 }
@@ -1041,6 +1023,7 @@
             else if (this.userSettings.showErrorMessages) {
                 alert('SERVER (required): See README for instructions');
             }
+            return frameworkNotInstalled$1();
         }
         archiving(options) {
             if (isHttpProtocol()) {
@@ -1049,9 +1032,10 @@
                     const body = assets ? assets.concat(this.assets) : this.assets;
                     if (body.length) {
                         body[0].exclusions = options.exclusions;
-                        fetch('/api/assets/archive' +
+                        return fetch('/api/assets/archive' +
                             '?filename=' + encodeURIComponent(filename.trim()) +
                             '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
+                            '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
                             '&append_to=' + encodeURIComponent((options.appendTo || '').trim()), {
                             method: 'POST',
                             headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
@@ -1060,14 +1044,13 @@
                             .then((response) => response.json())
                             .then((result) => {
                             if (result) {
-                                if (result.success && typeof options.callback === 'function') {
+                                if (typeof options.callback === 'function') {
                                     options.callback(result);
                                 }
                                 const zipname = result.zipname;
                                 if (isString$1(zipname)) {
                                     fetch('/api/browser/download?filepath=' + encodeURIComponent(zipname))
-                                        .then((response) => response.blob())
-                                        .then((blob) => File.downloadFile(blob, fromLastIndexOf$1(zipname, '/', '\\')));
+                                        .then(async (download) => File.downloadFile(await download.blob(), fromLastIndexOf$1(zipname, '/', '\\')));
                                 }
                                 else if (this.userSettings.showErrorMessages) {
                                     const { application, system } = result;
@@ -1076,11 +1059,7 @@
                                     }
                                 }
                             }
-                        })
-                            .catch(err => {
-                            if (this.userSettings.showErrorMessages) {
-                                alert(`ERROR: ${err}`);
-                            }
+                            return result;
                         });
                     }
                 }
@@ -1088,16 +1067,17 @@
             else if (this.userSettings.showErrorMessages) {
                 alert('SERVER (required): See README for instructions');
             }
+            return frameworkNotInstalled$1();
         }
     }
 
-    const $lib$2 = squared.lib;
-    const { USER_AGENT, isUserAgent } = $lib$2.client;
-    const { BOX_BORDER, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle: getStyle$1, hasComputedStyle: hasComputedStyle$1, isLength, isPercent, parseSelectorText: parseSelectorText$1, parseUnit } = $lib$2.css;
-    const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib$2.dom;
-    const { CHAR: CHAR$1, CSS: CSS$1, FILE: FILE$1, XML: XML$2 } = $lib$2.regex;
-    const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache: getElementCache$1, getPseudoElt, setElementCache: setElementCache$1 } = $lib$2.session;
-    const { aboveRange, belowRange, convertCamelCase: convertCamelCase$1, convertFloat, convertInt, hasBit: hasBit$1, hasValue, isNumber, isObject: isObject$1, isString: isString$2, iterateArray, spliceString, splitEnclosing } = $lib$2.util;
+    const $lib$3 = squared.lib;
+    const { USER_AGENT, isUserAgent } = $lib$3.client;
+    const { BOX_BORDER, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle: getStyle$1, hasComputedStyle: hasComputedStyle$1, isLength, isPercent, parseSelectorText: parseSelectorText$1, parseUnit } = $lib$3.css;
+    const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = $lib$3.dom;
+    const { CHAR: CHAR$1, CSS: CSS$1, FILE: FILE$1, XML: XML$2 } = $lib$3.regex;
+    const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache: getElementCache$1, getPseudoElt, setElementCache: setElementCache$1 } = $lib$3.session;
+    const { aboveRange, belowRange, convertCamelCase: convertCamelCase$1, convertFloat, convertInt, hasBit: hasBit$1, hasValue, isNumber, isObject: isObject$1, isString: isString$2, iterateArray, spliceString, splitEnclosing } = $lib$3.util;
     const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS$1;
     const REGEX_BACKGROUND$1 = /\s*(url|[a-z-]+gradient)/;
     const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
@@ -1139,6 +1119,155 @@
             return getFlexValue(node, attr, fallback, node.actualParent);
         }
         return fallback;
+    }
+    function hasTextAlign(node, value, localizedValue) {
+        const textAlign = node.cssAscend('textAlign', node.textElement && node.blockStatic && !node.hasPX('width'));
+        return (textAlign === value || textAlign === localizedValue) && (node.blockStatic ? node.textElement && !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true) : node.display.startsWith('inline'));
+    }
+    function setStyleCache(element, attr, sessionId, value, current) {
+        if (current !== value) {
+            element.style.setProperty(attr, value);
+            if (validateCssSet(value, element.style.getPropertyValue(attr))) {
+                setElementCache$1(element, attr, sessionId, value !== 'auto' ? current : '');
+                return true;
+            }
+            return false;
+        }
+        return true;
+    }
+    function deleteStyleCache(element, attr, sessionId) {
+        const value = getElementCache$1(element, attr, sessionId);
+        if (value !== undefined) {
+            element.style.setProperty(attr, value);
+            deleteElementCache(element, attr, sessionId);
+        }
+    }
+    function setDimension(node, styleMap, attr, attrMin, attrMax) {
+        const valueA = styleMap[attr];
+        const baseValue = node.parseUnit(valueA, attr);
+        let value = Math.max(baseValue, node.parseUnit(styleMap[attrMin], attr));
+        if (value === 0 && node.styleElement) {
+            const element = node.element;
+            switch (element.tagName) {
+                case 'IMG':
+                case 'INPUT':
+                    if (element.type !== 'image') {
+                        break;
+                    }
+                case 'TD':
+                case 'TH':
+                case 'SVG':
+                case 'IFRAME':
+                case 'VIDEO':
+                case 'AUDIO':
+                case 'CANVAS':
+                case 'OBJECT':
+                case 'EMBED': {
+                    const size = getNamedItem(element, attr);
+                    if (size !== '') {
+                        value = isNumber(size) ? parseFloat(size) : node.parseUnit(size, attr);
+                        if (value > 0) {
+                            node.css(attr, isPercent(size) ? size : size + 'px');
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        let maxValue = 0;
+        if (baseValue > 0 && !node.imageElement) {
+            const valueB = styleMap[attrMax];
+            if (valueA === valueB) {
+                delete styleMap[attrMax];
+            }
+            else {
+                maxValue = node.parseUnit(valueB, attr);
+                if (maxValue > 0 && maxValue <= baseValue && isLength(valueA)) {
+                    maxValue = 0;
+                    styleMap[attr] = valueB;
+                    delete styleMap[attrMax];
+                }
+            }
+        }
+        return maxValue > 0 ? Math.min(value, maxValue) : value;
+    }
+    function setOverflow(node) {
+        let result = 0;
+        if (node.htmlElement && !node.inputElement && !node.imageElement && node.tagName !== 'HR' && !node.documentBody) {
+            const element = node.element;
+            const { overflowX, overflowY } = node.cssAsObject('overflowX', 'overflowY');
+            if (node.hasHeight && (node.hasPX('height') || node.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
+                result |= 16 /* VERTICAL */;
+            }
+            if ((node.hasPX('width') || node.hasPX('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
+                result |= 8 /* HORIZONTAL */;
+            }
+        }
+        return result;
+    }
+    function convertBorderWidth(node, dimension, border) {
+        if (!node.plainText) {
+            switch (node.css(border[0])) {
+                case 'none':
+                case 'initial':
+                case 'hidden':
+                    return 0;
+            }
+            const width = node.css(border[1]);
+            const result = isLength(width, true) ? node.parseUnit(width, dimension) : convertFloat(node.style[border[1]]);
+            if (result > 0) {
+                return Math.max(Math.round(result), 1);
+            }
+        }
+        return 0;
+    }
+    function convertBox(node, attr, margin) {
+        var _a;
+        switch (node.display) {
+            case 'table':
+                if (!margin && node.css('borderCollapse') === 'collapse') {
+                    return 0;
+                }
+                break;
+            case 'table-row':
+                return 0;
+            case 'table-cell':
+                if (margin) {
+                    switch (node.tagName) {
+                        case 'TD':
+                        case 'TH':
+                            return 0;
+                        default: {
+                            const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
+                            if (parent) {
+                                const [horizontal, vertical] = parent.css('borderSpacing').split(' ');
+                                switch (attr) {
+                                    case 'marginTop':
+                                    case 'marginBottom':
+                                        return vertical ? node.parseUnit(vertical, 'height', false) : node.parseUnit(horizontal, 'width', false);
+                                    case 'marginRight':
+                                        if (node.actualParent.lastChild !== node) {
+                                            return node.parseUnit(horizontal, 'width', false);
+                                        }
+                                    case 'marginLeft':
+                                        return 0;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    return 0;
+                }
+                break;
+        }
+        return node.parseUnit(node.css(attr), 'width', !(((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.gridElement) === true));
+    }
+    const canTextAlign = (node) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
+    const validateCssSet = (value, actualValue) => value === actualValue || isLength(value, true) && PX.test(actualValue);
+    const soryById = (a, b) => a.id < b.id ? -1 : 1;
+    const getFontSize = (style) => parseFloat(style.getPropertyValue('font-size'));
+    function getInitialValue(attr, modified, computed) {
+        return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, modified, computed);
     }
     function validateQuerySelector(child, selector, index, last, adjacent) {
         var _a, _b;
@@ -1349,7 +1478,7 @@
                                         return false;
                                     }
                                     else if (element.name) {
-                                        if (iterateArray((((_a = child.ascend({ condition: item => item.tagName === 'FORM' })[0]) === null || _a === void 0 ? void 0 : _a.element) || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item) => item.checked) === Number.POSITIVE_INFINITY) {
+                                        if (iterateArray((((_a = child.ascend({ condition: item => item.tagName === 'FORM' })[0]) === null || _a === void 0 ? void 0 : _a.element) || document).querySelectorAll(`input[type=radio][name="${element.name}"`), (item) => item.checked) === Infinity) {
                                             return false;
                                         }
                                     }
@@ -1397,7 +1526,7 @@
                     case ':valid':
                     case ':invalid': {
                         const element = child.element;
-                        if (iterateArray(parent.element.querySelectorAll(':scope > ' + pseudo), item => item === element) !== Number.POSITIVE_INFINITY) {
+                        if (iterateArray(parent.element.querySelectorAll(':scope > ' + pseudo), item => item === element) !== Infinity) {
                             return false;
                         }
                         break;
@@ -1610,91 +1739,6 @@
         }
         return true;
     }
-    function hasTextAlign(node, value, localizedValue) {
-        const textAlign = node.cssAscend('textAlign', node.textElement && node.blockStatic && !node.hasPX('width'));
-        return (textAlign === value || textAlign === localizedValue) && (node.blockStatic ? node.textElement && !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true) : node.display.startsWith('inline'));
-    }
-    function setStyleCache(element, attr, sessionId, value, current) {
-        if (current !== value) {
-            element.style.setProperty(attr, value);
-            if (validateCssSet(value, element.style.getPropertyValue(attr))) {
-                setElementCache$1(element, attr, sessionId, value !== 'auto' ? current : '');
-                return true;
-            }
-            return false;
-        }
-        return true;
-    }
-    function deleteStyleCache(element, attr, sessionId) {
-        const value = getElementCache$1(element, attr, sessionId);
-        if (value !== undefined) {
-            element.style.setProperty(attr, value);
-            deleteElementCache(element, attr, sessionId);
-        }
-    }
-    function setDimension(node, styleMap, attr, attrMin, attrMax) {
-        const valueA = styleMap[attr];
-        const baseValue = node.parseUnit(valueA, attr);
-        let value = Math.max(baseValue, node.parseUnit(styleMap[attrMin], attr));
-        if (value === 0 && node.styleElement) {
-            const element = node.element;
-            switch (element.tagName) {
-                case 'IMG':
-                case 'INPUT':
-                    if (element.type !== 'image') {
-                        break;
-                    }
-                case 'TD':
-                case 'TH':
-                case 'SVG':
-                case 'IFRAME':
-                case 'VIDEO':
-                case 'AUDIO':
-                case 'CANVAS':
-                case 'OBJECT':
-                case 'EMBED': {
-                    const size = getNamedItem(element, attr);
-                    if (size !== '') {
-                        value = isNumber(size) ? parseFloat(size) : node.parseUnit(size, attr);
-                        if (value > 0) {
-                            node.css(attr, isPercent(size) ? size : size + 'px');
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-        let maxValue = 0;
-        if (baseValue > 0 && !node.imageElement) {
-            const valueB = styleMap[attrMax];
-            if (valueA === valueB) {
-                delete styleMap[attrMax];
-            }
-            else {
-                maxValue = node.parseUnit(valueB, attr);
-                if (maxValue > 0 && maxValue <= baseValue && isLength(valueA)) {
-                    maxValue = 0;
-                    styleMap[attr] = valueB;
-                    delete styleMap[attrMax];
-                }
-            }
-        }
-        return maxValue > 0 ? Math.min(value, maxValue) : value;
-    }
-    function setOverflow(node) {
-        let result = 0;
-        if (node.htmlElement && !node.inputElement && !node.imageElement && node.tagName !== 'HR' && !node.documentBody) {
-            const element = node.element;
-            const { overflowX, overflowY } = node.cssAsObject('overflowX', 'overflowY');
-            if (node.hasHeight && (node.hasPX('height') || node.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
-                result |= 16 /* VERTICAL */;
-            }
-            if ((node.hasPX('width') || node.hasPX('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
-                result |= 8 /* HORIZONTAL */;
-            }
-        }
-        return result;
-    }
     function convertPosition(attr) {
         if (!this.positionStatic) {
             const unit = getInitialValue.call(this, attr, true);
@@ -1707,69 +1751,6 @@
         }
         return 0;
     }
-    function convertBorderWidth(node, dimension, border) {
-        if (!node.plainText) {
-            switch (node.css(border[0])) {
-                case 'none':
-                case 'initial':
-                case 'hidden':
-                    return 0;
-            }
-            const width = node.css(border[1]);
-            const result = isLength(width, true) ? node.parseUnit(width, dimension) : convertFloat(node.style[border[1]]);
-            if (result > 0) {
-                return Math.max(Math.round(result), 1);
-            }
-        }
-        return 0;
-    }
-    function convertBox(node, attr, margin) {
-        var _a, _b;
-        switch (node.display) {
-            case 'table':
-                if (!margin && node.css('borderCollapse') === 'collapse') {
-                    return 0;
-                }
-                break;
-            case 'table-row':
-                return 0;
-            case 'table-cell':
-                if (margin) {
-                    switch (node.tagName) {
-                        case 'TD':
-                        case 'TH':
-                            return 0;
-                        default: {
-                            const parent = node.ascend({ condition: item => item.tagName === 'TABLE' })[0];
-                            if (parent) {
-                                const [horizontal, vertical] = parent.css('borderSpacing').split(' ');
-                                switch (attr) {
-                                    case 'marginTop':
-                                    case 'marginBottom':
-                                        return vertical ? node.parseUnit(vertical, 'height', false) : node.parseUnit(horizontal, 'width', false);
-                                    case 'marginRight':
-                                        if (((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.lastChild) !== node) {
-                                            return node.parseUnit(horizontal, 'width', false);
-                                        }
-                                    case 'marginLeft':
-                                        return 0;
-                                }
-                            }
-                            break;
-                        }
-                    }
-                    return 0;
-                }
-                break;
-        }
-        return node.parseUnit(node.css(attr), 'width', ((_b = node.actualParent) === null || _b === void 0 ? void 0 : _b.gridElement) !== true);
-    }
-    function getInitialValue(attr, modified, computed) {
-        return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, modified, computed);
-    }
-    const canTextAlign = (node) => node.naturalChild && (node.inlineVertical || node.length === 0) && !node.floating && node.autoMargin.horizontal !== true;
-    const validateCssSet = (value, actualValue) => value === actualValue || isLength(value, true) && PX.test(actualValue);
-    const soryById = (a, b) => a.id < b.id ? -1 : 1;
     class Node extends squared.lib.base.Container {
         constructor(id, sessionId = '0', element) {
             super();
@@ -1777,7 +1758,7 @@
             this.sessionId = sessionId;
             this.documentRoot = false;
             this.depth = -1;
-            this.childIndex = Number.POSITIVE_INFINITY;
+            this.childIndex = Infinity;
             this._element = null;
             this._data = {};
             this._documentBody = false;
@@ -1877,39 +1858,26 @@
             return isObject$1(stored) ? stored[attr] : undefined;
         }
         unsetCache(...attrs) {
-            const resetBounds = (cascade = true) => {
-                if (!this._preferInitial) {
-                    this.resetBounds();
-                    if (cascade) {
-                        this.cascade(item => {
-                            item.resetBounds();
-                            return false;
-                        });
-                    }
-                }
-            };
-            if (attrs.length) {
+            let length = attrs.length;
+            if (length) {
                 const cached = this._cached;
                 attrs.forEach(attr => {
                     switch (attr) {
                         case 'position':
-                            if (this._preferInitial) {
+                            if (!this._preferInitial) {
                                 this.cascade(item => {
                                     if (!item.pageFlow) {
                                         item.unsetCache('absoluteParent');
                                     }
-                                    item.resetBounds();
                                     return false;
                                 });
                             }
                             this._cached = {};
-                            resetBounds();
-                            break;
+                            return;
                         case 'display':
                         case 'float':
                         case 'tagName':
                             this._cached = {};
-                            resetBounds();
                             return;
                         case 'width':
                             cached.actualWidth = undefined;
@@ -1918,29 +1886,24 @@
                             cached.width = undefined;
                         case 'maxWidth':
                             cached.overflow = undefined;
-                            resetBounds();
                             break;
                         case 'height':
                             cached.actualHeight = undefined;
                             cached.percentHeight = undefined;
                         case 'minHeight':
                             cached.height = undefined;
-                            if (this._preferInitial) {
+                            if (!this._preferInitial) {
                                 cached.blockVertical = undefined;
-                                cached.overflow = undefined;
-                                this.each(item => item.unsetCache('height', 'blockVertical', 'overflow', 'bottomAligned'));
+                                this.each(item => item.unsetCache('height', 'actualHeight', 'blockVertical', 'overflow', 'bottomAligned'));
                             }
                         case 'maxHeight':
                             cached.overflow = undefined;
-                            resetBounds();
                             break;
                         case 'verticalAlign':
                             cached.baseline = undefined;
-                            resetBounds();
                             break;
                         case 'left':
                         case 'right':
-                            resetBounds();
                         case 'textAlign':
                             cached.rightAligned = undefined;
                             cached.centerAligned = undefined;
@@ -1948,56 +1911,63 @@
                         case 'top':
                         case 'bottom':
                             cached.bottomAligned = undefined;
-                            resetBounds();
                             break;
                         case 'overflowX':
                         case 'overflowY':
                             cached.overflow = undefined;
-                            resetBounds();
                             break;
                         default:
                             if (attr.startsWith('margin')) {
                                 cached.autoMargin = undefined;
                                 cached.rightAligned = undefined;
                                 cached.centerAligned = undefined;
-                                resetBounds();
                             }
                             else if (attr.startsWith('padding')) {
                                 cached.contentBoxWidth = undefined;
                                 cached.contentBoxHeight = undefined;
-                                resetBounds();
                             }
                             else if (attr.startsWith('border')) {
                                 cached.visibleStyle = undefined;
                                 cached.contentBoxWidth = undefined;
                                 cached.contentBoxHeight = undefined;
-                                resetBounds();
                             }
                             else if (attr.startsWith('background')) {
                                 cached.visibleStyle = undefined;
+                                --length;
                             }
                             else if (TEXT_STYLE.includes(attr)) {
                                 cached.lineHeight = undefined;
                                 this._textStyle = undefined;
-                                resetBounds();
+                            }
+                            else if (!/^(grid|flex|row|column|offset|scroll)/.test(attr)) {
+                                --length;
                             }
                             break;
                     }
-                    cached[attr] = undefined;
+                    if (attr in cached) {
+                        cached[attr] = undefined;
+                    }
                 });
             }
             else {
                 this._cached = {};
                 this._textStyle = undefined;
-                resetBounds();
+                length = 1;
+            }
+            if (length !== 0 && !this._preferInitial) {
+                this.resetBounds();
+                this.cascade(item => {
+                    item.resetBounds();
+                    return false;
+                });
             }
         }
-        ascend(options = {}) {
+        ascend(options) {
             let attr = options.attr;
             if (!isString$2(attr)) {
                 attr = 'actualParent';
             }
-            else if (!/Parent$/i.test(attr)) {
+            else if (!/[pP]arent$/.test(attr)) {
                 return [];
             }
             const { condition, including, error, every, excluding } = options;
@@ -2391,7 +2361,7 @@
                     invalid: {
                         if (query === '*') {
                             selectors.push({ all: true });
-                            offset++;
+                            ++offset;
                         }
                         else {
                             let adjacent;
@@ -2405,7 +2375,7 @@
                                     switch (ch) {
                                         case '+':
                                         case '~':
-                                            offset--;
+                                            --offset;
                                         case '>':
                                             if (adjacent || selectors.length === 0) {
                                                 selectors.length = 0;
@@ -2526,7 +2496,7 @@
                                         attrList
                                     });
                                 }
-                                offset++;
+                                ++offset;
                                 adjacent = undefined;
                             }
                         }
@@ -2826,14 +2796,15 @@
             return this._bounds || this.setBounds(false) || assignRect(this.boundingClientRect);
         }
         get linear() {
-            const setBoxRect = () => {
+            let result = this._linear;
+            if (result === undefined) {
                 const bounds = this.bounds;
                 if (bounds) {
                     if (this.styleElement) {
                         const { marginBottom, marginRight } = this;
                         const marginTop = Math.max(this.marginTop, 0);
                         const marginLeft = Math.max(this.marginLeft, 0);
-                        this._linear = {
+                        result = {
                             top: bounds.top - marginTop,
                             right: bounds.right + marginRight,
                             bottom: bounds.bottom + marginBottom,
@@ -2843,20 +2814,23 @@
                         };
                     }
                     else {
-                        this._linear = bounds;
+                        result = bounds;
                     }
-                    return this._linear;
                 }
-                return newBoxRectDimension();
-            };
-            return this._linear || setBoxRect();
+                else {
+                    result = newBoxRectDimension();
+                }
+                this._linear = result;
+            }
+            return result;
         }
         get box() {
-            const setBoxRect = () => {
+            let result = this._box;
+            if (result === undefined) {
                 const bounds = this.bounds;
                 if (bounds) {
                     if (this.styleElement) {
-                        this._box = {
+                        result = {
                             top: bounds.top + (this.paddingTop + this.borderTopWidth),
                             right: bounds.right - (this.paddingRight + this.borderRightWidth),
                             bottom: bounds.bottom - (this.paddingBottom + this.borderBottomWidth),
@@ -2866,13 +2840,15 @@
                         };
                     }
                     else {
-                        this._box = bounds;
+                        result = bounds;
                     }
-                    return this._box;
                 }
-                return newBoxRectDimension();
-            };
-            return this._box || setBoxRect();
+                else {
+                    result = newBoxRectDimension();
+                }
+                this._box = result;
+            }
+            return result;
         }
         get dataset() {
             if (this.styleElement) {
@@ -2927,14 +2903,7 @@
                     };
                 }
                 else {
-                    result = {
-                        alignSelf: 'auto',
-                        justifySelf: 'auto',
-                        basis: 'auto',
-                        grow: 0,
-                        shrink: 1,
-                        order: 0
-                    };
+                    result = {};
                 }
                 this._cached.flexbox = result;
             }
@@ -2970,10 +2939,15 @@
             if (result === undefined) {
                 const value = this.css('height');
                 if (isPercent(value)) {
-                    result = this.pageFlow && (((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody) ? parseFloat(value) > 0 : this.css('position') === 'fixed';
+                    if (this.pageFlow) {
+                        result = ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.hasHeight) || this.documentBody;
+                    }
+                    else {
+                        result = this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom');
+                    }
                 }
                 else {
-                    result = this.height > 0;
+                    result = this.height > 0 || this.hasPX('height', false);
                 }
                 this._cached.hasHeight = result;
             }
@@ -3286,7 +3260,6 @@
             return this._inlineText;
         }
         get block() {
-            var _a;
             let result = this._cached.block;
             if (result === undefined) {
                 switch (this.display) {
@@ -3300,7 +3273,7 @@
                         result = ELEMENT_BLOCK.includes(this.tagName);
                         break;
                     case 'inline':
-                        if (this.tagName === 'svg' && ((_a = this.actualParent) === null || _a === void 0 ? void 0 : _a.htmlElement)) {
+                        if (this.tagName === 'svg' && this.actualParent.htmlElement) {
                             result = !this.hasPX('width') && convertFloat(getNamedItem(this._element, 'width')) === 0;
                             break;
                         }
@@ -3513,7 +3486,7 @@
                         const children = this.naturalChildren;
                         const length = children.length;
                         if (length) {
-                            let top = Number.POSITIVE_INFINITY, right = Number.NEGATIVE_INFINITY, bottom = Number.NEGATIVE_INFINITY, left = Number.POSITIVE_INFINITY;
+                            let top = Infinity, right = -Infinity, bottom = -Infinity, left = Infinity;
                             let numberOfLines = 0;
                             let i = 0;
                             while (i < length) {
@@ -3872,7 +3845,6 @@
             var _a, _b, _c;
             let result = this._fontSize;
             if (result === undefined) {
-                const getFontSize = (style) => parseFloat(style.getPropertyValue('font-size'));
                 if (this.naturalChild && this.styleElement) {
                     const value = this.css('fontSize');
                     if (PX.test(value)) {
@@ -3941,6 +3913,19 @@
                 y: (bounds.top + bounds.bottom) / 2
             };
         }
+        get use() {
+            return this.dataset.use;
+        }
+        get extensions() {
+            var _a;
+            let result = this._cached.extensions;
+            if (result === undefined) {
+                const use = (_a = this.use) === null || _a === void 0 ? void 0 : _a.trim();
+                result = use ? use.split(XML$2.SEPARATOR) : [];
+                this._cached.extensions = result;
+            }
+            return result;
+        }
     }
 
     const CSS_SPACING = new Map([
@@ -4008,13 +3993,12 @@
         get NODE_PROCEDURE () { return NODE_PROCEDURE; }
     });
 
-    const $lib$3 = squared.lib;
-    const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = $lib$3.css;
-    const { isTextNode: isTextNode$1 } = $lib$3.dom;
-    const { equal } = $lib$3.math;
-    const { XML: XML$3 } = $lib$3.regex;
-    const { getElementAsNode: getElementAsNode$1 } = $lib$3.session;
-    const { capitalize: capitalize$1, cloneObject, convertWord, hasBit: hasBit$2, isArray, iterateArray: iterateArray$1, safeNestedMap, searchObject, spliceArray, withinRange } = $lib$3.util;
+    const $lib$4 = squared.lib;
+    const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = $lib$4.css;
+    const { isTextNode: isTextNode$1 } = $lib$4.dom;
+    const { equal } = $lib$4.math;
+    const { getElementAsNode: getElementAsNode$1 } = $lib$4.session;
+    const { capitalize: capitalize$1, cloneObject, convertWord, hasBit: hasBit$2, isArray, iterateArray: iterateArray$1, safeNestedMap, searchObject, withinRange } = $lib$4.util;
     const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
     const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
     function cascadeActualPadding(children, attr, value) {
@@ -4045,8 +4029,28 @@
         }
         return valid;
     }
-    function traverseElementSibling(options = {}, element, direction, sessionId) {
-        const { floating, pageFlow, lineBreak, excluded } = options;
+    function parseExclusions(attr, enumeration, dataset, parentDataset, systemName) {
+        let exclude = dataset[attr + systemName] || dataset[attr] || '';
+        let offset = 0;
+        const value = parentDataset[attr + 'Child' + systemName] || parentDataset[attr + 'Child'];
+        if (value) {
+            exclude += (exclude !== '' ? '|' : '') + value;
+        }
+        if (exclude !== '') {
+            exclude.split('|').forEach(name => {
+                const i = enumeration[name.trim().toUpperCase()] || 0;
+                if (i > 0 && !hasBit$2(offset, i)) {
+                    offset |= i;
+                }
+            });
+        }
+        return offset;
+    }
+    function traverseElementSibling(element, direction, sessionId, options) {
+        let floating, pageFlow, lineBreak, excluded;
+        if (options) {
+            ({ floating, pageFlow, lineBreak, excluded } = options);
+        }
         const result = [];
         while (element) {
             const node = getElementAsNode$1(element, sessionId);
@@ -4068,14 +4072,59 @@
         }
         return result;
     }
+    const canCascadeChildren = (node) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
+    const isBlockWrap = (node) => node.blockVertical || node.percentWidth > 0;
+    const checkBlockDimension = (node, previous) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous));
+    const getPercentWidth = (node) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
+    const getLayoutWidth = (node) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
     function getDatasetName(attr) {
         const dataset = this.dataset;
         return dataset[attr + capitalize$1(this.localSettings.systemName)] || dataset[attr];
     }
-    const canCascadeChildren = (node) => node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
-    const isBlockWrap = (node) => node.blockVertical || node.percentWidth > 0;
-    const checkBlockDimension = (node, previous) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (isBlockWrap(node) || isBlockWrap(previous));
-    const getPercentWidth = (node) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : Number.NEGATIVE_INFINITY;
+    function applyBoxReset(boxReset, attrs, region, start, node) {
+        for (let i = 0; i < 4; ++i) {
+            const key = CSS_SPACING_KEYS[i + start];
+            if (hasBit$2(region, key)) {
+                const name = attrs[i];
+                boxReset[name] = 1;
+                if (node) {
+                    const previous = this.registerBox(key);
+                    if (previous) {
+                        previous.resetBox(key, node);
+                    }
+                    else {
+                        if (this.naturalChild) {
+                            const value = this[name];
+                            if (value >= 0) {
+                                node.modifyBox(key, value);
+                            }
+                        }
+                        this.transferBox(key, node);
+                    }
+                }
+            }
+        }
+    }
+    function applyBoxAdjustment(boxAdjustment, attrs, region, start, node) {
+        for (let i = 0; i < 4; ++i) {
+            const key = CSS_SPACING_KEYS[i + start];
+            if (hasBit$2(region, key)) {
+                const previous = this.registerBox(key);
+                if (previous) {
+                    previous.transferBox(key, node);
+                }
+                else {
+                    const name = attrs[i];
+                    const value = boxAdjustment[name];
+                    if (value !== 0) {
+                        node.modifyBox(key, value, false);
+                        boxAdjustment[name] = 0;
+                    }
+                    this.registerBox(key, node);
+                }
+            }
+        }
+    }
     class NodeUI extends Node {
         constructor() {
             super(...arguments);
@@ -4093,8 +4142,8 @@
             this._excludeSection = 0;
             this._excludeProcedure = 0;
             this._excludeResource = 0;
-            this._childIndex = Number.POSITIVE_INFINITY;
-            this._containerIndex = Number.POSITIVE_INFINITY;
+            this._childIndex = Infinity;
+            this._containerIndex = Infinity;
             this._visible = true;
             this._renderAs = null;
             this._locked = {};
@@ -4116,10 +4165,10 @@
             return { width, height };
         }
         static outerRegion(node) {
-            let top = Number.POSITIVE_INFINITY, right = Number.NEGATIVE_INFINITY, bottom = Number.NEGATIVE_INFINITY, left = Number.POSITIVE_INFINITY;
+            let top = Infinity, right = -Infinity, bottom = -Infinity, left = Infinity;
             let actualTop, actualRight, actualBottom, actualLeft;
-            let negativeRight = Number.NEGATIVE_INFINITY;
-            let negativeBottom = Number.NEGATIVE_INFINITY;
+            let negativeRight = -Infinity;
+            let negativeBottom = -Infinity;
             node.each((item) => {
                 if (item.companion) {
                     actualTop = item.actualRect('top');
@@ -4255,10 +4304,10 @@
                     while (i < n) {
                         const node = nodes[i++];
                         if (node.alignedVertically(siblings, cleared) > 0) {
-                            y++;
+                            ++y;
                         }
                         else {
-                            x++;
+                            ++x;
                         }
                         if (x > 1 && y > 1) {
                             break;
@@ -4268,8 +4317,8 @@
                     linearX = x === n;
                     linearY = y === n;
                     if (linearX && floated.size) {
-                        let boxLeft = Number.POSITIVE_INFINITY, boxRight = Number.NEGATIVE_INFINITY;
-                        let floatLeft = Number.NEGATIVE_INFINITY, floatRight = Number.POSITIVE_INFINITY;
+                        let boxLeft = Infinity, boxRight = -Infinity;
+                        let floatLeft = -Infinity, floatRight = Infinity;
                         i = 0;
                         while (i < n) {
                             const node = nodes[i++];
@@ -4353,18 +4402,16 @@
                     row.push(node);
                     siblings.push(active);
                 }
+                else if (active.alignedVertically(siblings, cleared) > 0) {
+                    if (row.length) {
+                        result.push(row);
+                    }
+                    row = [node];
+                    siblings = [active];
+                }
                 else {
-                    if (active.alignedVertically(siblings, cleared) > 0) {
-                        if (row.length) {
-                            result.push(row);
-                        }
-                        row = [node];
-                        siblings = [active];
-                    }
-                    else {
-                        row.push(node);
-                        siblings.push(active);
-                    }
+                    row.push(node);
+                    siblings.push(active);
                 }
             }
             if (row.length) {
@@ -4468,12 +4515,8 @@
             return this;
         }
         hide(options) {
-            let remove, replacement;
-            if (options) {
-                ({ remove, replacement } = options);
-            }
-            if (remove) {
-                this.removeTry(replacement);
+            if (options === null || options === void 0 ? void 0 : options.remove) {
+                this.removeTry(options);
             }
             this.rendered = true;
             this.visible = false;
@@ -4594,50 +4637,35 @@
                 const parentDataset = ((_a = element.parentElement) === null || _a === void 0 ? void 0 : _a.dataset) || {};
                 if (Object.keys(dataset).length || Object.keys(parentDataset).length) {
                     systemName = capitalize$1(systemName || this.localSettings.systemName);
-                    const parseExclusions = (attr, enumeration) => {
-                        let exclude = dataset[attr + systemName] || dataset[attr] || '';
-                        let offset = 0;
-                        const value = parentDataset[attr + 'Child' + systemName] || parentDataset[attr + 'Child'];
-                        if (value) {
-                            exclude += (exclude !== '' ? '|' : '') + value;
-                        }
-                        if (exclude !== '') {
-                            exclude.split('|').forEach(name => {
-                                const i = enumeration[name.trim().toUpperCase()] || 0;
-                                if (i > 0 && !hasBit$2(offset, i)) {
-                                    offset |= i;
-                                }
-                            });
-                        }
-                        return offset;
-                    };
                     this.exclude({
-                        resource: parseExclusions('excludeResource', NODE_RESOURCE),
-                        procedure: parseExclusions('excludeProcedure', NODE_PROCEDURE),
-                        section: parseExclusions('excludeSection', APP_SECTION)
+                        resource: parseExclusions('excludeResource', NODE_RESOURCE, dataset, parentDataset, systemName),
+                        procedure: parseExclusions('excludeProcedure', NODE_PROCEDURE, dataset, parentDataset, systemName),
+                        section: parseExclusions('excludeSection', APP_SECTION, dataset, parentDataset, systemName)
                     });
                 }
             }
         }
-        appendTry(node, replacement, append = true) {
+        replaceTry(options) {
+            const { child, replaceWith } = options;
             const children = this.children;
             const length = children.length;
             for (let i = 0; i < length; ++i) {
                 const item = children[i];
-                if (item === node || item === node.innerMostWrapped || item === node.outerMostWrapper) {
-                    children[i] = replacement;
-                    replacement.parent = this;
-                    replacement.containerIndex = node.containerIndex;
+                if (item === child || item === child.outerMostWrapper) {
+                    children[i] = replaceWith;
+                    replaceWith.parent = this;
+                    replaceWith.containerIndex = child.containerIndex;
                     return true;
                 }
             }
-            if (append) {
-                replacement.parent = this;
+            if (options.notFoundAppend) {
+                replaceWith.parent = this;
                 return true;
             }
             return false;
         }
-        removeTry(replacement, beforeReplace) {
+        removeTry(options) {
+            var _a, _b;
             const renderParent = this.renderParent;
             if (renderParent) {
                 const { renderTemplates, renderChildren } = renderParent;
@@ -4646,25 +4674,25 @@
                     if (index !== -1) {
                         const template = renderTemplates[index];
                         if (template.node === this) {
-                            if (replacement) {
-                                const parent = replacement.renderParent;
-                                if (parent === this) {
-                                    const templates = parent.renderTemplates;
-                                    if (templates) {
-                                        const replaceIndex = templates.findIndex(item => item.node === replacement);
+                            const replaceWith = options === null || options === void 0 ? void 0 : options.replaceWith;
+                            if (replaceWith) {
+                                const replaceParent = replaceWith.renderParent;
+                                if (replaceParent) {
+                                    const replaceTemplates = replaceParent.renderTemplates;
+                                    if (replaceTemplates) {
+                                        const replaceIndex = replaceTemplates.findIndex(item => item.node === replaceWith);
                                         if (replaceIndex !== -1) {
-                                            parent.renderChildren.splice(replaceIndex, 1);
-                                        }
-                                        if (renderParent.appendTry(this, replacement, false)) {
-                                            beforeReplace === null || beforeReplace === void 0 ? void 0 : beforeReplace.call(this, replacement);
-                                            renderTemplates[index] = templates[replaceIndex];
-                                            replacement.renderParent = renderParent;
-                                            renderChildren[index] = replacement;
+                                            (_a = options.beforeReplace) === null || _a === void 0 ? void 0 : _a.call(this, replaceWith);
+                                            renderChildren[index] = replaceWith;
+                                            renderTemplates[index] = replaceTemplates[replaceIndex];
+                                            replaceTemplates.splice(replaceIndex, 1);
+                                            replaceParent.renderChildren.splice(replaceIndex, 1);
+                                            replaceWith.renderParent = renderParent;
                                             if (this.documentRoot) {
-                                                replacement.documentRoot = true;
+                                                replaceWith.documentRoot = true;
                                                 this.documentRoot = false;
                                             }
-                                            replacement.depth = this.depth;
+                                            replaceWith.depth = this.depth;
                                             this.renderParent = undefined;
                                             return template;
                                         }
@@ -4672,7 +4700,7 @@
                                 }
                             }
                             else {
-                                beforeReplace === null || beforeReplace === void 0 ? void 0 : beforeReplace.call(this, replacement);
+                                (_b = options === null || options === void 0 ? void 0 : options.beforeReplace) === null || _b === void 0 ? void 0 : _b.call(this, undefined);
                                 renderChildren.splice(index, 1);
                                 this.renderParent = undefined;
                                 return renderTemplates.splice(index, 1)[0];
@@ -4718,7 +4746,6 @@
                                         if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item) => item.layoutElement, startSelf: true })) {
                                             const length = actualParent.naturalChildren.filter((item) => item.visible && item.pageFlow).length;
                                             if (length === siblings.length + 1) {
-                                                const getLayoutWidth = (node) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
                                                 let width = actualParent.box.width - getLayoutWidth(this);
                                                 siblings.forEach(item => width -= getLayoutWidth(item));
                                                 if (width >= 0) {
@@ -4730,7 +4757,7 @@
                                     return 6 /* FLOAT_WRAP */;
                                 }
                             }
-                            else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : Number.NEGATIVE_INFINITY), 0) / this.actualParent.box.width >= 0.8) {
+                            else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : -Infinity), 0) / this.actualParent.box.width >= 0.8) {
                                 return 7 /* FLOAT_INTERSECT */;
                             }
                             else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
@@ -4748,7 +4775,7 @@
                                     else if (siblings[0].floating) {
                                         if (siblings.length > 1) {
                                             const float = siblings[0].float;
-                                            let maxBottom = Number.NEGATIVE_INFINITY;
+                                            let maxBottom = -Infinity;
                                             let contentWidth = 0;
                                             siblings.forEach(item => {
                                                 if (item.floating) {
@@ -4769,7 +4796,7 @@
                                                     }
                                                 }
                                                 const offset = bottom - maxBottom;
-                                                top = offset <= 0 || offset / (bottom - top) < 0.5 ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+                                                top = offset <= 0 || offset / (bottom - top) < 0.5 ? -Infinity : Infinity;
                                             }
                                             else {
                                                 top = Math.ceil(top);
@@ -4835,13 +4862,13 @@
             }
             return 0 /* HORIZONTAL */;
         }
-        previousSiblings(options = {}) {
+        previousSiblings(options) {
             var _a, _b, _c;
-            return traverseElementSibling(options, (this.nodeGroup ? (_b = (_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.element) === null || _b === void 0 ? void 0 : _b.previousSibling : (_c = this.innerMostWrapped.element) === null || _c === void 0 ? void 0 : _c.previousSibling), 'previousSibling', this.sessionId);
+            return traverseElementSibling((this.nodeGroup ? (_b = (_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.element) === null || _b === void 0 ? void 0 : _b.previousSibling : (_c = this.innerMostWrapped.element) === null || _c === void 0 ? void 0 : _c.previousSibling), 'previousSibling', this.sessionId, options);
         }
-        nextSiblings(options = {}) {
+        nextSiblings(options) {
             var _a, _b, _c;
-            return traverseElementSibling(options, (this.nodeGroup ? (_b = (_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.element) === null || _b === void 0 ? void 0 : _b.nextSibling : (_c = this.innerMostWrapped.element) === null || _c === void 0 ? void 0 : _c.nextSibling), 'nextSibling', this.sessionId);
+            return traverseElementSibling((this.nodeGroup ? (_b = (_a = this.firstChild) === null || _a === void 0 ? void 0 : _a.element) === null || _b === void 0 ? void 0 : _b.nextSibling : (_c = this.innerMostWrapped.element) === null || _c === void 0 ? void 0 : _c.nextSibling), 'nextSibling', this.sessionId, options);
         }
         modifyBox(region, offset, negative = true) {
             if (offset !== 0) {
@@ -4859,21 +4886,19 @@
                             this._boxReset[attr] = 1;
                         }
                     }
+                    else if (node) {
+                        node.modifyBox(region, offset, negative);
+                    }
                     else {
-                        if (node) {
-                            node.modifyBox(region, offset, negative);
+                        const boxAdjustment = this._boxAdjustment;
+                        if (!negative && (this._boxReset[attr] === 0 ? this[attr] : 0) + boxAdjustment[attr] + offset <= 0) {
+                            boxAdjustment[attr] = 0;
+                            if (this[attr] >= 0 && offset < 0) {
+                                this._boxReset[attr] = 1;
+                            }
                         }
                         else {
-                            const boxAdjustment = this._boxAdjustment;
-                            if (!negative && (this._boxReset[attr] === 0 ? this[attr] : 0) + boxAdjustment[attr] + offset <= 0) {
-                                boxAdjustment[attr] = 0;
-                                if (this[attr] >= 0 && offset < 0) {
-                                    this._boxReset[attr] = 1;
-                                }
-                            }
-                            else {
-                                boxAdjustment[attr] += offset;
-                            }
+                            boxAdjustment[attr] += offset;
                         }
                     }
                 }
@@ -4920,65 +4945,19 @@
             }
         }
         resetBox(region, node) {
-            const boxReset = this._boxReset;
-            const applyReset = (attrs, start) => {
-                for (let i = 0; i < 4; ++i) {
-                    const key = CSS_SPACING_KEYS[i + start];
-                    if (hasBit$2(region, key)) {
-                        const name = attrs[i];
-                        boxReset[name] = 1;
-                        if (node) {
-                            const previous = this.registerBox(key);
-                            if (previous) {
-                                previous.resetBox(key, node);
-                            }
-                            else {
-                                if (this.naturalChild) {
-                                    const value = this[name];
-                                    if (value >= 0) {
-                                        node.modifyBox(key, value);
-                                    }
-                                }
-                                this.transferBox(key, node);
-                            }
-                        }
-                    }
-                }
-            };
             if (hasBit$2(30 /* MARGIN */, region)) {
-                applyReset(BOX_MARGIN, 0);
+                applyBoxReset.call(this, this._boxReset, BOX_MARGIN, region, 0, node);
             }
             if (hasBit$2(480 /* PADDING */, region)) {
-                applyReset(BOX_PADDING, 4);
+                applyBoxReset.call(this, this._boxReset, BOX_PADDING, region, 4, node);
             }
         }
         transferBox(region, node) {
-            const boxAdjustment = this._boxAdjustment;
-            const applyReset = (attrs, start) => {
-                for (let i = 0; i < 4; ++i) {
-                    const key = CSS_SPACING_KEYS[i + start];
-                    if (hasBit$2(region, key)) {
-                        const previous = this.registerBox(key);
-                        if (previous) {
-                            previous.transferBox(key, node);
-                        }
-                        else {
-                            const name = attrs[i];
-                            const value = boxAdjustment[name];
-                            if (value !== 0) {
-                                node.modifyBox(key, value, false);
-                                boxAdjustment[name] = 0;
-                            }
-                            this.registerBox(key, node);
-                        }
-                    }
-                }
-            };
             if (hasBit$2(30 /* MARGIN */, region)) {
-                applyReset(BOX_MARGIN, 0);
+                applyBoxAdjustment.call(this, this._boxAdjustment, BOX_MARGIN, region, 0, node);
             }
             if (hasBit$2(480 /* PADDING */, region)) {
-                applyReset(BOX_PADDING, 4);
+                applyBoxAdjustment.call(this, this._boxAdjustment, BOX_PADDING, region, 4, node);
             }
         }
         registerBox(region, node) {
@@ -5393,12 +5372,12 @@
         }
         get childIndex() {
             let result = this._childIndex;
-            if (result === Number.POSITIVE_INFINITY) {
+            if (result === Infinity) {
                 let wrapped = this.innerWrapped;
                 if (wrapped) {
                     do {
                         const index = wrapped.childIndex;
-                        if (index !== Number.POSITIVE_INFINITY) {
+                        if (index !== Infinity) {
                             result = index;
                             this._childIndex = result;
                             break;
@@ -5430,11 +5409,11 @@
         }
         get containerIndex() {
             let result = this._containerIndex;
-            if (result === Number.POSITIVE_INFINITY) {
+            if (result === Infinity) {
                 let wrapped = this.innerWrapped;
                 while (wrapped) {
                     const index = wrapped.containerIndex;
-                    if (index !== Number.POSITIVE_INFINITY) {
+                    if (index !== Infinity) {
                         result = index;
                         this._containerIndex = result;
                         break;
@@ -5502,15 +5481,6 @@
         }
         get use() {
             return getDatasetName.call(this, 'use');
-        }
-        get extensions() {
-            let result = this._cached.extensions;
-            if (result === undefined) {
-                const use = this.use;
-                result = use ? spliceArray(use.split(XML$3.SEPARATOR), value => value === '') : [];
-                this._cached.extensions = result;
-            }
-            return result;
         }
     }
 
@@ -5627,12 +5597,12 @@
         get singleRowAligned() {
             let result = this._singleRow;
             if (result === undefined) {
-                const length = this.length;
+                const children = this.children;
+                const length = children.length;
                 if (length) {
                     result = true;
                     if (length > 1) {
-                        let previousBottom = Number.POSITIVE_INFINITY;
-                        const children = this.children;
+                        let previousBottom = Infinity;
                         let i = 0;
                         while (i < length) {
                             const node = children[i++];
@@ -5646,7 +5616,7 @@
                     this._singleRow = result;
                 }
                 else {
-                    result = false;
+                    return false;
                 }
             }
             return result;
@@ -5656,14 +5626,14 @@
         }
     }
 
-    const $lib$4 = squared.lib;
-    const { BOX_POSITION: BOX_POSITION$1, TEXT_STYLE: TEXT_STYLE$1, convertListStyle, formatPX: formatPX$1, getStyle: getStyle$2, insertStyleSheetRule: insertStyleSheetRule$1, resolveURL } = $lib$4.css;
-    const { getNamedItem: getNamedItem$1, isTextNode: isTextNode$2, removeElementsByClassName } = $lib$4.dom;
-    const { maxArray } = $lib$4.math;
-    const { appendSeparator, capitalize: capitalize$2, convertFloat: convertFloat$1, convertWord: convertWord$1, flatArray, hasBit: hasBit$4, hasMimeType: hasMimeType$1, isString: isString$3, iterateArray: iterateArray$2, partitionArray, safeNestedArray, safeNestedMap: safeNestedMap$1, trimBoth, trimString } = $lib$4.util;
-    const { XML: XML$4 } = $lib$4.regex;
-    const { getElementCache: getElementCache$2, getPseudoElt: getPseudoElt$1, setElementCache: setElementCache$2 } = $lib$4.session;
-    const { isPlainText } = $lib$4.xml;
+    const $lib$5 = squared.lib;
+    const { BOX_POSITION: BOX_POSITION$1, TEXT_STYLE: TEXT_STYLE$1, convertListStyle, formatPX: formatPX$1, getStyle: getStyle$2, insertStyleSheetRule: insertStyleSheetRule$1, resolveURL } = $lib$5.css;
+    const { getNamedItem: getNamedItem$1, isTextNode: isTextNode$2, removeElementsByClassName } = $lib$5.dom;
+    const { maxArray } = $lib$5.math;
+    const { appendSeparator, capitalize: capitalize$2, convertFloat: convertFloat$1, convertWord: convertWord$1, flatArray, hasBit: hasBit$4, hasMimeType: hasMimeType$1, isString: isString$3, iterateArray: iterateArray$2, partitionArray, safeNestedArray, safeNestedMap: safeNestedMap$1, trimBoth, trimString } = $lib$5.util;
+    const { XML: XML$3 } = $lib$5.regex;
+    const { getElementCache: getElementCache$2, getPseudoElt: getPseudoElt$1, setElementCache: setElementCache$2 } = $lib$5.session;
+    const { isPlainText } = $lib$5.xml;
     const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
     const STRING_PSEUDOPREFIX = '__squared_';
     function createPseudoElement(parent, tagName = 'span', index = -1) {
@@ -5698,7 +5668,7 @@
     function getCounterIncrementValue(parent, counterName, pseudoElt, sessionId, fallback) {
         var _a;
         const counterIncrement = (_a = getElementCache$2(parent, `styleMap${pseudoElt}`, sessionId)) === null || _a === void 0 ? void 0 : _a.counterIncrement;
-        return counterIncrement ? getCounterValue(counterIncrement, counterName, fallback) : undefined;
+        return counterIncrement && getCounterValue(counterIncrement, counterName, fallback);
     }
     function checkTraverseHorizontal(node, horizontal, vertical) {
         if (vertical.length) {
@@ -5716,7 +5686,7 @@
     }
     function prioritizeExtensions(value, extensions) {
         if (value) {
-            const included = value.split(XML$4.SEPARATOR);
+            const included = value.split(XML$3.SEPARATOR);
             const result = [];
             const untagged = [];
             extensions.forEach(ext => {
@@ -5760,10 +5730,33 @@
         }
         return result;
     }
+    function checkPseudoAfter(element) {
+        const previousSibling = element.childNodes[element.childNodes.length - 1];
+        if (isTextNode$2(previousSibling)) {
+            return !/\s+$/.test(previousSibling.textContent);
+        }
+        return false;
+    }
+    function checkPseudoDimension(styleMap, after, absolute) {
+        if ((after || convertFloat$1(styleMap.width) === 0) && convertFloat$1(styleMap.height) === 0) {
+            for (const attr in styleMap) {
+                if (/(padding|Width|Height)/.test(attr) && convertFloat$1(styleMap[attr]) > 0) {
+                    return true;
+                }
+                else if (!absolute && attr.startsWith('margin') && convertFloat$1(styleMap[attr]) !== 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
     const isHorizontalAligned = (node) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
     const requirePadding = (node) => node.textElement && (node.blockStatic || node.multiline);
     const getRelativeOffset = (item, fromRight) => item.positionRelative ? (item.hasPX('left') ? item.left * (fromRight ? 1 : -1) : item.right * (fromRight ? -1 : 1)) : 0;
     const hasOuterParentExtension = (node) => node.ascend({ condition: (item) => !!item.use }).length > 0;
+    const setMapDepth = (map, depth, id, node) => { var _a; return ((_a = map.get(depth)) === null || _a === void 0 ? void 0 : _a.set(id, node)) || map.set(depth, new Map([[id, node]])); };
+    const getMapIndex = (value) => (value * -1) - 2;
     class ApplicationUI extends Application {
         constructor(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor) {
             super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
@@ -5850,18 +5843,19 @@
             this.closed = true;
         }
         copyToDisk(directory, options) {
-            super.copyToDisk(directory, this.createAssetOptions(options));
+            return super.copyToDisk(directory, this.createAssetOptions(options));
         }
         appendToArchive(pathname, options) {
-            super.appendToArchive(pathname, this.createAssetOptions(options));
+            return super.appendToArchive(pathname, this.createAssetOptions(options));
         }
         saveToArchive(filename, options) {
-            super.saveToArchive(filename, this.createAssetOptions(options));
+            return super.saveToArchive(filename, this.createAssetOptions(options));
         }
         reset() {
             super.reset();
+            const iterationName = 'iteration' + capitalize$2(this.systemName);
             for (const element of this.rootElements) {
-                element.dataset.iteration = '';
+                delete element.dataset[iterationName];
             }
             const session = this.session;
             session.cache.reset();
@@ -5888,7 +5882,7 @@
                         current = current.parentElement;
                     }
                     const controllerHandler = this.controllerHandler;
-                    if (iterateArray$2(element.children, (item) => controllerHandler.visibleElement(item)) === Number.POSITIVE_INFINITY) {
+                    if (iterateArray$2(element.children, (item) => controllerHandler.visibleElement(item)) === Infinity) {
                         return true;
                     }
                     return this.useElement(element);
@@ -5981,23 +5975,23 @@
             return false;
         }
         createNode(options) {
-            const processing = this.processing;
             const { element, parent, children } = options;
-            const node = new this.Node(this.nextId, processing.sessionId, element, this.controllerHandler.afterInsertNode);
+            const node = new this.Node(this.nextId, this.processing.sessionId, element);
+            this.controllerHandler.afterInsertNode(node);
             if (parent) {
                 node.depth = parent.depth + 1;
                 if (parent.naturalElement && (!element || element.parentElement === null)) {
                     node.actualParent = parent;
                 }
-                const replace = options.replace;
-                if (replace && parent.appendTry(replace, node, false)) {
-                    replace.parent = node;
-                    node.innerWrapped = replace;
+                const child = options.innerWrap;
+                if (child && parent.replaceTry({ child, replaceWith: node })) {
+                    child.parent = node;
+                    node.innerWrapped = child;
                 }
             }
             children === null || children === void 0 ? void 0 : children.forEach(item => item.parent = node);
             if (options.append !== false) {
-                processing.cache.append(node, options.delegate === true, options.cascade === true);
+                this.processing.cache.append(node, options.delegate === true, options.cascade === true);
             }
             return node;
         }
@@ -6037,8 +6031,9 @@
                         }
                         if (item.positionRelative) {
                             BOX_POSITION$1.forEach(attr => {
-                                if (item.hasPX(attr)) {
+                                if (item.hasPX(attr) && item[attr] !== 0) {
                                     saveAlignment(preAlignment, element, item.id, attr, 'auto', item.css(attr));
+                                    resetBounds = true;
                                 }
                             });
                         }
@@ -6056,7 +6051,7 @@
                 });
                 cache.each(item => {
                     if (!item.pseudoElement) {
-                        item.setBounds(preAlignment[item.id] === undefined && !resetBounds);
+                        item.setBounds(!resetBounds && preAlignment[item.id] === undefined);
                     }
                     else {
                         pseudoElements.push(item);
@@ -6097,7 +6092,7 @@
                 }
                 excluded.each(item => {
                     if (!item.lineBreak) {
-                        item.setBounds();
+                        item.setBounds(!resetBounds);
                         item.saveAsInitial();
                     }
                     if (!item.pageFlow) {
@@ -6141,7 +6136,7 @@
         }
         useElement(element) {
             const use = this.getDatasetName('use', element);
-            return isString$3(use) && use.split(XML$4.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
+            return isString$3(use) && use.split(XML$3.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
         }
         toString() {
             var _a;
@@ -6319,13 +6314,11 @@
             let extensions = this.extensionsTraverse;
             {
                 let maxDepth = 0;
-                const setMap = (depth, id, node) => { var _a; return ((_a = mapY.get(depth)) === null || _a === void 0 ? void 0 : _a.set(id, node)) || mapY.set(depth, new Map([[id, node]])); };
-                const getIndex = (value) => (value * -1) - 2;
-                setMap(-1, 0, documentRoot.parent);
+                setMapDepth(mapY, -1, 0, documentRoot.parent);
                 cache.each(node => {
                     if (node.length) {
                         const depth = node.depth;
-                        setMap(depth, node.id, node);
+                        setMapDepth(mapY, depth, node.id, node);
                         maxDepth = Math.max(depth, maxDepth);
                         if (node.floatContainer) {
                             const floated = new Set();
@@ -6345,11 +6338,11 @@
                                                     case 'right':
                                                         previousFloat = [clearable.right];
                                                         break;
-                                                    case 'both':
+                                                    default:
                                                         previousFloat = [clearable.left, clearable.right];
                                                         break;
                                                 }
-                                                previousFloat === null || previousFloat === void 0 ? void 0 : previousFloat.forEach(previous => {
+                                                previousFloat.forEach(previous => {
                                                     if (previous) {
                                                         const float = previous.float;
                                                         if (floated.has(float) && Math.ceil(item.bounds.top) >= previous.bounds.bottom) {
@@ -6382,17 +6375,17 @@
                 });
                 let i = 0;
                 while (i < maxDepth) {
-                    mapY.set(getIndex(i++), new Map());
+                    mapY.set(getMapIndex(i++), new Map());
                 }
                 cache.afterAppend = (node, cascade = false) => {
-                    setMap(getIndex(node.depth), node.id, node);
+                    setMapDepth(mapY, getMapIndex(node.depth), node.id, node);
                     if (cascade && node.length) {
                         node.cascade((item) => {
                             var _a;
                             if (item.length) {
                                 const depth = item.depth;
                                 (_a = mapY.get(depth)) === null || _a === void 0 ? void 0 : _a.delete(item.id);
-                                setMap(getIndex(depth), item.id, item);
+                                setMapDepth(mapY, getMapIndex(depth), item.id, item);
                             }
                             return false;
                         });
@@ -6431,7 +6424,7 @@
                                     const item = axisY[l];
                                     if (item.pageFlow) {
                                         if (item.labelFor && !item.visible) {
-                                            m--;
+                                            --m;
                                             continue;
                                         }
                                         if (floatContainer) {
@@ -6466,7 +6459,7 @@
                                                     if (orientation) {
                                                         if (status < 4 /* FLOAT_CLEAR */ && floatActive && !item.siblingsLeading.some((node) => node.lineBreak && !clearMap.has(node))) {
                                                             if (!item.floating || previous.floating && item.bounds.top < Math.floor(previous.bounds.bottom)) {
-                                                                let floatBottom = Number.NEGATIVE_INFINITY;
+                                                                let floatBottom = -Infinity;
                                                                 if (!item.floating) {
                                                                     horizontal.forEach(node => {
                                                                         if (node.floating) {
@@ -6505,15 +6498,13 @@
                                                     break traverse;
                                                 }
                                             }
-                                            else {
-                                                if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
-                                                    if (!checkTraverseVertical(item, horizontal, vertical)) {
-                                                        break traverse;
-                                                    }
-                                                }
-                                                else if (!checkTraverseHorizontal(item, horizontal, vertical)) {
+                                            else if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
+                                                if (!checkTraverseVertical(item, horizontal, vertical)) {
                                                     break traverse;
                                                 }
+                                            }
+                                            else if (!checkTraverseHorizontal(item, horizontal, vertical)) {
+                                                break traverse;
                                             }
                                         }
                                         else {
@@ -6551,15 +6542,14 @@
                                     }
                                 }
                             }
-                            let complete = false;
+                            let complete = true;
                             if (layout) {
                                 if (this.addLayout(layout)) {
-                                    complete = true;
                                     parentY = nodeY.parent;
                                 }
-                            }
-                            else {
-                                complete = true;
+                                else {
+                                    complete = false;
+                                }
                             }
                             if (complete && segEnd === axisY[length - 1]) {
                                 parentY.removeAlign(2 /* UNKNOWN */);
@@ -6569,7 +6559,7 @@
                         if (i === length - 1) {
                             parentY.removeAlign(2 /* UNKNOWN */);
                         }
-                        if (nodeY.renderAs && parentY.appendTry(nodeY, nodeY.renderAs, false)) {
+                        if (nodeY.renderAs && parentY.replaceTry({ child: nodeY, replaceWith: nodeY.renderAs })) {
                             nodeY.hide();
                             nodeY = nodeY.renderAs;
                             if (nodeY.positioned) {
@@ -7022,7 +7012,7 @@
                 if (content.endsWith('-quote')) {
                     let parent = element.parentElement;
                     while ((parent === null || parent === void 0 ? void 0 : parent.tagName) === 'Q') {
-                        nested++;
+                        ++nested;
                         parent = parent.parentElement;
                     }
                 }
@@ -7038,32 +7028,9 @@
                             absolute = true;
                             break;
                     }
-                    const checkPseudoAfter = () => {
-                        if (!absolute && textContent !== '') {
-                            const previousSibling = element.childNodes[element.childNodes.length - 1];
-                            if (isTextNode$2(previousSibling)) {
-                                return !/\s+$/.test(previousSibling.textContent);
-                            }
-                        }
-                        return false;
-                    };
                     if (textContent.trim() === '') {
-                        const checkDimension = (after) => {
-                            if ((after || convertFloat$1(styleMap.width) === 0) && convertFloat$1(styleMap.height) === 0) {
-                                for (const attr in styleMap) {
-                                    if (/(padding|Width|Height)/.test(attr) && convertFloat$1(styleMap[attr]) > 0) {
-                                        return true;
-                                    }
-                                    else if (!absolute && attr.startsWith('margin') && convertFloat$1(styleMap[attr]) !== 0) {
-                                        return true;
-                                    }
-                                }
-                                return false;
-                            }
-                            return true;
-                        };
                         if (pseudoElt === '::after') {
-                            if (!checkPseudoAfter() && !checkDimension(true)) {
+                            if ((absolute || textContent === '' || !checkPseudoAfter(element)) && !checkPseudoDimension(styleMap, true, absolute)) {
                                 return undefined;
                             }
                         }
@@ -7097,7 +7064,7 @@
                                 case 'inline':
                                 case 'inherit':
                                 case 'initial':
-                                    if (!checkDimension(false)) {
+                                    if (!checkPseudoDimension(styleMap, false, absolute)) {
                                         return undefined;
                                     }
                                     break;
@@ -7329,9 +7296,7 @@
             const bottom = target.bounds.bottom;
             const boxWidth = parent.actualBoxWidth();
             if (leftAbove.length) {
-                let floatPosition = Number.NEGATIVE_INFINITY;
-                let marginLeft = 0;
-                let invalid = false;
+                let floatPosition = -Infinity;
                 let spacing = false;
                 leftAbove.forEach(child => {
                     if (child.bounds.top < bottom) {
@@ -7345,14 +7310,14 @@
                         }
                     }
                 });
-                if (floatPosition !== Number.NEGATIVE_INFINITY) {
+                if (floatPosition !== -Infinity) {
+                    let marginLeft = -Infinity;
                     paddingNodes.forEach(child => {
                         if (Math.floor(child.linear.left) <= floatPosition || child.centerAligned) {
                             marginLeft = Math.max(marginLeft, child.marginLeft);
-                            invalid = true;
                         }
                     });
-                    if (invalid) {
+                    if (marginLeft !== -Infinity) {
                         const offset = floatPosition - parent.box.left - marginLeft - maxArray(target.map((child) => !paddingNodes.includes(child) ? child.marginLeft : 0));
                         if (offset > 0 && offset < boxWidth) {
                             target.modifyBox(256 /* PADDING_LEFT */, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
@@ -7361,9 +7326,7 @@
                 }
             }
             if (rightAbove.length) {
-                let floatPosition = Number.POSITIVE_INFINITY;
-                let marginRight = 0;
-                let invalid = false;
+                let floatPosition = Infinity;
                 let spacing = false;
                 rightAbove.forEach(child => {
                     if (child.bounds.top < bottom) {
@@ -7377,14 +7340,14 @@
                         }
                     }
                 });
-                if (floatPosition !== Number.POSITIVE_INFINITY) {
+                if (floatPosition !== Infinity) {
+                    let marginRight = -Infinity;
                     paddingNodes.forEach(child => {
                         if (child.multiline || Math.ceil(child.linear.right) >= floatPosition) {
                             marginRight = Math.max(marginRight, child.marginRight);
-                            invalid = true;
                         }
                     });
-                    if (invalid) {
+                    if (marginRight !== -Infinity) {
                         const offset = parent.box.right - floatPosition - marginRight - maxArray(target.map((child) => !paddingNodes.includes(child) ? child.marginRight : 0));
                         if (offset > 0 && offset < boxWidth) {
                             target.modifyBox(64 /* PADDING_RIGHT */, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
@@ -7397,10 +7360,10 @@
             return this._layouts.sort((a, b) => {
                 const indexA = a.index, indexB = b.index;
                 if (indexA !== indexB) {
-                    if (indexA === 0 || indexB === Number.POSITIVE_INFINITY || indexB === undefined && !(indexA === Number.POSITIVE_INFINITY)) {
+                    if (indexA === 0 || indexB === Infinity || indexB === undefined && !(indexA === Infinity)) {
                         return -1;
                     }
-                    else if (indexB === 0 || indexA === Number.POSITIVE_INFINITY || indexA === undefined && !(indexB === Number.POSITIVE_INFINITY)) {
+                    else if (indexB === 0 || indexA === Infinity || indexA === undefined && !(indexB === Infinity)) {
                         return 1;
                     }
                     else if (indexA !== undefined && indexB !== undefined) {
@@ -7410,27 +7373,27 @@
                 return 0;
             });
         }
-        get clearMap() {
-            return this.session.clearMap;
-        }
         get extensionsCascade() {
             return this.extensions.filter(item => !!item.init);
         }
         get extensionsTraverse() {
             return this.extensions.filter(item => !item.eventOnly);
         }
+        get clearMap() {
+            return this.session.clearMap;
+        }
         get length() {
             return this.session.cache.length;
         }
     }
 
-    const $lib$5 = squared.lib;
-    const { USER_AGENT: USER_AGENT$1, isUserAgent: isUserAgent$1, isWinEdge } = $lib$5.client;
-    const { BOX_BORDER: BOX_BORDER$1, BOX_PADDING: BOX_PADDING$1, formatPX: formatPX$2, getStyle: getStyle$3, isLength: isLength$1, isPercent: isPercent$1 } = $lib$5.css;
-    const { isTextNode: isTextNode$3, withinViewport } = $lib$5.dom;
-    const { capitalize: capitalize$3, convertFloat: convertFloat$2, flatArray: flatArray$1, isString: isString$4, iterateArray: iterateArray$3, safeNestedArray: safeNestedArray$1 } = $lib$5.util;
-    const { actualClientRect: actualClientRect$1, getElementCache: getElementCache$3, setElementCache: setElementCache$3 } = $lib$5.session;
-    const { pushIndent, pushIndentArray } = $lib$5.xml;
+    const $lib$6 = squared.lib;
+    const { USER_AGENT: USER_AGENT$1, isUserAgent: isUserAgent$1, isWinEdge } = $lib$6.client;
+    const { BOX_BORDER: BOX_BORDER$1, BOX_PADDING: BOX_PADDING$1, formatPX: formatPX$2, getStyle: getStyle$3, isLength: isLength$1, isPercent: isPercent$1 } = $lib$6.css;
+    const { isTextNode: isTextNode$3, withinViewport } = $lib$6.dom;
+    const { capitalize: capitalize$3, convertFloat: convertFloat$2, flatArray: flatArray$1, isString: isString$4, iterateArray: iterateArray$3, safeNestedArray: safeNestedArray$1 } = $lib$6.util;
+    const { actualClientRect: actualClientRect$1, getElementCache: getElementCache$3, setElementCache: setElementCache$3 } = $lib$6.session;
+    const { pushIndent, pushIndentArray } = $lib$6.xml;
     function positionAbsolute(style) {
         switch (style.getPropertyValue('position')) {
             case 'absolute':
@@ -7438,6 +7401,36 @@
                 return true;
         }
         return false;
+    }
+    function setBorderStyle(styleMap, defaultColor) {
+        if (!isString$4(styleMap.border) && !(BOX_BORDER$1[0][0] in styleMap || BOX_BORDER$1[1][0] in styleMap || BOX_BORDER$1[2][0] in styleMap || BOX_BORDER$1[3][0] in styleMap)) {
+            styleMap.border = `outset 1px ${defaultColor}`;
+            for (let i = 0; i < 4; ++i) {
+                const border = BOX_BORDER$1[i];
+                styleMap[border[0]] = 'outset';
+                styleMap[border[1]] = '1px';
+                styleMap[border[2]] = defaultColor;
+            }
+            return true;
+        }
+        return false;
+    }
+    function setButtonStyle(styleMap, applied, defaultColor) {
+        if (applied) {
+            const backgroundColor = styleMap.backgroundColor;
+            if (!isString$4(backgroundColor) || backgroundColor === 'initial') {
+                styleMap.backgroundColor = defaultColor;
+            }
+        }
+        if (!isString$4(styleMap.textAlign)) {
+            styleMap.textAlign = 'center';
+        }
+        if (!isString$4(styleMap.padding) && !BOX_PADDING$1.some(attr => !!styleMap[attr])) {
+            styleMap.paddingTop = '2px';
+            styleMap.paddingRight = '6px';
+            styleMap.paddingBottom = '3px';
+            styleMap.paddingLeft = '6px';
+        }
     }
     const getNumberValue = (style, attr) => parseInt(style.getPropertyValue(attr));
     class ControllerUI extends Controller {
@@ -7478,38 +7471,6 @@
             }
             else {
                 styleMap = getElementCache$3(element, 'styleMap', sessionId) || {};
-                const setBorderStyle = () => {
-                    if (!isString$4(styleMap.border) && checkBorderAttribute()) {
-                        const inputBorderColor = this.localSettings.style.inputBorderColor;
-                        styleMap.border = `outset 1px ${inputBorderColor}`;
-                        for (let i = 0; i < 4; ++i) {
-                            const border = BOX_BORDER$1[i];
-                            styleMap[border[0]] = 'outset';
-                            styleMap[border[1]] = '1px';
-                            styleMap[border[2]] = inputBorderColor;
-                        }
-                        return true;
-                    }
-                    return false;
-                };
-                const setButtonStyle = (applied) => {
-                    if (applied) {
-                        const backgroundColor = styleMap.backgroundColor;
-                        if (!isString$4(backgroundColor) || backgroundColor === 'initial') {
-                            styleMap.backgroundColor = this.localSettings.style.inputBackgroundColor;
-                        }
-                    }
-                    if (!isString$4(styleMap.textAlign)) {
-                        styleMap.textAlign = 'center';
-                    }
-                    if (!isString$4(styleMap.padding) && !BOX_PADDING$1.some(attr => !!styleMap[attr])) {
-                        styleMap.paddingTop = '2px';
-                        styleMap.paddingRight = '6px';
-                        styleMap.paddingBottom = '3px';
-                        styleMap.paddingLeft = '6px';
-                    }
-                };
-                const checkBorderAttribute = () => !(BOX_BORDER$1[0][0] in styleMap || BOX_BORDER$1[1][0] in styleMap || BOX_BORDER$1[2][0] in styleMap || BOX_BORDER$1[3][0] in styleMap);
                 const tagName = element.tagName;
                 if (isUserAgent$1(8 /* FIREFOX */)) {
                     switch (tagName) {
@@ -7592,13 +7553,14 @@
                                 styleMap.paddingLeft = formatPX$2(convertFloat$2(styleMap.paddingLeft) + 1);
                                 break;
                             default: {
-                                const result = setBorderStyle();
+                                const style = this.localSettings.style;
+                                const result = setBorderStyle(styleMap, style.inputBorderColor);
                                 switch (type) {
                                     case 'file':
                                     case 'reset':
                                     case 'submit':
                                     case 'button':
-                                        setButtonStyle(result);
+                                        setButtonStyle(styleMap, result, style.inputBackgroundColor);
                                         break;
                                 }
                                 break;
@@ -7606,12 +7568,14 @@
                         }
                         break;
                     }
-                    case 'BUTTON':
-                        setButtonStyle(setBorderStyle());
+                    case 'BUTTON': {
+                        const style = this.localSettings.style;
+                        setButtonStyle(styleMap, setBorderStyle(styleMap, style.inputBorderColor), style.inputBackgroundColor);
                         break;
+                    }
                     case 'TEXTAREA':
                     case 'SELECT':
-                        setBorderStyle();
+                        setBorderStyle(styleMap, this.localSettings.style.inputBorderColor);
                         break;
                     case 'BODY': {
                         const backgroundColor = styleMap.backgroundColor;
@@ -7639,43 +7603,8 @@
                     case 'CANVAS':
                     case 'svg':
                     case 'IMG': {
-                        const setDimension = (attr, opposing) => {
-                            const dimension = styleMap[attr];
-                            if (!isString$4(dimension) || dimension === 'auto') {
-                                const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
-                                if (match) {
-                                    const value = match[1];
-                                    if (isLength$1(value)) {
-                                        styleMap[attr] = value + 'px';
-                                    }
-                                    else if (isPercent$1(value)) {
-                                        styleMap[attr] = value;
-                                    }
-                                }
-                                else if (tagName === 'IFRAME') {
-                                    if (attr === 'width') {
-                                        styleMap.width = '300px';
-                                    }
-                                    else {
-                                        styleMap.height = '150px';
-                                    }
-                                }
-                                else {
-                                    const value = styleMap[opposing];
-                                    if (value && isLength$1(value)) {
-                                        const attrMax = `max${capitalize$3(attr)}`;
-                                        if (!isString$4(styleMap[attrMax]) || !isPercent$1(attrMax)) {
-                                            const image = this.application.resourceHandler.getImage(element.src);
-                                            if (image && image.width > 0 && image.height > 0) {
-                                                styleMap[attr] = formatPX$2(image[attr] * parseFloat(value) / image[opposing]);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        };
-                        setDimension('width', 'height');
-                        setDimension('height', 'width');
+                        this.setElementDimension(element, tagName, styleMap, 'width', 'height');
+                        this.setElementDimension(element, tagName, styleMap, 'height', 'width');
                         break;
                     }
                 }
@@ -7779,7 +7708,7 @@
                 return style.getPropertyValue('visibility') === 'visible' || !positionAbsolute(style);
             }
             else if (!pseudoElt) {
-                if (iterateArray$3(element.children, (item) => this.visibleElement(item)) === Number.POSITIVE_INFINITY) {
+                if (iterateArray$3(element.children, (item) => this.visibleElement(item)) === Infinity) {
                     return true;
                 }
                 if (element.tagName === 'IMG' && style.getPropertyValue('display') !== 'none') {
@@ -7904,7 +7833,7 @@
                         } while (current && current !== parent);
                         node.css('opacity', opacity.toString());
                         node.parent = parent;
-                        node.containerIndex = Number.POSITIVE_INFINITY;
+                        node.containerIndex = Infinity;
                         altered.add(parent);
                         removed.add(actualParent);
                     }
@@ -7918,7 +7847,7 @@
                 const layers = [];
                 let maxIndex = -1;
                 node.each((item) => {
-                    if (item.containerIndex === Number.POSITIVE_INFINITY) {
+                    if (item.containerIndex === Infinity) {
                         node.some((adjacent) => {
                             let valid = adjacent.naturalElements.includes(item);
                             if (!valid) {
@@ -8032,13 +7961,48 @@
         getEnclosingXmlTag(controlName, attributes = '', content) {
             return '<' + controlName + attributes + (content ? `>\n${content}</${controlName}>\n` : ' />\n');
         }
+        setElementDimension(element, tagName, styleMap, attr, opposing) {
+            const dimension = styleMap[attr];
+            if (!isString$4(dimension) || dimension === 'auto') {
+                const match = new RegExp(`\\s+${attr}="([^"]+)"`).exec(element.outerHTML);
+                if (match) {
+                    const value = match[1];
+                    if (isLength$1(value)) {
+                        styleMap[attr] = value + 'px';
+                    }
+                    else if (isPercent$1(value)) {
+                        styleMap[attr] = value;
+                    }
+                }
+                else if (tagName === 'IFRAME') {
+                    if (attr === 'width') {
+                        styleMap.width = '300px';
+                    }
+                    else {
+                        styleMap.height = '150px';
+                    }
+                }
+                else {
+                    const value = styleMap[opposing];
+                    if (value && isLength$1(value)) {
+                        const attrMax = `max${capitalize$3(attr)}`;
+                        if (!isString$4(styleMap[attrMax]) || !isPercent$1(attrMax)) {
+                            const image = this.application.resourceHandler.getImage(element.src);
+                            if (image && image.width > 0 && image.height > 0) {
+                                styleMap[attr] = formatPX$2(image[attr] * parseFloat(value) / image[opposing]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         get generateSessionId() {
             return new Date().getTime().toString();
         }
     }
 
-    const $lib$6 = squared.lib;
-    const { capitalize: capitalize$4, includes } = $lib$6.util;
+    const $lib$7 = squared.lib;
+    const { capitalize: capitalize$4, includes } = $lib$7.util;
     class ExtensionUI extends Extension {
         constructor(name, framework, options, tagNames = []) {
             super(name, framework, options);
@@ -8309,7 +8273,7 @@
         }
         get childIndex() {
             let result = super.childIndex;
-            if (result === Number.POSITIVE_INFINITY) {
+            if (result === Infinity) {
                 this.each(node => result = Math.min(node.childIndex, result));
                 super.childIndex = result;
             }
@@ -8320,7 +8284,7 @@
         }
         get containerIndex() {
             let result = super.containerIndex;
-            if (result === Number.POSITIVE_INFINITY) {
+            if (result === Infinity) {
                 this.each(node => result = Math.min(node.containerIndex, result));
                 super.containerIndex = result;
             }
@@ -8380,15 +8344,16 @@
         }
     }
 
-    const $lib$7 = squared.lib;
-    const { USER_AGENT: USER_AGENT$2, isUserAgent: isUserAgent$2 } = $lib$7.client;
-    const { parseColor } = $lib$7.color;
-    const { BOX_BORDER: BOX_BORDER$2, calculate, convertAngle, formatPX: formatPX$3, getBackgroundPosition, getInheritedStyle: getInheritedStyle$1, isCalc, isLength: isLength$3, isParentStyle, isPercent: isPercent$2, parseAngle } = $lib$7.css;
-    const { cos, equal: equal$1, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = $lib$7.math;
-    const { CHAR: CHAR$2, ESCAPE, STRING: STRING$2, XML: XML$5 } = $lib$7.regex;
-    const { getElementAsNode: getElementAsNode$2 } = $lib$7.session;
-    const { appendSeparator: appendSeparator$1, convertCamelCase: convertCamelCase$2, convertFloat: convertFloat$3, hasValue: hasValue$1, isEqual, isNumber: isNumber$1, isString: isString$5, iterateArray: iterateArray$4, trimEnd, trimStart } = $lib$7.util;
-    const { STRING_SPACE, STRING_TABSPACE } = $lib$7.xml;
+    const $lib$8 = squared.lib;
+    const { USER_AGENT: USER_AGENT$2, isUserAgent: isUserAgent$2 } = $lib$8.client;
+    const { parseColor } = $lib$8.color;
+    const { BOX_BORDER: BOX_BORDER$2, calculate, convertAngle, formatPX: formatPX$3, getBackgroundPosition, getInheritedStyle: getInheritedStyle$1, isCalc, isLength: isLength$3, isParentStyle, isPercent: isPercent$2, parseAngle } = $lib$8.css;
+    const { getNamedItem: getNamedItem$2 } = $lib$8.dom;
+    const { cos, equal: equal$1, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = $lib$8.math;
+    const { CHAR: CHAR$2, ESCAPE, STRING: STRING$2, XML: XML$4 } = $lib$8.regex;
+    const { getElementAsNode: getElementAsNode$2 } = $lib$8.session;
+    const { appendSeparator: appendSeparator$1, convertCamelCase: convertCamelCase$2, convertFloat: convertFloat$3, hasValue: hasValue$1, isEqual, isNumber: isNumber$1, isString: isString$5, iterateArray: iterateArray$4, trimEnd, trimStart } = $lib$8.util;
+    const { STRING_SPACE, STRING_TABSPACE } = $lib$8.xml;
     const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING$2.LENGTH_PERCENTAGE}|${STRING$2.CSS_ANGLE}|(?:${STRING$2.CSS_CALC}(?=,)|${STRING$2.CSS_CALC}))?,?\\s*`;
     const REGEX_NOBREAKSPACE = /\u00A0/g;
     const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
@@ -8599,12 +8564,12 @@
     }
     function getBackgroundSize(node, index, value, screenDimension) {
         if (value) {
-            const sizes = value.split(XML$5.SEPARATOR);
+            const sizes = value.split(XML$4.SEPARATOR);
             return ResourceUI.getBackgroundSize(node, sizes[index % sizes.length], screenDimension);
         }
         return undefined;
     }
-    function setBorderStyle(node, boxStyle, attr, border) {
+    function setBorderStyle$1(node, boxStyle, attr, border) {
         const style = node.css(border[0]) || 'none';
         if (style !== 'none') {
             let width = formatPX$3(attr !== 'outline' ? node[border[1]] : convertFloat$3(node.style[border[1]]));
@@ -8675,10 +8640,6 @@
     const replaceAmpersand = (value) => value.replace(/&/g, '&amp;');
     const getGradientPosition = (value) => isString$5(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value]) : null;
     class ResourceUI extends Resource {
-        static isInheritedStyle(node, attr) {
-            var _a;
-            return node.styleElement && node.style[attr] === ((_a = node.actualParent) === null || _a === void 0 ? void 0 : _a.style[attr]) && (node.cssStyle[attr] === 'inherit' || node.cssInitial(attr) === '');
-        }
         static isBackgroundVisible(object) {
             return !!object && ('backgroundImage' in object || 'borderTop' in object || 'borderRight' in object || 'borderBottom' in object || 'borderLeft' in object);
         }
@@ -8696,7 +8657,7 @@
                     break;
                 }
                 else {
-                    name = `${prefix}_${++i}`;
+                    name = prefix + '_' + ++i;
                 }
             } while (true);
             ids.set(section, previous);
@@ -8760,8 +8721,8 @@
             var _a, _b;
             if (backgroundImage !== '') {
                 const images = [];
-                let i = 0;
                 REGEX_BACKGROUNDIMAGE.lastIndex = 0;
+                let i = 0;
                 let match;
                 while ((match = REGEX_BACKGROUNDIMAGE.exec(backgroundImage)) !== null) {
                     const value = match[0];
@@ -8847,8 +8808,8 @@
                                 let shape = 'ellipse';
                                 let closestSide = top;
                                 let farthestSide = top;
-                                let closestCorner = Number.POSITIVE_INFINITY;
-                                let farthestCorner = Number.NEGATIVE_INFINITY;
+                                let closestCorner = Infinity;
+                                let farthestCorner = -Infinity;
                                 let radius = 0;
                                 let radiusExtent = 0;
                                 if (position) {
@@ -8858,7 +8819,7 @@
                                             shape = 'circle';
                                         }
                                         else {
-                                            let minRadius = Number.POSITIVE_INFINITY;
+                                            let minRadius = Infinity;
                                             const radiusXY = name.split(' ');
                                             const length = radiusXY.length;
                                             for (let j = 0; j < length; ++j) {
@@ -9063,19 +9024,19 @@
                 }
                 if (node.visibleStyle.borderWidth) {
                     if (node.borderTopWidth > 0) {
-                        setBorderStyle(node, boxStyle, 'borderTop', BOX_BORDER$2[0]);
+                        setBorderStyle$1(node, boxStyle, 'borderTop', BOX_BORDER$2[0]);
                     }
                     if (node.borderRightWidth > 0) {
-                        setBorderStyle(node, boxStyle, 'borderRight', BOX_BORDER$2[1]);
+                        setBorderStyle$1(node, boxStyle, 'borderRight', BOX_BORDER$2[1]);
                     }
                     if (node.borderBottomWidth > 0) {
-                        setBorderStyle(node, boxStyle, 'borderBottom', BOX_BORDER$2[2]);
+                        setBorderStyle$1(node, boxStyle, 'borderBottom', BOX_BORDER$2[2]);
                     }
                     if (node.borderLeftWidth > 0) {
-                        setBorderStyle(node, boxStyle, 'borderLeft', BOX_BORDER$2[3]);
+                        setBorderStyle$1(node, boxStyle, 'borderLeft', BOX_BORDER$2[3]);
                     }
                 }
-                setBorderStyle(node, boxStyle, 'outline', BOX_BORDER$2[4]);
+                setBorderStyle$1(node, boxStyle, 'outline', BOX_BORDER$2[4]);
                 if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                     boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node, node.backgroundImage, node.localSettings.screenDimension);
                 }
@@ -9128,7 +9089,7 @@
                 let inlined = false;
                 switch (element.tagName) {
                     case 'INPUT':
-                        value = element.value;
+                        value = getNamedItem$2(element, 'value');
                         switch (element.type) {
                             case 'radio':
                             case 'checkbox': {
@@ -9393,7 +9354,7 @@
         processNode(node, parent) {
             let items = [];
             const rows = [items];
-            let maxSize = Number.POSITIVE_INFINITY;
+            let maxSize = Infinity;
             let multiline = false;
             node.each((item) => {
                 var _a;
@@ -9429,12 +9390,12 @@
             const columnWidth = node.parseWidth(node.css('columnWidth'));
             let columnGap = node.parseWidth(node.css('columnGap'));
             let columnSized;
-            const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Number.POSITIVE_INFINITY;
+            const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Infinity;
             if (columnGap > 0) {
                 columnSized = Math.floor(getColumnSizing());
             }
             else {
-                columnGap = (columnWidth > 0 && !isNaN(maxSize) && maxSize !== Number.POSITIVE_INFINITY ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
+                columnGap = (columnWidth > 0 && !isNaN(maxSize) && maxSize !== Infinity ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
                 columnSized = Math.ceil(getColumnSizing());
             }
             node.data(EXT_NAME.COLUMN, 'mainData', {
@@ -9455,10 +9416,10 @@
         }
     }
 
-    const $lib$8 = squared.lib;
-    const { formatPercent, formatPX: formatPX$4, isLength: isLength$4, isPercent: isPercent$3 } = $lib$8.css;
-    const { CHAR: CHAR$3, CSS: CSS$2 } = $lib$8.regex;
-    const { isNumber: isNumber$2, safeNestedArray: safeNestedArray$2, trimString: trimString$1, withinRange: withinRange$1 } = $lib$8.util;
+    const $lib$9 = squared.lib;
+    const { formatPercent, formatPX: formatPX$4, isLength: isLength$4, isPercent: isPercent$3 } = $lib$9.css;
+    const { CHAR: CHAR$3, CSS: CSS$2 } = $lib$9.regex;
+    const { isNumber: isNumber$2, safeNestedArray: safeNestedArray$2, trimString: trimString$1, withinRange: withinRange$1 } = $lib$9.util;
     const CSS_GRID = EXT_NAME.CSS_GRID;
     const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
     const STRING_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
@@ -9811,7 +9772,7 @@
                 node.each((item, index) => {
                     if (!previous || item.linear[directionA] >= previous.linear[directionB] || columnIndex > 0 && columnIndex === columnMax) {
                         columnMax = Math.max(columnIndex, columnMax);
-                        rowIndex++;
+                        ++rowIndex;
                         columnIndex = 1;
                     }
                     const { gridRowEnd, gridColumnEnd } = item.cssAsObject('gridRowEnd', 'gridColumnEnd');
@@ -9859,7 +9820,7 @@
                             }
                             if (!valid) {
                                 mainData.emptyRows[rowIndex - 1] = available;
-                                rowIndex++;
+                                ++rowIndex;
                             }
                         } while (!valid);
                     }
@@ -9993,12 +9954,10 @@
                                             }
                                         }
                                     }
-                                    else {
-                                        if (vertical) {
-                                            const end = previousPlacement[3];
-                                            if (end > 0 && placement[1] === 0) {
-                                                placement[1] = end;
-                                            }
+                                    else if (vertical) {
+                                        const end = previousPlacement[3];
+                                        if (end > 0 && placement[1] === 0) {
+                                            placement[1] = end;
                                         }
                                     }
                                 }
@@ -10034,10 +9993,8 @@
                                         rowSpan = span;
                                     }
                                 }
-                                else {
-                                    if (columnSpan === -1) {
-                                        columnSpan = span;
-                                    }
+                                else if (columnSpan === -1) {
+                                    columnSpan = span;
                                 }
                                 return true;
                             }
@@ -10179,7 +10136,7 @@
                         fr += parseFloat(value);
                     }
                     else if (value === 'auto') {
-                        auto++;
+                        ++auto;
                     }
                 });
                 data.flexible = percent < 1 || fr > 0;
@@ -10255,7 +10212,7 @@
                                         if (k === -1) {
                                             k = j;
                                         }
-                                        span++;
+                                        ++span;
                                     }
                                     if (rowItem || j === ITERATION - 1) {
                                         if (span >= COLUMN_SPAN) {
@@ -10464,14 +10421,14 @@
                                     });
                                 }
                                 else if (!horizontal) {
-                                    mainData.emptyRows[j] = [Number.POSITIVE_INFINITY];
+                                    mainData.emptyRows[j] = [Infinity];
                                 }
                             }
                         }
                         else {
                             rowMax[i] = parseFloat(unitHeight) || 0;
                             if (horizontal) {
-                                mainData.emptyRows[i] = [Number.POSITIVE_INFINITY];
+                                mainData.emptyRows[i] = [Infinity];
                             }
                         }
                     }
@@ -10646,8 +10603,8 @@
         }
     }
 
-    const $lib$9 = squared.lib;
-    const { aboveRange: aboveRange$1, belowRange: belowRange$1, objectMap: objectMap$1, safeNestedArray: safeNestedArray$3, withinRange: withinRange$3 } = $lib$9.util;
+    const $lib$a = squared.lib;
+    const { aboveRange: aboveRange$1, belowRange: belowRange$1, objectMap: objectMap$1, safeNestedArray: safeNestedArray$3, withinRange: withinRange$3 } = $lib$a.util;
     const GRID = EXT_NAME.GRID;
     function getRowIndex(columns, target) {
         const topA = target.bounds.top;
@@ -10685,16 +10642,13 @@
                 else if (node.percentWidth === 0 || !node.find(item => item.percentWidth > 0, { cascade: true })) {
                     let minLength = false;
                     let itemCount = 0;
-                    const children = node.children;
-                    let i = 0;
-                    while (i < length) {
-                        const item = children[i++];
+                    for (const item of node) {
                         if (item.pageFlow && item.blockStatic && !item.visibleStyle.background && item.percentWidth === 0 && !item.autoMargin.leftRight && !item.autoMargin.left) {
                             if (item.length > 1) {
                                 minLength = true;
                             }
                             if (item.display === 'list-item' && !item.has('listStyleType')) {
-                                itemCount++;
+                                ++itemCount;
                             }
                         }
                         else {
@@ -10765,7 +10719,7 @@
                             else {
                                 const columnLast = columns[columns.length - 1];
                                 if (columnLast) {
-                                    let minLeft = Number.POSITIVE_INFINITY, maxRight = Number.NEGATIVE_INFINITY;
+                                    let minLeft = Infinity, maxRight = -Infinity;
                                     columnLast.forEach(item => {
                                         const linear = item.linear;
                                         minLeft = Math.min(linear.left, minLeft);
@@ -10846,7 +10800,7 @@
                             while (k < columnCount) {
                                 const row = columns[k++][j];
                                 if (row.spacer === 1) {
-                                    columnSpan++;
+                                    ++columnSpan;
                                     row.spacer = 2;
                                 }
                                 else {
@@ -10858,7 +10812,7 @@
                                 while (k < rowCount) {
                                     const row = column[k++];
                                     if (row.spacer === 1) {
-                                        rowSpan++;
+                                        ++rowSpan;
                                         row.spacer = 2;
                                     }
                                     else {
@@ -10890,7 +10844,7 @@
                             assigned.add(item);
                         }
                         else if (item['spacer'] === 1) {
-                            spacer++;
+                            ++spacer;
                         }
                     }
                 }
@@ -10906,9 +10860,9 @@
         }
     }
 
-    const $lib$a = squared.lib;
-    const { convertListStyle: convertListStyle$1 } = $lib$a.css;
-    const { isNumber: isNumber$3 } = $lib$a.util;
+    const $lib$b = squared.lib;
+    const { convertListStyle: convertListStyle$1 } = $lib$b.css;
+    const { isNumber: isNumber$3 } = $lib$b.util;
     const hasSingleImage = (visibleStyle) => visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat;
     class List extends ExtensionUI {
         condition(node) {
@@ -11016,9 +10970,9 @@
     }
     List.createDataAttribute = () => ({ ordinal: '', imageSrc: '', imagePosition: '' });
 
-    const $lib$b = squared.lib;
-    const { assignRect: assignRect$1 } = $lib$b.dom;
-    const { convertFloat: convertFloat$4, withinRange: withinRange$4 } = $lib$b.util;
+    const $lib$c = squared.lib;
+    const { assignRect: assignRect$1 } = $lib$c.dom;
+    const { convertFloat: convertFloat$4, withinRange: withinRange$4 } = $lib$c.util;
     const TRANSLATE_OPTIONS = { relative: true };
     class Relative extends ExtensionUI {
         is(node) {
@@ -11145,13 +11099,11 @@
                                     if (top !== 0) {
                                         top -= rect.top - bounds.top;
                                     }
+                                    else if ((previous === null || previous === void 0 ? void 0 : previous.positionRelative) && previous.hasPX('top')) {
+                                        bottom += bounds.bottom - rect.bottom;
+                                    }
                                     else {
-                                        if ((previous === null || previous === void 0 ? void 0 : previous.positionRelative) && previous.hasPX('top')) {
-                                            bottom += bounds.bottom - rect.bottom;
-                                        }
-                                        else {
-                                            bottom += rect.bottom - bounds.bottom;
-                                        }
+                                        bottom += rect.bottom - bounds.bottom;
                                     }
                                 }
                                 if (hasHorizontal && renderParent.layoutHorizontal && !node.alignSibling('leftRight')) {
@@ -11159,13 +11111,11 @@
                                     if (left !== 0) {
                                         left -= rect.left - bounds.left;
                                     }
+                                    else if ((previous === null || previous === void 0 ? void 0 : previous.positionRelative) && previous.hasPX('right')) {
+                                        right += bounds.right - rect.right;
+                                    }
                                     else {
-                                        if ((previous === null || previous === void 0 ? void 0 : previous.positionRelative) && previous.hasPX('right')) {
-                                            right += bounds.right - rect.right;
-                                        }
-                                        else {
-                                            right += rect.right - bounds.right;
-                                        }
+                                        right += rect.right - bounds.right;
                                     }
                                 }
                             }
@@ -11245,18 +11195,18 @@
         }
     }
 
-    const $lib$c = squared.lib;
-    const { formatPercent: formatPercent$1, formatPX: formatPX$5, getInheritedStyle: getInheritedStyle$2, getStyle: getStyle$4, isLength: isLength$5, isPercent: isPercent$4 } = $lib$c.css;
-    const { getNamedItem: getNamedItem$2 } = $lib$c.dom;
-    const { maxArray: maxArray$1 } = $lib$c.math;
-    const { isNumber: isNumber$4, replaceMap, safeNestedArray: safeNestedArray$4, withinRange: withinRange$5 } = $lib$c.util;
+    const $lib$d = squared.lib;
+    const { formatPercent: formatPercent$1, formatPX: formatPX$5, getInheritedStyle: getInheritedStyle$2, getStyle: getStyle$4, isLength: isLength$5, isPercent: isPercent$4 } = $lib$d.css;
+    const { getNamedItem: getNamedItem$3 } = $lib$d.dom;
+    const { maxArray: maxArray$1 } = $lib$d.math;
+    const { isNumber: isNumber$4, replaceMap, safeNestedArray: safeNestedArray$4, withinRange: withinRange$5 } = $lib$d.util;
     const TABLE = EXT_NAME.TABLE;
     const REGEX_BACKGROUND$2 = /rgba\(0, 0, 0, 0\)|transparent/;
     function setAutoWidth(node, td, data) {
         data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
         data.expand = true;
     }
-    function setBorderStyle$1(node, attr, including) {
+    function setBorderStyle$2(node, attr, including) {
         const cssStyle = attr + 'Style';
         node.ascend({ including }).some((item) => {
             if (item.has(cssStyle)) {
@@ -11362,7 +11312,7 @@
                     let colSpan = element.colSpan;
                     let j = 0;
                     while (row[j]) {
-                        j++;
+                        ++j;
                     }
                     const q = i + rowSpan;
                     let k = i;
@@ -11372,7 +11322,7 @@
                         for (let l = j, m = 0; l < r; ++l) {
                             if (!item[l]) {
                                 item[l] = td;
-                                m++;
+                                ++m;
                             }
                             else {
                                 colSpan = m;
@@ -11381,7 +11331,7 @@
                         }
                     }
                     if (!td.hasPX('width')) {
-                        const value = getNamedItem$2(element, 'width');
+                        const value = getNamedItem$3(element, 'width');
                         if (isPercent$4(value)) {
                             td.css('width', value, true);
                         }
@@ -11390,7 +11340,7 @@
                         }
                     }
                     if (!td.hasPX('height')) {
-                        const value = getNamedItem$2(element, 'height');
+                        const value = getNamedItem$3(element, 'height');
                         if (isPercent$4(value)) {
                             td.css('height', value);
                         }
@@ -11428,16 +11378,16 @@
                         case 'TD': {
                             const including = td.parent;
                             if (td.borderTopWidth === 0) {
-                                setBorderStyle$1(td, 'borderTop', including);
+                                setBorderStyle$2(td, 'borderTop', including);
                             }
                             if (td.borderRightWidth === 0) {
-                                setBorderStyle$1(td, 'borderRight', including);
+                                setBorderStyle$2(td, 'borderRight', including);
                             }
                             if (td.borderBottomWidth === 0) {
-                                setBorderStyle$1(td, 'borderBottom', including);
+                                setBorderStyle$2(td, 'borderBottom', including);
                             }
                             if (td.borderLeftWidth === 0) {
-                                setBorderStyle$1(td, 'borderLeft', including);
+                                setBorderStyle$2(td, 'borderLeft', including);
                             }
                             break;
                         }
@@ -11446,10 +11396,10 @@
                                 td.css('textAlign', 'center');
                             }
                             if (td.borderTopWidth === 0) {
-                                setBorderStyle$1(td, 'borderTop', node);
+                                setBorderStyle$2(td, 'borderTop', node);
                             }
                             if (td.borderBottomWidth === 0) {
-                                setBorderStyle$1(td, 'borderBottom', node);
+                                setBorderStyle$2(td, 'borderBottom', node);
                             }
                             break;
                     }
@@ -11645,15 +11595,13 @@
                                         data.expand = false;
                                         data.downsized = false;
                                     }
+                                    else if (mainData.layoutFixed) {
+                                        setAutoWidth(node, td, data);
+                                        data.downsized = true;
+                                    }
                                     else {
-                                        if (mainData.layoutFixed) {
-                                            setAutoWidth(node, td, data);
-                                            data.downsized = true;
-                                        }
-                                        else {
-                                            setBoundsWidth(td);
-                                            data.expand = false;
-                                        }
+                                        setBoundsWidth(td);
+                                        data.expand = false;
                                     }
                                 }
                                 else {
@@ -11789,9 +11737,9 @@
         }
     }
 
-    const $lib$d = squared.lib;
-    const { isLength: isLength$6 } = $lib$d.css;
-    const { convertFloat: convertFloat$5 } = $lib$d.util;
+    const $lib$e = squared.lib;
+    const { isLength: isLength$6 } = $lib$e.css;
+    const { convertFloat: convertFloat$5 } = $lib$e.util;
     class VerticalAlign extends ExtensionUI {
         is(node) {
             return node.length > 0;
@@ -11821,13 +11769,13 @@
                             sameValue = NaN;
                         }
                     }
-                    inlineVertical++;
+                    ++inlineVertical;
                 }
                 else {
                     sameValue = NaN;
                 }
             }
-            return valid && isNaN(sameValue) && inlineVertical > 1 && NodeUI.linearData(node.children).linearX;
+            return valid && isNaN(sameValue) && inlineVertical > 1 && NodeUI.linearData(children).linearX;
         }
         processNode(node) {
             node.each((item) => {
@@ -11841,7 +11789,7 @@
             if (node.layoutHorizontal) {
                 for (const children of (node.horizontalRows || [node.renderChildren])) {
                     const aboveBaseline = [];
-                    let minTop = Number.POSITIVE_INFINITY;
+                    let minTop = Infinity;
                     let baseline;
                     children.forEach(item => {
                         const top = item.linear.top;
@@ -11891,11 +11839,11 @@
     }
 
     var _a;
-    const $lib$e = squared.lib;
-    const { formatPX: formatPX$6 } = $lib$e.css;
-    const { maxArray: maxArray$2 } = $lib$e.math;
-    const { getElementCache: getElementCache$4 } = $lib$e.session;
-    const { iterateReverseArray } = $lib$e.util;
+    const $lib$f = squared.lib;
+    const { formatPX: formatPX$6 } = $lib$f.css;
+    const { maxArray: maxArray$2 } = $lib$f.math;
+    const { getElementCache: getElementCache$4 } = $lib$f.session;
+    const { iterateReverseArray } = $lib$f.util;
     const DOCTYPE_HTML = ((_a = document.doctype) === null || _a === void 0 ? void 0 : _a.name) === 'html';
     const COLLAPSE_TOP = ['marginTop', 'borderTopWidth', 'paddingTop', 2 /* MARGIN_TOP */];
     const COLLAPSE_BOTTOM = ['marginBottom', 'borderBottomWidth', 'paddingBottom', 8 /* MARGIN_BOTTOM */];
@@ -11919,6 +11867,23 @@
         if (offset > 0) {
             (node.renderAs || node).modifyBox(region, offset);
         }
+    }
+    function adjustRegion(item, region, adjustment) {
+        if (item.getBox(region)[0] === 1) {
+            const registered = item.registerBox(region);
+            if (registered) {
+                const [reset, value] = registered.getBox(region);
+                adjustment = Math.max(value, adjustment);
+                if (reset === 1) {
+                    registered.setBox(region, { adjustment });
+                }
+                else {
+                    registered.setCacheValue('marginTop', adjustment);
+                }
+                return;
+            }
+        }
+        item.setBox(region, { reset: 1, adjustment });
     }
     function applyMarginCollapse(node, child, direction) {
         if (!direction || isBlockElement(child, true)) {
@@ -11948,23 +11913,6 @@
                     }
                     const offsetParent = node[marginName];
                     const offsetChild = target[marginName];
-                    const adjustRegion = (item, adjustment) => {
-                        if (item.getBox(region)[0] === 1) {
-                            const registered = item.registerBox(region);
-                            if (registered) {
-                                const [reset, value] = registered.getBox(region);
-                                adjustment = Math.max(value, adjustment);
-                                if (reset === 1) {
-                                    registered.setBox(region, { adjustment });
-                                }
-                                else {
-                                    registered.setCacheValue('marginTop', adjustment);
-                                }
-                                return;
-                            }
-                        }
-                        item.setBox(region, { reset: 1, adjustment });
-                    };
                     if (offsetParent >= 0 && offsetChild >= 0) {
                         const height = target.bounds.height;
                         let resetChild = false;
@@ -11982,7 +11930,7 @@
                                     const value = registered.getBox(region)[1];
                                     if (value > 0) {
                                         if (value > offsetParent) {
-                                            adjustRegion(node, value);
+                                            adjustRegion(node, region, value);
                                         }
                                         registered.setBox(region, { reset: 1, adjustment: 0 });
                                     }
@@ -12002,15 +11950,15 @@
                                             if (node.layoutVertical) {
                                                 const firstChild = node.renderChildren[0];
                                                 if ((target.positionStatic || target.top >= 0 && !target.hasPX('bottom')) && firstChild !== child.outerMostWrapper) {
-                                                    adjustRegion(firstChild, offsetChild);
-                                                    adjustRegion(target, 0);
+                                                    adjustRegion(firstChild, region, offsetChild);
+                                                    adjustRegion(target, region, 0);
                                                     resetChild = true;
                                                 }
                                             }
                                         }
                                     }
                                     else {
-                                        adjustRegion(node, offsetChild);
+                                        adjustRegion(node, region, offsetChild);
                                         resetChild = true;
                                     }
                                 }
@@ -12034,7 +11982,7 @@
                     else if (offsetParent < 0 && offsetChild < 0) {
                         if (!direction) {
                             if (offsetChild < offsetParent) {
-                                adjustRegion(node, offsetChild);
+                                adjustRegion(node, region, offsetChild);
                             }
                             resetBox(target, region);
                         }
@@ -12097,7 +12045,7 @@
         return false;
     }
     function getMarginOffset(below, above, lineHeight, aboveLineBreak) {
-        let top = Number.POSITIVE_INFINITY;
+        let top = Infinity;
         if (below.nodeGroup && below.some(item => item.floating)) {
             below.renderChildren.forEach((item) => {
                 if (!item.floating) {
@@ -12109,7 +12057,7 @@
                 }
             });
         }
-        if (top === Number.POSITIVE_INFINITY) {
+        if (top === Infinity) {
             top = below.linear.top;
         }
         if (aboveLineBreak) {
@@ -12186,6 +12134,7 @@
     const canResetChild = (node, children = true) => (!children && node.blockStatic || children && node.length > 0 && !node.floating) && !node.layoutElement && !node.tableElement && node.tagName !== 'FIELDSET';
     const validAboveChild = (node, children) => !node.hasHeight && node.borderBottomWidth === 0 && node.paddingBottom === 0 && canResetChild(node, children);
     const validBelowChild = (node, children) => !node.hasHeight && node.borderTopWidth === 0 && node.paddingTop === 0 && canResetChild(node, children);
+    const validSibling = (node) => node.pageFlow && node.blockDimension && !node.floating && !node.excluded;
     class WhiteSpace extends ExtensionUI {
         afterBaseLayout() {
             const application = this.application;
@@ -12213,15 +12162,13 @@
                                     }
                                     lastChild = current;
                                 }
-                                else {
-                                    if (lastChild) {
-                                        if (current.linear.bottom >= lastChild.linear.bottom) {
-                                            lastChild = current;
-                                        }
-                                    }
-                                    else {
+                                else if (lastChild) {
+                                    if (current.linear.bottom >= lastChild.linear.bottom) {
                                         lastChild = current;
                                     }
+                                }
+                                else {
+                                    lastChild = current;
                                 }
                             }
                             if (isBlockElement(current, true)) {
@@ -12374,14 +12321,12 @@
                                                             inheritedTop = false;
                                                         }
                                                     }
-                                                    else {
-                                                        if (!inheritedBottom || !isVerticalOverflow(previous)) {
-                                                            resetBox(previous, 8 /* MARGIN_BOTTOM */);
-                                                            if (previous.bounds.height === 0 && marginTop >= previous.marginTop) {
-                                                                resetBox(previous, 2 /* MARGIN_TOP */);
-                                                            }
-                                                            inheritedBottom = false;
+                                                    else if (!inheritedBottom || !isVerticalOverflow(previous)) {
+                                                        resetBox(previous, 8 /* MARGIN_BOTTOM */);
+                                                        if (previous.bounds.height === 0 && marginTop >= previous.marginTop) {
+                                                            resetBox(previous, 2 /* MARGIN_TOP */);
                                                         }
+                                                        inheritedBottom = false;
                                                     }
                                                 }
                                                 else if (current.bounds.height === 0) {
@@ -12447,14 +12392,12 @@
                                                 if (marginTop < marginBottom) {
                                                     resetBox(current, 2 /* MARGIN_TOP */);
                                                 }
+                                                else if (i === length - 1) {
+                                                    current.setCacheValue('marginBottom', marginTop);
+                                                    resetBox(current, 2 /* MARGIN_TOP */);
+                                                }
                                                 else {
-                                                    if (i === length - 1) {
-                                                        current.setCacheValue('marginBottom', marginTop);
-                                                        resetBox(current, 2 /* MARGIN_TOP */);
-                                                    }
-                                                    else {
-                                                        resetBox(current, 8 /* MARGIN_BOTTOM */);
-                                                    }
+                                                    resetBox(current, 8 /* MARGIN_BOTTOM */);
                                                 }
                                             }
                                         }
@@ -12571,7 +12514,7 @@
                             }
                         }
                         else if (actualParent.visible && !actualParent.preserveWhiteSpace && actualParent.tagName !== 'CODE') {
-                            if (!actualParent.originalRoot) {
+                            if (!actualParent.documentRoot && !actualParent.documentBody) {
                                 const previousStart = previousSiblings[previousSiblings.length - 1];
                                 const rect = previousStart.bounds.height === 0 && previousStart.length ? NodeUI.outerRegion(previousStart) : previousStart.linear;
                                 const offset = actualParent.box.bottom - (previousStart.lineBreak || previousStart.excluded ? rect.top : rect.bottom);
@@ -12633,11 +12576,10 @@
                             }
                             else if (!node.baselineAltered) {
                                 const horizontalRows = renderParent.horizontalRows;
-                                const validSibling = (item) => item.pageFlow && item.blockDimension && !item.floating && !item.excluded;
                                 let horizontal;
                                 if (horizontalRows && horizontalRows.length > 1) {
                                     found: {
-                                        let maxBottom = Number.NEGATIVE_INFINITY;
+                                        let maxBottom = -Infinity;
                                         const length = horizontalRows.length;
                                         for (let i = 0; i < length; ++i) {
                                             const row = horizontalRows[i];
@@ -12660,7 +12602,7 @@
                                                     maxBottom = Math.max(innerWrapped.actualRect('bottom'), maxBottom);
                                                 }
                                             });
-                                            if (maxBottom === Number.NEGATIVE_INFINITY) {
+                                            if (maxBottom === -Infinity) {
                                                 break;
                                             }
                                         }
@@ -12682,7 +12624,7 @@
                                             actualChildren.push(item);
                                         }
                                     });
-                                    let maxBottom = Number.NEGATIVE_INFINITY;
+                                    let maxBottom = -Infinity;
                                     const parent = node.actualParent;
                                     const top = node.actualRect('top');
                                     const naturalChildren = parent.naturalChildren;
@@ -12694,13 +12636,13 @@
                                             break;
                                         }
                                         else if (item.lineBreak || item.block) {
-                                            maxBottom = Number.NEGATIVE_INFINITY;
+                                            maxBottom = -Infinity;
                                         }
                                         else if (validSibling(item)) {
                                             maxBottom = Math.max(item.actualRect('bottom'), maxBottom);
                                         }
                                     }
-                                    if (maxBottom !== Number.NEGATIVE_INFINITY && top > maxBottom) {
+                                    if (maxBottom !== -Infinity && top > maxBottom) {
                                         setSpacingOffset(outerWrapper, 2 /* MARGIN_TOP */, maxBottom);
                                     }
                                 }

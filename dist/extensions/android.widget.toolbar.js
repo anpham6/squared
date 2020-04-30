@@ -1,4 +1,4 @@
-/* android.widget.toolbar 1.6.5
+/* android.widget.toolbar 1.7.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
@@ -281,16 +281,14 @@ this.android.widget.toolbar = (function () {
             }
             const themeData = node.data("android.widget.toolbar" /* TOOLBAR */, 'themeData');
             if (themeData) {
-                const settings = this.application.userSettings;
                 const options = createStyleAttribute(this.options.resource);
                 const optionsActionBar = createStyleAttribute({ name: '.NoActionBar', output: options.output });
                 const optionsAppBar = createStyleAttribute({ name: '.AppBarOverlay', output: options.output });
                 const optionsPopup = createStyleAttribute({ name: '.PopupOverlay', output: options.output });
-                const optionsActionBarItems = optionsActionBar.items;
-                assignEmptyValue(options, 'name', settings.manifestThemeName);
+                assignEmptyValue(options, 'name', this.application.userSettings.manifestThemeName);
                 assignEmptyValue(options, 'parent', 'Theme.AppCompat.Light.DarkActionBar');
-                assignEmptyValue(optionsActionBarItems, 'windowActionBar', 'false');
-                assignEmptyValue(optionsActionBarItems, 'windowNoTitle', 'true');
+                assignEmptyValue(optionsActionBar.items, 'windowActionBar', 'false');
+                assignEmptyValue(optionsActionBar.items, 'windowNoTitle', 'true');
                 assignEmptyValue(optionsAppBar, 'parent', themeData.appBarOverlay || 'ThemeOverlay.AppCompat.Dark.ActionBar');
                 assignEmptyValue(optionsPopup, 'parent', themeData.popupOverlay || 'ThemeOverlay.AppCompat.Light');
                 Resource.addTheme(options);
@@ -312,7 +310,7 @@ this.android.widget.toolbar = (function () {
             const container = this.application.createNode({ parent: node, children, delegate, cascade: true });
             container.inherit(node, 'base');
             if (delegate) {
-                let containerIndex = Number.POSITIVE_INFINITY;
+                let containerIndex = Infinity;
                 children.forEach(item => containerIndex = Math.min(containerIndex, item.containerIndex));
                 container.containerIndex = containerIndex;
             }

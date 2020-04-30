@@ -1,4 +1,3 @@
-
 import * as application from '../base/application';
 import * as file from '../base/file';
 
@@ -15,4 +14,6 @@ export interface FileArchivingOptions extends application.FileArchivingOptions, 
 export interface FileActionAttribute {
     name?: string;
     rel?: string;
+    saveAs?: { script?: string; link?: string };
+    ignoreExtensions?: boolean;
 }

@@ -1,4 +1,4 @@
-/* squared 1.6.5
+/* squared 1.7.0
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -6,6 +6,75 @@
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
     (global = global || self, factory(global.squared = {}));
 }(this, (function (exports) { 'use strict';
+
+    class Iterator {
+        constructor(children) {
+            this.children = children;
+            this.index = -1;
+            this._iterating = 0;
+            this.length = children.length;
+        }
+        next() {
+            if (this.hasNext()) {
+                this._iterating = 1;
+                return this.children[++this.index];
+            }
+            return undefined;
+        }
+        hasNext() {
+            return this.index < this.length - 1;
+        }
+        remove() {
+            const iterating = this._iterating;
+            if (iterating !== 0) {
+                this.children.splice(this.index, 1);
+                this.index -= iterating;
+                --this.length;
+                this._iterating = 0;
+            }
+        }
+        forEachRemaining(action) {
+            while (this.hasNext()) {
+                action(this.children[++this.index]);
+            }
+        }
+    }
+
+    class ListIterator extends Iterator {
+        constructor(children) {
+            super(children);
+        }
+        add(item) {
+            const iterating = this._iterating;
+            if (iterating !== 0) {
+                this.children.splice(iterating === 1 ? Math.min(++this.index, this.length) : Math.max(--this.index, 0), 0, item);
+                ++this.length;
+                this._iterating = 0;
+            }
+        }
+        set(item) {
+            if (this._iterating !== 0) {
+                this.children[this.index] = item;
+                this._iterating = 0;
+            }
+        }
+        nextIndex() {
+            return Math.min(this.index + 1, this.length);
+        }
+        hasPrevious() {
+            return this.previousIndex() > 0;
+        }
+        previous() {
+            if (this.hasPrevious()) {
+                this._iterating = -1;
+                return this.children[--this.index];
+            }
+            return undefined;
+        }
+        previousIndex() {
+            return Math.max(this.index - 1, -1);
+        }
+    }
 
     const DECIMAL = '-?(?:\\d+(?:\\.\\d+)?|\\d*\\.\\d+)';
     const UNIT_LENGTH = 'px|em|pt|rem|ch|pc|vw|vh|vmin|vmax|mm|cm|in';
@@ -102,6 +171,19 @@
     ];
     const CACHE_CAMELCASE = {};
     const CACHE_UNDERSCORE = {};
+    function promisify(fn) {
+        return (...args) => {
+            return new Promise((resolve, reject) => {
+                try {
+                    const result = fn.call(null, ...args);
+                    resolve(result);
+                }
+                catch (err) {
+                    reject(err);
+                }
+            });
+        };
+    }
     function hasMimeType(formats, value) {
         return formats === '*' || formats.includes(parseMimeType(value));
     }
@@ -584,17 +666,15 @@
         return value;
     }
     function delimitString(options, ...appending) {
-        const value = options.value || '';
-        if (value === '' && appending.length === 1) {
+        const value = options.value;
+        if (!value && appending.length === 1) {
             return appending[0];
         }
         const delimiter = options.delimiter || '|';
         const not = options.not || [];
         const remove = options.remove || false;
         const values = value !== '' ? value.split(delimiter) : [];
-        const length = appending.length;
-        let i = -1;
-        while (++i < length) {
+        for (let i = 0; i < appending.length; ++i) {
             const append = appending[i];
             if (append !== '') {
                 if (values.includes(not[i])) {
@@ -647,7 +727,7 @@
                             const joined = result[result.length - 1];
                             if (value.substring(index - joined.length, index + 1) === joined + prefix) {
                                 preceding = joined;
-                                result.length--;
+                                --result.length;
                             }
                         }
                     }
@@ -721,7 +801,7 @@
         return typeof value === 'object' && value !== null;
     }
     function isPlainObject(value) {
-        return isObject(value) && value.constructor === Object;
+        return isObject(value) && (value.constructor === Object || Object.getPrototypeOf(Object(value)) === null);
     }
     function isEqual(source, other) {
         if (source === other) {
@@ -802,28 +882,29 @@
         value = value.trim();
         if (!COMPONENT.PROTOCOL.test(value)) {
             const origin = location.origin;
-            let pathname = ((href === null || href === void 0 ? void 0 : href.replace(origin, '')) || location.pathname).split('/');
+            const pathname = ((href === null || href === void 0 ? void 0 : href.replace(origin, '')) || location.pathname).split('/');
             pathname.pop();
             if (value.charAt(0) === '/') {
-                value = origin + value;
+                return origin + value;
             }
             else if (value.startsWith('../')) {
-                const segments = [];
-                let levels = 0;
+                const trailing = [];
                 value.split('/').forEach(dir => {
                     if (dir === '..') {
-                        levels++;
+                        if (trailing.length === 0) {
+                            pathname.pop();
+                        }
+                        else {
+                            trailing.pop();
+                        }
                     }
                     else {
-                        segments.push(dir);
+                        trailing.push(dir);
                     }
                 });
-                pathname = pathname.slice(0, Math.max(pathname.length - levels, 0)).concat(segments);
-                value = origin + pathname.join('/');
+                value = trailing.join('/');
             }
-            else {
-                value = origin + pathname.join('/') + '/' + value;
-            }
+            return origin + pathname.join('/') + '/' + value;
         }
         return value;
     }
@@ -989,27 +1070,15 @@
             return 0;
         });
     }
-    function flatArray(list) {
-        let length = list.length;
-        let i = -1;
-        while (++i < length) {
-            const item = list[i];
-            if (item === undefined || item === null) {
-                list.splice(i--, 1);
-                length--;
-            }
-        }
-        return list;
-    }
-    function flatMultiArray(list) {
+    function flatArray(list, depth = 0, current = 0) {
         let result = [];
         const length = list.length;
         let i = 0;
         while (i < length) {
             const item = list[i++];
-            if (Array.isArray(item)) {
+            if (current < depth && Array.isArray(item)) {
                 if (item.length) {
-                    result = result.concat(flatMultiArray(item));
+                    result = result.concat(flatArray(item, depth, current + 1));
                 }
             }
             else if (item !== undefined && item !== null) {
@@ -1019,10 +1088,8 @@
         return result;
     }
     function spliceArray(list, predicate, callback, deleteCount) {
-        let length = list.length;
-        let i = -1;
         let deleted = 0;
-        while (++i < length) {
+        for (let i = 0; i < list.length; ++i) {
             const item = list[i];
             if (predicate(item, i, list)) {
                 if (callback) {
@@ -1032,7 +1099,6 @@
                 if (++deleted === deleteCount) {
                     break;
                 }
-                length--;
             }
         }
         return list;
@@ -1085,7 +1151,7 @@
         }
         return trailing ? result : result.substring(0, result.length - char.length);
     }
-    function iterateArray(list, predicate, start = 0, end = Number.POSITIVE_INFINITY) {
+    function iterateArray(list, predicate, start = 0, end = Infinity) {
         start = Math.max(start, 0);
         const length = Math.min(list.length, end);
         let i = start;
@@ -1093,12 +1159,12 @@
             const item = list[i];
             const result = predicate(item, i++, list);
             if (result === true) {
-                return Number.POSITIVE_INFINITY;
+                return Infinity;
             }
         }
         return length;
     }
-    function iterateReverseArray(list, predicate, start = 0, end = Number.POSITIVE_INFINITY) {
+    function iterateReverseArray(list, predicate, start = 0, end = Infinity) {
         start = Math.max(start, 0);
         const length = Math.min(list.length, end);
         let i = length - 1;
@@ -1106,15 +1172,14 @@
             const item = list[i];
             const result = predicate(item, i--, list);
             if (result === true) {
-                return Number.POSITIVE_INFINITY;
+                return Infinity;
             }
         }
         return length;
     }
     function conditionArray(list, predicate, callback) {
         const length = list.length;
-        let i = -1;
-        while (++i < length) {
+        for (let i = 0; i < length; ++i) {
             const item = list[i];
             if (predicate(item, i, list)) {
                 const value = callback(item, i, list);
@@ -1123,19 +1188,6 @@
                 }
             }
         }
-    }
-    function flatMap(list, predicate) {
-        const length = list.length;
-        const result = new Array(length);
-        let i = 0, j = 0;
-        while (i < length) {
-            const item = predicate(list[i], i++, list);
-            if (hasValue(item)) {
-                result[j++] = item;
-            }
-        }
-        result.length = j;
-        return result;
     }
     function replaceMap(list, predicate) {
         const length = list.length;
@@ -1157,6 +1209,7 @@
 
     var util = /*#__PURE__*/Object.freeze({
         __proto__: null,
+        promisify: promisify,
         hasMimeType: hasMimeType,
         parseMimeType: parseMimeType,
         fromMimeType: fromMimeType,
@@ -1207,7 +1260,6 @@
         safeNestedMap: safeNestedMap,
         sortArray: sortArray,
         flatArray: flatArray,
-        flatMultiArray: flatMultiArray,
         spliceArray: spliceArray,
         partitionArray: partitionArray,
         sameArray: sameArray,
@@ -1215,31 +1267,23 @@
         iterateArray: iterateArray,
         iterateReverseArray: iterateReverseArray,
         conditionArray: conditionArray,
-        flatMap: flatMap,
         replaceMap: replaceMap,
         objectMap: objectMap
     });
 
+    function* iterator(children) {
+        const length = children.length;
+        let i = 0;
+        while (i < length) {
+            yield children[i++];
+        }
+    }
     class Container {
         constructor(children) {
             this._children = children || [];
         }
         [Symbol.iterator]() {
-            const data = { done: false };
-            const list = this._children;
-            const length = list.length;
-            let i = 0;
-            return {
-                next() {
-                    if (i < length) {
-                        data.value = list[i++];
-                    }
-                    else {
-                        data.done = true;
-                    }
-                    return data;
-                }
-            };
+            return iterator(this._children);
         }
         item(index, value) {
             const children = this._children;
@@ -1264,8 +1308,7 @@
             const children = this._children;
             items.forEach(item => {
                 const length = children.length;
-                let i = -1;
-                while (++i < length) {
+                for (let i = 0; i < length; ++i) {
                     if (children[i] === item) {
                         children.splice(i, 1);
                         result.push(item);
@@ -1334,9 +1377,7 @@
             }
             const result = [];
             const children = this._children;
-            let length = children.length;
-            let i = -1;
-            while (++i < length) {
+            for (let i = 0; i < children.length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
                     break;
@@ -1345,16 +1386,9 @@
                     also === null || also === void 0 ? void 0 : also.call(item, item);
                     result.push(item);
                     children.splice(i--, 1);
-                    length--;
                 }
             }
             return result;
-        }
-        map(predicate) {
-            return objectMap(this._children, predicate);
-        }
-        flatMap(predicate) {
-            return flatMap(this._children, predicate);
         }
         findIndex(predicate, options) {
             let also, error;
@@ -1363,8 +1397,7 @@
             }
             const children = this._children;
             const length = children.length;
-            let i = -1;
-            while (++i < length) {
+            for (let i = 0; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
                     return -1;
@@ -1385,8 +1418,7 @@
             const recurse = (container) => {
                 const children = container.children;
                 const length = children.length;
-                let i = -1;
-                while (++i < length) {
+                for (let i = 0; i < length; ++i) {
                     const item = children[i];
                     if (error && error(item, i, children)) {
                         invalid = true;
@@ -1424,8 +1456,7 @@
                 let result = [];
                 const children = container.children;
                 const length = children.length;
-                let i = -1;
-                while (++i < length) {
+                for (let i = 0; i < length; ++i) {
                     const item = children[i];
                     if (error && error(item, i, children)) {
                         invalid = true;
@@ -1446,15 +1477,19 @@
             };
             return recurse(this);
         }
+        map(predicate) {
+            return objectMap(this._children, predicate);
+        }
         sort(predicate) {
-            if (predicate) {
-                this._children.sort(predicate);
-            }
+            this._children.sort(predicate);
             return this;
         }
         concat(list) {
             this._children = this._children.concat(list);
             return this;
+        }
+        iter() {
+            return new ListIterator(this._children);
         }
         get children() {
             return this._children;
@@ -1464,116 +1499,6 @@
         }
         get length() {
             return this._children.length;
-        }
-    }
-
-    class PromiseHandler {
-        constructor(thisArg) {
-            this.thisArg = thisArg;
-            this.status = 0;
-        }
-        then(resolve) {
-            this._then = resolve;
-            if (this.status === 2 /* THEN_WAITING */) {
-                this.status = 1 /* PENDING */;
-                this.success();
-            }
-            return this;
-        }
-        catch(reject) {
-            this._catch = reject;
-            if (this.status === 4 /* CATCH_WAITING */) {
-                this.status = 1 /* PENDING */;
-                this.throw(this._error);
-            }
-            return this;
-        }
-        finally(complete) {
-            this._finally = complete;
-            switch (this.status) {
-                case 6 /* FINALLY_WAITING */:
-                    this.status = 3 /* THEN_COMPLETE */;
-                case 3 /* THEN_COMPLETE */:
-                case 5 /* CATCH_COMPLETE */:
-                    this.finalize();
-                    this.status = 7 /* FINALLY_COMPLETE */;
-                    break;
-            }
-            return this;
-        }
-        success() {
-            if (this.complete || this.waiting) {
-                return;
-            }
-            if (this._then === undefined && this.status !== 1 /* PENDING */) {
-                this.status = 2 /* THEN_WAITING */;
-            }
-            else {
-                if (this.hasThen) {
-                    this._then.call(this.thisArg);
-                }
-                this.status = 3 /* THEN_COMPLETE */;
-                this.finalize();
-            }
-        }
-        throw(error) {
-            if (this.complete || this.waiting) {
-                return;
-            }
-            if (this._catch === undefined && this.status !== 1 /* PENDING */) {
-                this._error = error;
-                this.status = 4 /* CATCH_WAITING */;
-            }
-            else {
-                if (this.hasCatch) {
-                    this._catch.call(this.thisArg, error);
-                }
-                this.status = 5 /* CATCH_COMPLETE */;
-                this.finalize();
-            }
-        }
-        finalize() {
-            switch (this.status) {
-                case 7 /* FINALLY_COMPLETE */:
-                    return;
-                case 3 /* THEN_COMPLETE */:
-                case 5 /* CATCH_COMPLETE */:
-                    if (this.hasFinally) {
-                        this._finally.call(this.thisArg);
-                        this.status = 7 /* FINALLY_COMPLETE */;
-                        break;
-                    }
-                default:
-                    this.status = 6 /* FINALLY_WAITING */;
-                    break;
-            }
-        }
-        get hasThen() {
-            return typeof this._then === 'function';
-        }
-        get hasCatch() {
-            return typeof this._catch === 'function';
-        }
-        get hasFinally() {
-            return typeof this._finally === 'function';
-        }
-        get waiting() {
-            switch (this.status) {
-                case 2 /* THEN_WAITING */:
-                case 4 /* CATCH_WAITING */:
-                case 6 /* FINALLY_WAITING */:
-                    return true;
-            }
-            return false;
-        }
-        get complete() {
-            switch (this.status) {
-                case 3 /* THEN_COMPLETE */:
-                case 5 /* CATCH_COMPLETE */:
-                case 7 /* FINALLY_COMPLETE */:
-                    return true;
-            }
-            return false;
         }
     }
 
@@ -2731,6 +2656,24 @@
         }
     ];
     const CACHE_COLORDATA = {};
+    function hue2rgb(t, p, q) {
+        if (t < 0) {
+            t += 1;
+        }
+        else if (t > 1) {
+            t -= 1;
+        }
+        if (t < 1 / 6) {
+            return p + (q - p) * 6 * t;
+        }
+        else if (t < 1 / 2) {
+            return q;
+        }
+        else if (t < 2 / 3) {
+            return p + (q - p) * (2 / 3 - t) * 6;
+        }
+        return p;
+    }
     const parseOpacity = (value) => clamp(value) * 255;
     function findColorName(value) {
         value = value.toLowerCase();
@@ -2773,7 +2716,7 @@
             }
             else if (q > 1) {
                 const total = hsl.l + hsl.s;
-                let nearest = Number.POSITIVE_INFINITY;
+                let nearest = Infinity;
                 let index = -1;
                 for (i = 0; i < q; ++i) {
                     const { l, s } = result[i].hsl;
@@ -2999,27 +2942,9 @@
         else {
             const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
             const p = 2 * l - q;
-            const hue2rgb = (t) => {
-                if (t < 0) {
-                    t += 1;
-                }
-                else if (t > 1) {
-                    t -= 1;
-                }
-                if (t < 1 / 6) {
-                    return p + (q - p) * 6 * t;
-                }
-                else if (t < 1 / 2) {
-                    return q;
-                }
-                else if (t < 2 / 3) {
-                    return p + (q - p) * (2 / 3 - t) * 6;
-                }
-                return p;
-            };
-            r = hue2rgb(h + 1 / 3);
-            g = hue2rgb(h);
-            b = hue2rgb(h - 1 / 3);
+            r = hue2rgb(h + 1 / 3, p, q);
+            g = hue2rgb(h, p, q);
+            b = hue2rgb(h - 1 / 3, p, q);
         }
         r = Math.round(Math.min(r, 1) * 255);
         g = Math.round(Math.min(g, 1) * 255);
@@ -3278,6 +3203,35 @@
             vertical: 'top',
             orientation
         };
+    }
+    function checkCalculateNumber(operand, operator) {
+        if (operand) {
+            switch (operator) {
+                case '+':
+                case '-':
+                    if (isNumber(operand)) {
+                        return false;
+                    }
+                    break;
+                case '*':
+                case '/':
+                    if (!isNumber(operand)) {
+                        return false;
+                    }
+                    break;
+            }
+        }
+        return true;
+    }
+    function checkCalculateOperator(operand, operator) {
+        if (operand) {
+            switch (operator) {
+                case '+':
+                case '-':
+                    return false;
+            }
+        }
+        return true;
     }
     const getInnerWidth = (dimension) => (dimension === null || dimension === void 0 ? void 0 : dimension.width) || window.innerWidth;
     const getInnerHeight = (dimension) => (dimension === null || dimension === void 0 ? void 0 : dimension.height) || window.innerHeight;
@@ -4481,7 +4435,9 @@
     }
     function calculateVarAsString(element, value, options) {
         let orderedSize, dimension, separator, unitType, checkUnit, errorString;
+        const optionsVar = {};
         if (options) {
+            Object.assign(optionsVar, options);
             if (Array.isArray(options.orderedSize)) {
                 orderedSize = options.orderedSize;
             }
@@ -4491,7 +4447,6 @@
             ({ separator, unitType, checkUnit, errorString } = options);
         }
         value = value.trim();
-        const optionsVar = Object.assign({}, options);
         let unit;
         switch (unitType) {
             case 32 /* INTEGER */:
@@ -4675,17 +4630,20 @@
         }
         return { width, height };
     }
-    function getBackgroundPosition(value, dimension, options = {}) {
+    function getBackgroundPosition(value, dimension, options) {
         value = value.trim();
         if (value !== '') {
-            const { fontSize, imageDimension, imageSize, screenDimension } = options;
-            const { width, height } = dimension;
             const orientation = value.split(CHAR.SPACE);
             if (orientation.length === 1) {
                 orientation.push('center');
             }
             const length = orientation.length;
             if (length <= 4) {
+                let fontSize, imageDimension, imageSize, screenDimension;
+                if (options) {
+                    ({ fontSize, imageDimension, imageSize, screenDimension } = options);
+                }
+                const { width, height } = dimension;
                 const result = newBoxRectPosition(orientation);
                 const setImageOffset = (position, horizontal, direction, directionAsPercent) => {
                     if (imageDimension && !isLength(position)) {
@@ -4834,7 +4792,7 @@
                             case 'left':
                             case 'right':
                                 result.horizontal = position;
-                                horizontal++;
+                                ++horizontal;
                                 break;
                             case 'center':
                                 if (length === 4) {
@@ -4881,7 +4839,7 @@
                             case 'top':
                             case 'bottom':
                                 result.vertical = position;
-                                vertical++;
+                                ++vertical;
                                 break;
                             default:
                                 return false;
@@ -5162,12 +5120,11 @@
     function convertPX(value, fontSize) {
         return value ? parseUnit(value, fontSize) + 'px' : '0px';
     }
-    function calculate(value, options = {}) {
+    function calculate(value, options) {
         value = value.trim();
         if (value === '') {
             return NaN;
         }
-        const { boundingSize, min, max, unitType, fontSize } = options;
         let length = value.length;
         if (value.charAt(0) !== '(' || value.charAt(length - 1) !== ')') {
             value = `(${value})`;
@@ -5179,7 +5136,7 @@
         for (let i = 0; i < length; ++i) {
             switch (value.charAt(i)) {
                 case '(':
-                    opened++;
+                    ++opened;
                     opening[i] = true;
                     break;
                 case ')':
@@ -5205,37 +5162,11 @@
                         }
                     }
                     if (valid) {
-                        let operand;
-                        let operator;
-                        const checkNumber = () => {
-                            if (operand) {
-                                switch (operator) {
-                                    case '+':
-                                    case '-':
-                                        if (isNumber(operand)) {
-                                            return false;
-                                        }
-                                        break;
-                                    case '*':
-                                    case '/':
-                                        if (!isNumber(operand)) {
-                                            return false;
-                                        }
-                                        break;
-                                }
-                            }
-                            return true;
-                        };
-                        const checkOperator = () => {
-                            if (operand) {
-                                switch (operator) {
-                                    case '+':
-                                    case '-':
-                                        return false;
-                                }
-                            }
-                            return true;
-                        };
+                        let boundingSize, min, max, unitType, fontSize;
+                        if (options) {
+                            ({ boundingSize, min, max, unitType, fontSize } = options);
+                        }
+                        let operand, operator;
                         let found = false;
                         const seg = [];
                         const evaluate = [];
@@ -5260,7 +5191,7 @@
                                             case 64 /* DECIMAL */:
                                                 break;
                                             default:
-                                                if (!checkNumber()) {
+                                                if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
                                                 break;
@@ -5274,13 +5205,13 @@
                                         switch (unitType) {
                                             case 4 /* PERCENT */:
                                                 if (isNumber(partial)) {
-                                                    if (!checkOperator()) {
+                                                    if (!checkCalculateOperator(operand, operator)) {
                                                         return NaN;
                                                     }
                                                     seg.push(parseFloat(partial));
                                                 }
                                                 else if (isPercent(partial)) {
-                                                    if (!checkNumber()) {
+                                                    if (!checkCalculateNumber(operand, operator)) {
                                                         return NaN;
                                                     }
                                                     seg.push(parseFloat(partial));
@@ -5292,13 +5223,13 @@
                                                 break;
                                             case 8 /* TIME */:
                                                 if (isNumber(partial)) {
-                                                    if (!checkOperator()) {
+                                                    if (!checkCalculateOperator(operand, operator)) {
                                                         return NaN;
                                                     }
                                                     seg.push(parseFloat(partial));
                                                 }
                                                 else if (isTime(partial)) {
-                                                    if (!checkNumber()) {
+                                                    if (!checkCalculateNumber(operand, operator)) {
                                                         return NaN;
                                                     }
                                                     seg.push(parseTime(partial));
@@ -5310,13 +5241,13 @@
                                                 break;
                                             case 16 /* ANGLE */:
                                                 if (isNumber(partial)) {
-                                                    if (!checkOperator()) {
+                                                    if (!checkCalculateOperator(operand, operator)) {
                                                         return NaN;
                                                     }
                                                     seg.push(parseFloat(partial));
                                                 }
                                                 else if (isAngle(partial)) {
-                                                    if (!checkNumber()) {
+                                                    if (!checkCalculateNumber(operand, operator)) {
                                                         return NaN;
                                                     }
                                                     seg.push(parseAngle(partial));
@@ -5349,20 +5280,20 @@
                                                 break;
                                             default:
                                                 if (isNumber(partial)) {
-                                                    if (!checkOperator()) {
+                                                    if (!checkCalculateOperator(operand, operator)) {
                                                         return NaN;
                                                     }
                                                     seg.push(parseFloat(partial));
                                                 }
                                                 else if (isLength(partial)) {
-                                                    if (!checkNumber()) {
+                                                    if (!checkCalculateNumber(operand, operator)) {
                                                         return NaN;
                                                     }
                                                     seg.push(parseUnit(partial, fontSize));
                                                     found = true;
                                                 }
                                                 else if (isPercent(partial) && boundingSize !== undefined && !isNaN(boundingSize)) {
-                                                    if (!checkNumber()) {
+                                                    if (!checkCalculateNumber(operand, operator)) {
                                                         return NaN;
                                                     }
                                                     seg.push(parseFloat(partial) / 100 * boundingSize);
@@ -5685,7 +5616,7 @@
                     bounds.top = top;
                 }
                 else if (top >= domRect[i - 1].bottom) {
-                    numberOfLines++;
+                    ++numberOfLines;
                 }
                 if (bottom > bounds.bottom) {
                     bounds.bottom = bottom;
@@ -5790,6 +5721,9 @@
         isTextNode: isTextNode
     });
 
+    function frameworkNotInstalled() {
+        return Promise.reject(new Error('Framework not installed.'));
+    }
     function actualClientRect(element, sessionId) {
         if (sessionId) {
             const rect = getElementCache(element, 'clientRect', sessionId);
@@ -5861,6 +5795,7 @@
 
     var session = /*#__PURE__*/Object.freeze({
         __proto__: null,
+        frameworkNotInstalled: frameworkNotInstalled,
         actualClientRect: actualClientRect,
         actualTextRangeRect: actualTextRangeRect,
         getStyleValue: getStyleValue,
@@ -5964,8 +5899,7 @@
             indent += '\t'.repeat(depth);
         }
         let length = children.length;
-        let i = -1;
-        while (++i < length) {
+        for (let i = 0; i < length; ++i) {
             const item = children[i];
             const include = tag['#'] && item[tag['#']];
             const closed = !nested && !include;
@@ -6034,7 +5968,7 @@
         }
         return output;
     }
-    function formatTemplate(value, closeEmpty = true, startIndent = -1, char = '\t') {
+    function formatTemplate(value, closeEmpty = false, startIndent = -1, char = '\t') {
         const lines = [];
         let match;
         while ((match = REGEX_FORMAT.ITEM.exec(value)) !== null) {
@@ -6042,25 +5976,26 @@
                 tag: match[1],
                 closing: !!match[2],
                 tagName: match[3],
-                value: match[4].trim()
+                value: match[4]
             });
         }
         let output = '';
         let indent = startIndent;
+        let ignoreIndent = false;
         const length = lines.length;
-        let i = -1;
-        while (++i < length) {
+        for (let i = 0; i < length; ++i) {
             const line = lines[i];
             let previous = indent;
             if (i > 0) {
+                let single = false;
                 if (line.closing) {
                     --indent;
                 }
                 else {
-                    ++previous;
+                    const next = lines[i + 1];
+                    single = next.closing && line.tagName === next.tagName;
                     if (!REGEX_FORMAT.CLOSETAG.exec(line.tag)) {
                         if (closeEmpty && line.value.trim() === '') {
-                            const next = lines[i + 1];
                             if ((next === null || next === void 0 ? void 0 : next.closing) && next.tagName === line.tagName) {
                                 line.tag = line.tag.replace(REGEX_FORMAT.OPENTAG, ' />');
                                 ++i;
@@ -6073,12 +6008,23 @@
                             ++indent;
                         }
                     }
+                    ++previous;
                 }
-                let firstLine = true;
-                line.tag.trim().split('\n').forEach(partial => {
-                    const depth = previous + (firstLine ? 0 : 1);
-                    output += (depth > 0 ? char.repeat(depth) : '') + partial.trim() + '\n';
-                    firstLine = false;
+                line.tag.trim().split('\n').forEach((partial, index, array) => {
+                    if (ignoreIndent) {
+                        output += partial;
+                        ignoreIndent = false;
+                    }
+                    else {
+                        const depth = previous + Math.min(index, 1);
+                        output += (depth > 0 ? char.repeat(depth) : '') + partial.trim();
+                    }
+                    if (single && array.length === 1) {
+                        ignoreIndent = true;
+                    }
+                    else {
+                        output += '\n';
+                    }
                 });
             }
             else {
@@ -6093,11 +6039,9 @@
             .replace(REGEX_FORMAT.NBSP, '&#160;')
             .replace(ESCAPE.NONENTITY, '&amp;');
         const char = [];
-        let length = value.length;
-        let i = -1;
-        while (++i < length) {
-            const ch = value.charAt(i);
-            switch (ch) {
+        const length = value.length;
+        for (let i = 0; i < length; ++i) {
+            switch (value.charAt(i)) {
                 case "'":
                     char.push({ i, text: "\\'" });
                     break;
@@ -6123,13 +6067,11 @@
                     break;
             }
         }
-        length = char.length;
-        if (length) {
+        if (char.length) {
             const parts = value.split('');
-            let text;
             let j = 0;
-            while (j < length) {
-                ({ i, text } = char[j++]);
+            while (j < char.length) {
+                const { i, text } = char[j++];
                 parts[i] = text;
             }
             return parts.join('');
@@ -6152,15 +6094,6 @@
         replaceCharacterData: replaceCharacterData
     });
 
-    var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-        function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-        return new (P || (P = Promise))(function (resolve, reject) {
-            function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-            function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-            function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-            step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-    };
     const extensionsQueue = new Set();
     const optionsQueue = new Map();
     const settings = {};
@@ -6235,15 +6168,7 @@
                 return main.parseDocument(...elements);
             }
         }
-        else if (settings.showErrorMessages) {
-            alert('ERROR: Framework not installed.');
-        }
-        return new PromiseHandler();
-    }
-    function parseDocumentAsync(...elements) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return parseDocument(...elements);
-        });
+        return frameworkNotInstalled();
     }
     function include(value, options) {
         if (typeof value === 'string') {
@@ -6324,32 +6249,37 @@
     function copyToDisk(value, options) {
         if (checkWritable(main) && isString(value)) {
             main.finalize();
-            main.copyToDisk(value, options);
+            return main.copyToDisk(value, options);
         }
+        return frameworkNotInstalled();
     }
     function appendToArchive(value, options) {
         if (checkWritable(main) && isString(value)) {
             main.finalize();
-            main.appendToArchive(value, options);
+            return main.appendToArchive(value, options);
         }
+        return frameworkNotInstalled();
     }
     function saveToArchive(value, options) {
         if (checkWritable(main)) {
             main.finalize();
-            main.saveToArchive(value, options);
+            return main.saveToArchive(value, options);
         }
+        return frameworkNotInstalled();
     }
     function createFrom(value, options) {
         var _a;
         if (checkWritable(main) && isString(value) && isPlainObject(options) && ((_a = options.assets) === null || _a === void 0 ? void 0 : _a.length)) {
-            main.createFrom(value, options);
+            return main.createFrom(value, options);
         }
+        return frameworkNotInstalled();
     }
     function appendFromArchive(value, options) {
         var _a;
         if (checkWritable(main) && isString(value) && isPlainObject(options) && ((_a = options.assets) === null || _a === void 0 ? void 0 : _a.length)) {
-            main.appendFromArchive(value, options);
+            return main.appendFromArchive(value, options);
         }
+        return frameworkNotInstalled();
     }
     function toString() {
         return (main === null || main === void 0 ? void 0 : main.toString()) || '';
@@ -6357,7 +6287,8 @@
     const lib = {
         base: {
             Container,
-            PromiseHandler
+            ArrayIterator: Iterator,
+            ListIterator
         },
         client,
         color,
@@ -6380,7 +6311,6 @@
     exports.include = include;
     exports.lib = lib;
     exports.parseDocument = parseDocument;
-    exports.parseDocumentAsync = parseDocumentAsync;
     exports.ready = ready;
     exports.reset = reset;
     exports.retrieve = retrieve;

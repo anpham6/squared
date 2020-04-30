@@ -1,5 +1,5 @@
 import { NodeOptions, UserSettings } from './application';
-import { ChromeAsset } from './file';
+import { ChromeAsset, FileActionAttribute } from './file';
 
 import * as squared from '../squared';
 
@@ -37,13 +37,13 @@ declare namespace base {
         get application(): Application<T>;
         get userSettings(): UserSettings;
         get outputFileExclusions(): RegExp[];
-        getHtmlPage(name?: string, ignoreExtensions?: boolean): ChromeAsset[];
-        getScriptAssets(ignoreExtensions?: boolean): ChromeAsset[];
-        getLinkAssets(rel?: string, ignoreExtensions?: boolean): ChromeAsset[];
-        getImageAssets(ignoreExtensions?: boolean): ChromeAsset[];
-        getVideoAssets(ignoreExtensions?: boolean): ChromeAsset[];
-        getAudioAssets(ignoreExtensions?: boolean): ChromeAsset[];
-        getFontAssets(ignoreExtensions?: boolean): ChromeAsset[];
+        getHtmlPage(options?: FileActionAttribute): ChromeAsset[];
+        getScriptAssets(options?: FileActionAttribute): ChromeAsset[];
+        getLinkAssets(options?: FileActionAttribute): ChromeAsset[];
+        getImageAssets(options?: FileActionAttribute): ChromeAsset[];
+        getVideoAssets(options?: FileActionAttribute): ChromeAsset[];
+        getAudioAssets(options?: FileActionAttribute): ChromeAsset[];
+        getFontAssets(options?: FileActionAttribute): ChromeAsset[];
     }
 
     class Extension<T extends View> extends squared.base.Extension<T> {

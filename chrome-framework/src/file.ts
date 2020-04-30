@@ -1,5 +1,5 @@
 import { FileAsset } from '../../@types/base/file';
-import { ChromeAsset, FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/file';
+import { ChromeAsset, FileActionAttribute, FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/file';
 
 import Resource from './resource';
 
@@ -8,7 +8,7 @@ type View = chrome.base.View;
 const $lib = squared.lib;
 
 const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, objectMap, parseMimeType, resolvePath, spliceString, trimEnd } = $lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, isString, objectMap, parseMimeType, resolvePath, spliceString, trimEnd } = $lib.util;
 
 const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
@@ -37,14 +37,14 @@ function parseUri(uri: string, saveAs?: string): Undef<ChromeAsset> {
             local = true;
         }
         if (saveAs) {
-            let location = /saveAs:(.+)/.exec(saveAs)?.[1];
+            let location = /saveAs:([^;"']+)/.exec(saveAs)?.[1];
             if (location) {
                 if (location.charAt(0) === '/') {
                     moveTo = '__serverroot__';
                     location = location.substring(1);
                 }
                 const parts = location.split('/');
-                filename = parts.pop() as string;
+                filename = decodeURIComponent(parts.pop() as string);
                 pathname = parts.join('/');
                 append = true;
             }
@@ -102,9 +102,9 @@ function getExtensions(element: Null<HTMLElement>) {
     return use ? use.split(XML.SEPARATOR) : [];
 }
 
-function processExtensions(this: chrome.base.File<View>, data: ChromeAsset, extensions: string[], ignoreExtensions: boolean) {
+function processExtensions(this: chrome.base.File<View>, data: ChromeAsset, extensions: string[], options?: FileActionAttribute) {
     const processed: chrome.base.Extension<View>[] = [];
-    if (!ignoreExtensions) {
+    if (options?.ignoreExtensions !== true) {
         this.application.extensions.forEach(ext => {
             if (ext.processFile(data)) {
                 processed.push(ext);
@@ -154,11 +154,12 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         });
     }
 
-    public getHtmlPage(name?: string, ignoreExtensions = false) {
+    public getHtmlPage(options?: FileActionAttribute) {
         const result: ChromeAsset[] = [];
         const href = location.href;
         const data = parseUri(href);
         if (data) {
+            const name = options?.name;
             if (name) {
                 data.filename = name;
             }
@@ -171,24 +172,28 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             if (this.validFile(data)) {
                 data.mimeType = parseMimeType('html');
-                processExtensions.call(this, data, getExtensions(document.querySelector('html')), ignoreExtensions);
+                processExtensions.call(this, data, getExtensions(document.querySelector('html')), options);
                 result.push(data);
             }
         }
         return result;
     }
 
-    public getScriptAssets(ignoreExtensions = false) {
+    public getScriptAssets(options?: FileActionAttribute) {
         const result: ChromeAsset[] = [];
+        const saveAs = options?.saveAs?.script;
         document.querySelectorAll('script').forEach(element => {
-            const file = element.dataset.chromeFile;
+            let file = element.dataset.chromeFile;
             if (file !== 'exclude') {
+                if (!isString(file)) {
+                    file = saveAs;
+                }
                 const src = element.src.trim();
                 if (src !== '') {
                     const data = parseUri(resolvePath(src), file);
                     if (this.validFile(data)) {
                         data.mimeType = element.type.trim() || parseMimeType(data.uri!) || 'text/javascript';
-                        processExtensions.call(this, data, getExtensions(element), ignoreExtensions);
+                        processExtensions.call(this, data, getExtensions(element), options);
                         result.push(data);
                     }
                 }
@@ -197,11 +202,16 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
-    public getLinkAssets(rel?: string, ignoreExtensions = false) {
+    public getLinkAssets(options?: FileActionAttribute) {
         const result: ChromeAsset[] = [];
+        const rel = options?.rel;
+        const saveAs = options?.saveAs?.script;
         document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((element: HTMLLinkElement) => {
-            const file = element.dataset.chromeFile;
+            let file = element.dataset.chromeFile;
             if (file !== 'exclude') {
+                if (!isString(file)) {
+                    file = saveAs;
+                }
                 const href = element.href.trim();
                 if (href !== '') {
                     const data = parseUri(resolvePath(href), file);
@@ -217,7 +227,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                                 data.mimeType = element.type.trim() || parseMimeType(data.uri!);
                                 break;
                         }
-                        processExtensions.call(this, data, getExtensions(element), ignoreExtensions);
+                        processExtensions.call(this, data, getExtensions(element), options);
                         result.push(data);
                     }
                 }
@@ -226,13 +236,13 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
-    public getImageAssets(ignoreExtensions = false) {
+    public getImageAssets(options?: FileActionAttribute) {
         const result: ChromeAsset[] = [];
         const processUri = (element: Null<HTMLElement>, uri: string) => {
             if (uri !== '') {
                 const data = <ChromeAsset> parseUri(uri);
                 if (this.validFile(data) && !result.find(item => item.uri === uri)) {
-                    processExtensions.call(this, data, getExtensions(element), ignoreExtensions);
+                    processExtensions.call(this, data, getExtensions(element), options);
                     result.push(data);
                 }
             }
@@ -281,7 +291,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
                 if (this.validFile(data)) {
                     data.mimeType = mimeType;
-                    processExtensions.call(this, data, [], ignoreExtensions);
+                    processExtensions.call(this, data, [], options);
                     result.push(data);
                 }
             }
@@ -289,15 +299,15 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
-    public getVideoAssets(ignoreExtensions = false) {
-        return this.getRawAssets('video', ignoreExtensions);
+    public getVideoAssets(options?: FileActionAttribute) {
+        return this.getRawAssets('video', options);
     }
 
-    public getAudioAssets(ignoreExtensions = false) {
-        return this.getRawAssets('audio', ignoreExtensions);
+    public getAudioAssets(options?: FileActionAttribute) {
+        return this.getRawAssets('audio', options);
     }
 
-    public getFontAssets(ignoreExtensions = false) {
+    public getFontAssets(options?: FileActionAttribute) {
         const result: ChromeAsset[] = [];
         for (const fonts of ASSETS.fonts.values()) {
             fonts.forEach(font => {
@@ -305,7 +315,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 if (url) {
                     const data = parseUri(url);
                     if (this.validFile(data)) {
-                        processExtensions.call(this, data, [], ignoreExtensions);
+                        processExtensions.call(this, data, [], options);
                         result.push(data);
                     }
                 }
@@ -322,7 +332,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return false;
     }
 
-    protected getRawAssets(tagName: string, ignoreExtensions = false) {
+    protected getRawAssets(tagName: string, options?: FileActionAttribute) {
         const result: ChromeAsset[] = [];
         document.querySelectorAll(tagName).forEach((element: HTMLVideoElement | HTMLAudioElement) => {
             const items = new Map<HTMLElement, string>();
@@ -331,7 +341,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             for (const [item, uri] of items.entries()) {
                 const data = parseUri(uri);
                 if (this.validFile(data)) {
-                    processExtensions.call(this, data, getExtensions(item), ignoreExtensions);
+                    processExtensions.call(this, data, getExtensions(item), options);
                     result.push(data);
                 }
             }
@@ -340,10 +350,12 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     protected getAssetsAll(options: FileArchivingOptions = {}) {
-        const { name, rel } = options;
         const saveAsWebPage = options.saveAsWebPage === true;
-        const result = this.getHtmlPage(name, saveAsWebPage).concat(this.getLinkAssets(rel, saveAsWebPage));
         if (saveAsWebPage) {
+            options = { ...options, ignoreExtensions: true };
+        }
+        const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
+        if (options.saveAsWebPage) {
             result.forEach(item => {
                 const mimeType = item.mimeType;
                 switch (mimeType) {
@@ -355,11 +367,11 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
             });
         }
-        return result.concat(this.getScriptAssets(saveAsWebPage))
-            .concat(this.getImageAssets(saveAsWebPage))
-            .concat(this.getVideoAssets(saveAsWebPage))
-            .concat(this.getAudioAssets(saveAsWebPage))
-            .concat(this.getFontAssets(saveAsWebPage));
+        return result.concat(this.getScriptAssets(options))
+            .concat(this.getImageAssets(options))
+            .concat(this.getVideoAssets(options))
+            .concat(this.getAudioAssets(options))
+            .concat(this.getFontAssets(options));
     }
 
     get outputFileExclusions() {
