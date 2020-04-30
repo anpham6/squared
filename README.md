@@ -171,13 +171,12 @@ squared.settings = {
         'chrome.convert.bmp',
         'chrome.convert.gif', // squared-apache: gif | tiff
         'chrome.convert.tiff',
-        'chrome.compress.png',
+        'chrome.compress.png', // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
         'chrome.compress.jpeg',
         'chrome.compress.brotli',
         'chrome.compress.gzip'
     ],
     preloadImages: false,
-    compressImages: false, // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
     excludePlainText: true,
     createQuerySelectorMap: true,
     showErrorMessages: false,
@@ -624,6 +623,20 @@ See /android/widget/*.html for usage instructions in the squared-apache <https:/
 
 You can exclude unnecessary processing files using the dataset attribute in &lt;script&gt; or &lt;link&gt; tags.
 
+* saveAs: script + link
+* exportAs: script + style
+* exclude: script + link
+
+CSS files can be optimized further using these settings (node-express):
+
+* beautify
+* minify
+* optimize
+
+You can also define your own customizations in squared.settings.json from this project:
+
+* https://github.com/jakubpawlowicz/clean-css
+
 ```xml
 <script data-chrome-file="exclude" src="/dist/squared.js"></script>
 <script data-chrome-file="exclude" src="/dist/squared.base.js"></script>
@@ -637,10 +650,19 @@ You can exclude unnecessary processing files using the dataset attribute in &lt;
 JS and CSS files can be bundled together using the "saveAs" action.
 
 ```xml
+<link data-chrome-file="saveAs:css/prod.css:beautify" rel="stylesheet" href="css/dev.css" />
+<style data-chrome-file="exportAs:css/prod.css:minify">
+    body {
+        font: 1em/1.4 Helvetica, Arial, sans-serif;
+        background-color: #fafafa;
+    }
+</style>
 <script data-chrome-file="saveAs:js/bundle1.js" src="/dist/squared.js"></script>
 <script data-chrome-file="saveAs:js/bundle1.js" src="/dist/squared.base.js"></script>
 <script data-chrome-file="saveAs:js/bundle2.js" src="/dist/chrome.framework.js"></script>
 ```
+
+There entire page can similarly be included using the "saveAs" attribute in options.
 
 ```javascript
 const options = {
@@ -649,6 +671,7 @@ const options = {
         link: 'css/bundle.css'
     }
 };
+
 squared.system.saveScriptAssets(filename?: string, options);
 squared.system.saveLinkAssets(filename?: string, options);
 ```

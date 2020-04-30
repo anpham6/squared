@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta http-equiv="Content-Language" content="en">
     <title>https://github.com/anpham6/squared</title>
-    <link data-chrome-file="saveAs:css/prod.css" rel="stylesheet" type="text/css" href="css/dev.css" />
-    <style>
+    <link data-chrome-file="saveAs:css/prod.css:beautify" rel="stylesheet" type="text/css" href="css/dev.css" />
+    <style data-chrome-file="exportAs:css/prod.css:minify">
         body {
             font: 1em/1.4 Helvetica, Arial, sans-serif;
             background-color: #fafafa;
@@ -57,7 +57,9 @@
             grid-template-columns: 2fr 1fr 1fr;
             grid-gap: 10px;
         }
-        /*.cards {
+    </style>
+    <style data-chrome-file="exportAs:css/prod.css:optimize">
+        .cards {
             grid-template-columns: repeat(12,1fr);
             grid-gap: 10px;
         }
@@ -77,7 +79,7 @@
         }
         .card:nth-child(5) {
             grid-column: 10 / 13;
-        }*/
+        }
         /*.cards {
             grid-template-columns: [side-start] 1fr 1fr 1fr 
             [main-start] 1fr 1fr 1fr 1fr 1fr 1fr [main-end] 1fr 1fr 1fr [layout-end];
@@ -153,7 +155,7 @@
     <script data-chrome-file="saveAs:js/modules1.js" src="/common/transform.js"></script>
     <script data-chrome-file="saveAs:js/modules2.js" src="/common/babel-transform.js"></script>
     <script data-chrome-file="exclude" src="/common/dev.js"></script>
-    <script data-chrome-file="exclude">
+    <script data-chrome-file="exportAs:js/modules2.js">
         System.import('/build/src/main.js').then(result => {
             squared = result;
             System.import('/build/src/base/main.js').then(result => {
@@ -211,7 +213,7 @@
                 <header>
                     <h2>Bristol</h2>
                 </header>
-                <img data-use="chrome.convert.png" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" alt="Bristol harbour">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" alt="Bristol harbour">
                 <div class="body">
                     <p>I live in Bristol. It mostly rains, but when it isn't raining we have hot air balloons.</p>
                 </div>

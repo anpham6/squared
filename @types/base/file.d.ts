@@ -26,6 +26,7 @@ export interface RequestAsset extends ExternalAsset {
     rootDir?: string;
     moveTo?: string;
     append?: boolean;
+    format?: string;
 }
 
 export interface RawAsset extends ExternalAsset, Partial<ImageAsset> {}

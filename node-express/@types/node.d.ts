@@ -15,6 +15,7 @@ declare namespace Node {
         env?: string;
         port?: { development?: string; production?: string };
         routing?: Routing;
+        external?: External;
     }
 
     type Environment = "production" | "development";
@@ -30,9 +31,15 @@ declare namespace Node {
         path?: string;
     }
 
+    interface External {
+        css?: ObjectMap<StandardMap>;
+    }
+
     interface CompressionFormat extends file.CompressionFormat {}
 
-    interface RequestAsset extends Omit<file.RequestAsset, "exclusions"> {}
+    interface RequestAsset extends Omit<file.RequestAsset, "exclusions"> {
+        filepath?: string;
+    }
 
     interface ResultOfFileAction extends file.ResultOfFileAction {}
 }

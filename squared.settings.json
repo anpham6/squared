@@ -14,6 +14,15 @@
     "production": "80",
     "development": "3000"
   },
+  "external": {
+    "css": {
+      "clean_css": {
+        "beautify": { "level": 0, "format": "beautify" },
+        "minify": { "level": 1 },
+        "optimize": { "level": 2 }
+      }
+    }
+  },
   "routing": {
     "shared": [
       { "mount": "html", "path": "/" },

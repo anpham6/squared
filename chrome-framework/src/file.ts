@@ -14,7 +14,7 @@ const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
 const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
 
-function parseUri(uri: string, saveAs?: string): Undef<ChromeAsset> {
+function parseUri(uri: string, saveAs?: string, mimeType?: string): Undef<ChromeAsset> {
     const value = trimEnd(uri, '/');
     const match = COMPONENT.PROTOCOL.exec(value);
     if (match) {
@@ -24,6 +24,7 @@ function parseUri(uri: string, saveAs?: string): Undef<ChromeAsset> {
         let moveTo: Undef<string>;
         let local: Undef<boolean>;
         let append: Undef<boolean>;
+        let format: Undef<string>;
         const getDirectory = (start = 1) => {
             if (start > 1) {
                 rootDir = path.substring(0, start);
@@ -37,14 +38,16 @@ function parseUri(uri: string, saveAs?: string): Undef<ChromeAsset> {
             local = true;
         }
         if (saveAs) {
-            let location = /saveAs:([^;"']+)/.exec(saveAs)?.[1];
-            if (location) {
+            const subMatch = /saveAs:([^"']+)/.exec(saveAs);
+            if (subMatch) {
+                let location: string;
+                [location, format] = subMatch[1].split(':').map(value => value.trim());
                 if (location.charAt(0) === '/') {
                     moveTo = '__serverroot__';
                     location = location.substring(1);
                 }
                 const parts = location.split('/');
-                filename = decodeURIComponent(parts.pop() as string);
+                filename = parts.pop() as string;
                 pathname = parts.join('/');
                 append = true;
             }
@@ -77,6 +80,7 @@ function parseUri(uri: string, saveAs?: string): Undef<ChromeAsset> {
             filename,
             extension,
             append,
+            format,
             mimeType: extension && parseMimeType(extension)
         };
     }
@@ -214,6 +218,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
                 const href = element.href.trim();
                 if (href !== '') {
+                    const uri = resolvePath(href);
                     const data = parseUri(resolvePath(href), file);
                     if (this.validFile(data)) {
                         switch (element.rel.trim()) {
@@ -224,7 +229,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                                 data.mimeType = 'image/x-icon';
                                 break;
                             default:
-                                data.mimeType = element.type.trim() || parseMimeType(data.uri!);
+                                data.mimeType = element.type.trim() || parseMimeType(uri);
                                 break;
                         }
                         processExtensions.call(this, data, getExtensions(element), options);
@@ -358,12 +363,14 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         if (options.saveAsWebPage) {
             result.forEach(item => {
                 const mimeType = item.mimeType;
-                switch (mimeType) {
-                    case 'text/html':
-                    case 'text/css':
-                    case 'application/xhtml+xml':
-                        item.mimeType = '@' + mimeType;
-                        break;
+                if (mimeType) {
+                    switch (mimeType) {
+                        case 'text/html':
+                        case 'text/css':
+                        case 'application/xhtml+xml':
+                            item.mimeType = '@' + mimeType;
+                            break;
+                    }
                 }
             });
         }
