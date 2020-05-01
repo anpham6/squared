@@ -157,7 +157,7 @@ squared.settings = {
     outputDirectory: 'app/src/main',
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'android-xml',
-    outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
+    outputArchiveFormat: 'zip' // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
 };
 ```
 
@@ -183,7 +183,7 @@ squared.settings = {
     outputFileExclusions: [], // ['squared.*', '*.mp4'] | <script|link> data-chrome-file="exclude" | default is none
     outputEmptyCopyDirectory: false,
     outputArchiveName: 'chrome-data',
-    outputArchiveFormat: 'zip', // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
+    outputArchiveFormat: 'zip' // zip | tar | gz/tgz | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
 };
 ```
 
@@ -474,6 +474,7 @@ Placing an @ symbol (@png:image/jpeg) before the mime type will remove the origi
 
 ```javascript
 // NOTE: "exclusions" attribute and some compression formats are only available when using squared-apache
+
 squared.settings.outputArchiveFormat = '7z';
 squared.saveToArchive('archive1', {
     assets: [
@@ -621,37 +622,29 @@ See /android/widget/*.html for usage instructions in the squared-apache <https:/
 
 ### CHROME: Saving web page assets
 
-You can exclude unnecessary processing files using the dataset attribute in &lt;script&gt; or &lt;link&gt; tags.
+Bundling options are available with these HTML tag names.
 
 * saveAs: script + link
 * exportAs: script + style
-* exclude: script + link
+* exclude: script + link + style
 
-CSS files can be optimized further using these settings (node-express):
+JS and CSS files can be optimized further using these settings (node-express):
 
 * beautify
 * minify
-* optimize
+* custom name
 
-You can also define your own customizations in squared.settings.json from this project:
+You can also define your own optimizations in squared.settings.json:
 
+* https://github.com/terser/terser
+* https://github.com/beautify-web/js-beautify
 * https://github.com/jakubpawlowicz/clean-css
 
-```xml
-<script data-chrome-file="exclude" src="/dist/squared.js"></script>
-<script data-chrome-file="exclude" src="/dist/squared.base.js"></script>
-<script data-chrome-file="exclude" src="/dist/chrome.framework.js"></script>
-<script data-chrome-file="exclude">
-    squared.setFramework(chrome);
-    chrome.saveAsWebPage();
-</script>
-```
-
-JS and CSS files can be bundled together using the "saveAs" action.
+JS and CSS files can be bundled together with the "saveAs" or "exportAs" action.
 
 ```xml
-<link data-chrome-file="saveAs:css/prod.css:beautify" rel="stylesheet" href="css/dev.css" />
-<style data-chrome-file="exportAs:css/prod.css:minify">
+<link data-chrome-file="saveAs:css/prod.css::beautify" rel="stylesheet" href="css/dev.css" />
+<style data-chrome-file="exportAs:css/prod.css::minify">
     body {
         font: 1em/1.4 Helvetica, Arial, sans-serif;
         background-color: #fafafa;
@@ -667,13 +660,25 @@ There entire page can similarly be included using the "saveAs" attribute in opti
 ```javascript
 const options = {
     saveAs: {
-        script: 'js/bundle.js',
-        link: 'css/bundle.css'
+        script: { filename: 'js/bundle.js', format: 'minifiy' },
+        link: { filename: 'css/bundle.css', format: 'beautify' }
     }
 };
 
 squared.system.saveScriptAssets(filename?: string, options);
 squared.system.saveLinkAssets(filename?: string, options);
+```
+
+You can exclude unnecessary processing files using the dataset attribute in &lt;script&gt; or &lt;link&gt; tags.
+
+```xml
+<script data-chrome-file="exclude" src="/dist/squared.js"></script>
+<script data-chrome-file="exclude" src="/dist/squared.base.js"></script>
+<script data-chrome-file="exclude" src="/dist/chrome.framework.js"></script>
+<script data-chrome-file="exclude">
+    squared.setFramework(chrome);
+    chrome.saveAsWebPage();
+</script>
 ```
 
 ### CHROME: Extension configuration

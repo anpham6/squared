@@ -18,8 +18,16 @@
     "css": {
       "clean_css": {
         "beautify": { "level": 0, "format": "beautify" },
-        "minify": { "level": 1 },
-        "optimize": { "level": 2 }
+        "minify": {}
+      },
+      "js_beautify": {}
+    },
+    "js": {
+      "js_beautify": {
+        "beautify": {}
+      },
+      "terser": {
+        "minify": {}
       }
     }
   },

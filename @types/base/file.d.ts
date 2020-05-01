@@ -27,6 +27,8 @@ export interface RequestAsset extends ExternalAsset {
     moveTo?: string;
     append?: boolean;
     format?: string;
+    bundleMain?: boolean;
+    outerHTML?: string;
 }
 
 export interface RawAsset extends ExternalAsset, Partial<ImageAsset> {}

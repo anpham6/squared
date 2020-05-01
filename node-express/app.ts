@@ -11,6 +11,8 @@ import decompress = require('decompress');
 import uuid = require('uuid');
 import jimp = require('jimp');
 import clean_css = require('clean-css');
+import terser = require('terser');
+import js_beautify = require('js-beautify');
 import tinify = require('tinify');
 
 let THREAD_COUNT = 0;
@@ -21,7 +23,7 @@ interface AsyncStatus {
     dirname: string;
     filesToRemove: string[];
     filesToCompare: string[];
-    contentToAppend: Map<RequestAsset, string[]>;
+    contentToAppend: Map<string, string[]>;
 }
 
 interface CompressOutput {
@@ -283,29 +285,81 @@ function getSaveLocation(value: string) {
 }
 
 function minifyCss(format: string, value: string) {
-    let options: Undef<clean_css.OptionsOutput> = EXTERNAL?.css?.clean_css?.[format];
-    if (!options) {
+    const css = EXTERNAL?.css;
+    if (css) {
+        let [module, options] = findExternalPlugin(css, format);
         switch (format) {
             case 'beautify':
+                module = 'clean_css';
                 options = { level: 0, format: 'beautify' };
                 break;
             case 'minify':
+                module = 'clean_css';
                 options = { level: 1 };
                 break;
-            case 'optimize':
-                options = { level: 2 };
-                break;
-            default:
-                return '';
+        }
+        try {
+            switch (module) {
+                case 'clean_css':
+                    return new clean_css(<clean_css.OptionsOutput> options).minify(value).styles;
+                case 'js_beautify':
+                    return js_beautify.css_beautify(value, <JsBeautifyOptions> options);
+            }
+        }
+        catch (err) {
+            writeError(`External: ${module}`, err);
         }
     }
-    try {
-        return new clean_css(options).minify(value).styles;
-    }
-    catch (err) {
-        writeError('External: clean_css', err);
+    return '';
+}
+
+function minifyJs(format: string, value: string) {
+    const js = EXTERNAL?.js;
+    if (js) {
+        let [module, options] = findExternalPlugin(js, format);
+        if (!module) {
+            switch (format) {
+                case 'beautify':
+                    module = 'js_beautify';
+                    options = {};
+                    break;
+                case 'minify':
+                    module = 'terser';
+                    options = {};
+                    break;
+            }
+        }
+        try {
+            switch (module) {
+                case 'js_beautify':
+                    return js_beautify.js_beautify(value, <JsBeautifyOptions> options);
+                case 'terser':
+                    return terser.minify(value, <terser.MinifyOptions> options).code;
+            }
+        }
+        catch (err) {
+            writeError(`External: ${module}`, err);
+        }
     }
     return '';
+}
+
+function findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}] {
+    for (const name in data) {
+        const plugin = data[name];
+        for (const custom in plugin) {
+            if (custom === format) {
+                return [name, plugin[custom]];
+            }
+        }
+    }
+    return ['', {}];
+}
+
+function queueContentToAppend(status: AsyncStatus, filepath: string, content: string) {
+    const value = status.contentToAppend.get(filepath) || [];
+    value.push(content);
+    status.contentToAppend.set(filepath, value);
 }
 
 function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void) {
@@ -322,11 +376,11 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             let pattern = /\s*<(script|link).*?(\s+data-chrome-file=(["'])\s*saveAs:([^"']+)\3).*?\/?>(?:[\s\S]*?<\/\1>\n*)?/ig;
             let match: Null<RegExpExecArray>;
             while ((match = pattern.exec(html)) !== null) {
+                const value = match[0];
                 const script = match[1].toLowerCase() === 'script';
-                const saveAs = match[4].split(':').map(value => value.trim())[0];
+                const saveAs = match[4].split('::')[0].trim();
                 const [root, filename] = getSaveLocation(saveAs);
                 const location = root + filename;
-                const value = match[0];
                 if (saved.has(location)) {
                     source = source.replace(value, '');
                 }
@@ -341,15 +395,20 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             }
             source = convertAssetUrls(assets, file, source);
             html = source;
-            pattern = /(\s*)<(script|style).*?(\s+data-chrome-file=(["'])\s*exportAs:([^"']+)\4).*?\/?>([\s\S]+?)<\/\2>\n*/ig;
+            pattern = /(\s*)<(script|style).*?(\s+data-chrome-file=(["'])\s*exportAs:([^"']+)\4).*?>([\s\S]+?)<\/\2>\n*/ig;
             while ((match = pattern.exec(html)) !== null) {
-                const script = match[1].toLowerCase() === 'script';
-                const [exportAs, transform] = match[5].split(':').map(value => value.trim());
+                const script = match[2].toLowerCase() === 'script';
+                const [exportAs, transform] = match[5].split('::').map(value => value.trim());
                 const [root, filename] = getSaveLocation(exportAs);
                 const location = root + filename;
                 const pathname = path.join(status.dirname, location);
                 let content = match[6];
-                if (!script) {
+                if (script) {
+                    if (transform) {
+                        content = minifyJs(transform, content) || content;
+                    }
+                }
+                else {
                     const levels = filename.split('/').length - 1;
                     if (levels > 0) {
                         const urlPattern = /url\(\s*(["'])?(.+?)\1?\s*\)/g;
@@ -366,34 +425,70 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 const asset = assets.find(item => (item.moveTo ? item.moveTo + '/' : '') + item.pathname + '/' + item.filename === location);
                 let appending = true;
                 if (asset) {
-                    const value = status.contentToAppend.get(asset) || [];
-                    value.push(content);
-                    status.contentToAppend.set(asset, value);
+                    queueContentToAppend(status, asset.filepath!, content);
                 }
                 else {
                     appending = fs.existsSync(pathname);
                     if (appending) {
-                        fs.appendFileSync(pathname, content);
+                        fs.appendFileSync(pathname, '\n' + content);
                     }
                     else {
                         fs.writeFileSync(pathname, content);
                     }
                 }
-                source = source.replace(match[0], appending ? '' : match[1] + (script ? `<script src="${location}" type="text/javascript"></script>` : `<link href="${location}" type="stylesheet" />`));
+                source = source.replace(match[0], appending ? '' : match[1] + getFileOuterHTML(script, location));
+            }
+            for (const item of assets) {
+                const bundleMain = item.bundleMain;
+                if (typeof bundleMain === 'boolean') {
+                    let outerHTML = item.outerHTML;
+                    if (outerHTML) {
+                        const length = source.length;
+                        let replacement = '';
+                        if (bundleMain) {
+                            const location = getUri(item, item.uri || '/')[0];
+                            replacement = getFileOuterHTML(item.mimeType === 'text/javascript', location);
+                            source = source.replace(outerHTML, replacement);
+                        }
+                        else {
+                            source = source.replace(new RegExp(`\\s*${outerHTML}\\n*`), '');
+                        }
+                        if (source.length === length) {
+                            const htmlPattern = /(\s*)<(script|style).*?>([\s\S]+?)<\/\1>\n*/ig;
+                            const content = minifySpace(item.content || '');
+                            outerHTML = minifySpace(outerHTML);
+                            while ((match = htmlPattern.exec(html)) !== null) {
+                                if (outerHTML === minifySpace(match[0]) || content && content === minifySpace(match[3])) {
+                                    source = source.replace(match[0], (replacement !== '' ? match[1] : '') + replacement);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
             }
             fs.writeFileSync(
                 filepath,
                 source
-                    .replace(/\s*<(script|link).+?data-chrome-file=(["'])exclude\2.*?>[\s\S]*?<\/\1>\n*/ig, '')
+                    .replace(/\s*<(script|link|style).+?data-chrome-file=(["'])exclude\2.*?>[\s\S]*?<\/\1>\n*/ig, '')
                     .replace(/\s*<(script|link).+?data-chrome-file=(["'])exclude\2.*?\/?>\n*/ig, '')
                     .replace(/\s+data-(?:use|chrome-[\w-]+)=(["']).+?\1/g, '')
             );
             break;
         }
+        case 'text/javascript': {
+            if (format) {
+                const output = minifyJs(format, fs.readFileSync(filepath).toString('utf8'));
+                if (output) {
+                    fs.writeFileSync(filepath, output);
+                }
+            }
+            break;
+        }
         case 'text/css': {
             if (format) {
                 const output = minifyCss(format, fs.readFileSync(filepath).toString('utf8'));
-                if (output !== '') {
+                if (output) {
                     fs.writeFileSync(filepath, output);
                 }
             }
@@ -663,7 +758,8 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
     };
     for (const file of assets) {
         const { pathname, filepath } = getFileOutput(file, dirname);
-        const { content, base64, uri } = file;
+        const { append, base64, uri } = file;
+        let content = file.content;
         if (!emptyDir[pathname]) {
             if (empty) {
                 try {
@@ -679,6 +775,21 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
             emptyDir[pathname] = true;
         }
         if (content || base64) {
+            if (append && content) {
+                const format = file.format;
+                if (format) {
+                    switch (file.mimeType) {
+                        case 'text/javascript':
+                            content = minifyJs(format, content) || content;
+                            break;
+                        case 'text/css':
+                            content = minifyCss(format, content) || content;
+                            break;
+                    }
+                }
+                queueContentToAppend(status, filepath, content);
+                continue;
+            }
             ++status.delayed;
             fs.writeFile(
                 filepath,
@@ -697,7 +808,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 continue;
             }
             const checkQueue = () => {
-                if (file.append) {
+                if (append) {
                     const queue = appending[filepath];
                     if (queue) {
                         queue.push(file);
@@ -836,14 +947,13 @@ function removeUnusedFiles(dirname: string, status: AsyncStatus, files: Set<stri
             writeError(value, err);
         }
     }
-    for (const [asset, content] of contentToAppend.entries()) {
-        const filepath = asset.filepath;
-        if (filepath && content.length) {
+    for (const [filepath, content] of contentToAppend.entries()) {
+        if (content.length) {
             if (!fs.existsSync(filepath)) {
                 fs.writeFileSync(filepath, content.shift());
             }
             for (const value of content) {
-                fs.appendFileSync(filepath, value);
+                fs.appendFileSync(filepath, '\n' + value);
             }
         }
     }
@@ -919,6 +1029,7 @@ function checkPermissions(res: express.Response<any>, dirname: string) {
     return true;
 }
 
+const minifySpace = (value: string) => value.replace(/[\s\n]+/g, '');
 const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
 const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
 const getSeparator = (uri: string) => uri.includes('\\') ? '\\' : '/';
@@ -928,6 +1039,7 @@ const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.
 const hasCompressPng = (compress: Undef<CompressionFormat[]>) => TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
 const getCompressFormat = (compress: Undef<CompressionFormat[]>, format: string) => compress && compress.find(item => item.format === format);
 const getFileSize = (filepath: string) => fs.statSync(filepath).size;
+const getFileOuterHTML = (script: boolean, filepath: string) => script ? `<script src="${filepath}" type="text/javascript"></script>` : `<link href="${filepath}" type="stylesheet" />`;
 
 app.post('/api/assets/copy', (req, res) => {
     let dirname = req.query.to as string;

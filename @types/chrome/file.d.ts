@@ -14,6 +14,11 @@ export interface FileArchivingOptions extends application.FileArchivingOptions, 
 export interface FileActionAttribute {
     name?: string;
     rel?: string;
-    saveAs?: { script?: string; link?: string };
+    saveAs?: { script?: SaveAsOptions; link?: SaveAsOptions };
     ignoreExtensions?: boolean;
+}
+
+export interface SaveAsOptions {
+    filename: string;
+    format?: string;
 }

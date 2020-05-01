@@ -33,6 +33,7 @@ declare namespace Node {
 
     interface External {
         css?: ObjectMap<StandardMap>;
+        js?: ObjectMap<StandardMap>;
     }
 
     interface CompressionFormat extends file.CompressionFormat {}
