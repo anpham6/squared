@@ -32,11 +32,14 @@ declare namespace Node {
     }
 
     interface External {
+        html?: ObjectMap<StandardMap>;
         css?: ObjectMap<StandardMap>;
         js?: ObjectMap<StandardMap>;
     }
 
     interface CompressionFormat extends file.CompressionFormat {}
+
+    interface FormatableContent extends file.FormatableContent {}
 
     interface RequestAsset extends Omit<file.RequestAsset, "exclusions"> {
         filepath?: string;

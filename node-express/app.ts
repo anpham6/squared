@@ -1,4 +1,4 @@
-import { CompressionFormat, Environment, External, ResultOfFileAction, RequestAsset, Routing, Settings } from './@types/node';
+import { CompressionFormat, Environment, External, FormatableContent, ResultOfFileAction, RequestAsset, Routing, Settings } from './@types/node';
 
 import path = require('path');
 import fs = require('fs-extra');
@@ -10,9 +10,10 @@ import archiver = require('archiver');
 import decompress = require('decompress');
 import uuid = require('uuid');
 import jimp = require('jimp');
+import html_minifier = require('html-minifier');
 import clean_css = require('clean-css');
-import terser = require('terser');
 import js_beautify = require('js-beautify');
+import terser = require('terser');
 import tinify = require('tinify');
 
 let THREAD_COUNT = 0;
@@ -274,36 +275,69 @@ function convertAssetUrls(assets: RequestAsset[], file: RequestAsset, html: stri
     return html;
 }
 
-function getSaveLocation(value: string) {
-    let root = '';
-    let filename = value;
-    if (filename.charAt(0) === '/') {
-        root = '__serverroot__/';
-        filename = filename.substring(1);
+function minifyHtml(format: string, value: string) {
+    const html = EXTERNAL?.html;
+    if (html) {
+        let [module, options] = findExternalPlugin(html, format);
+        if (!module) {
+            switch (format) {
+                case 'beautify':
+                    module = 'js_beautify';
+                    options = <HTMLBeautifyOptions> {
+                        wrap_line_length: 0
+                    };
+                    break;
+                case 'minify':
+                    module = 'html_minifier';
+                    options = <html_minifier.Options> {
+                        collapseWhitespace: true,
+                        collapseBooleanAttributes: true,
+                        removeEmptyAttributes: true,
+                        removeRedundantAttributes: true,
+                        removeScriptTypeAttributes: true,
+                        removeStyleLinkTypeAttributes: true,
+                        removeComments: true
+                    };
+                    break;
+            }
+        }
+        try {
+            switch (module) {
+                case 'html_minifier':
+                    return html_minifier.minify(value, options);
+                case 'js_beautify':
+                    return js_beautify.html_beautify(value, options);
+            }
+        }
+        catch (err) {
+            writeError(`External: ${module}`, err);
+        }
     }
-    return [root, filename];
+    return '';
 }
 
 function minifyCss(format: string, value: string) {
     const css = EXTERNAL?.css;
     if (css) {
         let [module, options] = findExternalPlugin(css, format);
-        switch (format) {
-            case 'beautify':
-                module = 'clean_css';
-                options = { level: 0, format: 'beautify' };
-                break;
-            case 'minify':
-                module = 'clean_css';
-                options = { level: 1 };
-                break;
+        if (!module) {
+            switch (format) {
+                case 'beautify':
+                    module = 'clean_css';
+                    options = <clean_css.OptionsOutput> { level: 0, format: 'beautify' };
+                    break;
+                case 'minify':
+                    module = 'clean_css';
+                    options = <clean_css.OptionsOutput> { level: 1 };
+                    break;
+            }
         }
         try {
             switch (module) {
                 case 'clean_css':
-                    return new clean_css(<clean_css.OptionsOutput> options).minify(value).styles;
+                    return new clean_css(options).minify(value).styles;
                 case 'js_beautify':
-                    return js_beautify.css_beautify(value, <JsBeautifyOptions> options);
+                    return js_beautify.css_beautify(value, options);
             }
         }
         catch (err) {
@@ -321,20 +355,25 @@ function minifyJs(format: string, value: string) {
             switch (format) {
                 case 'beautify':
                     module = 'js_beautify';
-                    options = {};
+                    options = <JsBeautifyOptions> {
+                        break_chained_methods: true,
+                        keep_array_indentation: true
+                    };
                     break;
                 case 'minify':
                     module = 'terser';
-                    options = {};
+                    options = <terser.MinifyOptions> {
+                        keep_classnames: true
+                    };
                     break;
             }
         }
         try {
             switch (module) {
-                case 'js_beautify':
-                    return js_beautify.js_beautify(value, <JsBeautifyOptions> options);
                 case 'terser':
-                    return terser.minify(value, <terser.MinifyOptions> options).code;
+                    return terser.minify(value, options).code;
+                case 'js_beautify':
+                    return js_beautify.js_beautify(value, options);
             }
         }
         catch (err) {
@@ -356,10 +395,24 @@ function findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [stri
     return ['', {}];
 }
 
-function queueContentToAppend(status: AsyncStatus, filepath: string, content: string) {
+function queueContentToAppend(status: AsyncStatus, filepath: string, content: string, trailingContent?: FormatableContent[], mimeType?: string, format?: string) {
+    if (trailingContent) {
+        content += getTrailingContent(trailingContent, mimeType, format);
+    }
     const value = status.contentToAppend.get(filepath) || [];
     value.push(content);
     status.contentToAppend.set(filepath, value);
+}
+
+function writeTrailingContentSync(file: RequestAsset, filepath: string) {
+    if (file.trailingContent) {
+        try {
+            fs.appendFileSync(filepath, getTrailingContent(file.trailingContent, file.mimeType, file.format));
+        }
+        catch (err) {
+            writeError(filepath, err);
+        }
+    }
 }
 
 function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void) {
@@ -395,14 +448,17 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             }
             source = convertAssetUrls(assets, file, source);
             html = source;
-            pattern = /(\s*)<(script|style).*?(\s+data-chrome-file=(["'])\s*exportAs:([^"']+)\4).*?>([\s\S]+?)<\/\2>\n*/ig;
+            pattern = /(\s*)<(script|style).*?(\s+data-chrome-file=(["'])\s*exportAs:([^"']+)\4).*?>([\s\S]*?)<\/\2>\n*/ig;
             while ((match = pattern.exec(html)) !== null) {
+                let content = match[6];
+                if (!content) {
+                    continue;
+                }
                 const script = match[2].toLowerCase() === 'script';
                 const [exportAs, transform] = match[5].split('::').map(value => value.trim());
                 const [root, filename] = getSaveLocation(exportAs);
                 const location = root + filename;
                 const pathname = path.join(status.dirname, location);
-                let content = match[6];
                 if (script) {
                     if (transform) {
                         content = minifyJs(transform, content) || content;
@@ -414,8 +470,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                         const urlPattern = /url\(\s*(["'])?(.+?)\1?\s*\)/g;
                         let urlMatch: Null<RegExpExecArray>;
                         while ((urlMatch = urlPattern.exec(match[6])) !== null) {
-                            const url = urlMatch[2].trim();
-                            content = content.replace(urlMatch[0], 'url(' + '../'.repeat(levels) + (url.startsWith('/') ? `__serverroot__/${url.substring(1)}` : url) + ')');
+                            content = content.replace(urlMatch[0], 'url(' + '../'.repeat(levels) + getSaveLocation(urlMatch[2].trim()).join('') + ')');
                         }
                     }
                     if (transform) {
@@ -438,8 +493,9 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 }
                 source = source.replace(match[0], appending ? '' : match[1] + getFileOuterHTML(script, location));
             }
+            pattern = /(\s*)<(script|style).*?>([\s\S]*?)<\/\2>\n*/ig;
             for (const item of assets) {
-                const bundleMain = item.bundleMain;
+                const { bundleMain, trailingContent } = item;
                 if (typeof bundleMain === 'boolean') {
                     let outerHTML = item.outerHTML;
                     if (outerHTML) {
@@ -454,10 +510,10 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                             source = source.replace(new RegExp(`\\s*${outerHTML}\\n*`), '');
                         }
                         if (source.length === length) {
-                            const htmlPattern = /(\s*)<(script|style).*?>([\s\S]+?)<\/\1>\n*/ig;
+                            pattern.lastIndex = 0;
                             const content = minifySpace(item.content || '');
                             outerHTML = minifySpace(outerHTML);
-                            while ((match = htmlPattern.exec(html)) !== null) {
+                            while ((match = pattern.exec(source)) !== null) {
                                 if (outerHTML === minifySpace(match[0]) || content && content === minifySpace(match[3])) {
                                     source = source.replace(match[0], (replacement !== '' ? match[1] : '') + replacement);
                                     break;
@@ -466,32 +522,26 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                         }
                     }
                 }
-            }
-            fs.writeFileSync(
-                filepath,
-                source
-                    .replace(/\s*<(script|link|style).+?data-chrome-file=(["'])exclude\2.*?>[\s\S]*?<\/\1>\n*/ig, '')
-                    .replace(/\s*<(script|link).+?data-chrome-file=(["'])exclude\2.*?\/?>\n*/ig, '')
-                    .replace(/\s+data-(?:use|chrome-[\w-]+)=(["']).+?\1/g, '')
-            );
-            break;
-        }
-        case 'text/javascript': {
-            if (format) {
-                const output = minifyJs(format, fs.readFileSync(filepath).toString('utf8'));
-                if (output) {
-                    fs.writeFileSync(filepath, output);
+                if (trailingContent) {
+                    pattern.lastIndex = 0;
+                    const content = [];
+                    for (const trailing of trailingContent) {
+                        content.push(minifySpace(trailing.value));
+                    }
+                    const output = source;
+                    while ((match = pattern.exec(output)) !== null) {
+                        const value = minifySpace(match[3]);
+                        if (content.includes(value)) {
+                            source = source.replace(match[0], '');
+                        }
+                    }
                 }
             }
-            break;
-        }
-        case 'text/css': {
-            if (format) {
-                const output = minifyCss(format, fs.readFileSync(filepath).toString('utf8'));
-                if (output) {
-                    fs.writeFileSync(filepath, output);
-                }
-            }
+            source = source
+                .replace(/\s*<(script|link|style).+?data-chrome-file=(["'])exclude\2.*?>[\s\S]*?<\/\1>\n*/ig, '')
+                .replace(/\s*<(script|link).+?data-chrome-file=(["'])exclude\2.*?\/?>\n*/ig, '')
+                .replace(/\s+data-(?:use|chrome-[\w-]+)=(["']).+?\1/g, '');
+            fs.writeFileSync(filepath, format && minifyHtml(format, source) || source);
             break;
         }
         case '@text/css': {
@@ -525,6 +575,36 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 }
                 fs.writeFileSync(filepath, convertAssetUrls(assets, file, source));
             }
+            break;
+        }
+        case 'text/html':
+        case 'application/xhtml+xml': {
+            if (format) {
+                const output = minifyHtml(format, fs.readFileSync(filepath).toString('utf8'));
+                if (output) {
+                    fs.writeFileSync(filepath, output);
+                }
+            }
+            break;
+        }
+        case 'text/javascript': {
+            if (format) {
+                const output = minifyJs(format, fs.readFileSync(filepath).toString('utf8'));
+                if (output) {
+                    fs.writeFileSync(filepath, output);
+                }
+            }
+            writeTrailingContentSync(file, filepath);
+            break;
+        }
+        case 'text/css': {
+            if (format) {
+                const output = minifyCss(format, fs.readFileSync(filepath).toString('utf8'));
+                if (output) {
+                    fs.writeFileSync(filepath, output);
+                }
+            }
+            writeTrailingContentSync(file, filepath);
             break;
         }
         default:
@@ -708,6 +788,33 @@ function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: stri
     }
 }
 
+function formatContent(value: string, mimeType: string, format: string) {
+    switch (mimeType) {
+        case 'text/html':
+        case 'application/xhtml+xml':
+            return minifyHtml(format, value) || value;
+        case 'text/css':
+            return minifyCss(format, value) || value;
+        case 'text/javascript':
+            return minifyJs(format, value) || value;
+    }
+    return value;
+}
+
+function getTrailingContent(trailingContent: FormatableContent[], mimeType?: string, format?: string) {
+    let result = '';
+    for (const item of trailingContent) {
+        const formatter = item.format || format;
+        if (mimeType && formatter) {
+            result += '\n' + formatContent(item.value, mimeType, formatter);
+        }
+        else {
+            result += '\n' + item.value;
+        }
+    }
+    return result;
+}
+
 function processAssets(dirname: string, assets: RequestAsset[], status: AsyncStatus, finalize: (filepath?: string) => void, empty?: boolean) {
     const emptyDir = {};
     const notFound: ObjectMap<boolean> = {};
@@ -730,23 +837,33 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
         writeError(uri, message);
         delete processing[filepath];
     };
-    const processQueue = (file: RequestAsset, filepath: string) => {
+    const processQueue = (file: RequestAsset, filepath: string, original?: RequestAsset) => {
         if (file.append) {
-            const queue = appending[filepath]?.pop();
+            const queue = appending[filepath]?.shift();
             if (queue) {
                 const uri = queue.uri!;
-                const stream = fs.createWriteStream(filepath, { flags: 'a' });
-                stream.on('finish', () => processQueue(queue, filepath));
-                request(uri)
-                    .on('response', response => {
+                request(uri, (err, response) => {
+                    if (err) {
+                        notFound[uri] = true;
+                        writeError(uri, err);
+                    }
+                    else {
                         const statusCode = response.statusCode;
                         if (statusCode >= 300) {
-                            errorRequest(uri, filepath, statusCode + ' ' + response.statusMessage, stream);
+                            notFound[uri] = true;
+                            writeError(uri, statusCode + ' ' + response.statusMessage);
                         }
-                    })
-                    .on('error', err => errorRequest(uri, filepath, err, stream))
-                    .pipe(stream);
+                        else {
+                            const { format, mimeType } = queue;
+                            queueContentToAppend(status, filepath, format && mimeType && formatContent(response.body, mimeType, format) || response.body, queue.trailingContent, mimeType, format);
+                        }
+                    }
+                    processQueue(queue, filepath, original || file);
+                });
                 return;
+            }
+            else if (original) {
+                file = original;
             }
         }
         completed.push(filepath);
@@ -758,8 +875,6 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
     };
     for (const file of assets) {
         const { pathname, filepath } = getFileOutput(file, dirname);
-        const { append, base64, uri } = file;
-        let content = file.content;
         if (!emptyDir[pathname]) {
             if (empty) {
                 try {
@@ -774,27 +889,19 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
             }
             emptyDir[pathname] = true;
         }
-        if (content || base64) {
-            if (append && content) {
-                const format = file.format;
-                if (format) {
-                    switch (file.mimeType) {
-                        case 'text/javascript':
-                            content = minifyJs(format, content) || content;
-                            break;
-                        case 'text/css':
-                            content = minifyCss(format, content) || content;
-                            break;
-                    }
-                }
-                queueContentToAppend(status, filepath, content);
-                continue;
+        if (file.content) {
+            const { format, mimeType, trailingContent } = file;
+            if (format && mimeType) {
+                file.content = formatContent(file.content, mimeType, format);
+            }
+            if (trailingContent) {
+                file.content += getTrailingContent(trailingContent, mimeType, format);
             }
             ++status.delayed;
             fs.writeFile(
                 filepath,
-                base64 || content,
-                base64 ? 'base64' : 'utf8',
+                file.content,
+                'utf8',
                 err => {
                     if (!err) {
                         writeBuffer(assets, file, filepath, status, finalize);
@@ -803,8 +910,23 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 }
             );
         }
-        else if (uri) {
-            if (notFound[uri]) {
+        else if (file.base64) {
+            ++status.delayed;
+            fs.writeFile(
+                filepath,
+                file.base64,
+                'base64',
+                err => {
+                    if (!err) {
+                        writeBuffer(assets, file, filepath, status, finalize);
+                    }
+                    finalize(filepath);
+                }
+            );
+        }
+        else {
+            const { append, uri } = file;
+            if (!uri || notFound[uri]) {
                 continue;
             }
             const checkQueue = () => {
@@ -812,11 +934,12 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                     const queue = appending[filepath];
                     if (queue) {
                         queue.push(file);
+                        return true;
                     }
                     else {
                         appending[filepath] = [];
+                        return false;
                     }
-                    return false;
                 }
                 else if (completed.includes(filepath)) {
                     writeBuffer(assets, file, filepath, status, finalize);
@@ -1040,6 +1163,7 @@ const hasCompressPng = (compress: Undef<CompressionFormat[]>) => TINIFY_API_KEY 
 const getCompressFormat = (compress: Undef<CompressionFormat[]>, format: string) => compress && compress.find(item => item.format === format);
 const getFileSize = (filepath: string) => fs.statSync(filepath).size;
 const getFileOuterHTML = (script: boolean, filepath: string) => script ? `<script src="${filepath}" type="text/javascript"></script>` : `<link href="${filepath}" type="stylesheet" />`;
+const getSaveLocation = (value: string) => value.charAt(0) === '/' ? ['__serverroot__/', value.substring(1)] : ['', value];
 
 app.post('/api/assets/copy', (req, res) => {
     let dirname = req.query.to as string;

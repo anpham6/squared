@@ -15,6 +15,22 @@
     "development": "3000"
   },
   "external": {
+    "html": {
+      "html_minifier": {
+        "minify": {
+          "collapseWhitespace": true,
+          "collapseBooleanAttributes": true,
+          "removeEmptyAttributes": true,
+          "removeRedundantAttributes": true,
+          "removeScriptTypeAttributes": true,
+          "removeStyleLinkTypeAttributes": true,
+          "removeComments": true
+        }
+      },
+      "js_beautify": {
+        "beautify": {}
+      }
+    },
     "css": {
       "clean_css": {
         "beautify": { "level": 0, "format": "beautify" },

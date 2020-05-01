@@ -29,6 +29,7 @@ export interface RequestAsset extends ExternalAsset {
     format?: string;
     bundleMain?: boolean;
     outerHTML?: string;
+    trailingContent?: FormatableContent[];
 }
 
 export interface RawAsset extends ExternalAsset, Partial<ImageAsset> {}
@@ -52,4 +53,9 @@ export interface ResultOfFileAction {
     files?: string[];
     application?: string;
     system?: string;
+}
+
+export interface FormatableContent {
+    value: string;
+    format?: string;
 }

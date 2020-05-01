@@ -8,7 +8,7 @@ type View = chrome.base.View;
 const $lib = squared.lib;
 
 const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, isString, objectMap, parseMimeType, resolvePath, spliceString, trimEnd } = $lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, objectMap, parseMimeType, resolvePath, safeNestedArray, spliceString, trimEnd } = $lib.util;
 
 const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
@@ -88,11 +88,11 @@ function parseUri(uri: string, saveAs?: string, format?: string, outerHTML?: str
             pathname,
             filename,
             extension,
-            append,
+            mimeType: extension && parseMimeType(extension),
             format,
             outerHTML,
-            bundleMain,
-            mimeType: extension && parseMimeType(extension)
+            append,
+            bundleMain
         };
     }
     return undefined;
@@ -172,7 +172,18 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public getHtmlPage(options?: FileActionAttribute) {
         const result: ChromeAsset[] = [];
         const href = location.href;
-        const data = parseUri(href);
+        const element = document.querySelector('html');
+        const saveAs = options?.saveAs?.html;
+        let file: Undef<string>;
+        let format: Undef<string>;
+        if (element) {
+            file = element.dataset.chromeFile;
+        }
+        if (!isString(file) && saveAs) {
+            file = fromLastIndexOf(saveAs.filename, '/');
+            format = saveAs.format;
+        }
+        const data = parseUri(href, file, format);
         if (data) {
             const name = options?.name;
             if (name) {
@@ -217,16 +228,28 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     const content = element.innerHTML.trim();
                     if (content) {
                         const [moveTo, pathname, filename] = getFilePath(file);
-                        data = {
-                            pathname,
-                            filename,
-                            moveTo,
-                            content,
-                            format,
-                            append: true,
-                            outerHTML,
-                            bundleMain: bundleIndex === 0
-                        };
+                        const index = iterateReverseArray(result, item => {
+                            if ((item.moveTo === moveTo || !item.moveTo && !moveTo) && item.pathname === pathname && item.filename === filename) {
+                                safeNestedArray(<StandardMap> item, 'trailingContent').push({ value: content, format });
+                                return true;
+                            }
+                            return;
+                        });
+                        if (index !== Infinity) {
+                            data = {
+                                pathname,
+                                filename,
+                                moveTo,
+                                content,
+                                format,
+                                outerHTML,
+                                append: true,
+                                bundleMain: true
+                            };
+                        }
+                        else {
+                            return;
+                        }
                     }
                 }
                 if (this.validFile(data)) {

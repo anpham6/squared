@@ -624,7 +624,7 @@ See /android/widget/*.html for usage instructions in the squared-apache <https:/
 
 Bundling options are available with these HTML tag names.
 
-* saveAs: script + link
+* saveAs: html + script + link
 * exportAs: script + style
 * exclude: script + link + style
 
