@@ -36,16 +36,24 @@ function parseUri(uri: string, saveAs?: string, format?: string, outerHTML?: str
         let local: Undef<boolean>;
         let append: Undef<boolean>;
         let bundleMain: Undef<boolean>;
-        const getDirectory = (start = 1) => {
-            if (start > 1) {
-                rootDir = path.substring(0, start);
-            }
-            return path.substring(start, path.lastIndexOf('/'));
-        };
+        let prefix!: string;
+        const getDirectory = (start = 1) => path.substring(start, path.lastIndexOf('/'));
         if (!value.startsWith(trimEnd(location.origin, '/'))) {
             pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
         }
         else {
+            prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+            let j = 0;
+            const length = Math.min(path.length, prefix.length);
+            for (let i = 0; i < length; ++i) {
+                if (path.charAt(i) === prefix.charAt(i)) {
+                    j = i;
+                }
+                else {
+                    break;
+                }
+            }
+            rootDir = path.substring(0, j + 1);
             local = true;
         }
         if (saveAs) {
@@ -64,7 +72,6 @@ function parseUri(uri: string, saveAs?: string, format?: string, outerHTML?: str
         else if (path && path !== '/') {
             filename = fromLastIndexOf(path, '/');
             if (local) {
-                const prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
                 if (path.startsWith(prefix)) {
                     pathname = getDirectory(prefix.length);
                 }

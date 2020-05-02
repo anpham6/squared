@@ -16,7 +16,7 @@ let output: Undef<string>;
         const command = ARGV[i++];
         switch (type) {
             case '-f':
-            case '-framework': {
+            case '--framework': {
                 const name = command.toLowerCase();
                 switch (name) {
                     case 'android':
@@ -28,7 +28,7 @@ let output: Undef<string>;
                 break;
             }
             case '-m':
-            case '-modules':
+            case '--modules':
                 for (const value of command.split(',')) {
                     const module = value.toLowerCase();
                     switch (module) {
@@ -39,7 +39,7 @@ let output: Undef<string>;
                 }
                 break;
             case '-e':
-            case '-extensions':
+            case '--extensions':
                 for (const value of command.split(',')) {
                     const include: string[] = [];
                     if (value.includes('*')) {
@@ -60,7 +60,7 @@ let output: Undef<string>;
                 }
                 break;
             case '-o':
-            case '-output':
+            case '--output':
                 output = path.resolve(command);
                 break;
         }

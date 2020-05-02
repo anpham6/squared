@@ -1,15 +1,15 @@
-import { CompressionFormat, Environment, External, FormattableContent, ResultOfFileAction, RequestAsset, Routing, Settings } from './@types/node';
+import { CompressionFormat, Environment, External, FormattableContent, RequestAsset, ResultOfFileAction, Routing, Settings } from './@types/node';
 
 import path = require('path');
 import util = require('util');
-import fs = require('fs-extra');
 import zlib = require('zlib');
+import fs = require('fs-extra');
 import express = require('express');
 import body_parser = require('body-parser');
 import request = require('request');
+import uuid = require('uuid');
 import archiver = require('archiver');
 import decompress = require('decompress');
-import uuid = require('uuid');
 import jimp = require('jimp');
 import html_minifier = require('html-minifier');
 import clean_css = require('clean-css');
@@ -189,6 +189,7 @@ app.use(body_parser.urlencoded({ extended: true }));
 
 const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
 const SEPARATOR = path.sep;
+const REGEX_URL = /^([A-Za-z]+:\/\/[A-Za-z\d.-]+(?::\d+)?)(\/.*)/;
 
 function getFileOutput(file: RequestAsset, dirname: string) {
     const pathname = path.join(dirname, file.moveTo || '', file.pathname);
@@ -266,11 +267,8 @@ function convertAssetUrls(assets: RequestAsset[], file: RequestAsset, html: stri
                 html = replacePathName(html, rootDir + location, value);
             }
             else {
-                html = replacePathName(
-                    replacePathName(html, uri, value),
-                    getSeparator(uri) + location,
-                    value
-                );
+                html = replacePathName(html, uri, value);
+                html = replacePathName(html, getSeparator(uri) + location, value);
             }
         }
     }
@@ -417,6 +415,95 @@ function writeTrailingContentSync(file: RequestAsset, filepath: string) {
     }
 }
 
+function getBaseDirectory(location: string, asset: string) {
+    const locationDir = location.split('/');
+    const assetDir = asset.split('/');
+    while (locationDir.length && assetDir.length) {
+        if (locationDir[0] === assetDir[0]) {
+            locationDir.shift();
+            assetDir.shift();
+        }
+        else {
+            break;
+        }
+    }
+    return [locationDir, assetDir];
+}
+
+function getRelativeUrl(file: RequestAsset, url: string, assets: RequestAsset[], relocate?: string) {
+    const origin = file.uri;
+    if (origin) {
+        let asset = assets.find(item => item.uri === url);
+        if (asset) {
+            if (relocate) {
+                const [relocateMatch, originMatch] = [REGEX_URL.exec(relocate), REGEX_URL.exec(origin)];
+                if (relocateMatch && originMatch && relocateMatch[1] === originMatch[1]) {
+                    const [relocateDir] = getBaseDirectory(relocateMatch[2], originMatch[2]);
+                    return '../'.repeat(relocateDir.length - 1) + getUri(asset, url)[0];
+                }
+            }
+        }
+        else {
+            url = parseRelativeUrl(url, origin);
+            if (url) {
+                asset = assets.find(item => item.uri === url);
+            }
+            if (asset?.uri) {
+                const uri = asset.uri;
+                const uriMatch = REGEX_URL.exec(uri);
+                const originMatch = REGEX_URL.exec(origin);
+                if (uriMatch && originMatch && uriMatch[1] === originMatch[1]) {
+                    if (relocate) {
+                        if (path.dirname(relocate) === path.dirname(uri)) {
+                            return asset.filename;
+                        }
+                        const relocateMatch = REGEX_URL.exec(relocate);
+                        if (relocateMatch) {
+                            if (asset.moveTo === '__serverroot__') {
+                                const [relocateDir] = getBaseDirectory(relocateMatch[2], originMatch[2]);
+                                return '../'.repeat(relocateDir.length - 1) + getUri(asset, url)[0];
+                            }
+                            else {
+                                const [relocateDir, uriDir] = getBaseDirectory(relocateMatch[2], uriMatch[2]);
+                                return '../'.repeat(relocateDir.length) + '/' + uriDir.join('/') + asset.filename;
+                            }
+                        }
+                    }
+                    else {
+                        const rootDir = file.rootDir || '';
+                        if (asset.moveTo === '__serverroot__') {
+                            if (file.moveTo === '__serverroot__') {
+                                return asset.pathname + '/' + asset.filename;
+                            }
+                            else {
+                                const [originDir] = getBaseDirectory(originMatch[2], uriMatch[2]);
+                                originDir.pop();
+                                const rootParts = rootDir.split('/').filter(value => !!value);
+                                for (let i = 0; i < rootParts.length; ++i) {
+                                    if (rootParts[i] === originDir[i]) {
+                                        originDir[i] = '';
+                                    }
+                                    else {
+                                        break;
+                                    }
+                                }
+                                return '../'.repeat(originDir.filter(value => !!value).length) + getUri(asset, url)[0];
+                            }
+                        }
+                        else if (rootDir + file.pathname === asset.rootDir + asset.pathname) {
+                            return asset.filename;
+                        }
+                        else if (rootDir === asset.rootDir) {
+                            return asset.pathname + '/' + asset.filename;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return '';
+}
+
 function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void) {
     const { format, mimeType } = file;
     if (!mimeType) {
@@ -448,7 +535,6 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                     }
                 }
             }
-            source = convertAssetUrls(assets, file, source);
             html = source;
             pattern = /(\s*)<(script|style).*?(\s+data-chrome-file=(["'])\s*exportAs:([^"']+)\4).*?>([\s\S]*?)<\/\2>\n*/ig;
             while ((match = pattern.exec(html)) !== null) {
@@ -469,10 +555,14 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 else {
                     const levels = filename.split('/').length - 1;
                     if (levels > 0) {
+                        const baseUrl = parseRelativeUrl(exportAs, file.uri!);
                         const urlPattern = /url\(\s*(["'])?(.+?)\1?\s*\)/g;
                         let urlMatch: Null<RegExpExecArray>;
                         while ((urlMatch = urlPattern.exec(match[6])) !== null) {
-                            content = content.replace(urlMatch[0], 'url(' + '../'.repeat(levels) + getSaveLocation(urlMatch[2].trim()).join('') + ')');
+                            const url = getRelativeUrl(file, urlMatch[2].trim(), assets, baseUrl);
+                            if (url) {
+                                content = content.replace(urlMatch[0], `url(${url})`);
+                            }
                         }
                     }
                     if (transform) {
@@ -498,6 +588,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 }
                 source = source.replace(match[0], appending ? '' : match[1] + getFileOuterHTML(script, location));
             }
+            source = convertAssetUrls(assets, file, source);
             pattern = /(\s*)<(script|style).*?>([\s\S]*?)<\/\2>\n*/ig;
             for (const item of assets) {
                 const { bundleMain, trailingContent } = item;
@@ -520,7 +611,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                             outerHTML = minifySpace(outerHTML);
                             while ((match = pattern.exec(source)) !== null) {
                                 if (outerHTML === minifySpace(match[0]) || content && content === minifySpace(match[3])) {
-                                    source = source.replace(match[0], (replacement !== '' ? match[1] : '') + replacement);
+                                    source = source.replace(match[0], (replacement ? match[1] : '') + replacement);
                                     break;
                                 }
                             }
@@ -557,21 +648,11 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 const pattern = /[uU][rR][lL]\(\s*(["'])?\s*(.+)\s*\1?\s*\)/g;
                 let match: Null<RegExpMatchArray>;
                 while ((match = pattern.exec(html)) !== null) {
-                    let url = match[1];
+                    let url = match[2];
                     if (!isFileURI(url)) {
-                        url = parseRelativeUrl(url, href);
-                        if (url !== '') {
-                            const asset = assets.find(item => item.uri === url);
-                            if (asset) {
-                                const currentDir = file.rootDir + file.pathname;
-                                if (asset.moveTo === '__serverroot__') {
-                                    url = '../'.repeat(Math.max(currentDir.split('/').length - 2, 0)) + getUri(asset, url)[0];
-                                }
-                                else if (currentDir === asset.rootDir + asset.pathname) {
-                                    url = asset.filename;
-                                }
-                                source = source.replace(match[0], `url(${url})`);
-                            }
+                        url = getRelativeUrl(file, url, assets);
+                        if (url) {
+                            source = source.replace(match[0], `url(${url})`);
                         }
                     }
                 }
@@ -1140,20 +1221,21 @@ function finalizeAssetsAsync(dirname: string, assets: RequestAsset[], status: As
 }
 
 function replacePathName(source: string, segment: string, value: string) {
+    let result = source;
     let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${segment}\\s*\\2`, 'g');
-    let match: RegExpExecArray | null = null;
+    let match: RegExpExecArray | null;
     while ((match = pattern.exec(source)) !== null) {
-        source = source.replace(match[0], match[1].toLowerCase() + `="${value}"`);
+        result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
     }
     pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
     while ((match = pattern.exec(source)) !== null) {
-        source = source.replace(match[0], `url(${value})`);
+        result = result.replace(match[0], `url(${value})`);
     }
-    return source;
+    return result;
 }
 
 function parseRelativeUrl(value: string, href: string) {
-    const match = /^([A-Za-z]+:\/\/[A-Za-z\d.-]+(?::\d+)?)(\/.*)/.exec(href);
+    const match = REGEX_URL.exec(href);
     if (match) {
         const origin = match[1];
         const pathname = match[2].split('/');
