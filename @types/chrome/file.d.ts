@@ -14,12 +14,13 @@ export interface RequestAsset extends file.RequestAsset {
 export interface FileActionAttribute {
     name?: string;
     rel?: string;
-    saveAs?: { html?: SaveAsOptions; script?: SaveAsOptions; link?: SaveAsOptions };
+    saveAs?: { html?: SaveAsOptions; script?: SaveAsOptions; link?: SaveAsOptions; base64?: SaveAsOptions };
     preserveCrossOrigin?: boolean;
 }
 
 export interface SaveAsOptions {
-    filename: string;
+    pathname?: string;
+    filename?: string;
     format?: string;
 }
 

@@ -46,7 +46,7 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
             pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
         }
         else {
-            prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+            prefix = getRootDir();
             let j = 0;
             const length = Math.min(path.length, prefix.length);
             for (let i = 0; i < length; ++i) {
@@ -143,6 +143,8 @@ function processExtensions(this: chrome.base.File<View>, data: RequestAsset, ext
     }
 }
 
+const getRootDir = () => location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
+
 export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
     public resource!: chrome.base.Resource<T>;
 
@@ -188,8 +190,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         if (element) {
             file = element.dataset.chromeFile;
         }
-        if (!isString(file) && saveAs) {
-            file = fromLastIndexOf(saveAs.filename, '/');
+        if (!isString(file) && saveAs?.filename) {
+            file = fromLastIndexOf(saveAs.filename);
             format = saveAs.format;
         }
         const data = parseUri(href, options?.preserveCrossOrigin, file, format);
@@ -230,9 +232,12 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 let format: Undef<string>;
                 let outerHTML: Undef<string>;
                 if (!isString(file) && saveAs) {
-                    file = saveAs.filename;
-                    format = saveAs.format;
-                    outerHTML = element.outerHTML;
+                    const { pathname, filename } = saveAs;
+                    if (pathname && filename) {
+                        file = appendSeparator(pathname, filename);
+                        format = saveAs.format;
+                        outerHTML = element.outerHTML;
+                    }
                 }
                 let data: Undef<RequestAsset>;
                 if (src !== '') {
@@ -307,9 +312,13 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
                 let format: Undef<string>;
                 let outerHTML: Undef<string>;
-                if (saveAs && !isString(file) && mimeType === 'text/css') {
-                    ({ filename: file, format } = saveAs);
-                    outerHTML = element.outerHTML;
+                if (!isString(file) && saveAs && mimeType === 'text/css') {
+                    const { pathname, filename } = saveAs;
+                    if (pathname && filename) {
+                        file = appendSeparator(pathname, filename);
+                        format = saveAs.format;
+                        outerHTML = element.outerHTML;
+                    }
                 }
                 const data = parseUri(resolvePath(href), preserveCrossOrigin, file, format, outerHTML, bundleIndex);
                 if (this.validFile(data)) {
@@ -327,8 +336,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     public getImageAssets(options?: FileActionAttribute) {
         let preserveCrossOrigin: Undef<boolean>;
+        let saveAs: Undef<SaveAsOptions>;
         if (options) {
             preserveCrossOrigin = options.preserveCrossOrigin;
+            saveAs = options.saveAs?.base64;
         }
         const result: RequestAsset[] = [];
         const processUri = (element: Null<HTMLElement>, uri: string) => {
@@ -371,10 +382,32 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 continue;
             }
             else {
-                const { base64, content, filename, mimeType } = rawData;
+                const { base64, content, filename } = rawData;
+                let mimeType = rawData.mimeType;
                 let data: Undef<RequestAsset>;
+                let rootDir: Undef<string>;
                 if (base64) {
-                    data = { pathname: '__generated__/base64', filename, base64 };
+                    let pathname: string;
+                    if (saveAs && saveAs.pathname) {
+                        pathname = trimEnd(saveAs.pathname, '/');
+                        rootDir = getRootDir();
+                        if (mimeType?.startsWith('image/')) {
+                            const format = saveAs.format!;
+                            switch (format) {
+                                case 'png':
+                                case 'jpeg':
+                                case 'bmp':
+                                case 'gif':
+                                case 'tiff':
+                                    mimeType = `@${format}:${mimeType}`;
+                                    break;
+                            }
+                        }
+                    }
+                    else {
+                        pathname = '__generated__/base64';
+                    }
+                    data = { pathname, filename, rootDir, mimeType, base64 };
                 }
                 else if (content && mimeType) {
                     data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content };

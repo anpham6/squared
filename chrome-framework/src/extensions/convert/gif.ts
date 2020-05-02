@@ -14,7 +14,7 @@ export default class Gif<T extends View> extends Extension<T> {
 
     public processFile(data: RequestAsset, override = false) {
         const mimeType = data.mimeType;
-        if (mimeType) {
+        if (mimeType?.includes('gif:') === false) {
             const options = this.options;
             if (override || options.mimeTypes.find(value => mimeType.endsWith(value))) {
                 let command = '';

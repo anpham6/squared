@@ -655,14 +655,15 @@ JS and CSS files can be bundled together with the "saveAs" or "exportAs" action.
 <script data-chrome-file="saveAs:js/bundle2.js" src="/dist/chrome.framework.js"></script>
 ```
 
-The entire page can similarly be included using the "saveAs" attribute in options.
+The entire page can similarly be included using the "saveAs" attribute in options. Extension plugins will be applied to any relevant assets.
 
 ```javascript
 const options = {
     saveAs: { // All attributes are optional
         html: { filename: 'index.html', format: 'beautify' }
         script: { filename: 'js/bundle.js', format: 'minify' },
-        link: { filename: 'css/bundle.css' }
+        link: { filename: 'css/bundle.css' },
+        base64: { pathname: 'images/', format: 'png' }
     }
 };
 ```

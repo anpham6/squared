@@ -8,7 +8,7 @@
   "gzip_level": "9",
   "brotli_quality": "11",
   "jpeg_quality": "100",
-  "tinypng_api_key": "",
+  "tinypng_api_key": "GMjX2yh2dnWMkWmdpFtl4tktgv8TMR5s",
   "env": "development",
   "port": {
     "production": "80",

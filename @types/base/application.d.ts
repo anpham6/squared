@@ -113,7 +113,7 @@ export interface FileCopyingOptions extends FileActionOptions {
 
 export interface FileArchivingOptions extends FileActionOptions {
     filename?: string;
+    format?: string;
     copyTo?: string;
     appendTo?: string;
-    format?: string;
 }

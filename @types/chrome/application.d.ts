@@ -13,11 +13,10 @@ export interface NodeOptions {
 }
 
 export interface FileOutputAttribute {
+    saveAsWebPage?: boolean;
     productionRelease?: boolean;
 }
 
 export interface FileCopyingOptions extends application.FileCopyingOptions, FileActionAttribute, FileOutputAttribute {}
 
-export interface FileArchivingOptions extends application.FileArchivingOptions, FileActionAttribute, FileOutputAttribute {
-    saveAsWebPage?: boolean;
-}
+export interface FileArchivingOptions extends application.FileArchivingOptions, FileActionAttribute, FileOutputAttribute {}
