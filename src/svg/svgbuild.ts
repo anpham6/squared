@@ -312,12 +312,11 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static getPathCommands(value: string) {
-        value = value.trim();
+        REGEX_COMMAND.lastIndex = 0;
         const result: SvgPathCommand[] = [];
         let first = true;
-        REGEX_COMMAND.lastIndex = 0;
         let match: Null<RegExpExecArray>;
-        while ((match = REGEX_COMMAND.exec(value)) !== null) {
+        while ((match = REGEX_COMMAND.exec(value.trim())) !== null) {
             let key = match[1];
             if (first && key.toUpperCase() !== 'M') {
                 break;
@@ -791,8 +790,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static parseCoordinates(value: string) {
-        const result: number[] = [];
         REGEX_DECIMAL.lastIndex = 0;
+        const result: number[] = [];
         let match: Null<RegExpExecArray>;
         while ((match = REGEX_DECIMAL.exec(value)) !== null) {
             const coord = parseFloat(match[0]);

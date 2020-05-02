@@ -534,6 +534,14 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return result;
     }
 
+    public getCopyQueryParameters(options: FileCopyingOptions) {
+        return '';
+    }
+
+    public getArchiveQueryParameters(options: FileArchivingOptions) {
+        return '';
+    }
+
     protected getAssetsAll(assets?: FileAsset[]) {
         const userSettings = this.userSettings;
         let result: FileAsset[] = [];

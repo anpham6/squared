@@ -35,6 +35,9 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public abstract get userSettings(): UserSettings;
 
+    public abstract getCopyQueryParameters(options: FileCopyingOptions): string;
+    public abstract getArchiveQueryParameters(options: FileArchivingOptions): string;
+
     public createFrom(format: string, options: FileArchivingOptions) {
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
@@ -79,7 +82,8 @@ export default abstract class File<T extends squared.base.Node> implements squar
                     return fetch(
                         '/api/assets/copy' +
                         '?to=' + encodeURIComponent(directory.trim()) +
-                        '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0'), {
+                        '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
+                        this.getCopyQueryParameters(options), {
                             method: 'POST',
                             headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
                             body: JSON.stringify(body)
@@ -121,7 +125,8 @@ export default abstract class File<T extends squared.base.Node> implements squar
                         '?filename=' + encodeURIComponent(filename.trim()) +
                         '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
                         '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
-                        '&append_to=' + encodeURIComponent((options.appendTo || '').trim()), {
+                        '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
+                        this.getArchiveQueryParameters(options), {
                             method: 'POST',
                             headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
                             body: JSON.stringify(body)

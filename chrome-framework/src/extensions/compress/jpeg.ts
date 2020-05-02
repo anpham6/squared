@@ -1,4 +1,4 @@
-import { ChromeAsset } from '../../../../@types/chrome/file';
+import { RequestAsset } from '../../../../@types/chrome/file';
 import { CompressOptions } from '../../../../@types/chrome/extension';
 
 import Extension from '../../extension';
@@ -13,7 +13,7 @@ export default class Jpeg<T extends View> extends Extension<T> {
         mimeTypes: ['image/jpeg']
     };
 
-    public processFile(data: ChromeAsset, override = false) {
+    public processFile(data: RequestAsset, override = false) {
         if (!override) {
             const mimeType = data.mimeType;
             if (mimeType) {

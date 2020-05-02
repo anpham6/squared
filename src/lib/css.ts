@@ -378,8 +378,8 @@ export function parseSelectorText(value: string, document?: boolean) {
 }
 
 export function getSpecificity(value: string) {
-    let result = 0;
     CSS.SELECTOR_G.lastIndex = 0;
+    let result = 0;
     let match: Null<RegExpExecArray>;
     while ((match = CSS.SELECTOR_G.exec(value)) !== null) {
         let segment = match[1];
@@ -1367,9 +1367,9 @@ export function checkMediaRule(value: string, fontSize?: number) {
             REGEX_MEDIARULE.lastIndex = 0;
             let match: Null<RegExpExecArray>;
             while ((match = REGEX_MEDIARULE.exec(value)) !== null) {
+                REGEX_MEDIACONDITION.lastIndex = 0;
                 const negate = match[1] === 'not';
                 let valid = false;
-                REGEX_MEDIACONDITION.lastIndex = 0;
                 let condition: Null<RegExpExecArray>;
                 while ((condition = REGEX_MEDIACONDITION.exec(match[2])) !== null) {
                     const attr = condition[1];

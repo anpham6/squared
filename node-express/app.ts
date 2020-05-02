@@ -405,7 +405,7 @@ function queueContentToAppend(status: AsyncStatus, filepath: string, content: st
     status.contentToAppend.set(filepath, value);
 }
 
-function writeTrailingContentSync(file: RequestAsset, filepath: string) {
+function writeTrailingContent(file: RequestAsset, filepath: string) {
     if (file.trailingContent) {
         try {
             fs.appendFileSync(filepath, getTrailingContent(file.trailingContent, file.mimeType, file.format));
@@ -676,22 +676,30 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
         }
         case 'text/javascript': {
             if (format) {
-                const output = minifyJs(format, fs.readFileSync(filepath).toString('utf8'));
+                let output = minifyJs(format, fs.readFileSync(filepath).toString('utf8'));
                 if (output) {
+                    if (file.trailingContent) {
+                        output += getTrailingContent(file.trailingContent, mimeType, format);
+                    }
                     fs.writeFileSync(filepath, output);
+                    break;
                 }
             }
-            writeTrailingContentSync(file, filepath);
+            writeTrailingContent(file, filepath);
             break;
         }
         case 'text/css': {
             if (format) {
-                const output = minifyCss(format, fs.readFileSync(filepath).toString('utf8'));
+                let output = minifyCss(format, fs.readFileSync(filepath).toString('utf8'));
                 if (output) {
+                    if (file.trailingContent) {
+                        output += getTrailingContent(file.trailingContent, mimeType, format);
+                    }
                     fs.writeFileSync(filepath, output);
+                    break;
                 }
             }
-            writeTrailingContentSync(file, filepath);
+            writeTrailingContent(file, filepath);
             break;
         }
         default:
@@ -882,14 +890,14 @@ function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: stri
 }
 
 function formatContent(value: string, mimeType: string, format: string) {
-    switch (mimeType) {
-        case 'text/html':
-        case 'application/xhtml+xml':
-            return minifyHtml(format, value) || value;
-        case 'text/css':
-            return minifyCss(format, value) || value;
-        case 'text/javascript':
-            return minifyJs(format, value) || value;
+    if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
+        return minifyHtml(format, value) || value;
+    }
+    else if (mimeType.endsWith('text/css')) {
+        return minifyCss(format, value) || value;
+    }
+    else if (mimeType.endsWith('text/javascript')) {
+        return minifyJs(format, value) || value;
     }
     return value;
 }
@@ -908,8 +916,206 @@ function getTrailingContent(trailingContent: FormattableContent[], mimeType?: st
     return result;
 }
 
-function processAssets(dirname: string, assets: RequestAsset[], status: AsyncStatus, finalize: (filepath?: string) => void, empty?: boolean) {
-    const emptyDir = {};
+function replaceExtension(value: string, ext: string) {
+    const index = value.lastIndexOf('.');
+    return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
+}
+
+function isJPEG(file: RequestAsset) {
+    if (file.mimeType?.endsWith('image/jpeg')) {
+        return true;
+    }
+    switch (path.extname(file.filename).toLowerCase()) {
+        case '.jpg':
+        case '.jpeg':
+            return true;
+    }
+    return false;
+}
+
+function removeCompressionFormat(file: RequestAsset, format: string) {
+    const compress = file.compress;
+    if (compress) {
+        const index = compress.findIndex(value => value.format === format);
+        if (index !== -1) {
+            compress.splice(index, 1);
+        }
+    }
+}
+
+function replaceFileOutput(status: AsyncStatus, file: RequestAsset, replaceName: string) {
+    const { filepath, filename } = file;
+    if (filepath) {
+        status.files.delete(filepath.substring(status.dirname.length + 1));
+        status.files.add(filepath.replace(filename, replaceName));
+        file.originalName = file.filename;
+        file.filename = replaceName;
+    }
+}
+
+function replacePathName(source: string, segment: string, value: string) {
+    let result = source;
+    let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${segment}\\s*\\2`, 'g');
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(source)) !== null) {
+        result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
+    }
+    pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
+    while ((match = pattern.exec(source)) !== null) {
+        result = result.replace(match[0], `url(${value})`);
+    }
+    return result;
+}
+
+function parseRelativeUrl(value: string, href: string) {
+    const match = REGEX_URL.exec(href);
+    if (match) {
+        const origin = match[1];
+        const pathname = match[2].split('/');
+        pathname.pop();
+        if (value.charAt(0) === '/') {
+            return origin + value;
+        }
+        else if (value.startsWith('../')) {
+            const trailing: string[] = [];
+            value.split('/').forEach(dir => {
+                if (dir === '..') {
+                    if (trailing.length === 0) {
+                        pathname.pop();
+                    }
+                    else {
+                        trailing.pop();
+                    }
+                }
+                else {
+                    trailing.push(dir);
+                }
+            });
+            value = trailing.join('/');
+        }
+        return origin + pathname.join('/') + '/' + value;
+    }
+    return '';
+}
+
+function checkPermissions(res: express.Response<any>, dirname: string) {
+    if (isDirectoryUNC(dirname)) {
+        if (!UNC_WRITE) {
+            res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
+            return false;
+        }
+    }
+    else if (!DISK_WRITE) {
+        res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
+        return false;
+    }
+    try {
+        if (!fs.existsSync(dirname)) {
+            fs.mkdirpSync(dirname);
+        }
+        else if (!fs.lstatSync(dirname).isDirectory()) {
+            throw new Error('Root is not a directory.');
+        }
+    }
+    catch (system) {
+        res.json({ application: `DIRECTORY: ${dirname}`, system });
+        return false;
+    }
+    return true;
+}
+
+const minifySpace = (value: string) => value.replace(/[\s\n]+/g, '');
+const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
+const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
+const getSeparator = (uri: string) => uri.includes('\\') ? '\\' : '/';
+const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value) && !value.startsWith('file:');
+const isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
+const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
+const hasCompressPng = (compress: Undef<CompressionFormat[]>) => TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
+const getCompressFormat = (compress: Undef<CompressionFormat[]>, format: string) => compress && compress.find(item => item.format === format);
+const getFileSize = (filepath: string) => fs.statSync(filepath).size;
+const getFileOuterHTML = (script: boolean, filepath: string) => script ? `<script src="${filepath}" type="text/javascript"></script>` : `<link href="${filepath}" type="stylesheet" />`;
+const getSaveLocation = (value: string) => value.charAt(0) === '/' ? ['__serverroot__/', value.substring(1)] : ['', value];
+
+function finalizeAssetsAsync(dirname: string, assets: RequestAsset[], status: AsyncStatus, release: boolean) {
+    const { files, filesToRemove } = status;
+    for (const [file, output] of status.filesToCompare) {
+        const originalPath = file.filepath!;
+        let minFile = originalPath;
+        let minSize = getFileSize(minFile);
+        for (const filepath of output) {
+            const size = getFileSize(filepath);
+            if (size < minSize) {
+                filesToRemove.add(minFile);
+                minFile = filepath;
+                minSize = size;
+            }
+            else {
+                filesToRemove.add(filepath);
+            }
+        }
+        if (minFile !== originalPath) {
+            replaceFileOutput(status, file, path.basename(minFile));
+        }
+    }
+    (async () => {
+        await util.promisify(() => {
+            for (const value of filesToRemove) {
+                try {
+                    fs.unlink(value);
+                    files.delete(value.substring(dirname.length + 1));
+                }
+                catch (err) {
+                    writeError(value, err);
+                }
+            }
+            for (const [filepath, content] of status.contentToAppend.entries()) {
+                if (content.length) {
+                    fs.appendFile(filepath, '\n' + content.join('\n'));
+                }
+            }
+        })();
+    })();
+    const replaced = assets.filter(file => file.originalName);
+    if (replaced.length || release) {
+        for (const item of assets) {
+            switch (item.mimeType) {
+                case '@text/html':
+                case '@application/xhtml+xml':
+                case '@text/css':
+                    status.filesExported.add(item.filepath!);
+                    break;
+            }
+        }
+        for (const filepath of status.filesExported) {
+            fs.readFile(filepath, (err, data) => {
+                if (!err) {
+                    let html = data.toString('utf-8');
+                    let valid = release;
+                    for (const item of replaced) {
+                        const { pathname, originalName } = item;
+                        try {
+                            html = html.replace(new RegExp(pathname + getSeparator(pathname) + originalName, 'g'), pathname + '/' + item.filename);
+                            valid = true;
+                        }
+                        catch (error) {
+                            writeError(originalName!, error);
+                        }
+                    }
+                    if (release) {
+                        html = html.replace(/(\.\.\/)*__serverroot__/g, '');
+                    }
+                    if (valid) {
+                        fs.writeFileSync(filepath, html);
+                    }
+                }
+            });
+        }
+    }
+}
+
+function processAssetsAsync(dirname: string, assets: RequestAsset[], status: AsyncStatus, finalize: (filepath?: string) => void, empty?: boolean) {
+    const emptyDir = new Set<string>();
     const notFound: ObjectMap<boolean> = {};
     const processing: ObjectMap<RequestAsset[]> = {};
     const appending: ObjectMap<RequestAsset[]> = {};
@@ -969,7 +1175,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
     };
     for (const file of assets) {
         const { pathname, filepath } = getFileOutput(file, dirname);
-        if (!emptyDir[pathname]) {
+        if (!emptyDir.has(pathname)) {
             if (empty) {
                 try {
                     fs.emptyDirSync(pathname);
@@ -981,7 +1187,7 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
             if (!fs.existsSync(pathname)) {
                 fs.mkdirpSync(pathname);
             }
-            emptyDir[pathname] = true;
+            emptyDir.add(pathname);
         }
         const checkQueue = () => {
             if (file.append) {
@@ -1117,201 +1323,6 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
     }
 }
 
-function replaceExtension(value: string, ext: string) {
-    const index = value.lastIndexOf('.');
-    return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
-}
-
-function isJPEG(file: RequestAsset) {
-    if (file.mimeType?.endsWith('image/jpeg')) {
-        return true;
-    }
-    switch (path.extname(file.filename).toLowerCase()) {
-        case '.jpg':
-        case '.jpeg':
-            return true;
-    }
-    return false;
-}
-
-function removeCompressionFormat(file: RequestAsset, format: string) {
-    const compress = file.compress;
-    if (compress) {
-        const index = compress.findIndex(value => value.format === format);
-        if (index !== -1) {
-            compress.splice(index, 1);
-        }
-    }
-}
-
-function replaceFileOutput(status: AsyncStatus, file: RequestAsset, replaceName: string) {
-    const { filepath, filename } = file;
-    if (filepath) {
-        status.files.delete(filepath.substring(status.dirname.length + 1));
-        status.files.add(filepath.replace(filename, replaceName));
-        file.originalName = file.filename;
-        file.filename = replaceName;
-    }
-}
-
-function finalizeAssetsAsync(dirname: string, assets: RequestAsset[], status: AsyncStatus) {
-    const { files, filesToRemove } = status;
-    for (const [file, output] of status.filesToCompare) {
-        const originalPath = file.filepath!;
-        let minFile = originalPath;
-        let minSize = getFileSize(minFile);
-        for (const filepath of output) {
-            const size = getFileSize(filepath);
-            if (size < minSize) {
-                filesToRemove.add(minFile);
-                minFile = filepath;
-                minSize = size;
-            }
-            else {
-                filesToRemove.add(filepath);
-            }
-        }
-        if (minFile !== originalPath) {
-            replaceFileOutput(status, file, path.basename(minFile));
-        }
-    }
-    (async () => {
-        await util.promisify(() => {
-            for (const value of filesToRemove) {
-                try {
-                    fs.unlink(value);
-                    files.delete(value.substring(dirname.length + 1));
-                }
-                catch (err) {
-                    writeError(value, err);
-                }
-            }
-            for (const [filepath, content] of status.contentToAppend.entries()) {
-                if (content.length) {
-                    fs.appendFile(filepath, '\n' + content.join('\n'));
-                }
-            }
-        })();
-    })();
-    const replaced = assets.filter(file => file.originalName);
-    if (replaced.length) {
-        for (const item of assets) {
-            switch (item.mimeType) {
-                case '@text/html':
-                case '@application/xhtml+xml':
-                case '@text/css':
-                    status.filesExported.add(item.filepath!);
-                    break;
-            }
-        }
-        for (const filepath of status.filesExported) {
-            fs.readFile(filepath, (err, data) => {
-                if (!err) {
-                    let html = data.toString('utf-8');
-                    let valid = false;
-                    for (const item of replaced) {
-                        const { pathname, originalName } = item;
-                        try {
-                            html = html.replace(new RegExp(pathname + getSeparator(pathname) + originalName, 'g'), pathname + '/' + item.filename);
-                            valid = true;
-                        }
-                        catch (error) {
-                            writeError(originalName!, error);
-                        }
-                    }
-                    if (valid) {
-                        fs.writeFileSync(filepath, html);
-                    }
-                }
-            });
-        }
-    }
-}
-
-function replacePathName(source: string, segment: string, value: string) {
-    let result = source;
-    let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${segment}\\s*\\2`, 'g');
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(source)) !== null) {
-        result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
-    }
-    pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
-    while ((match = pattern.exec(source)) !== null) {
-        result = result.replace(match[0], `url(${value})`);
-    }
-    return result;
-}
-
-function parseRelativeUrl(value: string, href: string) {
-    const match = REGEX_URL.exec(href);
-    if (match) {
-        const origin = match[1];
-        const pathname = match[2].split('/');
-        pathname.pop();
-        if (value.charAt(0) === '/') {
-            return origin + value;
-        }
-        else if (value.startsWith('../')) {
-            const trailing: string[] = [];
-            value.split('/').forEach(dir => {
-                if (dir === '..') {
-                    if (trailing.length === 0) {
-                        pathname.pop();
-                    }
-                    else {
-                        trailing.pop();
-                    }
-                }
-                else {
-                    trailing.push(dir);
-                }
-            });
-            value = trailing.join('/');
-        }
-        return origin + pathname.join('/') + '/' + value;
-    }
-    return '';
-}
-
-function checkPermissions(res: express.Response<any>, dirname: string) {
-    if (isDirectoryUNC(dirname)) {
-        if (!UNC_WRITE) {
-            res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
-            return false;
-        }
-    }
-    else if (!DISK_WRITE) {
-        res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
-        return false;
-    }
-    try {
-        if (!fs.existsSync(dirname)) {
-            fs.mkdirpSync(dirname);
-        }
-        else if (!fs.lstatSync(dirname).isDirectory()) {
-            throw new Error('Root is not a directory.');
-        }
-    }
-    catch (system) {
-        res.json({ application: `DIRECTORY: ${dirname}`, system });
-        return false;
-    }
-    return true;
-}
-
-const minifySpace = (value: string) => value.replace(/[\s\n]+/g, '');
-const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
-const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
-const getSeparator = (uri: string) => uri.includes('\\') ? '\\' : '/';
-const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value) && !value.startsWith('file:');
-const isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
-const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
-const hasCompressPng = (compress: Undef<CompressionFormat[]>) => TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
-const getCompressFormat = (compress: Undef<CompressionFormat[]>, format: string) => compress && compress.find(item => item.format === format);
-const getFileSize = (filepath: string) => fs.statSync(filepath).size;
-const getFileOuterHTML = (script: boolean, filepath: string) => script ? `<script src="${filepath}" type="text/javascript"></script>` : `<link href="${filepath}" type="stylesheet" />`;
-const getSaveLocation = (value: string) => value.charAt(0) === '/' ? ['__serverroot__/', value.substring(1)] : ['', value];
-
 app.post('/api/assets/copy', (req, res) => {
     let dirname = req.query.to as string;
     if (dirname) {
@@ -1338,7 +1349,7 @@ app.post('/api/assets/copy', (req, res) => {
                 status.files.add(filepath.substring(dirname.length + 1));
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
-                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status))();
+                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status, req.query.release === '1'))();
                 --THREAD_COUNT;
                 res.json(<ResultOfFileAction> { success: status.files.size > 0, files: Array.from(status.files) });
                 status.delayed = Infinity;
@@ -1346,7 +1357,7 @@ app.post('/api/assets/copy', (req, res) => {
         };
         try {
             ++THREAD_COUNT;
-            processAssets(dirname, <RequestAsset[]> req.body, status, finalize, req.query.empty === '1');
+            processAssetsAsync(dirname, <RequestAsset[]> req.body, status, finalize, req.query.empty === '1');
             if (status.delayed === 0) {
                 finalize();
             }
@@ -1462,7 +1473,7 @@ app.post('/api/assets/archive', (req, res) => {
                 status.files.add(filepath.substring(dirname.length + 1));
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
-                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status))();
+                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status, req.query.release === '1'))();
                 archive.directory(dirname, false);
                 archive.finalize();
             }
@@ -1472,7 +1483,7 @@ app.post('/api/assets/archive', (req, res) => {
                 archive.directory(unzip_to, false);
             }
             ++THREAD_COUNT;
-            processAssets(dirname, <RequestAsset[]> req.body, status, finalize);
+            processAssetsAsync(dirname, <RequestAsset[]> req.body, status, finalize);
             if (status.delayed === 0) {
                 finalize();
             }

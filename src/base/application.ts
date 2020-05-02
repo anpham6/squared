@@ -53,8 +53,8 @@ function parseSrcSet(value: string) {
 function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr: string, preloadImges: boolean, styleSheetHref?: string) {
     const value = baseMap[attr];
     if (value && value !== 'initial') {
-        let result = value;
         REGEX_DATAURI.lastIndex = 0;
+        let result = value;
         let match: Null<RegExpExecArray>;
         while ((match = REGEX_DATAURI.exec(value)) !== null) {
             if (match[2]) {

@@ -1,6 +1,6 @@
 
 import { AppFramework } from '../base/internal';
-import { FileArchivingOptions } from './file';
+import { FileArchivingOptions } from './application';
 
 type View = chrome.base.View;
 

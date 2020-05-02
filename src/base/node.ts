@@ -1370,8 +1370,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         ++offset;
                     }
                     else {
-                        let adjacent: Undef<string>;
                         SELECTOR_G.lastIndex = 0;
+                        let adjacent: Undef<string>;
                         let match: Null<RegExpExecArray>;
                         while ((match = SELECTOR_G.exec(query)) !== null) {
                             let segment = match[1];

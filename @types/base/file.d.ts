@@ -17,22 +17,11 @@ export interface ImageAsset extends Omit<Asset, "index"> {
     height: number;
 }
 
-export interface ExternalAsset extends Omit<FileAsset, "index"> {
+export interface RequestAsset extends Omit<FileAsset, "index"> {
     base64?: string;
 }
 
-export interface RequestAsset extends ExternalAsset {
-    base64?: string;
-    rootDir?: string;
-    moveTo?: string;
-    append?: boolean;
-    format?: string;
-    bundleMain?: boolean;
-    outerHTML?: string;
-    trailingContent?: FormattableContent[];
-}
-
-export interface RawAsset extends ExternalAsset, Partial<ImageAsset> {}
+export interface RawAsset extends RequestAsset, Partial<ImageAsset> {}
 
 export interface Exclusions {
     pathname?: string[];
@@ -53,9 +42,4 @@ export interface ResultOfFileAction {
     files?: string[];
     application?: string;
     system?: string;
-}
-
-export interface FormattableContent {
-    value: string;
-    format?: string;
 }

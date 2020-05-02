@@ -40,8 +40,8 @@ const REGEX_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|line
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
-        const result: string[] = [];
         REGEX_TIMINGFUNCTION.lastIndex = 0;
+        const result: string[] = [];
         let match: Null<RegExpMatchArray>;
         while ((match = REGEX_TIMINGFUNCTION.exec(value)) !== null) {
             result.push(match[1]);

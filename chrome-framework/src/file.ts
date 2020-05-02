@@ -1,5 +1,6 @@
 import { FileAsset } from '../../@types/base/file';
-import { ChromeAsset, FileActionAttribute, FileArchivingOptions, FileCopyingOptions, SaveAsOptions } from '../../@types/chrome/file';
+import { FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/application';
+import { RequestAsset, FileActionAttribute, SaveAsOptions } from '../../@types/chrome/file';
 
 import Resource from './resource';
 
@@ -25,7 +26,7 @@ function getFilePath(location: string): [Undef<string>, string, string] {
     return [moveTo, parts.join('/'), filename];
 }
 
-function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, format?: string, outerHTML?: string, bundleIndex?: number): Undef<ChromeAsset> {
+function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, format?: string, outerHTML?: string, bundleIndex?: number): Undef<RequestAsset> {
     const value = trimEnd(uri, '/');
     const match = COMPONENT.PROTOCOL.exec(value);
     if (match) {
@@ -127,7 +128,7 @@ function getExtensions(element: Null<HTMLElement>) {
     return use ? use.split(XML.SEPARATOR) : [];
 }
 
-function processExtensions(this: chrome.base.File<View>, data: ChromeAsset, extensions: string[], options?: FileActionAttribute) {
+function processExtensions(this: chrome.base.File<View>, data: RequestAsset, extensions: string[], options?: FileActionAttribute) {
     const processed: chrome.base.Extension<View>[] = [];
     this.application.extensions.forEach(ext => {
         if (ext.processFile(data)) {
@@ -178,7 +179,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public getHtmlPage(options?: FileActionAttribute) {
-        const result: ChromeAsset[] = [];
+        const result: RequestAsset[] = [];
         const href = location.href;
         const element = document.querySelector('html');
         const saveAs = options?.saveAs?.html;
@@ -220,7 +221,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             preserveCrossOrigin = options.preserveCrossOrigin;
             saveAs = options.saveAs?.script;
         }
-        const result: ChromeAsset[] = [];
+        const result: RequestAsset[] = [];
         let bundleIndex = 0;
         document.querySelectorAll('script').forEach(element => {
             const src = element.src.trim();
@@ -233,7 +234,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     format = saveAs.format;
                     outerHTML = element.outerHTML;
                 }
-                let data: Undef<ChromeAsset>;
+                let data: Undef<RequestAsset>;
                 if (src !== '') {
                     data = parseUri(resolvePath(src), preserveCrossOrigin, file, format, outerHTML, bundleIndex);
                 }
@@ -286,7 +287,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             ({ rel, preserveCrossOrigin } = options);
             saveAs = options.saveAs?.link;
         }
-        const result: ChromeAsset[] = [];
+        const result: RequestAsset[] = [];
         let bundleIndex = 0;
         document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((element: HTMLLinkElement) => {
             const href = element.href.trim();
@@ -329,10 +330,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         if (options) {
             preserveCrossOrigin = options.preserveCrossOrigin;
         }
-        const result: ChromeAsset[] = [];
+        const result: RequestAsset[] = [];
         const processUri = (element: Null<HTMLElement>, uri: string) => {
             if (uri !== '') {
-                const data = <ChromeAsset> parseUri(uri, preserveCrossOrigin);
+                const data = <RequestAsset> parseUri(uri, preserveCrossOrigin);
                 if (this.validFile(data) && !result.find(item => item.uri === uri)) {
                     processExtensions.call(this, data, getExtensions(element), options);
                     result.push(data);
@@ -371,7 +372,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             else {
                 const { base64, content, filename, mimeType } = rawData;
-                let data: Undef<ChromeAsset>;
+                let data: Undef<RequestAsset>;
                 if (base64) {
                     data = { pathname: '__generated__/base64', filename, base64 };
                 }
@@ -404,7 +405,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         if (options) {
             preserveCrossOrigin = options.preserveCrossOrigin;
         }
-        const result: ChromeAsset[] = [];
+        const result: RequestAsset[] = [];
         for (const fonts of ASSETS.fonts.values()) {
             fonts.forEach(font => {
                 const url = font.srcUrl;
@@ -420,7 +421,15 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
-    protected validFile(data: Undef<ChromeAsset>): data is ChromeAsset {
+    public getCopyQueryParameters(options: FileCopyingOptions) {
+        return options.productionRelease ? '&release=1' : '';
+    }
+
+    public getArchiveQueryParameters(options: FileArchivingOptions) {
+        return options.productionRelease ? '&release=1' : '';
+    }
+
+    protected validFile(data: Undef<RequestAsset>): data is RequestAsset {
         if (data) {
             const fullpath = data.pathname + '/' + data.filename;
             return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
@@ -433,7 +442,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         if (options) {
             preserveCrossOrigin = options.preserveCrossOrigin;
         }
-        const result: ChromeAsset[] = [];
+        const result: RequestAsset[] = [];
         document.querySelectorAll(tagName).forEach((element: HTMLVideoElement | HTMLAudioElement) => {
             const items = new Map<HTMLElement, string>();
             resolveAssetSource(items, element);

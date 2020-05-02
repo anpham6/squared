@@ -353,8 +353,8 @@ export function capitalize(value: string, upper?: boolean) {
 }
 
 export function capitalizeString(value: string) {
-    const result = value.split('');
     XML.BREAKWORD_G.lastIndex = 0;
+    const result = value.split('');
     let match: Null<RegExpMatchArray>;
     while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
         const index = match.index;
@@ -366,8 +366,8 @@ export function capitalizeString(value: string) {
 }
 
 export function lowerCaseString(value: string) {
-    let result = value;
     XML.BREAKWORD_G.lastIndex = 0;
+    let result = value;
     let match: Null<RegExpMatchArray>;
     while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
         const index = match.index;

@@ -1589,8 +1589,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            let found = false;
                             REGEX_COUNTER.lastIndex = 0;
+                            let found = false;
                             let match: Null<RegExpExecArray>;
                             while ((match = REGEX_COUNTER.exec(value)) !== null) {
                                 const attr = match[1];

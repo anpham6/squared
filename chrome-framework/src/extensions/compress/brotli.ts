@@ -1,4 +1,4 @@
-import { ChromeAsset } from '../../../../@types/chrome/file';
+import { RequestAsset } from '../../../../@types/chrome/file';
 import { CompressOptions } from '../../../../@types/chrome/extension';
 
 import Extension from '../../extension';
@@ -13,7 +13,7 @@ export default class Brotli<T extends View> extends Extension<T> {
         mimeTypes: ['text/css', 'text/javascript', 'text/plain', 'text/csv', 'application/json', 'application/javascript', 'application/ld+json', 'application/xml']
     };
 
-    public processFile(data: ChromeAsset, override = false) {
+    public processFile(data: RequestAsset, override = false) {
         if (!override) {
             const mimeType = data.mimeType;
             if (mimeType) {

@@ -1,6 +1,6 @@
 import { FileAsset } from '../../@types/base/file';
 import { ChromeFramework } from '../../@types/chrome/internal';
-import { FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/file';
+import { FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/application';
 
 import Application from './application';
 import Controller from './controller';

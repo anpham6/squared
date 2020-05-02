@@ -1,5 +1,5 @@
 import { NodeOptions, UserSettings } from './application';
-import { ChromeAsset, FileActionAttribute } from './file';
+import { RequestAsset, FileActionAttribute } from './file';
 
 import * as squared from '../squared';
 
@@ -37,18 +37,18 @@ declare namespace base {
         get application(): Application<T>;
         get userSettings(): UserSettings;
         get outputFileExclusions(): RegExp[];
-        getHtmlPage(options?: FileActionAttribute): ChromeAsset[];
-        getScriptAssets(options?: FileActionAttribute): ChromeAsset[];
-        getLinkAssets(options?: FileActionAttribute): ChromeAsset[];
-        getImageAssets(options?: FileActionAttribute): ChromeAsset[];
-        getVideoAssets(options?: FileActionAttribute): ChromeAsset[];
-        getAudioAssets(options?: FileActionAttribute): ChromeAsset[];
-        getFontAssets(options?: FileActionAttribute): ChromeAsset[];
+        getHtmlPage(options?: FileActionAttribute): RequestAsset[];
+        getScriptAssets(options?: FileActionAttribute): RequestAsset[];
+        getLinkAssets(options?: FileActionAttribute): RequestAsset[];
+        getImageAssets(options?: FileActionAttribute): RequestAsset[];
+        getVideoAssets(options?: FileActionAttribute): RequestAsset[];
+        getAudioAssets(options?: FileActionAttribute): RequestAsset[];
+        getFontAssets(options?: FileActionAttribute): RequestAsset[];
     }
 
     class Extension<T extends View> extends squared.base.Extension<T> {
         application: Application<T>;
-        processFile(data: ChromeAsset, override?: boolean): boolean;
+        processFile(data: RequestAsset, override?: boolean): boolean;
     }
 
     class ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {}

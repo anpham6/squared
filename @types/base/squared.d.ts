@@ -261,6 +261,8 @@ declare class File<T extends Node> implements FileActionAsync {
     saveToArchive(filename: string, options?: FileArchivingOptions): Promise<ResultOfFileAction | void>;
     createFrom(format: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
     appendFromArchive(filename: string, options: FileArchivingOptions): Promise<ResultOfFileAction | void>;
+    getCopyQueryParameters(options: FileCopyingOptions): string;
+    getArchiveQueryParameters(options: FileArchivingOptions): string;
     get userSettings(): UserSettings;
 }
 

@@ -263,10 +263,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         row.gap = node.parseHeight(node.css('rowGap'), false);
         [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')].forEach((value, index) => {
             if (value !== '' && value !== 'none' && value !== 'auto') {
+                REGEX_NAMED.lastIndex = 0;
                 const data = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = data;
                 let i = 1;
-                REGEX_NAMED.lastIndex = 0;
                 let match: Null<RegExpMatchArray>;
                 while ((match = REGEX_NAMED.exec(value)) !== null) {
                     const command = match[1].trim();
@@ -290,8 +290,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         break;
                                 }
                                 if (iterations > 0) {
-                                    const repeating: RepeatItem[] = [];
                                     REGEX_REPEAT.lastIndex = 0;
+                                    const repeating: RepeatItem[] = [];
                                     let subMatch: Null<RegExpMatchArray>;
                                     while ((subMatch = REGEX_REPEAT.exec(match[3])) !== null) {
                                         const subPattern = subMatch[1];

@@ -170,6 +170,8 @@
                         }
                     });
                     chrome.saveAsWebPage('bundle2', { preserveCrossOrigin: true });
+                    chrome.saveAsWebPage('bundle3', { productionRelease: true });
+                    chrome.saveAsWebPage('bundle4', { productionRelease: true, preserveCrossOrigin: true });
                 });
             });
         });

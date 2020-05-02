@@ -655,21 +655,27 @@ JS and CSS files can be bundled together with the "saveAs" or "exportAs" action.
 <script data-chrome-file="saveAs:js/bundle2.js" src="/dist/chrome.framework.js"></script>
 ```
 
-There entire page can similarly be included using the "saveAs" attribute in options.
+The entire page can similarly be included using the "saveAs" attribute in options.
 
 ```javascript
 const options = {
-    saveAs: {
-        script: { filename: 'js/bundle.js', format: 'minifiy' },
-        link: { filename: 'css/bundle.css', format: 'beautify' }
+    saveAs: { // All attributes are optional
+        html: { filename: 'index.html', format: 'beautify' }
+        script: { filename: 'js/bundle.js', format: 'minify' },
+        link: { filename: 'css/bundle.css' }
     }
 };
+```
+There are a few ways to save the entire page or portions using the system methods.
 
-squared.system.saveScriptAssets(filename?: string, options);
-squared.system.saveLinkAssets(filename?: string, options);
+```xml
+<script>
+    chrome.saveAsWebPage({ preserveCrossOrigin: true }); // Ignore downloading assets hosted on other websites (http://)
+    chrome.saveAsWebPage({ productionRelease: true }); // Ignore local url rewriting and load assets using absolute paths
+</script>
 ```
 
-You can exclude unnecessary processing files using the dataset attribute in &lt;script&gt; or &lt;link&gt; tags.
+You can exclude unnecessary processing files using the dataset attribute in &lt;script|link|style&gt; tags.
 
 ```xml
 <script data-chrome-file="exclude" src="/dist/squared.js"></script>

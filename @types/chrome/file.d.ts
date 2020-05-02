@@ -1,14 +1,14 @@
-import * as application from '../base/application';
 import * as file from '../base/file';
 
-export interface ChromeAsset extends file.RequestAsset {
+export interface RequestAsset extends file.RequestAsset {
     extension?: string;
-}
-
-export interface FileCopyingOptions extends application.FileCopyingOptions, FileActionAttribute {}
-
-export interface FileArchivingOptions extends application.FileArchivingOptions, FileActionAttribute {
-    saveAsWebPage?: boolean;
+    rootDir?: string;
+    moveTo?: string;
+    append?: boolean;
+    format?: string;
+    bundleMain?: boolean;
+    outerHTML?: string;
+    trailingContent?: FormattableContent[];
 }
 
 export interface FileActionAttribute {
@@ -20,5 +20,10 @@ export interface FileActionAttribute {
 
 export interface SaveAsOptions {
     filename: string;
+    format?: string;
+}
+
+export interface FormattableContent {
+    value: string;
     format?: string;
 }

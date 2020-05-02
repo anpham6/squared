@@ -1,4 +1,5 @@
 import * as file from '../../@types/base/file';
+import * as file_chrome from '../../@types/chrome/file';
 
 declare namespace Node {
     interface Settings {
@@ -39,9 +40,9 @@ declare namespace Node {
 
     interface CompressionFormat extends file.CompressionFormat {}
 
-    interface FormattableContent extends file.FormattableContent {}
+    interface FormattableContent extends file_chrome.FormattableContent {}
 
-    interface RequestAsset extends Omit<file.RequestAsset, "exclusions"> {
+    interface RequestAsset extends Omit<file_chrome.RequestAsset, "exclusions"> {
         filepath?: string;
         originalName?: string;
     }
