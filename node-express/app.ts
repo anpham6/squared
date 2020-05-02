@@ -1,6 +1,7 @@
-import { CompressionFormat, Environment, External, FormatableContent, ResultOfFileAction, RequestAsset, Routing, Settings } from './@types/node';
+import { CompressionFormat, Environment, External, FormattableContent, ResultOfFileAction, RequestAsset, Routing, Settings } from './@types/node';
 
 import path = require('path');
+import util = require('util');
 import fs = require('fs-extra');
 import zlib = require('zlib');
 import express = require('express');
@@ -22,8 +23,9 @@ interface AsyncStatus {
     archiving: boolean;
     delayed: number;
     dirname: string;
-    filesToRemove: string[];
-    filesToCompare: string[];
+    filesExported: Set<string>;
+    filesToRemove: Set<string>;
+    filesToCompare: Map<RequestAsset, string[]>;
     contentToAppend: Map<string, string[]>;
 }
 
@@ -395,7 +397,7 @@ function findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [stri
     return ['', {}];
 }
 
-function queueContentToAppend(status: AsyncStatus, filepath: string, content: string, trailingContent?: FormatableContent[], mimeType?: string, format?: string) {
+function queueContentToAppend(status: AsyncStatus, filepath: string, content: string, trailingContent?: FormattableContent[], mimeType?: string, format?: string) {
     if (trailingContent) {
         content += getTrailingContent(trailingContent, mimeType, format);
     }
@@ -489,6 +491,9 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                     }
                     else {
                         fs.writeFileSync(pathname, content);
+                        if (!script) {
+                            status.filesExported.add(pathname);
+                        }
                     }
                 }
                 source = source.replace(match[0], appending ? '' : match[1] + getFileOuterHTML(script, location));
@@ -609,13 +614,20 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
         }
         default:
             if (mimeType.includes('image/')) {
-                const afterConvert = (output: string, command: string) => {
+                const afterConvert = (fileoutput: string, command: string) => {
                     switch (command.charAt(0)) {
                         case '@':
-                            status.filesToRemove.push(filepath);
+                            file.originalName = path.basename(filepath);
+                            file.filename = path.basename(fileoutput);
+                            status.filesToRemove.add(filepath);
                             break;
                         case '%':
-                            status.filesToCompare.push(filepath, output);
+                            if (status.filesToCompare.has(file)) {
+                                status.filesToCompare.get(file)!.push(fileoutput);
+                            }
+                            else {
+                                status.filesToCompare.set(file, [fileoutput]);
+                            }
                             break;
                     }
                 };
@@ -801,7 +813,7 @@ function formatContent(value: string, mimeType: string, format: string) {
     return value;
 }
 
-function getTrailingContent(trailingContent: FormatableContent[], mimeType?: string, format?: string) {
+function getTrailingContent(trailingContent: FormattableContent[], mimeType?: string, format?: string) {
     let result = '';
     for (const item of trailingContent) {
         const formatter = item.format || format;
@@ -841,7 +853,11 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
         if (file.append) {
             const queue = appending[filepath]?.shift();
             if (queue) {
-                const uri = queue.uri!;
+                const uri = queue.uri;
+                if (!uri) {
+                    processQueue(queue, filepath, original || file);
+                    return;
+                }
                 request(uri, (err, response) => {
                     if (err) {
                         notFound[uri] = true;
@@ -862,12 +878,9 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
                 });
                 return;
             }
-            else if (original) {
-                file = original;
-            }
         }
         completed.push(filepath);
-        for (const item of (processing[filepath] || [file])) {
+        for (const item of (processing[filepath] || [original || file])) {
             writeBuffer(assets, item, filepath, status, finalize);
             finalize(filepath);
         }
@@ -889,6 +902,36 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
             }
             emptyDir[pathname] = true;
         }
+        const checkQueue = () => {
+            if (file.append) {
+                const queue = appending[filepath];
+                if (queue) {
+                    queue.push(file);
+                    return true;
+                }
+                else {
+                    appending[filepath] = [];
+                    return false;
+                }
+            }
+            else if (completed.includes(filepath)) {
+                writeBuffer(assets, file, filepath, status, finalize);
+                finalize('');
+                return true;
+            }
+            else {
+                const queue = processing[filepath];
+                if (queue) {
+                    ++status.delayed;
+                    queue.push(file);
+                    return true;
+                }
+                else {
+                    processing[filepath] = [file];
+                    return false;
+                }
+            }
+        };
         if (file.content) {
             const { format, mimeType, trailingContent } = file;
             if (format && mimeType) {
@@ -896,6 +939,9 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
             }
             if (trailingContent) {
                 file.content += getTrailingContent(trailingContent, mimeType, format);
+            }
+            if (file.append && file.bundleMain) {
+                appending[filepath] = [];
             }
             ++status.delayed;
             fs.writeFile(
@@ -925,40 +971,10 @@ function processAssets(dirname: string, assets: RequestAsset[], status: AsyncSta
             );
         }
         else {
-            const { append, uri } = file;
+            const uri = file.uri;
             if (!uri || notFound[uri]) {
                 continue;
             }
-            const checkQueue = () => {
-                if (append) {
-                    const queue = appending[filepath];
-                    if (queue) {
-                        queue.push(file);
-                        return true;
-                    }
-                    else {
-                        appending[filepath] = [];
-                        return false;
-                    }
-                }
-                else if (completed.includes(filepath)) {
-                    writeBuffer(assets, file, filepath, status, finalize);
-                    finalize('');
-                    return true;
-                }
-                else {
-                    const queue = processing[filepath];
-                    if (queue) {
-                        ++status.delayed;
-                        queue.push(file);
-                        return true;
-                    }
-                    else {
-                        processing[filepath] = [file];
-                        return false;
-                    }
-                }
-            };
             try {
                 if (isFileURI(uri)) {
                     if (checkQueue()) {
@@ -1026,17 +1042,15 @@ function replaceExtension(value: string, ext: string) {
 }
 
 function isJPEG(file: RequestAsset) {
+    if (file.mimeType?.endsWith('image/jpeg')) {
+        return true;
+    }
     switch (path.extname(file.filename).toLowerCase()) {
         case '.jpg':
         case '.jpeg':
-            break;
-        default:
-            if (!file.mimeType || !file.mimeType.endsWith('image/jpeg')) {
-                return false;
-            }
-            break;
+            return true;
     }
-    return true;
+    return false;
 }
 
 function removeCompressionFormat(file: RequestAsset, format: string) {
@@ -1049,16 +1063,26 @@ function removeCompressionFormat(file: RequestAsset, format: string) {
     }
 }
 
-function removeUnusedFiles(dirname: string, status: AsyncStatus, files: Set<string>) {
-    const { filesToCompare, filesToRemove, contentToAppend } = status;
-    const length = filesToCompare.length;
-    let i = 0;
-    while (i < length) {
-        const original = filesToCompare[i++];
-        const transformed = filesToCompare[i++];
-        const smaller = getFileSize(original) > getFileSize(transformed) ? original : transformed;
-        if (!filesToRemove.includes(smaller)) {
-            filesToRemove.push(smaller);
+function finalizeAssetsAsync(dirname: string, assets: RequestAsset[], status: AsyncStatus, files: Set<string>) {
+    const filesToRemove = status.filesToRemove;
+    for (const [file, output] of status.filesToCompare) {
+        const originalPath = file.filepath!;
+        let minFile = originalPath;
+        let minSize = getFileSize(minFile);
+        for (const filepath of output) {
+            const size = getFileSize(filepath);
+            if (size < minSize) {
+                filesToRemove.add(minFile);
+                minFile = filepath;
+                minSize = size;
+            }
+            else {
+                filesToRemove.add(filepath);
+            }
+        }
+        if (minFile !== originalPath) {
+            file.originalName = path.basename(originalPath);
+            file.filename = path.basename(minFile);
         }
     }
     for (const value of filesToRemove) {
@@ -1070,7 +1094,7 @@ function removeUnusedFiles(dirname: string, status: AsyncStatus, files: Set<stri
             writeError(value, err);
         }
     }
-    for (const [filepath, content] of contentToAppend.entries()) {
+    for (const [filepath, content] of status.contentToAppend.entries()) {
         if (content.length) {
             if (!fs.existsSync(filepath)) {
                 fs.writeFileSync(filepath, content.shift());
@@ -1078,6 +1102,39 @@ function removeUnusedFiles(dirname: string, status: AsyncStatus, files: Set<stri
             for (const value of content) {
                 fs.appendFileSync(filepath, '\n' + value);
             }
+        }
+    }
+    const replaced = assets.filter(file => file.originalName);
+    if (replaced.length) {
+        for (const item of assets) {
+            switch (item.mimeType) {
+                case '@text/html':
+                case '@application/xhtml+xml':
+                case '@text/css':
+                    status.filesExported.add(item.filepath!);
+                    break;
+            }
+        }
+        for (const filepath of status.filesExported) {
+            fs.readFile(filepath, (err, data) => {
+                if (!err) {
+                    let html = data.toString('utf-8');
+                    let valid = false;
+                    for (const item of replaced) {
+                        const { pathname, originalName } = item;
+                        try {
+                            html = html.replace(new RegExp(pathname + getSeparator(pathname) + originalName, 'g'), pathname + '/' + item.filename);
+                            valid = true;
+                        }
+                        catch (error) {
+                            writeError(originalName!, error);
+                        }
+                    }
+                    if (valid) {
+                        fs.writeFileSync(filepath, html);
+                    }
+                }
+            });
         }
     }
 }
@@ -1177,8 +1234,9 @@ app.post('/api/assets/copy', (req, res) => {
             archiving: false,
             delayed: 0,
             dirname,
-            filesToRemove: [],
-            filesToCompare: [],
+            filesExported: new Set(),
+            filesToRemove: new Set(),
+            filesToCompare: new Map(),
             contentToAppend: new Map()
         };
         let cleared = false;
@@ -1190,7 +1248,7 @@ app.post('/api/assets/copy', (req, res) => {
                 files.add(filepath.substring(dirname.length + 1));
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
-                removeUnusedFiles(dirname, status, files);
+                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status, files))();
                 --THREAD_COUNT;
                 res.json(<ResultOfFileAction> { success: files.size > 0, files: Array.from(files) });
                 status.delayed = Infinity;
@@ -1242,8 +1300,9 @@ app.post('/api/assets/archive', (req, res) => {
         archiving: true,
         delayed: 0,
         dirname,
-        filesToRemove: [],
-        filesToCompare: [],
+        filesExported: new Set(),
+        filesToRemove: new Set(),
+        filesToCompare: new Map(),
         contentToAppend: new Map()
     };
     let cleared = false;
@@ -1313,7 +1372,7 @@ app.post('/api/assets/archive', (req, res) => {
                 files.add(filepath.substring(dirname.length + 1));
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
-                removeUnusedFiles(dirname, status, files);
+                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status, files))();
                 archive.directory(dirname, false);
                 archive.finalize();
             }

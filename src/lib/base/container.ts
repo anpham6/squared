@@ -59,6 +59,10 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return result;
     }
 
+    public removeAt(index: number): Undef<T> {
+        return this._children.splice(index, 1)[0];
+    }
+
     public contains(item: T) {
         return this._children.includes(item);
     }

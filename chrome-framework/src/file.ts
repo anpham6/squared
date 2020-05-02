@@ -425,22 +425,16 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     protected getAssetsAll(options: FileArchivingOptions = {}) {
-        const saveAsWebPage = options.saveAsWebPage === true;
-        if (saveAsWebPage) {
-            options = { ...options, ignoreExtensions: true };
-        }
         const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options.saveAsWebPage) {
             result.forEach(item => {
                 const mimeType = item.mimeType;
-                if (mimeType) {
-                    switch (mimeType) {
-                        case 'text/html':
-                        case 'text/css':
-                        case 'application/xhtml+xml':
-                            item.mimeType = '@' + mimeType;
-                            break;
-                    }
+                switch (mimeType) {
+                    case 'text/html':
+                    case 'application/xhtml+xml':
+                    case 'text/css':
+                        item.mimeType = '@' + mimeType;
+                        break;
                 }
             });
         }

@@ -7,6 +7,7 @@ declare namespace base {
         item(index?: number, value?: T): Undef<T>;
         append(item: T): this;
         remove(...items: T[]): T[];
+        removeAt(index: number): Undef<T>;
         retain(list: T[]): this;
         contains(item: T): boolean;
         duplicate(): T[];

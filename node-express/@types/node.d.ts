@@ -39,10 +39,11 @@ declare namespace Node {
 
     interface CompressionFormat extends file.CompressionFormat {}
 
-    interface FormatableContent extends file.FormatableContent {}
+    interface FormattableContent extends file.FormattableContent {}
 
     interface RequestAsset extends Omit<file.RequestAsset, "exclusions"> {
         filepath?: string;
+        originalName?: string;
     }
 
     interface ResultOfFileAction extends file.ResultOfFileAction {}
