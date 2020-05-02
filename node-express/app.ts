@@ -23,6 +23,7 @@ interface AsyncStatus {
     archiving: boolean;
     delayed: number;
     dirname: string;
+    files: Set<string>;
     filesExported: Set<string>;
     filesToRemove: Set<string>;
     filesToCompare: Map<RequestAsset, string[]>;
@@ -698,8 +699,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 const afterConvert = (fileoutput: string, command: string) => {
                     switch (command.charAt(0)) {
                         case '@':
-                            file.originalName = path.basename(filepath);
-                            file.filename = path.basename(fileoutput);
+                            replaceFileOutput(status, file, path.basename(fileoutput));
                             status.filesToRemove.add(filepath);
                             break;
                         case '%':
@@ -1144,8 +1144,18 @@ function removeCompressionFormat(file: RequestAsset, format: string) {
     }
 }
 
-function finalizeAssetsAsync(dirname: string, assets: RequestAsset[], status: AsyncStatus, files: Set<string>) {
-    const filesToRemove = status.filesToRemove;
+function replaceFileOutput(status: AsyncStatus, file: RequestAsset, replaceName: string) {
+    const { filepath, filename } = file;
+    if (filepath) {
+        status.files.delete(filepath.substring(status.dirname.length + 1));
+        status.files.add(filepath.replace(filename, replaceName));
+        file.originalName = file.filename;
+        file.filename = replaceName;
+    }
+}
+
+function finalizeAssetsAsync(dirname: string, assets: RequestAsset[], status: AsyncStatus) {
+    const { files, filesToRemove } = status;
     for (const [file, output] of status.filesToCompare) {
         const originalPath = file.filepath!;
         let minFile = originalPath;
@@ -1162,29 +1172,27 @@ function finalizeAssetsAsync(dirname: string, assets: RequestAsset[], status: As
             }
         }
         if (minFile !== originalPath) {
-            file.originalName = path.basename(originalPath);
-            file.filename = path.basename(minFile);
+            replaceFileOutput(status, file, path.basename(minFile));
         }
     }
-    for (const value of filesToRemove) {
-        try {
-            fs.unlinkSync(value);
-            files.delete(value.substring(dirname.length + 1));
-        }
-        catch (err) {
-            writeError(value, err);
-        }
-    }
-    for (const [filepath, content] of status.contentToAppend.entries()) {
-        if (content.length) {
-            if (!fs.existsSync(filepath)) {
-                fs.writeFileSync(filepath, content.shift());
+    (async () => {
+        await util.promisify(() => {
+            for (const value of filesToRemove) {
+                try {
+                    fs.unlink(value);
+                    files.delete(value.substring(dirname.length + 1));
+                }
+                catch (err) {
+                    writeError(value, err);
+                }
             }
-            for (const value of content) {
-                fs.appendFileSync(filepath, '\n' + value);
+            for (const [filepath, content] of status.contentToAppend.entries()) {
+                if (content.length) {
+                    fs.appendFile(filepath, '\n' + content.join('\n'));
+                }
             }
-        }
-    }
+        })();
+    })();
     const replaced = assets.filter(file => file.originalName);
     if (replaced.length) {
         for (const item of assets) {
@@ -1311,9 +1319,9 @@ app.post('/api/assets/copy', (req, res) => {
         if (!checkPermissions(res, dirname)) {
             return;
         }
-        const files = new Set<string>();
         const status: AsyncStatus = {
             archiving: false,
+            files: new Set(),
             delayed: 0,
             dirname,
             filesExported: new Set(),
@@ -1327,12 +1335,12 @@ app.post('/api/assets/copy', (req, res) => {
                 return;
             }
             if (filepath) {
-                files.add(filepath.substring(dirname.length + 1));
+                status.files.add(filepath.substring(dirname.length + 1));
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
-                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status, files))();
+                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status))();
                 --THREAD_COUNT;
-                res.json(<ResultOfFileAction> { success: files.size > 0, files: Array.from(files) });
+                res.json(<ResultOfFileAction> { success: status.files.size > 0, files: Array.from(status.files) });
                 status.delayed = Infinity;
             }
         };
@@ -1377,11 +1385,11 @@ app.post('/api/assets/archive', (req, res) => {
         res.json({ application: `DIRECTORY: ${dirname}`, system });
         return;
     }
-    const files = new Set<string>();
     const status: AsyncStatus = {
         archiving: true,
         delayed: 0,
         dirname,
+        files: new Set(),
         filesExported: new Set(),
         filesToRemove: new Set(),
         filesToCompare: new Map(),
@@ -1411,9 +1419,9 @@ app.post('/api/assets/archive', (req, res) => {
         zipname = path.join(dirname_zip, (req.query.filename || zipname || 'squared') + '.' + format);
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
-            const success = files.size > 0;
+            const success = status.files.size > 0;
             const bytes = archive.pointer();
-            const response: ResultOfFileAction = { success, files: Array.from(files) };
+            const response: ResultOfFileAction = { success, files: Array.from(status.files) };
             if (!copy_to) {
                 response.zipname = zipname;
                 response.bytes = bytes;
@@ -1451,10 +1459,10 @@ app.post('/api/assets/archive', (req, res) => {
                 return;
             }
             if (filepath) {
-                files.add(filepath.substring(dirname.length + 1));
+                status.files.add(filepath.substring(dirname.length + 1));
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
-                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status, files))();
+                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status))();
                 archive.directory(dirname, false);
                 archive.finalize();
             }
