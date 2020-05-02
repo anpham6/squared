@@ -1058,24 +1058,20 @@ function finalizeAssetsAsync(dirname: string, assets: RequestAsset[], status: As
             replaceFileOutput(status, file, path.basename(minFile));
         }
     }
-    (async () => {
-        await util.promisify(() => {
-            for (const value of filesToRemove) {
-                try {
-                    fs.unlink(value);
-                    files.delete(value.substring(dirname.length + 1));
-                }
-                catch (err) {
-                    writeError(value, err);
-                }
-            }
-            for (const [filepath, content] of status.contentToAppend.entries()) {
-                if (content.length) {
-                    fs.appendFile(filepath, '\n' + content.join('\n'));
-                }
-            }
-        })();
-    })();
+    for (const value of filesToRemove) {
+        try {
+            fs.unlinkSync(value);
+            files.delete(value.substring(dirname.length + 1));
+        }
+        catch (err) {
+            writeError(value, err);
+        }
+    }
+    for (const [filepath, content] of status.contentToAppend.entries()) {
+        if (content.length) {
+            fs.appendFileSync(filepath, '\n' + content.join('\n'));
+        }
+    }
     const replaced = assets.filter(file => file.originalName);
     if (replaced.length || release) {
         for (const item of assets) {

@@ -50,7 +50,7 @@ function parseSrcSet(value: string) {
     }
 }
 
-function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr: string, preloadImges: boolean, styleSheetHref?: string) {
+function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr: string, styleSheetHref?: string) {
     const value = baseMap[attr];
     if (value && value !== 'initial') {
         REGEX_DATAURI.lastIndex = 0;
@@ -61,7 +61,7 @@ function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr
                 const mimeType = match[2].split(XML.DELIMITER);
                 resourceHandler.addRawData(match[1], mimeType[0].trim(), mimeType[1]?.trim() || 'utf8', match[3]);
             }
-            else if (preloadImges) {
+            else {
                 const uri = resolvePath(match[3], styleSheetHref);
                 if (uri !== '') {
                     if (!resourceHandler.getImage(uri)) {
@@ -221,12 +221,12 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         });
         const documentRoot = this.rootElements.values().next().value;
+        for (const element of this.rootElements) {
+            element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
+            element.querySelectorAll('video').forEach((source: HTMLVideoElement) => addImageSrc(source.poster));
+            element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
+        }
         if (preloadImages) {
-            for (const element of this.rootElements) {
-                element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
-                element.querySelectorAll('video').forEach((source: HTMLVideoElement) => addImageSrc(source.poster));
-                element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
-            }
             for (const image of ASSET_IMAGE.values()) {
                 const uri = image.uri as string;
                 if (isSvg(uri)) {
@@ -245,39 +245,38 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
             }
-        }
-        for (const [uri, data] of ASSET_RAWDATA.entries()) {
-            const mimeType = data.mimeType;
-            if (mimeType?.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
-                const element = document.createElement('img');
-                element.src = `data:${mimeType};${data.base64 ? `base64,${data.base64}` : data.content}`;
-                const { naturalWidth: width, naturalHeight: height } = element;
-                if (width > 0 && height > 0) {
-                    data.width = width;
-                    data.height = height;
-                    ASSET_IMAGE.set(uri, { width, height, uri: data.filename });
-                }
-                else {
-                    document.body.appendChild(element);
-                    preloaded.push(element);
+            for (const [uri, data] of ASSET_RAWDATA.entries()) {
+                const mimeType = data.mimeType;
+                if (mimeType?.startsWith('image/') && !mimeType.endsWith('svg+xml')) {
+                    const element = document.createElement('img');
+                    element.src = `data:${mimeType};${data.base64 ? `base64,${data.base64}` : data.content}`;
+                    const { naturalWidth: width, naturalHeight: height } = element;
+                    if (width > 0 && height > 0) {
+                        data.width = width;
+                        data.height = height;
+                        ASSET_IMAGE.set(uri, { width, height, uri: data.filename });
+                    }
+                    else {
+                        document.body.appendChild(element);
+                        preloaded.push(element);
+                    }
                 }
             }
         }
         for (const element of this.rootElements) {
             element.querySelectorAll('img').forEach((image: HTMLImageElement) => {
-                if (isSvg(image.src)) {
-                    if (preloadImages) {
-                        imageElements.push(image.src);
-                    }
+                parseSrcSet(image.srcset);
+                if (!preloadImages) {
+                    resource.addImage(image);
+                }
+                else if (isSvg(image.src)) {
+                    imageElements.push(image.src);
                 }
                 else {
-                    if (preloadImages) {
-                        parseSrcSet(image.srcset);
-                    }
                     if (image.complete) {
                         resource.addImage(image);
                     }
-                    else if (preloadImages) {
+                    else {
                         imageElements.push(image);
                     }
                 }
@@ -337,7 +336,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         return node;
     }
 
-    public setStyleMap(caching = false) {
+    public setStyleMap() {
         const styleSheets = document.styleSheets;
         const length = styleSheets.length;
         let i = 0;
@@ -350,7 +349,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             catch {
             }
             if (!isString(mediaText) || REGEX_MEDIATEXT.test(mediaText)) {
-                this.applyStyleSheet(<CSSStyleSheet> styleSheet, caching);
+                this.applyStyleSheet(<CSSStyleSheet> styleSheet);
             }
         }
     }
@@ -464,27 +463,23 @@ export default abstract class Application<T extends Node> implements squared.bas
         return result;
     }
 
-    protected applyStyleRule(item: CSSStyleRule, caching: boolean) {
+    protected applyStyleRule(item: CSSStyleRule) {
         const resourceHandler = this.resourceHandler;
         const sessionId = this.processing.sessionId;
         const styleSheetHref = item.parentStyleSheet?.href || undefined;
         const cssText = item.cssText;
         switch (item.type) {
             case CSSRule.SUPPORTS_RULE:
-                this.applyCSSRuleList((<CSSSupportsRule> (item as unknown)).cssRules, caching);
+                this.applyCSSRuleList((<CSSSupportsRule> (item as unknown)).cssRules);
                 break;
             case CSSRule.STYLE_RULE: {
                 const cssStyle = item.style;
                 const important: ObjectMap<boolean> = {};
                 const baseMap: StringMap = {};
-                const preloadImages = this.userSettings.preloadImages || caching;
                 Array.from(cssStyle).forEach(attr => baseMap[convertCamelCase(attr)] = cssStyle[attr]);
-                parseImageUrl(resourceHandler, baseMap, 'backgroundImage', preloadImages, styleSheetHref);
-                parseImageUrl(resourceHandler, baseMap, 'listStyleImage', preloadImages, styleSheetHref);
-                parseImageUrl(resourceHandler, baseMap, 'content', preloadImages, styleSheetHref);
-                if (caching) {
-                    break;
-                }
+                parseImageUrl(resourceHandler, baseMap, 'backgroundImage', styleSheetHref);
+                parseImageUrl(resourceHandler, baseMap, 'listStyleImage', styleSheetHref);
+                parseImageUrl(resourceHandler, baseMap, 'content', styleSheetHref);
                 REGEX_IMPORTANT.lastIndex = 0;
                 let match: Null<RegExpExecArray>;
                 while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
@@ -635,15 +630,15 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
     }
 
-    protected applyCSSRuleList(rules: CSSRuleList, caching: boolean) {
+    protected applyCSSRuleList(rules: CSSRuleList) {
         const length = rules.length;
         let i = 0;
         while (i < length) {
-            this.applyStyleRule(<CSSStyleRule> rules[i++], caching);
+            this.applyStyleRule(<CSSStyleRule> rules[i++]);
         }
     }
 
-    protected applyStyleSheet(item: CSSStyleSheet, caching: boolean) {
+    protected applyStyleSheet(item: CSSStyleSheet) {
         try {
             const cssRules = item.cssRules;
             if (cssRules) {
@@ -654,19 +649,19 @@ export default abstract class Application<T extends Node> implements squared.bas
                     switch (rule.type) {
                         case CSSRule.STYLE_RULE:
                         case CSSRule.FONT_FACE_RULE:
-                            this.applyStyleRule(<CSSStyleRule> rule, caching);
+                            this.applyStyleRule(<CSSStyleRule> rule);
                             break;
                         case CSSRule.IMPORT_RULE:
-                            this.applyStyleSheet((<CSSImportRule> rule).styleSheet, caching);
+                            this.applyStyleSheet((<CSSImportRule> rule).styleSheet);
                             break;
                         case CSSRule.MEDIA_RULE:
                             if (checkMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
-                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules, caching);
+                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
                             }
                             break;
                         case CSSRule.SUPPORTS_RULE:
                             if (CSS.supports && CSS.supports((<CSSConditionRule> rule).conditionText || parseConditionText('supports', rule.cssText))) {
-                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules, caching);
+                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
                             }
                             break;
                     }

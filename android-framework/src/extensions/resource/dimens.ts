@@ -11,7 +11,7 @@ const { convertUnderscore, fromLastIndexOf, safeNestedArray, safeNestedMap } = $
 
 const STORED = <ResourceStoredMap> Resource.STORED;
 const REGEX_UNIT = /\dpx$/;
-const REGEX_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/;
+const REGEX_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/g;
 
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     if (map.get(name) === value) {
@@ -68,6 +68,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
         if (this.controller.hasAppendProcessing()) {
             const dimens = STORED.dimens;
             this.application.layouts.forEach(layout => {
+                REGEX_UNIT_ATTR.lastIndex = 0;
                 let content = layout.content!;
                 let match: Null<RegExpExecArray>;
                 while ((match = REGEX_UNIT_ATTR.exec(layout.content!)) !== null) {

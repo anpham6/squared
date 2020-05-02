@@ -310,7 +310,7 @@ const appBase: ChromeFramework<View> = {
             options.saveAsWebPage = true;
             const settings = application.userSettings;
             const restoreValue = settings.preloadImages;
-            settings.preloadImages = true;
+            settings.preloadImages = false;
             application.reset();
             return application.parseDocument(document.body).then((response: View[]) => {
                 file!.saveToArchive(filename || application.userSettings.outputArchiveName, options);
