@@ -164,11 +164,12 @@
                     chrome = result.default;
                     squared.settings.builtInExtensions = ['chrome.convert.png'];
                     squared.setFramework(chrome);
-                    chrome.saveAsWebPage('bundle', {
+                    chrome.saveAsWebPage('bundle1', {
                         saveAs: {
                             script: { filename: 'js/modules2.js', format: 'beautify' }
                         }
                     });
+                    chrome.saveAsWebPage('bundle2', { preserveCrossOrigin: true });
                 });
             });
         });

@@ -15,7 +15,7 @@ export interface FileActionAttribute {
     name?: string;
     rel?: string;
     saveAs?: { html?: SaveAsOptions; script?: SaveAsOptions; link?: SaveAsOptions };
-    ignoreExtensions?: boolean;
+    preserveCrossOrigin?: boolean;
 }
 
 export interface SaveAsOptions {
