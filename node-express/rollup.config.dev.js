@@ -1,5 +1,3 @@
-const prettier = require('rollup-plugin-prettier');
-
 export default [
     {
         input: '../build/app.js',
@@ -7,13 +5,7 @@ export default [
         output: {
             file: '../app.js',
             format: 'iife'
-        },
-        plugins: [
-            prettier({
-                parser: 'babel',
-                tabWidth: 4
-            })
-        ]
+        }
     },
     {
         input: '../build/build.js',
@@ -21,12 +13,6 @@ export default [
         output: {
             file: '../build.js',
             format: 'iife'
-        },
-        plugins: [
-            prettier({
-                parser: 'babel',
-                tabWidth: 4
-            })
-        ]
+        }
     }
 ];

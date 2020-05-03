@@ -197,7 +197,7 @@ class FileStatus {
     }
 
     public appendContent(file: RequestAsset, content: string) {
-        const filepath = file.filepath;
+        const filepath = file.filepath || getFileOutput(file, this.dirname).filepath;
         if (filepath) {
             if (file.trailingContent) {
                 content += this.getTrailingContent(file);
@@ -211,12 +211,13 @@ class FileStatus {
     public replaceFileOutput(file: RequestAsset, replaceWith: string) {
         const filepath = file.filepath;
         if (filepath) {
+            this.filesToRemove.add(filepath);
             this.delete(filepath);
-            this.add(replaceWith);
             if (!file.originalName) {
                 file.originalName = file.filename;
             }
             file.filename = path.basename(replaceWith);
+            this.add(replaceWith);
         }
     }
 
@@ -446,6 +447,7 @@ function minifyJs(format: string, value: string) {
                 case 'minify':
                     module = 'terser';
                     options = <terser.MinifyOptions> {
+                        toplevel: true,
                         keep_classnames: true
                     };
                     break;
@@ -514,10 +516,6 @@ function replacePathName(source: string, segment: string, value: string, base64?
         result = result.replace(match[0], `url(${value})`);
     }
     return result;
-}
-
-function getFileOuterHTML(script: boolean, filepath: string) {
-    return script ? `<script src="${filepath}" type="text/javascript"></script>` : `<link href="${filepath}" type="stylesheet" />`;
 }
 
 function parseRelativeUrl(value: string, href: string) {
@@ -641,11 +639,6 @@ function getRelativeUrl(assets: RequestAsset[], file: RequestAsset, url: string,
     return '';
 }
 
-
-function getRootUri(value: string) {
-    return value.charAt(0) === '/' ? ['__serverroot__/', value.substring(1)] : ['', value];
-}
-
 function getCompressFormat(compress: Undef<CompressionFormat[]>, format: string) {
     return compress?.find(item => item.format === format);
 }
@@ -742,6 +735,8 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             }
         }
     };
+    const getFileOuterHTML = (script: boolean, value: string) => script ? `<script src="${value}" type="text/javascript"></script>` : `<link href="${value}" type="stylesheet" />`;
+    const getRootUri = (value: string) => value.charAt(0) === '/' ? ['__serverroot__/', value.substring(1)] : ['', value];
     switch (mimeType) {
         case '@text/html':
         case '@application/xhtml+xml': {
@@ -807,11 +802,8 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 }
                 else {
                     appending = fs.existsSync(pathname);
-                    if (appending) {
-                        fs.appendFileSync(pathname, '\n' + content);
-                    }
-                    else {
-                        fs.writeFileSync(pathname, content);
+                    fs.appendFileSync(pathname, (appending ? '\n' + content : content));
+                    if (!appending) {
                         if (!script) {
                             status.filesExported.add(pathname);
                         }
@@ -855,8 +847,8 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                     for (const trailing of trailingContent) {
                         content.push(minifySpace(trailing.value));
                     }
-                    const output = source;
-                    while ((match = pattern.exec(output)) !== null) {
+                    html = source;
+                    while ((match = pattern.exec(html)) !== null) {
                         const value = minifySpace(match[3]);
                         if (content.includes(value)) {
                             source = source.replace(match[0], '');
@@ -935,7 +927,6 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                     switch (command.charAt(0)) {
                         case '@':
                             status.replaceFileOutput(file, transformed);
-                            status.filesToRemove.add(filepath);
                             break;
                         case '%':
                             if (status.filesToCompare.has(file)) {

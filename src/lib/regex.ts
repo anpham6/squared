@@ -7,11 +7,11 @@ export const STRING = {
     LENGTH: `(${DECIMAL})(${UNIT_LENGTH})?`,
     LENGTH_PERCENTAGE: `(${DECIMAL}(?:${UNIT_LENGTH}|%)?)`,
     UNIT_LENGTH,
-    DATAURI: '(?:data:([^,]+),)?(.*?)',
+    DATAURI: '(?:data:([^,]+),)?(.+?)',
     CSS_SELECTOR_LABEL: '[\\.#]?[\\w\\-]+',
     CSS_SELECTOR_PSEUDO_ELEMENT: '::[\\w\\-]+',
     CSS_SELECTOR_PSEUDO_CLASS: ':[\\w\\-]+(?:\\(\\s*([^()]+)\\s*\\)|\\(\\s*([\\w\\-]+\\(.+?\\))\\s*\\))?',
-    CSS_SELECTOR_ATTR: '\\[((?:\\*\\|)?(?:\\w+\\\\:)?[\\w\\-]+)(?:([~^$*|])?=(?:"([^"]+)"|\'([^\']+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
+    CSS_SELECTOR_ATTR: '\\[((?:\\*\\|)?(?:\\w+\\\\:)?[\\w\\-]+)(?:([~^$*|])?=(?:"((?:[^"]|\\\\")+)"|\'((?:[^\']|\\\')+)\'|([^\\s\\]]+))\\s*(i)?)?\\]',
     CSS_ANGLE: `(${DECIMAL})(deg|rad|turn|grad)`,
     CSS_TIME: `(${DECIMAL})(s|ms)`,
     CSS_CALC: 'calc\\((.+)\\)'
@@ -35,7 +35,7 @@ export const CSS = {
     TIME: new RegExp(`^\\s*${STRING.CSS_TIME}\\s*$`),
     CALC: new RegExp(`^\\s*${STRING.CSS_CALC}\\s*$`),
     VAR: /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/,
-    URL: /^\s*url\((?:"(.+)"|(.+))\)\s*$/,
+    URL: /^\s*url\((?:"?((?:[^")]|\\")+)"?)\)\s*$/,
     CUSTOM_PROPERTY: /^\s*var\(.+\)\s*$/,
     HEX: /[A-Za-z\d]{3,8}/,
     RGBA: /rgba?\((\d+),\s+(\d+),\s+(\d+)(?:,\s+([\d.]+))?\)/,
@@ -48,7 +48,7 @@ export const CSS = {
 };
 
 export const XML = {
-    ATTRIBUTE: /([^\s]+)="([^"]+)"/,
+    ATTRIBUTE: /([^\s]+)="((?:[^"]|\\")+)"/,
     ENTITY: /&#?[A-Za-z\d]+;/,
     SEPARATOR: /\s*,\s*/,
     DELIMITER: /\s*;\s*/,

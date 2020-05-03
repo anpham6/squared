@@ -58,6 +58,7 @@
       },
       "terser": {
         "minify": {
+          "toplevel": true,
           "keep_classnames": true
         }
       },

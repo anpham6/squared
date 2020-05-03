@@ -4,6 +4,6 @@ export default {
     output: {
         file: './dist/squared.base.js',
         name: 'squared.base',
-        format: 'umd'
+        format: 'iife'
     }
 };

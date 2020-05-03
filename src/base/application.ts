@@ -28,8 +28,8 @@ const REGEX_FONTFAMILY = /\s*font-family:[^\w]*([^'";]+)/;
 const REGEX_FONTSRC = /\s*src:\s*([^;]+);/;
 const REGEX_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
 const REGEX_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-const REGEX_URL = /\s*(url|local)\((?:["']([^'")]+)["']|([^)]+))\)(?:\s*format\(["']?([\w-]+)["']?\))?\s*/;
-const REGEX_DATAURI = new RegExp(`url\\(["']?(${STRING.DATAURI})["']?\\),?\\s*`, 'g');
+const REGEX_URL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/;
+const REGEX_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
     if (uri !== '') {

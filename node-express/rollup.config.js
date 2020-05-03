@@ -9,11 +9,7 @@ export default [
             format: 'iife'
         },
         plugins: [
-            terser({
-                mangle: {
-                    toplevel: true
-                }
-            })
+            terser({ toplevel: true })
         ]
     },
     {
@@ -22,13 +18,6 @@ export default [
         output: {
             file: '../build.js',
             format: 'iife'
-        },
-        plugins: [
-            terser({
-                mangle: {
-                    toplevel: true
-                }
-            })
-        ]
+        }
     }
 ];

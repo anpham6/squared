@@ -2,8 +2,9 @@ export default {
     compress: {
         loops: false,
         booleans: false,
-        keep_classnames: true,
         conditionals: false,
         switches: false
-    }
+    },
+    toplevel: true,
+    keep_classnames: true
 };

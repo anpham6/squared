@@ -28,7 +28,7 @@ const DEPRECATED = DEPRECATED_ANDROID.android;
 const SPACING_SELECT = 2;
 const SPACING_CHECKBOX = 4;
 const REGEX_DATASETATTR = /^attr[A-Z]/;
-const REGEX_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@+?[a-z]+\/)?.+)"$/;
+const REGEX_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@\+?[a-z]+\/)?.+)"$/;
 const REGEX_STRINGVALID = /[^\w$\-_.]/g;
 const REGEX_CLIPNONE = /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/;
 
