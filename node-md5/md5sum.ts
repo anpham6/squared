@@ -75,7 +75,7 @@ let screenshot = false;
                 break;
             case '-t':
             case '--timeout': {
-                const t = parseInt(ARGV[i++]);
+                const t = parseFloat(ARGV[i++]);
                 if (!isNaN(t) && t > 0) {
                     timeout = t * 60 * 1000;
                 }
@@ -216,9 +216,7 @@ else if (host && data && build && snapshot) {
                         }
                         const stderr = process.stderr;
                         const pathname = path.resolve(__dirname, snapshot!);
-                        if (!fs.existsSync(pathname)) {
-                            fs.mkdirpSync(pathname);
-                        }
+                        fs.mkdirpSync(pathname);
                         console.log('');
                         for (const item of items) {
                             const files = await readdirp.promise(item.filepath);

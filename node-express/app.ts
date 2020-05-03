@@ -1,7 +1,6 @@
 import { CompressionFormat, Environment, External, FormattableContent, RequestAsset, ResultOfFileAction, Routing, Settings } from './@types/node';
 
 import path = require('path');
-import util = require('util');
 import zlib = require('zlib');
 import fs = require('fs-extra');
 import express = require('express');
@@ -18,19 +17,6 @@ import terser = require('terser');
 import tinify = require('tinify');
 
 let THREAD_COUNT = 0;
-
-interface AsyncStatus {
-    archiving: boolean;
-    delayed: number;
-    dirname: string;
-    files: Set<string>;
-    filesExported: Set<string>;
-    filesToRemove: Set<string>;
-    filesToCompare: Map<RequestAsset, string[]>;
-    contentToAppend: Map<string, string[]>;
-    add(value: string): void;
-    delete(value: string): void;
-}
 
 interface CompressOutput {
     jpeg: number;
@@ -194,7 +180,7 @@ const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.ver
 const SEPARATOR = path.sep;
 const REGEX_URL = /^([A-Za-z]+:\/\/[A-Za-z\d.-]+(?::\d+)?)(\/.*)/;
 
-class AsyncStatus implements AsyncStatus {
+class FileStatus {
     public archiving = false;
     public delayed = 0;
     public files = new Set<string>();
@@ -273,11 +259,6 @@ function checkVersion(major: number, minor: number, patch = 0) {
     return true;
 }
 
-function getUri(file: RequestAsset, uri = '/') {
-    const location = appendSeparator(file.pathname, file.filename, getSeparator(uri));
-    return [(file.moveTo ? path.join(file.moveTo, location) : location).replace(/\\/g, '/'), location];
-}
-
 function convertAssetUrls(assets: RequestAsset[], html: string, file: RequestAsset) {
     for (const item of assets) {
         if (item === file || item.base64) {
@@ -285,13 +266,14 @@ function convertAssetUrls(assets: RequestAsset[], html: string, file: RequestAss
         }
         const { uri, rootDir } = item;
         if (uri) {
-            const [value, location] = getUri(item, uri);
+            const location = path.join(file.pathname, file.filename);
+            const value = getFullUri(item);
             if (rootDir) {
                 html = replacePathName(html, rootDir + location, value);
             }
             else {
                 html = replacePathName(html, uri, value);
-                html = replacePathName(html, getSeparator(uri) + location, value);
+                html = replacePathName(html, '/' + location, value);
             }
         }
     }
@@ -301,7 +283,7 @@ function convertAssetUrls(assets: RequestAsset[], html: string, file: RequestAss
 function convertBase64Urls(assets: RequestAsset[], html: string) {
     for (const item of assets) {
         if (item.base64) {
-            html = replacePathName(html, item.base64.replace(/\+/g, '\\+'), getUri(item)[0], true);
+            html = replacePathName(html, item.base64.replace(/\+/g, '\\+'), getFullUri(item), true);
         }
     }
     return html;
@@ -356,11 +338,16 @@ function minifyCss(format: string, value: string) {
             switch (format) {
                 case 'beautify':
                     module = 'clean_css';
-                    options = <clean_css.OptionsOutput> { level: 0, format: 'beautify' };
+                    options = <clean_css.OptionsOutput> {
+                        level: 0,
+                        format: 'beautify'
+                    };
                     break;
                 case 'minify':
                     module = 'clean_css';
-                    options = <clean_css.OptionsOutput> { level: 1 };
+                    options = <clean_css.OptionsOutput> {
+                        level: 1
+                    };
                     break;
             }
         }
@@ -427,7 +414,7 @@ function findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [stri
     return ['', {}];
 }
 
-function queueContentToAppend(status: AsyncStatus, filepath: string, content: string, trailingContent?: FormattableContent[], mimeType?: string, format?: string) {
+function queueContentToAppend(status: FileStatus, filepath: string, content: string, trailingContent?: FormattableContent[], mimeType?: string, format?: string) {
     if (trailingContent) {
         content += getTrailingContent(trailingContent, mimeType, format);
     }
@@ -465,13 +452,14 @@ function getBaseDirectory(location: string, asset: string) {
 function getRelativeUrl(file: RequestAsset, url: string, assets: RequestAsset[], relocate?: string) {
     const origin = file.uri;
     if (origin) {
-        let asset = assets.find(item => item.uri === url || item.base64 && getUri(item)[0] === url);
+        let asset = assets.find(item => item.uri === url || item.base64 && getFullUri(item) === url);
         if (asset) {
             if (relocate) {
-                const [relocateMatch, originMatch] = [REGEX_URL.exec(relocate), REGEX_URL.exec(origin)];
+                const relocateMatch = REGEX_URL.exec(relocate);
+                const originMatch = REGEX_URL.exec(origin);
                 if (relocateMatch && originMatch && relocateMatch[1] === originMatch[1]) {
                     const [relocateDir] = getBaseDirectory(relocateMatch[2], originMatch[2]);
-                    return '../'.repeat(relocateDir.length - 1) + getUri(asset, url)[0];
+                    return '../'.repeat(relocateDir.length - 1) + getFullUri(asset);
                 }
             }
         }
@@ -493,7 +481,7 @@ function getRelativeUrl(file: RequestAsset, url: string, assets: RequestAsset[],
                         if (relocateMatch) {
                             if (asset.moveTo === '__serverroot__') {
                                 const [relocateDir] = getBaseDirectory(relocateMatch[2], originMatch[2]);
-                                return '../'.repeat(relocateDir.length - 1) + getUri(asset, url)[0];
+                                return '../'.repeat(relocateDir.length - 1) + getFullUri(asset);
                             }
                             else {
                                 const [relocateDir, uriDir] = getBaseDirectory(relocateMatch[2], uriMatch[2]);
@@ -519,7 +507,7 @@ function getRelativeUrl(file: RequestAsset, url: string, assets: RequestAsset[],
                                         break;
                                     }
                                 }
-                                return '../'.repeat(originDir.filter(value => !!value).length) + getUri(asset, url)[0];
+                                return '../'.repeat(originDir.filter(value => !!value).length) + getFullUri(asset);
                             }
                         }
                         else if (rootDir + file.pathname === asset.rootDir + asset.pathname) {
@@ -536,7 +524,7 @@ function getRelativeUrl(file: RequestAsset, url: string, assets: RequestAsset[],
     return '';
 }
 
-function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void) {
+function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: FileStatus, finalize: (filepath?: string) => void) {
     const { format, mimeType } = file;
     if (!mimeType) {
         return;
@@ -586,16 +574,13 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                     }
                 }
                 else {
-                    const levels = filename.split('/').length - 1;
-                    if (levels > 0) {
-                        const baseUrl = parseRelativeUrl(exportAs, file.uri!);
-                        const urlPattern = /url\(\s*(["'])?(.+?)\1?\s*\)/g;
-                        let urlMatch: Null<RegExpExecArray>;
-                        while ((urlMatch = urlPattern.exec(match[6])) !== null) {
-                            const url = getRelativeUrl(file, urlMatch[2].trim(), assets, baseUrl);
-                            if (url) {
-                                content = content.replace(urlMatch[0], `url(${url})`);
-                            }
+                    const baseUrl = parseRelativeUrl(exportAs, file.uri!);
+                    const urlPattern = /url\(\s*(["'])?(.+?)\1?\s*\)/g;
+                    let urlMatch: Null<RegExpExecArray>;
+                    while ((urlMatch = urlPattern.exec(match[6])) !== null) {
+                        const url = getRelativeUrl(file, urlMatch[2].trim(), assets, baseUrl);
+                        if (url) {
+                            content = content.replace(urlMatch[0], `url(${url})`);
                         }
                     }
                     if (transform) {
@@ -632,8 +617,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                         const length = source.length;
                         let replacement = '';
                         if (bundleMain) {
-                            const location = getUri(item, item.uri)[0];
-                            replacement = getFileOuterHTML(item.mimeType === 'text/javascript', location);
+                            replacement = getFileOuterHTML(item.mimeType === 'text/javascript', getFullUri(item));
                             source = source.replace(outerHTML, replacement);
                         }
                         else {
@@ -737,18 +721,18 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
         }
         default:
             if (mimeType.includes('image/')) {
-                const afterConvert = (fileoutput: string, command: string) => {
+                const afterConvert = (transformed: string, command: string) => {
                     switch (command.charAt(0)) {
                         case '@':
-                            replaceFileOutput(status, file, path.basename(fileoutput));
+                            replaceFileOutput(status, file, transformed);
                             status.filesToRemove.add(filepath);
                             break;
                         case '%':
                             if (status.filesToCompare.has(file)) {
-                                status.filesToCompare.get(file)!.push(fileoutput);
+                                status.filesToCompare.get(file)!.push(transformed);
                             }
                             else {
-                                status.filesToCompare.set(file, [fileoutput]);
+                                status.filesToCompare.set(file, [transformed]);
                             }
                             break;
                     }
@@ -836,7 +820,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
     }
 }
 
-function writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void) {
+function writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: FileStatus, finalize: (filepath?: string) => void) {
     if (hasCompressPng(file.compress)) {
         try {
             tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
@@ -874,7 +858,7 @@ function compressImage(filepath: string, finalize: (filepath?: string) => void) 
     }
 }
 
-function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, status: AsyncStatus, finalize: (filepath?: string) => void) {
+function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, status: FileStatus, finalize: (filepath?: string) => void) {
     const { jpeg, gzip, brotli } = getCompressOutput(file);
     const resumeThread = () => {
         transformBuffer(assets, file, filepath, status, finalize);
@@ -976,26 +960,29 @@ function removeCompressionFormat(file: RequestAsset, format: string) {
     }
 }
 
-function replaceFileOutput(status: AsyncStatus, file: RequestAsset, replaceName: string) {
-    const { filepath, filename } = file;
+function replaceFileOutput(status: FileStatus, file: RequestAsset, replacement: string) {
+    const filepath = file.filepath;
     if (filepath) {
         status.delete(filepath);
-        status.add(filepath.replace(filename, replaceName));
+        status.add(replacement);
         if (!file.originalName) {
             file.originalName = file.filename;
         }
-        file.filename = replaceName;
+        file.filename = path.basename(replacement);
     }
 }
 
 function replacePathName(source: string, segment: string, value: string, base64?: boolean) {
+    if (!base64) {
+        segment = segment.replace(/[\\/]/g, '[\\\\/]');
+    }
     let result = source;
-    let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${base64 ? '.+?' : ''}${segment}\\s*\\2`, 'g');
+    let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${(base64 ? '.+?' : '') + segment}\\s*\\2`, 'g');
     let match: RegExpExecArray | null;
     while ((match = pattern.exec(source)) !== null) {
         result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
     }
-    pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${base64 ? '.+?' : ''}${segment}\\s*\\1?\\s*\\)`, 'g');
+    pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${(base64 ? '.+?' : '') + segment}\\s*\\1?\\s*\\)`, 'g');
     while ((match = pattern.exec(source)) !== null) {
         result = result.replace(match[0], `url(${value})`);
     }
@@ -1061,8 +1048,6 @@ function checkPermissions(res: express.Response<any>, dirname: string) {
 
 const minifySpace = (value: string) => value.replace(/[\s\n]+/g, '');
 const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
-const appendSeparator = (leading: string, trailing: string, separator: string) => leading + (!leading || leading.endsWith(separator) || trailing.startsWith(separator) ? '' : separator) + trailing;
-const getSeparator = (uri: string) => uri.includes('\\') ? '\\' : '/';
 const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value) && !value.startsWith('file:');
 const isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
 const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
@@ -1071,81 +1056,23 @@ const getCompressFormat = (compress: Undef<CompressionFormat[]>, format: string)
 const getFileSize = (filepath: string) => fs.statSync(filepath).size;
 const getFileOuterHTML = (script: boolean, filepath: string) => script ? `<script src="${filepath}" type="text/javascript"></script>` : `<link href="${filepath}" type="stylesheet" />`;
 const getSaveLocation = (value: string) => value.charAt(0) === '/' ? ['__serverroot__/', value.substring(1)] : ['', value];
+const getFullUri = (file: RequestAsset, filename?: string) => path.join(file.moveTo || '', file.pathname, filename || file.filename).replace(/\\/g, '/');
 
-function finalizeAssetsAsync(dirname: string, assets: RequestAsset[], status: AsyncStatus, release: boolean) {
-    const { files, filesToRemove } = status;
-    for (const [file, output] of status.filesToCompare) {
-        const originalPath = file.filepath!;
-        let minFile = originalPath;
-        let minSize = getFileSize(minFile);
-        for (const filepath of output) {
-            const size = getFileSize(filepath);
-            if (size < minSize) {
-                filesToRemove.add(minFile);
-                minFile = filepath;
-                minSize = size;
+function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
+    return (...args: any[]) => {
+        return new Promise((resolve, reject) => {
+            try {
+                const result: T = fn.call(null, ...args);
+                resolve(result);
             }
-            else {
-                filesToRemove.add(filepath);
+            catch (err) {
+                reject(err);
             }
-        }
-        if (minFile !== originalPath) {
-            replaceFileOutput(status, file, path.basename(minFile));
-        }
-    }
-    for (const value of filesToRemove) {
-        try {
-            fs.unlinkSync(value);
-            files.delete(value.substring(dirname.length + 1));
-        }
-        catch (err) {
-            writeError(value, err);
-        }
-    }
-    for (const [filepath, content] of status.contentToAppend.entries()) {
-        if (content.length) {
-            fs.appendFileSync(filepath, '\n' + content.join('\n'));
-        }
-    }
-    const replaced = assets.filter(file => file.originalName);
-    if (replaced.length || release) {
-        for (const item of assets) {
-            switch (item.mimeType) {
-                case '@text/html':
-                case '@application/xhtml+xml':
-                case '@text/css':
-                    status.filesExported.add(item.filepath!);
-                    break;
-            }
-        }
-        for (const filepath of status.filesExported) {
-            fs.readFile(filepath, (err, data) => {
-                if (!err) {
-                    let html = data.toString('utf-8');
-                    let valid = release;
-                    for (const item of replaced) {
-                        const { pathname, originalName } = item;
-                        try {
-                            html = html.replace(new RegExp(pathname + getSeparator(pathname) + originalName, 'g'), pathname + '/' + item.filename);
-                            valid = true;
-                        }
-                        catch (error) {
-                            writeError(originalName!, error);
-                        }
-                    }
-                    if (release) {
-                        html = html.replace(/(\.\.\/)*__serverroot__/g, '');
-                    }
-                    if (valid) {
-                        fs.writeFileSync(filepath, html);
-                    }
-                }
-            });
-        }
-    }
+        });
+    };
 }
 
-function processAssetsAsync(dirname: string, assets: RequestAsset[], status: AsyncStatus, finalize: (filepath?: string) => void, empty?: boolean) {
+function processAssetsAsync(dirname: string, assets: RequestAsset[], status: FileStatus, finalize: (filepath?: string) => void, empty?: boolean) {
     const emptyDir = new Set<string>();
     const notFound: ObjectMap<boolean> = {};
     const processing: ObjectMap<RequestAsset[]> = {};
@@ -1354,6 +1281,84 @@ function processAssetsAsync(dirname: string, assets: RequestAsset[], status: Asy
     }
 }
 
+function appendFilesAsync(status: FileStatus) {
+    const length = status.dirname.length;
+    for (const value of status.filesToRemove) {
+        try {
+            fs.unlink(value);
+            status.files.delete(value.substring(length + 1));
+        }
+        catch (err) {
+            writeError(value, err);
+        }
+    }
+    for (const [filepath, content] of status.contentToAppend.entries()) {
+        if (content.length) {
+            fs.appendFile(filepath, '\n' + content.join('\n'));
+        }
+    }
+}
+
+function finalizeAssetsAsync(assets: RequestAsset[], status: FileStatus, release: boolean) {
+    const filesToRemove = status.filesToRemove;
+    for (const [file, output] of status.filesToCompare) {
+        const originalPath = file.filepath!;
+        let minFile = originalPath;
+        let minSize = getFileSize(minFile);
+        for (const filepath of output) {
+            const size = getFileSize(filepath);
+            if (size < minSize) {
+                filesToRemove.add(minFile);
+                minFile = filepath;
+                minSize = size;
+            }
+            else {
+                filesToRemove.add(filepath);
+            }
+        }
+        if (minFile !== originalPath) {
+            replaceFileOutput(status, file, minFile);
+        }
+    }
+    return promisify(appendFilesAsync)(status).then(() => {
+        const replaced = assets.filter(file => file.originalName);
+        if (replaced.length || release) {
+            for (const item of assets) {
+                switch (item.mimeType) {
+                    case '@text/html':
+                    case '@application/xhtml+xml':
+                    case '@text/css':
+                        status.filesExported.add(item.filepath!);
+                        break;
+                }
+            }
+            for (const filepath of status.filesExported) {
+                fs.readFile(filepath, (err, data) => {
+                    if (!err) {
+                        let html = data.toString('utf-8');
+                        let valid = release;
+                        for (const item of replaced) {
+                            try {
+                                html = html.replace(new RegExp(getFullUri(item, item.originalName).replace(/[\\/]/g, '[\\\\/]'), 'g'), getFullUri(item));
+                                valid = true;
+                            }
+                            catch (error) {
+                                writeError(filepath, error);
+                            }
+                        }
+                        if (release) {
+                            html = html.replace(/(\.\.\/)*__serverroot__/g, '');
+                        }
+                        if (valid) {
+                            fs.writeFileSync(filepath, html);
+                        }
+                    }
+                });
+            }
+        }
+    });
+}
+
 app.post('/api/assets/copy', (req, res) => {
     let dirname = req.query.to as string;
     if (dirname) {
@@ -1361,7 +1366,7 @@ app.post('/api/assets/copy', (req, res) => {
         if (!checkPermissions(res, dirname)) {
             return;
         }
-        const status = new AsyncStatus(dirname);
+        const status = new FileStatus(dirname);
         let cleared = false;
         const finalize = (filepath?: string) => {
             if (status.delayed === Infinity) {
@@ -1371,10 +1376,11 @@ app.post('/api/assets/copy', (req, res) => {
                 status.add(filepath);
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
-                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status, req.query.release === '1'))();
-                --THREAD_COUNT;
-                res.json(<ResultOfFileAction> { success: status.files.size > 0, files: Array.from(status.files) });
-                status.delayed = Infinity;
+                finalizeAssetsAsync(<RequestAsset[]> req.body, status, req.query.release === '1').then(() => {
+                    --THREAD_COUNT;
+                    res.json(<ResultOfFileAction> { success: status.files.size > 0, files: Array.from(status.files) });
+                    status.delayed = Infinity;
+                });
             }
         };
         try {
@@ -1418,7 +1424,7 @@ app.post('/api/assets/archive', (req, res) => {
         res.json({ application: `DIRECTORY: ${dirname}`, system });
         return;
     }
-    const status = new AsyncStatus(dirname);
+    const status = new FileStatus(dirname);
     let cleared = false;
     let zipname = '';
     let format: archiver.Format;
@@ -1486,9 +1492,10 @@ app.post('/api/assets/archive', (req, res) => {
                 status.add(filepath);
             }
             if (filepath === undefined || --status.delayed === 0 && cleared) {
-                (async () => await util.promisify(finalizeAssetsAsync)(dirname, <RequestAsset[]> req.body, status, req.query.release === '1'))();
-                archive.directory(dirname, false);
-                archive.finalize();
+                finalizeAssetsAsync(<RequestAsset[]> req.body, status, req.query.release === '1').then(() => {
+                    archive.directory(dirname, false);
+                    archive.finalize();
+                });
             }
         };
         try {

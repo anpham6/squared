@@ -173,7 +173,7 @@ squared.settings = {
         'chrome.convert.tiff',
         'chrome.compress.png', // png | jpeg - TinyPNG API Key <https://tinypng.com/developers>
         'chrome.compress.jpeg',
-        'chrome.compress.brotli',
+        'chrome.compress.brotli', // node-express + node 11.7
         'chrome.compress.gzip'
     ],
     preloadImages: false,
@@ -655,14 +655,14 @@ JS and CSS files can be bundled together with the "saveAs" or "exportAs" action.
 <script data-chrome-file="saveAs:js/bundle2.js" src="/dist/chrome.framework.js"></script>
 ```
 
-The entire page can similarly be included using the "saveAs" attribute in options. Extension plugins will be applied to any relevant assets.
+The entire page can similarly be included using the "saveAs" attribute in options. Extension plugins will be applied to any qualified assets.
 
 ```javascript
 const options = {
     saveAs: { // All attributes are optional
         html: { filename: 'index.html', format: 'beautify' }
-        script: { filename: 'js/bundle.js', format: 'minify' },
-        link: { filename: 'css/bundle.css' },
+        script: { pathname: 'js/', filename: 'bundle.js', format: 'minify' },
+        link: { pathname: 'css/', filename: 'bundle.css' },
         base64: { pathname: 'images/', format: 'png' }
     }
 };

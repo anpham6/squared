@@ -8,7 +8,7 @@
   "gzip_level": "9",
   "brotli_quality": "11",
   "jpeg_quality": "100",
-  "tinypng_api_key": "GMjX2yh2dnWMkWmdpFtl4tktgv8TMR5s",
+  "tinypng_api_key": "",
   "env": "development",
   "port": {
     "production": "80",
@@ -35,8 +35,13 @@
     },
     "css": {
       "clean_css": {
-        "beautify": { "level": 0, "format": "beautify" },
-        "minify": {}
+        "beautify": {
+          "level": 0,
+          "format": "beautify"
+        },
+        "minify": {
+          "level": 1
+        }
       },
       "js_beautify": {}
     },
