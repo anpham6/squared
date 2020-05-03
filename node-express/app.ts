@@ -1,4 +1,4 @@
-import { CompressionFormat, Environment, External, FormattableContent, RequestAsset, ResultOfFileAction, Routing, Settings } from './@types/node';
+import { CompressionFormat, Environment, External, RequestAsset, ResultOfFileAction, Routing, Settings } from './@types/node';
 
 import path = require('path');
 import zlib = require('zlib');
@@ -13,16 +13,17 @@ import jimp = require('jimp');
 import html_minifier = require('html-minifier');
 import clean_css = require('clean-css');
 import js_beautify = require('js-beautify');
+import prettier = require('prettier');
 import terser = require('terser');
 import tinify = require('tinify');
-
-let THREAD_COUNT = 0;
 
 interface CompressOutput {
     jpeg: number;
     gzip?: number;
     brotli?: number;
 }
+
+let THREAD_COUNT = 0;
 
 const app = express();
 
@@ -176,10 +177,6 @@ catch (err) {
 app.set('port', PORT);
 app.use(body_parser.urlencoded({ extended: true }));
 
-const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
-const SEPARATOR = path.sep;
-const REGEX_URL = /^([A-Za-z]+:\/\/[A-Za-z\d.-]+(?::\d+)?)(\/.*)/;
-
 class FileStatus {
     public archiving = false;
     public delayed = 0;
@@ -189,7 +186,7 @@ class FileStatus {
     public filesToCompare = new Map<RequestAsset, string[]>();
     public contentToAppend = new Map<string, string[]>();
 
-    constructor(public dirname: string) {}
+    constructor(public dirname: string, public external: Undef<External>) {}
 
     public add(value: string) {
         this.files.add(value.substring(this.dirname.length + 1));
@@ -198,50 +195,60 @@ class FileStatus {
     public delete(value: string) {
         this.files.delete(value.substring(this.dirname.length + 1));
     }
-}
 
-function getFileOutput(file: RequestAsset, dirname: string) {
-    const pathname = path.join(dirname, file.moveTo || '', file.pathname);
-    const filepath = path.join(pathname, file.filename);
-    file.filepath = filepath;
-    return { pathname, filepath };
-}
+    public appendContent(file: RequestAsset, content: string) {
+        const filepath = file.filepath;
+        if (filepath) {
+            if (file.trailingContent) {
+                content += this.getTrailingContent(file);
+            }
+            const value = this.contentToAppend.get(filepath) || [];
+            value.push(content);
+            this.contentToAppend.set(filepath, value);
+        }
+    }
 
-function getCompressOutput(file: RequestAsset): CompressOutput {
-    const compress = file.compress;
-    const gz = getCompressFormat(compress, 'gz');
-    const br = getCompressFormat(compress, 'br');
-    const jpeg = isJPEG(file) && getCompressFormat(compress, 'jpeg');
-    return {
-        gzip: gz ? gz.level : -1,
-        brotli: br ? br.level : -1,
-        jpeg: jpeg ? jpeg.level || JPEG_QUALITY : -1
-    };
-}
+    public replaceFileOutput(file: RequestAsset, replaceWith: string) {
+        const filepath = file.filepath;
+        if (filepath) {
+            this.delete(filepath);
+            this.add(replaceWith);
+            if (!file.originalName) {
+                file.originalName = file.filename;
+            }
+            file.filename = path.basename(replaceWith);
+        }
+    }
 
-function createGzipWriteStream(source: string, filename: string, level?: number) {
-    const o = fs.createWriteStream(filename);
-    fs.createReadStream(source)
-        .pipe(zlib.createGzip({ level: level || GZIP_LEVEL }))
-        .pipe(o);
-    return o;
-}
-
-function createBrotliWriteStream(source: string, filename: string, quality?: number, mimeType = '') {
-    const o = fs.createWriteStream(filename);
-    fs.createReadStream(source)
-        .pipe(
-            zlib.createBrotliCompress({
-                params: {
-                    [zlib.constants.BROTLI_PARAM_MODE]: mimeType.includes('text/') ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
-                    [zlib.constants.BROTLI_PARAM_QUALITY]: quality || BROTLI_QUALITY,
-                    [zlib.constants.BROTLI_PARAM_SIZE_HINT]: getFileSize(source)
+    public getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
+        if (!mimeType) {
+            mimeType = file.mimeType;
+        }
+        const trailingContent = file.trailingContent;
+        let result = '';
+        if (trailingContent) {
+            for (const item of trailingContent) {
+                const formatter = item.format || format || file.format;
+                if (mimeType && formatter) {
+                    result += '\n' + formatContent(item.value, mimeType, formatter);
                 }
-            })
-        )
-        .pipe(o);
-    return o;
+                else {
+                    result += '\n' + item.value;
+                }
+            }
+        }
+        return result;
+    }
 }
+
+const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.version.substring(1).split('.').map(value => parseInt(value));
+const SEPARATOR = path.sep;
+const PRETTIER_PLUGINS = [require('prettier/parser-html'), require('prettier/parser-postcss'), require('prettier/parser-babel'), require('prettier/parser-typescript')];
+
+const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value) && !value.startsWith('file:');
+const isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
+const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
+const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
 
 function checkVersion(major: number, minor: number, patch = 0) {
     if (NODE_VERSION_MAJOR < major) {
@@ -257,6 +264,209 @@ function checkVersion(major: number, minor: number, patch = 0) {
         return true;
     }
     return true;
+}
+
+function checkPermissions(res: express.Response<any>, dirname: string) {
+    if (isDirectoryUNC(dirname)) {
+        if (!UNC_WRITE) {
+            res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
+            return false;
+        }
+    }
+    else if (!DISK_WRITE) {
+        res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
+        return false;
+    }
+    try {
+        if (!fs.existsSync(dirname)) {
+            fs.mkdirpSync(dirname);
+        }
+        else if (!fs.lstatSync(dirname).isDirectory()) {
+            throw new Error('Root is not a directory.');
+        }
+    }
+    catch (system) {
+        res.json({ application: `DIRECTORY: ${dirname}`, system });
+        return false;
+    }
+    return true;
+}
+
+const REGEX_URL = /^([A-Za-z]+:\/\/[A-Za-z\d.-]+(?::\d+)?)(\/.*)/;
+
+function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
+    return (...args: any[]) => {
+        return new Promise((resolve, reject) => {
+            try {
+                const result: T = fn.call(null, ...args);
+                resolve(result);
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
+    };
+}
+
+function replaceExtension(value: string, ext: string) {
+    const index = value.lastIndexOf('.');
+    return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
+}
+
+function findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}] {
+    for (const name in data) {
+        const plugin = data[name];
+        for (const custom in plugin) {
+            if (custom === format) {
+                let options = plugin[custom];
+                if (!options || typeof options !== 'object') {
+                    options = {};
+                }
+                return [name, options];
+            }
+        }
+    }
+    return ['', {}];
+}
+
+function formatContent(value: string, mimeType: string, format: string) {
+    if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
+        return minifyHtml(format, value) || value;
+    }
+    else if (mimeType.endsWith('text/css')) {
+        return minifyCss(format, value) || value;
+    }
+    else if (mimeType.endsWith('text/javascript')) {
+        return minifyJs(format, value) || value;
+    }
+    return value;
+}
+
+function minifySpace(value: string) {
+    return value.replace(/[\s\n]+/g, '');
+}
+
+function minifyHtml(format: string, value: string) {
+    const html = EXTERNAL?.html;
+    if (html) {
+        let [module, options] = findExternalPlugin(html, format);
+        if (!module) {
+            switch (format) {
+                case 'beautify':
+                    module = 'prettier';
+                    options = <prettier.Options> {
+                        parser: 'html',
+                        tabWidth: 4
+                    };
+                    break;
+                case 'minify':
+                    module = 'html_minifier';
+                    options = <html_minifier.Options> {
+                        collapseWhitespace: true,
+                        collapseBooleanAttributes: true,
+                        removeEmptyAttributes: true,
+                        removeRedundantAttributes: true,
+                        removeScriptTypeAttributes: true,
+                        removeStyleLinkTypeAttributes: true,
+                        removeComments: true
+                    };
+                    break;
+            }
+        }
+        try {
+            switch (module) {
+                case 'prettier':
+                    (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
+                    return prettier.format(value, options);
+                case 'html_minifier':
+                    return html_minifier.minify(value, options);
+                case 'js_beautify':
+                    return js_beautify.html_beautify(value, options);
+            }
+        }
+        catch (err) {
+            writeError(`External: ${module}`, err);
+        }
+    }
+    return '';
+}
+
+function minifyCss(format: string, value: string) {
+    const css = EXTERNAL?.css;
+    if (css) {
+        let [module, options] = findExternalPlugin(css, format);
+        if (!module) {
+            switch (format) {
+                case 'beautify':
+                    module = 'prettier';
+                    options = <prettier.Options> {
+                        parser: 'css',
+                        tabWidth: 4
+                    };
+                    break;
+                case 'minify':
+                    module = 'clean_css';
+                    options = <clean_css.OptionsOutput> {
+                        level: 1
+                    };
+                    break;
+            }
+        }
+        try {
+            switch (module) {
+                case 'prettier':
+                    (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
+                    return prettier.format(value, options);
+                case 'clean_css':
+                    return new clean_css(options).minify(value).styles;
+                case 'js_beautify':
+                    return js_beautify.css_beautify(value, options);
+            }
+        }
+        catch (err) {
+            writeError(`External: ${module}`, err);
+        }
+    }
+    return '';
+}
+
+function minifyJs(format: string, value: string) {
+    const js = EXTERNAL?.js;
+    if (js) {
+        let [module, options] = findExternalPlugin(js, format);
+        if (!module) {
+            switch (format) {
+                case 'beautify':
+                    module = 'prettier';
+                    options = <prettier.Options> {
+                        parser: 'babel',
+                        tabWidth: 4
+                    };
+                    break;
+                case 'minify':
+                    module = 'terser';
+                    options = <terser.MinifyOptions> {
+                        keep_classnames: true
+                    };
+                    break;
+            }
+        }
+        try {
+            switch (module) {
+                case 'prettier':
+                    (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
+                    return prettier.format(value, options);
+                case 'terser':
+                    return terser.minify(value, options).code;
+                case 'js_beautify':
+                    return js_beautify.js_beautify(value, options);
+            }
+        }
+        catch (err) {
+            writeError(`External: ${module}`, err);
+        }
+    }
+    return '';
 }
 
 function convertAssetUrls(assets: RequestAsset[], html: string, file: RequestAsset) {
@@ -289,149 +499,56 @@ function convertBase64Urls(assets: RequestAsset[], html: string) {
     return html;
 }
 
-function minifyHtml(format: string, value: string) {
-    const html = EXTERNAL?.html;
-    if (html) {
-        let [module, options] = findExternalPlugin(html, format);
-        if (!module) {
-            switch (format) {
-                case 'beautify':
-                    module = 'js_beautify';
-                    options = <HTMLBeautifyOptions> {
-                        wrap_line_length: 0
-                    };
-                    break;
-                case 'minify':
-                    module = 'html_minifier';
-                    options = <html_minifier.Options> {
-                        collapseWhitespace: true,
-                        collapseBooleanAttributes: true,
-                        removeEmptyAttributes: true,
-                        removeRedundantAttributes: true,
-                        removeScriptTypeAttributes: true,
-                        removeStyleLinkTypeAttributes: true,
-                        removeComments: true
-                    };
-                    break;
-            }
+function replacePathName(source: string, segment: string, value: string, base64?: boolean) {
+    if (!base64) {
+        segment = segment.replace(/[\\/]/g, '[\\\\/]');
+    }
+    let result = source;
+    let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${(base64 ? '.+?' : '') + segment}\\s*\\2`, 'g');
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(source)) !== null) {
+        result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
+    }
+    pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${(base64 ? '.+?' : '') + segment}\\s*\\1?\\s*\\)`, 'g');
+    while ((match = pattern.exec(source)) !== null) {
+        result = result.replace(match[0], `url(${value})`);
+    }
+    return result;
+}
+
+function getFileOuterHTML(script: boolean, filepath: string) {
+    return script ? `<script src="${filepath}" type="text/javascript"></script>` : `<link href="${filepath}" type="stylesheet" />`;
+}
+
+function parseRelativeUrl(value: string, href: string) {
+    const match = REGEX_URL.exec(href);
+    if (match) {
+        const origin = match[1];
+        const pathname = match[2].split('/');
+        pathname.pop();
+        if (value.charAt(0) === '/') {
+            return origin + value;
         }
-        try {
-            switch (module) {
-                case 'html_minifier':
-                    return html_minifier.minify(value, options);
-                case 'js_beautify':
-                    return js_beautify.html_beautify(value, options);
-            }
+        else if (value.startsWith('../')) {
+            const trailing: string[] = [];
+            value.split('/').forEach(dir => {
+                if (dir === '..') {
+                    if (trailing.length === 0) {
+                        pathname.pop();
+                    }
+                    else {
+                        trailing.pop();
+                    }
+                }
+                else {
+                    trailing.push(dir);
+                }
+            });
+            value = trailing.join('/');
         }
-        catch (err) {
-            writeError(`External: ${module}`, err);
-        }
+        return origin + pathname.join('/') + '/' + value;
     }
     return '';
-}
-
-function minifyCss(format: string, value: string) {
-    const css = EXTERNAL?.css;
-    if (css) {
-        let [module, options] = findExternalPlugin(css, format);
-        if (!module) {
-            switch (format) {
-                case 'beautify':
-                    module = 'clean_css';
-                    options = <clean_css.OptionsOutput> {
-                        level: 0,
-                        format: 'beautify'
-                    };
-                    break;
-                case 'minify':
-                    module = 'clean_css';
-                    options = <clean_css.OptionsOutput> {
-                        level: 1
-                    };
-                    break;
-            }
-        }
-        try {
-            switch (module) {
-                case 'clean_css':
-                    return new clean_css(options).minify(value).styles;
-                case 'js_beautify':
-                    return js_beautify.css_beautify(value, options);
-            }
-        }
-        catch (err) {
-            writeError(`External: ${module}`, err);
-        }
-    }
-    return '';
-}
-
-function minifyJs(format: string, value: string) {
-    const js = EXTERNAL?.js;
-    if (js) {
-        let [module, options] = findExternalPlugin(js, format);
-        if (!module) {
-            switch (format) {
-                case 'beautify':
-                    module = 'js_beautify';
-                    options = <JsBeautifyOptions> {
-                        break_chained_methods: true,
-                        keep_array_indentation: true
-                    };
-                    break;
-                case 'minify':
-                    module = 'terser';
-                    options = <terser.MinifyOptions> {
-                        keep_classnames: true
-                    };
-                    break;
-            }
-        }
-        try {
-            switch (module) {
-                case 'terser':
-                    return terser.minify(value, options).code;
-                case 'js_beautify':
-                    return js_beautify.js_beautify(value, options);
-            }
-        }
-        catch (err) {
-            writeError(`External: ${module}`, err);
-        }
-    }
-    return '';
-}
-
-function findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}] {
-    for (const name in data) {
-        const plugin = data[name];
-        for (const custom in plugin) {
-            if (custom === format) {
-                return [name, plugin[custom]];
-            }
-        }
-    }
-    return ['', {}];
-}
-
-function queueContentToAppend(status: FileStatus, filepath: string, content: string, trailingContent?: FormattableContent[], mimeType?: string, format?: string) {
-    if (trailingContent) {
-        content += getTrailingContent(trailingContent, mimeType, format);
-    }
-    const value = status.contentToAppend.get(filepath) || [];
-    value.push(content);
-    status.contentToAppend.set(filepath, value);
-}
-
-function writeTrailingContent(file: RequestAsset, filepath: string) {
-    if (file.trailingContent) {
-        try {
-            fs.appendFileSync(filepath, getTrailingContent(file.trailingContent, file.mimeType, file.format));
-        }
-        catch (err) {
-            writeError(filepath, err);
-        }
-    }
 }
 
 function getBaseDirectory(location: string, asset: string) {
@@ -449,7 +566,7 @@ function getBaseDirectory(location: string, asset: string) {
     return [locationDir, assetDir];
 }
 
-function getRelativeUrl(file: RequestAsset, url: string, assets: RequestAsset[], relocate?: string) {
+function getRelativeUrl(assets: RequestAsset[], file: RequestAsset, url: string, relocate?: string) {
     const origin = file.uri;
     if (origin) {
         let asset = assets.find(item => item.uri === url || item.base64 && getFullUri(item) === url);
@@ -524,11 +641,107 @@ function getRelativeUrl(file: RequestAsset, url: string, assets: RequestAsset[],
     return '';
 }
 
+
+function getRootUri(value: string) {
+    return value.charAt(0) === '/' ? ['__serverroot__/', value.substring(1)] : ['', value];
+}
+
+function getCompressFormat(compress: Undef<CompressionFormat[]>, format: string) {
+    return compress?.find(item => item.format === format);
+}
+
+function getCompressOutput(file: RequestAsset, level: number): CompressOutput {
+    const compress = file.compress;
+    const gz = getCompressFormat(compress, 'gz');
+    const br = getCompressFormat(compress, 'br');
+    const jpeg = isJPEG(file) && getCompressFormat(compress, 'jpeg');
+    return {
+        gzip: gz ? gz.level : -1,
+        brotli: br ? br.level : -1,
+        jpeg: jpeg ? jpeg.level || level : -1
+    };
+}
+
+function removeCompressionFormat(file: RequestAsset, format: string) {
+    const compress = file.compress;
+    if (compress) {
+        const index = compress.findIndex(value => value.format === format);
+        if (index !== -1) {
+            compress.splice(index, 1);
+        }
+    }
+}
+
+function hasCompressPng(compress: Undef<CompressionFormat[]>) {
+    return TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
+}
+
+function isJPEG(file: RequestAsset) {
+    if (file.mimeType?.endsWith('image/jpeg')) {
+        return true;
+    }
+    switch (path.extname(file.filename).toLowerCase()) {
+        case '.jpg':
+        case '.jpeg':
+            return true;
+    }
+    return false;
+}
+
+function getFullUri(file: RequestAsset, filename?: string) {
+    return path.join(file.moveTo || '', file.pathname, filename || file.filename).replace(/\\/g, '/');
+}
+
+function getFileOutput(file: RequestAsset, dirname: string) {
+    const pathname = path.join(dirname, file.moveTo || '', file.pathname);
+    const filepath = path.join(pathname, file.filename);
+    file.filepath = filepath;
+    return { pathname, filepath };
+}
+
+function getFileSize(filepath: string) {
+    return fs.statSync(filepath).size;
+}
+
+function createGzipWriteStream(source: string, filename: string, level?: number) {
+    const o = fs.createWriteStream(filename);
+    fs.createReadStream(source)
+        .pipe(zlib.createGzip({ level: level || GZIP_LEVEL }))
+        .pipe(o);
+    return o;
+}
+
+function createBrotliWriteStream(source: string, filename: string, quality?: number, mimeType = '') {
+    const o = fs.createWriteStream(filename);
+    fs.createReadStream(source)
+        .pipe(
+            zlib.createBrotliCompress({
+                params: {
+                    [zlib.constants.BROTLI_PARAM_MODE]: mimeType.includes('text/') ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
+                    [zlib.constants.BROTLI_PARAM_QUALITY]: quality || BROTLI_QUALITY,
+                    [zlib.constants.BROTLI_PARAM_SIZE_HINT]: getFileSize(source)
+                }
+            })
+        )
+        .pipe(o);
+    return o;
+}
+
 function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: FileStatus, finalize: (filepath?: string) => void) {
     const { format, mimeType } = file;
     if (!mimeType) {
         return;
     }
+    const writeTrailingContent = () => {
+        if (file.trailingContent) {
+            try {
+                fs.appendFileSync(filepath, status.getTrailingContent(file));
+            }
+            catch (err) {
+                writeError(filepath, err);
+            }
+        }
+    };
     switch (mimeType) {
         case '@text/html':
         case '@application/xhtml+xml': {
@@ -541,7 +754,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 const value = match[0];
                 const script = match[1].toLowerCase() === 'script';
                 const saveAs = match[4].split('::')[0].trim();
-                const [root, filename] = getSaveLocation(saveAs);
+                const [root, filename] = getRootUri(saveAs);
                 const location = root + filename;
                 if (saved.has(location)) {
                     source = source.replace(value, '');
@@ -565,7 +778,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 }
                 const script = match[2].toLowerCase() === 'script';
                 const [exportAs, transform] = match[5].split('::').map(value => value.trim());
-                const [root, filename] = getSaveLocation(exportAs);
+                const [root, filename] = getRootUri(exportAs);
                 const location = root + filename;
                 const pathname = path.join(status.dirname, location);
                 if (script) {
@@ -578,7 +791,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                     const urlPattern = /url\(\s*(["'])?(.+?)\1?\s*\)/g;
                     let urlMatch: Null<RegExpExecArray>;
                     while ((urlMatch = urlPattern.exec(match[6])) !== null) {
-                        const url = getRelativeUrl(file, urlMatch[2].trim(), assets, baseUrl);
+                        const url = getRelativeUrl(assets, file, urlMatch[2].trim(), baseUrl);
                         if (url) {
                             content = content.replace(urlMatch[0], `url(${url})`);
                         }
@@ -590,7 +803,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 const asset = assets.find(item => (item.moveTo ? item.moveTo + '/' : '') + item.pathname + '/' + item.filename === location);
                 let appending = true;
                 if (asset) {
-                    queueContentToAppend(status, asset.filepath!, content);
+                    status.appendContent(asset, content);
                 }
                 else {
                     appending = fs.existsSync(pathname);
@@ -659,26 +872,23 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             break;
         }
         case '@text/css': {
-            const href = file.uri;
-            if (href) {
-                const html = fs.readFileSync(filepath).toString('utf8');
-                let source = html;
-                const pattern = /[uU][rR][lL]\(\s*(["'])?\s*(.+)\s*\1?\s*\)/g;
-                let match: Null<RegExpMatchArray>;
-                while ((match = pattern.exec(html)) !== null) {
-                    let url = match[2];
-                    if (!isFileURI(url)) {
-                        url = getRelativeUrl(file, url, assets);
-                        if (url) {
-                            source = source.replace(match[0], `url(${url})`);
-                        }
+            const html = fs.readFileSync(filepath).toString('utf8');
+            let source = html;
+            const pattern = /[uU][rR][lL]\(\s*(["'])?\s*(.+)\s*\1?\s*\)/g;
+            let match: Null<RegExpMatchArray>;
+            while ((match = pattern.exec(html)) !== null) {
+                let url = match[2];
+                if (!isFileURI(url)) {
+                    url = getRelativeUrl(assets, file, url);
+                    if (url) {
+                        source = source.replace(match[0], `url(${url})`);
                     }
                 }
-                if (format) {
-                    source = minifyCss(format, source) || source;
-                }
-                fs.writeFileSync(filepath, convertAssetUrls(assets, source, file));
             }
+            if (format) {
+                source = minifyCss(format, source) || source;
+            }
+            fs.writeFileSync(filepath, convertAssetUrls(assets, source, file));
             break;
         }
         case 'text/html':
@@ -696,13 +906,13 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 let output = minifyJs(format, fs.readFileSync(filepath).toString('utf8'));
                 if (output) {
                     if (file.trailingContent) {
-                        output += getTrailingContent(file.trailingContent, mimeType, format);
+                        output += status.getTrailingContent(file, mimeType, format);
                     }
                     fs.writeFileSync(filepath, output);
                     break;
                 }
             }
-            writeTrailingContent(file, filepath);
+            writeTrailingContent();
             break;
         }
         case 'text/css': {
@@ -710,13 +920,13 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 let output = minifyCss(format, fs.readFileSync(filepath).toString('utf8'));
                 if (output) {
                     if (file.trailingContent) {
-                        output += getTrailingContent(file.trailingContent, mimeType, format);
+                        output += status.getTrailingContent(file, mimeType, format);
                     }
                     fs.writeFileSync(filepath, output);
                     break;
                 }
             }
-            writeTrailingContent(file, filepath);
+            writeTrailingContent();
             break;
         }
         default:
@@ -724,7 +934,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 const afterConvert = (transformed: string, command: string) => {
                     switch (command.charAt(0)) {
                         case '@':
-                            replaceFileOutput(status, file, transformed);
+                            status.replaceFileOutput(file, transformed);
                             status.filesToRemove.add(filepath);
                             break;
                         case '%':
@@ -859,7 +1069,7 @@ function compressImage(filepath: string, finalize: (filepath?: string) => void) 
 }
 
 function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, status: FileStatus, finalize: (filepath?: string) => void) {
-    const { jpeg, gzip, brotli } = getCompressOutput(file);
+    const { jpeg, gzip, brotli } = getCompressOutput(file, JPEG_QUALITY);
     const resumeThread = () => {
         transformBuffer(assets, file, filepath, status, finalize);
         if (gzip !== -1) {
@@ -906,178 +1116,13 @@ function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: stri
     }
 }
 
-function formatContent(value: string, mimeType: string, format: string) {
-    if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
-        return minifyHtml(format, value) || value;
-    }
-    else if (mimeType.endsWith('text/css')) {
-        return minifyCss(format, value) || value;
-    }
-    else if (mimeType.endsWith('text/javascript')) {
-        return minifyJs(format, value) || value;
-    }
-    return value;
-}
-
-function getTrailingContent(trailingContent: FormattableContent[], mimeType?: string, format?: string) {
-    let result = '';
-    for (const item of trailingContent) {
-        const formatter = item.format || format;
-        if (mimeType && formatter) {
-            result += '\n' + formatContent(item.value, mimeType, formatter);
-        }
-        else {
-            result += '\n' + item.value;
-        }
-    }
-    return result;
-}
-
-function replaceExtension(value: string, ext: string) {
-    const index = value.lastIndexOf('.');
-    return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
-}
-
-function isJPEG(file: RequestAsset) {
-    if (file.mimeType?.endsWith('image/jpeg')) {
-        return true;
-    }
-    switch (path.extname(file.filename).toLowerCase()) {
-        case '.jpg':
-        case '.jpeg':
-            return true;
-    }
-    return false;
-}
-
-function removeCompressionFormat(file: RequestAsset, format: string) {
-    const compress = file.compress;
-    if (compress) {
-        const index = compress.findIndex(value => value.format === format);
-        if (index !== -1) {
-            compress.splice(index, 1);
-        }
-    }
-}
-
-function replaceFileOutput(status: FileStatus, file: RequestAsset, replacement: string) {
-    const filepath = file.filepath;
-    if (filepath) {
-        status.delete(filepath);
-        status.add(replacement);
-        if (!file.originalName) {
-            file.originalName = file.filename;
-        }
-        file.filename = path.basename(replacement);
-    }
-}
-
-function replacePathName(source: string, segment: string, value: string, base64?: boolean) {
-    if (!base64) {
-        segment = segment.replace(/[\\/]/g, '[\\\\/]');
-    }
-    let result = source;
-    let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${(base64 ? '.+?' : '') + segment}\\s*\\2`, 'g');
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(source)) !== null) {
-        result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
-    }
-    pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${(base64 ? '.+?' : '') + segment}\\s*\\1?\\s*\\)`, 'g');
-    while ((match = pattern.exec(source)) !== null) {
-        result = result.replace(match[0], `url(${value})`);
-    }
-    return result;
-}
-
-function parseRelativeUrl(value: string, href: string) {
-    const match = REGEX_URL.exec(href);
-    if (match) {
-        const origin = match[1];
-        const pathname = match[2].split('/');
-        pathname.pop();
-        if (value.charAt(0) === '/') {
-            return origin + value;
-        }
-        else if (value.startsWith('../')) {
-            const trailing: string[] = [];
-            value.split('/').forEach(dir => {
-                if (dir === '..') {
-                    if (trailing.length === 0) {
-                        pathname.pop();
-                    }
-                    else {
-                        trailing.pop();
-                    }
-                }
-                else {
-                    trailing.push(dir);
-                }
-            });
-            value = trailing.join('/');
-        }
-        return origin + pathname.join('/') + '/' + value;
-    }
-    return '';
-}
-
-function checkPermissions(res: express.Response<any>, dirname: string) {
-    if (isDirectoryUNC(dirname)) {
-        if (!UNC_WRITE) {
-            res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
-            return false;
-        }
-    }
-    else if (!DISK_WRITE) {
-        res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
-        return false;
-    }
-    try {
-        if (!fs.existsSync(dirname)) {
-            fs.mkdirpSync(dirname);
-        }
-        else if (!fs.lstatSync(dirname).isDirectory()) {
-            throw new Error('Root is not a directory.');
-        }
-    }
-    catch (system) {
-        res.json({ application: `DIRECTORY: ${dirname}`, system });
-        return false;
-    }
-    return true;
-}
-
-const minifySpace = (value: string) => value.replace(/[\s\n]+/g, '');
-const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
-const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value) && !value.startsWith('file:');
-const isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
-const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
-const hasCompressPng = (compress: Undef<CompressionFormat[]>) => TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
-const getCompressFormat = (compress: Undef<CompressionFormat[]>, format: string) => compress && compress.find(item => item.format === format);
-const getFileSize = (filepath: string) => fs.statSync(filepath).size;
-const getFileOuterHTML = (script: boolean, filepath: string) => script ? `<script src="${filepath}" type="text/javascript"></script>` : `<link href="${filepath}" type="stylesheet" />`;
-const getSaveLocation = (value: string) => value.charAt(0) === '/' ? ['__serverroot__/', value.substring(1)] : ['', value];
-const getFullUri = (file: RequestAsset, filename?: string) => path.join(file.moveTo || '', file.pathname, filename || file.filename).replace(/\\/g, '/');
-
-function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
-    return (...args: any[]) => {
-        return new Promise((resolve, reject) => {
-            try {
-                const result: T = fn.call(null, ...args);
-                resolve(result);
-            }
-            catch (err) {
-                reject(err);
-            }
-        });
-    };
-}
-
-function processAssetsAsync(dirname: string, assets: RequestAsset[], status: FileStatus, finalize: (filepath?: string) => void, empty?: boolean) {
+function processAssetsAsync(assets: RequestAsset[], status: FileStatus, finalize: (filepath?: string) => void, empty?: boolean) {
     const emptyDir = new Set<string>();
     const notFound: ObjectMap<boolean> = {};
     const processing: ObjectMap<RequestAsset[]> = {};
     const appending: ObjectMap<RequestAsset[]> = {};
     const completed: string[] = [];
+    const dirname = status.dirname;
     const errorRequest = (uri: string, filepath: string, message: Error | string, stream?: fs.WriteStream) => {
         if (!notFound[uri]) {
             finalize('');
@@ -1116,7 +1161,7 @@ function processAssetsAsync(dirname: string, assets: RequestAsset[], status: Fil
                         }
                         else {
                             const { format, mimeType } = queue;
-                            queueContentToAppend(status, filepath, format && mimeType && formatContent(response.body, mimeType, format) || response.body, queue.trailingContent, mimeType, format);
+                            status.appendContent(queue, format && mimeType && formatContent(response.body, mimeType, format) || response.body);
                         }
                     }
                     processQueue(queue, filepath, original || file);
@@ -1178,12 +1223,12 @@ function processAssetsAsync(dirname: string, assets: RequestAsset[], status: Fil
             }
         };
         if (file.content) {
-            const { format, mimeType, trailingContent } = file;
+            const { format, mimeType } = file;
             if (format && mimeType) {
                 file.content = formatContent(file.content, mimeType, format);
             }
-            if (trailingContent) {
-                file.content += getTrailingContent(trailingContent, mimeType, format);
+            if (file.trailingContent) {
+                file.content += status.getTrailingContent(file, mimeType, format);
             }
             if (file.append && file.bundleMain) {
                 appending[filepath] = [];
@@ -1281,24 +1326,6 @@ function processAssetsAsync(dirname: string, assets: RequestAsset[], status: Fil
     }
 }
 
-function appendFilesAsync(status: FileStatus) {
-    const length = status.dirname.length;
-    for (const value of status.filesToRemove) {
-        try {
-            fs.unlink(value);
-            status.files.delete(value.substring(length + 1));
-        }
-        catch (err) {
-            writeError(value, err);
-        }
-    }
-    for (const [filepath, content] of status.contentToAppend.entries()) {
-        if (content.length) {
-            fs.appendFile(filepath, '\n' + content.join('\n'));
-        }
-    }
-}
-
 function finalizeAssetsAsync(assets: RequestAsset[], status: FileStatus, release: boolean) {
     const filesToRemove = status.filesToRemove;
     for (const [file, output] of status.filesToCompare) {
@@ -1317,10 +1344,25 @@ function finalizeAssetsAsync(assets: RequestAsset[], status: FileStatus, release
             }
         }
         if (minFile !== originalPath) {
-            replaceFileOutput(status, file, minFile);
+            status.replaceFileOutput(file, minFile);
         }
     }
-    return promisify(appendFilesAsync)(status).then(() => {
+    const length = status.dirname.length;
+    for (const value of status.filesToRemove) {
+        try {
+            fs.unlinkSync(value);
+            status.files.delete(value.substring(length + 1));
+        }
+        catch (err) {
+            writeError(value, err);
+        }
+    }
+    for (const [filepath, content] of status.contentToAppend.entries()) {
+        if (content.length) {
+            fs.appendFileSync(filepath, '\n' + content.join('\n'));
+        }
+    }
+    return promisify(() => {
         const replaced = assets.filter(file => file.originalName);
         if (replaced.length || release) {
             for (const item of assets) {
@@ -1356,7 +1398,7 @@ function finalizeAssetsAsync(assets: RequestAsset[], status: FileStatus, release
                 });
             }
         }
-    });
+    })();
 }
 
 app.post('/api/assets/copy', (req, res) => {
@@ -1366,7 +1408,7 @@ app.post('/api/assets/copy', (req, res) => {
         if (!checkPermissions(res, dirname)) {
             return;
         }
-        const status = new FileStatus(dirname);
+        const status = new FileStatus(dirname, EXTERNAL);
         let cleared = false;
         const finalize = (filepath?: string) => {
             if (status.delayed === Infinity) {
@@ -1385,7 +1427,7 @@ app.post('/api/assets/copy', (req, res) => {
         };
         try {
             ++THREAD_COUNT;
-            processAssetsAsync(dirname, <RequestAsset[]> req.body, status, finalize, req.query.empty === '1');
+            processAssetsAsync(<RequestAsset[]> req.body, status, finalize, req.query.empty === '1');
             if (status.delayed === 0) {
                 finalize();
             }
@@ -1424,7 +1466,7 @@ app.post('/api/assets/archive', (req, res) => {
         res.json({ application: `DIRECTORY: ${dirname}`, system });
         return;
     }
-    const status = new FileStatus(dirname);
+    const status = new FileStatus(dirname, EXTERNAL);
     let cleared = false;
     let zipname = '';
     let format: archiver.Format;
@@ -1503,7 +1545,7 @@ app.post('/api/assets/archive', (req, res) => {
                 archive.directory(unzip_to, false);
             }
             ++THREAD_COUNT;
-            processAssetsAsync(dirname, <RequestAsset[]> req.body, status, finalize);
+            processAssetsAsync(<RequestAsset[]> req.body, status, finalize);
             if (status.delayed === 0) {
                 finalize();
             }

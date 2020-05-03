@@ -24,10 +24,10 @@
     "dev-base": "tsc -p ./tsconfig.base.json && rollup -c rollup.config.dev-base.js",
     "dev-android": "tsc -p ./tsconfig.dev.json && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js",
     "dev-chrome": "tsc -p ./tsconfig.dev.json && rollup -c rollup.config.dev.js && cd ./chrome-framework && rollup -c rollup.config.dev.js",
-    "dev-express": "cd ./node-express && eslint **/*.ts && tsc -outDir ../",
+    "dev-express": "cd ./node-express && eslint **/*.ts && tsc && rollup -c rollup.config.dev.js",
     "dev-md5": "cd ./node-md5 && eslint **/*.ts && tsc -outDir ../",
     "dev": "tsc -p ./tsconfig.dev.json && rollup -c rollup.config.dev.js && cd ./android-framework && rollup -c rollup.config.dev.js && cd ../chrome-framework && rollup -c rollup.config.dev.js",
-    "prod": "npm run clean && eslint **/*.ts && tsc -p ./tsconfig.prod.json && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./node-express && eslint **/*.ts && tsc && cd ../build && terser app.js -c -m toplevel -o ../app.js && terser build.js -o ../build.js && cd ../android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js",
+    "prod": "npm run clean && eslint **/*.ts && tsc -p ./tsconfig.prod.json && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ./node-express && eslint **/*.ts && tsc && rollup -c rollup.config.js && cd ../android-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../chrome-framework && rollup -c rollup.config.dev.js && rollup -c rollup.config.js && cd ../android-widget && rollup -c rollup.config.js",
     "clean": "rimraf build/* && rimraf dist/* && rimraf temp/*"
   },
   "repository": {
@@ -79,6 +79,7 @@
     "html-minifier": "^4.0.0",
     "jimp": "^0.10.3",
     "js-beautify": "^1.11.0",
+    "prettier": "^2.0.5",
     "request": "^2.88.2",
     "rimraf": "^3.0.2",
     "terser": "^4.6.13",
@@ -100,6 +101,7 @@
     "@types/js-beautify": "^1.8.2",
     "@types/md5": "^2.2.0",
     "@types/node": "^13.13.4",
+    "@types/prettier": "^2.0.0",
     "@types/puppeteer": "^2.0.1",
     "@types/request": "^2.48.4",
     "@types/uuid": "^7.0.3",
@@ -115,6 +117,7 @@
     "puppeteer": "^3.0.2",
     "readdirp": "^3.4.0",
     "rollup": "^2.7.6",
+    "rollup-plugin-prettier": "^2.0.0",
     "rollup-plugin-terser": "^5.3.0",
     "typescript": "^3.8.3"
   }

@@ -637,8 +637,9 @@ JS and CSS files can be optimized further using these settings (node-express):
 You can also define your own optimizations in squared.settings.json:
 
 * https://github.com/terser/terser
-* https://github.com/beautify-web/js-beautify
+* https://github.com/prettier/prettier
 * https://github.com/jakubpawlowicz/clean-css
+* https://github.com/beautify-web/js-beautify
 
 JS and CSS files can be bundled together with the "saveAs" or "exportAs" action.
 

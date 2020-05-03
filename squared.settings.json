@@ -16,6 +16,12 @@
   },
   "external": {
     "html": {
+      "prettier": {
+        "beautify": {
+          "parser": "html",
+          "tabWidth": 4
+        }
+      },
       "html_minifier": {
         "minify": {
           "collapseWhitespace": true,
@@ -27,18 +33,16 @@
           "removeComments": true
         }
       },
-      "js_beautify": {
-        "beautify": {
-          "wrap_line_length": 0
-        }
-      }
+      "js_beautify": {}
     },
     "css": {
-      "clean_css": {
+      "prettier": {
         "beautify": {
-          "level": 0,
-          "format": "beautify"
-        },
+          "parser": "css",
+          "tabWidth": 4
+        }
+      },
+      "clean_css": {
         "minify": {
           "level": 1
         }
@@ -46,17 +50,18 @@
       "js_beautify": {}
     },
     "js": {
-      "js_beautify": {
+      "prettier": {
         "beautify": {
-          "break_chained_methods": true,
-          "keep_array_indentation": true
+          "parser": "babel",
+          "tabWidth": 4
         }
       },
       "terser": {
         "minify": {
           "keep_classnames": true
         }
-      }
+      },
+      "js_beautify": {}
     }
   },
   "routing": {
