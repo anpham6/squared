@@ -5,44 +5,72 @@ import { RequestAsset, FileActionAttribute, SaveAsOptions } from '../../@types/c
 import Resource from './resource';
 
 type View = chrome.base.View;
+type BundleIndex = ObjectMap<RequestAsset[]>;
 
 const $lib = squared.lib;
 
 const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, objectMap, parseMimeType, resolvePath, safeNestedArray, spliceString, trimEnd } = $lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, objectMap, parseMimeType, partitionLastIndexOf, resolvePath, safeNestedArray, trimEnd } = $lib.util;
 
 const ASSETS = Resource.ASSETS;
-const REGEX_SRCSET = /\s*(.+?\.[^\s,]+).*?,\s*/;
-const REGEX_SRCSET_SPECIFIER = /\s+[0-9.][wx]$/;
+const REGEX_SRCSET = /[\s\n]*(.+?\.[^\s,]+).*?,?/g;
 
-function getFilePath(location: string): [Undef<string>, string, string] {
+function getFilePath(value: string): string[] {
+    value = value.replace(/\\/g, '/');
     let moveTo: Undef<string>;
-    if (location.charAt(0) === '/') {
+    if (value.charAt(0) === '/') {
         moveTo = '__serverroot__';
-        location = location.substring(1);
     }
-    const parts = location.split('/');
-    const filename = parts.pop() as string;
-    return [moveTo, parts.join('/'), filename];
+    else if (value.startsWith('../')) {
+        moveTo = '__serverroot__';
+        const pathname = location.pathname.split('/');
+        pathname.pop();
+        for (let i = 0; i < value.length && pathname.length > 0; i += 3) {
+            if (value.substring(i, i + 3) === '../') {
+                pathname.pop();
+            }
+            else {
+                break;
+            }
+        }
+        value = pathname.join('/') + '/' + value.split('../').pop();
+    }
+    else if (value.startsWith('./')) {
+        value = value.substring(2);
+    }
+    const result = partitionLastIndexOf(value, '/');
+    result.unshift(moveTo as string);
+    return result;
 }
 
-function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, format?: string, outerHTML?: string, bundleIndex?: number): Undef<RequestAsset> {
-    const value = trimEnd(uri, '/');
+function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, format?: string): Undef<RequestAsset> {
+    let value = trimEnd(uri, '/');
+    const local = value.startsWith(trimEnd(location.origin, '/'));
+    if (!local && crossOrigin) {
+        return undefined;
+    }
+    let relocate: Undef<string>;
+    if (saveAs) {
+        const subMatch = /saveAs:((?:[^"]|\\")+)/.exec(saveAs.replace(/\\/g, '/'));
+        if (subMatch) {
+            [relocate, format] = subMatch[1].split('::').map(item => item.trim());
+        }
+        else {
+            relocate = saveAs;
+        }
+        if (local) {
+            value = resolvePath(relocate, location.href);
+        }
+    }
     const match = COMPONENT.PROTOCOL.exec(value);
     if (match) {
         const host = match[2], port = match[3], path = match[4];
         let pathname = '', filename = '';
         let rootDir = '';
         let moveTo: Undef<string>;
-        let local: Undef<boolean>;
-        let append: Undef<boolean>;
-        let bundleMain: Undef<boolean>;
         let prefix!: string;
-        const getDirectory = (start = 1) => path.substring(start, path.lastIndexOf('/'));
-        if (!value.startsWith(trimEnd(location.origin, '/'))) {
-            if (crossOrigin) {
-                return undefined;
-            }
+        const getDirectory = (start: number) => path.substring(start, path.lastIndexOf('/'));
+        if (!local) {
             pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
         }
         else {
@@ -58,34 +86,23 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
                 }
             }
             rootDir = path.substring(0, j + 1);
-            local = true;
         }
-        if (saveAs) {
-            let location: string;
-            const subMatch = /saveAs:([^"']+)/.exec(saveAs);
-            if (subMatch) {
-                [location, format] = subMatch[1].split('::').map(item => item.trim());
-            }
-            else {
-                location = saveAs;
-                bundleMain = bundleIndex === 0;
-            }
-            [moveTo, pathname, filename] = getFilePath(location);
-            append = true;
+        if (relocate && local) {
+            [moveTo, pathname, filename] = getFilePath(relocate);
         }
         else if (path && path !== '/') {
-            filename = fromLastIndexOf(path, '/');
+            filename = fromLastIndexOf(path, '/', '\\');
             if (local) {
                 if (path.startsWith(prefix)) {
                     pathname = getDirectory(prefix.length);
                 }
                 else {
                     moveTo = '__serverroot__';
-                    pathname = getDirectory();
+                    pathname = getDirectory(0);
                 }
             }
             else {
-                pathname += getDirectory();
+                pathname += getDirectory(1);
             }
         }
         else {
@@ -96,14 +113,11 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
             uri,
             rootDir,
             moveTo,
-            pathname,
+            pathname: pathname.replace(/\\/g, '/'),
             filename,
             extension,
             mimeType: extension && parseMimeType(extension),
-            format,
-            outerHTML,
-            append,
-            bundleMain
+            format
         };
     }
     return undefined;
@@ -141,6 +155,50 @@ function processExtensions(this: chrome.base.File<View>, data: RequestAsset, ext
             ext.processFile(data, true);
         }
     }
+}
+
+function setBundleIndex(bundleIndex: BundleIndex) {
+    for (const saveTo in bundleIndex) {
+        const items = bundleIndex[saveTo];
+        const length = items.length;
+        if (length > 1) {
+            let i = 0;
+            while (i < length) {
+                items[i].bundleIndex = i++;
+            }
+        }
+    }
+}
+
+function createBundleAsset(bundles: RequestAsset[], element: HTMLElement, saveTo: string, format?: string) {
+    const content = element.innerHTML.trim();
+    if (content) {
+        const [moveTo, pathname, filename] = getFilePath(saveTo);
+        const index = iterateReverseArray(bundles, item => {
+            if ((item.moveTo === moveTo || !item.moveTo && !moveTo) && item.pathname === pathname && item.filename === filename) {
+                safeNestedArray(<StandardMap> item, 'trailingContent').push({ value: content, href: location.href, format });
+                return true;
+            }
+            return;
+        });
+        if (index !== Infinity) {
+            return <RequestAsset> {
+                href: !moveTo ? location.href : undefined,
+                uri: resolvePath(saveTo, location.href),
+                pathname,
+                filename,
+                moveTo,
+                content,
+                format
+            };
+        }
+    }
+    return undefined;
+}
+
+function parseExportAs(value: string): Undef<string>[] {
+    const match = /exportAs:((?:[^"]|\\")+)/.exec(value.replace(/\\/g, '/'));
+    return match ? match[1].split('::').map(item => item.trim()) : [];
 }
 
 const getRootDir = () => location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
@@ -208,6 +266,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
             }
             if (this.validFile(data)) {
+                data.requestMain = true;
                 data.mimeType = parseMimeType('html');
                 processExtensions.call(this, data, getExtensions(document.querySelector('html')));
                 result.push(data);
@@ -224,7 +283,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             saveAs = options.saveAs?.script;
         }
         const result: RequestAsset[] = [];
-        let bundleIndex = 0;
+        const bundleIndex: BundleIndex = {};
         document.querySelectorAll('script').forEach(element => {
             const src = element.src.trim();
             let file = element.dataset.chromeFile;
@@ -241,46 +300,28 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
                 let data: Undef<RequestAsset>;
                 if (src !== '') {
-                    data = parseUri(resolvePath(src), preserveCrossOrigin, file, format, outerHTML, bundleIndex);
+                    data = parseUri(resolvePath(src), preserveCrossOrigin, file, format);
                 }
-                else if (file && outerHTML) {
-                    const content = element.innerHTML.trim();
-                    if (content) {
-                        const [moveTo, pathname, filename] = getFilePath(file);
-                        const index = iterateReverseArray(result, item => {
-                            if ((item.moveTo === moveTo || !item.moveTo && !moveTo) && item.pathname === pathname && item.filename === filename) {
-                                safeNestedArray(<StandardMap> item, 'trailingContent').push({ value: content, format });
-                                return true;
-                            }
-                            return;
-                        });
-                        if (index !== Infinity) {
-                            data = {
-                                pathname,
-                                filename,
-                                moveTo,
-                                content,
-                                format,
-                                outerHTML,
-                                append: true,
-                                bundleMain: true
-                            };
-                        }
-                        else {
-                            return;
-                        }
+                else if (isString(file)) {
+                    if (!outerHTML) {
+                        [file, format] = parseExportAs(file);
+                    }
+                    if (file) {
+                        data = createBundleAsset(result, element, file, format);
                     }
                 }
                 if (this.validFile(data)) {
-                    if (outerHTML) {
-                        ++bundleIndex;
-                    }
+                    safeNestedArray(bundleIndex, (data.moveTo || '') + data.pathname + data.filename).push(data);
                     data.mimeType = element.type.trim() || data.uri && parseMimeType(data.uri) || 'text/javascript';
+                    if (outerHTML) {
+                        data.outerHTML = outerHTML;
+                    }
                     processExtensions.call(this, data, getExtensions(element));
                     result.push(data);
                 }
             }
         });
+        setBundleIndex(bundleIndex);
         return result;
     }
 
@@ -293,26 +334,15 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             saveAs = options.saveAs?.link;
         }
         const result: RequestAsset[] = [];
-        let bundleIndex = 0;
-        document.querySelectorAll(rel ? `link[rel="${rel}"]` : 'link').forEach((element: HTMLLinkElement) => {
-            const href = element.href.trim();
+        const bundleIndex: BundleIndex = {};
+        document.querySelectorAll((rel ? `link[rel="${rel}"]` : 'link') + ', style').forEach((element: HTMLLinkElement | HTMLStyleElement) => {
             let file = element.dataset.chromeFile;
-            if (file !== 'exclude' && href !== '') {
-                let mimeType: string;
-                switch (element.rel.trim()) {
-                    case 'stylesheet':
-                        mimeType = 'text/css';
-                        break;
-                    case 'icon':
-                        mimeType = 'image/x-icon';
-                        break;
-                    default:
-                        mimeType = element.type.trim() || parseMimeType(href);
-                        break;
-                }
+            if (file !== 'exclude') {
+                let data: Undef<RequestAsset>;
                 let format: Undef<string>;
                 let outerHTML: Undef<string>;
-                if (!isString(file) && saveAs && mimeType === 'text/css') {
+                let mimeType: Undef<string>;
+                if (!isString(file) && saveAs && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
                     const { pathname, filename } = saveAs;
                     if (pathname && filename) {
                         file = appendSeparator(pathname, filename);
@@ -320,17 +350,54 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                         outerHTML = element.outerHTML;
                     }
                 }
-                const data = parseUri(resolvePath(href), preserveCrossOrigin, file, format, outerHTML, bundleIndex);
+                if (element instanceof HTMLLinkElement) {
+                    const href = element.href.trim();
+                    if (href !== '') {
+                        switch (element.rel.trim()) {
+                            case 'stylesheet':
+                                mimeType = 'text/css';
+                                break;
+                            case 'icon':
+                                mimeType = 'image/x-icon';
+                                break;
+                            default:
+                                mimeType = element.type.trim() || parseMimeType(href);
+                                break;
+                        }
+                        data = parseUri(resolvePath(href), preserveCrossOrigin, file, format);
+                    }
+                }
+                else if (isString(file)) {
+                    if (!outerHTML) {
+                        [file, format] = parseExportAs(file);
+                    }
+                    if (file) {
+                        data = createBundleAsset(result, element, file, format);
+                    }
+                }
                 if (this.validFile(data)) {
-                    data.mimeType = mimeType;
+                    safeNestedArray(bundleIndex, (data.moveTo || '') + data.pathname + data.filename).push(data);
+                    data.mimeType = mimeType || 'text/css';
                     if (outerHTML) {
-                        ++bundleIndex;
+                        data.outerHTML = outerHTML;
                     }
                     processExtensions.call(this, data, getExtensions(element));
                     result.push(data);
                 }
             }
         });
+        for (const [uri, rawData] of ASSETS.rawData.entries()) {
+            const mimeType = rawData.mimeType;
+            if (mimeType === 'text/css') {
+                const data = parseUri(resolvePath(uri), preserveCrossOrigin, undefined, saveAs?.format);
+                if (this.validFile(data)) {
+                    data.mimeType = mimeType;
+                    processExtensions.call(this, data, []);
+                    result.push(data);
+                }
+            }
+        }
+        setBundleIndex(bundleIndex);
         return result;
     }
 
@@ -342,14 +409,19 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             saveAs = options.saveAs?.base64;
         }
         const result: RequestAsset[] = [];
-        const processUri = (element: Null<HTMLElement>, uri: string) => {
+        const processUri = (element: Null<HTMLElement>, uri: string, mimeType?: string) => {
             if (uri !== '') {
                 const data = <RequestAsset> parseUri(uri, preserveCrossOrigin);
                 if (this.validFile(data) && !result.find(item => item.uri === uri)) {
+                    if (mimeType) {
+                        data.mimeType = mimeType;
+                    }
                     processExtensions.call(this, data, getExtensions(element));
                     result.push(data);
+                    return data;
                 }
             }
+            return undefined;
         };
         document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => source.srcset.split(XML.SEPARATOR).forEach(uri => processUri(source, resolvePath(uri.split(CHAR.SPACE)[0]))));
         document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(source, resolvePath(source.poster)));
@@ -360,19 +432,11 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
-            const images: string[] = [];
-            let srcset = element.srcset.trim();
+            REGEX_SRCSET.lastIndex = 0;
             let match: Null<RegExpExecArray>;
-            while ((match = REGEX_SRCSET.exec(srcset)) !== null) {
-                images.push(match[1]);
-                srcset = spliceString(srcset, match.index, match[0].length);
+            while ((match = REGEX_SRCSET.exec(element.srcset.trim())) !== null) {
+                processUri(element, resolvePath(match[1]));
             }
-            images.push(srcset.trim().replace(REGEX_SRCSET_SPECIFIER, ''));
-            images.forEach(src => {
-                if (src !== '') {
-                    processUri(element, resolvePath(src));
-                }
-            });
         });
         for (const uri of ASSETS.image.keys()) {
             processUri(null, uri);
@@ -385,14 +449,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 const { base64, content, filename } = rawData;
                 let mimeType = rawData.mimeType;
                 let data: Undef<RequestAsset>;
-                let rootDir: Undef<string>;
                 if (base64) {
-                    let pathname: string;
-                    if (saveAs && saveAs.pathname) {
-                        pathname = trimEnd(saveAs.pathname, '/');
-                        rootDir = getRootDir();
-                        if (mimeType?.startsWith('image/')) {
-                            const format = saveAs.format!;
+                    if (saveAs?.pathname) {
+                        const format = saveAs.format;
+                        if (format && mimeType?.startsWith('image/')) {
                             switch (format) {
                                 case 'png':
                                 case 'jpeg':
@@ -403,11 +463,15 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                                     break;
                             }
                         }
+                        const pathname = getFilePath(trimEnd(saveAs.pathname.replace(/\\/g, '/'), '/') + '/' + filename)[1];
+                        const uri = resolvePath(pathname + '/' + filename, location.href);
+                        data = processUri(null, uri, mimeType);
+                        if (data) {
+                            data.base64 = base64;
+                            continue;
+                        }
                     }
-                    else {
-                        pathname = '__generated__/base64';
-                    }
-                    data = { pathname, filename, rootDir, mimeType, base64 };
+                    data = { pathname: '__generated__/base64', filename, mimeType, base64 };
                 }
                 else if (content && mimeType) {
                     data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content };

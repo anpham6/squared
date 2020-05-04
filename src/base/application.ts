@@ -466,7 +466,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     protected applyStyleRule(item: CSSStyleRule) {
         const resourceHandler = this.resourceHandler;
         const sessionId = this.processing.sessionId;
-        const styleSheetHref = item.parentStyleSheet?.href || undefined;
+        const styleSheetHref = item.parentStyleSheet?.href || location.href;
         const cssText = item.cssText;
         switch (item.type) {
             case CSSRule.SUPPORTS_RULE:
@@ -651,9 +651,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                         case CSSRule.FONT_FACE_RULE:
                             this.applyStyleRule(<CSSStyleRule> rule);
                             break;
-                        case CSSRule.IMPORT_RULE:
+                        case CSSRule.IMPORT_RULE: {
+                            const uri = resolvePath((<CSSImportRule> rule).href, rule.parentStyleSheet?.href || location.href);
+                            if (uri !== '') {
+                                this.resourceHandler.addRawData(uri, 'text/css', 'utf8', '');
+                            }
                             this.applyStyleSheet((<CSSImportRule> rule).styleSheet);
                             break;
+                        }
                         case CSSRule.MEDIA_RULE:
                             if (checkMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
                                 this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);

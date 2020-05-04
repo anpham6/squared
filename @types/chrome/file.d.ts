@@ -4,9 +4,9 @@ export interface RequestAsset extends file.RequestAsset {
     extension?: string;
     rootDir?: string;
     moveTo?: string;
-    append?: boolean;
     format?: string;
-    bundleMain?: boolean;
+    bundleIndex?: number;
+    requestMain?: boolean;
     outerHTML?: string;
     trailingContent?: FormattableContent[];
 }
@@ -26,5 +26,6 @@ export interface SaveAsOptions {
 
 export interface FormattableContent {
     value: string;
+    href: string;
     format?: string;
 }

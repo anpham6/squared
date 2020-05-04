@@ -755,8 +755,9 @@ export function resolvePath(value: string, href?: string) {
     value = value.trim();
     if (!COMPONENT.PROTOCOL.test(value)) {
         const origin = location.origin;
-        const pathname = (href?.replace(origin, '') || location.pathname).split('/');
+        const pathname = (href?.replace(origin, '') || location.pathname).replace(/\\/g, '/').split('/');
         pathname.pop();
+        value = value.replace(/\\/g, '/');
         if (value.charAt(0) === '/') {
             return origin + value;
         }
@@ -802,6 +803,16 @@ export function trimEnd(value: string, char: string) {
 export function appendSeparator(preceding: string, value: string, separator = '/') {
     preceding = preceding.trim();
     value = value.trim();
+    switch (separator) {
+        case '\\':
+            preceding = preceding.replace(/\//g, '\\');
+            value = value.replace(/\//g, '\\');
+            break;
+        case '/':
+            preceding = preceding.replace(/\\/g, '/');
+            value = value.replace(/\\/g, '/');
+            break;
+    }
     return preceding + (preceding !== '' && value !== '' && !preceding.endsWith(separator) && !value.startsWith(separator) ? separator : '') + value;
 }
 
@@ -813,6 +824,16 @@ export function fromLastIndexOf(value: string, ...char: string[]) {
         }
     }
     return value;
+}
+
+export function partitionLastIndexOf(value: string, ...char: string[]): [string, string] {
+    for (const ch of char) {
+        const index = value.lastIndexOf(ch);
+        if (index !== -1) {
+            return [value.substring(0, index), value.substring(index + 1)];
+        }
+    }
+    return ['', value];
 }
 
 export function searchObject(obj: StringMap, value: string | StringMap) {

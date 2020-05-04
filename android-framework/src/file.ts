@@ -19,7 +19,7 @@ type View = android.base.View;
 
 const $lib = squared.lib;
 
-const { fromLastIndexOf, objectMap, parseMimeType, trimEnd } = $lib.util;
+const { fromLastIndexOf, objectMap, parseMimeType } = $lib.util;
 const { applyTemplate, replaceTab } = $lib.xml;
 
 type ItemValue = {
@@ -101,14 +101,8 @@ function getRawAssets(pathname: string, items: string[]) {
 }
 
 function getOutputDirectory(value: string) {
-    value = value.trim();
-    if (value.endsWith('\\')) {
-        return trimEnd(value, '\\') + '/';
-    }
-    else if (!value.endsWith('/')) {
-        return value + '/';
-    }
-    return value;
+    value = value.trim().replace(/\\/g, '/');
+    return value + (!value.endsWith('/') ? '/' : '');
 }
 
 const createFileAsset = (pathname: string, filename: string, content: string): FileAsset => ({ pathname, filename, content });

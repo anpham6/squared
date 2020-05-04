@@ -85,10 +85,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         let path = 'res/values', file = 'themes.xml';
         if (output) {
             if (isString(output.path)) {
-                path = trimString(output.path.trim(), '/');
+                path = trimString(output.path.trim().replace(/\\/g, '/'), '/');
             }
             if (isString(output.file)) {
-                file = trimString(output.file.trim(), '/');
+                file = trimString(output.file.trim().replace(/\\/g, '/'), '/');
             }
         }
         const filename = path + '/' + file;

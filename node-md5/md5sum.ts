@@ -223,7 +223,7 @@ else if (host && data && build && snapshot) {
                             files.sort((a, b) => a.path < b.path ? -1 : 1);
                             let output = '';
                             for (const file of files) {
-                                output += md5(fs.readFileSync(file.fullPath)) + '  ./' + file.path.replace(/[\\]/g, '/') + '\n';
+                                output += md5(fs.readFileSync(file.fullPath)) + '  ./' + file.path.replace(/\\/g, '/') + '\n';
                             }
                             fs.writeFileSync(path.resolve(pathname, item.name + '.md5'), output);
                             stderr.write(colors.bgBlue(colors.bold(item.files!.length !== files.length ? colors.black('!') : colors.white('>'))));

@@ -303,6 +303,7 @@ declare namespace util {
     function trimEnd(value: string, char: string): string;
     function appendSeparator(preceding: string, value: string, separator?: string): string;
     function fromLastIndexOf(value: string, ...char: string[]): string;
+    function partitionLastIndexOf(value: string, ...char: string[]): [string, string];
     function searchObject(obj: StringMap, value: string | StringMap): any[][];
     function hasValue<T>(value: any): value is T;
     function compareRange(operation: string, range: number, value: number): boolean;
