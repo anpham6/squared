@@ -5,6 +5,7 @@ android-framework/
 android-widget/
 build/
 chrome-framework/
+config/
 dist/bundles/
 html/*
 md5/

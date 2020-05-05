@@ -1,4 +1,9 @@
-export default {
+export const prettier_options = {
+    parser: 'babel',
+    tabWidth: 4
+};
+
+export const terser_options = {
     compress: {
         loops: false,
         booleans: false,

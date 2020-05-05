@@ -8,7 +8,7 @@ module.exports = {
         "plugin:@typescript-eslint/eslint-recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
-        "../.eslint-shared"
+        "../config/.eslint-shared"
     ],
     "ignorePatterns": [],
     "rules": {

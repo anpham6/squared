@@ -1,9 +1,8 @@
-import prettier from 'rollup-plugin-prettier';
-import options from '../rollup+terser.config';
-import options_prettier from '../rollup+prettier.config';
-
-import { terser } from 'rollup-plugin-terser'
+import { terser_options, prettier_options } from '../config/rollup-options';
 import { version } from './package.json';
+
+import prettier from 'rollup-plugin-prettier';
+import { terser } from 'rollup-plugin-terser'
 
 export default [
     {
@@ -15,7 +14,7 @@ export default [
             format: 'umd'
         },
         plugins: [
-            terser(options)
+            terser(terser_options)
         ]
     },
     {
@@ -28,7 +27,7 @@ export default [
             banner: `/* chrome-framework ${version}\n   https://github.com/anpham6/squared */\n`
         },
         plugins: [
-            prettier(options_prettier)
+            prettier(prettier_options)
         ]
     }
 ];

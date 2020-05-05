@@ -1,9 +1,8 @@
-import prettier from 'rollup-plugin-prettier';
-import options from './rollup+terser.config';
-import options_prettier from './rollup+prettier.config';
+import { terser_options, prettier_options } from './rollup-options';
+import { version } from '../package.json';
 
+import prettier from 'rollup-plugin-prettier';
 import { terser } from 'rollup-plugin-terser'
-import { version } from './package.json';
 
 export default [
     {
@@ -15,7 +14,7 @@ export default [
             format: 'umd'
         },
         plugins: [
-            terser(options)
+            terser(terser_options)
         ]
     },
     {
@@ -27,7 +26,7 @@ export default [
             format: 'umd'
         },
         plugins: [
-            terser(options)
+            terser(terser_options)
         ]
     },
     {
@@ -39,7 +38,7 @@ export default [
             format: 'umd'
         },
         plugins: [
-            terser(options)
+            terser(terser_options)
         ]
     },
     {
@@ -52,7 +51,7 @@ export default [
             banner: `/* squared ${version}\n   https://github.com/anpham6/squared */\n`
         },
         plugins: [
-            prettier(options_prettier)
+            prettier(prettier_options)
         ]
     },
     {
@@ -65,7 +64,7 @@ export default [
             banner: `/* squared.base ${version}\n   https://github.com/anpham6/squared */\n`
         },
         plugins: [
-            prettier(options_prettier)
+            prettier(prettier_options)
         ]
     },
     {
@@ -78,7 +77,7 @@ export default [
             banner: `/* squared.svg ${version}\n   https://github.com/anpham6/squared */\n`
         },
         plugins: [
-            prettier(options_prettier)
+            prettier(prettier_options)
         ]
     }
 ];

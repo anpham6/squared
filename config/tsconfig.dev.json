@@ -1,0 +1,14 @@
+{
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+      "inlineSourceMap": true,
+      "incremental": true
+    },
+    "include": [
+      "../@types/**/index.d.ts",
+      "../android-framework/**/*.ts",
+      "../android-widget/**/*.ts",
+      "../chrome-framework/**/*.ts",
+      "../src/**/*.ts"
+    ]
+  }
