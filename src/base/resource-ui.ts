@@ -169,18 +169,6 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     return result;
 }
 
-function getAngle(value: string, fallback = 0) {
-    value = value.trim();
-    if (value !== '') {
-        let degree = parseAngle(value);
-        if (degree < 0) {
-            degree += 360;
-        }
-        return degree;
-    }
-    return fallback;
-}
-
 function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boolean] {
     let inlined = false;
     value = value.replace(REGEX_NOBREAKSPACE, STRING_SPACE);
@@ -307,6 +295,18 @@ function getStoredName(asset: string, value: any): string {
         }
     }
     return '';
+}
+
+function getAngle(value: string, fallback = 0) {
+    value = value.trim();
+    if (value !== '') {
+        let degree = parseAngle(value);
+        if (degree < 0) {
+            degree += 360;
+        }
+        return degree;
+    }
+    return fallback;
 }
 
 const replaceAmpersand = (value: string) => value.replace(/&/g, '&amp;');

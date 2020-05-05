@@ -47,129 +47,6 @@ function checkTextAlign(value: string, ignoreStart: boolean) {
     return value;
 }
 
-function setAutoMargin(node: T, autoMargin: AutoMargin) {
-    if (autoMargin.horizontal && (!node.blockWidth || node.hasWidth || node.hasPX('maxWidth') || node.innerMostWrapped.has('width', { type: CSS_UNIT.PERCENT, not: '100%' }))) {
-        node.mergeGravity(
-            (node.blockWidth || !node.pageFlow) && !node.outerWrapper ? 'gravity' : 'layout_gravity',
-            autoMargin.leftRight ? 'center_horizontal' : (autoMargin.left ? 'right' : 'left')
-        );
-        return true;
-    }
-    return false;
-}
-
-function setMultiline(node: T, lineHeight: number, overwrite: boolean) {
-    const offset = getLineSpacingExtra(node, lineHeight);
-    if (node.api >= BUILD_ANDROID.PIE) {
-        node.android('lineHeight', formatPX(lineHeight), overwrite);
-    }
-    else if (offset > 0) {
-        node.android('lineSpacingExtra', formatPX(offset), overwrite);
-    }
-    else {
-        return;
-    }
-    const upper = Math.round(offset);
-    if (upper > 0) {
-        node.modifyBox(node.inline ? BOX_STANDARD.MARGIN_TOP : BOX_STANDARD.PADDING_TOP, upper);
-        if (!(node.block && !node.floating)) {
-            node.modifyBox(node.inline ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.PADDING_BOTTOM, Math.floor(offset));
-        }
-    }
-}
-
-function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top: boolean, bottom: boolean) {
-    const styleValue = node.cssInitial('lineHeight');
-    if (node.imageOrSvgElement || node.renderChildren.length || node.actualHeight === 0 || styleValue === 'initial') {
-        return;
-    }
-    if (node.multiline) {
-        setMultiline(node, lineHeight, false);
-    }
-    else {
-        const height = node.height;
-        if (lineHeight === height) {
-            node.mergeGravity('gravity', 'center_vertical', false);
-        }
-        else {
-            const setBoxPadding = (offset: number, padding = false) => {
-                let upper = Math.round(offset);
-                if (upper > 0) {
-                    const boxPadding = (inlineStyle || height > lineHeight) && (node.styleText || padding) && !node.inline && !(node.inputElement && !isLength(styleValue, true));
-                    if (top) {
-                        if (boxPadding) {
-                            if (upper > 0) {
-                                node.modifyBox(BOX_STANDARD.PADDING_TOP, upper);
-                            }
-                        }
-                        else if (inlineStyle || !node.baselineAltered) {
-                            upper -= node.paddingTop;
-                            if (upper > 0) {
-                                node.modifyBox(BOX_STANDARD.MARGIN_TOP, upper);
-                            }
-                        }
-                    }
-                    if (bottom) {
-                        offset = Math.floor(offset);
-                        if (boxPadding) {
-                            if (offset > 0) {
-                                node.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
-                            }
-                        }
-                        else {
-                            offset -= node.paddingBottom;
-                            if (offset > 0) {
-                                node.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
-                            }
-                        }
-                    }
-                }
-            };
-            if (height > 0) {
-                if (node.styleText) {
-                    setBoxPadding(getLineSpacingExtra(node, lineHeight));
-                }
-                else {
-                    const offset = (lineHeight / 2) - node.paddingTop;
-                    if (offset > 0) {
-                        node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
-                    }
-                }
-            }
-            else if (node.textElement) {
-                setBoxPadding(getLineSpacingExtra(node, lineHeight));
-            }
-            else if (node.inputElement) {
-                const element = createElement(document.body, 'div', { ...node.textStyle, visibility: 'hidden' });
-                element.innerText = 'AgjpyZ';
-                const rowHeight = actualTextRangeRect(<Element> element).height;
-                document.body.removeChild(element);
-                let rows = 1;
-                switch (node.tagName)  {
-                    case 'SELECT':
-                        rows = node.toElementInt('size', 1);
-                        break;
-                    case 'TEXTAREA':
-                        rows = node.toElementInt('rows', 1);
-                        break;
-                }
-                setBoxPadding((lineHeight - rowHeight * Math.max(rows, 1)) / 2, true);
-            }
-            else {
-                setBoxPadding((lineHeight - node.bounds.height) / 2);
-            }
-        }
-    }
-}
-
-function isFlexibleDimension(node: T, value: string) {
-    if (value === '0px') {
-        const renderParent = node.renderParent as T;
-        return !!renderParent && (renderParent.layoutConstraint || renderParent.layoutGrid);
-    }
-    return false;
-}
-
 function checkMergableGravity(value: string, direction: Set<string>) {
     const horizontal = value + '_horizontal';
     const vertical = value + '_vertical';
@@ -180,10 +57,134 @@ function checkMergableGravity(value: string, direction: Set<string>) {
     }
 }
 
-function getLineSpacingExtra(node: T, lineHeight: number) {
+function setAutoMargin(this: T, autoMargin: AutoMargin) {
+    if (autoMargin.horizontal && (!this.blockWidth || this.hasWidth || this.hasPX('maxWidth') || this.innerMostWrapped.has('width', { type: CSS_UNIT.PERCENT, not: '100%' }))) {
+        this.mergeGravity(
+            (this.blockWidth || !this.pageFlow) && !this.outerWrapper ? 'gravity' : 'layout_gravity',
+            autoMargin.leftRight ? 'center_horizontal' : (autoMargin.left ? 'right' : 'left')
+        );
+        return true;
+    }
+    return false;
+}
+
+function setMultiline(this: T, lineHeight: number, overwrite: boolean) {
+    const offset = getLineSpacingExtra.call(this, lineHeight);
+    if (this.api >= BUILD_ANDROID.PIE) {
+        this.android('lineHeight', formatPX(lineHeight), overwrite);
+    }
+    else if (offset > 0) {
+        this.android('lineSpacingExtra', formatPX(offset), overwrite);
+    }
+    else {
+        return;
+    }
+    const upper = Math.round(offset);
+    if (upper > 0) {
+        this.modifyBox(this.inline ? BOX_STANDARD.MARGIN_TOP : BOX_STANDARD.PADDING_TOP, upper);
+        if (!(this.block && !this.floating)) {
+            this.modifyBox(this.inline ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.PADDING_BOTTOM, Math.floor(offset));
+        }
+    }
+}
+
+function setMarginOffset(this: T, lineHeight: number, inlineStyle: boolean, top: boolean, bottom: boolean) {
+    const styleValue = this.cssInitial('lineHeight');
+    if (this.imageOrSvgElement || this.renderChildren.length || this.actualHeight === 0 || styleValue === 'initial') {
+        return;
+    }
+    if (this.multiline) {
+        setMultiline.call(this, lineHeight, false);
+    }
+    else {
+        const height = this.height;
+        if (lineHeight === height) {
+            this.mergeGravity('gravity', 'center_vertical', false);
+        }
+        else {
+            const setBoxPadding = (offset: number, padding = false) => {
+                let upper = Math.round(offset);
+                if (upper > 0) {
+                    const boxPadding = (inlineStyle || height > lineHeight) && (this.styleText || padding) && !this.inline && !(this.inputElement && !isLength(styleValue, true));
+                    if (top) {
+                        if (boxPadding) {
+                            if (upper > 0) {
+                                this.modifyBox(BOX_STANDARD.PADDING_TOP, upper);
+                            }
+                        }
+                        else if (inlineStyle || !this.baselineAltered) {
+                            upper -= this.paddingTop;
+                            if (upper > 0) {
+                                this.modifyBox(BOX_STANDARD.MARGIN_TOP, upper);
+                            }
+                        }
+                    }
+                    if (bottom) {
+                        offset = Math.floor(offset);
+                        if (boxPadding) {
+                            if (offset > 0) {
+                                this.modifyBox(BOX_STANDARD.PADDING_BOTTOM, offset);
+                            }
+                        }
+                        else {
+                            offset -= this.paddingBottom;
+                            if (offset > 0) {
+                                this.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, offset);
+                            }
+                        }
+                    }
+                }
+            };
+            if (height > 0) {
+                if (this.styleText) {
+                    setBoxPadding(getLineSpacingExtra.call(this, lineHeight));
+                }
+                else {
+                    const offset = (lineHeight / 2) - this.paddingTop;
+                    if (offset > 0) {
+                        this.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+                    }
+                }
+            }
+            else if (this.textElement) {
+                setBoxPadding(getLineSpacingExtra.call(this, lineHeight));
+            }
+            else if (this.inputElement) {
+                const element = createElement(document.body, 'div', { ...this.textStyle, visibility: 'hidden' });
+                element.innerText = 'AgjpyZ';
+                const rowHeight = actualTextRangeRect(<Element> element).height;
+                document.body.removeChild(element);
+                let rows = 1;
+                switch (this.tagName)  {
+                    case 'SELECT':
+                        rows = this.toElementInt('size', 1);
+                        break;
+                    case 'TEXTAREA':
+                        rows = this.toElementInt('rows', 1);
+                        break;
+                }
+                setBoxPadding((lineHeight - rowHeight * Math.max(rows, 1)) / 2, true);
+            }
+            else {
+                setBoxPadding((lineHeight - this.bounds.height) / 2);
+            }
+        }
+    }
+}
+
+function isFlexibleDimension(this: T, value: string) {
+    if (value === '0px') {
+        const renderParent = this.renderParent as T;
+        return !!renderParent && (renderParent.layoutConstraint || renderParent.layoutGrid);
+    }
+    return false;
+}
+
+
+function getLineSpacingExtra(this: T, lineHeight: number) {
     let height = NaN;
-    if (node.styleText) {
-        const values = node.cssTryAll({
+    if (this.styleText) {
+        const values = this.cssTryAll({
             'display': 'inline-block',
             'height': 'auto',
             'max-height': 'none',
@@ -192,79 +193,79 @@ function getLineSpacingExtra(node: T, lineHeight: number) {
             'white-space': 'nowrap'
         });
         if (values) {
-            height = actualTextRangeRect(<Element> node.element).height;
-            node.cssFinally(values);
+            height = actualTextRangeRect(<Element> this.element).height;
+            this.cssFinally(values);
         }
     }
-    else if (node.plainText) {
-        const bounds = node.bounds;
+    else if (this.plainText) {
+        const bounds = this.bounds;
         height = bounds.height / (bounds.numberOfLines || 1);
     }
-    return (lineHeight - (!isNaN(height) ? height : node.boundingClientRect.height)) / 2;
+    return (lineHeight - (!isNaN(height) ? height : this.boundingClientRect.height)) / 2;
 }
 
-function constraintMinMax(node: T, horizontal: boolean) {
-    if (node.support.maxDimension && (horizontal && node.floating || !horizontal)) {
+function constraintMinMax(this: T, horizontal: boolean) {
+    if (this.support.maxDimension && (horizontal && this.floating || !horizontal)) {
         return;
     }
-    if (!node.hasPX(horizontal ? 'width' : 'height', false)) {
-        const minWH = node.cssInitial(horizontal ? 'minWidth' : 'minHeight', true);
+    if (!this.hasPX(horizontal ? 'width' : 'height', false)) {
+        const minWH = this.cssInitial(horizontal ? 'minWidth' : 'minHeight', true);
         if (isLength(minWH, true) && parseFloat(minWH) > 0) {
             if (horizontal) {
-                if (ascendFlexibleWidth(node)) {
-                    node.setLayoutWidth('0px', false);
-                    if (node.flexibleWidth) {
-                        node.app('layout_constraintWidth_min', formatPX(node.parseWidth(minWH) + node.contentBoxWidth));
-                        node.css('minWidth', 'auto');
+                if (ascendFlexibleWidth.call(this)) {
+                    this.setLayoutWidth('0px', false);
+                    if (this.flexibleWidth) {
+                        this.app('layout_constraintWidth_min', formatPX(this.parseWidth(minWH) + this.contentBoxWidth));
+                        this.css('minWidth', 'auto');
                     }
                 }
             }
-            else if (ascendFlexibleHeight(node)) {
-                node.setLayoutHeight('0px', false);
-                if (node.flexibleHeight) {
-                    node.app('layout_constraintHeight_min', formatPX(node.parseHeight(minWH) + node.contentBoxHeight));
-                    node.css(horizontal ? 'minWidth' : 'minHeight', 'auto');
+            else if (ascendFlexibleHeight.call(this)) {
+                this.setLayoutHeight('0px', false);
+                if (this.flexibleHeight) {
+                    this.app('layout_constraintHeight_min', formatPX(this.parseHeight(minWH) + this.contentBoxHeight));
+                    this.css(horizontal ? 'minWidth' : 'minHeight', 'auto');
                 }
             }
         }
     }
-    const maxWH = node.cssInitial(horizontal ? 'maxWidth' : 'maxHeight', true);
+    const maxWH = this.cssInitial(horizontal ? 'maxWidth' : 'maxHeight', true);
     if (isLength(maxWH, true) && maxWH !== '100%') {
         if (horizontal) {
-            if (ascendFlexibleWidth(node)) {
-                const value = node.parseWidth(maxWH);
-                if (value > node.width || node.percentWidth > 0) {
-                    node.setLayoutWidth('0px');
-                    node.app('layout_constraintWidth_max', formatPX(value + (node.contentBox ? node.contentBoxWidth : 0)));
-                    node.css('maxWidth', 'auto');
+            if (ascendFlexibleWidth.call(this)) {
+                const value = this.parseWidth(maxWH);
+                if (value > this.width || this.percentWidth > 0) {
+                    this.setLayoutWidth('0px');
+                    this.app('layout_constraintWidth_max', formatPX(value + (this.contentBox ? this.contentBoxWidth : 0)));
+                    this.css('maxWidth', 'auto');
                 }
             }
         }
-        else if (ascendFlexibleHeight(node)) {
-            const value = node.parseHeight(maxWH);
-            if (value > node.height || node.percentHeight > 0) {
-                node.setLayoutHeight('0px');
-                node.app('layout_constraintHeight_max', formatPX(value + (node.contentBox ? node.contentBoxHeight : 0)));
-                node.css('maxHeight', 'auto');
+        else if (ascendFlexibleHeight.call(this)) {
+            const value = this.parseHeight(maxWH);
+            if (value > this.height || this.percentHeight > 0) {
+                this.setLayoutHeight('0px');
+                this.app('layout_constraintHeight_max', formatPX(value + (this.contentBox ? this.contentBoxHeight : 0)));
+                this.css('maxHeight', 'auto');
             }
         }
     }
 }
 
-function setConstraintPercent(node: T, value: number, horizontal: boolean, percent: number) {
-    if (value < 1 && !isNaN(percent) && node.pageFlow) {
-        const parent = node.actualParent || node.documentParent;
+function setConstraintPercent(this: T, value: number, horizontal: boolean, percent: number) {
+    if (value < 1 && !isNaN(percent) && this.pageFlow) {
+        const parent = this.actualParent || this.documentParent;
         let boxPercent: number;
         let marginPercent: number;
         if (horizontal) {
             const width = parent.box.width;
-            boxPercent = !parent.gridElement ? node.contentBoxWidth / width : 0;
-            marginPercent = (Math.max(node.marginLeft, 0) + node.marginRight) / width;
+            boxPercent = !parent.gridElement ? this.contentBoxWidth / width : 0;
+            marginPercent = (Math.max(this.marginLeft, 0) + this.marginRight) / width;
         }
         else {
             const height = parent.box.height;
-            boxPercent = !parent.gridElement ? node.contentBoxHeight / height : 0;
-            marginPercent = (Math.max(node.marginTop, 0) + node.marginBottom) / height;
+            boxPercent = !parent.gridElement ? this.contentBoxHeight / height : 0;
+            marginPercent = (Math.max(this.marginTop, 0) + this.marginBottom) / height;
         }
         if (percent === 1 && value + marginPercent >= percent) {
             value = percent - marginPercent;
@@ -288,71 +289,71 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
             value = Math.min(value + boxPercent, 1);
         }
     }
-    if (value === 1 && !node.hasPX(horizontal ? 'maxWidth' : 'maxHeight')) {
-        setLayoutDimension(node, 'match_parent', horizontal, false);
+    if (value === 1 && !this.hasPX(horizontal ? 'maxWidth' : 'maxHeight')) {
+        setLayoutDimension.call(this, 'match_parent', horizontal, false);
     }
     else {
-        node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', truncate(value, node.localSettings.floatPrecision));
-        setLayoutDimension(node, '0px', horizontal, false);
+        this.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', truncate(value, this.localSettings.floatPrecision));
+        setLayoutDimension.call(this, '0px', horizontal, false);
     }
     return percent;
 }
 
-function setLayoutDimension(node: T, value: string, horizontal: boolean, overwrite: boolean) {
+function setLayoutDimension(this: T, value: string, horizontal: boolean, overwrite: boolean) {
     if (horizontal) {
-        node.setLayoutWidth(value, overwrite);
+        this.setLayoutWidth(value, overwrite);
     }
     else {
-        node.setLayoutHeight(value, overwrite);
+        this.setLayoutHeight(value, overwrite);
     }
 }
 
-function constraintPercentValue(node: T, horizontal: boolean, percent: number) {
-    const value = horizontal ? node.percentWidth : node.percentHeight;
-    return value > 0 ? setConstraintPercent(node, value, horizontal, percent) : percent;
+function constraintPercentValue(this: T, horizontal: boolean, percent: number) {
+    const value = horizontal ? this.percentWidth : this.percentHeight;
+    return value > 0 ? setConstraintPercent.call(this, value, horizontal, percent) : percent;
 }
 
-function constraintPercentWidth(node: T, percent = 1) {
-    const value = node.percentWidth;
+function constraintPercentWidth(this: T, percent = 1) {
+    const value = this.percentWidth;
     if (value > 0) {
-        if ((node.renderParent as T).hasPX('width', false) && !((node.actualParent || node.documentParent) as T).layoutElement) {
+        if ((this.renderParent as T).hasPX('width', false) && !((this.actualParent || this.documentParent) as T).layoutElement) {
             if (value < 1) {
-                node.setLayoutWidth(formatPX(node.actualWidth));
+                this.setLayoutWidth(formatPX(this.actualWidth));
             }
             else {
-                node.setLayoutWidth('match_parent', false);
+                this.setLayoutWidth('match_parent', false);
             }
         }
-        else if (!node.inputElement) {
-            return constraintPercentValue(node, true, percent);
+        else if (!this.inputElement) {
+            return constraintPercentValue.call(this, true, percent);
         }
     }
     return percent;
 }
 
-function constraintPercentHeight(node: T, percent = 1) {
-    const value = node.percentHeight;
+function constraintPercentHeight(this: T, percent = 1) {
+    const value = this.percentHeight;
     if (value > 0) {
-        if ((node.renderParent as T).hasPX('height', false) && !((node.actualParent || node.documentParent) as T).layoutElement) {
+        if ((this.renderParent as T).hasPX('height', false) && !((this.actualParent || this.documentParent) as T).layoutElement) {
             if (value < 1) {
-                node.setLayoutHeight(formatPX(node.actualHeight));
+                this.setLayoutHeight(formatPX(this.actualHeight));
             }
             else {
-                node.setLayoutHeight('match_parent', false);
+                this.setLayoutHeight('match_parent', false);
             }
         }
-        else if (!node.inputElement) {
-            return constraintPercentValue(node, false, percent);
+        else if (!this.inputElement) {
+            return constraintPercentValue.call(this, false, percent);
         }
     }
     return percent;
 }
 
-function ascendFlexibleWidth(node: T) {
-    if (node.documentRoot && (node.hasWidth || node.blockStatic || node.blockWidth)) {
+function ascendFlexibleWidth(this: T) {
+    if (this.documentRoot && (this.hasWidth || this.blockStatic || this.blockWidth)) {
         return true;
     }
-    let parent = <Undef<T>> node.renderParent;
+    let parent = <Undef<T>> this.renderParent;
     let i = 0;
     while (parent) {
         if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) > 0 || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
@@ -371,35 +372,35 @@ function ascendFlexibleWidth(node: T) {
     return false;
 }
 
-function ascendFlexibleHeight(node: T) {
-    if (node.documentRoot && node.hasHeight) {
+function ascendFlexibleHeight(this: T) {
+    if (this.documentRoot && this.hasHeight) {
         return true;
     }
-    const parent = <Undef<T>> node.renderParent;
-    return !!parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || node.absoluteParent?.hasHeight === true;
+    const parent = <Undef<T>> this.renderParent;
+    return !!parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || this.absoluteParent?.hasHeight === true;
 }
 
-function replaceLayoutPosition(node: T, parentId: string) {
-    const left = node.anchorChain('left').shift();
-    const right = node.anchorChain('right').shift();
-    const top = node.anchorChain('top').shift();
-    const bottom = node.anchorChain('bottom').shift();
+function replaceLayoutPosition(this: T, parentId: string) {
+    const left = this.anchorChain('left').shift();
+    const right = this.anchorChain('right').shift();
+    const top = this.anchorChain('top').shift();
+    const bottom = this.anchorChain('bottom').shift();
     if (left && right) {
         left.anchor('rightLeft', right.documentId, true);
         right.anchor('leftRight', left.documentId, true);
     }
     else if (left) {
         left.anchorDelete('rightLeft');
-        if (node.alignParent('right')) {
+        if (this.alignParent('right')) {
             left.anchor('right', parentId);
-            transferHorizontalStyle(node, left);
+            transferHorizontalStyle.call(this, left);
         }
     }
     else if (right) {
         right.anchorDelete('leftRight');
-        if (node.alignParent('left')) {
+        if (this.alignParent('left')) {
             right.anchor('left', parentId);
-            transferHorizontalStyle(node, right);
+            transferHorizontalStyle.call(this, right);
         }
     }
     if (top && bottom) {
@@ -408,34 +409,34 @@ function replaceLayoutPosition(node: T, parentId: string) {
     }
     else if (top) {
         top.anchorDelete('bottomTop');
-        if (node.alignParent('bottom')) {
+        if (this.alignParent('bottom')) {
             top.anchor('bottom', parentId);
-            transferVerticalStyle(node, top);
+            transferVerticalStyle.call(this, top);
         }
     }
     else if (bottom) {
         bottom.anchorDelete('topBottom');
-        if (node.alignParent('top')) {
+        if (this.alignParent('top')) {
             bottom.anchor('top', parentId);
-            transferVerticalStyle(node, bottom);
+            transferVerticalStyle.call(this, bottom);
         }
     }
 }
 
-function transferHorizontalStyle(node: T, sibling: T) {
-    sibling.app('layout_constraintHorizontal_bias', node.app('layout_constraintHorizontal_bias'));
-    sibling.app('layout_constraintHorizontal_chainStyle', node.app('layout_constraintHorizontal_chainStyle'));
+function transferHorizontalStyle(this: T, sibling: T) {
+    sibling.app('layout_constraintHorizontal_bias', this.app('layout_constraintHorizontal_bias'));
+    sibling.app('layout_constraintHorizontal_chainStyle', this.app('layout_constraintHorizontal_chainStyle'));
 }
 
-function transferVerticalStyle(node: T, sibling: T) {
-    sibling.app('layout_constraintVertical_bias', node.app('layout_constraintVertical_bias'));
-    sibling.app('layout_constraintVertical_chainStyle', node.app('layout_constraintVertical_chainStyle'));
+function transferVerticalStyle(this: T, sibling: T) {
+    sibling.app('layout_constraintVertical_bias', this.app('layout_constraintVertical_bias'));
+    sibling.app('layout_constraintVertical_chainStyle', this.app('layout_constraintVertical_chainStyle'));
 }
 
-function transferLayoutAlignment(node: T, replaceWith: T) {
+function transferLayoutAlignment(this: T, replaceWith: T) {
     replaceWith.anchorClear();
-    for (const name of node.unsafe('namespaces') as string[]) {
-        const data = node.namespace(name);
+    for (const name of this.unsafe('namespaces') as string[]) {
+        const data = this.namespace(name);
         for (const attr in data) {
             switch (attr) {
                 case 'layout_width':
@@ -454,26 +455,26 @@ function transferLayoutAlignment(node: T, replaceWith: T) {
     }
 }
 
-function setLineHeight(node: T, renderParent: T) {
-    const lineHeight = node.lineHeight;
+function setLineHeight(this: T, renderParent: T) {
+    const lineHeight = this.lineHeight;
     if (lineHeight > 0) {
-        const hasOwnStyle = node.has('lineHeight', { map: 'initial' });
-        if (node.multiline) {
-            setMultiline(node, lineHeight, hasOwnStyle);
+        const hasOwnStyle = this.has('lineHeight', { map: 'initial' });
+        if (this.multiline) {
+            setMultiline.call(this, lineHeight, hasOwnStyle);
         }
-        else if (node.renderChildren.length) {
-            if (!hasOwnStyle && node.layoutHorizontal && node.alignSibling('baseline')) {
+        else if (this.renderChildren.length) {
+            if (!hasOwnStyle && this.layoutHorizontal && this.alignSibling('baseline')) {
                 return;
             }
-            else if (node.layoutVertical || node.layoutFrame) {
-                node.renderChildren.forEach((item: T) => {
+            else if (this.layoutVertical || this.layoutFrame) {
+                this.renderChildren.forEach((item: T) => {
                     if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
-                        setMarginOffset(item, lineHeight, true, true, true);
+                        setMarginOffset.call(item, lineHeight, true, true, true);
                     }
                 });
             }
             else {
-                const horizontalRows = node.horizontalRows || [node.renderChildren];
+                const horizontalRows = this.horizontalRows || [this.renderChildren];
                 let previousMultiline = false;
                 const length = horizontalRows.length;
                 for (let i = 0; i < length; ++i) {
@@ -488,7 +489,7 @@ function setLineHeight(node: T, renderParent: T) {
                     const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
                     if (baseline) {
                         if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
-                            setMarginOffset(baseline as T, lineHeight, false, top, bottom);
+                            setMarginOffset.call(baseline as T, lineHeight, false, top, bottom);
                         }
                         else {
                             previousMultiline = true;
@@ -498,7 +499,7 @@ function setLineHeight(node: T, renderParent: T) {
                     else {
                         row.forEach((item: T) => {
                             if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
-                                setMarginOffset(item, lineHeight, onlyChild, top, bottom);
+                                setMarginOffset.call(item, lineHeight, onlyChild, top, bottom);
                             }
                         });
                     }
@@ -507,13 +508,13 @@ function setLineHeight(node: T, renderParent: T) {
             }
         }
         else if (hasOwnStyle || renderParent.lineHeight === 0) {
-            setMarginOffset(node, lineHeight, hasOwnStyle, true, true);
+            setMarginOffset.call(this, lineHeight, hasOwnStyle, true, true);
         }
     }
 }
 
-function finalizeGravity(node: T, attr: string) {
-    const direction = getGravityValues(node, attr);
+function finalizeGravity(this: T, attr: string) {
+    const direction = getGravityValues.call(this, attr);
     if (direction.size > 1) {
         checkMergableGravity('center', direction);
         checkMergableGravity('fill', direction);
@@ -536,16 +537,16 @@ function finalizeGravity(node: T, attr: string) {
         result += (result !== '' ? '|' : '') + z;
     }
     if (result !== '') {
-        node.android(attr, result);
+        this.android(attr, result);
     }
     else {
-        node.delete('android', attr);
+        this.delete('android', attr);
     }
 }
 
-function setFlexGrow(node: T, horizontal: boolean, grow: number, value?: number, shrink?: number) {
+function setFlexGrow(this: T, horizontal: boolean, grow: number, value?: number, shrink?: number) {
     if (grow > 0) {
-        node.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', truncate(grow, node.localSettings.floatPrecision));
+        this.app(horizontal ? 'layout_constraintHorizontal_weight' : 'layout_constraintVertical_weight', truncate(grow, this.localSettings.floatPrecision));
         return true;
     }
     else if (value) {
@@ -557,25 +558,33 @@ function setFlexGrow(node: T, horizontal: boolean, grow: number, value?: number,
                 value *= 1 - shrink;
             }
         }
-        node.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
+        this.app(horizontal ? 'layout_constraintWidth_min' : 'layout_constraintHeight_min', formatPX(value));
     }
     return false;
 }
 
-function setCustomization(node: T, obj: Undef<ObjectMap<StringMap>>, overwrite: boolean) {
+function setCustomization(this: T, obj: Undef<ObjectMap<StringMap>>, overwrite: boolean) {
     if (obj) {
         for (const name in obj) {
             const data = obj[name];
             for (const attr in data) {
-                node.attr(name, attr, data[attr], overwrite);
+                this.attr(name, attr, data[attr], overwrite);
             }
         }
     }
 }
 
-const getGravityValues = (node: T, attr: string) => new Set<string>(node.android(attr).split('|'));
-const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
-const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
+function getGravityValues(this: T, attr: string) {
+    return new Set<string>(this.android(attr).split('|'));
+}
+
+function excludeHorizontal(this: T) {
+    return this.bounds.width === 0 && this.contentBoxWidth === 0 && this.textEmpty && this.marginLeft === 0 && this.marginRight === 0 && !this.visibleStyle.background;
+}
+
+function excludeVertical(this: T) {
+    return this.bounds.height === 0 && this.contentBoxHeight === 0 && (this.marginTop === 0 && this.marginBottom === 0 || this.css('overflow') === 'hidden');
+}
 
 function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment: BoxModel, margin: boolean) {
     let top = 0, right = 0, bottom = 0, left = 0;
@@ -811,11 +820,11 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
 export default (Base: Constructor<squared.base.NodeUI>) => {
     return class View extends Base implements android.base.View {
         public static setConstraintDimension<T extends View>(node: T, percentWidth = NaN) {
-            percentWidth = constraintPercentWidth(node, percentWidth);
-            constraintPercentHeight(node, 1);
+            percentWidth = constraintPercentWidth.call(node, percentWidth);
+            constraintPercentHeight.call(node, 1);
             if (!node.inputElement) {
-                constraintMinMax(node, true);
-                constraintMinMax(node, false);
+                constraintMinMax.call(node, true);
+                constraintMinMax.call(node, false);
             }
             return percentWidth;
         }
@@ -824,33 +833,33 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const { grow, basis, shrink } = node.flexbox;
             const horizontal = dimension === 'width';
             if (isLength(basis)) {
-                setFlexGrow(node, horizontal, grow, node.parseUnit(basis, dimension), shrink);
-                setLayoutDimension(node, '0px', horizontal, true);
+                setFlexGrow.call(node, horizontal, grow, node.parseUnit(basis, dimension), shrink);
+                setLayoutDimension.call(node, '0px', horizontal, true);
             }
             else if (basis !== '0%' && isPercent(basis)) {
-                setFlexGrow(node, horizontal, grow);
+                setFlexGrow.call(node, horizontal, grow);
                 const percent = parseFloat(basis) / 100;
                 if (horizontal) {
-                    setConstraintPercent(node, percent, true, NaN);
+                    setConstraintPercent.call(node, percent, true, NaN);
                 }
                 else {
-                    setConstraintPercent(node, percent, false, NaN);
+                    setConstraintPercent.call(node, percent, false, NaN);
                 }
             }
             else {
                 let flexible = false;
                 if (node.hasFlex(horizontal ? 'row' : 'column')) {
-                    flexible = setFlexGrow(node, horizontal, grow, node.hasPX(dimension, false) ? (horizontal ? node.actualWidth : node.actualHeight) : 0, shrink);
+                    flexible = setFlexGrow.call(node, horizontal, grow, node.hasPX(dimension, false) ? (horizontal ? node.actualWidth : node.actualHeight) : 0, shrink);
                     if (flexible) {
-                        setLayoutDimension(node, '0px', horizontal, true);
+                        setLayoutDimension.call(node, '0px', horizontal, true);
                     }
                 }
                 if (!flexible) {
                     if (horizontal) {
-                        constraintPercentWidth(node, 0);
+                        constraintPercentWidth.call(node, 0);
                     }
                     else {
-                        constraintPercentHeight(node, 0);
+                        constraintPercentHeight.call(node, 0);
                     }
                 }
             }
@@ -858,11 +867,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 node.app(horizontal ? 'layout_constrainedWidth' : 'layout_constrainedHeight', 'true');
             }
             if (horizontal) {
-                constraintPercentHeight(node);
+                constraintPercentHeight.call(node);
             }
             if (!node.inputElement && !node.imageOrSvgElement) {
-                constraintMinMax(node, true);
-                constraintMinMax(node, false);
+                constraintMinMax.call(node, true);
+                constraintMinMax.call(node, false);
             }
         }
 
@@ -1358,7 +1367,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (this.floating) {
                             node.mergeGravity('layout_gravity', this.float);
                         }
-                        else if (!setAutoMargin(node, autoMargin) && textAlign !== '' && this.hasWidth && !this.blockStatic && !this.inputElement && this.display !== 'table') {
+                        else if (!setAutoMargin.call(node, autoMargin) && textAlign !== '' && this.hasWidth && !this.blockStatic && !this.inputElement && this.display !== 'table') {
                             node.mergeGravity('layout_gravity', textAlign, false);
                         }
                     }
@@ -1382,7 +1391,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     });
                 }
                 if (renderParent.layoutFrame) {
-                    if (!setAutoMargin(this, autoMargin)) {
+                    if (!setAutoMargin.call(this, autoMargin)) {
                         if (!this.innerWrapped) {
                             if (this.floating) {
                                 floating = this.float;
@@ -1425,7 +1434,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         (node.blockWidth && this !== node ? this : node).mergeGravity('layout_gravity', floating);
                     }
                 }
-                else if (setAutoMargin(node.inlineWidth ? node : this, autoMargin) && textAlign !== '') {
+                else if (setAutoMargin.call(node.inlineWidth ? node : this, autoMargin) && textAlign !== '') {
                     textAlignParent = '';
                 }
             }
@@ -2024,20 +2033,20 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (renderParent) {
                 if (renderParent.layoutConstraint) {
                     if (update === true) {
-                        replaceLayoutPosition(node, 'parent');
+                        replaceLayoutPosition.call(node, 'parent');
                     }
                     else if (update) {
-                        transferLayoutAlignment(node, update);
+                        transferLayoutAlignment.call(node, update);
                     }
                     node.anchorDelete(...Object.keys(LAYOUT_CONSTRAINT));
                     node.delete('app', 'layout_constraintHorizontal_bias', 'layout_constraintHorizontal_chainStyle', 'layout_constraintVertical_bias', 'layout_constraintVertical_chainStyle');
                 }
                 else if (renderParent.layoutRelative) {
                     if (update === true) {
-                        replaceLayoutPosition(node, 'true');
+                        replaceLayoutPosition.call(node, 'true');
                     }
                     else if (update) {
-                        transferLayoutAlignment(node, update);
+                        transferLayoutAlignment.call(node, update);
                     }
                     node.anchorDelete(...Object.keys(LAYOUT_RELATIVE_PARENT));
                     node.anchorDelete(...Object.keys(LAYOUT_RELATIVE));
@@ -2205,7 +2214,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         break;
                 }
             }
-            const direction = getGravityValues(this, attr);
+            const direction = getGravityValues.call(this, attr);
             const gravity = this.localizeString(alignment);
             if (!direction.has(gravity)) {
                 direction.add(gravity);
@@ -2240,9 +2249,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = this.renderParent;
             if (renderParent) {
                 this.alignLayout(renderParent);
-                setLineHeight(this, renderParent);
-                finalizeGravity(this, 'layout_gravity');
-                finalizeGravity(this, 'gravity');
+                setLineHeight.call(this, renderParent);
+                finalizeGravity.call(this, 'layout_gravity');
+                finalizeGravity.call(this, 'gravity');
                 if (this.imageElement) {
                     const { layoutWidth, layoutHeight } = this;
                     if (layoutWidth === 'wrap_content' && layoutHeight !== 'wrap_content' ||
@@ -2261,13 +2270,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public applyCustomizations(overwrite = true) {
             const { tagName, controlName } = this;
             let assign = API_ANDROID[0].assign;
-            setCustomization(this, assign[tagName], overwrite);
-            setCustomization(this, assign[controlName], overwrite);
+            setCustomization.call(this, assign[tagName], overwrite);
+            setCustomization.call(this, assign[controlName], overwrite);
             const api = API_ANDROID[this.api];
             if (api) {
                 assign = api.assign;
-                setCustomization(this, assign[tagName], overwrite);
-                setCustomization(this, assign[controlName], overwrite);
+                setCustomization.call(this, assign[tagName], overwrite);
+                setCustomization.call(this, assign[controlName], overwrite);
             }
         }
 
@@ -2405,14 +2414,14 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (!this.onlyChild && this.length === 0 && this.styleElement && !this.imageElement && !this.pseudoElement) {
                             if (this.pageFlow) {
                                 if (renderParent.layoutVertical) {
-                                    result = excludeVertical(this) && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
+                                    result = excludeVertical.call(this) && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
                                 }
                                 else {
-                                    result = excludeHorizontal(this) && (renderParent.layoutHorizontal || excludeVertical(this)) && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '' && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
+                                    result = excludeHorizontal.call(this) && (renderParent.layoutHorizontal || excludeVertical.call(this)) && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '' && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
                                 }
                             }
                             else {
-                                result = excludeHorizontal(this) || excludeVertical(this);
+                                result = excludeHorizontal.call(this) || excludeVertical.call(this);
                             }
                         }
                         else {
@@ -2558,10 +2567,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         get flexibleWidth(): boolean {
-            return isFlexibleDimension(this, this.layoutWidth);
+            return isFlexibleDimension.call(this, this.layoutWidth);
         }
         get flexibleHeight(): boolean {
-            return isFlexibleDimension(this, this.layoutHeight);
+            return isFlexibleDimension.call(this, this.layoutHeight);
         }
 
         get labelFor() {
