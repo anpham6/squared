@@ -641,11 +641,11 @@ You can also define your own optimizations in squared.settings.json:
 * https://github.com/jakubpawlowicz/clean-css
 * https://github.com/beautify-web/js-beautify
 
-JS and CSS files can be bundled together with the "saveAs" or "exportAs" action.
+JS and CSS files can be bundled together with the "saveAs" or "exportAs" action. Multiple transformations per asset are supported.
 
 ```xml
 <link data-chrome-file="saveAs:css/prod.css::beautify" rel="stylesheet" href="css/dev.css" />
-<style data-chrome-file="exportAs:css/prod.css::minify">
+<style data-chrome-file="exportAs:css/prod.css::minify::beautify">
     body {
         font: 1em/1.4 Helvetica, Arial, sans-serif;
         background-color: #fafafa;
@@ -662,9 +662,9 @@ The entire page can similarly be included using the "saveAs" attribute in option
 const options = {
     saveAs: { // All attributes are optional
         html: { filename: 'index.html', format: 'beautify' }
-        script: { pathname: 'js/', filename: 'bundle.js', format: 'minify' },
-        link: { pathname: 'css/', filename: 'bundle.css' },
-        base64: { pathname: 'images/', format: 'png' }
+        script: { pathname: '../js', filename: 'bundle.js', format: 'minify' },
+        link: { pathname: 'css', filename: 'bundle.css' },
+        base64: { format: 'png' }
     }
 };
 ```

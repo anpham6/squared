@@ -15,6 +15,16 @@ const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseA
 const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /[\s\n]*(.+?\.[^\s,]+).*?,?/g;
 
+function parseFileAs(attr: string, value: string): Undef<string>[] | undefined {
+    const match = new RegExp(`${attr}As:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
+    if (match) {
+        const segments = match[1].split('::').map(item => item.trim());
+        const format = segments.splice(1);
+        return [segments[0], format.length ? format.join('::') : undefined];
+    }
+    return undefined;
+}
+
 function getFilePath(value: string): string[] {
     value = value.replace(/\\/g, '/');
     let moveTo: Undef<string>;
@@ -51,14 +61,14 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
     }
     let relocate: Undef<string>;
     if (saveAs) {
-        const subMatch = /saveAs:((?:[^"]|\\")+)/.exec(saveAs.replace(/\\/g, '/'));
-        if (subMatch) {
-            [relocate, format] = subMatch[1].split('::').map(item => item.trim());
+        const data = parseFileAs('save', saveAs);
+        if (data) {
+            [relocate, format] = data;
         }
         else {
-            relocate = saveAs;
+            relocate = saveAs.replace(/\\/g, '/');
         }
-        if (local) {
+        if (local && relocate) {
             value = resolvePath(relocate, location.href);
         }
     }
@@ -66,7 +76,7 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
     if (match) {
         const host = match[2], port = match[3], path = match[4];
         let pathname = '', filename = '';
-        let rootDir = '';
+        let rootDir: Undef<string>;
         let moveTo: Undef<string>;
         let prefix!: string;
         const getDirectory = (start: number) => path.substring(start, path.lastIndexOf('/'));
@@ -87,7 +97,7 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
             }
             rootDir = path.substring(0, j + 1);
         }
-        if (relocate && local) {
+        if (local && relocate) {
             [moveTo, pathname, filename] = getFilePath(relocate);
         }
         else if (path && path !== '/') {
@@ -196,11 +206,6 @@ function createBundleAsset(bundles: RequestAsset[], element: HTMLElement, saveTo
     return undefined;
 }
 
-function parseExportAs(value: string): Undef<string>[] {
-    const match = /exportAs:((?:[^"]|\\")+)/.exec(value.replace(/\\/g, '/'));
-    return match ? match[1].split('::').map(item => item.trim()) : [];
-}
-
 const getRootDir = () => location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
 
 export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
@@ -292,8 +297,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 let outerHTML: Undef<string>;
                 if (!isString(file) && saveAs) {
                     const { pathname, filename } = saveAs;
-                    if (pathname && filename) {
-                        file = appendSeparator(pathname, filename);
+                    if (filename) {
+                        file = appendSeparator(pathname || '', filename);
                         format = saveAs.format;
                         outerHTML = element.outerHTML;
                     }
@@ -304,7 +309,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
                 else if (isString(file)) {
                     if (!outerHTML) {
-                        [file, format] = parseExportAs(file);
+                        const command = parseFileAs('export', file);
+                        if (command) {
+                            [file, format] = command;
+                        }
                     }
                     if (file) {
                         data = createBundleAsset(result, element, file, format);
@@ -339,13 +347,13 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             let file = element.dataset.chromeFile;
             if (file !== 'exclude') {
                 let data: Undef<RequestAsset>;
+                let mimeType: Undef<string>;
                 let format: Undef<string>;
                 let outerHTML: Undef<string>;
-                let mimeType: Undef<string>;
                 if (!isString(file) && saveAs && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
                     const { pathname, filename } = saveAs;
-                    if (pathname && filename) {
-                        file = appendSeparator(pathname, filename);
+                    if (filename) {
+                        file = appendSeparator(pathname || '', filename);
                         format = saveAs.format;
                         outerHTML = element.outerHTML;
                     }
@@ -369,7 +377,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
                 else if (isString(file)) {
                     if (!outerHTML) {
-                        [file, format] = parseExportAs(file);
+                        const command = parseFileAs('export', file);
+                        if (command) {
+                            [file, format] = command;
+                        }
                     }
                     if (file) {
                         data = createBundleAsset(result, element, file, format);
@@ -450,7 +461,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 let mimeType = rawData.mimeType;
                 let data: Undef<RequestAsset>;
                 if (base64) {
-                    if (saveAs?.pathname) {
+                    if (saveAs) {
                         const format = saveAs.format;
                         if (format && mimeType?.startsWith('image/')) {
                             switch (format) {
@@ -463,9 +474,12 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                                     break;
                             }
                         }
-                        const pathname = getFilePath(trimEnd(saveAs.pathname.replace(/\\/g, '/'), '/') + '/' + filename)[1];
-                        const uri = resolvePath(pathname + '/' + filename, location.href);
-                        data = processUri(null, uri, mimeType);
+                        const pathname = trimEnd(saveAs.pathname || '', '/').replace(/\\/g, '/');
+                        data = processUri(
+                            null,
+                            resolvePath(getFilePath(pathname + (pathname !== '' ? '/' : '') + filename)[1] + filename, location.href),
+                            mimeType
+                        );
                         if (data) {
                             data.base64 = base64;
                             continue;

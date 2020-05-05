@@ -177,7 +177,113 @@ catch (err) {
 app.set('port', PORT);
 app.use(body_parser.urlencoded({ extended: true }));
 
-class FileStatus {
+class NodeExpress {
+    public static fromSameOrigin(base: string, other: string) {
+        const baseMatch = REGEX_URL.exec(base);
+        const otherMatch = REGEX_URL.exec(other);
+        return !!baseMatch && !!otherMatch && baseMatch[1] === otherMatch[1];
+    }
+
+    public static getFullUri(file: RequestAsset, filename?: string) {
+        return path.join(file.moveTo || '', file.pathname, filename || file.filename).replace(/\\/g, '/');
+    }
+
+    public static getRelativePath(value: string, href: string): string {
+        value = value.replace(/\\/g, '/');
+        let moveTo = '';
+        if (value.charAt(0) === '/') {
+            moveTo = '__serverroot__';
+        }
+        else if (value.startsWith('../')) {
+            moveTo = '__serverroot__';
+            value = NodeExpress.resolvePath(value, href, false);
+        }
+        else if (value.startsWith('./')) {
+            value = value.substring(2);
+        }
+        return moveTo + value;
+    }
+
+    public static resolvePath(value: string, href: string, hostname = true) {
+        const match = REGEX_URL.exec(href.replace(/\\/g, '/'));
+        if (match) {
+            const origin = hostname ? match[1] : '';
+            const pathname = match[2].split('/');
+            pathname.pop();
+            value = value.replace(/\\/g, '/');
+            if (value.charAt(0) === '/') {
+                return origin + value;
+            }
+            else if (value.startsWith('../')) {
+                const trailing: string[] = [];
+                value.split('/').forEach(dir => {
+                    if (dir === '..') {
+                        if (trailing.length === 0) {
+                            pathname.pop();
+                        }
+                        else {
+                            trailing.pop();
+                        }
+                    }
+                    else {
+                        trailing.push(dir);
+                    }
+                });
+                value = trailing.join('/');
+            }
+            return origin + pathname.join('/') + '/' + value;
+        }
+        return '';
+    }
+
+    public static getBaseDirectory(location: string, asset: string) {
+        const locationDir = location.split(/[\\/]/);
+        const assetDir = asset.split(/[\\/]/);
+        while (locationDir.length && assetDir.length) {
+            if (locationDir[0] === assetDir[0]) {
+                locationDir.shift();
+                assetDir.shift();
+            }
+            else {
+                break;
+            }
+        }
+        return [locationDir, assetDir];
+    }
+
+    public static formatContent(value: string, mimeType: string, format: string) {
+        if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
+            return minifyHtml(format, value) || value;
+        }
+        else if (mimeType.endsWith('text/css')) {
+            return minifyCss(format, value) || value;
+        }
+        else if (mimeType.endsWith('text/javascript')) {
+            return minifyJs(format, value) || value;
+        }
+        return value;
+    }
+
+    public static getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
+        if (!mimeType) {
+            mimeType = file.mimeType;
+        }
+        const trailingContent = file.trailingContent;
+        let result = '';
+        if (trailingContent) {
+            for (const item of trailingContent) {
+                const formatter = item.format || format || file.format;
+                if (mimeType && formatter) {
+                    result += '\n' + NodeExpress.formatContent(item.value, mimeType, formatter);
+                }
+                else {
+                    result += '\n' + item.value;
+                }
+            }
+        }
+        return result;
+    }
+
     public archiving = false;
     public delayed = 0;
     public files = new Set<string>();
@@ -202,8 +308,15 @@ class FileStatus {
         this.files.delete(value.substring(this.dirname.length + 1));
     }
 
+    public getFileOutput(file: RequestAsset) {
+        const pathname = path.join(this.dirname, file.moveTo || '', file.pathname);
+        const filepath = path.join(pathname, file.filename);
+        file.filepath = filepath;
+        return { pathname, filepath };
+    }
+
     public appendContent(file: RequestAsset, content: string) {
-        const filepath = file.filepath || getFileOutput(file, this.dirname).filepath;
+        const filepath = file.filepath || this.getFileOutput(file).filepath;
         if (filepath && file.bundleIndex) {
             const value = this.contentToAppend.get(filepath) || [];
             value.splice(file.bundleIndex - 1, 0, content);
@@ -224,24 +337,53 @@ class FileStatus {
         }
     }
 
-    public getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
-        if (!mimeType) {
-            mimeType = file.mimeType;
+    public getRelativeUrl(file: RequestAsset, url: string) {
+        let asset = this.assets.find(item => item.uri === url);
+        let origin = file.uri!;
+        if (!asset) {
+            url = NodeExpress.resolvePath(url, origin);
+            if (url) {
+                asset = this.assets.find(item => item.uri === url);
+            }
         }
-        const trailingContent = file.trailingContent;
-        let result = '';
-        if (trailingContent) {
-            for (const item of trailingContent) {
-                const formatter = item.format || format || file.format;
-                if (mimeType && formatter) {
-                    result += '\n' + formatContent(item.value, mimeType, formatter);
+        if (asset?.uri) {
+            const requestMain = this.requestMain;
+            if (requestMain) {
+                origin = NodeExpress.resolvePath((file.moveTo === '__serverroot__' ? '/' : (file.rootDir || '')) + file.pathname + '/' + file.filename, requestMain.uri!);
+            }
+            const uri = asset.uri;
+            const uriMatch = REGEX_URL.exec(uri);
+            const originMatch = REGEX_URL.exec(origin);
+            if (uriMatch && originMatch && uriMatch[1] === originMatch[1]) {
+                const rootDir = file.rootDir || '';
+                const baseDir = rootDir + file.pathname;
+                if (asset.moveTo === '__serverroot__') {
+                    if (file.moveTo === '__serverroot__') {
+                        return asset.pathname + '/' + asset.filename;
+                    }
+                    else if (requestMain) {
+                        const requestMatch = REGEX_URL.exec(requestMain.uri!);
+                        if (requestMatch && requestMatch[1] === originMatch[1]) {
+                            const [originDir] = NodeExpress.getBaseDirectory(baseDir + '/' + file.filename, requestMatch[2]);
+                            return '../'.repeat(originDir.length - 1) + NodeExpress.getFullUri(asset);
+                        }
+                    }
+                }
+                else if (asset.rootDir) {
+                    if (baseDir === asset.rootDir + asset.pathname) {
+                        return asset.filename;
+                    }
+                    else if (baseDir === asset.rootDir) {
+                        return asset.pathname + '/' + asset.filename;
+                    }
                 }
                 else {
-                    result += '\n' + item.value;
+                    const [originDir, uriDir] = NodeExpress.getBaseDirectory(originMatch[2], uriMatch[2]);
+                    return '../'.repeat(originDir.length - 1) + uriDir.join('/');
                 }
             }
         }
-        return result;
+        return '';
     }
 }
 
@@ -249,12 +391,6 @@ const [NODE_VERSION_MAJOR, NODE_VERSION_MINOR, NODE_VERSION_PATCH] = process.ver
 const SEPARATOR = path.sep;
 const PRETTIER_PLUGINS = [require('prettier/parser-html'), require('prettier/parser-postcss'), require('prettier/parser-babel'), require('prettier/parser-typescript')];
 const REGEX_URL = /^([A-Za-z]+:\/\/[A-Za-z\d.-]+(?::\d+)?)(\/.*)/;
-
-const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value) && !value.startsWith('file:');
-const isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
-const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
-const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
-const getFileSize = (filepath: string) => fs.statSync(filepath).size;
 
 function checkVersion(major: number, minor: number, patch = 0) {
     if (NODE_VERSION_MAJOR < major) {
@@ -298,6 +434,14 @@ function checkPermissions(res: express.Response<any>, dirname: string) {
     return true;
 }
 
+const isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value) && !value.startsWith('file:');
+const isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
+const isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
+const writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
+const getFileSize = (filepath: string) => fs.statSync(filepath).size;
+const getCompressFormat = (compress: Undef<CompressionFormat[]>, format: string) => compress?.find(item => item.format === format);
+const hasCompressPng = (compress: Undef<CompressionFormat[]>) => TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
+
 function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: any[]) => {
         return new Promise((resolve, reject) => {
@@ -312,41 +456,16 @@ function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>>
     };
 }
 
-function resolvePath(value: string, href: string, hostname = true) {
-    const match = REGEX_URL.exec(href.replace(/\\/g, '/'));
-    if (match) {
-        const origin = hostname ? match[1] : '';
-        const pathname = match[2].split('/');
-        pathname.pop();
-        value = value.replace(/\\/g, '/');
-        if (value.charAt(0) === '/') {
-            return origin + value;
-        }
-        else if (value.startsWith('../')) {
-            const trailing: string[] = [];
-            value.split('/').forEach(dir => {
-                if (dir === '..') {
-                    if (trailing.length === 0) {
-                        pathname.pop();
-                    }
-                    else {
-                        trailing.pop();
-                    }
-                }
-                else {
-                    trailing.push(dir);
-                }
-            });
-            value = trailing.join('/');
-        }
-        return origin + pathname.join('/') + '/' + value;
+function isJPEG(file: RequestAsset) {
+    if (file.mimeType?.endsWith('image/jpeg')) {
+        return true;
     }
-    return '';
-}
-
-function replaceExtension(value: string, ext: string) {
-    const index = value.lastIndexOf('.');
-    return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
+    switch (path.extname(file.filename).toLowerCase()) {
+        case '.jpg':
+        case '.jpeg':
+            return true;
+    }
+    return false;
 }
 
 function findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}] {
@@ -365,59 +484,70 @@ function findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [stri
     return ['', {}];
 }
 
-function formatContent(value: string, mimeType: string, format: string) {
-    if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
-        return minifyHtml(format, value) || value;
-    }
-    else if (mimeType.endsWith('text/css')) {
-        return minifyCss(format, value) || value;
-    }
-    else if (mimeType.endsWith('text/javascript')) {
-        return minifyJs(format, value) || value;
-    }
-    return value;
-}
-
 function minifyHtml(format: string, value: string) {
     const html = EXTERNAL?.html;
     if (html) {
-        let [module, options] = findExternalPlugin(html, format);
-        if (!module) {
-            switch (format) {
-                case 'beautify':
-                    module = 'prettier';
-                    options = <prettier.Options> {
-                        parser: 'html',
-                        tabWidth: 4
-                    };
-                    break;
-                case 'minify':
-                    module = 'html_minifier';
-                    options = <html_minifier.Options> {
-                        collapseWhitespace: true,
-                        collapseBooleanAttributes: true,
-                        removeEmptyAttributes: true,
-                        removeRedundantAttributes: true,
-                        removeScriptTypeAttributes: true,
-                        removeStyleLinkTypeAttributes: true,
-                        removeComments: true
-                    };
-                    break;
+        let valid = false;
+        for (const name of format.split('::')) {
+            let [module, options] = findExternalPlugin(html, name);
+            if (!module) {
+                switch (name) {
+                    case 'beautify':
+                        module = 'prettier';
+                        options = <prettier.Options> {
+                            parser: 'html',
+                            tabWidth: 4
+                        };
+                        break;
+                    case 'minify':
+                        module = 'html_minifier';
+                        options = <html_minifier.Options> {
+                            collapseWhitespace: true,
+                            collapseBooleanAttributes: true,
+                            removeEmptyAttributes: true,
+                            removeRedundantAttributes: true,
+                            removeScriptTypeAttributes: true,
+                            removeStyleLinkTypeAttributes: true,
+                            removeComments: true
+                        };
+                        break;
+                }
+            }
+            try {
+                switch (module) {
+                    case 'prettier': {
+                        (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
+                        const result = prettier.format(value, options);
+                        if (result) {
+                            value = result;
+                            valid = true;
+                        }
+                        break;
+                    }
+                    case 'html_minifier': {
+                        const result = html_minifier.minify(value, options);
+                        if (result) {
+                            value = result;
+                            valid = true;
+                        }
+                        break;
+                    }
+                    case 'js_beautify': {
+                        const result = js_beautify.html_beautify(value, options);
+                        if (result) {
+                            value = result;
+                            valid = true;
+                        }
+                        break;
+                    }
+                }
+            }
+            catch (err) {
+                writeError(`External: ${module}`, err);
             }
         }
-        try {
-            switch (module) {
-                case 'prettier':
-                    (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
-                    return prettier.format(value, options);
-                case 'html_minifier':
-                    return html_minifier.minify(value, options);
-                case 'js_beautify':
-                    return js_beautify.html_beautify(value, options);
-            }
-        }
-        catch (err) {
-            writeError(`External: ${module}`, err);
+        if (valid) {
+            return value;
         }
     }
     return '';
@@ -426,37 +556,62 @@ function minifyHtml(format: string, value: string) {
 function minifyCss(format: string, value: string) {
     const css = EXTERNAL?.css;
     if (css) {
-        let [module, options] = findExternalPlugin(css, format);
-        if (!module) {
-            switch (format) {
-                case 'beautify':
-                    module = 'prettier';
-                    options = <prettier.Options> {
-                        parser: 'css',
-                        tabWidth: 4
-                    };
-                    break;
-                case 'minify':
-                    module = 'clean_css';
-                    options = <clean_css.OptionsOutput> {
-                        level: 1
-                    };
-                    break;
+        let valid = false;
+        for (const name of format.split('::')) {
+            let [module, options] = findExternalPlugin(css, name);
+            if (!module) {
+                switch (name) {
+                    case 'beautify':
+                        module = 'prettier';
+                        options = <prettier.Options> {
+                            parser: 'css',
+                            tabWidth: 4
+                        };
+                        break;
+                    case 'minify':
+                        module = 'clean_css';
+                        options = <clean_css.OptionsOutput> {
+                            level: 1,
+                            inline: ['none']
+                        };
+                        break;
+                }
+            }
+            try {
+                switch (module) {
+                    case 'prettier': {
+                        (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
+                        const result = prettier.format(value, options);
+                        if (result) {
+                            value = result;
+                            valid = true;
+                        }
+                        break;
+                    }
+                    case 'clean_css': {
+                        const result = new clean_css(options).minify(value).styles;
+                        if (result) {
+                            value = result;
+                            valid = true;
+                        }
+                        break;
+                    }
+                    case 'js_beautify': {
+                        const result = js_beautify.css_beautify(value, options);
+                        if (result) {
+                            value = result;
+                            valid = true;
+                        }
+                        break;
+                    }
+                }
+            }
+            catch (err) {
+                writeError(`External: ${module}`, err);
             }
         }
-        try {
-            switch (module) {
-                case 'prettier':
-                    (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
-                    return prettier.format(value, options);
-                case 'clean_css':
-                    return new clean_css(options).minify(value).styles;
-                case 'js_beautify':
-                    return js_beautify.css_beautify(value, options);
-            }
-        }
-        catch (err) {
-            writeError(`External: ${module}`, err);
+        if (valid) {
+            return value;
         }
     }
     return '';
@@ -465,46 +620,70 @@ function minifyCss(format: string, value: string) {
 function minifyJs(format: string, value: string) {
     const js = EXTERNAL?.js;
     if (js) {
-        let [module, options] = findExternalPlugin(js, format);
-        if (!module) {
-            switch (format) {
-                case 'beautify':
-                    module = 'prettier';
-                    options = <prettier.Options> {
-                        parser: 'babel',
-                        tabWidth: 4
-                    };
-                    break;
-                case 'minify':
-                    module = 'terser';
-                    options = <terser.MinifyOptions> {
-                        toplevel: true,
-                        keep_classnames: true
-                    };
-                    break;
+        let valid = false;
+        for (const name of format.split('::')) {
+            let [module, options] = findExternalPlugin(js, name);
+            if (!module) {
+                switch (name) {
+                    case 'beautify':
+                        module = 'prettier';
+                        options = <prettier.Options> {
+                            parser: 'babel',
+                            tabWidth: 4
+                        };
+                        break;
+                    case 'minify':
+                        module = 'terser';
+                        options = <terser.MinifyOptions> {
+                            toplevel: true,
+                            keep_classnames: true
+                        };
+                        break;
+                }
+            }
+            try {
+                switch (module) {
+                    case 'prettier': {
+                        (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
+                        const result = prettier.format(value, options);
+                        if (result) {
+                            value = result;
+                            valid = true;
+                        }
+                        break;
+                    }
+                    case 'terser': {
+                        const result = terser.minify(value, options).code;
+                        if (result) {
+                            value = result;
+                            valid = true;
+                        }
+                        break;
+                    }
+                    case 'js_beautify': {
+                        const result = js_beautify.js_beautify(value, options);
+                        if (result) {
+                            value = result;
+                            valid = true;
+                        }
+                        break;
+                    }
+                }
+            }
+            catch (err) {
+                writeError(`External: ${module}`, err);
             }
         }
-        try {
-            switch (module) {
-                case 'prettier':
-                    (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
-                    return prettier.format(value, options);
-                case 'terser':
-                    return terser.minify(value, options).code;
-                case 'js_beautify':
-                    return js_beautify.js_beautify(value, options);
-            }
-        }
-        catch (err) {
-            writeError(`External: ${module}`, err);
+        if (valid) {
+            return value;
         }
     }
     return '';
 }
 
-function transformCss(status: FileStatus, file: RequestAsset, filepath: Undef<string>, content?: string) {
+function transformCss(status: NodeExpress, file: RequestAsset, filepath: Undef<string>, content?: string) {
     const baseUrl = file.uri!;
-    if (status.requestMain && hasSameOrigin(status.requestMain.uri!, baseUrl)) {
+    if (status.requestMain && NodeExpress.fromSameOrigin(status.requestMain.uri!, baseUrl)) {
         const assets = status.assets;
         if (filepath) {
             content = fs.readFileSync(filepath).toString('utf8');
@@ -514,8 +693,8 @@ function transformCss(status: FileStatus, file: RequestAsset, filepath: Undef<st
         }
         for (const item of assets) {
             if (item.base64 && item.uri) {
-                const url = getRelativeUrl(status, file, item.uri);
-                if (url !== '') {
+                const url = status.getRelativeUrl(file, item.uri);
+                if (url) {
                     content = replacePathName(content, item.base64.replace(/\+/g, '\\+'), url, true);
                 }
             }
@@ -525,13 +704,13 @@ function transformCss(status: FileStatus, file: RequestAsset, filepath: Undef<st
         let match: Null<RegExpExecArray>;
         while ((match = pattern.exec(content)) !== null) {
             let url = match[2];
-            if (!isFileURI(url) || hasSameOrigin(baseUrl, url)) {
-                url = getRelativeUrl(status, file, url);
+            if (!isFileURI(url) || NodeExpress.fromSameOrigin(baseUrl, url)) {
+                url = status.getRelativeUrl(file, url);
                 if (url) {
                     source = source.replace(match[0], `url(${url})`);
                 }
                 else {
-                    url = resolvePath(url, baseUrl);
+                    url = NodeExpress.resolvePath(match[2], baseUrl);
                     const asset = assets.find(item => item.uri === url);
                     if (asset) {
                         source = source.replace(match[0], `url(${url})`);
@@ -541,9 +720,8 @@ function transformCss(status: FileStatus, file: RequestAsset, filepath: Undef<st
             else {
                 const asset = assets.find(item => item.uri === url);
                 if (asset) {
-                    url = getFullUri(asset);
                     const count = file.pathname.split(/[\\/]/).length;
-                    source = source.replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + url})`);
+                    source = source.replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + NodeExpress.getFullUri(asset)})`);
                 }
             }
         }
@@ -573,98 +751,6 @@ function replacePathName(source: string, segment: string, value: string, base64?
     return result;
 }
 
-function getBaseDirectory(location: string, asset: string) {
-    const locationDir = location.split(/[\\/]/);
-    const assetDir = asset.split(/[\\/]/);
-    while (locationDir.length && assetDir.length) {
-        if (locationDir[0] === assetDir[0]) {
-            locationDir.shift();
-            assetDir.shift();
-        }
-        else {
-            break;
-        }
-    }
-    return [locationDir, assetDir];
-}
-
-function getRelativeUrl(status: FileStatus, file: RequestAsset, url: string) {
-    let asset = status.assets.find(item => item.uri === url);
-    let origin = file.uri!;
-    if (!asset) {
-        url = resolvePath(url, origin);
-        if (url !== '') {
-            asset = status.assets.find(item => item.uri === url);
-        }
-    }
-    if (asset?.uri) {
-        const requestMain = status.requestMain;
-        if (requestMain) {
-            origin = resolvePath((file.moveTo === '__serverroot__' ? '/' : file.rootDir) + file.pathname + '/' + file.filename, requestMain.uri!);
-        }
-        const uri = asset.uri;
-        const uriMatch = REGEX_URL.exec(uri);
-        const originMatch = REGEX_URL.exec(origin);
-        if (uriMatch && originMatch && uriMatch[1] === originMatch[1]) {
-            const rootDir = file.rootDir || '';
-            const baseDir = rootDir + file.pathname;
-            if (asset.moveTo === '__serverroot__') {
-                if (file.moveTo === '__serverroot__') {
-                    return asset.pathname + '/' + asset.filename;
-                }
-                else if (requestMain) {
-                    const requestMatch = REGEX_URL.exec(requestMain.uri!);
-                    if (requestMatch && requestMatch[1] === originMatch[1]) {
-                        const [originDir] = getBaseDirectory(baseDir + '/' + file.filename, requestMatch[2]);
-                        return '../'.repeat(originDir.length - 1) + getFullUri(asset);
-                    }
-                }
-            }
-            else if (baseDir === asset.rootDir + asset.pathname) {
-                return asset.filename;
-            }
-            else if (baseDir === asset.rootDir) {
-                return asset.pathname + '/' + asset.filename;
-            }
-            else {
-                const [originDir, uriDir] = getBaseDirectory(originMatch[2], uriMatch[2]);
-                return '../'.repeat(originDir.length - 1) + uriDir.join('/');
-            }
-        }
-    }
-    return '';
-}
-
-function getFullUri(file: RequestAsset, filename?: string) {
-    return path.join(file.moveTo || '', file.pathname, filename || file.filename).replace(/\\/g, '/');
-}
-
-function getRelativePath(value: string, href: string): string {
-    value = value.replace(/\\/g, '/');
-    let moveTo = '';
-    if (value.charAt(0) === '/') {
-        moveTo = '__serverroot__';
-    }
-    else if (value.startsWith('../')) {
-        moveTo = '__serverroot__';
-        value = resolvePath(value, href, false);
-    }
-    else if (value.startsWith('./')) {
-        value = value.substring(2);
-    }
-    return moveTo + value;
-}
-
-function hasSameOrigin(base: string, other: string) {
-    const baseMatch = REGEX_URL.exec(base);
-    const otherMatch = REGEX_URL.exec(other);
-    return !!baseMatch && !!otherMatch && baseMatch[1] === otherMatch[1];
-}
-
-function getCompressFormat(compress: Undef<CompressionFormat[]>, format: string) {
-    return compress?.find(item => item.format === format);
-}
-
 function getCompressOutput(file: RequestAsset, level: number): CompressOutput {
     const compress = file.compress;
     const gz = getCompressFormat(compress, 'gz');
@@ -685,29 +771,6 @@ function removeCompressionFormat(file: RequestAsset, format: string) {
             compress.splice(index, 1);
         }
     }
-}
-
-function hasCompressPng(compress: Undef<CompressionFormat[]>) {
-    return TINIFY_API_KEY && getCompressFormat(compress, 'png') !== undefined;
-}
-
-function isJPEG(file: RequestAsset) {
-    if (file.mimeType?.endsWith('image/jpeg')) {
-        return true;
-    }
-    switch (path.extname(file.filename).toLowerCase()) {
-        case '.jpg':
-        case '.jpeg':
-            return true;
-    }
-    return false;
-}
-
-function getFileOutput(file: RequestAsset, dirname: string) {
-    const pathname = path.join(dirname, file.moveTo || '', file.pathname);
-    const filepath = path.join(pathname, file.filename);
-    file.filepath = filepath;
-    return { pathname, filepath };
 }
 
 function createGzipWriteStream(source: string, filename: string, level?: number) {
@@ -734,7 +797,70 @@ function createBrotliWriteStream(source: string, filename: string, quality?: num
     return o;
 }
 
-function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: FileStatus, finalize: (filepath?: string) => void) {
+function compressFile(status: NodeExpress, assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
+    const { jpeg, gzip, brotli } = getCompressOutput(file, JPEG_QUALITY);
+    const resumeThread = () => {
+        transformBuffer(status, assets, file, filepath, finalize);
+        if (gzip !== -1) {
+            ++status.delayed;
+            const gz = `${filepath}.gz`;
+            createGzipWriteStream(filepath, gz, gzip)
+                .on('finish', () => finalize(gz))
+                .on('error', err => {
+                    writeError(gz, err);
+                    finalize('');
+                });
+        }
+        if (brotli !== -1 && checkVersion(11, 7)) {
+            ++status.delayed;
+            const br = `${filepath}.br`;
+            createBrotliWriteStream(filepath, br, brotli, file.mimeType)
+                .on('finish', () => finalize(br))
+                .on('error', err => {
+                    writeError(br, err);
+                    finalize('');
+                });
+        }
+    };
+    if (jpeg !== -1) {
+        ++status.delayed;
+        jimp.read(filepath)
+            .then(image => {
+                image.quality(jpeg).write(filepath, err => {
+                    if (err) {
+                        writeError(filepath, err);
+                    }
+                    finalize('');
+                    resumeThread();
+                });
+            })
+            .catch(err => {
+                writeError(filepath, err);
+                finalize('');
+                resumeThread();
+            });
+    }
+    else {
+        resumeThread();
+    }
+}
+
+function compressImage(filepath: string, finalize: (filepath?: string) => void) {
+    try {
+        tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
+            if (!err) {
+                fs.writeFileSync(filepath, resultData);
+            }
+            finalize(filepath);
+        });
+    }
+    catch (err) {
+        finalize('');
+        writeError(filepath, err);
+    }
+}
+
+function transformBuffer(status: NodeExpress, assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
     const { format, mimeType } = file;
     if (!mimeType) {
         return;
@@ -742,8 +868,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
     const writeTrailingContent = () => {
         if (file.trailingContent) {
             try {
-                fs.appendFileSync(filepath, status.getTrailingContent(file));
-                file.trailingContent = undefined;
+                fs.appendFileSync(filepath, NodeExpress.getTrailingContent(file));
             }
             catch (err) {
                 writeError(filepath, err);
@@ -759,12 +884,12 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             const saved = new Set<string>();
             let html = fs.readFileSync(filepath).toString('utf8');
             let source = html;
-            let pattern = /(\s*)<(script|link|style).*?(\s+data-chrome-file="\s*(save|export)As:((?:[^"]|\\")+)").*?\/?>(?:[\s\S]*?<\/\2>\n*)?/ig;
+            let pattern = /(\s*)<(script|link|style).*?(\s+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)").*?\/?>(?:[\s\S]*?<\/\2>\n*)?/ig;
             let match: Null<RegExpExecArray>;
             while ((match = pattern.exec(html)) !== null) {
                 const segment = match[0];
                 const script = match[2].toLowerCase() === 'script';
-                const location = getRelativePath(match[5].split('::')[0].trim(), baseUri);
+                const location = NodeExpress.getRelativePath(match[5].split('::')[0].trim(), baseUri);
                 if (saved.has(location)) {
                     source = source.replace(segment, '');
                 }
@@ -790,7 +915,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                         const length = source.length;
                         let replaceWith = '';
                         if (bundleIndex === 0) {
-                            replaceWith = getFileOuterHTML(item.mimeType === 'text/javascript', getFullUri(item));
+                            replaceWith = getFileOuterHTML(item.mimeType === 'text/javascript', NodeExpress.getFullUri(item));
                             source = source.replace(outerHTML, replaceWith);
                         }
                         else {
@@ -827,19 +952,20 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             html = source;
             for (const item of assets) {
                 if (item.base64) {
-                    source = replacePathName(source, item.base64.replace(/\+/g, '\\+'), getFullUri(item), true);
+                    source = replacePathName(source, item.base64.replace(/\+/g, '\\+'), NodeExpress.getFullUri(item), true);
                     continue;
                 }
                 else if (item === file || item.content || !item.uri) {
                     continue;
                 }
-                const value = getFullUri(item);
+                const value = NodeExpress.getFullUri(item);
                 source = replacePathName(source, item.uri, value);
-                if (item.rootDir || hasSameOrigin(baseUri, item.uri)) {
+                if (item.rootDir || NodeExpress.fromSameOrigin(baseUri, item.uri)) {
                     pattern = new RegExp(`((?:\\.\\.)?(?:[\\\\/]\\.\\.|\\.\\.[\\\\/]|[\\\\/])*)?(${path.join(item.pathname, item.filename).replace(/[\\/]/g, '[\\\\/]')})`, 'g');
                     while ((match = pattern.exec(html)) !== null) {
-                        if (match[0] !== value && item.uri === resolvePath(match[0], baseUri)) {
-                            source = source.replace(match[0], value);
+                        const pathname = match[0];
+                        if (pathname !== value && item.uri === NodeExpress.resolvePath(pathname, baseUri)) {
+                            source = source.replace(pathname, value);
                         }
                     }
                 }
@@ -847,19 +973,24 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
             source = source
                 .replace(/\s*<(script|link|style).+?data-chrome-file="exclude".*?>[\s\S]*?<\/\1>\n*/ig, '')
                 .replace(/\s*<(script|link).+?data-chrome-file="exclude".*?\/?>\n*/ig, '')
-                .replace(/\s+data-(?:use|chrome-[\w-]+)=".+?"/g, '');
+                .replace(/\s+data-(?:use|chrome-[\w-]+)="([^"]|\\")+?"/g, '');
             fs.writeFileSync(filepath, format && minifyHtml(format, source) || source);
             break;
         }
         case '@text/css': {
-            let source = transformCss(status, file, filepath);
-            if (format) {
-                if (source === '') {
-                    source = fs.readFileSync(filepath).toString('utf8');
-                }
-                source = minifyCss(format, source) || source;
+            let output = transformCss(status, file, filepath);
+            if (format && !output) {
+                output = fs.readFileSync(filepath).toString('utf8');
+                output = minifyCss(format, output) || output;
             }
-            fs.writeFileSync(filepath, source);
+            if (file.trailingContent) {
+                let result = NodeExpress.getTrailingContent(file, mimeType, format);
+                result = transformCss(status, file, undefined, result);
+                if (result) {
+                    output += result;
+                }
+            }
+            fs.writeFileSync(filepath, output);
             break;
         }
         case 'text/html':
@@ -877,8 +1008,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 let output = minifyCss(format, fs.readFileSync(filepath).toString('utf8'));
                 if (output) {
                     if (file.trailingContent) {
-                        output += status.getTrailingContent(file, mimeType, format);
-                        file.trailingContent = undefined;
+                        output += NodeExpress.getTrailingContent(file, mimeType, format);
                     }
                     fs.writeFileSync(filepath, output);
                     break;
@@ -892,8 +1022,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
                 let output = minifyJs(format, fs.readFileSync(filepath).toString('utf8'));
                 if (output) {
                     if (file.trailingContent) {
-                        output += status.getTrailingContent(file, mimeType, format);
-                        file.trailingContent = undefined;
+                        output += NodeExpress.getTrailingContent(file, mimeType, format);
                     }
                     fs.writeFileSync(filepath, output);
                     break;
@@ -904,6 +1033,10 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
         }
         default:
             if (mimeType.includes('image/')) {
+                const replaceExtension = (value: string, ext: string) => {
+                    const index = value.lastIndexOf('.');
+                    return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
+                };
                 const afterConvert = (transformed: string, command: string) => {
                     switch (command.charAt(0)) {
                         case '@':
@@ -1002,7 +1135,7 @@ function transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: s
     }
 }
 
-function writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, status: FileStatus, finalize: (filepath?: string) => void) {
+function writeBuffer(status: NodeExpress, assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
     if (hasCompressPng(file.compress)) {
         try {
             tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
@@ -1012,89 +1145,108 @@ function writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: strin
                 if (isJPEG(file)) {
                     removeCompressionFormat(file, 'jpeg');
                 }
-                compressFile(assets, file, filepath, status, finalize);
+                compressFile(status, assets, file, filepath, finalize);
             });
         }
         catch (err) {
-            compressFile(assets, file, filepath, status, finalize);
+            compressFile(status, assets, file, filepath, finalize);
             writeError(filepath, err);
         }
     }
     else {
-        compressFile(assets, file, filepath, status, finalize);
+        compressFile(status, assets, file, filepath, finalize);
     }
 }
 
-function compressImage(filepath: string, finalize: (filepath?: string) => void) {
-    try {
-        tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
-            if (!err) {
-                fs.writeFileSync(filepath, resultData);
-            }
-            finalize(filepath);
-        });
-    }
-    catch (err) {
-        finalize('');
-        writeError(filepath, err);
-    }
-}
-
-function compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, status: FileStatus, finalize: (filepath?: string) => void) {
-    const { jpeg, gzip, brotli } = getCompressOutput(file, JPEG_QUALITY);
-    const resumeThread = () => {
-        transformBuffer(assets, file, filepath, status, finalize);
-        if (gzip !== -1) {
-            ++status.delayed;
-            const gz = `${filepath}.gz`;
-            createGzipWriteStream(filepath, gz, gzip)
-                .on('finish', () => finalize(gz))
-                .on('error', err => {
-                    writeError(gz, err);
-                    finalize('');
-                });
-        }
-        if (brotli !== -1 && checkVersion(11, 7)) {
-            ++status.delayed;
-            const br = `${filepath}.br`;
-            createBrotliWriteStream(filepath, br, brotli, file.mimeType)
-                .on('finish', () => finalize(br))
-                .on('error', err => {
-                    writeError(br, err);
-                    finalize('');
-                });
-        }
-    };
-    if (jpeg !== -1) {
-        ++status.delayed;
-        jimp.read(filepath)
-            .then(image => {
-                image.quality(jpeg).write(filepath, err => {
-                    if (err) {
-                        writeError(filepath, err);
-                    }
-                    finalize('');
-                    resumeThread();
-                });
-            })
-            .catch(err => {
-                writeError(filepath, err);
-                finalize('');
-                resumeThread();
-            });
-    }
-    else {
-        resumeThread();
-    }
-}
-
-function processAssetsAsync(status: FileStatus, finalize: (filepath?: string) => void, empty?: boolean) {
+function processAssetsAsync(status: NodeExpress, finalize: (filepath?: string) => void, empty?: boolean) {
     const emptyDir = new Set<string>();
     const notFound: ObjectMap<boolean> = {};
     const processing: ObjectMap<RequestAsset[]> = {};
     const appending: ObjectMap<RequestAsset[]> = {};
     const completed: string[] = [];
-    const { assets, dirname } = status;
+    const assets = status.assets;
+    const checkQueue = (file: RequestAsset, filepath: string) => {
+        if (file.bundleIndex !== undefined) {
+            const queue = appending[filepath];
+            if (queue) {
+                queue.push(file);
+                return true;
+            }
+            else {
+                appending[filepath] = [];
+                return false;
+            }
+        }
+        else if (completed.includes(filepath)) {
+            writeBuffer(status, assets, file, filepath, finalize);
+            finalize('');
+            return true;
+        }
+        else {
+            const queue = processing[filepath];
+            if (queue) {
+                ++status.delayed;
+                queue.push(file);
+                return true;
+            }
+            else {
+                processing[filepath] = [file];
+                return false;
+            }
+        }
+    };
+    const processQueue = (file: RequestAsset, filepath: string, bundleMain?: RequestAsset) => {
+        const bundleIndex = file.bundleIndex;
+        if (bundleIndex !== undefined) {
+            const queue = appending[filepath]?.shift();
+            if (queue) {
+                const uri = queue.uri;
+                if (!uri) {
+                    processQueue(queue, filepath, bundleMain || file);
+                    return;
+                }
+                request(uri, (err, response) => {
+                    if (err) {
+                        notFound[uri] = true;
+                        writeError(uri, err);
+                    }
+                    else {
+                        const statusCode = response.statusCode;
+                        if (statusCode >= 300) {
+                            notFound[uri] = true;
+                            writeError(uri, statusCode + ' ' + response.statusMessage);
+                        }
+                        else {
+                            let content = response.body as string;
+                            let source: Undef<string>;
+                            if (queue.mimeType === '@text/css') {
+                                if (queue.trailingContent) {
+                                    content += NodeExpress.getTrailingContent(queue);
+                                }
+                                source = transformCss(status, queue, undefined, content);
+                                if (source) {
+                                    queue.trailingContent = undefined;
+                                }
+                            }
+                            if (!source) {
+                                const { format, mimeType } = queue;
+                                source = format && mimeType && NodeExpress.formatContent(content, mimeType, format);
+                            }
+                            status.appendContent(queue, source || content);
+                        }
+                    }
+                    processQueue(queue, filepath, bundleMain || file);
+                });
+                return;
+            }
+        }
+        completed.push(filepath);
+        for (const item of (processing[filepath] || [bundleMain || file])) {
+            writeBuffer(status, assets, item, filepath, finalize);
+            finalize(filepath);
+        }
+        delete processing[filepath];
+    };
     const errorRequest = (uri: string, filepath: string, message: Error | string, stream?: fs.WriteStream) => {
         if (!notFound[uri]) {
             finalize('');
@@ -1111,64 +1263,8 @@ function processAssetsAsync(status: FileStatus, finalize: (filepath?: string) =>
         writeError(uri, message);
         delete processing[filepath];
     };
-    const processQueue = (file: RequestAsset, filepath: string, original?: RequestAsset) => {
-        const bundleIndex = file.bundleIndex;
-        if (bundleIndex !== undefined) {
-            if (bundleIndex === 0 && file.mimeType === '@text/css') {
-                const source = transformCss(status, file, filepath);
-                if (source !== '') {
-                    fs.writeFileSync(filepath, source);
-                }
-            }
-            const queue = appending[filepath]?.shift();
-            if (queue) {
-                const uri = queue.uri;
-                if (!uri) {
-                    processQueue(queue, filepath, original || file);
-                    return;
-                }
-                request(uri, (err, response) => {
-                    if (err) {
-                        notFound[uri] = true;
-                        writeError(uri, err);
-                    }
-                    else {
-                        const statusCode = response.statusCode;
-                        if (statusCode >= 300) {
-                            notFound[uri] = true;
-                            writeError(uri, statusCode + ' ' + response.statusMessage);
-                        }
-                        else {
-                            let content = response.body as string;
-                            if (queue.trailingContent) {
-                                content += status.getTrailingContent(queue);
-                                queue.trailingContent = undefined;
-                            }
-                            let source: Undef<string>;
-                            if (queue.mimeType === '@text/css') {
-                                source = transformCss(status, queue, undefined, content);
-                            }
-                            if (!source) {
-                                const { format, mimeType } = queue;
-                                source = format && mimeType && formatContent(content, mimeType, format);
-                            }
-                            status.appendContent(queue, source || content);
-                        }
-                    }
-                    processQueue(queue, filepath, original || file);
-                });
-                return;
-            }
-        }
-        completed.push(filepath);
-        for (const item of (processing[filepath] || [original || file])) {
-            writeBuffer(assets, item, filepath, status, finalize);
-            finalize(filepath);
-        }
-        delete processing[filepath];
-    };
     for (const file of assets) {
-        const { pathname, filepath } = getFileOutput(file, dirname);
+        const { pathname, filepath } = status.getFileOutput(file);
         if (!emptyDir.has(pathname)) {
             if (empty) {
                 try {
@@ -1183,44 +1279,14 @@ function processAssetsAsync(status: FileStatus, finalize: (filepath?: string) =>
             }
             emptyDir.add(pathname);
         }
-        const checkQueue = () => {
-            if (file.bundleIndex !== undefined) {
-                const queue = appending[filepath];
-                if (queue) {
-                    queue.push(file);
-                    return true;
-                }
-                else {
-                    appending[filepath] = [];
-                    return false;
-                }
-            }
-            else if (completed.includes(filepath)) {
-                writeBuffer(assets, file, filepath, status, finalize);
-                finalize('');
-                return true;
-            }
-            else {
-                const queue = processing[filepath];
-                if (queue) {
-                    ++status.delayed;
-                    queue.push(file);
-                    return true;
-                }
-                else {
-                    processing[filepath] = [file];
-                    return false;
-                }
-            }
-        };
+
         if (file.content) {
             const { format, mimeType } = file;
             if (format && mimeType) {
-                file.content = formatContent(file.content, mimeType, format);
+                file.content = NodeExpress.formatContent(file.content, mimeType, format);
             }
             if (file.trailingContent) {
-                file.content += status.getTrailingContent(file, mimeType, format);
-                file.trailingContent = undefined;
+                file.content += NodeExpress.getTrailingContent(file, mimeType, format);
             }
             if (file.bundleIndex === 0) {
                 appending[filepath] = [];
@@ -1232,7 +1298,7 @@ function processAssetsAsync(status: FileStatus, finalize: (filepath?: string) =>
                 'utf8',
                 err => {
                     if (!err) {
-                        writeBuffer(assets, file, filepath, status, finalize);
+                        writeBuffer(status, assets, file, filepath, finalize);
                     }
                     finalize(filepath);
                 }
@@ -1246,7 +1312,7 @@ function processAssetsAsync(status: FileStatus, finalize: (filepath?: string) =>
                 'base64',
                 err => {
                     if (!err) {
-                        writeBuffer(assets, file, filepath, status, finalize);
+                        writeBuffer(status, assets, file, filepath, finalize);
                     }
                     finalize(filepath);
                 }
@@ -1259,7 +1325,7 @@ function processAssetsAsync(status: FileStatus, finalize: (filepath?: string) =>
             }
             try {
                 if (isFileURI(uri)) {
-                    if (checkQueue()) {
+                    if (checkQueue(file, filepath)) {
                         continue;
                     }
                     const stream = fs.createWriteStream(filepath);
@@ -1297,14 +1363,14 @@ function processAssetsAsync(status: FileStatus, finalize: (filepath?: string) =>
                     };
                     if (isFileUNC(uri)) {
                         if (UNC_READ) {
-                            if (checkQueue()) {
+                            if (checkQueue(file, filepath)) {
                                 continue;
                             }
                             copyUri(uri, filepath);
                         }
                     }
                     else if (DISK_READ && path.isAbsolute(uri)) {
-                        if (checkQueue()) {
+                        if (checkQueue(file, filepath)) {
                             continue;
                         }
                         copyUri(uri, filepath);
@@ -1318,7 +1384,7 @@ function processAssetsAsync(status: FileStatus, finalize: (filepath?: string) =>
     }
 }
 
-function finalizeAssetsAsync(status: FileStatus, release: boolean) {
+function finalizeAssetsAsync(status: NodeExpress, release: boolean) {
     const filesToRemove = status.filesToRemove;
     for (const [file, output] of status.filesToCompare) {
         const originalPath = file.filepath!;
@@ -1377,22 +1443,13 @@ function finalizeAssetsAsync(status: FileStatus, release: boolean) {
                             fs.readFile(filepath, (err, data) => {
                                 if (!err) {
                                     let html = data.toString('utf-8');
-                                    let valid = release;
                                     for (const item of replaced) {
-                                        try {
-                                            html = html.replace(new RegExp(getFullUri(item, item.originalName).replace(/[\\/]/g, '[\\\\/]'), 'g'), getFullUri(item));
-                                            valid = true;
-                                        }
-                                        catch (error) {
-                                            writeError(filepath, error);
-                                        }
+                                        html = html.replace(new RegExp(NodeExpress.getFullUri(item, item.originalName).replace(/[\\/]/g, '[\\\\/]'), 'g'), NodeExpress.getFullUri(item));
                                     }
                                     if (release) {
                                         html = html.replace(/(\.\.\/)*__serverroot__/g, '');
                                     }
-                                    if (valid) {
-                                        fs.writeFileSync(filepath, html);
-                                    }
+                                    fs.writeFileSync(filepath, html);
                                 }
                             });
                             break;
@@ -1410,7 +1467,7 @@ app.post('/api/assets/copy', (req, res) => {
         if (!checkPermissions(res, dirname)) {
             return;
         }
-        const status = new FileStatus(dirname, <RequestAsset[]> req.body, EXTERNAL);
+        const status = new NodeExpress(dirname, <RequestAsset[]> req.body, EXTERNAL);
         let cleared = false;
         const finalize = (filepath?: string) => {
             if (status.delayed === Infinity) {
@@ -1419,7 +1476,7 @@ app.post('/api/assets/copy', (req, res) => {
             if (filepath) {
                 status.add(filepath);
             }
-            if (filepath === undefined || --status.delayed === 0 && cleared) {
+            if (!filepath || --status.delayed === 0 && cleared) {
                 finalizeAssetsAsync(status, req.query.release === '1').then(() => {
                     --THREAD_COUNT;
                     res.json(<ResultOfFileAction> { success: status.files.size > 0, files: Array.from(status.files) });
@@ -1468,7 +1525,7 @@ app.post('/api/assets/archive', (req, res) => {
         res.json({ application: `DIRECTORY: ${dirname}`, system });
         return;
     }
-    const status = new FileStatus(dirname, <RequestAsset[]> req.body, EXTERNAL);
+    const status = new NodeExpress(dirname, <RequestAsset[]> req.body, EXTERNAL);
     let cleared = false;
     let zipname = '';
     let format: archiver.Format;
@@ -1535,7 +1592,7 @@ app.post('/api/assets/archive', (req, res) => {
             if (filepath) {
                 status.add(filepath);
             }
-            if (filepath === undefined || --status.delayed === 0 && cleared) {
+            if (!filepath || --status.delayed === 0 && cleared) {
                 finalizeAssetsAsync(status, req.query.release === '1').then(() => {
                     archive.directory(dirname, false);
                     archive.finalize();
