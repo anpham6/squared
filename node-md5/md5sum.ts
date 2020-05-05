@@ -5,7 +5,7 @@ import puppeteer = require('puppeteer');
 import readdirp = require('readdirp');
 import md5 = require('md5');
 import diff = require('diff');
-import colors = require('colors');
+import chalk = require('chalk');
 
 type PageRequest = { name: string; filepath: string; files?: string[] };
 
@@ -96,11 +96,11 @@ function formatTime(start: number) {
     return `${h}h ${m}m ${s}s ${time}ms`;
 }
 
-const failMessage = (message: string, status: any) => console.log('\n' + colors.bold(colors.red('FAIL')) + `: ${message} ` + getStatus(status) + '\n');
-const warnMessage = (message: string, status: string) => console.log(colors.yellow('WARN') + `: ${message} (${colors.grey(status)})`);
-const requiredMessage = (message: string, status: string) => console.log(colors.bold(colors.yellow('REQUIRED')) + `: ${message} ` + getStatus(status));
-const successMessage = (message: string, status: string) => console.log('\n\n' + colors.bold(colors.green('SUCCESS')) + `: ${message} ` + getStatus(status) + '\n');
-const getStatus = (status: string) => colors.yellow('[') + colors.grey(status) + colors.yellow(']');
+const failMessage = (message: string, status: any) => console.log('\n' + chalk.bold.red('FAIL') + `: ${message} ` + getStatus(status) + '\n');
+const warnMessage = (message: string, status: string) => console.log(chalk.yellow('WARN') + `: ${message} (${chalk.grey(status)})`);
+const requiredMessage = (message: string, status: string) => console.log(chalk.bold.yellow('REQUIRED') + `: ${message} ` + getStatus(status));
+const successMessage = (message: string, status: string) => console.log('\n\n' + chalk.bold.green('SUCCESS') + `: ${message} ` + getStatus(status) + '\n');
+const getStatus = (status: string) => chalk.yellow('[') + chalk.grey(status) + chalk.yellow(']');
 
 if (master) {
     if (snapshot) {
@@ -121,26 +121,26 @@ if (master) {
                     );
                     if (output.length > 1) {
                         const pngpath = filepath.replace('.md5', '.png');
-                        stderr.write('\n\n' + colors.bgWhite(colors.black('-'.repeat(100))) + '\n\n');
-                        stderr.write(colors.yellow(masterpath) + '\n' + colors.grey(filepath) + '\n' + (fs.existsSync(pngpath) ? colors.blue(pngpath) + '\n' : '') + '\n');
+                        stderr.write('\n\n' + chalk.bgWhite.black('-'.repeat(100)) + '\n\n');
+                        stderr.write(chalk.yellow(masterpath) + '\n' + chalk.grey(filepath) + '\n' + (fs.existsSync(pngpath) ? chalk.blue(pngpath) + '\n' : '') + '\n');
                         for (const part of output) {
                             if (part.removed) {
-                                stderr.write(colors.yellow(part.value));
+                                stderr.write(chalk.yellow(part.value));
                             }
                             else if (!part.added) {
-                                stderr.write(colors.grey(part.value));
+                                stderr.write(chalk.grey(part.value));
                             }
                         }
                         stderr.write('\n');
                         errors.push(filename);
                     }
                     else {
-                        stderr.write(colors.bgBlue(colors.white('>')));
+                        stderr.write(chalk.bgBlue.white('>'));
                     }
                 }
                 else {
                     notFound.push(filename);
-                    stderr.write(colors.bgBlue(colors.black('?')));
+                    stderr.write(chalk.bgBlue.black('?'));
                 }
             }
             if (errors.length || notFound.length) {
@@ -178,7 +178,7 @@ else if (host && data && build && snapshot) {
                             executablePath,
                             defaultViewport: { width, height }
                         });
-                        console.log(colors.blue('VERSION') + ': ' + colors.bold(await browser.version()) + '\n');
+                        console.log(chalk.blue('VERSION') + ': ' + chalk.bold(await browser.version()) + '\n');
                         const tempDir = path.resolve(__dirname, 'temp', build!);
                         try {
                             fs.emptyDirSync(tempDir);
@@ -206,7 +206,7 @@ else if (host && data && build && snapshot) {
                                     await page.waitFor('#md5_complete', { timeout });
                                     const files = (await page.$eval('#md5_complete', element => element.innerHTML)).split('\n').sort();
                                     items.push({ name, filepath, files });
-                                    console.log(colors.yellow('OK') + ': ' + href);
+                                    console.log(chalk.yellow('OK') + ': ' + href);
                                 }
                                 catch (err) {
                                     failed.push({ name, filepath });
@@ -226,9 +226,9 @@ else if (host && data && build && snapshot) {
                                 output += md5(fs.readFileSync(file.fullPath)) + '  ./' + file.path.replace(/\\/g, '/') + '\n';
                             }
                             fs.writeFileSync(path.resolve(pathname, item.name + '.md5'), output);
-                            stderr.write(colors.bgBlue(colors.bold(item.files!.length !== files.length ? colors.black('!') : colors.white('>'))));
+                            stderr.write(chalk.bgBlue.bold(item.files!.length !== files.length ? chalk.black('!') : chalk.white('>')));
                         }
-                        const message = '+' + colors.green(items.length.toString()) + ' -' + colors.red(failed.length.toString());
+                        const message = '+' + chalk.green(items.length.toString()) + ' -' + chalk.red(failed.length.toString());
                         if (failed.length === 0) {
                             successMessage(message, formatTime(timeStart));
                         }
