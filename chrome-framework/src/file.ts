@@ -148,8 +148,12 @@ function convertFileMatch(value: string) {
 }
 
 function getExtensions(element: Null<HTMLElement>) {
-    const use = element?.dataset.use?.trim();
-    return use ? use.split(XML.SEPARATOR) : [];
+    if (element) {
+        const dataset = element.dataset;
+        const use = dataset.useChrome?.trim() || dataset.use?.trim();
+        return use ? use.split(XML.SEPARATOR) : [];
+    }
+    return [];
 }
 
 function processExtensions(this: chrome.base.File<View>, data: RequestAsset, extensions: string[]) {

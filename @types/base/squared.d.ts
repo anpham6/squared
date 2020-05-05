@@ -461,8 +461,6 @@ declare class Node extends squared.lib.base.Container<Node> implements BoxModel 
     get cssStyle(): StringMap;
     get textStyle(): StringMap;
     get center(): Point;
-    get use(): Undef<string>;
-    get extensions(): string[];
     constructor(id: number, sessionId?: string, element?: Element);
 }
 
@@ -584,6 +582,8 @@ declare class NodeUI extends Node implements LayoutType {
     set renderExclude(value: boolean);
     get renderExclude(): boolean;
     set use(value: Undef<string>);
+    get use(): Undef<string>;
+    get extensions(): string[];
     get controlElement(): boolean;
     get documentId(): string;
     get baselineHeight(): number;
