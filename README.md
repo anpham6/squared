@@ -44,7 +44,7 @@ Option #2 (more features):
 
     document.addEventListener('DOMContentLoaded', function() {
         // Required
-        squared.setFramework(android); // OR: chrome
+        squared.setFramework(android /* chrome */, { builtInExtensions: [/* optional */] }); // override default settings
 
         // Required: zero or more DOM elements
         squared.parseDocument(/* document.getElementById('mainview') */, /* 'subview-id' */, /* etc... */);
@@ -194,7 +194,7 @@ There is no official documentation as this project is still in early development
 ```javascript
 .settings // see user preferences section
 
-setFramework(module: {}, cached?: boolean) // install application interpreter
+setFramework(module: {}, settings?: {}, cached?: boolean) // install application interpreter
 setHostname(value: string) // use another cors-enabled server for processing archives - (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
 setViewModel(data?: {}) // object data for layout bindings
 
@@ -697,14 +697,29 @@ Most extensions have a few settings which can be configured. Compression and qua
 ```javascript
 chrome.extension.options = { // internal representation
     mimeTypes: ['image/jpeg', 'image/bmp', 'image/gif', 'image/tiff'],
-    replaceWith: true,
-    pickSmaller: false
+    greaterThan: 0,
+    smallerThan: Infinity,
+    whenSmaller: false,
+    replaceWith: true // convert
 };
 
 squared.configure('chrome.convert.png', {
+    greaterThan: 10000,
     replaceWith: false,
-    pickSmaller: true
+    whenSmaller: true
 });
+```
+You can also use these same commands individually on any elements which have images.
+
+{format}?{@%}?(minSize(0),maxSize(*))?  
+
+@ - replace  
+% - smaller  
+
+```xml
+
+<img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour/::png@(10000,75000)" />
+
 ```
 
 ### LICENSE

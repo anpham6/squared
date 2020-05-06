@@ -8,23 +8,18 @@ type View = chrome.base.View;
 export default class Gif<T extends View> extends Extension<T> {
     public readonly options: ConvertOptions = {
         mimeTypes: ['image/png', 'image/jpeg', 'image/bmp', 'image/tiff'],
-        replaceWith: true,
-        pickSmaller: false
+        greaterThan: 0,
+        smallerThan: Infinity,
+        whenSmaller: false,
+        replaceWith: true
     };
 
     public processFile(data: RequestAsset, override = false) {
         const mimeType = data.mimeType;
-        if (mimeType?.includes('gif:') === false) {
-            const options = this.options;
-            if (override || options.mimeTypes.find(value => mimeType.endsWith(value))) {
-                let command = '';
-                if (options.replaceWith) {
-                    command = '@';
-                }
-                else if (options.pickSmaller) {
-                    command = '%';
-                }
-                data.mimeType = command + 'gif:' + mimeType;
+        if (mimeType && !/gif[(%@:]/.test(mimeType)) {
+            const mimeTypes = this.options.mimeTypes;
+            if (override || Array.isArray(mimeTypes) && mimeTypes.find(value => mimeType.endsWith(value))) {
+                data.mimeType = Extension.getConvertOptions('gif', this.options) + mimeType;
                 return true;
             }
         }

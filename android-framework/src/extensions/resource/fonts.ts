@@ -11,7 +11,7 @@ type View = android.base.View;
 const $lib = squared.lib;
 
 const { XML } = $lib.regex;
-const { capitalize, convertInt, convertWord, safeNestedArray, safeNestedMap, objectMap, spliceArray, trimBoth } = $lib.util;
+const { capitalize, convertInt, convertWord, hasKeys, safeNestedArray, safeNestedMap, objectMap, spliceArray, trimBoth } = $lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
@@ -301,7 +301,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                 filtered[attrA] = ids;
                             }
                         }
-                        if (Object.keys(filtered).length) {
+                        if (hasKeys(filtered)) {
                             const combined: ObjectMap<Set<string>> = {};
                             const deleteKeys = new Set<string>();
                             const joinArray: StringMap = {};

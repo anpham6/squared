@@ -348,6 +348,13 @@ export function fromMimeType(value: string) {
     }
 }
 
+export function hasKeys(obj: {}) {
+    for (const attr in obj) {
+        return obj[attr] !== undefined;
+    }
+    return false;
+}
+
 export function capitalize(value: string, upper?: boolean) {
     return upper === false ? value.charAt(0).toLowerCase() + value.substring(1) : value.charAt(0).toUpperCase() + value.substring(1).toLowerCase();
 }

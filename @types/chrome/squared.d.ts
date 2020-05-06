@@ -1,5 +1,6 @@
 import { NodeOptions, UserSettings } from './application';
 import { RequestAsset, FileActionAttribute } from './file';
+import { CompressOptions, ConvertOptions } from './extension';
 
 import * as squared from '../squared';
 
@@ -47,6 +48,8 @@ declare namespace base {
     }
 
     class Extension<T extends View> extends squared.base.Extension<T> {
+        public static getConvertOptions(name: string, options: ConvertOptions): Undef<string>;
+        public static getCompressOptions(name: string, options: CompressOptions): string;
         application: Application<T>;
         processFile(data: RequestAsset, override?: boolean): boolean;
     }

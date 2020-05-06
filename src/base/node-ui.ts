@@ -15,7 +15,7 @@ const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = $lib.css;
 const { isTextNode } = $lib.dom;
 const { equal } = $lib.math;
 const { getElementAsNode } = $lib.session;
-const { capitalize, cloneObject, convertWord, hasBit, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = $lib.util;
+const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = $lib.util;
 const { XML } = $lib.regex;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
@@ -773,7 +773,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const element = <HTMLElement> this._element;
             const dataset = element.dataset;
             const parentDataset = element.parentElement?.dataset || {};
-            if (Object.keys(dataset).length || Object.keys(parentDataset).length) {
+            if (hasKeys(dataset) || hasKeys(parentDataset)) {
                 systemName = capitalize(systemName || this.localSettings.systemName);
                 this.exclude({
                     resource: parseExclusions('excludeResource', NODE_RESOURCE, dataset, parentDataset, systemName),

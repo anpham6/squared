@@ -16,7 +16,7 @@ const { BOX_MARGIN, BOX_PADDING, CSS_UNIT, formatPX, isLength, isPercent } = $li
 const { createElement, getNamedItem, newBoxModel } = $lib.dom;
 const { clamp, truncate } = $lib.math;
 const { actualTextRangeRect } = $lib.session;
-const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
+const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
 
 const { EXT_NAME } = $base.lib.constant;
 const { BOX_STANDARD, NODE_ALIGNMENT } = $base.lib.enumeration;
@@ -2057,7 +2057,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public supported(attr: string, result = {}): boolean {
             if (typeof DEPRECATED[attr] === 'function') {
                 const valid = DEPRECATED[attr](result, this.api, this);
-                if (!valid || Object.keys(result).length) {
+                if (!valid || hasKeys(result)) {
                     return valid;
                 }
             }
@@ -2097,7 +2097,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                             if (!this.supported(attr, data)) {
                                                 continue;
                                             }
-                                            if (Object.keys(data).length) {
+                                            if (hasKeys(data)) {
                                                 if (isString(data.attr)) {
                                                     attr = data.attr;
                                                 }

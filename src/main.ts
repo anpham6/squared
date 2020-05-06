@@ -35,6 +35,12 @@ function includeExtension(extensions: Extension[], ext: Extension) {
     }
 }
 
+function deleteProperties(data: {}) {
+    for (const attr in data) {
+        delete data[attr];
+    }
+}
+
 const checkWritable = (app: Undef<Application>): app is Application => app?.initializing === false && app.length > 0;
 
 export function setHostname(value: string) {
@@ -46,13 +52,14 @@ export function setHostname(value: string) {
     }
 }
 
-export function setFramework(value: AppFramework<Node>, cached = false) {
+export function setFramework(value: AppFramework<Node>, options?: ObjectMap<any>, cached = false) {
     const reloading = framework !== undefined;
     if (framework !== value) {
         const appBase = cached ? value.cached() : value.create();
-        if (!reloading) {
-            Object.assign(appBase.userSettings, settings);
+        if (util.isPlainObject(options)) {
+            Object.assign(appBase.userSettings, options);
         }
+        deleteProperties(settings);
         Object.assign(settings, appBase.userSettings);
         main = appBase.application;
         main.userSettings = settings;
@@ -72,11 +79,11 @@ export function setFramework(value: AppFramework<Node>, cached = false) {
                 }
             }
         });
-        framework = value;
         if (reloading) {
-            Object.keys(system).forEach(attr => delete system[attr]);
+            deleteProperties(system);
         }
         Object.assign(system, value.system);
+        framework = value;
     }
     if (reloading) {
         reset();

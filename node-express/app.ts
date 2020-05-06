@@ -1,6 +1,6 @@
 import { IChrome, ICompress, IFileManager, IExpress, INode, Settings } from './@types/node';
 import { Environment, RequestAsset, ResultOfFileAction, Routing } from './@types/express';
-import { CompressOutput, CompressFormat, External } from './@types/content';
+import { CompressFormat, External } from './@types/content';
 
 import path = require('path');
 import zlib = require('zlib');
@@ -329,7 +329,7 @@ let Chrome: IChrome;
             }
             return [locationDir, assetDir];
         }
-        toAbsoluteUrl(value: string, href: string) {
+        getAbsoluteUrl(value: string, href: string) {
             value = value.replace(/\\/g, '/');
             let moveTo = '';
             if (value.charAt(0) === '/') {
@@ -358,15 +358,15 @@ let Chrome: IChrome;
         {
         }
 
-        createGzipWriteStream(source: string, filename: string, level?: number) {
-            const o = fs.createWriteStream(filename);
+        createGzipWriteStream(source: string, filepath: string, level?: number) {
+            const o = fs.createWriteStream(filepath);
             fs.createReadStream(source)
                 .pipe(zlib.createGzip({ level: level || this.gzip_level }))
                 .pipe(o);
             return o;
         }
-        createBrotliWriteStream(source: string, filename: string, quality?: number, mimeType = '') {
-            const o = fs.createWriteStream(filename);
+        createBrotliWriteStream(source: string, filepath: string, quality?: number, mimeType = '') {
+            const o = fs.createWriteStream(filepath);
             fs.createReadStream(source)
                 .pipe(
                     zlib.createBrotliCompress({
@@ -379,17 +379,6 @@ let Chrome: IChrome;
                 )
                 .pipe(o);
             return o;
-        }
-        getOutput(file: RequestAsset): CompressOutput {
-            const compress = file.compress;
-            const gz = this.getFormat(compress, 'gz');
-            const br = this.getFormat(compress, 'br');
-            const jpeg = this.isJpeg(file) && this.getFormat(compress, 'jpeg');
-            return {
-                gzip: gz ? gz.level : -1,
-                brotli: br ? br.level : -1,
-                jpeg: jpeg ? jpeg.level || this.jpeg_quality : -1
-            };
         }
         getFileSize(filepath: string) {
             return fs.statSync(filepath).size;
@@ -405,8 +394,8 @@ let Chrome: IChrome;
                 }
             }
         }
-        hasPng(compress: Undef<CompressFormat[]>) {
-            return this.tinify_api_key && this.getFormat(compress, 'png') !== undefined;
+        getPng(compress: Undef<CompressFormat[]>) {
+            return this.tinify_api_key ? this.getFormat(compress, 'png') : undefined;
         }
         isJpeg(file: RequestAsset) {
             if (file.mimeType?.endsWith('image/jpeg')) {
@@ -418,6 +407,23 @@ let Chrome: IChrome;
                     return true;
             }
             return false;
+        }
+        getSizeRange(value: string): [number, number] {
+            const match = /\(\s*(\d+)\s*,\s*(\d+|\*)\s*\)/.exec(value);
+            return match ? [parseInt(match[1]), match[2] === '*' ? Infinity : parseInt(match[2])] : [0, Infinity];
+        }
+        withinSizeRange(filepath: string, value: Undef<string>) {
+            if (!value) {
+                return true;
+            }
+            const [greaterThan, smallerThan] = Compress.getSizeRange(value);
+            if (greaterThan > 0 || smallerThan < Infinity) {
+                const fileSize = Compress.getFileSize(filepath);
+                if (fileSize < greaterThan || fileSize > smallerThan) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
     (GZIP_LEVEL, BROTLI_QUALITY, JPEG_QUALITY, TINIFY_API_KEY);
@@ -743,7 +749,7 @@ class FileManager implements IFileManager {
             this.add(replaceWith);
         }
     }
-    toRelativeUrl(file: RequestAsset, url: string) {
+    getRelativeUrl(file: RequestAsset, url: string) {
         let asset = this.assets.find(item => item.uri === url);
         let origin = file.uri!;
         if (!asset) {
@@ -804,35 +810,81 @@ class FileManager implements IFileManager {
         }
     }
     compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
-        const { jpeg, gzip, brotli } = Compress.getOutput(file);
+        const compress = file.compress;
+        const gzip = Compress.getFormat(compress, 'gz');
+        const brotli = Compress.getFormat(compress, 'br');
+        const jpeg = Compress.isJpeg(file) && Compress.getFormat(compress, 'jpeg');
         const resumeThread = () => {
             this.transformBuffer(assets, file, filepath, finalize);
-            if (gzip !== -1) {
+            if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
                 ++this.delayed;
                 const gz = `${filepath}.gz`;
-                Compress.createGzipWriteStream(filepath, gz, gzip)
-                    .on('finish', () => finalize(gz))
+                Compress.createGzipWriteStream(filepath, gz, gzip.level)
+                    .on('finish', () => {
+                        if (gzip.condition?.includes('%') && Compress.getFileSize(gz) >= Compress.getFileSize(filepath)) {
+                            try {
+                                fs.unlinkSync(gz);
+                            }
+                            catch (err) {
+                                Node.writeError(gz, err);
+                            }
+                            finalize('');
+                        }
+                        else {
+                            finalize(gz);
+                        }
+                    })
                     .on('error', err => {
                         Node.writeError(gz, err);
                         finalize('');
                     });
             }
-            if (brotli !== -1 && Node.checkVersion(11, 7)) {
+            if (brotli && Node.checkVersion(11, 7) && Compress.withinSizeRange(filepath, brotli.condition)) {
                 ++this.delayed;
                 const br = `${filepath}.br`;
-                Compress.createBrotliWriteStream(filepath, br, brotli, file.mimeType)
-                    .on('finish', () => finalize(br))
+                Compress.createBrotliWriteStream(filepath, br, brotli.level, file.mimeType)
+                    .on('finish', () => {
+                        if (brotli.condition?.includes('%') && Compress.getFileSize(br) >= Compress.getFileSize(filepath)) {
+                            try {
+                                fs.unlinkSync(br);
+                            }
+                            catch (err) {
+                                Node.writeError(br, err);
+                            }
+                            finalize('');
+                        }
+                        else {
+                            finalize(br);
+                        }
+                    })
                     .on('error', err => {
                         Node.writeError(br, err);
                         finalize('');
                     });
             }
         };
-        if (jpeg !== -1) {
+        if (jpeg && Compress.withinSizeRange(filepath, jpeg.condition)) {
             ++this.delayed;
+            let jpg = filepath;
+            if (jpeg.condition?.includes('%')) {
+                jpg = `${filepath}.jpg`;
+            }
             jimp.read(filepath)
                 .then(image => {
-                    image.quality(jpeg).write(filepath, err => {
+                    image.quality(jpeg.level || Compress.jpeg_quality).write(jpg, err => {
+                        if (jpg !== filepath) {
+                            try {
+                                if (Compress.getFileSize(jpg) >= Compress.getFileSize(filepath)) {
+                                    fs.unlinkSync(jpg);
+                                }
+                                else {
+                                    fs.renameSync(jpg, filepath);
+                                }
+                            }
+                            catch (error) {
+                                Node.writeError(jpg, error);
+                            }
+                        }
                         if (err) {
                             Node.writeError(filepath, err);
                         }
@@ -879,7 +931,7 @@ class FileManager implements IFileManager {
                 while ((match = pattern.exec(html)) !== null) {
                     const segment = match[0];
                     const script = match[2].toLowerCase() === 'script';
-                    const location = Express.toAbsoluteUrl(match[5].split('::')[0].trim(), baseUri);
+                    const location = Express.getAbsoluteUrl(match[5].split('::')[0].trim(), baseUri);
                     if (saved.has(location)) {
                         source = source.replace(segment, '');
                     }
@@ -1039,19 +1091,17 @@ class FileManager implements IFileManager {
                         const index = value.lastIndexOf('.');
                         return value.substring(0, index !== -1 ? index : value.length) + '.' + ext;
                     };
-                    const afterConvert = (transformed: string, command: string) => {
-                        switch (command.charAt(0)) {
-                            case '@':
-                                this.replaceFileOutput(file, transformed);
-                                break;
-                            case '%':
-                                if (this.filesToCompare.has(file)) {
-                                    this.filesToCompare.get(file)!.push(transformed);
-                                }
-                                else {
-                                    this.filesToCompare.set(file, [transformed]);
-                                }
-                                break;
+                    const afterConvert = (transformed: string, condition: string) => {
+                        if (condition.includes('@')) {
+                            this.replaceFileOutput(file, transformed);
+                        }
+                        else if (condition.includes('%')) {
+                            if (this.filesToCompare.has(file)) {
+                                this.filesToCompare.get(file)!.push(transformed);
+                            }
+                            else {
+                                this.filesToCompare.set(file, [transformed]);
+                            }
                         }
                     };
                     const compressImage = (location: string) => {
@@ -1071,7 +1121,10 @@ class FileManager implements IFileManager {
                     const convert = mimeType.split(':');
                     convert.pop();
                     convert.forEach(value => {
-                        if (/^[@%]?png/.test(value)) {
+                        if (!Compress.withinSizeRange(filepath, value)) {
+                            return;
+                        }
+                        if (value.startsWith('png')) {
                             if (!mimeType.endsWith('/png')) {
                                 ++this.delayed;
                                 jimp.read(filepath)
@@ -1083,7 +1136,7 @@ class FileManager implements IFileManager {
                                             }
                                             else {
                                                 afterConvert(png, value);
-                                                if (Compress.hasPng(file.compress)) {
+                                                if (Compress.getPng(file.compress)) {
                                                     compressImage(png);
                                                     return;
                                                 }
@@ -1097,7 +1150,7 @@ class FileManager implements IFileManager {
                                     });
                             }
                         }
-                        else if (/^[@%]?jpeg/.test(value)) {
+                        else if (value.startsWith('jpeg')) {
                             if (!mimeType.endsWith('/jpeg')) {
                                 ++this.delayed;
                                 jimp.read(filepath)
@@ -1109,7 +1162,7 @@ class FileManager implements IFileManager {
                                             }
                                             else {
                                                 afterConvert(jpg, value);
-                                                if (Compress.hasPng(file.compress)) {
+                                                if (Compress.getPng(file.compress)) {
                                                     compressImage(jpg);
                                                     return;
                                                 }
@@ -1123,7 +1176,7 @@ class FileManager implements IFileManager {
                                     });
                             }
                         }
-                        else if (/^[@%]?bmp/.test(value)) {
+                        else if (value.startsWith('bmp')) {
                             if (!mimeType.endsWith('/bmp')) {
                                 ++this.delayed;
                                 jimp.read(filepath)
@@ -1162,7 +1215,7 @@ class FileManager implements IFileManager {
             }
             for (const item of assets) {
                 if (item.base64 && item.uri) {
-                    const url = this.toRelativeUrl(file, item.uri);
+                    const url = this.getRelativeUrl(file, item.uri);
                     if (url) {
                         content = Chrome.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
                     }
@@ -1174,7 +1227,7 @@ class FileManager implements IFileManager {
             while ((match = pattern.exec(content)) !== null) {
                 let url = match[2];
                 if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
-                    url = this.toRelativeUrl(file, url);
+                    url = this.getRelativeUrl(file, url);
                     if (url) {
                         source = source.replace(match[0], `url(${url})`);
                     }
@@ -1203,7 +1256,8 @@ class FileManager implements IFileManager {
         return '';
     }
     writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
-        if (Compress.hasPng(file.compress)) {
+        const png = Compress.getPng(file.compress);
+        if (png && Compress.withinSizeRange(filepath, png.condition)) {
             try {
                 tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
                     if (!err) {

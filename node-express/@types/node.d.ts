@@ -1,5 +1,5 @@
 import { RequestAsset, Routing } from './express';
-import { CompressFormat, CompressOutput, External } from './content';
+import { CompressFormat, External } from './content';
 
 import * as fs from "fs";
 import * as cors from "cors";
@@ -26,7 +26,7 @@ declare namespace Node {
         fromSameOrigin(base: string, other: string): boolean;
         resolvePath(value: string, href: string, hostname?: boolean): string;
         getBaseDirectory(location: string, asset: string): [string[], string[]];
-        toAbsoluteUrl(value: string, href: string): string;
+        getAbsoluteUrl(value: string, href: string): string;
         getFullUri(file: RequestAsset, filename?: string): string;
     }
 
@@ -36,13 +36,14 @@ declare namespace Node {
         readonly jpeg_quality: number;
         readonly tinify_api_key: boolean;
         getFileSize(filepath: string): number;
-        createGzipWriteStream(source: string, filename: string, level?: number): fs.WriteStream;
-        createBrotliWriteStream(source: string, filename: string, quality?: number, mimeType?: string): fs.WriteStream;
-        getOutput(file: RequestAsset): CompressOutput;
+        createGzipWriteStream(source: string, filepath: string, level?: number): fs.WriteStream;
+        createBrotliWriteStream(source: string, filepath: string, quality?: number, mimeType?: string): fs.WriteStream;
         getFormat(compress: Undef<CompressFormat[]>, format: string): Undef<CompressFormat>;
         removeFormat(compress: Undef<CompressFormat[]>, format: string): void;
-        hasPng(compress: Undef<CompressFormat[]>): boolean;
+        getPng(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
         isJpeg(file: RequestAsset): boolean;
+        getSizeRange(value: string): [number, number];
+        withinSizeRange(filepath: string, value: Undef<string>): boolean;
     }
 
     interface IChrome {
@@ -71,7 +72,7 @@ declare namespace Node {
         delete(value: string): void;
         getFileOutput(file: RequestAsset): { pathname: string; filepath: string };
         replaceFileOutput(file: RequestAsset, replaceWith: string): void;
-        toRelativeUrl(file: RequestAsset, url: string): string;
+        getRelativeUrl(file: RequestAsset, url: string): string;
         appendContent(file: RequestAsset, content: string): void;
         compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
         transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;

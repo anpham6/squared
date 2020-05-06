@@ -4,7 +4,7 @@ import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
 import { CHAR, CSS, STRING, UNIT, XML } from './regex';
-import { convertAlpha, convertFloat, convertRoman, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
+import { convertAlpha, convertFloat, convertRoman, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
 
 const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
 const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
@@ -1302,7 +1302,7 @@ export function getKeyframesRules(): ObjectMap<KeyframesData> {
                         const item = <CSSKeyframesRule> cssRules[j];
                         if (item.type === CSSRule.KEYFRAMES_RULE) {
                             const value = parseKeyframes(item.cssRules);
-                            if (Object.keys(value).length) {
+                            if (hasKeys(value)) {
                                 const name = item.name;
                                 if (result[name]) {
                                     Object.assign(result[name], value);

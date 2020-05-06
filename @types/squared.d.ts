@@ -4,7 +4,7 @@ type ExtensionRequest = string | {};
 export const settings: StandardMap;
 export const system: FunctionMap<any>;
 export function setHostname(value: string): void;
-export function setFramework(value: {}, cached?: boolean): void;
+export function setFramework(value: {}, options?: {}, cached?: boolean): void;
 export function setViewModel(data?: {}): void;
 export function include(value: ExtensionRequest, options?: {}): boolean;
 export function exclude(value: ExtensionRequest | string): boolean;

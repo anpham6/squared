@@ -269,6 +269,7 @@ declare namespace util {
     function hasMimeType(formats: MIMEOrAll, value: string): boolean;
     function parseMimeType(value: string): string;
     function fromMimeType(value: string): string;
+    function hasKeys(obj: {}): boolean;
     function capitalize(value: string, upper?: boolean): string;
     function capitalizeString(value: string): string;
     function lowerCaseString(value: string): string;

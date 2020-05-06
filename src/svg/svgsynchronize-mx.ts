@@ -17,7 +17,7 @@ const $lib = squared.lib;
 
 const { clamp, equal, multipleOf } = $lib.math;
 const { CHAR } = $lib.regex;
-const { hasBit, hasValue, isEqual, isNumber, joinArray, objectMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = $lib.util;
+const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, objectMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = $lib.util;
 
 type AnimateValue = number | Point[] | string;
 type TimelineValue = Map<any, AnimateValue>;
@@ -1735,7 +1735,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                 return a.time < b.time ? -1 : 1;
                             });
                         }
-                        if (Object.keys(infiniteMap).length) {
+                        if (hasKeys(infiniteMap)) {
                             const delay: number[] = [];
                             const duration: number[] = [];
                             for (const attr in infiniteMap) {
@@ -1863,7 +1863,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         }
                         repeatingResult = createKeyTimeMap(repeatingMap, keyTimes, forwardMap);
                     }
-                    if (repeatingAsInfinite === -1 && Object.keys(infiniteMap).length) {
+                    if (repeatingAsInfinite === -1 && hasKeys(infiniteMap)) {
                         const timelineMap: TimelineMap = {};
                         const infiniteAnimations: SvgAnimate[] = [];
                         const keyTimes: number[] = [];

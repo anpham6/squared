@@ -33,6 +33,7 @@ export interface Exclusions {
 export interface CompressFormat {
     format: string;
     level?: number;
+    condition?: string;
 }
 
 export interface ResultOfFileAction {

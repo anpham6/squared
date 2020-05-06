@@ -9,7 +9,10 @@ const { safeNestedArray } = squared.lib.util;
 
 export default class Png<T extends View> extends Extension<T> {
     public readonly options: CompressOptions = {
-        mimeTypes: ['image/png']
+        mimeTypes: ['image/png'],
+        greaterThan: 0,
+        smallerThan: Infinity,
+        whenSmaller: true
     };
 
     public processFile(data: RequestAsset, override = false) {
@@ -17,11 +20,11 @@ export default class Png<T extends View> extends Extension<T> {
             const mimeType = data.mimeType;
             if (mimeType) {
                 const mimeTypes = this.options.mimeTypes;
-                override = /[@%]png:/.test(mimeType) || Array.isArray(mimeTypes) && !!mimeTypes.find(value => mimeType.endsWith(value)) || mimeTypes === '*' && mimeType.includes('image/');
+                override = mimeType.includes('png:') || mimeTypes === '*' && mimeType.includes('image/') || Array.isArray(mimeTypes) && !!mimeTypes.find(value => mimeType.endsWith(value));
             }
         }
         if (override) {
-            safeNestedArray(<StandardMap> data, 'compress').push({ format: 'png' });
+            safeNestedArray(<StandardMap> data, 'compress').push({ format: 'png', condition: Extension.getCompressOptions(this.options) });
             return true;
         }
         return false;

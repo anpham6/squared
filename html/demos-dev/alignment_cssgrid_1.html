@@ -163,8 +163,19 @@
                 squared.base = result;
                 System.import('/build/chrome-framework/src/main.js').then(result => {
                     chrome = result.default;
-                    squared.settings.builtInExtensions = ['chrome.convert.png'];
-                    squared.setFramework(chrome);
+                    squared.setFramework(chrome, {
+                        builtInExtensions: ['chrome.convert.png', 'chrome.compress.gzip']
+                    });
+                    squared.configure('chrome.convert.png', {
+                        greaterThan: 35000,
+                        smallerThan: 50000,
+                        whenSmaller: false,
+                        replaceWith: true
+                    });
+                    squared.configure('chrome.compress.gzip', {
+                        greaterThan: 35000
+                    });
+                    chrome.saveAsWebPage();
                     chrome.saveAsWebPage('bundle1', {
                         callback: result => console.log(result),
                         saveAs: {

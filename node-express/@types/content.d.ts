@@ -8,12 +8,6 @@ declare namespace Content {
         js?: ObjectMap<StandardMap>;
     }
 
-    interface CompressOutput {
-        jpeg: number;
-        gzip?: number;
-        brotli?: number;
-    }
-
     interface CompressFormat extends file.CompressFormat {}
 
     interface FormattableContent extends file_chrome.FormattableContent {}

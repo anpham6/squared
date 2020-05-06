@@ -40,7 +40,7 @@ const $svg_lib = squared.svg.lib;
 const { extractURL, formatPX, isPercent } = $lib.css;
 const { truncate } = $lib.math;
 const { CHAR, FILE } = $lib.regex;
-const { convertCamelCase, convertInt, convertWord, formatString, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = $lib.util;
+const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = $lib.util;
 const { applyTemplate } = $lib.xml;
 
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = $svg_lib.constant;
@@ -1589,7 +1589,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (target.clipRegion !== '') {
             this.createClipPath(target, clipMain, target.clipRegion);
         }
-        if (clipMain.length || Object.keys(transformData).length) {
+        if (clipMain.length || hasKeys(transformData)) {
             Object.assign(groupMain, transformData);
             result.push(groupMain);
         }
@@ -1603,7 +1603,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             if (this.queueAnimations(target, groupName, item => SvgBuild.asAnimateTransform(item))) {
                 baseData.name = groupName;
             }
-            if (Object.keys(baseData).length) {
+            if (hasKeys(baseData)) {
                 Object.assign(groupBox, baseData);
                 result.push(groupBox);
             }
@@ -1650,7 +1650,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (clipElement.length) {
             baseData['clip-path'] = clipElement;
         }
-        if (Object.keys(baseData).length) {
+        if (hasKeys(baseData)) {
             renderData.push(baseData);
         }
         path.transformResidual?.forEach(item => renderData.push(createTransformData(item)));

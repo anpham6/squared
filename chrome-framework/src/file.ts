@@ -10,17 +10,19 @@ type BundleIndex = ObjectMap<RequestAsset[]>;
 const $lib = squared.lib;
 
 const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, objectMap, parseMimeType, partitionLastIndexOf, resolvePath, safeNestedArray, trimEnd } = $lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, objectMap, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, safeNestedArray, trimEnd } = $lib.util;
 
 const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /[\s\n]*(.+?\.[^\s,]+).*?,?/g;
 
-function parseFileAs(attr: string, value: string): Undef<string>[] | undefined {
-    const match = new RegExp(`${attr}As:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
-    if (match) {
-        const segments = match[1].split('::').map(item => item.trim());
-        const format = segments.splice(1);
-        return [segments[0], format.length ? format.join('::') : undefined];
+function parseFileAs(attr: string, value: Undef<string>): Undef<string>[] | undefined {
+    if (value) {
+        const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
+        if (match) {
+            const segments = match[1].split('::').map(item => item.trim());
+            const format = segments.splice(1);
+            return [segments[0], format.length ? format.join('::') : undefined];
+        }
     }
     return undefined;
 }
@@ -53,7 +55,7 @@ function getFilePath(value: string): string[] {
     return result;
 }
 
-function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, format?: string): Undef<RequestAsset> {
+function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, format?: string, saveTo?: boolean): Undef<RequestAsset> {
     let value = trimEnd(uri, '/');
     const local = value.startsWith(trimEnd(location.origin, '/'));
     if (!local && crossOrigin) {
@@ -61,7 +63,7 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
     }
     let relocate: Undef<string>;
     if (saveAs) {
-        const data = parseFileAs('save', saveAs);
+        const data = parseFileAs('saveAs', trimEnd(saveAs, '/'));
         if (data) {
             [relocate, format] = data;
         }
@@ -75,13 +77,19 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
     const match = COMPONENT.PROTOCOL.exec(value);
     if (match) {
         const host = match[2], port = match[3], path = match[4];
+        const extension = uri.includes('.') ? fromLastIndexOf(uri, '.').toLowerCase() : undefined;
         let pathname = '', filename = '';
         let rootDir: Undef<string>;
         let moveTo: Undef<string>;
         let prefix!: string;
         const getDirectory = (start: number) => path.substring(start, path.lastIndexOf('/'));
         if (!local) {
-            pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
+            if (saveTo && relocate) {
+                [moveTo, pathname, filename] = getFilePath(relocate + '/' + randomUUID() + (extension ? '.' + extension : ''));
+            }
+            else {
+                pathname = convertWord(host) + (port ? '/' + port.substring(1) : '') + '/';
+            }
         }
         else {
             prefix = getRootDir();
@@ -97,28 +105,29 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
             }
             rootDir = path.substring(0, j + 1);
         }
-        if (local && relocate) {
-            [moveTo, pathname, filename] = getFilePath(relocate);
-        }
-        else if (path && path !== '/') {
-            filename = fromLastIndexOf(path, '/', '\\');
-            if (local) {
-                if (path.startsWith(prefix)) {
-                    pathname = getDirectory(prefix.length);
+        if (filename === '') {
+            if (local && relocate) {
+                [moveTo, pathname, filename] = getFilePath(relocate);
+            }
+            else if (path && path !== '/') {
+                filename = fromLastIndexOf(path, '/', '\\');
+                if (local) {
+                    if (path.startsWith(prefix)) {
+                        pathname = getDirectory(prefix.length);
+                    }
+                    else {
+                        moveTo = '__serverroot__';
+                        pathname = getDirectory(0);
+                    }
                 }
                 else {
-                    moveTo = '__serverroot__';
-                    pathname = getDirectory(0);
+                    pathname += getDirectory(1);
                 }
             }
             else {
-                pathname += getDirectory(1);
+                filename = 'index.html';
             }
         }
-        else {
-            filename = 'index.html';
-        }
-        const extension = filename.includes('.') ? fromLastIndexOf(filename, '.').toLowerCase() : undefined;
         return {
             uri,
             rootDir,
@@ -313,7 +322,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
                 else if (isString(file)) {
                     if (!outerHTML) {
-                        const command = parseFileAs('export', file);
+                        const command = parseFileAs('exportAs', file);
                         if (command) {
                             [file, format] = command;
                         }
@@ -381,7 +390,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
                 else if (isString(file)) {
                     if (!outerHTML) {
-                        const command = parseFileAs('export', file);
+                        const command = parseFileAs('exportAs', file);
                         if (command) {
                             [file, format] = command;
                         }
@@ -426,10 +435,17 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         const result: RequestAsset[] = [];
         const processUri = (element: Null<HTMLElement>, uri: string, mimeType?: string) => {
             if (uri !== '') {
-                const data = <RequestAsset> parseUri(uri, preserveCrossOrigin);
+                let file: Undef<string>;
+                if (element) {
+                    const saveTo = parseFileAs('saveTo', element.dataset.chromeFile);
+                    if (saveTo) {
+                        [file, mimeType] = saveTo;
+                    }
+                }
+                const data = <RequestAsset> parseUri(uri, preserveCrossOrigin, file, undefined, true);
                 if (this.validFile(data) && !result.find(item => item.uri === uri)) {
                     if (mimeType) {
-                        data.mimeType = mimeType;
+                        data.mimeType = file ? mimeType + ':' + data.mimeType : mimeType;
                     }
                     processExtensions.call(this, data, getExtensions(element));
                     result.push(data);
@@ -438,8 +454,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             return undefined;
         };
+        document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(null, resolvePath(source.poster)));
         document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => source.srcset.split(XML.SEPARATOR).forEach(uri => processUri(source, resolvePath(uri.split(CHAR.SPACE)[0]))));
-        document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(source, resolvePath(source.poster)));
         document.querySelectorAll('img, input[type=image]').forEach((image: HTMLImageElement) => {
             const src = image.src.trim();
             if (!src.startsWith('data:image/')) {
