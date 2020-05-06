@@ -1,5 +1,5 @@
 import { RequestAsset, Routing } from './express';
-import { CompressFormat, External } from './content';
+import { CompressFormat, Exclusions, External } from './content';
 
 import * as fs from "fs";
 import * as cors from "cors";
@@ -70,6 +70,7 @@ declare namespace Node {
         readonly requestMain?: RequestAsset;
         add(value: string): void;
         delete(value: string): void;
+        check(file: RequestAsset, exclusions: Exclusions): boolean;
         getFileOutput(file: RequestAsset): { pathname: string; filepath: string };
         replaceFileOutput(file: RequestAsset, replaceWith: string): void;
         getRelativeUrl(file: RequestAsset, url: string): string;

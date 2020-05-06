@@ -11,6 +11,8 @@ declare namespace Content {
     interface CompressFormat extends file.CompressFormat {}
 
     interface FormattableContent extends file_chrome.FormattableContent {}
+
+    interface Exclusions extends file.Exclusions {}
 }
 
 export = Content;

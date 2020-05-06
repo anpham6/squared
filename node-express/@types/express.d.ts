@@ -15,7 +15,7 @@ declare namespace Express {
         path?: string;
     }
 
-    interface RequestAsset extends Omit<file_chrome.RequestAsset, "exclusions"> {
+    interface RequestAsset extends file_chrome.RequestAsset {
         filepath?: string;
         originalName?: string;
     }

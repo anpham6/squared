@@ -449,7 +449,7 @@ Image conversion can be achieved using the mimeType property in a RequestAsset o
 * tiff (node-express: readonly)
 
 ```xml
-{saveAsExtension}:image/{format}
+{saveAsExtension}{@%}?{(minSize(0),maxSize(*))}?:image/{format}
 ```
 
 ```javascript
@@ -464,7 +464,7 @@ const options = {
         {
             pathname: 'images',
             filename: 'pencil.png',
-            mimeType: 'bmp:image/png',
+            mimeType: 'bmp@(50000,100000):image/png',
             uri: 'http://localhost:3000/common/images/pencil.png'
         }
     ]
@@ -474,7 +474,7 @@ const options = {
 Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
 
 ```javascript
-// NOTE: "exclusions" attribute and some compression formats are only available when using squared-apache
+// NOTE: Some compression formats are only available when using squared-apache
 
 squared.settings.outputArchiveFormat = '7z';
 squared.saveToArchive('archive1', {
@@ -709,9 +709,9 @@ squared.configure('chrome.convert.png', {
     whenSmaller: true
 });
 ```
-You can also use these same commands individually on any elements which have images.
+You can also use these commands individually on any elements where the image is the primary output display.
 
-{format}?{@%}?(minSize(0),maxSize(*))?  
+{format}{@%}?{(minSize(0),maxSize(*))}?  
 
 @ - replace  
 % - smaller  

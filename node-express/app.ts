@@ -1,6 +1,6 @@
 import { IChrome, ICompress, IFileManager, IExpress, INode, Settings } from './@types/node';
 import { Environment, RequestAsset, ResultOfFileAction, Routing } from './@types/express';
-import { CompressFormat, External } from './@types/content';
+import { CompressFormat, Exclusions, External } from './@types/content';
 
 import path = require('path');
 import zlib = require('zlib');
@@ -731,6 +731,45 @@ class FileManager implements IFileManager {
     delete(value: string) {
         this.files.delete(value.substring(this.dirname.length + 1));
     }
+    check(file: RequestAsset, exclusions: Exclusions) {
+        const pathname = file.pathname.replace(/[\\/]$/, '');
+        const filename = file.filename;
+        const winOS = path.sep === '/' ? '' : 'i';
+        if (exclusions.pathname) {
+            for (const value of exclusions.pathname) {
+                const directory = value.trim().replace(/[\\/]/g, '[\\\\/]').replace(/[\\/]$/, '');
+                if (new RegExp(`^${directory}$`, winOS).test(pathname) || new RegExp(`^${directory}[\\\\/]`, winOS).test(pathname)) {
+                    return false;
+                }
+            }
+        }
+        if (exclusions.filename) {
+            for (const value of exclusions.filename) {
+                if (value === filename || winOS && value.toLowerCase() === filename.toLowerCase()) {
+                    return false;
+                }
+            }
+        }
+        if (exclusions.extension) {
+            const ext = path.extname(filename).substring(1).toLowerCase();
+            for (const value of exclusions.extension) {
+                if (ext === value.toLowerCase()) {
+                    return false;
+                }
+            }
+        }
+        if (exclusions.pattern) {
+            const filepath = path.join(pathname, filename);
+            const filepath_opposing = winOS ? filepath.replace(/\\/g, '/') : filepath.replace(/\//g, '\\');
+            for (const value of exclusions.pattern) {
+                const pattern = new RegExp(value);
+                if (pattern.test(filepath) || pattern.test(filepath_opposing)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
     getFileOutput(file: RequestAsset) {
         const pathname = path.join(this.dirname, file.moveTo || '', file.pathname);
         const filepath = path.join(pathname, file.filename);
@@ -1285,6 +1324,7 @@ class FileManager implements IFileManager {
         const appending: ObjectMap<RequestAsset[]> = {};
         const completed: string[] = [];
         const assets = this.assets;
+        const exclusions = assets[0].exclusions;
         const checkQueue = (file: RequestAsset, filepath: string) => {
             if (file.bundleIndex !== undefined) {
                 const queue = appending[filepath];
@@ -1383,7 +1423,12 @@ class FileManager implements IFileManager {
             Node.writeError(uri, message);
             delete processing[filepath];
         };
-        for (const file of assets) {
+        for (let i = 0; i < assets.length; ++i) {
+            const file = assets[i];
+            if (exclusions && !this.check(file, exclusions)) {
+                assets.splice(i--, 1);
+                continue;
+            }
             const { pathname, filepath } = this.getFileOutput(file);
             if (!emptyDir.has(pathname)) {
                 if (empty) {
@@ -1399,7 +1444,6 @@ class FileManager implements IFileManager {
                 }
                 emptyDir.add(pathname);
             }
-
             if (file.content) {
                 const { format, mimeType } = file;
                 if (format && mimeType) {
