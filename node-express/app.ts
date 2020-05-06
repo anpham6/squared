@@ -1,4 +1,4 @@
-import { CompressionFormat, Environment, External, RequestAsset, ResultOfFileAction, Routing, Settings } from './@types/node';
+import { CompressOutput, CompressionFormat, Environment, IChrome, ICompress, IFileManager, IExpress, INode, External, RequestAsset, ResultOfFileAction, Routing, Settings } from './@types/node';
 
 import path = require('path');
 import zlib = require('zlib');
@@ -16,75 +16,108 @@ import js_beautify = require('js-beautify');
 import prettier = require('prettier');
 import terser = require('terser');
 import tinify = require('tinify');
-
-const PRETTIER_PLUGINS = [require('prettier/parser-html'), require('prettier/parser-postcss'), require('prettier/parser-babel'), require('prettier/parser-typescript')];
-
-interface CompressOutput {
-    jpeg: number;
-    gzip?: number;
-    brotli?: number;
-}
+import chalk = require('chalk');
 
 const app = express();
 
-let DISK_READ = false;
-let DISK_WRITE = false;
-let UNC_READ = false;
-let UNC_WRITE = false;
-let GZIP_LEVEL = 9;
-let BROTLI_QUALITY = 11;
-let JPEG_QUALITY = 100;
-let TINIFY_API_KEY = false;
-let ENV: Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
-let PORT = '3000';
-let EXTERNAL: External = {};
-let ROUTING: Undef<Routing>;
+let Node: INode;
+let Express: IExpress;
+let Compress: ICompress;
+let Chrome: IChrome;
 
-try {
-    const { disk_read, disk_write, unc_read, unc_write, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, env, port, routing, external } = <Settings> require('./squared.settings.json');
-    DISK_READ = disk_read === true || disk_read === 'true';
-    DISK_WRITE = disk_write === true || disk_write === 'true';
-    UNC_READ = unc_read === true || unc_read === 'true';
-    UNC_WRITE = unc_write === true || unc_write === 'true';
-    ROUTING = routing;
-    if (external) {
-        EXTERNAL = external;
+{
+    let DISK_READ = false;
+    let DISK_WRITE = false;
+    let UNC_READ = false;
+    let UNC_WRITE = false;
+    let GZIP_LEVEL = 9;
+    let BROTLI_QUALITY = 11;
+    let JPEG_QUALITY = 100;
+    let TINIFY_API_KEY = false;
+    let EXTERNAL: Undef<External>;
+    let ROUTING: Undef<Routing>;
+    let ENV: Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
+    let PORT = '3000';
+
+    try {
+        const { disk_read, disk_write, unc_read, unc_write, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, env, port, routing, external } = <Settings> require('./squared.settings.json');
+        DISK_READ = disk_read === true || disk_read === 'true';
+        DISK_WRITE = disk_write === true || disk_write === 'true';
+        UNC_READ = unc_read === true || unc_read === 'true';
+        UNC_WRITE = unc_write === true || unc_write === 'true';
+        ROUTING = routing;
+        if (external) {
+            EXTERNAL = external;
+        }
+        const gzip = parseInt(gzip_level as string);
+        const brotli = parseInt(brotli_quality as string);
+        const jpeg = parseInt(jpeg_quality as string);
+        if (!process.env.NODE_ENV && env?.startsWith('prod')) {
+            ENV = 'production';
+        }
+        if (port) {
+            const value = parseInt(port[ENV] as string);
+            if (!isNaN(value) && value >= 0) {
+                PORT = value.toString();
+            }
+        }
+        if (!isNaN(gzip)) {
+            GZIP_LEVEL = gzip;
+        }
+        if (!isNaN(brotli)) {
+            BROTLI_QUALITY = brotli;
+        }
+        if (!isNaN(jpeg)) {
+            JPEG_QUALITY = jpeg;
+        }
+        if (tinypng_api_key) {
+            tinify.key = tinypng_api_key;
+            tinify.validate(err => {
+                if (!err) {
+                    TINIFY_API_KEY = true;
+                }
+            });
+        }
+        app.use(body_parser.json({ limit: request_post_limit || '100mb' }));
     }
-    const gzip = parseInt(gzip_level as string);
-    const brotli = parseInt(brotli_quality as string);
-    const jpeg = parseInt(jpeg_quality as string);
-    if (!process.env.NODE_ENV && env?.startsWith('prod')) {
-        ENV = 'production';
+    catch (err) {
+        console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${err}`);
     }
-    if (port) {
-        const value = parseInt(port[ENV] as string);
-        if (!isNaN(value) && value >= 0) {
-            PORT = value.toString();
+
+    try {
+        if (ROUTING) {
+            console.log('');
+            let mounted = 0;
+            for (const routes of [ROUTING.shared, ROUTING[ENV]]) {
+                if (Array.isArray(routes)) {
+                    for (const route of routes) {
+                        const { path: dirname, mount } = route;
+                        if (dirname && mount) {
+                            const pathname = path.join(__dirname, mount);
+                            app.use(dirname, express.static(pathname));
+                            console.log(`${chalk.yellow('MOUNT')}: ${chalk.bgGrey(pathname)} ${chalk.yellow('->')} ${chalk.bold(dirname)}`);
+                            ++mounted;
+                        }
+                    }
+                }
+            }
+            console.log(`\n${chalk.bold(mounted)} directories were mounted.\n`);
+        }
+        else {
+            throw new Error('Routing not defined.');
         }
     }
-    if (!isNaN(gzip)) {
-        GZIP_LEVEL = gzip;
+    catch (err) {
+        app.use(body_parser.json({ limit: '100mb' }));
+        app.use('/', express.static(path.join(__dirname, 'html')));
+        app.use('/dist', express.static(path.join(__dirname, 'dist')));
+        if (ENV === 'development') {
+            app.use('/common', express.static(path.join(__dirname, 'html/common')));
+            app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
+        }
+        console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${err}`);
     }
-    if (!isNaN(brotli)) {
-        BROTLI_QUALITY = brotli;
-    }
-    if (!isNaN(jpeg)) {
-        JPEG_QUALITY = jpeg;
-    }
-    if (tinypng_api_key) {
-        tinify.key = tinypng_api_key;
-        tinify.validate(err => {
-            if (!err) {
-                TINIFY_API_KEY = true;
-            }
-        });
-    }
-    app.use(body_parser.json({ limit: request_post_limit || '100mb' }));
-}
-catch (err) {
-    console.log(`FAIL: ${err}`);
-}
-{
+
     PORT = process.env.PORT || PORT;
     const ARGV = process.argv;
     let i = 2;
@@ -139,43 +172,494 @@ catch (err) {
             }
         }
     }
-}
-try {
-    if (ROUTING) {
-        console.log('');
-        let mounted = 0;
-        for (const routes of [ROUTING.shared, ROUTING[ENV]]) {
-            if (Array.isArray(routes)) {
-                for (const route of routes) {
-                    const { path: dirname, mount } = route;
-                    if (dirname && mount) {
-                        const pathname = path.join(__dirname, mount);
-                        app.use(dirname, express.static(pathname));
-                        console.log(`MOUNT: ${pathname} -> ${dirname}`);
-                        ++mounted;
-                    }
+
+    console.log(`${chalk.blue('DISK')}: ${DISK_READ ? chalk.green('+') : chalk.red('-')}r ${DISK_WRITE ? chalk.green('+') : chalk.red('-')}w`);
+    console.log(`${chalk.blue(' UNC')}: ${UNC_READ ? chalk.green('+') : chalk.red('-')}r ${UNC_WRITE ? chalk.green('+') : chalk.red('-')}w`);
+
+    app.use(body_parser.urlencoded({ extended: true }));
+    app.listen(PORT, () => console.log(`\n${chalk[ENV === 'production' ? 'green' : 'yellow'](ENV.toUpperCase())}: Express server listening on port ${chalk.bold(PORT)}\n`));
+
+    Node = new class implements INode {
+        public major: number;
+        public minor: number;
+        public patch: number;
+
+        constructor(
+            public readonly disk_read = false,
+            public readonly disk_write = false,
+            public readonly unc_read = false,
+            public readonly unc_write = false)
+        {
+            [this.major, this.minor, this.patch] = process.version.substring(1).split('.').map(value => parseInt(value));
+        }
+
+        checkVersion(major: number, minor: number, patch = 0) {
+            if (this.major < major) {
+                return false;
+            }
+            else if (this.major === major) {
+                if (this.minor < minor) {
+                    return false;
+                }
+                else if (this.minor === minor) {
+                    return this.patch >= patch;
+                }
+                return true;
+            }
+            return true;
+        }
+        checkPermissions(res: express.Response<any>, dirname: string) {
+            if (this.isDirectoryUNC(dirname)) {
+                if (!this.unc_write) {
+                    res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
+                    return false;
+                }
+            }
+            else if (!this.disk_write) {
+                res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
+                return false;
+            }
+            try {
+                if (!fs.existsSync(dirname)) {
+                    fs.mkdirpSync(dirname);
+                }
+                else if (!fs.lstatSync(dirname).isDirectory()) {
+                    throw new Error('Root is not a directory.');
+                }
+            }
+            catch (system) {
+                res.json({ application: `DIRECTORY: ${dirname}`, system });
+                return false;
+            }
+            return true;
+        }
+        isFileURI(value: string) {
+            return /^[A-Za-z]{3,}:\/\/[^/]/.test(value) && !value.startsWith('file:');
+        }
+        isFileUNC(value: string) {
+            return /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
+        }
+        isDirectoryUNC(value: string) {
+            return /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
+        }
+        writeError(description: string, message: any) {
+            return console.log(`${chalk.bgRed.bold.white('FAIL')}: ${description} (${message})`);
+        }
+    }
+    (DISK_READ, DISK_WRITE, UNC_READ, UNC_WRITE);
+
+    Express = new class implements IExpress {
+        public PATTERN_URL = /^([A-Za-z]+:\/\/[A-Za-z\d.-]+(?::\d+)?)(\/.*)/;
+
+        fromSameOrigin(base: string, other: string) {
+            const baseMatch = this.PATTERN_URL.exec(base);
+            const otherMatch = this.PATTERN_URL.exec(other);
+            return !!baseMatch && !!otherMatch && baseMatch[1] === otherMatch[1];
+        }
+        resolvePath(value: string, href: string, hostname = true) {
+            const match = this.PATTERN_URL.exec(href.replace(/\\/g, '/'));
+            if (match) {
+                const origin = hostname ? match[1] : '';
+                const pathname = match[2].split('/');
+                pathname.pop();
+                value = value.replace(/\\/g, '/');
+                if (value.charAt(0) === '/') {
+                    return origin + value;
+                }
+                else if (value.startsWith('../')) {
+                    const trailing: string[] = [];
+                    value.split('/').forEach(dir => {
+                        if (dir === '..') {
+                            if (trailing.length === 0) {
+                                pathname.pop();
+                            }
+                            else {
+                                trailing.pop();
+                            }
+                        }
+                        else {
+                            trailing.push(dir);
+                        }
+                    });
+                    value = trailing.join('/');
+                }
+                return origin + pathname.join('/') + '/' + value;
+            }
+            return '';
+        }
+        getBaseDirectory(location: string, asset: string): [string[], string[]] {
+            const locationDir = location.split(/[\\/]/);
+            const assetDir = asset.split(/[\\/]/);
+            while (locationDir.length && assetDir.length) {
+                if (locationDir[0] === assetDir[0]) {
+                    locationDir.shift();
+                    assetDir.shift();
+                }
+                else {
+                    break;
+                }
+            }
+            return [locationDir, assetDir];
+        }
+        toAbsoluteUrl(value: string, href: string) {
+            value = value.replace(/\\/g, '/');
+            let moveTo = '';
+            if (value.charAt(0) === '/') {
+                moveTo = '__serverroot__';
+            }
+            else if (value.startsWith('../')) {
+                moveTo = '__serverroot__';
+                value = this.resolvePath(value, href, false);
+            }
+            else if (value.startsWith('./')) {
+                value = value.substring(2);
+            }
+            return moveTo + value;
+        }
+        getFullUri(file: RequestAsset, filename?: string) {
+            return path.join(file.moveTo || '', file.pathname, filename || file.filename).replace(/\\/g, '/');
+        }
+    }();
+
+    Compress = new class implements ICompress {
+        constructor(
+            public gzip_level: number,
+            public brotli_quality: number,
+            public jpeg_quality: number,
+            public tinify_api_key: boolean)
+        {
+        }
+
+        createGzipWriteStream(source: string, filename: string, level?: number) {
+            const o = fs.createWriteStream(filename);
+            fs.createReadStream(source)
+                .pipe(zlib.createGzip({ level: level || this.gzip_level }))
+                .pipe(o);
+            return o;
+        }
+        createBrotliWriteStream(source: string, filename: string, quality?: number, mimeType = '') {
+            const o = fs.createWriteStream(filename);
+            fs.createReadStream(source)
+                .pipe(
+                    zlib.createBrotliCompress({
+                        params: {
+                            [zlib.constants.BROTLI_PARAM_MODE]: mimeType.includes('text/') ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
+                            [zlib.constants.BROTLI_PARAM_QUALITY]: quality || this.brotli_quality,
+                            [zlib.constants.BROTLI_PARAM_SIZE_HINT]: this.getFileSize(source)
+                        }
+                    })
+                )
+                .pipe(o);
+            return o;
+        }
+        getOutput(file: RequestAsset): CompressOutput {
+            const compress = file.compress;
+            const gz = this.getFormat(compress, 'gz');
+            const br = this.getFormat(compress, 'br');
+            const jpeg = this.isJpeg(file) && this.getFormat(compress, 'jpeg');
+            return {
+                gzip: gz ? gz.level : -1,
+                brotli: br ? br.level : -1,
+                jpeg: jpeg ? jpeg.level || this.jpeg_quality : -1
+            };
+        }
+        getFileSize(filepath: string) {
+            return fs.statSync(filepath).size;
+        }
+        getFormat(compress: Undef<CompressionFormat[]>, format: string) {
+            return compress?.find(item => item.format === format);
+        }
+        removeFormat(compress: Undef<CompressionFormat[]>, format: string) {
+            if (compress) {
+                const index = compress.findIndex(value => value.format === format);
+                if (index !== -1) {
+                    compress.splice(index, 1);
                 }
             }
         }
-        console.log(`\n${mounted} directories were mounted.\n`);
+        hasPng(compress: Undef<CompressionFormat[]>) {
+            return this.tinify_api_key && this.getFormat(compress, 'png') !== undefined;
+        }
+        isJpeg(file: RequestAsset) {
+            if (file.mimeType?.endsWith('image/jpeg')) {
+                return true;
+            }
+            switch (path.extname(file.filename).toLowerCase()) {
+                case '.jpg':
+                case '.jpeg':
+                    return true;
+            }
+            return false;
+        }
     }
-    else {
-        throw new Error('Routing not defined.');
-    }
-}
-catch (err) {
-    app.use(body_parser.json({ limit: '100mb' }));
-    app.use('/', express.static(path.join(__dirname, 'html')));
-    app.use('/dist', express.static(path.join(__dirname, 'dist')));
-    if (ENV === 'development') {
-        app.use('/common', express.static(path.join(__dirname, 'html/common')));
-        app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
-    }
-    console.log(`FAIL: ${err}`);
-}
+    (GZIP_LEVEL, BROTLI_QUALITY, JPEG_QUALITY, TINIFY_API_KEY);
 
-app.set('port', PORT);
-app.use(body_parser.urlencoded({ extended: true }));
+    Chrome = new class implements IChrome {
+        constructor(
+            public external: Undef<External>,
+            public prettier_plugins: {}[])
+        {
+        }
+
+        formatContent(value: string, mimeType: string, format: string) {
+            if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
+                return this.minifyHtml(format, value) || value;
+            }
+            else if (mimeType.endsWith('text/css')) {
+                return this.minifyCss(format, value) || value;
+            }
+            else if (mimeType.endsWith('text/javascript')) {
+                return this.minifyJs(format, value) || value;
+            }
+            return value;
+        }
+        getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
+            if (!mimeType) {
+                mimeType = file.mimeType;
+            }
+            const trailingContent = file.trailingContent;
+            let result = '';
+            if (trailingContent) {
+                for (const item of trailingContent) {
+                    const formatter = item.format || format || file.format;
+                    if (mimeType && formatter) {
+                        result += '\n' + this.formatContent(item.value, mimeType, formatter);
+                    }
+                    else {
+                        result += '\n' + item.value;
+                    }
+                }
+            }
+            return result;
+        }
+        findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}] {
+            for (const name in data) {
+                const plugin = data[name];
+                for (const custom in plugin) {
+                    if (custom === format) {
+                        let options = plugin[custom];
+                        if (!options || typeof options !== 'object') {
+                            options = {};
+                        }
+                        return [name, options];
+                    }
+                }
+            }
+            return ['', {}];
+        }
+        minifyHtml(format: string, value: string) {
+            const html = this.external?.html;
+            if (html) {
+                let valid = false;
+                for (const name of format.split('::')) {
+                    let [module, options] = this.findExternalPlugin(html, name);
+                    if (!module) {
+                        switch (name) {
+                            case 'beautify':
+                                module = 'prettier';
+                                options = <prettier.Options> {
+                                    parser: 'html',
+                                    tabWidth: 4
+                                };
+                                break;
+                            case 'minify':
+                                module = 'html_minifier';
+                                options = <html_minifier.Options> {
+                                    collapseWhitespace: true,
+                                    collapseBooleanAttributes: true,
+                                    removeEmptyAttributes: true,
+                                    removeRedundantAttributes: true,
+                                    removeScriptTypeAttributes: true,
+                                    removeStyleLinkTypeAttributes: true,
+                                    removeComments: true
+                                };
+                                break;
+                        }
+                    }
+                    try {
+                        switch (module) {
+                            case 'prettier': {
+                                (<prettier.Options> options).plugins = this.prettier_plugins;
+                                const result = prettier.format(value, options);
+                                if (result) {
+                                    value = result;
+                                    valid = true;
+                                }
+                                break;
+                            }
+                            case 'html_minifier': {
+                                const result = html_minifier.minify(value, options);
+                                if (result) {
+                                    value = result;
+                                    valid = true;
+                                }
+                                break;
+                            }
+                            case 'js_beautify': {
+                                const result = js_beautify.html_beautify(value, options);
+                                if (result) {
+                                    value = result;
+                                    valid = true;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    catch (err) {
+                        Node.writeError(`External: ${module}`, err);
+                    }
+                }
+                if (valid) {
+                    return value;
+                }
+            }
+            return '';
+        }
+        minifyCss(format: string, value: string) {
+            const css = this.external?.css;
+            if (css) {
+                let valid = false;
+                for (const name of format.split('::')) {
+                    let [module, options] = this.findExternalPlugin(css, name);
+                    if (!module) {
+                        switch (name) {
+                            case 'beautify':
+                                module = 'prettier';
+                                options = <prettier.Options> {
+                                    parser: 'css',
+                                    tabWidth: 4
+                                };
+                                break;
+                            case 'minify':
+                                module = 'clean_css';
+                                options = <clean_css.OptionsOutput> {
+                                    level: 1,
+                                    inline: ['none']
+                                };
+                                break;
+                        }
+                    }
+                    try {
+                        switch (module) {
+                            case 'prettier': {
+                                (<prettier.Options> options).plugins = this.prettier_plugins;
+                                const result = prettier.format(value, options);
+                                if (result) {
+                                    value = result;
+                                    valid = true;
+                                }
+                                break;
+                            }
+                            case 'clean_css': {
+                                const result = new clean_css(options).minify(value).styles;
+                                if (result) {
+                                    value = result;
+                                    valid = true;
+                                }
+                                break;
+                            }
+                            case 'js_beautify': {
+                                const result = js_beautify.css_beautify(value, options);
+                                if (result) {
+                                    value = result;
+                                    valid = true;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    catch (err) {
+                        Node.writeError(`External: ${module}`, err);
+                    }
+                }
+                if (valid) {
+                    return value;
+                }
+            }
+            return '';
+        }
+        minifyJs(format: string, value: string) {
+            const js = this.external?.js;
+            if (js) {
+                let valid = false;
+                for (const name of format.split('::')) {
+                    let [module, options] = this.findExternalPlugin(js, name);
+                    if (!module) {
+                        switch (name) {
+                            case 'beautify':
+                                module = 'prettier';
+                                options = <prettier.Options> {
+                                    parser: 'babel',
+                                    tabWidth: 4
+                                };
+                                break;
+                            case 'minify':
+                                module = 'terser';
+                                options = <terser.MinifyOptions> {
+                                    toplevel: true,
+                                    keep_classnames: true
+                                };
+                                break;
+                        }
+                    }
+                    try {
+                        switch (module) {
+                            case 'prettier': {
+                                (<prettier.Options> options).plugins = this.prettier_plugins;
+                                const result = prettier.format(value, options);
+                                if (result) {
+                                    value = result;
+                                    valid = true;
+                                }
+                                break;
+                            }
+                            case 'terser': {
+                                const result = terser.minify(value, options).code;
+                                if (result) {
+                                    value = result;
+                                    valid = true;
+                                }
+                                break;
+                            }
+                            case 'js_beautify': {
+                                const result = js_beautify.js_beautify(value, options);
+                                if (result) {
+                                    value = result;
+                                    valid = true;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    catch (err) {
+                        Node.writeError(`External: ${module}`, err);
+                    }
+                }
+                if (valid) {
+                    return value;
+                }
+            }
+            return '';
+        }
+        replacePath(source: string, segment: string, value: string, base64?: boolean) {
+            if (!base64) {
+                segment = segment.replace(/[\\/]/g, '[\\\\/]');
+            }
+            let result = source;
+            let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${(base64 ? '.+?' : '') + segment}\\s*\\2`, 'g');
+            let match: RegExpExecArray | null;
+            while ((match = pattern.exec(source)) !== null) {
+                result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
+            }
+            pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${(base64 ? '.+?' : '') + segment}\\s*\\1?\\s*\\)`, 'g');
+            while ((match = pattern.exec(source)) !== null) {
+                result = result.replace(match[0], `url(${value})`);
+            }
+            return result;
+        }
+    }
+    (EXTERNAL, [require('prettier/parser-html'), require('prettier/parser-postcss'), require('prettier/parser-babel'), require('prettier/parser-typescript')]);
+}
 
 function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: any[]) => {
@@ -191,499 +675,7 @@ function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>>
     };
 }
 
-const Node = new class {
-    public major: number;
-    public minor: number;
-    public patch: number;
-
-    constructor() {
-        [this.major, this.minor, this.patch] = process.version.substring(1).split('.').map(value => parseInt(value));
-    }
-
-    checkVersion(major: number, minor: number, patch = 0) {
-        if (this.major < major) {
-            return false;
-        }
-        else if (this.major === major) {
-            if (this.minor < minor) {
-                return false;
-            }
-            else if (this.minor === minor) {
-                return this.patch >= patch;
-            }
-            return true;
-        }
-        return true;
-    }
-    checkPermissions(res: express.Response<any>, dirname: string) {
-        if (this.isDirectoryUNC(dirname)) {
-            if (!UNC_WRITE) {
-                res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });
-                return false;
-            }
-        }
-        else if (!DISK_WRITE) {
-            res.json({ application: 'OPTION: --disk-write', system: 'Writing to disk is not enabled.' });
-            return false;
-        }
-        try {
-            if (!fs.existsSync(dirname)) {
-                fs.mkdirpSync(dirname);
-            }
-            else if (!fs.lstatSync(dirname).isDirectory()) {
-                throw new Error('Root is not a directory.');
-            }
-        }
-        catch (system) {
-            res.json({ application: `DIRECTORY: ${dirname}`, system });
-            return false;
-        }
-        return true;
-    }
-    getFileSize = (filepath: string) => fs.statSync(filepath).size;
-    isFileURI = (value: string) => /^[A-Za-z]{3,}:\/\/[^/]/.test(value) && !value.startsWith('file:');
-    isFileUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$?)((?<=\$)(?:[^\\]*|\\.+)|\\.+)$/.test(value);
-    isDirectoryUNC = (value: string) => /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
-    writeError = (description: string, message: any) => console.log(`FAIL: ${description} (${message})`);
-}();
-
-const Chrome = new class {
-    formatContent(value: string, mimeType: string, format: string) {
-        if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
-            return this.minifyHtml(format, value) || value;
-        }
-        else if (mimeType.endsWith('text/css')) {
-            return this.minifyCss(format, value) || value;
-        }
-        else if (mimeType.endsWith('text/javascript')) {
-            return this.minifyJs(format, value) || value;
-        }
-        return value;
-    }
-    getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
-        if (!mimeType) {
-            mimeType = file.mimeType;
-        }
-        const trailingContent = file.trailingContent;
-        let result = '';
-        if (trailingContent) {
-            for (const item of trailingContent) {
-                const formatter = item.format || format || file.format;
-                if (mimeType && formatter) {
-                    result += '\n' + this.formatContent(item.value, mimeType, formatter);
-                }
-                else {
-                    result += '\n' + item.value;
-                }
-            }
-        }
-        return result;
-    }
-    findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}] {
-        for (const name in data) {
-            const plugin = data[name];
-            for (const custom in plugin) {
-                if (custom === format) {
-                    let options = plugin[custom];
-                    if (!options || typeof options !== 'object') {
-                        options = {};
-                    }
-                    return [name, options];
-                }
-            }
-        }
-        return ['', {}];
-    }
-    minifyHtml(format: string, value: string) {
-        const html = EXTERNAL?.html;
-        if (html) {
-            let valid = false;
-            for (const name of format.split('::')) {
-                let [module, options] = this.findExternalPlugin(html, name);
-                if (!module) {
-                    switch (name) {
-                        case 'beautify':
-                            module = 'prettier';
-                            options = <prettier.Options> {
-                                parser: 'html',
-                                tabWidth: 4
-                            };
-                            break;
-                        case 'minify':
-                            module = 'html_minifier';
-                            options = <html_minifier.Options> {
-                                collapseWhitespace: true,
-                                collapseBooleanAttributes: true,
-                                removeEmptyAttributes: true,
-                                removeRedundantAttributes: true,
-                                removeScriptTypeAttributes: true,
-                                removeStyleLinkTypeAttributes: true,
-                                removeComments: true
-                            };
-                            break;
-                    }
-                }
-                try {
-                    switch (module) {
-                        case 'prettier': {
-                            (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
-                            const result = prettier.format(value, options);
-                            if (result) {
-                                value = result;
-                                valid = true;
-                            }
-                            break;
-                        }
-                        case 'html_minifier': {
-                            const result = html_minifier.minify(value, options);
-                            if (result) {
-                                value = result;
-                                valid = true;
-                            }
-                            break;
-                        }
-                        case 'js_beautify': {
-                            const result = js_beautify.html_beautify(value, options);
-                            if (result) {
-                                value = result;
-                                valid = true;
-                            }
-                            break;
-                        }
-                    }
-                }
-                catch (err) {
-                    Node.writeError(`External: ${module}`, err);
-                }
-            }
-            if (valid) {
-                return value;
-            }
-        }
-        return '';
-    }
-    minifyCss(format: string, value: string) {
-        const css = EXTERNAL?.css;
-        if (css) {
-            let valid = false;
-            for (const name of format.split('::')) {
-                let [module, options] = this.findExternalPlugin(css, name);
-                if (!module) {
-                    switch (name) {
-                        case 'beautify':
-                            module = 'prettier';
-                            options = <prettier.Options> {
-                                parser: 'css',
-                                tabWidth: 4
-                            };
-                            break;
-                        case 'minify':
-                            module = 'clean_css';
-                            options = <clean_css.OptionsOutput> {
-                                level: 1,
-                                inline: ['none']
-                            };
-                            break;
-                    }
-                }
-                try {
-                    switch (module) {
-                        case 'prettier': {
-                            (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
-                            const result = prettier.format(value, options);
-                            if (result) {
-                                value = result;
-                                valid = true;
-                            }
-                            break;
-                        }
-                        case 'clean_css': {
-                            const result = new clean_css(options).minify(value).styles;
-                            if (result) {
-                                value = result;
-                                valid = true;
-                            }
-                            break;
-                        }
-                        case 'js_beautify': {
-                            const result = js_beautify.css_beautify(value, options);
-                            if (result) {
-                                value = result;
-                                valid = true;
-                            }
-                            break;
-                        }
-                    }
-                }
-                catch (err) {
-                    Node.writeError(`External: ${module}`, err);
-                }
-            }
-            if (valid) {
-                return value;
-            }
-        }
-        return '';
-    }
-    minifyJs(format: string, value: string) {
-        const js = EXTERNAL?.js;
-        if (js) {
-            let valid = false;
-            for (const name of format.split('::')) {
-                let [module, options] = this.findExternalPlugin(js, name);
-                if (!module) {
-                    switch (name) {
-                        case 'beautify':
-                            module = 'prettier';
-                            options = <prettier.Options> {
-                                parser: 'babel',
-                                tabWidth: 4
-                            };
-                            break;
-                        case 'minify':
-                            module = 'terser';
-                            options = <terser.MinifyOptions> {
-                                toplevel: true,
-                                keep_classnames: true
-                            };
-                            break;
-                    }
-                }
-                try {
-                    switch (module) {
-                        case 'prettier': {
-                            (<prettier.Options> options).plugins = PRETTIER_PLUGINS;
-                            const result = prettier.format(value, options);
-                            if (result) {
-                                value = result;
-                                valid = true;
-                            }
-                            break;
-                        }
-                        case 'terser': {
-                            const result = terser.minify(value, options).code;
-                            if (result) {
-                                value = result;
-                                valid = true;
-                            }
-                            break;
-                        }
-                        case 'js_beautify': {
-                            const result = js_beautify.js_beautify(value, options);
-                            if (result) {
-                                value = result;
-                                valid = true;
-                            }
-                            break;
-                        }
-                    }
-                }
-                catch (err) {
-                    Node.writeError(`External: ${module}`, err);
-                }
-            }
-            if (valid) {
-                return value;
-            }
-        }
-        return '';
-    }
-    replacePathName(source: string, segment: string, value: string, base64?: boolean) {
-        if (!base64) {
-            segment = segment.replace(/[\\/]/g, '[\\\\/]');
-        }
-        let result = source;
-        let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${(base64 ? '.+?' : '') + segment}\\s*\\2`, 'g');
-        let match: RegExpExecArray | null;
-        while ((match = pattern.exec(source)) !== null) {
-            result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
-        }
-        pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${(base64 ? '.+?' : '') + segment}\\s*\\1?\\s*\\)`, 'g');
-        while ((match = pattern.exec(source)) !== null) {
-            result = result.replace(match[0], `url(${value})`);
-        }
-        return result;
-    }
-}();
-
-const Express = new class {
-    public PATTERN_URL = /^([A-Za-z]+:\/\/[A-Za-z\d.-]+(?::\d+)?)(\/.*)/;
-
-    fromSameOrigin(base: string, other: string) {
-        const baseMatch = this.PATTERN_URL.exec(base);
-        const otherMatch = this.PATTERN_URL.exec(other);
-        return !!baseMatch && !!otherMatch && baseMatch[1] === otherMatch[1];
-    }
-    resolvePath(value: string, href: string, hostname = true) {
-        const match = this.PATTERN_URL.exec(href.replace(/\\/g, '/'));
-        if (match) {
-            const origin = hostname ? match[1] : '';
-            const pathname = match[2].split('/');
-            pathname.pop();
-            value = value.replace(/\\/g, '/');
-            if (value.charAt(0) === '/') {
-                return origin + value;
-            }
-            else if (value.startsWith('../')) {
-                const trailing: string[] = [];
-                value.split('/').forEach(dir => {
-                    if (dir === '..') {
-                        if (trailing.length === 0) {
-                            pathname.pop();
-                        }
-                        else {
-                            trailing.pop();
-                        }
-                    }
-                    else {
-                        trailing.push(dir);
-                    }
-                });
-                value = trailing.join('/');
-            }
-            return origin + pathname.join('/') + '/' + value;
-        }
-        return '';
-    }
-    getBaseDirectory(location: string, asset: string) {
-        const locationDir = location.split(/[\\/]/);
-        const assetDir = asset.split(/[\\/]/);
-        while (locationDir.length && assetDir.length) {
-            if (locationDir[0] === assetDir[0]) {
-                locationDir.shift();
-                assetDir.shift();
-            }
-            else {
-                break;
-            }
-        }
-        return [locationDir, assetDir];
-    }
-    toAbsoluteUrl(value: string, href: string): string {
-        value = value.replace(/\\/g, '/');
-        let moveTo = '';
-        if (value.charAt(0) === '/') {
-            moveTo = '__serverroot__';
-        }
-        else if (value.startsWith('../')) {
-            moveTo = '__serverroot__';
-            value = this.resolvePath(value, href, false);
-        }
-        else if (value.startsWith('./')) {
-            value = value.substring(2);
-        }
-        return moveTo + value;
-    }
-    toRelativeUrl(status: FileManager, file: RequestAsset, url: string) {
-        let asset = status.assets.find(item => item.uri === url);
-        let origin = file.uri!;
-        if (!asset) {
-            url = this.resolvePath(url, origin);
-            if (url) {
-                asset = status.assets.find(item => item.uri === url);
-            }
-        }
-        if (asset?.uri) {
-            const requestMain = status.requestMain;
-            if (requestMain) {
-                origin = this.resolvePath((file.moveTo === '__serverroot__' ? '/' : (file.rootDir || '')) + file.pathname + '/' + file.filename, requestMain.uri!);
-            }
-            const uri = asset.uri;
-            const uriMatch = this.PATTERN_URL.exec(uri);
-            const originMatch = this.PATTERN_URL.exec(origin);
-            if (uriMatch && originMatch && uriMatch[1] === originMatch[1]) {
-                const rootDir = file.rootDir || '';
-                const baseDir = rootDir + file.pathname;
-                if (asset.moveTo === '__serverroot__') {
-                    if (file.moveTo === '__serverroot__') {
-                        return asset.pathname + '/' + asset.filename;
-                    }
-                    else if (requestMain) {
-                        const requestMatch = this.PATTERN_URL.exec(requestMain.uri!);
-                        if (requestMatch && requestMatch[1] === originMatch[1]) {
-                            const [originDir] = this.getBaseDirectory(baseDir + '/' + file.filename, requestMatch[2]);
-                            return '../'.repeat(originDir.length - 1) + this.getFullUri(asset);
-                        }
-                    }
-                }
-                else if (asset.rootDir) {
-                    if (baseDir === asset.rootDir + asset.pathname) {
-                        return asset.filename;
-                    }
-                    else if (baseDir === asset.rootDir) {
-                        return asset.pathname + '/' + asset.filename;
-                    }
-                }
-                else {
-                    const [originDir, uriDir] = this.getBaseDirectory(originMatch[2], uriMatch[2]);
-                    return '../'.repeat(originDir.length - 1) + uriDir.join('/');
-                }
-            }
-        }
-        return '';
-    }
-    getFullUri = (file: RequestAsset, filename?: string) => path.join(file.moveTo || '', file.pathname, filename || file.filename).replace(/\\/g, '/');
-}();
-
-const Compress = new class {
-    removeFormat(file: RequestAsset, format: string) {
-        const compress = file.compress;
-        if (compress) {
-            const index = compress.findIndex(value => value.format === format);
-            if (index !== -1) {
-                compress.splice(index, 1);
-            }
-        }
-    }
-    createGzipWriteStream(source: string, filename: string, level?: number) {
-        const o = fs.createWriteStream(filename);
-        fs.createReadStream(source)
-            .pipe(zlib.createGzip({ level: level || GZIP_LEVEL }))
-            .pipe(o);
-        return o;
-    }
-    createBrotliWriteStream(source: string, filename: string, quality?: number, mimeType = '') {
-        const o = fs.createWriteStream(filename);
-        fs.createReadStream(source)
-            .pipe(
-                zlib.createBrotliCompress({
-                    params: {
-                        [zlib.constants.BROTLI_PARAM_MODE]: mimeType.includes('text/') ? zlib.constants.BROTLI_MODE_TEXT : zlib.constants.BROTLI_MODE_GENERIC,
-                        [zlib.constants.BROTLI_PARAM_QUALITY]: quality || BROTLI_QUALITY,
-                        [zlib.constants.BROTLI_PARAM_SIZE_HINT]: Node.getFileSize(source)
-                    }
-                })
-            )
-            .pipe(o);
-        return o;
-    }
-    isJpeg(file: RequestAsset) {
-        if (file.mimeType?.endsWith('image/jpeg')) {
-            return true;
-        }
-        switch (path.extname(file.filename).toLowerCase()) {
-            case '.jpg':
-            case '.jpeg':
-                return true;
-        }
-        return false;
-    }
-    getOutput(file: RequestAsset, level: number): CompressOutput {
-        const compress = file.compress;
-        const gz = this.getFormat(compress, 'gz');
-        const br = this.getFormat(compress, 'br');
-        const jpeg = this.isJpeg(file) && this.getFormat(compress, 'jpeg');
-        return {
-            gzip: gz ? gz.level : -1,
-            brotli: br ? br.level : -1,
-            jpeg: jpeg ? jpeg.level || level : -1
-        };
-    }
-    getFormat = (compress: Undef<CompressionFormat[]>, format: string) => compress?.find(item => item.format === format);
-    hasPng = (compress: Undef<CompressionFormat[]>) => TINIFY_API_KEY && this.getFormat(compress, 'png') !== undefined;
-}();
-
-class FileManager {
+class FileManager implements IFileManager {
     public archiving = false;
     public delayed = 0;
     public files = new Set<string>();
@@ -694,8 +686,7 @@ class FileManager {
 
     constructor(
         public dirname: string,
-        public assets: RequestAsset[],
-        public external: Undef<External>)
+        public assets: RequestAsset[])
     {
         this.requestMain = this.assets.find(item => item.requestMain);
     }
@@ -724,16 +715,68 @@ class FileManager {
             this.add(replaceWith);
         }
     }
+    toRelativeUrl(file: RequestAsset, url: string) {
+        let asset = this.assets.find(item => item.uri === url);
+        let origin = file.uri!;
+        if (!asset) {
+            url = Express.resolvePath(url, origin);
+            if (url) {
+                asset = this.assets.find(item => item.uri === url);
+            }
+        }
+        if (asset?.uri) {
+            const requestMain = this.requestMain;
+            if (requestMain) {
+                origin = Express.resolvePath((file.moveTo === '__serverroot__' ? '/' : (file.rootDir || '')) + file.pathname + '/' + file.filename, requestMain.uri!);
+            }
+            const pattern = Express.PATTERN_URL;
+            const uri = asset.uri;
+            const uriMatch = pattern.exec(uri);
+            const originMatch = pattern.exec(origin);
+            if (uriMatch && originMatch && uriMatch[1] === originMatch[1]) {
+                const rootDir = file.rootDir || '';
+                const baseDir = rootDir + file.pathname;
+                if (asset.moveTo === '__serverroot__') {
+                    if (file.moveTo === '__serverroot__') {
+                        return asset.pathname + '/' + asset.filename;
+                    }
+                    else if (requestMain) {
+                        const requestMatch = pattern.exec(requestMain.uri!);
+                        if (requestMatch && requestMatch[1] === originMatch[1]) {
+                            const [originDir] = Express.getBaseDirectory(baseDir + '/' + file.filename, requestMatch[2]);
+                            return '../'.repeat(originDir.length - 1) + Express.getFullUri(asset);
+                        }
+                    }
+                }
+                else if (asset.rootDir) {
+                    if (baseDir === asset.rootDir + asset.pathname) {
+                        return asset.filename;
+                    }
+                    else if (baseDir === asset.rootDir) {
+                        return asset.pathname + '/' + asset.filename;
+                    }
+                }
+                else {
+                    const [originDir, uriDir] = Express.getBaseDirectory(originMatch[2], uriMatch[2]);
+                    return '../'.repeat(originDir.length - 1) + uriDir.join('/');
+                }
+            }
+        }
+        return '';
+    }
     appendContent(file: RequestAsset, content: string) {
         const filepath = file.filepath || this.getFileOutput(file).filepath;
         if (filepath && file.bundleIndex) {
             const value = this.contentToAppend.get(filepath) || [];
+            if (file.trailingContent) {
+                content += Chrome.getTrailingContent(file, file.mimeType, file.format);
+            }
             value.splice(file.bundleIndex - 1, 0, content);
             this.contentToAppend.set(filepath, value);
         }
     }
     compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
-        const { jpeg, gzip, brotli } = Compress.getOutput(file, JPEG_QUALITY);
+        const { jpeg, gzip, brotli } = Compress.getOutput(file);
         const resumeThread = () => {
             this.transformBuffer(assets, file, filepath, finalize);
             if (gzip !== -1) {
@@ -871,14 +914,14 @@ class FileManager {
                 html = source;
                 for (const item of assets) {
                     if (item.base64) {
-                        source = Chrome.replacePathName(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
+                        source = Chrome.replacePath(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
                         continue;
                     }
                     else if (item === file || item.content || !item.uri) {
                         continue;
                     }
                     const value = Express.getFullUri(item);
-                    source = Chrome.replacePathName(source, item.uri, value);
+                    source = Chrome.replacePath(source, item.uri, value);
                     if (item.rootDir || Express.fromSameOrigin(baseUri, item.uri)) {
                         pattern = new RegExp(`((?:\\.\\.)?(?:[\\\\/]\\.\\.|\\.\\.[\\\\/]|[\\\\/])*)?(${path.join(item.pathname, item.filename).replace(/[\\/]/g, '[\\\\/]')})`, 'g');
                         while ((match = pattern.exec(html)) !== null) {
@@ -1020,7 +1063,7 @@ class FileManager {
                                 jimp.read(filepath)
                                     .then(image => {
                                         const jpg = replaceExtension(filepath, 'jpg');
-                                        image.quality(JPEG_QUALITY).write(jpg, err => {
+                                        image.quality(Compress.jpeg_quality).write(jpg, err => {
                                             if (err) {
                                                 Node.writeError(jpg, err);
                                             }
@@ -1079,9 +1122,9 @@ class FileManager {
             }
             for (const item of assets) {
                 if (item.base64 && item.uri) {
-                    const url = Express.toRelativeUrl(this, file, item.uri);
+                    const url = this.toRelativeUrl(file, item.uri);
                     if (url) {
-                        content = Chrome.replacePathName(content, item.base64.replace(/\+/g, '\\+'), url, true);
+                        content = Chrome.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
                     }
                 }
             }
@@ -1091,7 +1134,7 @@ class FileManager {
             while ((match = pattern.exec(content)) !== null) {
                 let url = match[2];
                 if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
-                    url = Express.toRelativeUrl(this, file, url);
+                    url = this.toRelativeUrl(file, url);
                     if (url) {
                         source = source.replace(match[0], `url(${url})`);
                     }
@@ -1127,7 +1170,7 @@ class FileManager {
                         fs.writeFileSync(filepath, resultData);
                     }
                     if (Compress.isJpeg(file)) {
-                        Compress.removeFormat(file, 'jpeg');
+                        Compress.removeFormat(file.compress, 'jpeg');
                     }
                     this.compressFile(assets, file, filepath, finalize);
                 });
@@ -1345,14 +1388,14 @@ class FileManager {
                             );
                         };
                         if (Node.isFileUNC(uri)) {
-                            if (UNC_READ) {
+                            if (Node.unc_read) {
                                 if (checkQueue(file, filepath)) {
                                     continue;
                                 }
                                 copyUri(uri, filepath);
                             }
                         }
-                        else if (DISK_READ && path.isAbsolute(uri)) {
+                        else if (Node.disk_read && path.isAbsolute(uri)) {
                             if (checkQueue(file, filepath)) {
                                 continue;
                             }
@@ -1371,9 +1414,9 @@ class FileManager {
         for (const [file, output] of this.filesToCompare) {
             const originalPath = file.filepath!;
             let minFile = originalPath;
-            let minSize = Node.getFileSize(minFile);
+            let minSize = Compress.getFileSize(minFile);
             for (const filepath of output) {
-                const size = Node.getFileSize(filepath);
+                const size = Compress.getFileSize(filepath);
                 if (size < minSize) {
                     filesToRemove.add(minFile);
                     minFile = filepath;
@@ -1411,7 +1454,7 @@ class FileManager {
                 fs.writeFileSync(filepath, output);
             }
         }
-        return promisify(() => {
+        return promisify<void>(() => {
             const replaced = this.assets.filter(file => file.originalName);
             if (replaced.length || release) {
                 for (const asset of this.assets) {
@@ -1450,7 +1493,7 @@ app.post('/api/assets/copy', (req, res) => {
         if (!Node.checkPermissions(res, dirname)) {
             return;
         }
-        const status = new FileManager(dirname, <RequestAsset[]> req.body, EXTERNAL);
+        const status = new FileManager(dirname, <RequestAsset[]> req.body);
         let cleared = false;
         const finalize = (filepath?: string) => {
             if (status.delayed === Infinity) {
@@ -1505,7 +1548,7 @@ app.post('/api/assets/archive', (req, res) => {
         res.json({ application: `DIRECTORY: ${dirname}`, system });
         return;
     }
-    const status = new FileManager(dirname, <RequestAsset[]> req.body, EXTERNAL);
+    const status = new FileManager(dirname, <RequestAsset[]> req.body);
     let cleared = false;
     let zipname = '';
     let format: archiver.Format;
@@ -1526,7 +1569,7 @@ app.post('/api/assets/archive', (req, res) => {
             break;
     }
     const resumeThread = (unzip_to = '') => {
-        const archive = archiver(format, { zlib: { level: GZIP_LEVEL } });
+        const archive = archiver(format, { zlib: { level: Compress.gzip_level } });
         zipname = path.join(dirname_zip, (req.query.filename || zipname || 'squared') + '.' + format);
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
@@ -1541,13 +1584,13 @@ app.post('/api/assets/archive', (req, res) => {
                 const gz = req.query.format === 'tgz' ? zipname.replace(/tar$/, 'tgz') : `${zipname}.gz`;
                 Compress.createGzipWriteStream(zipname, gz)
                     .on('finish', () => {
-                        const gz_bytes = Node.getFileSize(gz);
+                        const gz_bytes = Compress.getFileSize(gz);
                         if (!copy_to) {
                             response.zipname = gz;
                             response.bytes = gz_bytes;
                         }
                         res.json(response);
-                        console.log(`WRITE: ${gz} (${gz_bytes} bytes)`);
+                        console.log(`${chalk.blue('WRITE')}: ${gz} ${chalk.yellow('[') + chalk.grey(gz_bytes + ' bytes') + chalk.yellow(']')}`);
                     })
                     .on('error', err => {
                         response.success = false;
@@ -1559,7 +1602,7 @@ app.post('/api/assets/archive', (req, res) => {
                 res.json(response);
             }
             status.delayed = Infinity;
-            console.log(`WRITE: ${zipname} (${bytes} bytes)`);
+            console.log(`${chalk.blue('WRITE')}: ${zipname} ${chalk.yellow('[') + chalk.grey(bytes + ' bytes') + chalk.yellow(']')}`);
         });
         archive.pipe(output);
         const finalize = (filepath?: string) => {
@@ -1629,12 +1672,12 @@ app.post('/api/assets/archive', (req, res) => {
                 }
                 else if (fs.existsSync(append_to)) {
                     if (Node.isFileUNC(append_to)) {
-                        if (!UNC_READ) {
+                        if (!Node.unc_read) {
                             res.json({ application: 'OPTION: --unc-read', system: 'Reading from UNC shares is not enabled.' });
                             return;
                         }
                     }
-                    else if (!DISK_READ && path.isAbsolute(append_to)) {
+                    else if (!Node.disk_read && path.isAbsolute(append_to)) {
                         res.json({ application: 'OPTION: --disk-read', system: 'Reading from disk is not enabled.' });
                         return;
                     }
@@ -1671,5 +1714,3 @@ app.get('/api/browser/download', (req, res) => {
         res.json(null);
     }
 });
-
-app.listen(PORT, () => console.log(`${ENV.toUpperCase()}: Express server listening on port ${PORT}\n`));

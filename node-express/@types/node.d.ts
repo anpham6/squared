@@ -1,7 +1,84 @@
+import * as fs from "fs";
 import * as file from '../../@types/base/file';
 import * as file_chrome from '../../@types/chrome/file';
 
-declare namespace Node {
+declare namespace NodeExpress {
+    interface INode {
+        readonly disk_read: boolean;
+        readonly disk_write: boolean;
+        readonly unc_read: boolean;
+        readonly unc_write: boolean;
+        readonly major: number;
+        readonly minor: number;
+        readonly patch: number;
+        checkVersion(major: number, minor: number, patch?: number): boolean;
+        checkPermissions(res: {}, dirname: string): boolean;
+        isFileURI(value: string): boolean;
+        isFileUNC(value: string): boolean;
+        isDirectoryUNC(value: string): boolean;
+        writeError(description: string, message: any): void;
+    }
+
+    interface IExpress {
+        readonly PATTERN_URL: RegExp;
+        fromSameOrigin(base: string, other: string): boolean;
+        resolvePath(value: string, href: string, hostname?: boolean): string;
+        getBaseDirectory(location: string, asset: string): [string[], string[]];
+        toAbsoluteUrl(value: string, href: string): string;
+        getFullUri(file: RequestAsset, filename?: string): string;
+    }
+
+    interface ICompress {
+        readonly gzip_level: number;
+        readonly brotli_quality: number;
+        readonly jpeg_quality: number;
+        readonly tinify_api_key: boolean;
+        getFileSize(filepath: string): number;
+        createGzipWriteStream(source: string, filename: string, level?: number): fs.WriteStream;
+        createBrotliWriteStream(source: string, filename: string, quality?: number, mimeType?: string): fs.WriteStream;
+        getOutput(file: RequestAsset): CompressOutput;
+        getFormat(compress: Undef<CompressionFormat[]>, format: string): Undef<CompressionFormat>;
+        removeFormat(compress: Undef<CompressionFormat[]>, format: string): void;
+        hasPng(compress: Undef<CompressionFormat[]>): boolean;
+        isJpeg(file: RequestAsset): boolean;
+    }
+
+    interface IChrome {
+        readonly external: Undef<External>;
+        readonly prettier_plugins: {}[];
+        formatContent(value: string, mimeType: string, format: string): string;
+        getTrailingContent(file: RequestAsset, mimeType?: string, format?: string): string;
+        findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}];
+        minifyHtml(format: string, value: string): string;
+        minifyCss(format: string, value: string): string;
+        minifyJs(format: string, value: string): string;
+        replacePath(source: string, segment: string, value: string, base64?: boolean): string;
+    }
+
+    interface IFileManager {
+        archiving: boolean;
+        delayed: number;
+        files: Set<string>;
+        filesToRemove: Set<string>;
+        filesToCompare: Map<RequestAsset, string[]>;
+        contentToAppend: Map<string, string[]>;
+        dirname: string;
+        assets: RequestAsset[];
+        readonly requestMain?: RequestAsset;
+        add(value: string): void;
+        delete(value: string): void;
+        getFileOutput(file: RequestAsset): { pathname: string; filepath: string };
+        replaceFileOutput(file: RequestAsset, replaceWith: string): void;
+        toRelativeUrl(file: RequestAsset, url: string): string;
+        appendContent(file: RequestAsset, content: string): void;
+        compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
+        transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
+        transformCss(file: RequestAsset, filepath: Undef<string>, content?: string): string;
+        writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
+        processAssetsAsync(empty: boolean, finalize: (filepath?: string) => void): void;
+        finalizeAssetsAsync(release: boolean): Promise<void>;
+    }
+
     interface Settings {
         version?: string;
         disk_read?: string | boolean;
@@ -38,6 +115,12 @@ declare namespace Node {
         js?: ObjectMap<StandardMap>;
     }
 
+    interface CompressOutput {
+        jpeg: number;
+        gzip?: number;
+        brotli?: number;
+    }
+
     interface CompressionFormat extends file.CompressionFormat {}
 
     interface FormattableContent extends file_chrome.FormattableContent {}
@@ -50,4 +133,4 @@ declare namespace Node {
     interface ResultOfFileAction extends file.ResultOfFileAction {}
 }
 
-export = Node;
+export = NodeExpress;
