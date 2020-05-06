@@ -1,8 +1,10 @@
-import * as fs from "fs";
-import * as file from '../../@types/base/file';
-import * as file_chrome from '../../@types/chrome/file';
+import { RequestAsset, Routing } from './express';
+import { CompressFormat, CompressOutput, External } from './content';
 
-declare namespace NodeExpress {
+import * as fs from "fs";
+import * as cors from "cors";
+
+declare namespace Node {
     interface INode {
         readonly disk_read: boolean;
         readonly disk_write: boolean;
@@ -37,9 +39,9 @@ declare namespace NodeExpress {
         createGzipWriteStream(source: string, filename: string, level?: number): fs.WriteStream;
         createBrotliWriteStream(source: string, filename: string, quality?: number, mimeType?: string): fs.WriteStream;
         getOutput(file: RequestAsset): CompressOutput;
-        getFormat(compress: Undef<CompressionFormat[]>, format: string): Undef<CompressionFormat>;
-        removeFormat(compress: Undef<CompressionFormat[]>, format: string): void;
-        hasPng(compress: Undef<CompressionFormat[]>): boolean;
+        getFormat(compress: Undef<CompressFormat[]>, format: string): Undef<CompressFormat>;
+        removeFormat(compress: Undef<CompressFormat[]>, format: string): void;
+        hasPng(compress: Undef<CompressFormat[]>): boolean;
         isJpeg(file: RequestAsset): boolean;
     }
 
@@ -85,6 +87,7 @@ declare namespace NodeExpress {
         disk_write?: string | boolean;
         unc_read?: string | boolean;
         unc_write?: string | boolean;
+        cors?: cors.CorsOptions;
         request_post_limit?: string;
         gzip_level?: string | number;
         brotli_quality?: string | number;
@@ -95,42 +98,6 @@ declare namespace NodeExpress {
         routing?: Routing;
         external?: External;
     }
-
-    type Environment = "production" | "development";
-
-    interface Routing {
-        shared?: Route[];
-        production?: Route[];
-        development?: Route[];
-    }
-
-    interface Route {
-        mount?: string;
-        path?: string;
-    }
-
-    interface External {
-        html?: ObjectMap<StandardMap>;
-        css?: ObjectMap<StandardMap>;
-        js?: ObjectMap<StandardMap>;
-    }
-
-    interface CompressOutput {
-        jpeg: number;
-        gzip?: number;
-        brotli?: number;
-    }
-
-    interface CompressionFormat extends file.CompressionFormat {}
-
-    interface FormattableContent extends file_chrome.FormattableContent {}
-
-    interface RequestAsset extends Omit<file_chrome.RequestAsset, "exclusions"> {
-        filepath?: string;
-        originalName?: string;
-    }
-
-    interface ResultOfFileAction extends file.ResultOfFileAction {}
 }
 
-export = NodeExpress;
+export = Node;

@@ -264,6 +264,8 @@ declare class File<T extends Node> implements FileActionAsync {
     getCopyQueryParameters(options: FileCopyingOptions): string;
     getArchiveQueryParameters(options: FileArchivingOptions): string;
     get userSettings(): UserSettings;
+    set hostname(value);
+    get hostname(): string;
 }
 
 declare class FileUI<T extends NodeUI> extends File<T> {

@@ -1,10 +1,13 @@
-import { CompressOutput, CompressionFormat, Environment, IChrome, ICompress, IFileManager, IExpress, INode, External, RequestAsset, ResultOfFileAction, Routing, Settings } from './@types/node';
+import { IChrome, ICompress, IFileManager, IExpress, INode, Settings } from './@types/node';
+import { Environment, RequestAsset, ResultOfFileAction, Routing } from './@types/express';
+import { CompressOutput, CompressFormat, External } from './@types/content';
 
 import path = require('path');
 import zlib = require('zlib');
 import fs = require('fs-extra');
 import express = require('express');
 import body_parser = require('body-parser');
+import cors = require('cors');
 import request = require('request');
 import uuid = require('uuid');
 import archiver = require('archiver');
@@ -34,21 +37,27 @@ let Chrome: IChrome;
     let BROTLI_QUALITY = 11;
     let JPEG_QUALITY = 100;
     let TINIFY_API_KEY = false;
-    let EXTERNAL: Undef<External>;
+
     let ROUTING: Undef<Routing>;
+    let CORS: Undef<cors.CorsOptions>;
     let ENV: Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
     let PORT = '3000';
 
+    let EXTERNAL: Undef<External>;
+
     try {
-        const { disk_read, disk_write, unc_read, unc_write, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, env, port, routing, external } = <Settings> require('./squared.settings.json');
+        const { disk_read, disk_write, unc_read, unc_write, cors: cors_options, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, env, port, routing, external } = <Settings> require('./squared.settings.json');
         DISK_READ = disk_read === true || disk_read === 'true';
         DISK_WRITE = disk_write === true || disk_write === 'true';
         UNC_READ = unc_read === true || unc_read === 'true';
         UNC_WRITE = unc_write === true || unc_write === 'true';
-        ROUTING = routing;
+        if (cors_options) {
+            CORS = cors_options;
+        }
         if (external) {
             EXTERNAL = external;
         }
+        ROUTING = routing;
         const gzip = parseInt(gzip_level as string);
         const brotli = parseInt(brotli_quality as string);
         const jpeg = parseInt(jpeg_quality as string);
@@ -119,6 +128,8 @@ let Chrome: IChrome;
     }
 
     PORT = process.env.PORT || PORT;
+    let CORS_origin: Undef<string | boolean>;
+
     const ARGV = process.argv;
     let i = 2;
     while (i < ARGV.length) {
@@ -170,11 +181,28 @@ let Chrome: IChrome;
                 }
                 break;
             }
+            case '-c':
+            case '--cors': {
+                CORS_origin = ARGV[i] && !ARGV[i].startsWith('-') ? ARGV[i++] : true;
+                break;
+            }
         }
     }
 
     console.log(`${chalk.blue('DISK')}: ${DISK_READ ? chalk.green('+') : chalk.red('-')}r ${DISK_WRITE ? chalk.green('+') : chalk.red('-')}w`);
     console.log(`${chalk.blue(' UNC')}: ${UNC_READ ? chalk.green('+') : chalk.red('-')}r ${UNC_WRITE ? chalk.green('+') : chalk.red('-')}w`);
+
+    if (CORS_origin) {
+        app.use(cors({ origin: CORS_origin }));
+        app.options('*', cors());
+    }
+    else if (CORS && CORS.origin) {
+        app.use(cors(CORS));
+        app.options('*', cors());
+        CORS_origin = typeof CORS.origin === 'string' ? CORS.origin : 'true';
+    }
+
+    console.log(`${chalk.blue('CORS')}: ${CORS_origin ? chalk.green(CORS_origin) : chalk.grey('disabled')}`);
 
     app.use(body_parser.urlencoded({ extended: true }));
     app.listen(PORT, () => console.log(`\n${chalk[ENV === 'production' ? 'green' : 'yellow'](ENV.toUpperCase())}: Express server listening on port ${chalk.bold(PORT)}\n`));
@@ -366,10 +394,10 @@ let Chrome: IChrome;
         getFileSize(filepath: string) {
             return fs.statSync(filepath).size;
         }
-        getFormat(compress: Undef<CompressionFormat[]>, format: string) {
+        getFormat(compress: Undef<CompressFormat[]>, format: string) {
             return compress?.find(item => item.format === format);
         }
-        removeFormat(compress: Undef<CompressionFormat[]>, format: string) {
+        removeFormat(compress: Undef<CompressFormat[]>, format: string) {
             if (compress) {
                 const index = compress.findIndex(value => value.format === format);
                 if (index !== -1) {
@@ -377,7 +405,7 @@ let Chrome: IChrome;
                 }
             }
         }
-        hasPng(compress: Undef<CompressionFormat[]>) {
+        hasPng(compress: Undef<CompressFormat[]>) {
             return this.tinify_api_key && this.getFormat(compress, 'png') !== undefined;
         }
         isJpeg(file: RequestAsset) {
@@ -840,7 +868,7 @@ class FileManager implements IFileManager {
         switch (mimeType) {
             case '@text/html':
             case '@application/xhtml+xml': {
-                const getFileOuterHTML = (script: boolean, value: string) => script ? `<script type="text/javascript" src="${value}"></script>` : `<link rel="stylesheet" type="text/css" href="${value}" />`;
+                const getOuterHTML = (script: boolean, value: string) => script ? `<script type="text/javascript" src="${value}"></script>` : `<link rel="stylesheet" type="text/css" href="${value}" />`;
                 const minifySpace = (value: string) => value.replace(/[\s\n]+/g, '');
                 const baseUri = file.uri!;
                 const saved = new Set<string>();
@@ -864,9 +892,12 @@ class FileManager implements IFileManager {
                         }
                     }
                     else {
-                        source = source.replace(segment, match[1] + getFileOuterHTML(script, location));
+                        source = source.replace(segment, match[1] + getOuterHTML(script, location));
                         saved.add(location);
                     }
+                }
+                if (saved.size) {
+                    html = source;
                 }
                 pattern = /(\s*)<(script|style).*?>([\s\S]*?)<\/\2>\n*/ig;
                 for (const item of assets) {
@@ -877,7 +908,7 @@ class FileManager implements IFileManager {
                             const length = source.length;
                             let replaceWith = '';
                             if (bundleIndex === 0) {
-                                replaceWith = getFileOuterHTML(item.mimeType === 'text/javascript', Express.getFullUri(item));
+                                replaceWith = getOuterHTML(item.mimeType === 'text/javascript', Express.getFullUri(item));
                                 source = source.replace(outerHTML, replaceWith);
                             }
                             else {
@@ -887,9 +918,10 @@ class FileManager implements IFileManager {
                                 pattern.lastIndex = 0;
                                 const content = minifySpace(item.content || '');
                                 outerHTML = minifySpace(outerHTML);
-                                while ((match = pattern.exec(source)) !== null) {
+                                while ((match = pattern.exec(html)) !== null) {
                                     if (outerHTML === minifySpace(match[0]) || content && content === minifySpace(match[3])) {
                                         source = source.replace(match[0], (replaceWith ? match[1] : '') + replaceWith);
+                                        html = source;
                                         break;
                                     }
                                 }
@@ -902,16 +934,19 @@ class FileManager implements IFileManager {
                         for (const trailing of trailingContent) {
                             content.push(minifySpace(trailing.value));
                         }
-                        html = source;
+                        let modified = false;
                         while ((match = pattern.exec(html)) !== null) {
                             const value = minifySpace(match[3]);
                             if (content.includes(value)) {
                                 source = source.replace(match[0], '');
+                                modified = true;
                             }
+                        }
+                        if (modified) {
+                            html = source;
                         }
                     }
                 }
-                html = source;
                 for (const item of assets) {
                     if (item.base64) {
                         source = Chrome.replacePath(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
@@ -923,12 +958,17 @@ class FileManager implements IFileManager {
                     const value = Express.getFullUri(item);
                     source = Chrome.replacePath(source, item.uri, value);
                     if (item.rootDir || Express.fromSameOrigin(baseUri, item.uri)) {
+                        let modified = false;
                         pattern = new RegExp(`((?:\\.\\.)?(?:[\\\\/]\\.\\.|\\.\\.[\\\\/]|[\\\\/])*)?(${path.join(item.pathname, item.filename).replace(/[\\/]/g, '[\\\\/]')})`, 'g');
                         while ((match = pattern.exec(html)) !== null) {
                             const pathname = match[0];
                             if (pathname !== value && item.uri === Express.resolvePath(pathname, baseUri)) {
                                 source = source.replace(pathname, value);
+                                modified = true;
                             }
+                        }
+                        if (modified) {
+                            html = source;
                         }
                     }
                 }

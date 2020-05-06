@@ -195,6 +195,7 @@ There is no official documentation as this project is still in early development
 .settings // see user preferences section
 
 setFramework(module: {}, cached?: boolean) // install application interpreter
+setHostname(value: string) // use another cors-enabled server for processing archives - (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
 setViewModel(data?: {}) // object data for layout bindings
 
 parseDocument() // see installation section (Promise)

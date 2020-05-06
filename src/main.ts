@@ -37,6 +37,15 @@ function includeExtension(extensions: Extension[], ext: Extension) {
 
 const checkWritable = (app: Undef<Application>): app is Application => app?.initializing === false && app.length > 0;
 
+export function setHostname(value: string) {
+    if (main?.fileHandler) {
+        const match = regex.COMPONENT.PROTOCOL.exec(value);
+        if (match && match[1].startsWith('http')) {
+            main.fileHandler.hostname = match[1] + match[2] + (match[3] || '');
+        }
+    }
+}
+
 export function setFramework(value: AppFramework<Node>, cached = false) {
     const reloading = framework !== undefined;
     if (framework !== value) {

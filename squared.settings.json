@@ -4,6 +4,9 @@
   "disk_write": false,
   "unc_read": false,
   "unc_write": false,
+  "cors": {
+    "origin": false
+  },
   "request_post_limit": "100mb",
   "gzip_level": "9",
   "brotli_quality": "11",

@@ -4,3 +4,5 @@
 // TypeScript Version: 3.6
 
 /// <reference path="node.d.ts" />
+/// <reference path="express.d.ts" />
+/// <reference path="content.d.ts" />

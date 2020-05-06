@@ -8,7 +8,7 @@ export interface FileAsset extends Asset {
     pathname: string;
     filename: string;
     content?: string;
-    compress?: CompressionFormat[];
+    compress?: CompressFormat[];
     exclusions?: Exclusions;
 }
 
@@ -30,7 +30,7 @@ export interface Exclusions {
     pattern?: string[];
 }
 
-export interface CompressionFormat {
+export interface CompressFormat {
     format: string;
     level?: number;
 }
