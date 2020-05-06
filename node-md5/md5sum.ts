@@ -20,6 +20,7 @@ let height = 960;
 let flags = 1;
 let timeout = 1 * 60 * 1000;
 let screenshot = false;
+let extension = 'md5';
 {
     const ARGV = process.argv;
     let i = 2;
@@ -73,6 +74,14 @@ let screenshot = false;
                 master = ARGV[i++];
                 snapshot = ARGV[i++];
                 break;
+            case '-x':
+            case '--extension':
+                extension = ARGV[i++];
+                break;
+            case '-r':
+            case '--raw':
+                screenshot = true;
+                break;
             case '-t':
             case '--timeout': {
                 const t = parseFloat(ARGV[i++]);
@@ -111,31 +120,46 @@ if (master) {
             const notFound: string[] = [];
             const stderr = process.stderr;
             for (const file of fs.readdirSync(masterDir)) {
+                if (!file.endsWith('.' + extension)) {
+                    continue;
+                }
                 const filename = path.basename(file);
                 const filepath = path.resolve(snapshotDir, path.basename(filename));
                 if (fs.existsSync(filepath)) {
-                    const masterpath = path.resolve(masterDir, file);
-                    const output = diff.diffChars(
-                        fs.readFileSync(masterpath).toString('utf-8'),
-                        fs.readFileSync(filepath).toString('utf-8')
-                    );
-                    if (output.length > 1) {
-                        const pngpath = filepath.replace('.md5', '.png');
-                        stderr.write('\n\n' + chalk.bgWhite.black('-'.repeat(100)) + '\n\n');
-                        stderr.write(chalk.yellow(masterpath) + '\n' + chalk.grey(filepath) + '\n' + (fs.existsSync(pngpath) ? chalk.blue(pngpath) + '\n' : '') + '\n');
-                        for (const part of output) {
-                            if (part.removed) {
-                                stderr.write(chalk.yellow(part.value));
-                            }
-                            else if (!part.added) {
-                                stderr.write(chalk.grey(part.value));
-                            }
+                    const masterpath = path.resolve(masterDir, filename);
+                    if (screenshot) {
+                        if (md5(fs.readFileSync(filepath)) !== md5(fs.readFileSync(masterpath))) {
+                            stderr.write(chalk.bgWhite.black('-'.repeat(100)) + '\n\n');
+                            stderr.write(chalk.yellow(masterpath) + '\n' + chalk.grey(filepath) + '\n\n');
+                            errors.push(filename);
                         }
-                        stderr.write('\n');
-                        errors.push(filename);
+                        else {
+                            stderr.write(chalk.bgBlue.white('>'));
+                        }
                     }
                     else {
-                        stderr.write(chalk.bgBlue.white('>'));
+                        const output = diff.diffChars(
+                            fs.readFileSync(masterpath).toString('utf-8'),
+                            fs.readFileSync(filepath).toString('utf-8')
+                        );
+                        if (output.length > 1) {
+                            const pngpath = filepath.replace('.md5', '.png');
+                            stderr.write('\n\n' + chalk.bgWhite.black('-'.repeat(100)) + '\n\n');
+                            stderr.write(chalk.yellow(masterpath) + '\n' + chalk.grey(filepath) + '\n' + (fs.existsSync(pngpath) ? chalk.blue(pngpath) + '\n' : '') + '\n');
+                            for (const part of output) {
+                                if (part.removed) {
+                                    stderr.write(chalk.yellow(part.value));
+                                }
+                                else if (!part.added) {
+                                    stderr.write(chalk.grey(part.value));
+                                }
+                            }
+                            stderr.write('\n');
+                            errors.push(filename);
+                        }
+                        else {
+                            stderr.write(chalk.bgBlue.white('>'));
+                        }
                     }
                 }
                 else {
@@ -144,7 +168,7 @@ if (master) {
                 }
             }
             if (errors.length || notFound.length) {
-                stderr.write('\n');
+                stderr.write('\n' + (screenshot ? '\n' : ''));
                 for (const value of errors) {
                     warnMessage('MD5 not matched', value);
                 }
