@@ -8,6 +8,10 @@ declare namespace Content {
         js?: ObjectMap<StandardMap>;
     }
 
+    interface ResizeMode extends Dimension {
+        mode: string;
+    }
+
     interface CompressFormat extends file.CompressFormat {}
 
     interface FormattableContent extends file_chrome.FormattableContent {}

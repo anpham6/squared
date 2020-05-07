@@ -1,8 +1,9 @@
 import { RequestAsset, Routing } from './express';
-import { CompressFormat, Exclusions, External } from './content';
+import { CompressFormat, Exclusions, External, ResizeMode } from './content';
 
 import * as fs from "fs";
 import * as cors from "cors";
+import * as jimp from "jimp";
 
 declare namespace Node {
     interface INode {
@@ -34,16 +35,21 @@ declare namespace Node {
         readonly gzip_level: number;
         readonly brotli_quality: number;
         readonly jpeg_quality: number;
-        readonly tinify_api_key: boolean;
         getFileSize(filepath: string): number;
         createGzipWriteStream(source: string, filepath: string, level?: number): fs.WriteStream;
         createBrotliWriteStream(source: string, filepath: string, quality?: number, mimeType?: string): fs.WriteStream;
         getFormat(compress: Undef<CompressFormat[]>, format: string): Undef<CompressFormat>;
         removeFormat(compress: Undef<CompressFormat[]>, format: string): void;
-        getPng(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
-        isJpeg(file: RequestAsset, filepath?: string): boolean;
         getSizeRange(value: string): [number, number];
         withinSizeRange(filepath: string, value: Undef<string>): boolean;
+    }
+
+    interface IImage {
+        readonly tinify_api_key: boolean;
+        getFormat(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
+        isJpeg(file: RequestAsset, filepath?: string): boolean;
+        parseResizeMode(value: string): ResizeMode;
+        resize(image: jimp, width: Undef<number>, height: Undef<number>, mode?: string): jimp;
     }
 
     interface IChrome {

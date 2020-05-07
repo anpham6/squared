@@ -1,4 +1,4 @@
-import { IChrome, ICompress, IFileManager, IExpress, INode, Settings } from './@types/node';
+import { IChrome, ICompress, IFileManager, IExpress, IImage, INode, Settings } from './@types/node';
 import { DataMap, Environment, RequestAsset, ResultOfFileAction, Routing } from './@types/express';
 import { CompressFormat, Exclusions, External } from './@types/content';
 
@@ -27,6 +27,7 @@ let Node: INode;
 let Express: IExpress;
 let Compress: ICompress;
 let Chrome: IChrome;
+let Image: IImage;
 
 {
     let DISK_READ = false;
@@ -353,8 +354,7 @@ let Chrome: IChrome;
         constructor(
             public gzip_level: number,
             public brotli_quality: number,
-            public jpeg_quality: number,
-            public tinify_api_key: boolean)
+            public jpeg_quality: number)
         {
         }
 
@@ -394,20 +394,6 @@ let Chrome: IChrome;
                 }
             }
         }
-        getPng(compress: Undef<CompressFormat[]>) {
-            return this.tinify_api_key ? this.getFormat(compress, 'png') : undefined;
-        }
-        isJpeg(file: RequestAsset, filepath?: string) {
-            if (file.mimeType?.endsWith('image/jpeg')) {
-                return true;
-            }
-            switch (path.extname(filepath || file.filename).toLowerCase()) {
-                case '.jpg':
-                case '.jpeg':
-                    return true;
-            }
-            return false;
-        }
         getSizeRange(value: string): [number, number] {
             const match = /\(\s*(\d+)\s*,\s*(\d+|\*)\s*\)/.exec(value);
             return match ? [parseInt(match[1]), match[2] === '*' ? Infinity : parseInt(match[2])] : [0, Infinity];
@@ -426,7 +412,7 @@ let Chrome: IChrome;
             return true;
         }
     }
-    (GZIP_LEVEL, BROTLI_QUALITY, JPEG_QUALITY, TINIFY_API_KEY);
+    (GZIP_LEVEL, BROTLI_QUALITY, JPEG_QUALITY);
 
     Chrome = new class implements IChrome {
         constructor(
@@ -728,6 +714,56 @@ let Chrome: IChrome;
         }
     }
     (EXTERNAL, [require('prettier/parser-html'), require('prettier/parser-postcss'), require('prettier/parser-babel'), require('prettier/parser-typescript')]);
+
+    Image = new class implements IImage {
+        constructor(public tinify_api_key: boolean) {}
+
+        getFormat(compress: Undef<CompressFormat[]>) {
+            return this.tinify_api_key ? Compress.getFormat(compress, 'png') : undefined;
+        }
+        isJpeg(file: RequestAsset, filepath?: string) {
+            if (file.mimeType?.endsWith('image/jpeg')) {
+                return true;
+            }
+            switch (path.extname(filepath || file.filename).toLowerCase()) {
+                case '.jpg':
+                case '.jpeg':
+                    return true;
+            }
+            return false;
+        }
+        parseResizeMode(value: string) {
+            let width = 0, height = 0;
+            let mode = '';
+            const match = /\((\d+)x(\d+)#?(contain|cover)?\)/.exec(value);
+            if (match) {
+                width = parseInt(match[1]);
+                height = parseInt(match[2]);
+                mode = match[3];
+            }
+            return { width, height, mode };
+        }
+        resize(image: jimp, width: Undef<number>, height: Undef<number>, mode?: string) {
+            if (width && height) {
+                switch (mode) {
+                    case 'contain':
+                        image.contain(width, height);
+                        break;
+                    case 'cover':
+                        image.cover(width, height);
+                        break;
+                    case 'scale':
+                        image.scaleToFit(width, height);
+                        break;
+                    default:
+                        image.resize(width, height);
+                        break;
+                }
+            }
+            return image;
+        }
+    }
+    (TINIFY_API_KEY);
 }
 
 function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
@@ -889,7 +925,7 @@ class FileManager implements IFileManager {
         const compress = file.compress;
         const gzip = Compress.getFormat(compress, 'gz');
         const brotli = Compress.getFormat(compress, 'br');
-        const jpeg = Compress.isJpeg(file, filepath) && Compress.getFormat(compress, 'jpeg');
+        const jpeg = Image.isJpeg(file, filepath) && Compress.getFormat(compress, 'jpeg');
         const resumeThread = () => {
             this.transformBuffer(assets, file, filepath, finalize);
             if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
@@ -948,7 +984,10 @@ class FileManager implements IFileManager {
             jimp.read(filepath)
                 .then(image => {
                     image.quality(jpeg.level || Compress.jpeg_quality).write(jpg, err => {
-                        if (jpg !== filepath) {
+                        if (err) {
+                            Node.writeError(filepath, err);
+                        }
+                        else if (jpg !== filepath) {
                             try {
                                 if (Compress.getFileSize(jpg) >= Compress.getFileSize(filepath)) {
                                     fs.unlinkSync(jpg);
@@ -960,9 +999,6 @@ class FileManager implements IFileManager {
                             catch (error) {
                                 Node.writeError(jpg, error);
                             }
-                        }
-                        if (err) {
-                            Node.writeError(filepath, err);
                         }
                         finalize('');
                         resumeThread();
@@ -979,20 +1015,11 @@ class FileManager implements IFileManager {
         }
     }
     transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
-        const { mimeType, format } = file;
+        let mimeType = file.mimeType as string;
         if (!mimeType) {
             return;
         }
-        const writeTrailingContent = () => {
-            if (file.trailingContent) {
-                try {
-                    fs.appendFileSync(filepath, Chrome.getTrailingContent(file));
-                }
-                catch (err) {
-                    Node.writeError(filepath, err);
-                }
-            }
-        };
+        const format = file.format;
         switch (mimeType) {
             case '@text/html':
             case '@application/xhtml+xml': {
@@ -1143,7 +1170,14 @@ class FileManager implements IFileManager {
                         break;
                     }
                 }
-                writeTrailingContent();
+                if (file.trailingContent) {
+                    try {
+                        fs.appendFileSync(filepath, Chrome.getTrailingContent(file, mimeType, format));
+                    }
+                    catch (err) {
+                        Node.writeError(filepath, err);
+                    }
+                }
                 break;
             }
             default:
@@ -1182,22 +1216,26 @@ class FileManager implements IFileManager {
                     const convert = mimeType.split(':');
                     convert.pop();
                     convert.forEach(value => {
+                        const removeValue = () => mimeType = mimeType.replace(value + ':', '');
                         if (!Compress.withinSizeRange(filepath, value)) {
+                            removeValue();
                             return;
                         }
+                        const { width, height, mode } = Image.parseResizeMode(value);
                         if (value.startsWith('png')) {
                             if (!mimeType.endsWith('/png')) {
+                                removeValue();
                                 ++this.delayed;
                                 jimp.read(filepath)
                                     .then(image => {
                                         const png = replaceExtension(filepath, 'png');
-                                        image.write(png, err => {
+                                        Image.resize(image, width, height, mode).write(png, err => {
                                             if (err) {
                                                 Node.writeError(png, err);
                                             }
                                             else {
                                                 afterConvert(png, value);
-                                                if (Compress.getPng(file.compress)) {
+                                                if (Image.getFormat(file.compress)) {
                                                     compressImage(png);
                                                     return;
                                                 }
@@ -1209,21 +1247,23 @@ class FileManager implements IFileManager {
                                         finalize('');
                                         Node.writeError(filepath, err);
                                     });
+                                return;
                             }
                         }
                         else if (value.startsWith('jpeg')) {
                             if (!mimeType.endsWith('/jpeg')) {
+                                removeValue();
                                 ++this.delayed;
                                 jimp.read(filepath)
                                     .then(image => {
                                         const jpg = replaceExtension(filepath, 'jpg');
-                                        image.quality(Compress.jpeg_quality).write(jpg, err => {
+                                        Image.resize(image, width, height, mode).quality(Compress.jpeg_quality).write(jpg, err => {
                                             if (err) {
                                                 Node.writeError(jpg, err);
                                             }
                                             else {
                                                 afterConvert(jpg, value);
-                                                if (Compress.getPng(file.compress)) {
+                                                if (Image.getFormat(file.compress)) {
                                                     compressImage(jpg);
                                                     return;
                                                 }
@@ -1235,15 +1275,17 @@ class FileManager implements IFileManager {
                                         finalize('');
                                         Node.writeError(filepath, err);
                                     });
+                                return;
                             }
                         }
                         else if (value.startsWith('bmp')) {
                             if (!mimeType.endsWith('/bmp')) {
+                                removeValue();
                                 ++this.delayed;
                                 jimp.read(filepath)
                                     .then(image => {
                                         const bmp = replaceExtension(filepath, 'bmp');
-                                        image.write(bmp, err => {
+                                        Image.resize(image, width, height, mode).write(bmp, err => {
                                             if (err) {
                                                 Node.writeError(bmp, err);
                                             }
@@ -1257,9 +1299,29 @@ class FileManager implements IFileManager {
                                         finalize('');
                                         Node.writeError(filepath, err);
                                     });
+                                return;
                             }
                         }
                     });
+                    if (/\/(png|jpeg|bmp)$/.test(mimeType)) {
+                        const { width, height, mode } = Image.parseResizeMode(mimeType);
+                        if (width && height) {
+                            ++this.delayed;
+                            jimp.read(filepath)
+                                .then(image => {
+                                    const resizepath = filepath + path.extname(filepath);
+                                    Image.resize(image, width, height, mode).write(resizepath, err => {
+                                        if (err) {
+                                            Node.writeError(resizepath, err);
+                                        }
+                                        else {
+                                            fs.renameSync(resizepath, filepath);
+                                        }
+                                        finalize('');
+                                    });
+                                });
+                        }
+                    }
                 }
                 break;
         }
@@ -1327,14 +1389,14 @@ class FileManager implements IFileManager {
         return '';
     }
     writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
-        const png = Compress.getPng(file.compress);
+        const png = Image.getFormat(file.compress);
         if (png && Compress.withinSizeRange(filepath, png.condition)) {
             try {
                 tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
                     if (!err) {
                         fs.writeFileSync(filepath, resultData);
                     }
-                    if (Compress.isJpeg(file)) {
+                    if (Image.isJpeg(file)) {
                         Compress.removeFormat(file.compress, 'jpeg');
                     }
                     this.compressFile(assets, file, filepath, finalize);
@@ -1675,7 +1737,7 @@ app.post('/api/assets/copy', (req, res) => {
             if (filepath) {
                 status.add(filepath);
             }
-            if (!filepath || --status.delayed === 0 && cleared) {
+            if (filepath === undefined || --status.delayed === 0 && cleared) {
                 status.finalizeAssetsAsync(req.query.release === '1').then(() => {
                     res.json(<ResultOfFileAction> { success: status.files.size > 0, files: Array.from(status.files) });
                     status.delayed = Infinity;
@@ -1785,7 +1847,7 @@ app.post('/api/assets/archive', (req, res) => {
             if (filepath) {
                 status.add(filepath);
             }
-            if (!filepath || --status.delayed === 0 && cleared) {
+            if (filepath === undefined || --status.delayed === 0 && cleared) {
                 status.finalizeAssetsAsync(req.query.release === '1').then(() => {
                     archive.directory(dirname, false);
                     archive.finalize();

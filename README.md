@@ -709,16 +709,16 @@ squared.configure('chrome.convert.png', {
     whenSmaller: true
 });
 ```
-You can also use these commands individually on any elements where the image is the primary output display.
+You can also use these commands individually on any elements where the image is the primary output display. Image resizing only works with individual elements or assets and not globally with extensions.
 
-{format}{@%}?{(minSize(0),maxSize(*))}?  
+{format}{@%}?{(minSize(0),maxSize(*))}?{(width(n)xheight(n)#?cover|contain|scale)}?  
 
 @ - replace  
 % - smaller  
 
 ```xml
 
-<img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour/::png@(10000,75000)" />
+<img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)" />
 
 ```
 
