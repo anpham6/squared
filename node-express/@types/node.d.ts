@@ -41,7 +41,7 @@ declare namespace Node {
         getFormat(compress: Undef<CompressFormat[]>, format: string): Undef<CompressFormat>;
         removeFormat(compress: Undef<CompressFormat[]>, format: string): void;
         getPng(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
-        isJpeg(file: RequestAsset): boolean;
+        isJpeg(file: RequestAsset, filepath?: string): boolean;
         getSizeRange(value: string): [number, number];
         withinSizeRange(filepath: string, value: Undef<string>): boolean;
     }
@@ -55,6 +55,7 @@ declare namespace Node {
         minifyHtml(format: string, value: string): string;
         minifyCss(format: string, value: string): string;
         minifyJs(format: string, value: string): string;
+        removeCss(source: string, styles: string[]): string;
         replacePath(source: string, segment: string, value: string, base64?: boolean): string;
     }
 

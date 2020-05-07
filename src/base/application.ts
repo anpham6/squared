@@ -92,6 +92,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     public readonly processing: AppProcessing<T> = {
         cache: new NodeList<T>(),
         excluded: new NodeList<T>(),
+        unusedStyles: new Set<string>(),
         sessionId: ''
     };
     public abstract builtInExtensions: ObjectMap<Extension<T>>;
@@ -155,6 +156,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         processing.cache.reset();
         processing.excluded.clear();
         processing.sessionId = '';
+        processing.unusedStyles.clear();
         this.session.active.length = 0;
         this.controllerHandler.reset();
         this.resourceHandler.reset();
@@ -555,7 +557,15 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');
                     const targetElt = target ? '::' + target : '';
-                    document.querySelectorAll(selector || '*').forEach((element: HTMLElement) => {
+                    const elements = document.querySelectorAll(selector);
+                    const length = elements.length;
+                    if (length === 0) {
+                        this.processing.unusedStyles.add(selectorText);
+                        return;
+                    }
+                    let i = 0;
+                    while (i < length) {
+                        const element = elements[i++];
                         const attrStyle = `styleMap${targetElt}`;
                         const attrSpecificity = `styleSpecificity${targetElt}`;
                         const styleData: StringMap = getElementCache(element, attrStyle, sessionId);
@@ -589,7 +599,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             setElementCache(element, attrStyle, sessionId, styleMap);
                             setElementCache(element, attrSpecificity, sessionId, specificityData);
                         }
-                    });
+                    }
                 });
                 break;
             }

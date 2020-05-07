@@ -30,6 +30,7 @@ export interface AppSession<T> {
 export interface AppProcessing<T extends Node> {
     cache: NodeList<T>;
     excluded: NodeList<T>;
+    unusedStyles: Set<string>;
     sessionId: string;
     node?: T;
 }

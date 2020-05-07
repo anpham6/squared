@@ -18,9 +18,14 @@ declare namespace Express {
     interface RequestAsset extends file_chrome.RequestAsset {
         filepath?: string;
         originalName?: string;
+        dataMap?: DataMap;
     }
 
     interface ResultOfFileAction extends file.ResultOfFileAction {}
+
+    interface DataMap {
+        unusedStyles?: string[];
+    }
 }
 
 export = Express;

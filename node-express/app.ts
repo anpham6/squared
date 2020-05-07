@@ -1,5 +1,5 @@
 import { IChrome, ICompress, IFileManager, IExpress, INode, Settings } from './@types/node';
-import { Environment, RequestAsset, ResultOfFileAction, Routing } from './@types/express';
+import { DataMap, Environment, RequestAsset, ResultOfFileAction, Routing } from './@types/express';
 import { CompressFormat, Exclusions, External } from './@types/content';
 
 import path = require('path');
@@ -397,11 +397,11 @@ let Chrome: IChrome;
         getPng(compress: Undef<CompressFormat[]>) {
             return this.tinify_api_key ? this.getFormat(compress, 'png') : undefined;
         }
-        isJpeg(file: RequestAsset) {
+        isJpeg(file: RequestAsset, filepath?: string) {
             if (file.mimeType?.endsWith('image/jpeg')) {
                 return true;
             }
-            switch (path.extname(file.filename).toLowerCase()) {
+            switch (path.extname(filepath || file.filename).toLowerCase()) {
                 case '.jpg':
                 case '.jpeg':
                     return true;
@@ -448,12 +448,12 @@ let Chrome: IChrome;
             return value;
         }
         getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
-            if (!mimeType) {
-                mimeType = file.mimeType;
-            }
             const trailingContent = file.trailingContent;
-            let result = '';
             if (trailingContent) {
+                if (!mimeType) {
+                    mimeType = file.mimeType;
+                }
+                let result = '';
                 for (const item of trailingContent) {
                     const formatter = item.format || format || file.format;
                     if (mimeType && formatter) {
@@ -463,8 +463,9 @@ let Chrome: IChrome;
                         result += '\n' + item.value;
                     }
                 }
+                return result;
             }
-            return result;
+            return '';
         }
         findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}] {
             for (const name in data) {
@@ -675,6 +676,40 @@ let Chrome: IChrome;
             }
             return '';
         }
+        removeCss(source: string, styles: string[]) {
+            let content = source;
+            let pattern: Undef<RegExp>;
+            let match: Null<RegExpExecArray>;
+            for (let value of styles) {
+                value = value.replace(/\./g, '\\.');
+                let found = false;
+                pattern = new RegExp(`^\\s*${value}[\\s\\n]*\\{[\\s\\S]*?\\}\\n*`, 'gm');
+                while ((match = pattern.exec(content)) !== null) {
+                    source = source.replace(match[0], '');
+                    found = true;
+                }
+                if (found) {
+                    content = source;
+                }
+                pattern = new RegExp(`^[^,]*(,?[\\s\\n]*${value}[\\s\\n]*[,{](\\s*)).*?\\{?`, 'gm');
+                while ((match = pattern.exec(content)) !== null) {
+                    const segment = match[1];
+                    let replaceWith = '';
+                    if (segment.trim().endsWith('{')) {
+                        replaceWith = ' {' + match[2];
+                    }
+                    else if (segment.startsWith(',')) {
+                        replaceWith = ', ';
+                    }
+                    source = source.replace(match[0], match[0].replace(segment, replaceWith));
+                    found = true;
+                }
+                if (found) {
+                    content = source;
+                }
+            }
+            return source;
+        }
         replacePath(source: string, segment: string, value: string, base64?: boolean) {
             if (!base64) {
                 segment = segment.replace(/[\\/]/g, '[\\\\/]');
@@ -717,12 +752,14 @@ class FileManager implements IFileManager {
     public filesToCompare = new Map<RequestAsset, string[]>();
     public contentToAppend = new Map<string, string[]>();
     public readonly requestMain?: RequestAsset;
+    public readonly dataMap?: DataMap;
 
     constructor(
         public dirname: string,
         public assets: RequestAsset[])
     {
-        this.requestMain = this.assets.find(item => item.requestMain);
+        this.requestMain = assets.find(item => item.requestMain);
+        this.dataMap = assets[0].dataMap;
     }
 
     add(value: string) {
@@ -800,7 +837,7 @@ class FileManager implements IFileManager {
         if (asset?.uri) {
             const requestMain = this.requestMain;
             if (requestMain) {
-                origin = Express.resolvePath((file.moveTo === '__serverroot__' ? '/' : (file.rootDir || '')) + file.pathname + '/' + file.filename, requestMain.uri!);
+                origin = Express.resolvePath(path.join(file.moveTo === '__serverroot__' ? '' : (file.rootDir || ''), file.pathname, file.filename), requestMain.uri!);
             }
             const pattern = Express.PATTERN_URL;
             const uri = asset.uri;
@@ -852,7 +889,7 @@ class FileManager implements IFileManager {
         const compress = file.compress;
         const gzip = Compress.getFormat(compress, 'gz');
         const brotli = Compress.getFormat(compress, 'br');
-        const jpeg = Compress.isJpeg(file) && Compress.getFormat(compress, 'jpeg');
+        const jpeg = Compress.isJpeg(file, filepath) && Compress.getFormat(compress, 'jpeg');
         const resumeThread = () => {
             this.transformBuffer(assets, file, filepath, finalize);
             if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
@@ -942,7 +979,7 @@ class FileManager implements IFileManager {
         }
     }
     transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
-        const { format, mimeType } = file;
+        const { mimeType, format } = file;
         if (!mimeType) {
             return;
         }
@@ -1077,13 +1114,11 @@ class FileManager implements IFileManager {
                     output = Chrome.minifyCss(format, output) || output;
                 }
                 if (file.trailingContent) {
-                    let result = Chrome.getTrailingContent(file, mimeType, format);
-                    result = this.transformCss(file, undefined, result);
-                    if (result) {
-                        output += result;
-                    }
+                    const content = Chrome.getTrailingContent(file, mimeType, format);
+                    output += this.transformCss(file, undefined, content) || content;
                 }
-                fs.writeFileSync(filepath, output);
+                const unusedStyles = this.dataMap?.unusedStyles;
+                fs.writeFileSync(filepath, unusedStyles ? Chrome.removeCss(output, unusedStyles) : output);
                 break;
             }
             case 'text/html':
@@ -1096,23 +1131,10 @@ class FileManager implements IFileManager {
                 }
                 break;
             }
-            case 'text/css': {
-                if (format) {
-                    let output = Chrome.minifyCss(format, fs.readFileSync(filepath).toString('utf8'));
-                    if (output) {
-                        if (file.trailingContent) {
-                            output += Chrome.getTrailingContent(file, mimeType, format);
-                        }
-                        fs.writeFileSync(filepath, output);
-                        break;
-                    }
-                }
-                writeTrailingContent();
-                break;
-            }
+            case 'text/css':
             case 'text/javascript': {
                 if (format) {
-                    let output = Chrome.minifyJs(format, fs.readFileSync(filepath).toString('utf8'));
+                    let output = Chrome[mimeType === 'text/css' ? 'minifyCss' : 'minifyJs'](format, fs.readFileSync(filepath).toString('utf8'));
                     if (output) {
                         if (file.trailingContent) {
                             output += Chrome.getTrailingContent(file, mimeType, format);
@@ -1244,53 +1266,63 @@ class FileManager implements IFileManager {
     }
     transformCss(file: RequestAsset, filepath: Undef<string>, content?: string) {
         const baseUrl = file.uri!;
-        if (this.requestMain && Express.fromSameOrigin(this.requestMain.uri!, baseUrl)) {
-            const assets = this.assets;
+        const sameOrigin = this.requestMain !== undefined && Express.fromSameOrigin(this.requestMain.uri!, baseUrl);
+        const unusedStyles = this.dataMap?.unusedStyles;
+        if (sameOrigin || unusedStyles) {
             if (filepath) {
                 content = fs.readFileSync(filepath).toString('utf8');
             }
             else if (!content) {
                 return '';
             }
-            for (const item of assets) {
-                if (item.base64 && item.uri) {
-                    const url = this.getRelativeUrl(file, item.uri);
-                    if (url) {
-                        content = Chrome.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
-                    }
-                }
+            if (unusedStyles) {
+                content = Chrome.removeCss(content, unusedStyles);
             }
-            let source = content;
-            const pattern = /[uU][rR][lL]\(\s*(["'])?\s*((?:[^"')]|\\"|\\')+)\s*\1?\s*\)/g;
-            let match: Null<RegExpExecArray>;
-            while ((match = pattern.exec(content)) !== null) {
-                let url = match[2];
-                if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
-                    url = this.getRelativeUrl(file, url);
-                    if (url) {
-                        source = source.replace(match[0], `url(${url})`);
-                    }
-                    else {
-                        url = Express.resolvePath(match[2], baseUrl);
-                        const asset = assets.find(item => item.uri === url);
-                        if (asset) {
-                            source = source.replace(match[0], `url(${url})`);
+            if (sameOrigin) {
+                const assets = this.assets;
+                for (const item of assets) {
+                    if (item.base64 && item.uri) {
+                        const url = this.getRelativeUrl(file, item.uri);
+                        if (url) {
+                            content = Chrome.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
                         }
                     }
                 }
-                else {
-                    const asset = assets.find(item => item.uri === url);
-                    if (asset) {
-                        const count = file.pathname.split(/[\\/]/).length;
-                        source = source.replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
+                let source = content;
+                const pattern = /[uU][rR][lL]\(\s*(["'])?\s*((?:[^"')]|\\"|\\')+)\s*\1?\s*\)/g;
+                let match: Null<RegExpExecArray>;
+                while ((match = pattern.exec(content)) !== null) {
+                    let url = match[2];
+                    if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
+                        url = this.getRelativeUrl(file, url);
+                        if (url) {
+                            source = source.replace(match[0], `url(${url})`);
+                        }
+                        else if (this.requestMain) {
+                            url = Express.resolvePath(match[2], this.requestMain.uri!);
+                            const asset = assets.find(item => item.uri === url);
+                            if (asset) {
+                                url = this.getRelativeUrl(file, url);
+                                if (url) {
+                                    source = source.replace(match[0], `url(${url})`);
+                                }
+                            }
+                        }
+                    }
+                    else {
+                        const asset = assets.find(item => item.uri === url);
+                        if (asset) {
+                            const count = file.pathname.split(/[\\/]/).length;
+                            source = source.replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
+                        }
                     }
                 }
+                if (file.format) {
+                    source = Chrome.minifyCss(file.format, source) || source;
+                }
+                file.mimeType = '&text/css';
+                return source;
             }
-            if (file.format) {
-                source = Chrome.minifyCss(file.format, source) || source;
-            }
-            file.mimeType = '&text/css';
-            return source;
         }
         return '';
     }
@@ -1325,6 +1357,7 @@ class FileManager implements IFileManager {
         const completed: string[] = [];
         const assets = this.assets;
         const exclusions = assets[0].exclusions;
+        const unusedStyles = this.dataMap?.unusedStyles;
         const checkQueue = (file: RequestAsset, filepath: string) => {
             if (file.bundleIndex !== undefined) {
                 const queue = appending[filepath];
@@ -1377,22 +1410,31 @@ class FileManager implements IFileManager {
                                 Node.writeError(uri, statusCode + ' ' + response.statusMessage);
                             }
                             else {
+                                const { mimeType, format } = queue;
                                 let content = response.body as string;
-                                let source: Undef<string>;
-                                if (queue.mimeType === '@text/css') {
+                                if (mimeType && format) {
+                                    content = Chrome.formatContent(content, mimeType, format) || content;
+                                }
+                                if (mimeType === '@text/css') {
                                     if (queue.trailingContent) {
                                         content += Chrome.getTrailingContent(queue);
                                     }
-                                    source = this.transformCss(queue, undefined, content);
-                                    if (source) {
-                                        queue.trailingContent = undefined;
+                                    if (unusedStyles) {
+                                        content = Chrome.removeCss(content, unusedStyles);
+                                    }
+                                    content = this.transformCss(queue, undefined, content) || content;
+                                }
+                                if (queue.bundleIndex) {
+                                    this.appendContent(queue, content);
+                                }
+                                else {
+                                    try {
+                                        fs.writeFileSync(filepath, content);
+                                    }
+                                    catch (error) {
+                                        Node.writeError(filepath, error);
                                     }
                                 }
-                                if (!source) {
-                                    const { format, mimeType } = queue;
-                                    source = format && mimeType && Chrome.formatContent(content, mimeType, format);
-                                }
-                                this.appendContent(queue, source || content);
                             }
                         }
                         processQueue(queue, filepath, bundleMain || file);
@@ -1445,13 +1487,6 @@ class FileManager implements IFileManager {
                 emptyDir.add(pathname);
             }
             if (file.content) {
-                const { format, mimeType } = file;
-                if (format && mimeType) {
-                    file.content = Chrome.formatContent(file.content, mimeType, format);
-                }
-                if (file.trailingContent) {
-                    file.content += Chrome.getTrailingContent(file, mimeType, format);
-                }
                 if (file.bundleIndex === 0) {
                     appending[filepath] = [];
                 }

@@ -22,8 +22,16 @@
             margin-bottom: 20px;
             overflow: hidden;
         }
-        .cards {
+        .cards1 {
             max-width: 960px;
+        }
+        .cards1, .cards2 {
+            max-width: 960px;
+        }
+        .cards1, .cards, .cards2 {
+            max-width: 960px;
+        }
+        .cards {
             display: grid;
             margin: 0 auto;
         }
@@ -168,7 +176,7 @@
                     });
                     squared.configure('chrome.convert.png', {
                         greaterThan: 35000,
-                        smallerThan: 50000,
+                        smallerThan: 75000,
                         whenSmaller: false,
                         replaceWith: true
                     });
@@ -176,6 +184,14 @@
                         greaterThan: 35000
                     });
                     chrome.saveAsWebPage();
+                    /*chrome.saveAsWebPage('bundle', {
+                        exclusions: {
+                            pathname: ['/common'],
+                            filename: ['harbour1.jpg'],
+                            extension: ['css'],
+                            pattern: ['amazonaws.*']
+                        }
+                    });
                     chrome.saveAsWebPage('bundle1', {
                         callback: result => console.log(result),
                         saveAs: {
@@ -185,7 +201,7 @@
                     });
                     chrome.saveAsWebPage('bundle2', { preserveCrossOrigin: true });
                     chrome.saveAsWebPage('bundle3', { productionRelease: true });
-                    chrome.saveAsWebPage('bundle4', { productionRelease: true, preserveCrossOrigin: true });
+                    chrome.saveAsWebPage('bundle4', { productionRelease: true, preserveCrossOrigin: true });*/
                 });
             });
         });
@@ -199,7 +215,7 @@
                 <header>
                     <h2>Bristol</h2>
                 </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" alt="Bristol harbour">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" alt="Bristol harbour" data-chrome-file="saveTo:../images/harbor/::png@(10000,75000)">
                 <div class="body">
                     <p>I live in Bristol. It mostly rains, but when it isn't raining we have hot air balloons.</p>
                 </div>
@@ -208,7 +224,7 @@
                 <header>
                     <h2>Harbour Cranes</h2>
                 </header>
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour2.jpg" alt="Bristol harbour">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour2.jpg" alt="Bristol harbour" data-chrome-file="saveTo:../images/harbor/::png%(10000,75000)">
                 <div class="body">
                 <p>We also have giant cranes, and historic boats. It is best if the balloons avoid these.</p>
                 </div>

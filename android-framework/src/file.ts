@@ -1,4 +1,4 @@
-import { FileArchivingOptions, FileCopyingOptions } from '../../@types/base/application';
+import { FileActionOptions, FileArchivingOptions, FileCopyingOptions } from '../../@types/base/application';
 import { FileAsset } from '../../@types/base/file';
 import { FileOutputOptions, ResourceStoredMap } from '../../@types/android/application';
 
@@ -526,6 +526,10 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             }
         }
         return result;
+    }
+
+    public getDataMap(options: FileActionOptions) {
+        return undefined;
     }
 
     public getCopyQueryParameters(options: FileCopyingOptions) {

@@ -1,6 +1,7 @@
+import { FileActionOptions } from '../../@types/base/application';
 import { FileAsset } from '../../@types/base/file';
 import { FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/application';
-import { RequestAsset, FileActionAttribute, SaveAsOptions } from '../../@types/chrome/file';
+import { FileActionAttribute, RequestAsset, SaveAsOptions } from '../../@types/chrome/file';
 
 import Resource from './resource';
 
@@ -63,12 +64,13 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
     }
     let relocate: Undef<string>;
     if (saveAs) {
-        const data = parseFileAs('saveAs', trimEnd(saveAs, '/'));
+        saveAs = trimEnd(saveAs.replace(/\\/g, '/'), '/');
+        const data = parseFileAs('saveAs', saveAs);
         if (data) {
             [relocate, format] = data;
         }
         else {
-            relocate = saveAs.replace(/\\/g, '/');
+            relocate = saveAs;
         }
         if (local && relocate) {
             value = resolvePath(relocate, location.href);
@@ -117,6 +119,7 @@ function parseUri(uri: string, crossOrigin: Undef<boolean>, saveAs?: string, for
                     }
                     else {
                         moveTo = '__serverroot__';
+                        rootDir = '';
                         pathname = getDirectory(0);
                     }
                 }
@@ -550,6 +553,12 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             });
         }
         return result;
+    }
+
+    public getDataMap(options: FileActionOptions) {
+        return {
+            unusedStyles: Array.from(this.application.processing.unusedStyles)
+        };
     }
 
     public getCopyQueryParameters(options: FileCopyingOptions) {

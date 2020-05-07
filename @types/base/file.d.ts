@@ -19,6 +19,7 @@ export interface ImageAsset extends Omit<Asset, "index"> {
 
 export interface RequestAsset extends Omit<FileAsset, "index"> {
     base64?: string;
+    dataMap?: StandardMap;
 }
 
 export interface RawAsset extends RequestAsset, Partial<ImageAsset> {}

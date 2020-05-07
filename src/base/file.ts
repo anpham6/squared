@@ -1,5 +1,5 @@
-import { FileArchivingOptions, FileCopyingOptions, UserSettings } from '../../@types/base/application';
-import { RawAsset, ResultOfFileAction } from '../../@types/base/file';
+import { FileActionOptions, FileArchivingOptions, FileCopyingOptions, UserSettings } from '../../@types/base/application';
+import { RawAsset, RequestAsset, ResultOfFileAction } from '../../@types/base/file';
 
 const $lib = squared.lib;
 
@@ -35,6 +35,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public abstract get userSettings(): UserSettings;
 
+    public abstract getDataMap(options: FileActionOptions): Undef<StandardMap>;
     public abstract getCopyQueryParameters(options: FileCopyingOptions): string;
     public abstract getArchiveQueryParameters(options: FileArchivingOptions): string;
 
@@ -76,9 +77,11 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (this.hasHttpProtocol()) {
             const { assets, directory } = options;
             if (isString(directory)) {
-                const body = assets ? assets.concat(this.assets) : this.assets;
-                if (body.length) {
-                    body[0].exclusions = options.exclusions;
+                const body = <RequestAsset[]> (assets ? assets.concat(this.assets) : this.assets);
+                const asset = body[0];
+                if (asset) {
+                    asset.exclusions = options.exclusions;
+                    asset.dataMap = this.getDataMap(options);
                     return fetch(
                         this.hostname +
                         '/api/assets/copy' +
@@ -118,9 +121,11 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (this.hasHttpProtocol()) {
             const { assets, filename } = options;
             if (isString(filename)) {
-                const body = assets ? assets.concat(this.assets) : this.assets;
-                if (body.length) {
-                    body[0].exclusions = options.exclusions;
+                const body = <RequestAsset[]> (assets ? assets.concat(this.assets) : this.assets);
+                const asset = body[0];
+                if (asset) {
+                    asset.exclusions = options.exclusions;
+                    asset.dataMap = this.getDataMap(options);
                     return fetch(
                         this.hostname +
                         '/api/assets/archive' +
