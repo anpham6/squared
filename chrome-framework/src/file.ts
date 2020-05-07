@@ -21,8 +21,7 @@ function parseFileAs(attr: string, value: Undef<string>): Undef<string>[] | unde
         const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
         if (match) {
             const segments = match[1].split('::').map(item => item.trim());
-            const format = segments.splice(1);
-            return [segments[0], format.length ? format.join('::') : undefined];
+            return [segments[0], segments[1] || undefined];
         }
     }
     return undefined;

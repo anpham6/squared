@@ -473,10 +473,10 @@ let Image: IImage;
             const html = this.external?.html;
             if (html) {
                 let valid = false;
-                const formatters = format.split('::');
+                const formatters = format.split('+');
                 const length = formatters.length;
                 for (let j = 0; j < length; ++j) {
-                    const name = formatters[j];
+                    const name = formatters[j].trim();
                     let [module, options] = this.findExternalPlugin(html, name);
                     if (!module) {
                         switch (name) {
@@ -553,10 +553,10 @@ let Image: IImage;
             const css = this.external?.css;
             if (css) {
                 let valid = false;
-                const formatters = format.split('::');
+                const formatters = format.split('+');
                 const length = formatters.length;
                 for (let j = 0; j < length; ++j) {
-                    const name = formatters[j];
+                    const name = formatters[j].trim();
                     let [module, options] = this.findExternalPlugin(css, name);
                     if (!module) {
                         switch (name) {
@@ -628,10 +628,10 @@ let Image: IImage;
             const js = this.external?.js;
             if (js) {
                 let valid = false;
-                const formatters = format.split('::');
+                const formatters = format.split('+');
                 const length = formatters.length;
                 for (let j = 0; j < length; ++j) {
-                    const name = formatters[j];
+                    const name = formatters[j].trim();
                     let [module, options] = this.findExternalPlugin(js, name);
                     if (!module) {
                         switch (name) {
