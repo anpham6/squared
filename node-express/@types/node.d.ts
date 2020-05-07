@@ -55,13 +55,13 @@ declare namespace Node {
     interface IChrome {
         readonly external: Undef<External>;
         readonly prettier_plugins: {}[];
-        formatContent(value: string, mimeType: string, format: string): string;
+        formatContent(value: string, mimeType: string, format: string): Undef<string>;
         getTrailingContent(file: RequestAsset, mimeType?: string, format?: string): string;
         findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}];
-        minifyHtml(format: string, value: string): string;
-        minifyCss(format: string, value: string): string;
-        minifyJs(format: string, value: string): string;
-        removeCss(source: string, styles: string[]): string;
+        minifyHtml(format: string, value: string): Undef<string>;
+        minifyCss(format: string, value: string): Undef<string>;
+        minifyJs(format: string, value: string): Undef<string>;
+        removeCss(source: string, styles: string[]): Undef<string>;
         replacePath(source: string, segment: string, value: string, base64?: boolean): string;
     }
 
@@ -84,7 +84,7 @@ declare namespace Node {
         appendContent(file: RequestAsset, content: string): void;
         compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
         transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
-        transformCss(file: RequestAsset, filepath: Undef<string>, content?: string): string;
+        transformCss(file: RequestAsset, filepath: Undef<string>, content?: string): Undef<string>;
         writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
         processAssetsAsync(empty: boolean, finalize: (filepath?: string) => void): void;
         finalizeAssetsAsync(release: boolean): Promise<void>;

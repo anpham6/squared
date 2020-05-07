@@ -423,35 +423,36 @@ let Image: IImage;
 
         formatContent(value: string, mimeType: string, format: string) {
             if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
-                return this.minifyHtml(format, value) || value;
+                return this.minifyHtml(format, value);
             }
             else if (mimeType.endsWith('text/css')) {
-                return this.minifyCss(format, value) || value;
+                return this.minifyCss(format, value);
             }
             else if (mimeType.endsWith('text/javascript')) {
-                return this.minifyJs(format, value) || value;
+                return this.minifyJs(format, value);
             }
-            return value;
+            return undefined;
         }
         getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
+            let result = '';
             const trailingContent = file.trailingContent;
             if (trailingContent) {
                 if (!mimeType) {
                     mimeType = file.mimeType;
                 }
-                let result = '';
                 for (const item of trailingContent) {
                     const formatter = item.format || format || file.format;
                     if (mimeType && formatter) {
-                        result += '\n' + this.formatContent(item.value, mimeType, formatter);
+                        const content = this.formatContent(item.value, mimeType, formatter);
+                        if (content) {
+                            result += '\n' + content;
+                            continue;
+                        }
                     }
-                    else {
-                        result += '\n' + item.value;
-                    }
+                    result += '\n' + item.value;
                 }
-                return result;
             }
-            return '';
+            return result;
         }
         findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}] {
             for (const name in data) {
@@ -472,7 +473,10 @@ let Image: IImage;
             const html = this.external?.html;
             if (html) {
                 let valid = false;
-                for (const name of format.split('::')) {
+                const formatters = format.split('::');
+                const length = formatters.length;
+                for (let j = 0; j < length; ++j) {
+                    const name = formatters[j];
                     let [module, options] = this.findExternalPlugin(html, name);
                     if (!module) {
                         switch (name) {
@@ -503,6 +507,9 @@ let Image: IImage;
                                 (<prettier.Options> options).plugins = this.prettier_plugins;
                                 const result = prettier.format(value, options);
                                 if (result) {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
                                     value = result;
                                     valid = true;
                                 }
@@ -511,6 +518,9 @@ let Image: IImage;
                             case 'html_minifier': {
                                 const result = html_minifier.minify(value, options);
                                 if (result) {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
                                     value = result;
                                     valid = true;
                                 }
@@ -519,6 +529,9 @@ let Image: IImage;
                             case 'js_beautify': {
                                 const result = js_beautify.html_beautify(value, options);
                                 if (result) {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
                                     value = result;
                                     valid = true;
                                 }
@@ -534,13 +547,16 @@ let Image: IImage;
                     return value;
                 }
             }
-            return '';
+            return undefined;
         }
         minifyCss(format: string, value: string) {
             const css = this.external?.css;
             if (css) {
                 let valid = false;
-                for (const name of format.split('::')) {
+                const formatters = format.split('::');
+                const length = formatters.length;
+                for (let j = 0; j < length; ++j) {
+                    const name = formatters[j];
                     let [module, options] = this.findExternalPlugin(css, name);
                     if (!module) {
                         switch (name) {
@@ -566,6 +582,9 @@ let Image: IImage;
                                 (<prettier.Options> options).plugins = this.prettier_plugins;
                                 const result = prettier.format(value, options);
                                 if (result) {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
                                     value = result;
                                     valid = true;
                                 }
@@ -574,6 +593,9 @@ let Image: IImage;
                             case 'clean_css': {
                                 const result = new clean_css(options).minify(value).styles;
                                 if (result) {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
                                     value = result;
                                     valid = true;
                                 }
@@ -582,6 +604,9 @@ let Image: IImage;
                             case 'js_beautify': {
                                 const result = js_beautify.css_beautify(value, options);
                                 if (result) {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
                                     value = result;
                                     valid = true;
                                 }
@@ -597,13 +622,16 @@ let Image: IImage;
                     return value;
                 }
             }
-            return '';
+            return undefined;
         }
         minifyJs(format: string, value: string) {
             const js = this.external?.js;
             if (js) {
                 let valid = false;
-                for (const name of format.split('::')) {
+                const formatters = format.split('::');
+                const length = formatters.length;
+                for (let j = 0; j < length; ++j) {
+                    const name = formatters[j];
                     let [module, options] = this.findExternalPlugin(js, name);
                     if (!module) {
                         switch (name) {
@@ -629,6 +657,9 @@ let Image: IImage;
                                 (<prettier.Options> options).plugins = this.prettier_plugins;
                                 const result = prettier.format(value, options);
                                 if (result) {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
                                     value = result;
                                     valid = true;
                                 }
@@ -637,6 +668,9 @@ let Image: IImage;
                             case 'terser': {
                                 const result = terser.minify(value, options).code;
                                 if (result) {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
                                     value = result;
                                     valid = true;
                                 }
@@ -645,6 +679,9 @@ let Image: IImage;
                             case 'js_beautify': {
                                 const result = js_beautify.js_beautify(value, options);
                                 if (result) {
+                                    if (j === length - 1) {
+                                        return result;
+                                    }
                                     value = result;
                                     valid = true;
                                 }
@@ -660,25 +697,31 @@ let Image: IImage;
                     return value;
                 }
             }
-            return '';
+            return undefined;
         }
         removeCss(source: string, styles: string[]) {
-            let content = source;
+            let result: Undef<string>;
             let pattern: Undef<RegExp>;
             let match: Null<RegExpExecArray>;
             for (let value of styles) {
                 value = value.replace(/\./g, '\\.');
                 let found = false;
                 pattern = new RegExp(`^\\s*${value}[\\s\\n]*\\{[\\s\\S]*?\\}\\n*`, 'gm');
-                while ((match = pattern.exec(content)) !== null) {
-                    source = source.replace(match[0], '');
+                while ((match = pattern.exec(source)) !== null) {
+                    if (result === undefined) {
+                        result = source;
+                    }
+                    result = result.replace(match[0], '');
                     found = true;
                 }
                 if (found) {
-                    content = source;
+                    source = result!;
                 }
                 pattern = new RegExp(`^[^,]*(,?[\\s\\n]*${value}[\\s\\n]*[,{](\\s*)).*?\\{?`, 'gm');
-                while ((match = pattern.exec(content)) !== null) {
+                while ((match = pattern.exec(source)) !== null) {
+                    if (result === undefined) {
+                        result = source;
+                    }
                     const segment = match[1];
                     let replaceWith = '';
                     if (segment.trim().endsWith('{')) {
@@ -687,14 +730,14 @@ let Image: IImage;
                     else if (segment.startsWith(',')) {
                         replaceWith = ', ';
                     }
-                    source = source.replace(match[0], match[0].replace(segment, replaceWith));
+                    result = result.replace(match[0], match[0].replace(segment, replaceWith));
                     found = true;
                 }
                 if (found) {
-                    content = source;
+                    source = result!;
                 }
             }
-            return source;
+            return result;
         }
         replacePath(source: string, segment: string, value: string, base64?: boolean) {
             if (!base64) {
@@ -915,7 +958,7 @@ class FileManager implements IFileManager {
         if (filepath && file.bundleIndex) {
             const value = this.contentToAppend.get(filepath) || [];
             if (file.trailingContent) {
-                content += Chrome.getTrailingContent(file, file.mimeType, file.format);
+                content += Chrome.getTrailingContent(file);
             }
             value.splice(file.bundleIndex - 1, 0, content);
             this.contentToAppend.set(filepath, value);
@@ -1028,10 +1071,13 @@ class FileManager implements IFileManager {
                 const baseUri = file.uri!;
                 const saved = new Set<string>();
                 let html = fs.readFileSync(filepath).toString('utf8');
-                let source = html;
+                let source: Undef<string>;
                 let pattern = /(\s*)<(script|link|style).*?(\s+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)").*?\/?>(?:[\s\S]*?<\/\2>\n*)?/ig;
                 let match: Null<RegExpExecArray>;
                 while ((match = pattern.exec(html)) !== null) {
+                    if (source === undefined) {
+                        source = html;
+                    }
                     const segment = match[0];
                     const script = match[2].toLowerCase() === 'script';
                     const location = Express.getAbsoluteUrl(match[5].split('::')[0].trim(), baseUri);
@@ -1052,7 +1098,7 @@ class FileManager implements IFileManager {
                     }
                 }
                 if (saved.size) {
-                    html = source;
+                    html = source!;
                 }
                 pattern = /(\s*)<(script|style).*?>([\s\S]*?)<\/\2>\n*/ig;
                 for (const item of assets) {
@@ -1060,6 +1106,9 @@ class FileManager implements IFileManager {
                     if (bundleIndex !== undefined) {
                         let outerHTML = item.outerHTML;
                         if (outerHTML) {
+                            if (source === undefined) {
+                                source = html;
+                            }
                             const length = source.length;
                             let replaceWith = '';
                             if (bundleIndex === 0) {
@@ -1091,6 +1140,9 @@ class FileManager implements IFileManager {
                         }
                         let modified = false;
                         while ((match = pattern.exec(html)) !== null) {
+                            if (source === undefined) {
+                                source = html;
+                            }
                             const value = minifySpace(match[3]);
                             if (content.includes(value)) {
                                 source = source.replace(match[0], '');
@@ -1098,9 +1150,12 @@ class FileManager implements IFileManager {
                             }
                         }
                         if (modified) {
-                            html = source;
+                            html = source!;
                         }
                     }
+                }
+                if (source === undefined) {
+                    source = html;
                 }
                 for (const item of assets) {
                     if (item.base64) {
@@ -1135,17 +1190,33 @@ class FileManager implements IFileManager {
                 break;
             }
             case '@text/css': {
-                let output = this.transformCss(file, filepath);
-                if (format && !output) {
-                    output = fs.readFileSync(filepath).toString('utf8');
-                    output = Chrome.minifyCss(format, output) || output;
+                const output = this.transformCss(file, filepath) || fs.readFileSync(filepath).toString('utf8');
+                let source: Undef<string>;
+                if (format) {
+                    source = Chrome.minifyCss(format, output);
                 }
                 if (file.trailingContent) {
                     const content = Chrome.getTrailingContent(file, mimeType, format);
-                    output += this.transformCss(file, undefined, content) || content;
+                    const result = this.transformCss(file, undefined, content);
+                    if (result) {
+                        if (source) {
+                            source += result;
+                        }
+                        else {
+                            source = result;
+                        }
+                    }
+                    else {
+                        if (source) {
+                            source += content;
+                        }
+                        else {
+                            source = content;
+                        }
+                    }
                 }
                 const unusedStyles = this.dataMap?.unusedStyles;
-                fs.writeFileSync(filepath, unusedStyles ? Chrome.removeCss(output, unusedStyles) : output);
+                fs.writeFileSync(filepath, unusedStyles && Chrome.removeCss(source || output, unusedStyles) || source || output);
                 break;
             }
             case 'text/html':
@@ -1335,10 +1406,13 @@ class FileManager implements IFileManager {
                 content = fs.readFileSync(filepath).toString('utf8');
             }
             else if (!content) {
-                return '';
+                return undefined;
             }
             if (unusedStyles) {
-                content = Chrome.removeCss(content, unusedStyles);
+                const result = Chrome.removeCss(content, unusedStyles);
+                if (result) {
+                    content = result;
+                }
             }
             if (sameOrigin) {
                 const assets = this.assets;
@@ -1350,10 +1424,13 @@ class FileManager implements IFileManager {
                         }
                     }
                 }
-                let source = content;
+                let source: Undef<string>;
                 const pattern = /[uU][rR][lL]\(\s*(["'])?\s*((?:[^"')]|\\"|\\')+)\s*\1?\s*\)/g;
                 let match: Null<RegExpExecArray>;
                 while ((match = pattern.exec(content)) !== null) {
+                    if (source === undefined) {
+                        source = content;
+                    }
                     let url = match[2];
                     if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
                         url = this.getRelativeUrl(file, url);
@@ -1380,13 +1457,13 @@ class FileManager implements IFileManager {
                     }
                 }
                 if (file.format) {
-                    source = Chrome.minifyCss(file.format, source) || source;
+                    source = Chrome.minifyCss(file.format, source || content) || source || content;
                 }
                 file.mimeType = '&text/css';
-                return source;
+                return source || content;
             }
         }
-        return '';
+        return undefined;
     }
     writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
         const png = Image.getFormat(file.compress);
@@ -1475,16 +1552,25 @@ class FileManager implements IFileManager {
                                 const { mimeType, format } = queue;
                                 let content = response.body as string;
                                 if (mimeType && format) {
-                                    content = Chrome.formatContent(content, mimeType, format) || content;
+                                    const source = Chrome.formatContent(content, mimeType, format);
+                                    if (source) {
+                                        content = source;
+                                    }
                                 }
                                 if (mimeType === '@text/css') {
                                     if (queue.trailingContent) {
                                         content += Chrome.getTrailingContent(queue);
                                     }
                                     if (unusedStyles) {
-                                        content = Chrome.removeCss(content, unusedStyles);
+                                        const source = Chrome.removeCss(content, unusedStyles);
+                                        if (source) {
+                                            content = source;
+                                        }
                                     }
-                                    content = this.transformCss(queue, undefined, content) || content;
+                                    const result = this.transformCss(queue, undefined, content);
+                                    if (result) {
+                                        content = result;
+                                    }
                                 }
                                 if (queue.bundleIndex) {
                                     this.appendContent(queue, content);
