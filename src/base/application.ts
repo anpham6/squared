@@ -557,7 +557,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');
                     const targetElt = target ? '::' + target : '';
-                    const elements = document.querySelectorAll(selector);
+                    const elements = document.querySelectorAll(selector || '*');
                     const length = elements.length;
                     if (length === 0) {
                         this.processing.unusedStyles.add(selectorText);

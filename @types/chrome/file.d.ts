@@ -1,13 +1,13 @@
 import * as file from '../base/file';
 
 export interface RequestAsset extends file.RequestAsset {
-    extension?: string;
     rootDir?: string;
     moveTo?: string;
     format?: string;
     bundleIndex?: number;
     requestMain?: boolean;
     outerHTML?: string;
+    preserve?: boolean;
     trailingContent?: FormattableContent[];
 }
 
@@ -22,10 +22,18 @@ export interface SaveAsOptions {
     pathname?: string;
     filename?: string;
     format?: string;
+    preserve?: boolean;
 }
 
 export interface FormattableContent {
     value: string;
-    href: string;
     format?: string;
+}
+
+export interface UriOptions {
+    saveAs?: string;
+    saveTo?: boolean;
+    format?: string;
+    preserve?: boolean;
+    preserveCrossOrigin?: boolean;
 }

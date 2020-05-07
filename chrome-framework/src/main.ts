@@ -309,12 +309,12 @@ const appBase: ChromeFramework<View> = {
             options = !isObject(options) ? {} : { ...options };
             options.saveAsWebPage = true;
             const settings = application.userSettings;
-            const restoreValue = settings.preloadImages;
+            const preloadImages = settings.preloadImages;
             settings.preloadImages = false;
             application.reset();
             return application.parseDocument(document.body).then((response: View[]) => {
                 file!.saveToArchive(filename || application.userSettings.outputArchiveName, options);
-                settings.preloadImages = restoreValue;
+                settings.preloadImages = preloadImages;
                 return response;
             });
         }

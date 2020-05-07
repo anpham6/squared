@@ -642,10 +642,10 @@ You can also define your own optimizations in squared.settings.json:
 * https://github.com/jakubpawlowicz/clean-css
 * https://github.com/beautify-web/js-beautify
 
-JS and CSS files can be bundled together with the "saveAs" or "exportAs" action. Multiple transformations per asset are supported using the "+" symbol to chain them together.
+JS and CSS files can be bundled together with the "saveAs" or "exportAs" action. Multiple transformations per asset are supported using the "+" symbol to chain them together. The "preserve" command will prevent unused styles from being deleted.
 
 ```xml
-<link data-chrome-file="saveAs:css/prod.css::beautify" rel="stylesheet" href="css/dev.css" />
+<link data-chrome-file="saveAs:css/prod.css::beautify::preserve" rel="stylesheet" href="css/dev.css" />
 <style data-chrome-file="exportAs:css/prod.css::minify+beautify">
     body {
         font: 1em/1.4 Helvetica, Arial, sans-serif;
@@ -664,7 +664,7 @@ const options = {
     saveAs: { // All attributes are optional
         html: { filename: 'index.html', format: 'beautify' }
         script: { pathname: '../js', filename: 'bundle.js', format: 'minify' },
-        link: { pathname: 'css', filename: 'bundle.css' },
+        link: { pathname: 'css', filename: 'bundle.css', preserve: true },
         base64: { format: 'png' }
     }
 };
@@ -673,8 +673,11 @@ There are a few ways to save the entire page or portions using the system method
 
 ```xml
 <script>
-    chrome.saveAsWebPage({ preserveCrossOrigin: true }); // Ignore downloading assets hosted on other websites (http://)
-    chrome.saveAsWebPage({ productionRelease: true }); // Ignore local url rewriting and load assets using absolute paths
+    chrome.saveAsWebPage({ // default is false
+        removeUnusedStyles: true, // Use only when you are not switching classnames with JavaScript
+        productionRelease: true, // Ignore local url rewriting and load assets using absolute paths
+        preserveCrossOrigin: true // Ignore downloading assets hosted on other hostnames (http://)
+    }); 
 </script>
 ```
 

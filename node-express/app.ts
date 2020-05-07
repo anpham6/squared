@@ -1216,7 +1216,7 @@ class FileManager implements IFileManager {
                     }
                 }
                 const unusedStyles = this.dataMap?.unusedStyles;
-                fs.writeFileSync(filepath, unusedStyles && Chrome.removeCss(source || output, unusedStyles) || source || output);
+                fs.writeFileSync(filepath, unusedStyles && !file.preserve && Chrome.removeCss(source || output, unusedStyles) || source || output);
                 break;
             }
             case 'text/html':
@@ -1408,7 +1408,7 @@ class FileManager implements IFileManager {
             else if (!content) {
                 return undefined;
             }
-            if (unusedStyles) {
+            if (unusedStyles && !file.preserve) {
                 const result = Chrome.removeCss(content, unusedStyles);
                 if (result) {
                     content = result;
@@ -1561,7 +1561,7 @@ class FileManager implements IFileManager {
                                     if (queue.trailingContent) {
                                         content += Chrome.getTrailingContent(queue);
                                     }
-                                    if (unusedStyles) {
+                                    if (unusedStyles && !queue.preserve) {
                                         const source = Chrome.removeCss(content, unusedStyles);
                                         if (source) {
                                             content = source;

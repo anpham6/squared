@@ -1,5 +1,5 @@
 import { NodeOptions, UserSettings } from './application';
-import { RequestAsset, FileActionAttribute } from './file';
+import { FileActionAttribute, RequestAsset, UriOptions } from './file';
 import { CompressOptions, ConvertOptions } from './extension';
 
 import * as squared from '../squared';
@@ -34,6 +34,7 @@ declare namespace base {
     }
 
     class File<T extends View> extends squared.base.File<T> {
+        public static parseUri(uri: string, options?: UriOptions): Undef<RequestAsset>;
         resource: Resource<T>;
         get application(): Application<T>;
         get userSettings(): UserSettings;
