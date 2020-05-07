@@ -12,13 +12,13 @@ GitHub
 &nbsp;&nbsp;&nbsp;&gt; npm install  
 &nbsp;&nbsp;&nbsp;&gt; npm run prod -OR- npm run dev  
 &nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
-&nbsp;&nbsp;&nbsp;&gt; node app.js  
+&nbsp;&nbsp;&nbsp;&gt; node app.js
 
 NPM  
 &nbsp;&nbsp;&nbsp;&gt; npm install squared  
 &nbsp;&nbsp;&nbsp;&gt; cd node_modules/squared  
 &nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
-&nbsp;&nbsp;&nbsp;&gt; node app.js  
+&nbsp;&nbsp;&nbsp;&gt; node app.js
 
 * http://localhost:3000
 
@@ -29,7 +29,7 @@ Option #2 (more features):
 &nbsp;&nbsp;&nbsp;&gt; git clone https://github.com/anpham6/squared-apache  
 &nbsp;&nbsp;&nbsp;&gt; cd squared-apache  
 &nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
-&nbsp;&nbsp;&nbsp;&gt; gradlew run  
+&nbsp;&nbsp;&nbsp;&gt; gradlew run
 
 * http://localhost:8080
 
@@ -609,18 +609,6 @@ See /android/widget/*.html for usage instructions in the squared-apache <https:/
 * android.widget.toolbar
 * android.widget.drawer
 
-<img src="html/common/images/android/custom.viewpager.tablayout.png" alt="custom: viewpager + tablayout" />
-
-<img src="html/common/images/android/drawer.png" alt="drawer: floating action button" />
-
-<img src="html/common/images/android/coordinator.scrolling.png" alt="coordinator: scrolling" />
-
-<img src="html/common/images/android/bottomnavigation.png" alt="bottom navigation" />
-
-<img src="html/common/images/android/drawer.navigationview.png" alt="drawer: actionbar" />
-
-<img src="html/common/images/android/menu.png" alt="toolbar: menu" />
-
 ### CHROME: Saving web page assets
 
 Bundling options are available with these HTML tag names.
@@ -720,9 +708,17 @@ You can also use these commands individually on any elements where the image is 
 % - smaller  
 
 ```xml
-
 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)" />
+```
 
+You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets. The only difference is the HTML page will not replace the elements with their bundle equivalent in the final output.
+
+```javascript
+document.querySelectorAll('img').forEach(element => {
+    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600)';
+});
+
+chrome.saveAsWebPage();
 ```
 
 ### LICENSE

@@ -1433,10 +1433,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     this.processRelativeHorizontal(node, renderChildren);
                 }
                 else if (node.layoutConstraint) {
-                    let j = 0;
                     const length = renderChildren.length;
                     const pageFlow: T[] = new Array(length);
-                    renderChildren.forEach(item => {
+                    let i = 0, j = 0;
+                    while (i < length) {
+                        const item = renderChildren[i++];
                         if (!item.positioned) {
                             if (item.pageFlow || item.autoPosition) {
                                 pageFlow[j++] = item;
@@ -1470,7 +1471,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                             }
                         }
-                    });
+                    }
                     if (j > 0) {
                         pageFlow.length = j;
                         if (node.layoutHorizontal) {

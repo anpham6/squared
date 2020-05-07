@@ -467,7 +467,7 @@ function setLineHeight(this: T, renderParent: T) {
                 return;
             }
             else if (this.layoutVertical || this.layoutFrame) {
-                this.renderChildren.forEach((item: T) => {
+                this.renderEach((item: T) => {
                     if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
                         setMarginOffset.call(item, lineHeight, true, true, true);
                     }
