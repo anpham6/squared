@@ -8,7 +8,7 @@ type View = chrome.base.View;
 export default class Gif<T extends View> extends Extension<T> {
     public readonly options: ConvertOptions = {
         mimeTypes: ['image/png', 'image/jpeg', 'image/bmp', 'image/tiff'],
-        greaterThan: 0,
+        largerThan: 0,
         smallerThan: Infinity,
         whenSmaller: false,
         replaceWith: true

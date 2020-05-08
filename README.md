@@ -449,8 +449,13 @@ Image conversion can be achieved using the mimeType property in a RequestAsset o
 * tiff (node-express: readonly)
 
 ```xml
-{saveAsExtension}{@%}?{(minSize(0),maxSize(*))}?:image/{format}
+format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?:image/{format}
+
+@ - replace  
+% - smaller 
 ```
+
+Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
 
 ```javascript
 const options = {
@@ -470,8 +475,6 @@ const options = {
     ]
 };
 ```
-
-Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
 
 ```javascript
 // NOTE: Some compression formats are only available when using squared-apache
@@ -493,6 +496,24 @@ squared.saveToArchive('archive1', {
         pattern: ['outputs', 'grad.+\\.', '\\.git']
     }
 });
+```
+
+### CHROME: Inline commands
+
+You can also use these commands individually on any elements where the image is the primary output display. Image resizing only works with individual elements or assets and not globally with extensions.
+
+```xml
+<img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)" />
+```
+
+You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets. The only difference is the HTML page will not replace the elements with their bundle equivalent in the final output.
+
+```javascript
+document.querySelectorAll('img').forEach(element => {
+    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600)';
+});
+
+chrome.saveAsWebPage();
 ```
 
 ### ANDROID: Layout Includes / Merge Tag
@@ -688,37 +709,17 @@ Most extensions have a few settings which can be configured. Compression and qua
 ```javascript
 chrome.extension.options = { // internal representation
     mimeTypes: ['image/jpeg', 'image/bmp', 'image/gif', 'image/tiff'],
-    greaterThan: 0,
+    largerThan: 0,
     smallerThan: Infinity,
     whenSmaller: false,
     replaceWith: true // convert
 };
 
 squared.configure('chrome.convert.png', {
-    greaterThan: 10000,
+    largerThan: 10000,
     replaceWith: false,
     whenSmaller: true
 });
-```
-You can also use these commands individually on any elements where the image is the primary output display. Image resizing only works with individual elements or assets and not globally with extensions.
-
-{format}{@%}?{(minSize(0),maxSize(*))}?{(width(n)xheight(n)#?cover|contain|scale)}?  
-
-@ - replace  
-% - smaller  
-
-```xml
-<img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)" />
-```
-
-You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets. The only difference is the HTML page will not replace the elements with their bundle equivalent in the final output.
-
-```javascript
-document.querySelectorAll('img').forEach(element => {
-    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600)';
-});
-
-chrome.saveAsWebPage();
 ```
 
 ### LICENSE

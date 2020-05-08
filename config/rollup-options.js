@@ -10,6 +10,5 @@ export const terser_options = {
         conditionals: false,
         switches: false
     },
-    toplevel: true,
     keep_classnames: true
 };

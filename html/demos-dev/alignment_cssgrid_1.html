@@ -5,7 +5,7 @@
     <meta http-equiv="Content-Language" content="en">
     <title>https://github.com/anpham6/squared</title>
     <link data-chrome-file="saveAs:css/prod.css::beautify" rel="stylesheet" type="text/css" href="css/dev.css" />
-    <style data-chrome-file="exportAs:css/prod.css::minify">
+    <style data-chrome-file="exportAs:css/prod.css::minify::preserve">
         body {
             font: 1em/1.4 Helvetica, Arial, sans-serif;
             background-color: #fafafa;
@@ -175,13 +175,13 @@
                         builtInExtensions: ['chrome.convert.png', 'chrome.compress.gzip']
                     });
                     squared.configure('chrome.convert.png', {
-                        greaterThan: 35000,
+                        largerThan: 35000,
                         smallerThan: 75000,
                         whenSmaller: true,
                         replaceWith: false
                     });
                     squared.configure('chrome.compress.gzip', {
-                        greaterThan: 35000
+                        largerThan: 35000
                     });
                     chrome.saveAsWebPage();
                     /*chrome.saveAsWebPage('bundle', {

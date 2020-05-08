@@ -3,7 +3,7 @@ import { MIMEOrAll } from '../lib/data';
 export interface CompressOptions {
     level?: number;
     mimeTypes: MIMEOrAll;
-    greaterThan: number;
+    largerThan: number;
     smallerThan: number;
     whenSmaller: boolean;
 }

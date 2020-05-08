@@ -10,7 +10,7 @@ const { safeNestedArray } = squared.lib.util;
 export default class Gzip<T extends View> extends Extension<T> {
     public readonly options: CompressOptions = {
         mimeTypes: ['text/css', 'text/javascript', 'text/plain', 'text/csv', 'application/json', 'application/javascript', 'application/ld+json', 'application/xml'],
-        greaterThan: 0,
+        largerThan: 0,
         smallerThan: Infinity,
         whenSmaller: true,
         level: 9

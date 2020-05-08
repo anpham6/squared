@@ -8,7 +8,7 @@ type View = chrome.base.View;
 export default class Jpeg<T extends View> extends Extension<T> {
     public readonly options: ConvertOptions = {
         mimeTypes: ['image/png', 'image/bmp', 'image/gif', 'image/tiff'],
-        greaterThan: 0,
+        largerThan: 0,
         smallerThan: Infinity,
         whenSmaller: false,
         replaceWith: true

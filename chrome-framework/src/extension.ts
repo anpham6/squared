@@ -1,7 +1,7 @@
 import { RequestAsset } from '../../@types/chrome/file';
 import { CompressOptions, ConvertOptions } from '../../@types/chrome/extension';
 
-const getSizeRange = (options: CompressOptions) => '(' + Math.max(options.greaterThan, 0) + ',' + (options.smallerThan < Infinity ? options.smallerThan : '*') + ')';
+const getSizeRange = (options: CompressOptions) => '(' + Math.max(options.largerThan, 0) + ',' + (options.smallerThan < Infinity ? options.smallerThan : '*') + ')';
 
 export default abstract class Extension<T extends chrome.base.View> extends squared.base.Extension<T> implements chrome.base.Extension<T> {
     public static getCompressOptions(options: CompressOptions) {

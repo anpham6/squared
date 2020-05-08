@@ -402,10 +402,10 @@ let Image: IImage;
             if (!value) {
                 return true;
             }
-            const [greaterThan, smallerThan] = Compress.getSizeRange(value);
-            if (greaterThan > 0 || smallerThan < Infinity) {
+            const [largerThan, smallerThan] = Compress.getSizeRange(value);
+            if (largerThan > 0 || smallerThan < Infinity) {
                 const fileSize = Compress.getFileSize(filepath);
-                if (fileSize < greaterThan || fileSize > smallerThan) {
+                if (fileSize < largerThan || fileSize > smallerThan) {
                     return false;
                 }
             }

@@ -10,7 +10,7 @@ const { safeNestedArray } = squared.lib.util;
 export default class Jpeg<T extends View> extends Extension<T> {
     public readonly options: CompressOptions = {
         mimeTypes: ['image/jpeg'],
-        greaterThan: 0,
+        largerThan: 0,
         smallerThan: Infinity,
         whenSmaller: true,
         level: 100
