@@ -107,6 +107,19 @@ declare namespace Node {
         routing?: Routing;
         external?: External;
     }
+
+    interface Arguments {
+        env: "prod" | "dev";
+        port: number;
+        accessAll?: boolean;
+        accessDisk?: boolean;
+        accessUnc?: boolean;
+        diskRead?: boolean;
+        diskWrite?: boolean;
+        uncRead?: boolean;
+        uncWrite?: boolean;
+        cors?: string;
+    }
 }
 
 export = Node;

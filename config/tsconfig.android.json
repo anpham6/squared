@@ -5,7 +5,6 @@
     },
     "include": [
       "../@types/index.d.ts",
-      "../@types/base/index.d.ts",
       "../@types/android/index.d.ts",
       "../src/**/*.ts",
       "../android-framework/**/*.ts"

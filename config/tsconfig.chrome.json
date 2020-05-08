@@ -5,7 +5,8 @@
     },
     "include": [
       "../@types/index.d.ts",
-      "../@types/base/index.d.ts",
-      "../src/**/*.ts"
+      "../@types/chrome/index.d.ts",
+      "../src/**/*.ts",
+      "../chrome-framework/**/*.ts"
     ]
   }

@@ -1,23 +1,13 @@
 import { terser } from 'rollup-plugin-terser';
 
-export default [
-    {
-        input: '../build/app.js',
-        treeshake: false,
-        output: {
-            file: '../app.js',
-            format: 'iife'
-        },
-        plugins: [
-            terser({ toplevel: true })
-        ]
+export default {
+    input: '../build/serve.js',
+    treeshake: false,
+    output: {
+        file: '../serve.js',
+        format: 'iife'
     },
-    {
-        input: '../build/build.js',
-        treeshake: false,
-        output: {
-            file: '../build.js',
-            format: 'iife'
-        }
-    }
-];
+    plugins: [
+        terser({ toplevel: true })
+    ]
+}

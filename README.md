@@ -12,13 +12,13 @@ GitHub
 &nbsp;&nbsp;&nbsp;&gt; npm install  
 &nbsp;&nbsp;&nbsp;&gt; npm run prod -OR- npm run dev  
 &nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
-&nbsp;&nbsp;&nbsp;&gt; node app.js
+&nbsp;&nbsp;&nbsp;&gt; node serve.js [--help]
 
 NPM  
 &nbsp;&nbsp;&nbsp;&gt; npm install squared  
 &nbsp;&nbsp;&nbsp;&gt; cd node_modules/squared  
 &nbsp;&nbsp;&nbsp;&gt; squared.settings.json (configure)  
-&nbsp;&nbsp;&nbsp;&gt; node app.js
+&nbsp;&nbsp;&nbsp;&gt; node serve.js [--help]
 
 * http://localhost:3000
 
@@ -225,7 +225,9 @@ configure(name: string, options: {}) // see extension configuration section
 exclude(name: string) // remove an extension by namespace or control
 ```
 
-### ANDROID: Public System Methods
+### ANDROID: Public Methods
+
+The system methods are used internally to create the entire project and generally are not useful other than for debugging purposes or extracting the raw assets.
 
 ```javascript
 squared.system.customize(build: number, widget: string, options: {}) // global attributes applied to specific views
@@ -297,6 +299,7 @@ squared.system.addXmlNs('aapt', 'http://schemas.android.com/aapt');
 
 ```javascript
 // Promise methods
+
 chrome.getElementById(value: string, cache?: boolean) // cache: default "true"
 chrome.querySelector(value: string, cache?: boolean)
 chrome.querySelectorAll(value: string, cache?: boolean)
@@ -305,11 +308,11 @@ chrome.getElement(element: HTMLElement, cache?: boolean) // cache: default "fals
 chrome.saveAsWebPage(filename?: string, options?: {}) // create archive with html and web page assets asynchronously
 ```
 
-### Public System Methods
-
 The system methods querySelector and querySelectorAll can also be called from every Node object and provide the same functionality as the similarly named DOM methods.
 
 ```javascript
+// Synchronous
+
 squared.system.getElementById(value: string, cache?: boolean) // cache: default "true"
 squared.system.querySelector(value: string, cache?: boolean)
 squared.system.querySelectorAll(value: string, cache?: boolean)
@@ -317,7 +320,7 @@ squared.system.getElement(element: HTMLElement, cache?: boolean) // cache: defau
 squared.system.getElementMap()
 squared.system.clearElementMap()
 
-// NOTE: options: { assets?: RequestAsset[], saveAs?: { script?: string; link?: string }, callback?: () => void }
+// NOTE: options: { assets?: RequestAsset[], saveAs?: {}, callback?: () => void }
 
 squared.system.copyHtmlPage(directory: string, options?: {}) // option "name": e.g. "index.html"
 squared.system.copyScriptAssets(directory: string, options?: {})
@@ -452,10 +455,10 @@ node-express offers only read support for GIF and TIFF.
 
 ```xml
 format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?:image/{format}
+```
 
 @ - replace  
-% - smaller 
-```
+% - smaller
 
 Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
 
@@ -503,11 +506,11 @@ squared.saveToArchive('archive1', {
 });
 ```
 
-### CHROME: Inline commands
-
 You can also use these commands individually on any elements where the image is the primary output display. Image resizing only works with individual elements or assets and not globally with extensions.
 
 ```xml
+<!-- NOTE: Chrome framework -->
+
 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)" />
 ```
 
@@ -651,10 +654,13 @@ JS and CSS files can be optimized further using these settings (node-express):
 
 You can also define your own optimizations in squared.settings.json:
 
-* https://github.com/terser/terser
-* https://github.com/prettier/prettier
-* https://github.com/jakubpawlowicz/clean-css
-* https://github.com/beautify-web/js-beautify
+* npm i terser -> https://github.com/terser/terser
+* npm i prettier -> https://github.com/prettier/prettier
+* npm i clean-css -> https://github.com/jakubpawlowicz/clean-css
+* npm i html-minifier -> https://github.com/kangax/html-minifier
+* npm i js-beautify -> https://github.com/beautify-web/js-beautify
+
+These plugins are not included with the default installation. You have to manually add them yourself since this feature is only relevant to the Chrome framework [<b>npm run install-chrome</b>].
 
 JS and CSS files can be bundled together with the "saveAs" or "exportAs" action. Multiple transformations per asset are supported using the "+" symbol to chain them together. The "preserve" command will prevent unused styles from being deleted.
 

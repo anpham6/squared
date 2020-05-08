@@ -1,10 +1,11 @@
-import { IChrome, ICompress, IFileManager, IExpress, IImage, INode, Settings } from './@types/node';
+import { Arguments, IChrome, ICompress, IFileManager, IExpress, IImage, INode, Settings } from './@types/node';
 import { DataMap, Environment, RequestAsset, ResultOfFileAction, Routing } from './@types/express';
 import { CompressFormat, Exclusions, External } from './@types/content';
 
 import path = require('path');
 import zlib = require('zlib');
 import fs = require('fs-extra');
+import yargs = require('yargs');
 import express = require('express');
 import body_parser = require('body-parser');
 import cors = require('cors');
@@ -42,7 +43,7 @@ let Image: IImage;
     let ROUTING: Undef<Routing>;
     let CORS: Undef<cors.CorsOptions>;
     let ENV: Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
-    let PORT = '3000';
+    let PORT = process.env.PORT || '3000';
 
     let EXTERNAL: Undef<External>;
 
@@ -77,7 +78,7 @@ let Image: IImage;
         if (!process.env.NODE_ENV && env?.startsWith('prod')) {
             ENV = 'production';
         }
-        if (port) {
+        if (!process.env.PORT && port) {
             const value = parseInt(port[ENV] as string);
             if (!isNaN(value) && value >= 0) {
                 PORT = value.toString();
@@ -106,30 +107,122 @@ let Image: IImage;
         console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${err}`);
     }
 
-    try {
-        if (ROUTING) {
-            console.log('');
-            let mounted = 0;
-            for (const routes of [ROUTING.shared, ROUTING[ENV]]) {
-                if (Array.isArray(routes)) {
-                    for (const route of routes) {
-                        const { path: dirname, mount } = route;
-                        if (dirname && mount) {
-                            const pathname = path.join(__dirname, mount);
+    const argv = <Arguments> (yargs
+        .usage('$0 [args]')
+        .option('access-all', {
+            type: 'boolean',
+            description: 'Grant full disk and UNC privileges'
+        })
+        .option('access-disk', {
+            alias: 'd',
+            type: 'boolean',
+            description: 'Grant full disk privileges'
+        })
+        .option('access-unc', {
+            alias: 'u',
+            type: 'boolean',
+            description: 'Grant full UNC privileges'
+        })
+        .option('disk-read', {
+            alias: 'dr',
+            type: 'boolean',
+            description: 'Grant disk +r (read only)'
+        })
+        .option('disk-write', {
+            alias: 'dw',
+            type: 'boolean',
+            description: 'Grant disk +w (write only)'
+        })
+        .option('unc-read', {
+            alias: 'ur',
+            type: 'boolean',
+            description: 'Grant UNC +r (read only)'
+        })
+        .option('unc-write', {
+            alias: 'uw',
+            type: 'boolean',
+            description: 'Grant UNC +w (write only)'
+        })
+        .option('env', {
+            alias: 'e',
+            type: 'string',
+            description: 'Set environment <prod|dev>',
+            default: ENV,
+            nargs: 1
+        })
+        .option('port', {
+            alias: 'p',
+            type: 'number',
+            description: 'Port number for HTTP',
+            default: parseInt(PORT),
+            nargs: 1
+        })
+        .option('cors', {
+            alias: 'c',
+            type: 'string',
+            description: 'Enable CORS access to <origin>',
+            nargs: 1
+        })
+        .argv as unknown);
+
+    if (argv.accessAll) {
+        DISK_READ = true;
+        DISK_WRITE = true;
+        UNC_READ = true;
+        UNC_WRITE = true;
+    }
+    else {
+        if (argv.accessDisk) {
+            DISK_READ = true;
+            DISK_WRITE = true;
+        }
+        else {
+            if (argv.diskRead) {
+                DISK_READ = true;
+            }
+            if (argv.diskWrite) {
+                DISK_WRITE = true;
+            }
+        }
+        if (argv.accessUnc) {
+            UNC_READ = true;
+            UNC_WRITE = true;
+        }
+        else {
+            if (argv.uncRead) {
+                UNC_READ = true;
+            }
+            if (argv.uncWrite) {
+                UNC_WRITE = true;
+            }
+        }
+    }
+    ENV = argv.env.startsWith('prod') ? 'production' : 'development';
+
+    if (ROUTING) {
+        console.log('');
+        let mounted = 0;
+        for (const routes of [ROUTING.shared, ROUTING[ENV]]) {
+            if (Array.isArray(routes)) {
+                for (const route of routes) {
+                    const { path: dirname, mount } = route;
+                    if (dirname && mount) {
+                        const pathname = path.join(__dirname, mount);
+                        try {
                             app.use(dirname, express.static(pathname));
                             console.log(`${chalk.yellow('MOUNT')}: ${chalk.bgGrey(pathname)} ${chalk.yellow('->')} ${chalk.bold(dirname)}`);
                             ++mounted;
                         }
+                        catch (err) {
+                            console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${dirname} -> ${err}`);
+                        }
                     }
                 }
             }
-            console.log(`\n${chalk.bold(mounted)} directories were mounted.\n`);
         }
-        else {
-            throw new Error('Routing not defined.');
-        }
+        console.log(`\n${chalk.bold(mounted)} directories were mounted.\n`);
     }
-    catch (err) {
+    else {
         app.use(body_parser.json({ limit: '100mb' }));
         app.use('/', express.static(path.join(__dirname, 'html')));
         app.use('/dist', express.static(path.join(__dirname, 'dist')));
@@ -137,88 +230,26 @@ let Image: IImage;
             app.use('/common', express.static(path.join(__dirname, 'html/common')));
             app.use('/demos', express.static(path.join(__dirname, 'html/demos')));
         }
-        console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${err}`);
-    }
-
-    PORT = process.env.PORT || PORT;
-    let CORS_origin: Undef<string | boolean>;
-
-    const ARGV = process.argv;
-    let i = 2;
-    while (i < ARGV.length) {
-        switch (ARGV[i++]) {
-            case '--access-all':
-                DISK_READ = true;
-                DISK_WRITE = true;
-                UNC_READ = true;
-                UNC_WRITE = true;
-                break;
-            case '--access-disk':
-                DISK_READ = true;
-                DISK_WRITE = true;
-                break;
-            case '--disk-read':
-                DISK_READ = true;
-                break;
-            case '--disk-write':
-                DISK_WRITE = true;
-                break;
-            case '--access-unc':
-                UNC_READ = true;
-                UNC_WRITE = true;
-                break;
-            case '--unc-read':
-                UNC_READ = true;
-                break;
-            case '--unc-write':
-                UNC_WRITE = true;
-                break;
-            case '-e':
-            case '--env':
-                switch (ARGV[i++]) {
-                    case 'prod':
-                    case 'production':
-                        ENV = 'production';
-                        break;
-                    case 'dev':
-                    case 'development':
-                        ENV = 'development';
-                        break;
-                }
-                break;
-            case '-p':
-            case '--port': {
-                const port = parseInt(ARGV[i++]);
-                if (!isNaN(port)) {
-                    PORT = port.toString();
-                }
-                break;
-            }
-            case '-c':
-            case '--cors': {
-                CORS_origin = ARGV[i] && !ARGV[i].startsWith('-') ? ARGV[i++] : true;
-                break;
-            }
-        }
+        console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: Routing not defined.`);
     }
 
     console.log(`${chalk.blue('DISK')}: ${DISK_READ ? chalk.green('+') : chalk.red('-')}r ${DISK_WRITE ? chalk.green('+') : chalk.red('-')}w`);
     console.log(`${chalk.blue(' UNC')}: ${UNC_READ ? chalk.green('+') : chalk.red('-')}r ${UNC_WRITE ? chalk.green('+') : chalk.red('-')}w`);
 
-    if (CORS_origin) {
-        app.use(cors({ origin: CORS_origin }));
+    if (argv.cors) {
+        app.use(cors({ origin: argv.cors }));
         app.options('*', cors());
     }
     else if (CORS && CORS.origin) {
         app.use(cors(CORS));
         app.options('*', cors());
-        CORS_origin = typeof CORS.origin === 'string' ? CORS.origin : 'true';
+        argv.cors = typeof CORS.origin === 'string' ? CORS.origin : 'true';
     }
 
-    console.log(`${chalk.blue('CORS')}: ${CORS_origin ? chalk.green(CORS_origin) : chalk.grey('disabled')}`);
+    console.log(`${chalk.blue('CORS')}: ${argv.cors ? chalk.green(argv.cors) : chalk.grey('disabled')}`);
 
     app.use(body_parser.urlencoded({ extended: true }));
-    app.listen(PORT, () => console.log(`\n${chalk[ENV === 'production' ? 'green' : 'yellow'](ENV.toUpperCase())}: Express server listening on port ${chalk.bold(PORT)}\n`));
+    app.listen(argv.port, () => console.log(`\n${chalk[ENV === 'production' ? 'green' : 'yellow'](ENV.toUpperCase())}: Express server listening on port ${chalk.bold(argv.port)}\n`));
 
     Node = new class implements INode {
         public major: number;
@@ -679,7 +710,7 @@ let Image: IImage;
             return undefined;
         }
         getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
-            let result: Undef<string>;
+            let result = '';
             const trailingContent = file.trailingContent;
             if (trailingContent) {
                 if (!mimeType) {
@@ -697,7 +728,7 @@ let Image: IImage;
                     result += '\n' + item.value;
                 }
             }
-            return result;
+            return result || undefined;
         }
         formatContent(value: string, mimeType: string, format: string) {
             if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
@@ -1222,9 +1253,9 @@ class FileManager implements IFileManager {
                 if (format) {
                     source = Chrome.minifyCss(format, output);
                 }
-                if (file.trailingContent) {
-                    const content = Chrome.getTrailingContent(file, mimeType, format);
-                    const result = this.transformCss(file, undefined, content);
+                const trailing = Chrome.getTrailingContent(file, mimeType, format);
+                if (trailing) {
+                    const result = this.transformCss(file, undefined, trailing);
                     if (result) {
                         if (source) {
                             source += result;
@@ -1235,10 +1266,10 @@ class FileManager implements IFileManager {
                     }
                     else {
                         if (source) {
-                            source += content;
+                            source += trailing;
                         }
                         else {
-                            source = content;
+                            source = trailing;
                         }
                     }
                 }

@@ -11,7 +11,7 @@ html/*
 md5/
 node_modules/
 node-express/
-node-md5/
+node-scripts/
 src/
 temp/
 .eslint*
@@ -19,7 +19,7 @@ temp/
 *.code-workspace
 rollup*
 tsconfig.*
-build.js
+bundle.js
 md5sum.js
-!app.js
+!serve.js
 !html/index.html
