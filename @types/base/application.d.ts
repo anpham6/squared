@@ -13,7 +13,6 @@ export interface UserSettings {
     outputArchiveName: string;
 }
 
-
 export interface ControllerSettings {
     mimeType: {
         font: MIMEOrAll;

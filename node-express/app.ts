@@ -285,6 +285,38 @@ let Image: IImage;
             const otherMatch = this.PATTERN_URL.exec(other);
             return !!baseMatch && !!otherMatch && baseMatch[1] === otherMatch[1];
         }
+        getBaseDirectory(location: string, asset: string): [string[], string[]] {
+            const locationDir = location.split(/[\\/]/);
+            const assetDir = asset.split(/[\\/]/);
+            while (locationDir.length && assetDir.length) {
+                if (locationDir[0] === assetDir[0]) {
+                    locationDir.shift();
+                    assetDir.shift();
+                }
+                else {
+                    break;
+                }
+            }
+            return [locationDir, assetDir];
+        }
+        getAbsoluteUrl(value: string, href: string) {
+            value = value.replace(/\\/g, '/');
+            let moveTo = '';
+            if (value.charAt(0) === '/') {
+                moveTo = '__serverroot__';
+            }
+            else if (value.startsWith('../')) {
+                moveTo = '__serverroot__';
+                value = this.resolvePath(value, href, false) || ('/' + value.replace(/\.\.\//g, ''));
+            }
+            else if (value.startsWith('./')) {
+                value = value.substring(2);
+            }
+            return moveTo + value;
+        }
+        getFullUri(file: RequestAsset, filename?: string) {
+            return path.join(file.moveTo || '', file.pathname, filename || file.filename).replace(/\\/g, '/');
+        }
         resolvePath(value: string, href: string, hostname = true) {
             const match = this.PATTERN_URL.exec(href.replace(/\\/g, '/'));
             if (match) {
@@ -314,39 +346,7 @@ let Image: IImage;
                 }
                 return origin + pathname.join('/') + '/' + value;
             }
-            return '';
-        }
-        getBaseDirectory(location: string, asset: string): [string[], string[]] {
-            const locationDir = location.split(/[\\/]/);
-            const assetDir = asset.split(/[\\/]/);
-            while (locationDir.length && assetDir.length) {
-                if (locationDir[0] === assetDir[0]) {
-                    locationDir.shift();
-                    assetDir.shift();
-                }
-                else {
-                    break;
-                }
-            }
-            return [locationDir, assetDir];
-        }
-        getAbsoluteUrl(value: string, href: string) {
-            value = value.replace(/\\/g, '/');
-            let moveTo = '';
-            if (value.charAt(0) === '/') {
-                moveTo = '__serverroot__';
-            }
-            else if (value.startsWith('../')) {
-                moveTo = '__serverroot__';
-                value = this.resolvePath(value, href, false);
-            }
-            else if (value.startsWith('./')) {
-                value = value.substring(2);
-            }
-            return moveTo + value;
-        }
-        getFullUri(file: RequestAsset, filename?: string) {
-            return path.join(file.moveTo || '', file.pathname, filename || file.filename).replace(/\\/g, '/');
+            return undefined;
         }
     }();
 
@@ -421,39 +421,6 @@ let Image: IImage;
         {
         }
 
-        formatContent(value: string, mimeType: string, format: string) {
-            if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
-                return this.minifyHtml(format, value);
-            }
-            else if (mimeType.endsWith('text/css')) {
-                return this.minifyCss(format, value);
-            }
-            else if (mimeType.endsWith('text/javascript')) {
-                return this.minifyJs(format, value);
-            }
-            return undefined;
-        }
-        getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
-            let result = '';
-            const trailingContent = file.trailingContent;
-            if (trailingContent) {
-                if (!mimeType) {
-                    mimeType = file.mimeType;
-                }
-                for (const item of trailingContent) {
-                    const formatter = item.format || format || file.format;
-                    if (mimeType && formatter) {
-                        const content = this.formatContent(item.value, mimeType, formatter);
-                        if (content) {
-                            result += '\n' + content;
-                            continue;
-                        }
-                    }
-                    result += '\n' + item.value;
-                }
-            }
-            return result;
-        }
         findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}] {
             for (const name in data) {
                 const plugin = data[name];
@@ -699,6 +666,39 @@ let Image: IImage;
             }
             return undefined;
         }
+        getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
+            let result: Undef<string>;
+            const trailingContent = file.trailingContent;
+            if (trailingContent) {
+                if (!mimeType) {
+                    mimeType = file.mimeType;
+                }
+                for (const item of trailingContent) {
+                    const formatter = item.format || format || file.format;
+                    if (mimeType && formatter) {
+                        const content = this.formatContent(item.value, mimeType, formatter);
+                        if (content) {
+                            result += '\n' + content;
+                            continue;
+                        }
+                    }
+                    result += '\n' + item.value;
+                }
+            }
+            return result;
+        }
+        formatContent(value: string, mimeType: string, format: string) {
+            if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
+                return this.minifyHtml(format, value);
+            }
+            else if (mimeType.endsWith('text/css')) {
+                return this.minifyCss(format, value);
+            }
+            else if (mimeType.endsWith('text/javascript')) {
+                return this.minifyJs(format, value);
+            }
+            return undefined;
+        }
         removeCss(source: string, styles: string[]) {
             let result: Undef<string>;
             let pattern: Undef<RegExp>;
@@ -743,14 +743,20 @@ let Image: IImage;
             if (!base64) {
                 segment = segment.replace(/[\\/]/g, '[\\\\/]');
             }
-            let result = source;
+            let result: Undef<string>;
             let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF])=(["'])\\s*${(base64 ? '.+?' : '') + segment}\\s*\\2`, 'g');
             let match: RegExpExecArray | null;
             while ((match = pattern.exec(source)) !== null) {
+                if (result === undefined) {
+                    result = source;
+                }
                 result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
             }
             pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${(base64 ? '.+?' : '') + segment}\\s*\\1?\\s*\\)`, 'g');
             while ((match = pattern.exec(source)) !== null) {
+                if (result === undefined) {
+                    result = source;
+                }
                 result = result.replace(match[0], `url(${value})`);
             }
             return result;
@@ -906,11 +912,11 @@ class FileManager implements IFileManager {
     }
     getRelativeUrl(file: RequestAsset, url: string) {
         let asset = this.assets.find(item => item.uri === url);
-        let origin = file.uri!;
-        if (!asset) {
-            url = Express.resolvePath(url, origin);
-            if (url) {
-                asset = this.assets.find(item => item.uri === url);
+        let origin: Undef<string> = file.uri;
+        if (!asset && origin) {
+            const location = Express.resolvePath(url, origin);
+            if (location) {
+                asset = this.assets.find(item => item.uri === location);
             }
         }
         if (asset?.uri) {
@@ -918,47 +924,50 @@ class FileManager implements IFileManager {
             if (requestMain) {
                 origin = Express.resolvePath(path.join(file.moveTo === '__serverroot__' ? '' : (file.rootDir || ''), file.pathname, file.filename), requestMain.uri!);
             }
-            const pattern = Express.PATTERN_URL;
-            const uri = asset.uri;
-            const uriMatch = pattern.exec(uri);
-            const originMatch = pattern.exec(origin);
-            if (uriMatch && originMatch && uriMatch[1] === originMatch[1]) {
-                const rootDir = file.rootDir || '';
-                const baseDir = rootDir + file.pathname;
-                if (asset.moveTo === '__serverroot__') {
-                    if (file.moveTo === '__serverroot__') {
-                        return asset.pathname + '/' + asset.filename;
-                    }
-                    else if (requestMain) {
-                        const requestMatch = pattern.exec(requestMain.uri!);
-                        if (requestMatch && requestMatch[1] === originMatch[1]) {
-                            const [originDir] = Express.getBaseDirectory(baseDir + '/' + file.filename, requestMatch[2]);
-                            return '../'.repeat(originDir.length - 1) + Express.getFullUri(asset);
+            if (origin) {
+                const pattern = Express.PATTERN_URL;
+                const uri = asset.uri;
+                const uriMatch = pattern.exec(uri);
+                const originMatch = pattern.exec(origin);
+                if (uriMatch && originMatch && uriMatch[1] === originMatch[1]) {
+                    const rootDir = file.rootDir || '';
+                    const baseDir = rootDir + file.pathname;
+                    if (asset.moveTo === '__serverroot__') {
+                        if (file.moveTo === '__serverroot__') {
+                            return asset.pathname + '/' + asset.filename;
+                        }
+                        else if (requestMain) {
+                            const requestMatch = pattern.exec(requestMain.uri!);
+                            if (requestMatch && requestMatch[1] === originMatch[1]) {
+                                const [originDir] = Express.getBaseDirectory(baseDir + '/' + file.filename, requestMatch[2]);
+                                return '../'.repeat(originDir.length - 1) + Express.getFullUri(asset);
+                            }
                         }
                     }
-                }
-                else if (asset.rootDir) {
-                    if (baseDir === asset.rootDir + asset.pathname) {
-                        return asset.filename;
+                    else if (asset.rootDir) {
+                        if (baseDir === asset.rootDir + asset.pathname) {
+                            return asset.filename;
+                        }
+                        else if (baseDir === asset.rootDir) {
+                            return asset.pathname + '/' + asset.filename;
+                        }
                     }
-                    else if (baseDir === asset.rootDir) {
-                        return asset.pathname + '/' + asset.filename;
+                    else {
+                        const [originDir, uriDir] = Express.getBaseDirectory(originMatch[2], uriMatch[2]);
+                        return '../'.repeat(originDir.length - 1) + uriDir.join('/');
                     }
-                }
-                else {
-                    const [originDir, uriDir] = Express.getBaseDirectory(originMatch[2], uriMatch[2]);
-                    return '../'.repeat(originDir.length - 1) + uriDir.join('/');
                 }
             }
         }
-        return '';
+        return undefined;
     }
     appendContent(file: RequestAsset, content: string) {
         const filepath = file.filepath || this.getFileOutput(file).filepath;
         if (filepath && file.bundleIndex) {
             const value = this.contentToAppend.get(filepath) || [];
-            if (file.trailingContent) {
-                content += Chrome.getTrailingContent(file);
+            const trailing = Chrome.getTrailingContent(file);
+            if (trailing) {
+                content += trailing;
             }
             value.splice(file.bundleIndex - 1, 0, content);
             this.contentToAppend.set(filepath, value);
@@ -1159,14 +1168,20 @@ class FileManager implements IFileManager {
                 }
                 for (const item of assets) {
                     if (item.base64) {
-                        source = Chrome.replacePath(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
+                        const replacement = Chrome.replacePath(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
+                        if (replacement) {
+                            source = replacement;
+                        }
                         continue;
                     }
                     else if (item === file || item.content || !item.uri) {
                         continue;
                     }
                     const value = Express.getFullUri(item);
-                    source = Chrome.replacePath(source, item.uri, value);
+                    const replacement = Chrome.replacePath(source, item.uri, value);
+                    if (replacement) {
+                        source = replacement;
+                    }
                     if (item.rootDir || Express.fromSameOrigin(baseUri, item.uri)) {
                         let modified = false;
                         pattern = new RegExp(`((?:\\.\\.)?(?:[\\\\/]\\.\\.|\\.\\.[\\\\/]|[\\\\/])*)?(${path.join(item.pathname, item.filename).replace(/[\\/]/g, '[\\\\/]')})`, 'g');
@@ -1234,16 +1249,18 @@ class FileManager implements IFileManager {
                 if (format) {
                     let output = Chrome[mimeType === 'text/css' ? 'minifyCss' : 'minifyJs'](format, fs.readFileSync(filepath).toString('utf8'));
                     if (output) {
-                        if (file.trailingContent) {
-                            output += Chrome.getTrailingContent(file, mimeType, format);
+                        const trailing = Chrome.getTrailingContent(file, mimeType, format);
+                        if (trailing) {
+                            output += trailing;
                         }
                         fs.writeFileSync(filepath, output);
                         break;
                     }
                 }
-                if (file.trailingContent) {
+                const trailing = Chrome.getTrailingContent(file, mimeType, format);
+                if (trailing) {
                     try {
-                        fs.appendFileSync(filepath, Chrome.getTrailingContent(file, mimeType, format));
+                        fs.appendFileSync(filepath, trailing);
                     }
                     catch (err) {
                         Node.writeError(filepath, err);
@@ -1420,7 +1437,10 @@ class FileManager implements IFileManager {
                     if (item.base64 && item.uri) {
                         const url = this.getRelativeUrl(file, item.uri);
                         if (url) {
-                            content = Chrome.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
+                            const replacement = Chrome.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
+                            if (replacement) {
+                                content = replacement;
+                            }
                         }
                     }
                 }
@@ -1431,19 +1451,21 @@ class FileManager implements IFileManager {
                     if (source === undefined) {
                         source = content;
                     }
-                    let url = match[2];
+                    const url = match[2];
                     if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
-                        url = this.getRelativeUrl(file, url);
-                        if (url) {
-                            source = source.replace(match[0], `url(${url})`);
+                        let location = this.getRelativeUrl(file, url);
+                        if (location) {
+                            source = source.replace(match[0], `url(${location})`);
                         }
-                        else if (this.requestMain) {
-                            url = Express.resolvePath(match[2], this.requestMain.uri!);
-                            const asset = assets.find(item => item.uri === url);
-                            if (asset) {
-                                url = this.getRelativeUrl(file, url);
-                                if (url) {
-                                    source = source.replace(match[0], `url(${url})`);
+                        else {
+                            location = Express.resolvePath(match[2], this.requestMain!.uri!);
+                            if (location) {
+                                const asset = assets.find(item => item.uri === location);
+                                if (asset) {
+                                    location = this.getRelativeUrl(file, location);
+                                    if (location) {
+                                        source = source.replace(match[0], `url(${location})`);
+                                    }
                                 }
                             }
                         }
@@ -1558,8 +1580,9 @@ class FileManager implements IFileManager {
                                     }
                                 }
                                 if (mimeType === '@text/css') {
-                                    if (queue.trailingContent) {
-                                        content += Chrome.getTrailingContent(queue);
+                                    const trailing = Chrome.getTrailingContent(queue);
+                                    if (trailing) {
+                                        content += trailing;
                                     }
                                     if (unusedStyles && !queue.preserve) {
                                         const source = Chrome.removeCss(content, unusedStyles);

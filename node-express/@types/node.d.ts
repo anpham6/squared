@@ -25,10 +25,10 @@ declare namespace Node {
     interface IExpress {
         readonly PATTERN_URL: RegExp;
         fromSameOrigin(base: string, other: string): boolean;
-        resolvePath(value: string, href: string, hostname?: boolean): string;
         getBaseDirectory(location: string, asset: string): [string[], string[]];
         getAbsoluteUrl(value: string, href: string): string;
         getFullUri(file: RequestAsset, filename?: string): string;
+        resolvePath(value: string, href: string, hostname?: boolean): Undef<string>;
     }
 
     interface ICompress {
@@ -55,14 +55,14 @@ declare namespace Node {
     interface IChrome {
         readonly external: Undef<External>;
         readonly prettier_plugins: {}[];
-        formatContent(value: string, mimeType: string, format: string): Undef<string>;
-        getTrailingContent(file: RequestAsset, mimeType?: string, format?: string): string;
         findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}];
         minifyHtml(format: string, value: string): Undef<string>;
         minifyCss(format: string, value: string): Undef<string>;
         minifyJs(format: string, value: string): Undef<string>;
+        formatContent(value: string, mimeType: string, format: string): Undef<string>;
+        getTrailingContent(file: RequestAsset, mimeType?: string, format?: string): Undef<string>;
         removeCss(source: string, styles: string[]): Undef<string>;
-        replacePath(source: string, segment: string, value: string, base64?: boolean): string;
+        replacePath(source: string, segment: string, value: string, base64?: boolean): Undef<string>;
     }
 
     interface IFileManager {
@@ -80,7 +80,7 @@ declare namespace Node {
         check(file: RequestAsset, exclusions: Exclusions): boolean;
         getFileOutput(file: RequestAsset): { pathname: string; filepath: string };
         replaceFileOutput(file: RequestAsset, replaceWith: string): void;
-        getRelativeUrl(file: RequestAsset, url: string): string;
+        getRelativeUrl(file: RequestAsset, url: string): Undef<string>;
         appendContent(file: RequestAsset, content: string): void;
         compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
         transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
