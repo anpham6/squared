@@ -47,18 +47,30 @@ let Image: IImage;
     let EXTERNAL: Undef<External>;
 
     try {
-        const { disk_read, disk_write, unc_read, unc_write, cors: cors_options, request_post_limit, gzip_level, brotli_quality, jpeg_quality, tinypng_api_key, env, port, routing, external } = <Settings> require('./squared.settings.json');
+        const settings = <Settings> require('./squared.settings.json');
+        const {
+            disk_read,
+            disk_write,
+            unc_read,
+            unc_write,
+            request_post_limit,
+            gzip_level,
+            brotli_quality,
+            jpeg_quality,
+            tinypng_api_key,
+            env,
+            port,
+        } = settings;
+
+        CORS = settings.cors;
+        EXTERNAL = settings.external;
+        ROUTING = settings.routing;
+
         DISK_READ = disk_read === true || disk_read === 'true';
         DISK_WRITE = disk_write === true || disk_write === 'true';
         UNC_READ = unc_read === true || unc_read === 'true';
         UNC_WRITE = unc_write === true || unc_write === 'true';
-        if (cors_options) {
-            CORS = cors_options;
-        }
-        if (external) {
-            EXTERNAL = external;
-        }
-        ROUTING = routing;
+
         const gzip = parseInt(gzip_level as string);
         const brotli = parseInt(brotli_quality as string);
         const jpeg = parseInt(jpeg_quality as string);
@@ -767,7 +779,7 @@ let Image: IImage;
     Image = new class implements IImage {
         constructor(public tinify_api_key: boolean) {}
 
-        getFormat(compress: Undef<CompressFormat[]>) {
+        getCompress(compress: Undef<CompressFormat[]>) {
             return this.tinify_api_key ? Compress.getFormat(compress, 'png') : undefined;
         }
         isJpeg(file: RequestAsset, filepath?: string) {
@@ -784,7 +796,7 @@ let Image: IImage;
         parseResizeMode(value: string) {
             let width = 0, height = 0;
             let mode = '';
-            const match = /\((\d+)x(\d+)#?(contain|cover)?\)/.exec(value);
+            const match = /\((\d+)x(\d+)#?(contain|cover|scale)?\)/.exec(value);
             if (match) {
                 width = parseInt(match[1]);
                 height = parseInt(match[2]);
@@ -853,7 +865,19 @@ class FileManager implements IFileManager {
     delete(value: string) {
         this.files.delete(value.substring(this.dirname.length + 1));
     }
-    check(file: RequestAsset, exclusions: Exclusions) {
+    replace(file: RequestAsset, replaceWith: string) {
+        const filepath = file.filepath;
+        if (filepath) {
+            this.filesToRemove.add(filepath);
+            this.delete(filepath);
+            if (!file.originalName) {
+                file.originalName = file.filename;
+            }
+            file.filename = path.basename(replaceWith);
+            this.add(replaceWith);
+        }
+    }
+    validate(file: RequestAsset, exclusions: Exclusions) {
         const pathname = file.pathname.replace(/[\\/]$/, '');
         const filename = file.filename;
         const winOS = path.sep === '/' ? '' : 'i';
@@ -897,18 +921,6 @@ class FileManager implements IFileManager {
         const filepath = path.join(pathname, file.filename);
         file.filepath = filepath;
         return { pathname, filepath };
-    }
-    replaceFileOutput(file: RequestAsset, replaceWith: string) {
-        const filepath = file.filepath;
-        if (filepath) {
-            this.filesToRemove.add(filepath);
-            this.delete(filepath);
-            if (!file.originalName) {
-                file.originalName = file.filename;
-            }
-            file.filename = path.basename(replaceWith);
-            this.add(replaceWith);
-        }
     }
     getRelativeUrl(file: RequestAsset, url: string) {
         let asset = this.assets.find(item => item.uri === url);
@@ -1246,10 +1258,10 @@ class FileManager implements IFileManager {
             }
             case 'text/css':
             case 'text/javascript': {
+                const trailing = Chrome.getTrailingContent(file, mimeType, format);
                 if (format) {
                     let output = Chrome[mimeType === 'text/css' ? 'minifyCss' : 'minifyJs'](format, fs.readFileSync(filepath).toString('utf8'));
                     if (output) {
-                        const trailing = Chrome.getTrailingContent(file, mimeType, format);
                         if (trailing) {
                             output += trailing;
                         }
@@ -1257,7 +1269,6 @@ class FileManager implements IFileManager {
                         break;
                     }
                 }
-                const trailing = Chrome.getTrailingContent(file, mimeType, format);
                 if (trailing) {
                     try {
                         fs.appendFileSync(filepath, trailing);
@@ -1276,7 +1287,7 @@ class FileManager implements IFileManager {
                     };
                     const afterConvert = (transformed: string, condition: string) => {
                         if (condition.includes('@')) {
-                            this.replaceFileOutput(file, transformed);
+                            this.replace(file, transformed);
                         }
                         else if (condition.includes('%')) {
                             if (this.filesToCompare.has(file)) {
@@ -1323,7 +1334,7 @@ class FileManager implements IFileManager {
                                             }
                                             else {
                                                 afterConvert(png, value);
-                                                if (Image.getFormat(file.compress)) {
+                                                if (Image.getCompress(file.compress)) {
                                                     compressImage(png);
                                                     return;
                                                 }
@@ -1351,7 +1362,7 @@ class FileManager implements IFileManager {
                                             }
                                             else {
                                                 afterConvert(jpg, value);
-                                                if (Image.getFormat(file.compress)) {
+                                                if (Image.getCompress(file.compress)) {
                                                     compressImage(jpg);
                                                     return;
                                                 }
@@ -1488,7 +1499,7 @@ class FileManager implements IFileManager {
         return undefined;
     }
     writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
-        const png = Image.getFormat(file.compress);
+        const png = Image.getCompress(file.compress);
         if (png && Compress.withinSizeRange(filepath, png.condition)) {
             try {
                 tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
@@ -1510,7 +1521,7 @@ class FileManager implements IFileManager {
             this.compressFile(assets, file, filepath, finalize);
         }
     }
-    processAssetsAsync(empty: boolean, finalize: (filepath?: string) => void) {
+    processAssetsSync(empty: boolean, finalize: (filepath?: string) => void) {
         const emptyDir = new Set<string>();
         const notFound: ObjectMap<boolean> = {};
         const processing: ObjectMap<RequestAsset[]> = {};
@@ -1638,7 +1649,7 @@ class FileManager implements IFileManager {
         };
         for (let i = 0; i < assets.length; ++i) {
             const file = assets[i];
-            if (exclusions && !this.check(file, exclusions)) {
+            if (exclusions && !this.validate(file, exclusions)) {
                 assets.splice(i--, 1);
                 continue;
             }
@@ -1771,7 +1782,7 @@ class FileManager implements IFileManager {
                 }
             }
             if (minFile !== originalPath) {
-                this.replaceFileOutput(file, minFile);
+                this.replace(file, minFile);
             }
         }
         const length = this.dirname.length;
@@ -1837,25 +1848,25 @@ app.post('/api/assets/copy', (req, res) => {
         if (!Node.checkPermissions(res, dirname)) {
             return;
         }
-        const status = new FileManager(dirname, <RequestAsset[]> req.body);
         let cleared = false;
+        const manager = new FileManager(dirname, <RequestAsset[]> req.body);
         const finalize = (filepath?: string) => {
-            if (status.delayed === Infinity) {
+            if (manager.delayed === Infinity) {
                 return;
             }
             if (filepath) {
-                status.add(filepath);
+                manager.add(filepath);
             }
-            if (filepath === undefined || --status.delayed === 0 && cleared) {
-                status.finalizeAssetsAsync(req.query.release === '1').then(() => {
-                    res.json(<ResultOfFileAction> { success: status.files.size > 0, files: Array.from(status.files) });
-                    status.delayed = Infinity;
+            if (filepath === undefined || --manager.delayed === 0 && cleared) {
+                manager.finalizeAssetsAsync(req.query.release === '1').then(() => {
+                    res.json(<ResultOfFileAction> { success: manager.files.size > 0, files: Array.from(manager.files) });
+                    manager.delayed = Infinity;
                 });
             }
         };
         try {
-            status.processAssetsAsync(req.query.empty === '1', finalize);
-            if (status.delayed === 0) {
+            manager.processAssetsSync(req.query.empty === '1', finalize);
+            if (manager.delayed === 0) {
                 finalize();
             }
             else {
@@ -1892,15 +1903,14 @@ app.post('/api/assets/archive', (req, res) => {
         res.json({ application: `DIRECTORY: ${dirname}`, system });
         return;
     }
-    const status = new FileManager(dirname, <RequestAsset[]> req.body);
-    let cleared = false;
-    let zipname = '';
-    let format: archiver.Format;
-    let formatGzip = false;
     let append_to = req.query.append_to as string;
     if (path.isAbsolute(append_to)) {
         append_to = path.normalize(append_to);
     }
+    let zipname = '';
+    let format: archiver.Format;
+    let cleared = false;
+    let formatGzip = false;
     switch (req.query.format) {
         case 'gz':
         case 'tgz':
@@ -1912,14 +1922,15 @@ app.post('/api/assets/archive', (req, res) => {
             format = 'zip';
             break;
     }
+    const manager = new FileManager(dirname, <RequestAsset[]> req.body);
     const resumeThread = (unzip_to = '') => {
         const archive = archiver(format, { zlib: { level: Compress.gzip_level } });
-        zipname = path.join(dirname_zip, (req.query.filename || zipname || 'squared') + '.' + format);
+        zipname = path.join(dirname_zip, (req.query.filename || zipname || uuid.v4()) + '.' + format);
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
-            const success = status.files.size > 0;
+            const success = manager.files.size > 0;
             const bytes = archive.pointer();
-            const response: ResultOfFileAction = { success, files: Array.from(status.files) };
+            const response: ResultOfFileAction = { success, files: Array.from(manager.files) };
             if (!copy_to) {
                 response.zipname = zipname;
                 response.bytes = bytes;
@@ -1945,19 +1956,19 @@ app.post('/api/assets/archive', (req, res) => {
             else {
                 res.json(response);
             }
-            status.delayed = Infinity;
+            manager.delayed = Infinity;
             console.log(`${chalk.blue('WRITE')}: ${zipname} ${chalk.yellow('[') + chalk.grey(bytes + ' bytes') + chalk.yellow(']')}`);
         });
         archive.pipe(output);
         const finalize = (filepath?: string) => {
-            if (status.delayed === Infinity) {
+            if (manager.delayed === Infinity) {
                 return;
             }
             if (filepath) {
-                status.add(filepath);
+                manager.add(filepath);
             }
-            if (filepath === undefined || --status.delayed === 0 && cleared) {
-                status.finalizeAssetsAsync(req.query.release === '1').then(() => {
+            if (filepath === undefined || --manager.delayed === 0 && cleared) {
+                manager.finalizeAssetsAsync(req.query.release === '1').then(() => {
                     archive.directory(dirname, false);
                     archive.finalize();
                 });
@@ -1967,8 +1978,8 @@ app.post('/api/assets/archive', (req, res) => {
             if (unzip_to) {
                 archive.directory(unzip_to, false);
             }
-            status.processAssetsAsync(false, finalize);
-            if (status.delayed === 0) {
+            manager.processAssetsSync(false, finalize);
+            if (manager.delayed === 0) {
                 finalize();
             }
             else {
@@ -1980,27 +1991,23 @@ app.post('/api/assets/archive', (req, res) => {
         }
     };
     if (append_to) {
-        const errorAppend = (name: string, err: Error) => {
-            resumeThread();
-            Node.writeError(name, err);
-        };
         const match = /([^/\\]+)\.(zip|tar)$/i.exec(append_to);
         if (match) {
             const zippath = path.join(dirname_zip, match[0]);
+            const copySuccess = () => {
+                zipname = match[1];
+                const unzip_to = path.join(dirname_zip, zipname);
+                decompress(zippath, unzip_to)
+                    .then(() => {
+                        format = <archiver.Format> match[2].toLowerCase();
+                        resumeThread(unzip_to);
+                    })
+                    .catch(err => {
+                        Node.writeError(zippath, err);
+                        resumeThread();
+                    });
+            };
             try {
-                const copySuccess = () => {
-                    zipname = match[1];
-                    const unzip_to = path.join(dirname_zip, zipname);
-                    decompress(zippath, unzip_to)
-                        .then(() => {
-                            format = <archiver.Format> match[2].toLowerCase();
-                            resumeThread(unzip_to);
-                        })
-                        .catch(err => {
-                            Node.writeError(zippath, err);
-                            resumeThread();
-                        });
-                };
                 if (Node.isFileURI(append_to)) {
                     const stream = fs.createWriteStream(zippath);
                     stream.on('finish', copySuccess);
@@ -2008,11 +2015,16 @@ app.post('/api/assets/archive', (req, res) => {
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
-                                errorAppend(zippath, new Error(statusCode + ' ' + response.statusMessage));
+                                Node.writeError(zippath, new Error(statusCode + ' ' + response.statusMessage));
+                                resumeThread();
                             }
                         })
-                        .on('error', err => errorAppend(zippath, err))
+                        .on('error', err => {
+                            Node.writeError(zippath, err);
+                            resumeThread();
+                        })
                         .pipe(stream);
+                    return;
                 }
                 else if (fs.existsSync(append_to)) {
                     if (Node.isFileUNC(append_to)) {
@@ -2025,24 +2037,22 @@ app.post('/api/assets/archive', (req, res) => {
                         res.json({ application: 'OPTION: --disk-read', system: 'Reading from disk is not enabled.' });
                         return;
                     }
-                    fs.copyFileSync(append_to, zippath);
-                    copySuccess();
+                    fs.copyFile(append_to, zippath, copySuccess);
+                    return;
                 }
                 else {
-                    errorAppend(append_to, new Error('Archive not found.'));
+                    Node.writeError(append_to, new Error('Archive not found.'));
                 }
             }
             catch (err) {
-                errorAppend(zippath, <Error> err);
+                Node.writeError(zippath, <Error> err);
             }
         }
         else {
-            errorAppend(append_to, new Error('Invalid archive format.'));
+            Node.writeError(append_to, new Error('Invalid archive format.'));
         }
     }
-    else {
-        resumeThread();
-    }
+    resumeThread();
 });
 
 app.get('/api/browser/download', (req, res) => {

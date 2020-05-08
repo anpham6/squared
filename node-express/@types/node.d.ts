@@ -46,7 +46,7 @@ declare namespace Node {
 
     interface IImage {
         readonly tinify_api_key: boolean;
-        getFormat(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
+        getCompress(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
         isJpeg(file: RequestAsset, filepath?: string): boolean;
         parseResizeMode(value: string): ResizeMode;
         resize(image: jimp, width: Undef<number>, height: Undef<number>, mode?: string): jimp;
@@ -77,16 +77,16 @@ declare namespace Node {
         readonly requestMain?: RequestAsset;
         add(value: string): void;
         delete(value: string): void;
-        check(file: RequestAsset, exclusions: Exclusions): boolean;
+        replace(file: RequestAsset, replaceWith: string): void;
+        validate(file: RequestAsset, exclusions: Exclusions): boolean;
         getFileOutput(file: RequestAsset): { pathname: string; filepath: string };
-        replaceFileOutput(file: RequestAsset, replaceWith: string): void;
         getRelativeUrl(file: RequestAsset, url: string): Undef<string>;
         appendContent(file: RequestAsset, content: string): void;
         compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
         transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
         transformCss(file: RequestAsset, filepath: Undef<string>, content?: string): Undef<string>;
         writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
-        processAssetsAsync(empty: boolean, finalize: (filepath?: string) => void): void;
+        processAssetsSync(empty: boolean, finalize: (filepath?: string) => void): void;
         finalizeAssetsAsync(release: boolean): Promise<void>;
     }
 

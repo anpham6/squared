@@ -445,8 +445,10 @@ Image conversion can be achieved using the mimeType property in a RequestAsset o
 * png
 * jpeg
 * bmp
-* gif (node-express: readonly)
-* tiff (node-express: readonly)
+* gif
+* tiff
+
+node-express offers only read support for GIF and TIFF.
 
 ```xml
 format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?:image/{format}
@@ -458,6 +460,8 @@ format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?:im
 Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
 
 ```javascript
+// NOTE: squared-apache uses TinyPNG for refitting (contain|cover|scale) and supports only PNG and JPEG. Resizing uses ImageJ (free) and supports all formats.
+
 const options = {
     assets: [
         {
@@ -477,9 +481,10 @@ const options = {
 ```
 
 ```javascript
-// NOTE: Some compression formats are only available when using squared-apache
+// NOTE: common: zip | tar | gz/tgz | node-express: br | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
 
 squared.settings.outputArchiveFormat = '7z';
+
 squared.saveToArchive('archive1', {
     assets: [
         {
