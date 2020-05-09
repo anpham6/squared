@@ -19,7 +19,7 @@ declare namespace Node {
         isFileURI(value: string): boolean;
         isFileUNC(value: string): boolean;
         isDirectoryUNC(value: string): boolean;
-        writeError(description: string, message: any): void;
+        writeFail(description: string, message: any): void;
     }
 
     interface IExpress {
@@ -38,7 +38,7 @@ declare namespace Node {
         getFileSize(filepath: string): number;
         createGzipWriteStream(source: string, filepath: string, level?: number): fs.WriteStream;
         createBrotliWriteStream(source: string, filepath: string, quality?: number, mimeType?: string): fs.WriteStream;
-        getFormat(compress: Undef<CompressFormat[]>, format: string): Undef<CompressFormat>;
+        findFormat(compress: Undef<CompressFormat[]>, format: string): Undef<CompressFormat>;
         removeFormat(compress: Undef<CompressFormat[]>, format: string): void;
         getSizeRange(value: string): [number, number];
         withinSizeRange(filepath: string, value: Undef<string>): boolean;
@@ -46,7 +46,7 @@ declare namespace Node {
 
     interface IImage {
         readonly tinify_api_key: boolean;
-        getCompress(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
+        findCompress(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
         isJpeg(file: RequestAsset, filepath?: string): boolean;
         parseResizeMode(value: string): ResizeMode;
         resize(image: jimp, width: Undef<number>, height: Undef<number>, mode?: string): jimp;
@@ -65,14 +65,13 @@ declare namespace Node {
     }
 
     interface IFileManager {
-        archiving: boolean;
         delayed: number;
-        files: Set<string>;
-        filesToRemove: Set<string>;
-        filesToCompare: Map<RequestAsset, string[]>;
-        contentToAppend: Map<string, string[]>;
-        dirname: string;
-        assets: RequestAsset[];
+        readonly files: Set<string>;
+        readonly filesToRemove: Set<string>;
+        readonly filesToCompare: Map<RequestAsset, string[]>;
+        readonly contentToAppend: Map<string, string[]>;
+        readonly assets: RequestAsset[];
+        readonly dirname: string;
         readonly requestMain?: RequestAsset;
         add(value: string): void;
         delete(value: string): void;

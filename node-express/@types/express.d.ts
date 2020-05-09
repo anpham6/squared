@@ -17,6 +17,7 @@ declare namespace Express {
 
     interface RequestAsset extends file_chrome.RequestAsset {
         filepath?: string;
+        excluded?: boolean;
         originalName?: string;
         dataMap?: DataMap;
     }

@@ -313,7 +313,7 @@ let Image: IImage;
         isDirectoryUNC(value: string) {
             return /^\\\\([\w.-]+)\\([\w-]+\$|[\w-]+\$\\.+|[\w-]+\\.*)$/.test(value);
         }
-        writeError(description: string, message: any) {
+        writeFail(description: string, message: any) {
             return console.log(`${chalk.bgRed.bold.white('FAIL')}: ${description} (${message})`);
         }
     }
@@ -430,7 +430,7 @@ let Image: IImage;
             }
             return 0;
         }
-        getFormat(compress: Undef<CompressFormat[]>, format: string) {
+        findFormat(compress: Undef<CompressFormat[]>, format: string) {
             return compress?.find(item => item.format === format);
         }
         removeFormat(compress: Undef<CompressFormat[]>, format: string) {
@@ -462,10 +462,7 @@ let Image: IImage;
     (GZIP_LEVEL, BROTLI_QUALITY, JPEG_QUALITY);
 
     Chrome = new class implements IChrome {
-        constructor(
-            public external: Undef<External>)
-        {
-        }
+        constructor(public external: Undef<External>) {}
 
         findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, StandardMap] {
             for (const name in data) {
@@ -584,7 +581,7 @@ let Image: IImage;
                         }
                     }
                     catch (err) {
-                        Node.writeError(`External: ${module} [npm run install-chrome]`, err);
+                        Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
                     }
                 }
                 if (valid) {
@@ -660,7 +657,7 @@ let Image: IImage;
                         }
                     }
                     catch (err) {
-                        Node.writeError(`External: ${module} [npm run install-chrome]`, err);
+                        Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
                     }
                 }
                 if (valid) {
@@ -735,7 +732,7 @@ let Image: IImage;
                         }
                     }
                     catch (err) {
-                        Node.writeError(`External: ${module} [npm run install-chrome]`, err);
+                        Node.writeFail(`External: ${module} [npm run install-chrome]`, err);
                     }
                 }
                 if (valid) {
@@ -824,8 +821,8 @@ let Image: IImage;
     Image = new class implements IImage {
         constructor(public tinify_api_key: boolean) {}
 
-        getCompress(compress: Undef<CompressFormat[]>) {
-            return this.tinify_api_key ? Compress.getFormat(compress, 'png') : undefined;
+        findCompress(compress: Undef<CompressFormat[]>) {
+            return this.tinify_api_key ? Compress.findFormat(compress, 'png') : undefined;
         }
         isJpeg(file: RequestAsset, filepath?: string) {
             if (file.mimeType?.endsWith('image/jpeg')) {
@@ -887,18 +884,17 @@ function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>>
 }
 
 class FileManager implements IFileManager {
-    public archiving = false;
     public delayed = 0;
-    public files = new Set<string>();
-    public filesToRemove = new Set<string>();
-    public filesToCompare = new Map<RequestAsset, string[]>();
-    public contentToAppend = new Map<string, string[]>();
+    public readonly files = new Set<string>();
+    public readonly filesToRemove = new Set<string>();
+    public readonly filesToCompare = new Map<RequestAsset, string[]>();
+    public readonly contentToAppend = new Map<string, string[]>();
     public readonly requestMain?: RequestAsset;
     public readonly dataMap?: DataMap;
 
     constructor(
-        public dirname: string,
-        public assets: RequestAsset[])
+        public readonly dirname: string,
+        public readonly assets: RequestAsset[])
     {
         this.requestMain = assets.find(item => item.requestMain);
         this.dataMap = assets[0].dataMap;
@@ -991,7 +987,7 @@ class FileManager implements IFileManager {
                     const baseDir = rootDir + file.pathname;
                     if (asset.moveTo === '__serverroot__') {
                         if (file.moveTo === '__serverroot__') {
-                            return asset.pathname + '/' + asset.filename;
+                            return path.join(asset.pathname, asset.filename).replace(/\\/g, '/');
                         }
                         else if (requestMain) {
                             const requestMatch = pattern.exec(requestMain.uri!);
@@ -1006,7 +1002,7 @@ class FileManager implements IFileManager {
                             return asset.filename;
                         }
                         else if (baseDir === asset.rootDir) {
-                            return asset.pathname + '/' + asset.filename;
+                            return path.join(asset.pathname, asset.filename).replace(/\\/g, '/');
                         }
                     }
                     else {
@@ -1061,11 +1057,11 @@ class FileManager implements IFileManager {
     }
     compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
         const compress = file.compress;
-        const gzip = Compress.getFormat(compress, 'gz');
-        const brotli = Compress.getFormat(compress, 'br');
-        const jpeg = Image.isJpeg(file, filepath) && Compress.getFormat(compress, 'jpeg');
+        const jpeg = Image.isJpeg(file, filepath) && Compress.findFormat(compress, 'jpeg');
         const resumeThread = () => {
             this.transformBuffer(assets, file, filepath, finalize);
+            const gzip = Compress.findFormat(compress, 'gz');
+            const brotli = Compress.findFormat(compress, 'br');
             if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
                 ++this.delayed;
                 const gz = `${filepath}.gz`;
@@ -1076,7 +1072,7 @@ class FileManager implements IFileManager {
                                 fs.unlinkSync(gz);
                             }
                             catch (err) {
-                                Node.writeError(gz, err);
+                                Node.writeFail(gz, err);
                             }
                             finalize('');
                         }
@@ -1085,7 +1081,7 @@ class FileManager implements IFileManager {
                         }
                     })
                     .on('error', err => {
-                        Node.writeError(gz, err);
+                        Node.writeFail(gz, err);
                         finalize('');
                     });
             }
@@ -1099,7 +1095,7 @@ class FileManager implements IFileManager {
                                 fs.unlinkSync(br);
                             }
                             catch (err) {
-                                Node.writeError(br, err);
+                                Node.writeFail(br, err);
                             }
                             finalize('');
                         }
@@ -1108,7 +1104,7 @@ class FileManager implements IFileManager {
                         }
                     })
                     .on('error', err => {
-                        Node.writeError(br, err);
+                        Node.writeFail(br, err);
                         finalize('');
                     });
             }
@@ -1123,7 +1119,7 @@ class FileManager implements IFileManager {
                 .then(image => {
                     image.quality(jpeg.level || Compress.jpeg_quality).write(jpg, err => {
                         if (err) {
-                            Node.writeError(filepath, err);
+                            Node.writeFail(filepath, err);
                         }
                         else if (jpg !== filepath) {
                             try {
@@ -1135,7 +1131,7 @@ class FileManager implements IFileManager {
                                 }
                             }
                             catch (error) {
-                                Node.writeError(jpg, error);
+                                Node.writeFail(jpg, error);
                             }
                         }
                         finalize('');
@@ -1143,7 +1139,7 @@ class FileManager implements IFileManager {
                     });
                 })
                 .catch(err => {
-                    Node.writeError(filepath, err);
+                    Node.writeFail(filepath, err);
                     finalize('');
                     resumeThread();
                 });
@@ -1167,7 +1163,7 @@ class FileManager implements IFileManager {
                 const saved = new Set<string>();
                 let html = fs.readFileSync(filepath).toString('utf8');
                 let source: Undef<string>;
-                let pattern = /(\s*)<(script|link|style).*?(\s+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)").*?\/?>(?:[\s\S]*?<\/\2>\n*)?/ig;
+                let pattern = /(\s*)<(script|link|style)[\s\S]*?([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[\s\S]*?\/?>(?:[\s\S]*?<\/\2>\n*)?/ig;
                 let match: Null<RegExpExecArray>;
                 while ((match = pattern.exec(html)) !== null) {
                     if (source === undefined) {
@@ -1192,21 +1188,24 @@ class FileManager implements IFileManager {
                         saved.add(location);
                     }
                 }
-                if (saved.size) {
-                    html = source!;
+                if (source) {
+                    html = source;
                 }
-                pattern = /(\s*)<(script|style).*?>([\s\S]*?)<\/\2>\n*/ig;
+                pattern = /(\s*)<(script|style)[\s\S]*?>([\s\S]*?)<\/\2>\n*/ig;
                 for (const item of assets) {
+                    if (item.excluded) {
+                        continue;
+                    }
                     const { bundleIndex, trailingContent } = item;
                     if (bundleIndex !== undefined) {
-                        let outerHTML = item.outerHTML;
+                        const outerHTML = item.outerHTML;
                         if (outerHTML) {
                             if (source === undefined) {
                                 source = html;
                             }
                             const length = source.length;
                             let replaceWith = '';
-                            if (bundleIndex === 0) {
+                            if (bundleIndex === 0 || bundleIndex === Infinity) {
                                 replaceWith = getOuterHTML(item.mimeType === 'text/javascript', Express.getFullUri(item));
                                 source = source.replace(outerHTML, replaceWith);
                             }
@@ -1216,11 +1215,10 @@ class FileManager implements IFileManager {
                             if (source.length === length) {
                                 pattern.lastIndex = 0;
                                 const content = minifySpace(item.content || '');
-                                outerHTML = minifySpace(outerHTML);
+                                const outerContent = minifySpace(outerHTML);
                                 while ((match = pattern.exec(html)) !== null) {
-                                    if (outerHTML === minifySpace(match[0]) || content && content === minifySpace(match[3])) {
+                                    if (outerContent === minifySpace(match[0]) || content && content === minifySpace(match[3])) {
                                         source = source.replace(match[0], (replaceWith ? match[1] : '') + replaceWith);
-                                        html = source;
                                         break;
                                     }
                                 }
@@ -1233,7 +1231,6 @@ class FileManager implements IFileManager {
                         for (const trailing of trailingContent) {
                             content.push(minifySpace(trailing.value));
                         }
-                        let modified = false;
                         while ((match = pattern.exec(html)) !== null) {
                             if (source === undefined) {
                                 source = html;
@@ -1241,11 +1238,7 @@ class FileManager implements IFileManager {
                             const value = minifySpace(match[3]);
                             if (content.includes(value)) {
                                 source = source.replace(match[0], '');
-                                modified = true;
                             }
-                        }
-                        if (modified) {
-                            html = source!;
                         }
                     }
                 }
@@ -1253,6 +1246,9 @@ class FileManager implements IFileManager {
                     source = html;
                 }
                 for (const item of assets) {
+                    if (item.excluded) {
+                        continue;
+                    }
                     if (item.base64) {
                         const replacement = Chrome.replacePath(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
                         if (replacement) {
@@ -1269,23 +1265,18 @@ class FileManager implements IFileManager {
                         source = replacement;
                     }
                     if (item.rootDir || Express.fromSameOrigin(baseUri, item.uri)) {
-                        let modified = false;
                         pattern = new RegExp(`((?:\\.\\.)?(?:[\\\\/]\\.\\.|\\.\\.[\\\\/]|[\\\\/])*)?(${path.join(item.pathname, item.filename).replace(/[\\/]/g, '[\\\\/]')})`, 'g');
                         while ((match = pattern.exec(html)) !== null) {
                             const pathname = match[0];
                             if (pathname !== value && item.uri === Express.resolvePath(pathname, baseUri)) {
                                 source = source.replace(pathname, value);
-                                modified = true;
                             }
-                        }
-                        if (modified) {
-                            html = source;
                         }
                     }
                 }
                 source = source
-                    .replace(/\s*<(script|link|style).+?data-chrome-file="exclude".*?>[\s\S]*?<\/\1>\n*/ig, '')
-                    .replace(/\s*<(script|link).+?data-chrome-file="exclude".*?\/?>\n*/ig, '')
+                    .replace(/\s*<(script|link|style)[\s\S]*?data-chrome-file="exclude"[\s\S]*?>[\s\S]*?<\/\1>\n*/ig, '')
+                    .replace(/\s*<(script|link)[\s\S]*?data-chrome-file="exclude"[\s\S]*?\/?>\n*/ig, '')
                     .replace(/\s+data-(?:use|chrome-[\w-]+)="([^"]|\\")+?"/g, '');
                 fs.writeFileSync(filepath, format && Chrome.minifyHtml(format, source) || source);
                 break;
@@ -1312,7 +1303,7 @@ class FileManager implements IFileManager {
                             fs.appendFileSync(filepath, trailing);
                         }
                         catch (err) {
-                            Node.writeError(filepath, err);
+                            Node.writeFail(filepath, err);
                         }
                     }
                     break;
@@ -1350,7 +1341,7 @@ class FileManager implements IFileManager {
                         fs.writeFileSync(filepath, source);
                     }
                     catch (err) {
-                        Node.writeError(filepath, err);
+                        Node.writeFail(filepath, err);
                     }
                 }
                 break;
@@ -1364,7 +1355,7 @@ class FileManager implements IFileManager {
                             fs.appendFileSync(filepath, trailing);
                         }
                         catch (err) {
-                            Node.writeError(filepath, err);
+                            Node.writeFail(filepath, err);
                         }
                     }
                     break;
@@ -1390,7 +1381,7 @@ class FileManager implements IFileManager {
                         fs.writeFileSync(filepath, source);
                     }
                     catch (err) {
-                        Node.writeError(filepath, err);
+                        Node.writeFail(filepath, err);
                     }
                 }
                 break;
@@ -1425,7 +1416,7 @@ class FileManager implements IFileManager {
                         }
                         catch (err) {
                             finalize('');
-                            Node.writeError(location, err);
+                            Node.writeFail(location, err);
                         }
                     };
                     const convert = mimeType.split(':');
@@ -1446,11 +1437,11 @@ class FileManager implements IFileManager {
                                         const png = replaceExtension(filepath, 'png');
                                         Image.resize(image, width, height, mode).write(png, err => {
                                             if (err) {
-                                                Node.writeError(png, err);
+                                                Node.writeFail(png, err);
                                             }
                                             else {
                                                 afterConvert(png, value);
-                                                if (Image.getCompress(file.compress)) {
+                                                if (Image.findCompress(file.compress)) {
                                                     compressImage(png);
                                                     return;
                                                 }
@@ -1460,7 +1451,7 @@ class FileManager implements IFileManager {
                                     })
                                     .catch(err => {
                                         finalize('');
-                                        Node.writeError(filepath, err);
+                                        Node.writeFail(filepath, err);
                                     });
                                 return;
                             }
@@ -1474,11 +1465,11 @@ class FileManager implements IFileManager {
                                         const jpg = replaceExtension(filepath, 'jpg');
                                         Image.resize(image, width, height, mode).quality(Compress.jpeg_quality).write(jpg, err => {
                                             if (err) {
-                                                Node.writeError(jpg, err);
+                                                Node.writeFail(jpg, err);
                                             }
                                             else {
                                                 afterConvert(jpg, value);
-                                                if (Image.getCompress(file.compress)) {
+                                                if (Image.findCompress(file.compress)) {
                                                     compressImage(jpg);
                                                     return;
                                                 }
@@ -1488,7 +1479,7 @@ class FileManager implements IFileManager {
                                     })
                                     .catch(err => {
                                         finalize('');
-                                        Node.writeError(filepath, err);
+                                        Node.writeFail(filepath, err);
                                     });
                                 return;
                             }
@@ -1502,7 +1493,7 @@ class FileManager implements IFileManager {
                                         const bmp = replaceExtension(filepath, 'bmp');
                                         Image.resize(image, width, height, mode).write(bmp, err => {
                                             if (err) {
-                                                Node.writeError(bmp, err);
+                                                Node.writeFail(bmp, err);
                                             }
                                             else {
                                                 afterConvert(bmp, value);
@@ -1512,7 +1503,7 @@ class FileManager implements IFileManager {
                                     })
                                     .catch(err => {
                                         finalize('');
-                                        Node.writeError(filepath, err);
+                                        Node.writeFail(filepath, err);
                                     });
                                 return;
                             }
@@ -1527,7 +1518,7 @@ class FileManager implements IFileManager {
                                     const resizepath = filepath + path.extname(filepath);
                                     Image.resize(image, width, height, mode).write(resizepath, err => {
                                         if (err) {
-                                            Node.writeError(resizepath, err);
+                                            Node.writeFail(resizepath, err);
                                         }
                                         else {
                                             fs.renameSync(resizepath, filepath);
@@ -1580,7 +1571,7 @@ class FileManager implements IFileManager {
         if (this.requestMain && Express.fromSameOrigin(this.requestMain.uri!, baseUrl)) {
             const assets = this.assets;
             for (const item of assets) {
-                if (item.base64 && item.uri) {
+                if (item.base64 && item.uri && !item.excluded) {
                     const url = this.getRelativeUrl(file, item.uri);
                     if (url) {
                         const replacement = Chrome.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
@@ -1606,7 +1597,7 @@ class FileManager implements IFileManager {
                     else {
                         location = Express.resolvePath(match[2], this.requestMain.uri!);
                         if (location) {
-                            const asset = assets.find(item => item.uri === location);
+                            const asset = assets.find(item => item.uri === location && !item.excluded);
                             if (asset) {
                                 location = this.getRelativeUrl(file, location);
                                 if (location) {
@@ -1617,7 +1608,7 @@ class FileManager implements IFileManager {
                     }
                 }
                 else {
-                    const asset = assets.find(item => item.uri === url);
+                    const asset = assets.find(item => item.uri === url && !item.excluded);
                     if (asset) {
                         const count = file.pathname.split(/[\\/]/).length;
                         source = source.replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
@@ -1629,7 +1620,7 @@ class FileManager implements IFileManager {
         return undefined;
     }
     writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
-        const png = Image.getCompress(file.compress);
+        const png = Image.findCompress(file.compress);
         if (png && Compress.withinSizeRange(filepath, png.condition)) {
             try {
                 tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
@@ -1644,7 +1635,7 @@ class FileManager implements IFileManager {
             }
             catch (err) {
                 this.compressFile(assets, file, filepath, finalize);
-                Node.writeError(filepath, err);
+                Node.writeFail(filepath, err);
             }
         }
         else {
@@ -1695,86 +1686,99 @@ class FileManager implements IFileManager {
             return false;
         };
         const processQueue = (file: RequestAsset, filepath: string, bundleMain?: RequestAsset) => {
-            const bundleIndex = file.bundleIndex;
-            if (bundleIndex !== undefined) {
-                if (bundleIndex === 0 && Compress.getFileSize(filepath) > 0) {
-                    const content = this.appendContent(file, fs.readFileSync(filepath).toString('utf8'), true);
-                    if (content) {
-                        try {
-                            fs.writeFileSync(filepath, content, 'utf8');
+            if (file.bundleIndex !== undefined) {
+                if (file.bundleIndex === 0) {
+                    if (Compress.getFileSize(filepath) > 0 && !file.excluded) {
+                        const content = this.appendContent(file, fs.readFileSync(filepath).toString('utf8'), true);
+                        if (content) {
+                            try {
+                                fs.writeFileSync(filepath, content, 'utf8');
+                            }
+                            catch (err) {
+                                Node.writeFail(filepath, err);
+                            }
                         }
-                        catch (err) {
-                            Node.writeError(filepath, err);
+                    }
+                    else {
+                        file.excluded = true;
+                        const content = this.getTrailingContent(file);
+                        if (content) {
+                            try {
+                                fs.writeFileSync(filepath, content, 'utf8');
+                                file.excluded = false;
+                            }
+                            catch (err) {
+                                Node.writeFail(filepath, err);
+                            }
                         }
                     }
                 }
                 const queue = appending[filepath]?.shift();
                 if (queue) {
                     const uri = queue.uri;
-                    if (queue.content) {
+                    const verifyBundle = (value: string) => {
                         if (Compress.getFileSize(filepath) > 0) {
-                            this.appendContent(queue, queue.content);
+                            this.appendContent(queue, value);
                         }
                         else {
-                            const content = this.appendContent(queue, queue.content, true);
+                            const content = this.appendContent(queue, value, true);
                             if (content) {
                                 try {
                                     fs.writeFileSync(filepath, content, 'utf8');
+                                    queue.bundleIndex = Infinity;
                                     bundleMain = queue;
                                 }
                                 catch (err) {
-                                    Node.writeError(filepath, err);
+                                    queue.excluded = true;
+                                    Node.writeFail(filepath, err);
                                 }
                             }
                         }
+                    };
+                    if (queue.content) {
+                        verifyBundle(queue.content);
                     }
                     else if (uri) {
                         request(uri, (err, response) => {
                             if (err) {
                                 notFound[uri] = true;
-                                Node.writeError(uri, err);
+                                queue.excluded = true;
+                                Node.writeFail(uri, err);
                             }
                             else {
                                 const statusCode = response.statusCode;
                                 if (statusCode >= 300) {
                                     notFound[uri] = true;
-                                    Node.writeError(uri, statusCode + ' ' + response.statusMessage);
+                                    queue.excluded = true;
+                                    Node.writeFail(uri, statusCode + ' ' + response.statusMessage);
                                 }
                                 else {
-                                    if (Compress.getFileSize(filepath) > 0) {
-                                        this.appendContent(queue, response.body);
-                                    }
-                                    else {
-                                        const content = this.appendContent(queue, response.body, true);
-                                        if (content) {
-                                            try {
-                                                fs.writeFileSync(filepath, content, 'utf8');
-                                                bundleMain = queue;
-                                            }
-                                            catch (error) {
-                                                Node.writeError(filepath, error);
-                                            }
-                                        }
-                                    }
+                                    verifyBundle(response.body);
                                 }
                             }
                         });
                     }
-                    processQueue(queue, filepath, bundleMain || file);
+                    processQueue(queue, filepath, !bundleMain || bundleMain.excluded ? !file.excluded && file || queue : bundleMain);
                 }
                 else if (Compress.getFileSize(filepath) > 0) {
                     this.compressFile(assets, bundleMain || file, filepath, finalize);
                     finalize(filepath);
                 }
                 else {
+                    (bundleMain || file).excluded = true;
                     finalize('');
                 }
             }
             else if (Array.isArray(processing[filepath])) {
                 completed.push(filepath);
                 for (const item of processing[filepath]) {
-                    this.writeBuffer(assets, item, filepath, finalize);
-                    finalize(filepath);
+                    if (item.excluded) {
+                        finalize('');
+                    }
+                    else {
+                        this.writeBuffer(assets, item, filepath, finalize);
+                        finalize(filepath);
+                    }
                 }
                 delete processing[filepath];
             }
@@ -1802,13 +1806,13 @@ class FileManager implements IFileManager {
                 catch {
                 }
             }
-            Node.writeError(uri, message);
+            file.excluded = true;
+            Node.writeFail(uri, message);
             delete processing[filepath];
         };
-        for (let i = 0; i < assets.length; ++i) {
-            const file = assets[i];
+        for (const file of assets) {
             if (exclusions && !this.validate(file, exclusions)) {
-                assets.splice(i--, 1);
+                file.excluded = true;
                 continue;
             }
             const { pathname, filepath } = this.getFileOutput(file);
@@ -1818,11 +1822,17 @@ class FileManager implements IFileManager {
                         fs.emptyDirSync(pathname);
                     }
                     catch (err) {
-                        Node.writeError(pathname, err);
+                        Node.writeFail(pathname, err);
                     }
                 }
                 if (!fs.existsSync(pathname)) {
-                    fs.mkdirpSync(pathname);
+                    try {
+                        fs.mkdirpSync(pathname);
+                    }
+                    catch (err) {
+                        file.excluded = true;
+                        Node.writeFail(pathname, err);
+                    }
                 }
                 emptyDir.add(pathname);
             }
@@ -1836,6 +1846,9 @@ class FileManager implements IFileManager {
                     file.content,
                     'utf8',
                     err => {
+                        if (err) {
+                            file.excluded = true;
+                        }
                         if (!err || appending[filepath]?.length) {
                             processQueue(file, filepath);
                         }
@@ -1857,6 +1870,7 @@ class FileManager implements IFileManager {
                             finalize(filepath);
                         }
                         else {
+                            file.excluded = true;
                             finalize('');
                         }
                     }
@@ -1865,6 +1879,7 @@ class FileManager implements IFileManager {
             else {
                 const uri = file.uri;
                 if (!uri || notFound[uri]) {
+                    file.excluded = true;
                     continue;
                 }
                 try {
@@ -1896,6 +1911,9 @@ class FileManager implements IFileManager {
                                 from,
                                 to,
                                 err => {
+                                    if (err) {
+                                        file.excluded = true;
+                                    }
                                     if (!err || appending[filepath]?.length) {
                                         processQueue(file, filepath);
                                     }
@@ -1918,6 +1936,9 @@ class FileManager implements IFileManager {
                                 continue;
                             }
                             copyUri(uri, filepath);
+                        }
+                        else {
+                            file.excluded = true;
                         }
                     }
                 }
@@ -1955,7 +1976,7 @@ class FileManager implements IFileManager {
                 this.files.delete(value.substring(length + 1));
             }
             catch (err) {
-                Node.writeError(value, err);
+                Node.writeFail(value, err);
             }
         }
         for (const [filepath, content] of this.contentToAppend.entries()) {
@@ -1973,10 +1994,13 @@ class FileManager implements IFileManager {
             }
         }
         return promisify<void>(() => {
-            const replaced = this.assets.filter(file => file.originalName);
+            const replaced = this.assets.filter(item => item.originalName);
             if (replaced.length || release) {
-                for (const asset of this.assets) {
-                    const { filepath, mimeType } = asset;
+                for (const item of this.assets) {
+                    if (item.excluded) {
+                        continue;
+                    }
+                    const { filepath, mimeType } = item;
                     if (filepath) {
                         switch (mimeType) {
                             case '@text/html':
@@ -1986,8 +2010,8 @@ class FileManager implements IFileManager {
                                 fs.readFile(filepath, (err, data) => {
                                     if (!err) {
                                         let html = data.toString('utf-8');
-                                        for (const item of replaced) {
-                                            html = html.replace(new RegExp(Express.getFullUri(item, item.originalName).replace(/[\\/]/g, '[\\\\/]'), 'g'), Express.getFullUri(item));
+                                        for (const asset of replaced) {
+                                            html = html.replace(new RegExp(Express.getFullUri(asset, asset.originalName).replace(/[\\/]/g, '[\\\\/]'), 'g'), Express.getFullUri(asset));
                                         }
                                         if (release) {
                                             html = html.replace(/(\.\.\/)*__serverroot__/g, '');
@@ -2113,7 +2137,7 @@ app.post('/api/assets/archive', (req, res) => {
                     .on('error', err => {
                         response.success = false;
                         res.json(response);
-                        Node.writeError(gz, err);
+                        Node.writeFail(gz, err);
                     });
             }
             else {
@@ -2166,7 +2190,7 @@ app.post('/api/assets/archive', (req, res) => {
                         resumeThread(unzip_to);
                     })
                     .catch(err => {
-                        Node.writeError(zippath, err);
+                        Node.writeFail(zippath, err);
                         resumeThread();
                     });
             };
@@ -2178,12 +2202,12 @@ app.post('/api/assets/archive', (req, res) => {
                         .on('response', response => {
                             const statusCode = response.statusCode;
                             if (statusCode >= 300) {
-                                Node.writeError(zippath, new Error(statusCode + ' ' + response.statusMessage));
+                                Node.writeFail(zippath, new Error(statusCode + ' ' + response.statusMessage));
                                 resumeThread();
                             }
                         })
                         .on('error', err => {
-                            Node.writeError(zippath, err);
+                            Node.writeFail(zippath, err);
                             resumeThread();
                         })
                         .pipe(stream);
@@ -2204,15 +2228,15 @@ app.post('/api/assets/archive', (req, res) => {
                     return;
                 }
                 else {
-                    Node.writeError(append_to, new Error('Archive not found.'));
+                    Node.writeFail(append_to, new Error('Archive not found.'));
                 }
             }
             catch (err) {
-                Node.writeError(zippath, <Error> err);
+                Node.writeFail(zippath, <Error> err);
             }
         }
         else {
-            Node.writeError(append_to, new Error('Invalid archive format.'));
+            Node.writeFail(append_to, new Error('Invalid archive format.'));
         }
     }
     resumeThread();
@@ -2223,7 +2247,7 @@ app.get('/api/browser/download', (req, res) => {
     if (filepath) {
         res.sendFile(filepath, err => {
             if (err) {
-                Node.writeError(filepath, err);
+                Node.writeFail(filepath, err);
             }
         });
     }
