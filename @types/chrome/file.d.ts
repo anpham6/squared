@@ -28,6 +28,7 @@ export interface SaveAsOptions {
 export interface FormattableContent {
     value: string;
     format?: string;
+    preserve?: boolean;
 }
 
 export interface UriOptions {

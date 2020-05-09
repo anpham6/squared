@@ -1,4 +1,4 @@
-/* chrome-framework 1.8.0
+/* chrome-framework 1.8.2
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -260,6 +260,7 @@
                     safeNestedArray(item, "trailingContent").push({
                         value: content,
                         format,
+                        preserve,
                     });
                     return true;
                 }
@@ -508,6 +509,7 @@
                 if (file !== "exclude") {
                     let format;
                     let outerHTML;
+                    let preserve;
                     if (!isString(file) && saveAs) {
                         const { pathname, filename } = saveAs;
                         if (filename) {
@@ -527,7 +529,7 @@
                         if (!outerHTML) {
                             const command = parseFileAs("exportAs", file);
                             if (command) {
-                                [file, format] = command;
+                                [file, format, preserve] = command;
                             }
                         }
                         if (file) {
@@ -535,7 +537,8 @@
                                 result,
                                 element,
                                 file,
-                                format
+                                format,
+                                preserve
                             );
                         }
                     }

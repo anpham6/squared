@@ -54,13 +54,12 @@ declare namespace Node {
 
     interface IChrome {
         readonly external: Undef<External>;
-        readonly prettier_plugins: {}[];
-        findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}];
+        findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, StandardMap];
+        getPrettierParser(name: string): NodeModule[];
         minifyHtml(format: string, value: string): Undef<string>;
         minifyCss(format: string, value: string): Undef<string>;
         minifyJs(format: string, value: string): Undef<string>;
         formatContent(value: string, mimeType: string, format: string): Undef<string>;
-        getTrailingContent(file: RequestAsset, mimeType?: string, format?: string): Undef<string>;
         removeCss(source: string, styles: string[]): Undef<string>;
         replacePath(source: string, segment: string, value: string, base64?: boolean): Undef<string>;
     }
@@ -81,10 +80,11 @@ declare namespace Node {
         validate(file: RequestAsset, exclusions: Exclusions): boolean;
         getFileOutput(file: RequestAsset): { pathname: string; filepath: string };
         getRelativeUrl(file: RequestAsset, url: string): Undef<string>;
-        appendContent(file: RequestAsset, content: string): void;
+        getTrailingContent(file: RequestAsset): Undef<string>;
+        appendContent(file: RequestAsset, content: string, outputOnly?: boolean): Undef<string>;
         compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
         transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
-        transformCss(file: RequestAsset, filepath: Undef<string>, content?: string): Undef<string>;
+        transformCss(file: RequestAsset, content: string): Undef<string>;
         writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
         processAssetsSync(empty: boolean, finalize: (filepath?: string) => void): void;
         finalizeAssetsAsync(release: boolean): Promise<void>;

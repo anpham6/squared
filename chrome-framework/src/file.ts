@@ -113,7 +113,7 @@ function createBundleAsset(bundles: RequestAsset[], element: HTMLElement, saveTo
         const [moveTo, pathname, filename] = getFilePath(saveTo);
         const index = iterateReverseArray(bundles, item => {
             if ((item.moveTo === moveTo || !item.moveTo && !moveTo) && item.pathname === pathname && item.filename === filename) {
-                safeNestedArray(<StandardMap> item, 'trailingContent').push({ value: content, format });
+                safeNestedArray(<StandardMap> item, 'trailingContent').push({ value: content, format, preserve });
                 return true;
             }
             return;
@@ -311,6 +311,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             if (file !== 'exclude') {
                 let format: Undef<string>;
                 let outerHTML: Undef<string>;
+                let preserve: Undef<boolean>;
                 if (!isString(file) && saveAs) {
                     const { pathname, filename } = saveAs;
                     if (filename) {
@@ -327,11 +328,11 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     if (!outerHTML) {
                         const command = parseFileAs('exportAs', file);
                         if (command) {
-                            [file, format] = command;
+                            [file, format, preserve] = command;
                         }
                     }
                     if (file) {
-                        data = createBundleAsset(result, element, file, format);
+                        data = createBundleAsset(result, element, file, format, preserve);
                     }
                 }
                 if (this.validFile(data)) {

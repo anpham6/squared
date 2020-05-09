@@ -14,11 +14,6 @@ import uuid = require('uuid');
 import archiver = require('archiver');
 import decompress = require('decompress');
 import jimp = require('jimp');
-import html_minifier = require('html-minifier');
-import clean_css = require('clean-css');
-import js_beautify = require('js-beautify');
-import prettier = require('prettier');
-import terser = require('terser');
 import tinify = require('tinify');
 import chalk = require('chalk');
 
@@ -428,7 +423,12 @@ let Image: IImage;
             return o;
         }
         getFileSize(filepath: string) {
-            return fs.statSync(filepath).size;
+            try {
+                return fs.statSync(filepath).size;
+            }
+            catch {
+            }
+            return 0;
         }
         getFormat(compress: Undef<CompressFormat[]>, format: string) {
             return compress?.find(item => item.format === format);
@@ -463,12 +463,11 @@ let Image: IImage;
 
     Chrome = new class implements IChrome {
         constructor(
-            public external: Undef<External>,
-            public prettier_plugins: {}[])
+            public external: Undef<External>)
         {
         }
 
-        findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, {}] {
+        findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, StandardMap] {
             for (const name in data) {
                 const plugin = data[name];
                 for (const custom in plugin) {
@@ -483,6 +482,37 @@ let Image: IImage;
             }
             return ['', {}];
         }
+        getPrettierParser(name: string): NodeModule[] {
+            switch (name.toLowerCase()) {
+                case 'babel':
+                case 'babel-flow':
+                case 'babel-ts':
+                case 'json':
+                case 'json-5':
+                case 'json-stringify':
+                    return [require('prettier/parser-babel')];
+                case 'css':
+                case 'scss':
+                case 'less':
+                    return [require('prettier/parser-postcss')];
+                case 'flow':
+                    return [require('prettier/parser-flow')];
+                case 'html':
+                case 'angular':
+                case 'lwc':
+                case 'vue':
+                    return [require('prettier/parser-html')];
+                case 'graphql':
+                    return [require('prettier/parser-graphql')];
+                case 'markdown':
+                    return [require('prettier/parser-markdown')];
+                case 'typescript':
+                    return [require('prettier/parser-typescript')];
+                case 'yaml':
+                    return [require('prettier/parser-yaml')];
+            }
+            return [];
+        }
         minifyHtml(format: string, value: string) {
             const html = this.external?.html;
             if (html) {
@@ -496,14 +526,14 @@ let Image: IImage;
                         switch (name) {
                             case 'beautify':
                                 module = 'prettier';
-                                options = <prettier.Options> {
+                                options = {
                                     parser: 'html',
                                     tabWidth: 4
                                 };
                                 break;
                             case 'minify':
                                 module = 'html_minifier';
-                                options = <html_minifier.Options> {
+                                options = {
                                     collapseWhitespace: true,
                                     collapseBooleanAttributes: true,
                                     removeEmptyAttributes: true,
@@ -518,8 +548,8 @@ let Image: IImage;
                     try {
                         switch (module) {
                             case 'prettier': {
-                                (<prettier.Options> options).plugins = this.prettier_plugins;
-                                const result = prettier.format(value, options);
+                                options.plugins = this.getPrettierParser(options.parser);
+                                const result = require('prettier').format(value, options);
                                 if (result) {
                                     if (j === length - 1) {
                                         return result;
@@ -530,7 +560,7 @@ let Image: IImage;
                                 break;
                             }
                             case 'html_minifier': {
-                                const result = html_minifier.minify(value, options);
+                                const result = require('html-minifier').minify(value, options);
                                 if (result) {
                                     if (j === length - 1) {
                                         return result;
@@ -541,7 +571,7 @@ let Image: IImage;
                                 break;
                             }
                             case 'js_beautify': {
-                                const result = js_beautify.html_beautify(value, options);
+                                const result = require('js-beautify').html_beautify(value, options);
                                 if (result) {
                                     if (j === length - 1) {
                                         return result;
@@ -554,7 +584,7 @@ let Image: IImage;
                         }
                     }
                     catch (err) {
-                        Node.writeError(`External: ${module}`, err);
+                        Node.writeError(`External: ${module} [npm run install-chrome]`, err);
                     }
                 }
                 if (valid) {
@@ -576,14 +606,14 @@ let Image: IImage;
                         switch (name) {
                             case 'beautify':
                                 module = 'prettier';
-                                options = <prettier.Options> {
+                                options = {
                                     parser: 'css',
                                     tabWidth: 4
                                 };
                                 break;
                             case 'minify':
                                 module = 'clean_css';
-                                options = <clean_css.OptionsOutput> {
+                                options = {
                                     level: 1,
                                     inline: ['none']
                                 };
@@ -593,8 +623,8 @@ let Image: IImage;
                     try {
                         switch (module) {
                             case 'prettier': {
-                                (<prettier.Options> options).plugins = this.prettier_plugins;
-                                const result = prettier.format(value, options);
+                                options.plugins = this.getPrettierParser(options.parser);
+                                const result = require('prettier').format(value, options);
                                 if (result) {
                                     if (j === length - 1) {
                                         return result;
@@ -605,6 +635,7 @@ let Image: IImage;
                                 break;
                             }
                             case 'clean_css': {
+                                const clean_css = require('clean-css');
                                 const result = new clean_css(options).minify(value).styles;
                                 if (result) {
                                     if (j === length - 1) {
@@ -616,7 +647,7 @@ let Image: IImage;
                                 break;
                             }
                             case 'js_beautify': {
-                                const result = js_beautify.css_beautify(value, options);
+                                const result = require('js-beautify').css_beautify(value, options);
                                 if (result) {
                                     if (j === length - 1) {
                                         return result;
@@ -629,7 +660,7 @@ let Image: IImage;
                         }
                     }
                     catch (err) {
-                        Node.writeError(`External: ${module}`, err);
+                        Node.writeError(`External: ${module} [npm run install-chrome]`, err);
                     }
                 }
                 if (valid) {
@@ -651,14 +682,14 @@ let Image: IImage;
                         switch (name) {
                             case 'beautify':
                                 module = 'prettier';
-                                options = <prettier.Options> {
+                                options = {
                                     parser: 'babel',
                                     tabWidth: 4
                                 };
                                 break;
                             case 'minify':
                                 module = 'terser';
-                                options = <terser.MinifyOptions> {
+                                options = {
                                     toplevel: true,
                                     keep_classnames: true
                                 };
@@ -668,8 +699,8 @@ let Image: IImage;
                     try {
                         switch (module) {
                             case 'prettier': {
-                                (<prettier.Options> options).plugins = this.prettier_plugins;
-                                const result = prettier.format(value, options);
+                                options.plugins = this.getPrettierParser(options.parser);
+                                const result = require('prettier').format(value, options);
                                 if (result) {
                                     if (j === length - 1) {
                                         return result;
@@ -680,7 +711,7 @@ let Image: IImage;
                                 break;
                             }
                             case 'terser': {
-                                const result = terser.minify(value, options).code;
+                                const result = require('terser').minify(value, options).code;
                                 if (result) {
                                     if (j === length - 1) {
                                         return result;
@@ -691,7 +722,7 @@ let Image: IImage;
                                 break;
                             }
                             case 'js_beautify': {
-                                const result = js_beautify.js_beautify(value, options);
+                                const result = require('js-beautify').js_beautify(value, options);
                                 if (result) {
                                     if (j === length - 1) {
                                         return result;
@@ -704,7 +735,7 @@ let Image: IImage;
                         }
                     }
                     catch (err) {
-                        Node.writeError(`External: ${module}`, err);
+                        Node.writeError(`External: ${module} [npm run install-chrome]`, err);
                     }
                 }
                 if (valid) {
@@ -712,27 +743,6 @@ let Image: IImage;
                 }
             }
             return undefined;
-        }
-        getTrailingContent(file: RequestAsset, mimeType?: string, format?: string) {
-            let result = '';
-            const trailingContent = file.trailingContent;
-            if (trailingContent) {
-                if (!mimeType) {
-                    mimeType = file.mimeType;
-                }
-                for (const item of trailingContent) {
-                    const formatter = item.format || format || file.format;
-                    if (mimeType && formatter) {
-                        const content = this.formatContent(item.value, mimeType, formatter);
-                        if (content) {
-                            result += '\n' + content;
-                            continue;
-                        }
-                    }
-                    result += '\n' + item.value;
-                }
-            }
-            return result || undefined;
         }
         formatContent(value: string, mimeType: string, format: string) {
             if (mimeType.endsWith('text/html') || mimeType.endsWith('application/xhtml+xml')) {
@@ -809,7 +819,7 @@ let Image: IImage;
             return result;
         }
     }
-    (EXTERNAL, [require('prettier/parser-html'), require('prettier/parser-postcss'), require('prettier/parser-babel'), require('prettier/parser-typescript')]);
+    (EXTERNAL);
 
     Image = new class implements IImage {
         constructor(public tinify_api_key: boolean) {}
@@ -1008,17 +1018,46 @@ class FileManager implements IFileManager {
         }
         return undefined;
     }
-    appendContent(file: RequestAsset, content: string) {
+    appendContent(file: RequestAsset, content: string, outputOnly = false) {
         const filepath = file.filepath || this.getFileOutput(file).filepath;
-        if (filepath && file.bundleIndex) {
-            const value = this.contentToAppend.get(filepath) || [];
-            const trailing = Chrome.getTrailingContent(file);
+        if (filepath && file.bundleIndex !== undefined) {
+            const { mimeType, format } = file;
+            if (mimeType) {
+                if (mimeType.endsWith('text/css')) {
+                    const unusedStyles = this.dataMap?.unusedStyles;
+                    if (unusedStyles && !file.preserve) {
+                        const result = Chrome.removeCss(content, unusedStyles);
+                        if (result) {
+                            content = result;
+                        }
+                    }
+                    if (mimeType.charAt(0) === '@') {
+                        const result = this.transformCss(file, content);
+                        if (result) {
+                            content = result;
+                        }
+                    }
+                }
+                if (format) {
+                    const result = Chrome.formatContent(content, mimeType, format);
+                    if (result) {
+                        content = result;
+                    }
+                }
+                file.mimeType = '&' + mimeType.replace('@', '');
+            }
+            const trailing = this.getTrailingContent(file);
             if (trailing) {
                 content += trailing;
             }
-            value.splice(file.bundleIndex - 1, 0, content);
-            this.contentToAppend.set(filepath, value);
+            if (outputOnly || file.bundleIndex === 0) {
+                return content;
+            }
+            const items = this.contentToAppend.get(filepath) || [];
+            items.splice(file.bundleIndex - 1, 0, content);
+            this.contentToAppend.set(filepath, items);
         }
+        return undefined;
     }
     compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
         const compress = file.compress;
@@ -1115,7 +1154,7 @@ class FileManager implements IFileManager {
     }
     transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
         let mimeType = file.mimeType as string;
-        if (!mimeType) {
+        if (!mimeType || mimeType.charAt(0) === '&') {
             return;
         }
         const format = file.format;
@@ -1251,36 +1290,6 @@ class FileManager implements IFileManager {
                 fs.writeFileSync(filepath, format && Chrome.minifyHtml(format, source) || source);
                 break;
             }
-            case '@text/css': {
-                const output = this.transformCss(file, filepath) || fs.readFileSync(filepath).toString('utf8');
-                let source: Undef<string>;
-                if (format) {
-                    source = Chrome.minifyCss(format, output);
-                }
-                const trailing = Chrome.getTrailingContent(file, mimeType, format);
-                if (trailing) {
-                    const result = this.transformCss(file, undefined, trailing);
-                    if (result) {
-                        if (source) {
-                            source += result;
-                        }
-                        else {
-                            source = result;
-                        }
-                    }
-                    else {
-                        if (source) {
-                            source += trailing;
-                        }
-                        else {
-                            source = trailing;
-                        }
-                    }
-                }
-                const unusedStyles = this.dataMap?.unusedStyles;
-                fs.writeFileSync(filepath, unusedStyles && !file.preserve && Chrome.removeCss(source || output, unusedStyles) || source || output);
-                break;
-            }
             case 'text/html':
             case 'application/xhtml+xml': {
                 if (format) {
@@ -1292,21 +1301,93 @@ class FileManager implements IFileManager {
                 break;
             }
             case 'text/css':
-            case 'text/javascript': {
-                const trailing = Chrome.getTrailingContent(file, mimeType, format);
-                if (format) {
-                    let output = Chrome[mimeType === 'text/css' ? 'minifyCss' : 'minifyJs'](format, fs.readFileSync(filepath).toString('utf8'));
-                    if (output) {
-                        if (trailing) {
-                            output += trailing;
+            case '@text/css': {
+                const unusedStyles = this.dataMap?.unusedStyles;
+                const removeStyles = !!unusedStyles && file.preserve !== true;
+                const transforming = mimeType.charAt(0) === '@';
+                const trailing = this.getTrailingContent(file);
+                if (!removeStyles && !transforming && !format) {
+                    if (trailing) {
+                        try {
+                            fs.appendFileSync(filepath, trailing);
                         }
-                        fs.writeFileSync(filepath, output);
-                        break;
+                        catch (err) {
+                            Node.writeError(filepath, err);
+                        }
+                    }
+                    break;
+                }
+                const content = fs.readFileSync(filepath).toString('utf8');
+                let source: Undef<string>;
+                if (removeStyles) {
+                    const result = Chrome.removeCss(content, unusedStyles!);
+                    if (result) {
+                        source = result;
+                    }
+                }
+                if (transforming) {
+                    const result = this.transformCss(file, source || content);
+                    if (result) {
+                        source = result;
+                    }
+                }
+                if (format) {
+                    const result = Chrome.minifyCss(format, source || content);
+                    if (result) {
+                        source = result;
                     }
                 }
                 if (trailing) {
+                    if (source) {
+                        source += trailing;
+                    }
+                    else {
+                        source = content + trailing;
+                    }
+                }
+                if (source) {
                     try {
-                        fs.appendFileSync(filepath, trailing);
+                        fs.writeFileSync(filepath, source);
+                    }
+                    catch (err) {
+                        Node.writeError(filepath, err);
+                    }
+                }
+                break;
+            }
+            case 'text/javascript':
+            case '@text/javascript': {
+                const trailing = this.getTrailingContent(file);
+                if (!format) {
+                    if (trailing) {
+                        try {
+                            fs.appendFileSync(filepath, trailing);
+                        }
+                        catch (err) {
+                            Node.writeError(filepath, err);
+                        }
+                    }
+                    break;
+                }
+                const content = fs.readFileSync(filepath).toString('utf8');
+                let source: Undef<string>;
+                if (format) {
+                    const result = Chrome.minifyJs(format, content);
+                    if (result) {
+                        source = result;
+                    }
+                }
+                if (trailing) {
+                    if (source) {
+                        source += trailing;
+                    }
+                    else {
+                        source = content + trailing;
+                    }
+                }
+                if (source) {
+                    try {
+                        fs.writeFileSync(filepath, source);
                     }
                     catch (err) {
                         Node.writeError(filepath, err);
@@ -1460,76 +1541,90 @@ class FileManager implements IFileManager {
                 break;
         }
     }
-    transformCss(file: RequestAsset, filepath: Undef<string>, content?: string) {
+    getTrailingContent(file: RequestAsset) {
+        let output = '';
+        const trailingContent = file.trailingContent;
+        if (trailingContent) {
+            const unusedStyles = this.dataMap?.unusedStyles;
+            const mimeType = file.mimeType;
+            for (const item of trailingContent) {
+                let value = item.value;
+                if (mimeType?.endsWith('text/css')) {
+                    if (unusedStyles && !item.preserve) {
+                        const result = Chrome.removeCss(value, unusedStyles);
+                        if (result) {
+                            value = result;
+                        }
+                    }
+                    if (mimeType.charAt(0) === '@') {
+                        const result = this.transformCss(file, value);
+                        if (result) {
+                            value = result;
+                        }
+                    }
+                }
+                if (mimeType && item.format) {
+                    const result = Chrome.formatContent(value, mimeType, item.format);
+                    if (result) {
+                        output += '\n' + result;
+                        continue;
+                    }
+                }
+                output += '\n' + value;
+            }
+        }
+        return output || undefined;
+    }
+    transformCss(file: RequestAsset, content: string) {
         const baseUrl = file.uri!;
-        const sameOrigin = this.requestMain !== undefined && Express.fromSameOrigin(this.requestMain.uri!, baseUrl);
-        const unusedStyles = this.dataMap?.unusedStyles;
-        if (sameOrigin || unusedStyles) {
-            if (filepath) {
-                content = fs.readFileSync(filepath).toString('utf8');
-            }
-            else if (!content) {
-                return undefined;
-            }
-            if (unusedStyles && !file.preserve) {
-                const result = Chrome.removeCss(content, unusedStyles);
-                if (result) {
-                    content = result;
-                }
-            }
-            if (sameOrigin) {
-                const assets = this.assets;
-                for (const item of assets) {
-                    if (item.base64 && item.uri) {
-                        const url = this.getRelativeUrl(file, item.uri);
-                        if (url) {
-                            const replacement = Chrome.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
-                            if (replacement) {
-                                content = replacement;
-                            }
+        if (this.requestMain && Express.fromSameOrigin(this.requestMain.uri!, baseUrl)) {
+            const assets = this.assets;
+            for (const item of assets) {
+                if (item.base64 && item.uri) {
+                    const url = this.getRelativeUrl(file, item.uri);
+                    if (url) {
+                        const replacement = Chrome.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
+                        if (replacement) {
+                            content = replacement;
                         }
                     }
                 }
-                let source: Undef<string>;
-                const pattern = /[uU][rR][lL]\(\s*(["'])?\s*((?:[^"')]|\\"|\\')+)\s*\1?\s*\)/g;
-                let match: Null<RegExpExecArray>;
-                while ((match = pattern.exec(content)) !== null) {
-                    if (source === undefined) {
-                        source = content;
+            }
+            let source: Undef<string>;
+            const pattern = /[uU][rR][lL]\(\s*(["'])?\s*((?:[^"')]|\\"|\\')+)\s*\1?\s*\)/g;
+            let match: Null<RegExpExecArray>;
+            while ((match = pattern.exec(content)) !== null) {
+                if (source === undefined) {
+                    source = content;
+                }
+                const url = match[2];
+                if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
+                    let location = this.getRelativeUrl(file, url);
+                    if (location) {
+                        source = source.replace(match[0], `url(${location})`);
                     }
-                    const url = match[2];
-                    if (!Node.isFileURI(url) || Express.fromSameOrigin(baseUrl, url)) {
-                        let location = this.getRelativeUrl(file, url);
+                    else {
+                        location = Express.resolvePath(match[2], this.requestMain.uri!);
                         if (location) {
-                            source = source.replace(match[0], `url(${location})`);
-                        }
-                        else {
-                            location = Express.resolvePath(match[2], this.requestMain!.uri!);
-                            if (location) {
-                                const asset = assets.find(item => item.uri === location);
-                                if (asset) {
-                                    location = this.getRelativeUrl(file, location);
-                                    if (location) {
-                                        source = source.replace(match[0], `url(${location})`);
-                                    }
+                            const asset = assets.find(item => item.uri === location);
+                            if (asset) {
+                                location = this.getRelativeUrl(file, location);
+                                if (location) {
+                                    source = source.replace(match[0], `url(${location})`);
                                 }
                             }
                         }
                     }
-                    else {
-                        const asset = assets.find(item => item.uri === url);
-                        if (asset) {
-                            const count = file.pathname.split(/[\\/]/).length;
-                            source = source.replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
-                        }
+                }
+                else {
+                    const asset = assets.find(item => item.uri === url);
+                    if (asset) {
+                        const count = file.pathname.split(/[\\/]/).length;
+                        source = source.replace(match[0], `url(${(count > 0 ? '../'.repeat(count) : '') + Express.getFullUri(asset)})`);
                     }
                 }
-                if (file.format) {
-                    source = Chrome.minifyCss(file.format, source || content) || source || content;
-                }
-                file.mimeType = '&text/css';
-                return source || content;
             }
+            return source || content;
         }
         return undefined;
     }
@@ -1564,111 +1659,139 @@ class FileManager implements IFileManager {
         const completed: string[] = [];
         const assets = this.assets;
         const exclusions = assets[0].exclusions;
-        const unusedStyles = this.dataMap?.unusedStyles;
-        const checkQueue = (file: RequestAsset, filepath: string) => {
-            if (file.bundleIndex !== undefined) {
-                const queue = appending[filepath];
-                if (queue) {
-                    queue.push(file);
-                    return true;
-                }
-                else {
+        const checkQueue = (file: RequestAsset, filepath: string, content = false) => {
+            const bundleIndex = file.bundleIndex;
+            if (bundleIndex !== undefined) {
+                if (appending[filepath] === undefined) {
                     appending[filepath] = [];
+                }
+                if (bundleIndex === 0) {
                     return false;
                 }
+                else {
+                    appending[filepath].push(file);
+                    return true;
+                }
             }
-            else if (completed.includes(filepath)) {
-                this.writeBuffer(assets, file, filepath, finalize);
-                finalize('');
-                return true;
-            }
-            else {
-                const queue = processing[filepath];
-                if (queue) {
-                    ++this.delayed;
-                    queue.push(file);
+            else if (!content) {
+                if (completed.includes(filepath)) {
+                    this.writeBuffer(assets, file, filepath, finalize);
+                    finalize('');
                     return true;
                 }
                 else {
-                    processing[filepath] = [file];
-                    return false;
+                    const queue = processing[filepath];
+                    if (queue) {
+                        ++this.delayed;
+                        queue.push(file);
+                        return true;
+                    }
+                    else {
+                        processing[filepath] = [file];
+                        return false;
+                    }
                 }
             }
+            return false;
         };
         const processQueue = (file: RequestAsset, filepath: string, bundleMain?: RequestAsset) => {
             const bundleIndex = file.bundleIndex;
             if (bundleIndex !== undefined) {
+                if (bundleIndex === 0 && Compress.getFileSize(filepath) > 0) {
+                    const content = this.appendContent(file, fs.readFileSync(filepath).toString('utf8'), true);
+                    if (content) {
+                        try {
+                            fs.writeFileSync(filepath, content, 'utf8');
+                        }
+                        catch (err) {
+                            Node.writeError(filepath, err);
+                        }
+                    }
+                }
                 const queue = appending[filepath]?.shift();
                 if (queue) {
                     const uri = queue.uri;
-                    if (!uri) {
-                        processQueue(queue, filepath, bundleMain || file);
-                        return;
-                    }
-                    request(uri, (err, response) => {
-                        if (err) {
-                            notFound[uri] = true;
-                            Node.writeError(uri, err);
+                    if (queue.content) {
+                        if (Compress.getFileSize(filepath) > 0) {
+                            this.appendContent(queue, queue.content);
                         }
                         else {
-                            const statusCode = response.statusCode;
-                            if (statusCode >= 300) {
-                                notFound[uri] = true;
-                                Node.writeError(uri, statusCode + ' ' + response.statusMessage);
-                            }
-                            else {
-                                const { mimeType, format } = queue;
-                                let content = response.body as string;
-                                if (mimeType && format) {
-                                    const source = Chrome.formatContent(content, mimeType, format);
-                                    if (source) {
-                                        content = source;
-                                    }
+                            const content = this.appendContent(queue, queue.content, true);
+                            if (content) {
+                                try {
+                                    fs.writeFileSync(filepath, content, 'utf8');
+                                    bundleMain = queue;
                                 }
-                                if (mimeType === '@text/css') {
-                                    const trailing = Chrome.getTrailingContent(queue);
-                                    if (trailing) {
-                                        content += trailing;
-                                    }
-                                    if (unusedStyles && !queue.preserve) {
-                                        const source = Chrome.removeCss(content, unusedStyles);
-                                        if (source) {
-                                            content = source;
-                                        }
-                                    }
-                                    const result = this.transformCss(queue, undefined, content);
-                                    if (result) {
-                                        content = result;
-                                    }
-                                }
-                                if (queue.bundleIndex) {
-                                    this.appendContent(queue, content);
-                                }
-                                else {
-                                    try {
-                                        fs.writeFileSync(filepath, content);
-                                    }
-                                    catch (error) {
-                                        Node.writeError(filepath, error);
-                                    }
+                                catch (err) {
+                                    Node.writeError(filepath, err);
                                 }
                             }
                         }
-                        processQueue(queue, filepath, bundleMain || file);
-                    });
-                    return;
+                    }
+                    else if (uri) {
+                        request(uri, (err, response) => {
+                            if (err) {
+                                notFound[uri] = true;
+                                Node.writeError(uri, err);
+                            }
+                            else {
+                                const statusCode = response.statusCode;
+                                if (statusCode >= 300) {
+                                    notFound[uri] = true;
+                                    Node.writeError(uri, statusCode + ' ' + response.statusMessage);
+                                }
+                                else {
+                                    if (Compress.getFileSize(filepath) > 0) {
+                                        this.appendContent(queue, response.body);
+                                    }
+                                    else {
+                                        const content = this.appendContent(queue, response.body, true);
+                                        if (content) {
+                                            try {
+                                                fs.writeFileSync(filepath, content, 'utf8');
+                                                bundleMain = queue;
+                                            }
+                                            catch (error) {
+                                                Node.writeError(filepath, error);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    processQueue(queue, filepath, bundleMain || file);
+                }
+                else if (Compress.getFileSize(filepath) > 0) {
+                    this.compressFile(assets, bundleMain || file, filepath, finalize);
+                    finalize(filepath);
+                }
+                else {
+                    finalize('');
                 }
             }
-            completed.push(filepath);
-            for (const item of (processing[filepath] || [bundleMain || file])) {
-                this.writeBuffer(assets, item, filepath, finalize);
+            else if (Array.isArray(processing[filepath])) {
+                completed.push(filepath);
+                for (const item of processing[filepath]) {
+                    this.writeBuffer(assets, item, filepath, finalize);
+                    finalize(filepath);
+                }
+                delete processing[filepath];
+            }
+            else {
+                this.writeBuffer(assets, file, filepath, finalize);
                 finalize(filepath);
             }
-            delete processing[filepath];
         };
-        const errorRequest = (uri: string, filepath: string, message: Error | string, stream?: fs.WriteStream) => {
+        const errorRequest = (file: RequestAsset, filepath: string, message: Error | string, stream?: fs.WriteStream) => {
+            const uri = file.uri!;
             if (!notFound[uri]) {
-                finalize('');
+                if (appending[filepath]?.length) {
+                    processQueue(file, filepath);
+                }
+                else {
+                    finalize('');
+                }
                 notFound[uri] = true;
             }
             if (stream) {
@@ -1704,8 +1827,8 @@ class FileManager implements IFileManager {
                 emptyDir.add(pathname);
             }
             if (file.content) {
-                if (file.bundleIndex === 0) {
-                    appending[filepath] = [];
+                if (checkQueue(file, filepath, true)) {
+                    continue;
                 }
                 ++this.delayed;
                 fs.writeFile(
@@ -1713,10 +1836,12 @@ class FileManager implements IFileManager {
                     file.content,
                     'utf8',
                     err => {
-                        if (!err) {
-                            this.writeBuffer(assets, file, filepath, finalize);
+                        if (!err || appending[filepath]?.length) {
+                            processQueue(file, filepath);
                         }
-                        finalize(filepath);
+                        else {
+                            finalize('');
+                        }
                     }
                 );
             }
@@ -1729,8 +1854,11 @@ class FileManager implements IFileManager {
                     err => {
                         if (!err) {
                             this.writeBuffer(assets, file, filepath, finalize);
+                            finalize(filepath);
                         }
-                        finalize(filepath);
+                        else {
+                            finalize('');
+                        }
                     }
                 );
             }
@@ -1755,10 +1883,10 @@ class FileManager implements IFileManager {
                             .on('response', response => {
                                 const statusCode = response.statusCode;
                                 if (statusCode >= 300) {
-                                    errorRequest(uri, filepath, statusCode + ' ' + response.statusMessage, stream);
+                                    errorRequest(file, filepath, statusCode + ' ' + response.statusMessage, stream);
                                 }
                             })
-                            .on('error', err => errorRequest(uri, filepath, err, stream))
+                            .on('error', err => errorRequest(file, filepath, err, stream))
                             .pipe(stream);
                     }
                     else {
@@ -1768,7 +1896,7 @@ class FileManager implements IFileManager {
                                 from,
                                 to,
                                 err => {
-                                    if (!err) {
+                                    if (!err || appending[filepath]?.length) {
                                         processQueue(file, filepath);
                                     }
                                     else {
@@ -1794,7 +1922,7 @@ class FileManager implements IFileManager {
                     }
                 }
                 catch (err) {
-                    errorRequest(uri, filepath, err);
+                    errorRequest(file, filepath, err);
                 }
             }
         }
