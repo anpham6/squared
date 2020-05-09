@@ -654,13 +654,11 @@ JS and CSS files can be optimized further using these settings (node-express):
 
 You can also define your own optimizations in squared.settings.json:
 
-* npm i terser -> https://github.com/terser/terser
-* npm i prettier -> https://github.com/prettier/prettier
-* npm i clean-css -> https://github.com/jakubpawlowicz/clean-css
-* npm i html-minifier -> https://github.com/kangax/html-minifier
-* npm i js-beautify -> https://github.com/beautify-web/js-beautify
-
-These plugins are not included with the default installation. You have to manually add them yourself since this feature is only relevant to the Chrome framework [<b>npm run install-chrome</b>].
+* https://github.com/terser/terser
+* https://github.com/prettier/prettier
+* https://github.com/jakubpawlowicz/clean-css
+* https://github.com/kangax/html-minifier
+* https://github.com/beautify-web/js-beautify
 
 JS and CSS files can be bundled together with the "saveAs" or "exportAs" action. Multiple transformations per asset are supported using the "+" symbol to chain them together. The "preserve" command will prevent unused styles from being deleted.
 
