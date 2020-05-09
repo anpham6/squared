@@ -4,9 +4,7 @@ import Extension from './extension';
 
 type NodeUI = squared.base.NodeUI;
 
-const $lib = squared.lib;
-
-const { capitalize, includes } = $lib.util;
+const { capitalize, includes } = squared.lib.util;
 
 export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T> implements squared.base.ExtensionUI<T> {
     public static findNestedElement(node: NodeUI, name: string) {

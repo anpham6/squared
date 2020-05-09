@@ -8,17 +8,18 @@ import diff = require('diff');
 import chalk = require('chalk');
 
 type PageRequest = { name: string; filepath: string; files?: string[] };
+type String = string | undefined;
 
-let host: Undef<string>;
-let data: Undef<string>;
-let build: Undef<string>;
-let master: Undef<string>;
-let snapshot: Undef<string>;
-let executablePath: Undef<string>;
+let host: String;
+let data: String;
+let build: String;
+let master: String;
+let snapshot: String;
+let executablePath: String;
 let width = 1280;
 let height = 960;
 let flags = 1;
-let timeout = 1 * 60 * 1000;
+let timeout = 60 * 1000;
 let screenshot = false;
 let extension = 'md5';
 {

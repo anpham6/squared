@@ -5,9 +5,7 @@ import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-
-const { formatPX } = $lib.css;
+const { formatPX } = squared.lib.css;
 
 const { BOX_STANDARD, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 

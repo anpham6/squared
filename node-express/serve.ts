@@ -163,6 +163,7 @@ let Image: IImage;
             description: 'Enable CORS access to <origin>',
             nargs: 1
         })
+        .epilogue('For more information and source: https://github.com/anpham6/squared')
         .argv as unknown);
 
     if (argv.accessAll) {
@@ -245,6 +246,9 @@ let Image: IImage;
         app.options('*', cors());
         argv.cors = typeof CORS.origin === 'string' ? CORS.origin : 'true';
     }
+    if (isNaN(argv.port)) {
+        argv.port = parseInt(PORT);
+    }
 
     console.log(`${chalk.blue('CORS')}: ${argv.cors ? chalk.green(argv.cors) : chalk.grey('disabled')}`);
 
@@ -280,7 +284,7 @@ let Image: IImage;
             }
             return true;
         }
-        checkPermissions(res: express.Response<any>, dirname: string) {
+        checkPermissions(res: express.Response, dirname: string) {
             if (this.isDirectoryUNC(dirname)) {
                 if (!this.unc_write) {
                     res.json({ application: 'OPTION: --unc-write', system: 'Writing to UNC shares is not enabled.' });

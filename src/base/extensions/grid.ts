@@ -6,9 +6,7 @@ import NodeUI from '../node-ui';
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const $lib = squared.lib;
-
-const { aboveRange, belowRange, objectMap, safeNestedArray, withinRange } = $lib.util;
+const { aboveRange, belowRange, objectMap, safeNestedArray, withinRange } = squared.lib.util;
 
 const GRID = EXT_NAME.GRID;
 

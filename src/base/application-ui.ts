@@ -156,7 +156,7 @@ function checkPseudoDimension(styleMap: StringMap, after: boolean, absolute: boo
 
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI): boolean => node.textElement && (node.blockStatic || node.multiline);
-const getRelativeOffset = (item: NodeUI, fromRight: boolean) => item.positionRelative ? (item.hasPX('left') ? item.left * (fromRight ? 1 : -1) : item.right * (fromRight ? -1 : 1)) : 0;
+const getRelativeOffset = (node: NodeUI, fromRight: boolean) => node.positionRelative ? (node.hasPX('left') ? node.left * (fromRight ? 1 : -1) : node.right * (fromRight ? -1 : 1)) : 0;
 const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => !!item.use }).length > 0;
 const setMapDepth = (map: LayoutMap, depth: number, id: number, node: NodeUI) => map.get(depth)?.set(id, node) || map.set(depth, new Map<number, NodeUI>([[id, node]]));
 const getMapIndex = (value: number) => (value * -1) - 2;

@@ -2,12 +2,14 @@ import fs = require('fs-extra');
 import path = require('path');
 import glob = require('glob');
 
+type String = string | undefined;
+
 const isFile = (value: string) => fs.lstatSync(value).isFile();
 
 const files: string[] = ['squared', ''];
 const extensions: string[] = [];
-let framework: Undef<string>;
-let output: Undef<string>;
+let framework: String;
+let output: String;
 {
     const ARGV = process.argv;
     let i = 2;

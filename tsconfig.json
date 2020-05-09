@@ -23,6 +23,6 @@
     "build",
     "dist",
     "node-express",
-    "node-md5"
+    "node-scripts"
   ]
 }
