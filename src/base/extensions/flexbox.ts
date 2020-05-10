@@ -1,5 +1,3 @@
-import { FlexboxData } from '../../../@types/base/extension';
-
 import ExtensionUI from '../extension-ui';
 
 import { EXT_NAME } from '../lib/constant';
@@ -14,7 +12,7 @@ const FLEXBOX = EXT_NAME.FLEXBOX;
 export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute(node: NodeUI, children: NodeUI[]): FlexboxData<NodeUI> {
         return {
-            ...(<Required<FlexData>> node.flexdata),
+            ...(node.flexdata as Required<FlexData>),
             rowCount: 0,
             columnCount: 0,
             children

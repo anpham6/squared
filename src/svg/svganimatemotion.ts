@@ -161,7 +161,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         item.key = i;
                         result[i++] = item;
                     }
-                    const end = <SvgOffsetPath> offsetPath.pop();
+                    const end = offsetPath.pop() as SvgOffsetPath;
                     if (item.value !== end.value) {
                         end.key = duration;
                         result.push(end);
@@ -264,7 +264,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                     for (let i = 0; i < distance; i += fps) {
                         result.push(offsetPath[Math.floor(i)]);
                     }
-                    const end = <SvgOffsetPath> offsetPath.pop();
+                    const end = offsetPath.pop() as SvgOffsetPath;
                     if (result[result.length - 1] !== end) {
                         result.push(end);
                     }

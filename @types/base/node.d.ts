@@ -1,13 +1,11 @@
-import { Node } from './squared';
+type BoxType = "bounds" | "box" | "linear";
 
-export type BoxType = "bounds" | "box" | "linear";
-
-export interface InitialData<T> {
+interface InitialData<T> {
     styleMap?: StringMap;
     children?: T[];
 }
 
-export interface CachedValue<T> {
+interface CachedValue<T> {
     htmlElement?: boolean;
     svgElement?: boolean;
     inputElement?: boolean;
@@ -83,7 +81,28 @@ export interface CachedValue<T> {
     extensions?: string[];
 }
 
-export interface VisibleStyle {
+interface CachedValueUI<T> extends CachedValue<T> {
+    layoutElement?: boolean;
+    leftTopAxis?: boolean;
+    autoPosition?: boolean;
+    positiveAxis?: boolean;
+    renderExclude?: boolean;
+    containerName?: string;
+    baselineHeight?: number;
+    support?: SupportUI;
+}
+
+interface LocalSettingsUI {
+    systemName: string;
+    screenDimension: Dimension;
+}
+
+interface SupportUI {
+    positionRelative: boolean;
+    positionTranslation: boolean;
+}
+
+interface VisibleStyle {
     borderWidth: boolean;
     background: boolean;
     backgroundImage: boolean;
@@ -93,7 +112,7 @@ export interface VisibleStyle {
     backgroundRepeatY: boolean;
 }
 
-export interface AutoMargin {
+interface AutoMargin {
     horizontal?: boolean;
     left?: boolean;
     right?: boolean;
@@ -104,37 +123,75 @@ export interface AutoMargin {
     topBottom?: boolean;
 }
 
-export interface SiblingOptions {
+interface SiblingOptions {
     floating?: boolean;
     pageFlow?: boolean;
     lineBreak?: boolean;
     excluded?: boolean;
 }
 
-export interface AscendOptions {
-    condition?: (item: Node) => boolean;
-    error?: (item: Node) => boolean;
-    including?: Node;
-    excluding?: Node;
+interface AscendOptions<T> {
+    condition?: (item: T) => boolean;
+    error?: (item: T) => boolean;
+    including?: T;
+    excluding?: T;
     attr?: string;
     startSelf?: boolean;
     every?: boolean;
 }
 
-export interface HasOptions {
+interface HasOptions {
     map?: string;
     not?: string | string[];
     type?: number;
 }
 
-export interface BoxOptions {
+interface BoxOptions {
     reset?: 0 | 1;
     adjustment?: number;
     accumulate?: boolean;
     negative?: boolean;
 }
 
-export interface QueryData {
+interface LinearData<T> {
+    linearX: boolean;
+    linearY: boolean;
+    floated: Set<string>;
+    cleared?: Map<T, string>;
+}
+
+interface ExcludeOptions {
+    resource?: number;
+    procedure?: number;
+    section?: number;
+}
+
+interface ReplaceTryOptions<T> {
+    child: T;
+    replaceWith: T;
+    notFoundAppend?: boolean;
+}
+
+interface RemoveTryOptions<T> {
+    replaceWith?: T;
+    alignSiblings?: boolean;
+    beforeReplace?: BindGeneric<Undef<T>, void>;
+}
+
+interface HideOptions<T> extends RemoveTryOptions<T> {
+    hidden?: boolean;
+    collapse?: boolean;
+    remove?: boolean;
+}
+
+interface TranslateOptions {
+    accumulate?: boolean;
+    contain?: boolean;
+    oppose?: boolean;
+    relative?: boolean;
+}
+
+interface QueryData {
     all?: boolean;
     tagName?: string;
     id?: string;
@@ -145,7 +202,7 @@ export interface QueryData {
     notList?: string[];
 }
 
-export interface QueryAttribute extends StringValue {
+interface QueryAttribute extends StringValue {
     symbol?: string;
     endsWith?: boolean;
     caseInsensitive: boolean;

@@ -55,7 +55,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             intervalMap[keyName] = {};
             intervalTimes[keyName] = new Set<number>();
             const attributeName = keyName.split(':')[0];
-            const backwards = <SvgAnimate> animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => a.group.id < b.group.id ? 1 : -1)[0];
+            const backwards = animations.filter(item => item.fillBackwards && item.attributeName === attributeName).sort((a, b) => a.group.id < b.group.id ? 1 : -1)[0] as SvgAnimate;
             if (backwards) {
                 const delay = backwards.delay;
                 insertIntervalValue(intervalMap, intervalTimes, keyName, 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
@@ -146,7 +146,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                                     for (let i = 0; i < dataB.length; ++i) {
                                         const itemB = dataB[i];
                                         if (timeB > timeA) {
-                                            if (itemB.end && previous.includes(<SvgAnimation> itemB.animation)) {
+                                            if (itemB.end && previous.includes(itemB.animation as SvgAnimation)) {
                                                 dataB.splice(i--, 1);
                                             }
                                         }
@@ -165,7 +165,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                             const group = animationA.group;
                             const ordering = group.ordering;
                             if (ordering) {
-                                const duration = (<SvgAnimate> animationA).getTotalDuration();
+                                const duration = (animationA as SvgAnimate).getTotalDuration();
                                 const name = group.name;
                                 const length = ordering.length;
                                 let i = 0;
@@ -232,7 +232,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 if (!animation) {
                     return true;
                 }
-                return (<SvgAnimationIntervalValue<SvgAnimation>[]> map.get(time)).findIndex(item => item.animation === animation) !== -1;
+                return (map.get(time) as SvgAnimationIntervalValue<SvgAnimation>[]).findIndex(item => item.animation === animation) !== -1;
             }
             return false;
         }

@@ -1,5 +1,3 @@
-import { FlexboxData } from '../../../@types/base/extension';
-
 import View from '../view';
 
 import { CONTAINER_NODE } from '../lib/enumeration';
@@ -191,7 +189,7 @@ function getOuterFrameChild(item: Undef<View>) {
         if (item.layoutFrame) {
             return item.innerWrapped;
         }
-        item = <View> item.innerWrapped;
+        item = item.innerWrapped as View;
     }
     return undefined;
 }
@@ -266,7 +264,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 if (mainData) {
                     const index = mainData.children.findIndex(item => item === node);
                     if (index !== -1) {
-                        const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent);
+                        const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent);
                         container.cssApply({
                             marginTop: '0px',
                             marginRight: '0px',
@@ -303,7 +301,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     public postBaseLayout(node: T) {
         const mainData: FlexboxData<T> = node.data(FLEXBOX, 'mainData');
         if (mainData) {
-            const controller = <android.base.Controller<T>> this.controller;
+            const controller = this.controller as android.base.Controller<T>;
             const { row, column, reverse, wrap, wrapReverse, alignContent, justifyContent, children } = mainData;
             const parentBottom = node.hasPX('height', false) || node.percentHeight > 0 ? node.linear.bottom : 0;
             const chainHorizontal: T[][] = [];
@@ -425,11 +423,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     }
                     else {
                         growAll = horizontal || dimensionInverse;
-                        growAvailable = 1 - adjustGrowRatio(node, seg, <DimensionAttr> WHL);
+                        growAvailable = 1 - adjustGrowRatio(node, seg, WHL as DimensionAttr);
                         if (q > 1) {
                             let sizeCount = 0;
                             seg.forEach(chain => {
-                                const value = (<BoxRectDimension> chain.data(FLEXBOX, 'boundsData') || chain.bounds)[HWL];
+                                const value = (chain.data(FLEXBOX, 'boundsData') as BoxRectDimension || chain.bounds)[HWL];
                                 if (sizeCount === 0) {
                                     maxSize = value;
                                     ++sizeCount;
@@ -518,7 +516,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'baseline':
                                     if (horizontal) {
                                         if (baseline === null) {
-                                            baseline = <Null<T>> getBaseline(seg);
+                                            baseline = getBaseline(seg) as Null<T>;
                                         }
                                         if (baseline) {
                                             if (baseline !== chain) {
@@ -611,7 +609,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                         setLayoutWeightOpposing(chain, 'wrap_content', horizontal);
                                                     }
                                                 }
-                                                else if ((chain.naturalElement ? (<BoxRectDimension> chain.data(FLEXBOX, 'boundsData') || chain.bounds)[HWL] : Infinity) < maxSize) {
+                                                else if ((chain.naturalElement ? (chain.data(FLEXBOX, 'boundsData') as BoxRectDimension || chain.bounds)[HWL] : Infinity) < maxSize) {
                                                     setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px', horizontal);
                                                     if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
                                                         setLayoutWeightOpposing(innerWrapped as T, 'match_parent', horizontal);
@@ -631,7 +629,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 }
                             }
-                            View.setFlexDimension(chain, <DimensionAttr> WHL);
+                            View.setFlexDimension(chain, WHL as DimensionAttr);
                             if (!chain.innerMostWrapped.has('flexGrow')) {
                                 growAll = false;
                             }

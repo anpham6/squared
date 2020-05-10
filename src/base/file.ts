@@ -1,5 +1,6 @@
-import { FileActionOptions, FileArchivingOptions, FileCopyingOptions, UserSettings } from '../../@types/base/application';
-import { RawAsset, RequestAsset, ResultOfFileAction } from '../../@types/base/file';
+type FileActionOptions = squared.base.FileActionOptions;
+type FileArchivingOptions = squared.base.FileArchivingOptions;
+type FileCopyingOptions = squared.base.FileCopyingOptions;
 
 const $lib = squared.lib;
 
@@ -64,7 +65,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
                 Object.assign(asset, data);
             }
             else {
-                this.assets.push(<RawAsset> data);
+                this.assets.push(data as RawAsset);
             }
         }
     }
@@ -77,7 +78,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (this.hasHttpProtocol()) {
             const { assets, directory } = options;
             if (isString(directory)) {
-                const body = <RequestAsset[]> (assets ? assets.concat(this.assets) : this.assets);
+                const body = (assets ? assets.concat(this.assets) : this.assets) as RequestAsset[];
                 const asset = body[0];
                 if (asset) {
                     asset.exclusions = options.exclusions;
@@ -121,7 +122,7 @@ export default abstract class File<T extends squared.base.Node> implements squar
         if (this.hasHttpProtocol()) {
             const { assets, filename } = options;
             if (isString(filename)) {
-                const body = <RequestAsset[]> (assets ? assets.concat(this.assets) : this.assets);
+                const body = (assets ? assets.concat(this.assets) : this.assets) as RequestAsset[];
                 const asset = body[0];
                 if (asset) {
                     asset.exclusions = options.exclusions;

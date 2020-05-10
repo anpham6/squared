@@ -1,5 +1,3 @@
-import { NodeXmlTemplate } from '../../../../@types/base/application';
-
 import View from '../../view';
 
 import { CONTAINER_NODE } from '../../lib/enumeration';
@@ -35,7 +33,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
     }
 
     public processNode(node: T, parent: T) {
-        const controller = <android.base.Controller<T>> this.controller;
+        const controller = this.controller as android.base.Controller<T>;
         const { backgroundColor, backgroundImage, visibleStyle } = node;
         const { backgroundColor: backgroundColorA, backgroundImage: backgroundImageA, backgroundRepeatX, backgroundRepeatY, borderWidth } = visibleStyle;
         const backgroundSeparate = isBackgroundSeparate(node, parent, backgroundColorA, backgroundImageA, backgroundRepeatX, backgroundRepeatY, borderWidth);
@@ -72,11 +70,11 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                     this.application.addLayoutTemplate(
                         renderParent,
                         container,
-                        <NodeXmlTemplate<T>> {
+                        {
                             type: NODE_TEMPLATE.XML,
                             node: container,
                             controlName: container.controlName
-                        }
+                        } as NodeXmlTemplate<T>
                     );
                     parentAs = container;
                     renderParent = container;

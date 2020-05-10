@@ -35,7 +35,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     public build(options?: SvgBuildOptions) {
-        const element = options?.element || <SVGGeometryElement> this.element;
+        const element = options?.element || this.element as SVGGeometryElement;
         const path: SvgPath = new SvgPath(element);
         path.build({ ...options });
         const pathValue = path.value;
@@ -177,7 +177,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                             break;
                         case SVGTransform.SVG_TRANSFORM_ROTATE:
                             while (rotateOrigin.length) {
-                                const pt = <SvgPoint> rotateOrigin.shift();
+                                const pt = rotateOrigin.shift() as SvgPoint;
                                 if (pt.angle === item.angle) {
                                     item.origin = {
                                         x: x + pt.x,

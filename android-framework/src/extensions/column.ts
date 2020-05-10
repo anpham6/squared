@@ -1,6 +1,3 @@
-import { NodeXmlTemplate } from '../../../@types/base/application';
-import { ColumnData } from '../../../@types/base/extension';
-
 import View from '../view';
 
 import { CONTAINER_ANDROID } from '../lib/constant';
@@ -30,7 +27,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
     }
 
     public postBaseLayout(node: T) {
-        const mainData = <ColumnData<T>> node.data(COLUMN, 'mainData');
+        const mainData = node.data(COLUMN, 'mainData') as ColumnData<T>;
         if (mainData) {
             const application = this.application;
             const { columnCount, columnGap, columnWidth, columnRule, columnSized, boxWidth, rows, multiline } = mainData;
@@ -70,11 +67,11 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                 application.addLayoutTemplate(
                     node,
                     divider,
-                    <NodeXmlTemplate<T>> {
+                    {
                         type: NODE_TEMPLATE.XML,
                         node: divider,
                         controlName: divider.controlName
-                    }
+                    } as NodeXmlTemplate<T>
                 );
                 return divider;
             };
@@ -193,7 +190,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         while (k < s) {
                             const column = seg[k++];
                             if (column.naturalChild) {
-                                const element = <HTMLElement> (<Element> column.element).cloneNode(true);
+                                const element = (column.element as Element).cloneNode(true) as HTMLElement;
                                 if (column.styleElement) {
                                     if (column.imageOrSvgElement) {
                                         element.style.height = formatPX(column.bounds.height);

@@ -1,6 +1,4 @@
-import { UserSettings } from '../../@types/chrome/application';
-
-const settings: UserSettings = {
+const settings: ChromeUserSettings = {
     builtInExtensions: [],
     preloadImages: false,
     excludePlainText: true,

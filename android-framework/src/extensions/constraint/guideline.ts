@@ -1,5 +1,3 @@
-import { ConstraintGuidelineOptions } from '../../../../@types/android/extension';
-
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -20,7 +18,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
     };
 
     public is(node: T) {
-        return this.included(<HTMLElement> node.element);
+        return this.included(node.element as HTMLElement);
     }
 
     public condition(node: T) {
@@ -42,7 +40,7 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
     }
 
     public postBaseLayout(node: T) {
-        const controller = <android.base.Controller<T>> this.controller;
+        const controller = this.controller as android.base.Controller<T>;
         const circlePosition = this.options.circlePosition;
         const { left, top } = node.box;
         let anchor!: T;

@@ -1,5 +1,3 @@
-import { NodeTemplate, NodeIncludeTemplate } from '../../../../@types/base/application';
-
 import { getRootNs } from '../../lib/util';
 
 type View = android.base.View;
@@ -52,7 +50,7 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                 });
                 if (open && close) {
                     const application = this.application;
-                    const controller = <android.base.Controller<T>> this.controller;
+                    const controller = this.controller as android.base.Controller<T>;
                     const length = Math.min(open.length, close.length);
                     const excess = close.length - length;
                     if (excess > 0) {
@@ -67,16 +65,16 @@ export default class ResourceIncludes<T extends View> extends squared.base.Exten
                                 const templates: NodeTemplate<T>[] = [];
                                 let k = index;
                                 while (k <= q) {
-                                    templates.push(<NodeTemplate<T>> renderTemplates[k++]);
+                                    templates.push(renderTemplates[k++] as NodeTemplate<T>);
                                 }
                                 const merge = !include || templates.length > 1;
                                 const depth = merge ? 1 : 0;
-                                renderTemplates.splice(index, templates.length, <NodeIncludeTemplate<T>> {
+                                renderTemplates.splice(index, templates.length, {
                                     type: NODE_TEMPLATE.INCLUDE,
                                     node: templates[0].node,
                                     content: controller.renderNodeStatic({ controlName: 'include', width: 'match_parent' }, { layout: `@layout/${name}`, android: {} }),
                                     indent: true
-                                });
+                                } as NodeIncludeTemplate<T>);
                                 let content = controller.cascadeDocument(templates, depth);
                                 if (merge) {
                                     content = controller.getEnclosingXmlTag('merge', getRootNs(content), content);

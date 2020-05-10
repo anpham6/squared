@@ -233,7 +233,7 @@ function isAbsolutePosition(value: string) {
 }
 
 function newBoxRectPosition(orientation: string[] = ['left', 'top']) {
-    return <BoxRectPosition> {
+    return {
         static: true,
         top: 0,
         left: 0,
@@ -246,7 +246,7 @@ function newBoxRectPosition(orientation: string[] = ['left', 'top']) {
         horizontal: 'left',
         vertical: 'top',
         orientation
-    };
+    } as BoxRectPosition;
 }
 
 function checkCalculateNumber(operand: Undef<string>, operator: Undef<string>) {
@@ -323,9 +323,9 @@ export function getStyle(element: Null<Element>, pseudoElt = ''): CSSStyleDeclar
             element['__style' + pseudoElt] = style;
             return style;
         }
-        return <CSSStyleDeclaration> { position: 'static', display: 'inline' };
+        return { position: 'static', display: 'inline' } as CSSStyleDeclaration;
     }
-    return <CSSStyleDeclaration> { position: 'static', display: 'none' };
+    return { position: 'static', display: 'none' } as CSSStyleDeclaration;
 }
 
 export function getFontSize(element: Element) {
@@ -1292,12 +1292,12 @@ export function getKeyframesRules(): ObjectMap<KeyframesData> {
         const length = styleSheets.length;
         let i = 0;
         while (i < length) {
-            const cssRules = (<CSSStyleSheet> styleSheets[i++]).cssRules;
+            const cssRules = (styleSheets[i++] as CSSStyleSheet).cssRules;
             if (cssRules) {
                 const q = cssRules.length;
                 for (let j = 0; j < q; ++j) {
                     try {
-                        const item = <CSSKeyframesRule> cssRules[j];
+                        const item = cssRules[j] as CSSKeyframesRule;
                         if (item.type === CSSRule.KEYFRAMES_RULE) {
                             const value = parseKeyframes(item.cssRules);
                             if (hasKeys(value)) {
@@ -1508,7 +1508,7 @@ export function parseVar(element: CSSElement, value: string) {
 
 export function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions) {
     let orderedSize: Undef<number[]>, dimension: Undef<DimensionAttr[]>,  separator: Undef<string>,  unitType: Undef<number>, checkUnit: Undef<boolean>, errorString: Undef<RegExp>;
-    const optionsVar = <CalculateVarOptions> {};
+    const optionsVar = {} as CalculateVarOptions;
     if (options) {
         Object.assign(optionsVar, options);
         if (Array.isArray(options.orderedSize)) {
@@ -1995,7 +1995,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
 }
 
 export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
-    const parentElement = <HTMLPictureElement> element.parentElement;
+    const parentElement = element.parentElement as HTMLPictureElement;
     const result: ImageSrcSet[] = [];
     let { srcset, sizes } = element;
     if (parentElement?.tagName === 'PICTURE') {
@@ -2174,7 +2174,7 @@ export function insertStyleSheetRule(value: string, index = 0) {
         style.appendChild(document.createTextNode(''));
     }
     document.head.appendChild(style);
-    const sheet = <CSSStyleSheet> style.sheet;
+    const sheet = style.sheet as CSSStyleSheet;
     if (typeof sheet?.insertRule === 'function') {
         try {
             sheet.insertRule(value, index);

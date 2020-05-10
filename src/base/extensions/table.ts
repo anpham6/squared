@@ -1,5 +1,3 @@
-import { TableCellData, TableData } from '../../../@types/base/extension';
-
 import ExtensionUI from '../extension-ui';
 
 import { EXT_NAME } from '../lib/constant';
@@ -120,7 +118,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const [horizontal, vertical] = borderCollapse ? [0, 0] : replaceMap(node.css('borderSpacing').split(' '), (value: string, index) => index === 0 ? node.parseWidth(value) : node.parseHeight(value));
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
-        const colgroup = (<Element> node.element).querySelector('COLGROUP');
+        const colgroup = (node.element as Element).querySelector('COLGROUP');
         const caption = node.find(item => item.tagName === 'CAPTION');
         const captionBottom = node.css('captionSide') === 'bottom';
         const rowWidth: number[] = [];
@@ -135,7 +133,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const row: T[] = tableFilled[i] || [];
             tableFilled[i] = row;
             tr.each((td: T, index) => {
-                const element = <HTMLTableCellElement> td.element;
+                const element = td.element as HTMLTableCellElement;
                 const rowSpan = element.rowSpan;
                 let colSpan = element.colSpan;
                 let j = 0;

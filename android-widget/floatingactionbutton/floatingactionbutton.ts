@@ -1,5 +1,3 @@
-import { NodeXmlTemplate } from '../../@types/base/application';
-
 import { WIDGET_NAME } from '../lib/constant';
 
 type View = android.base.View;
@@ -24,17 +22,17 @@ const SUPPORTED_INPUT = ['button', 'file', 'image', 'reset', 'search', 'submit']
 
 export default class FloatingActionButton<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        const element = <HTMLInputElement> node.element;
+        const element = node.element as HTMLInputElement;
         return super.is(node) && (element.tagName !== 'INPUT' || SUPPORTED_INPUT.includes(element.type));
     }
 
     public condition(node: T) {
-        return this.included(<HTMLElement> node.element);
+        return this.included(node.element as HTMLElement);
     }
 
     public processNode(node: T, parent: T) {
-        const resource = <android.base.Resource<T>> this.resource;
-        const element = <HTMLElement> node.element;
+        const resource = this.resource as android.base.Resource<T>;
+        const element = node.element as HTMLElement;
         const target = node.target;
         const options = createViewAttribute(this.options[element.id]);
         const colorName = Resource.addColor(parseColor(node.css('backgroundColor'), node.toFloat('opacity', 1)));
@@ -45,11 +43,11 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         let src: Undef<string>;
         switch (element.tagName) {
             case 'IMG':
-                src = resource.addImageSrc(<HTMLImageElement> element, PREFIX_DIALOG);
+                src = resource.addImageSrc(element as HTMLImageElement, PREFIX_DIALOG);
                 break;
             case 'INPUT':
-                if ((<HTMLInputElement> element).type === 'image') {
-                    src = resource.addImageSrc(<HTMLImageElement> element, PREFIX_DIALOG);
+                if ((element as HTMLInputElement).type === 'image') {
+                    src = resource.addImageSrc(element as HTMLImageElement, PREFIX_DIALOG);
                     break;
                 }
             case 'BUTTON':
@@ -65,7 +63,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         if (!node.pageFlow) {
             const { leftRight, topBottom } = node.autoMargin;
-            const offsetParent = (<android.base.Application<T>> this.application).resolveTarget(target) || parent;
+            const offsetParent = (this.application as android.base.Application<T>).resolveTarget(target) || parent;
             if (leftRight) {
                 node.mergeGravity('layout_gravity', 'center_horizontal');
             }
@@ -140,11 +138,11 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         node.render(parent);
         node.apply(options);
         return {
-            output: <NodeXmlTemplate<T>> {
+            output: {
                 type: NODE_TEMPLATE.XML,
                 node,
                 controlName
-            },
+            } as NodeXmlTemplate<T>,
             complete: true
         };
     }

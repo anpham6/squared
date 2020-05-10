@@ -397,7 +397,7 @@ export function getDOMRect(element: SVGElement) {
     const result: Partial<DOMRect> = element.getBoundingClientRect();
     result.x = result.left;
     result.y = result.top;
-    return <DOMRect> result;
+    return result as DOMRect;
 }
 
 function getViewportArea(min: boolean, viewBox: DOMRect) {

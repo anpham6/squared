@@ -19,7 +19,7 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
     }
 
     public setPath() {
-        this.path = new SvgPath(<SVGGeometryElement> this.element);
+        this.path = new SvgPath(this.element as SVGGeometryElement);
     }
 
     public build(options?: SvgBuildOptions) {

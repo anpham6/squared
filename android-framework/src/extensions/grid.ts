@@ -1,5 +1,3 @@
-import { GridCellData } from '../../../@types/base/extension';
-
 import Resource from '../resource';
 
 import { CONTAINER_NODE } from '../lib/enumeration';
@@ -72,7 +70,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
             const siblings = cellData.siblings?.slice(0);
             let layout: Undef<LayoutUI<T>>;
             if (siblings) {
-                const controller = <android.base.Controller<T>> this.controller;
+                const controller = this.controller as android.base.Controller<T>;
                 siblings.unshift(node);
                 layout = controller.processLayoutHorizontal(
                     new LayoutUI(
@@ -114,7 +112,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 node.renderEach(item => {
                     const cellData: GridCellData<T> = item.data(GRID, 'cellData');
                     if (cellData) {
-                        const parent = <Null<T>> item.actualParent;
+                        const parent = item.actualParent as Null<T>;
                         if (parent?.visible === false) {
                             const marginTop = parent.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? parent.marginTop : 0;
                             const marginBottom = parent.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0 ? parent.marginBottom : 0;
@@ -131,7 +129,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                                         paddingBottom = heightBottom;
                                     }
                                     else {
-                                        const controller = <android.base.Controller<T>> this.controller;
+                                        const controller = this.controller as android.base.Controller<T>;
                                         controller.addAfterOutsideTemplate(
                                             item.id,
                                             controller.renderSpace({

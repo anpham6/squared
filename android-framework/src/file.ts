@@ -1,7 +1,3 @@
-import { FileActionOptions, FileArchivingOptions, FileCopyingOptions } from '../../@types/base/application';
-import { FileAsset } from '../../@types/base/file';
-import { FileOutputOptions, ResourceStoredMap } from '../../@types/android/application';
-
 import Resource from './resource';
 
 import { XMLNS_ANDROID } from './lib/constant';
@@ -15,6 +11,9 @@ import STRING_TMPL from './template/resources/string';
 import STRINGARRAY_TMPL from './template/resources/string-array';
 import STYLE_TMPL from './template/resources/style';
 
+type FileActionOptions = squared.base.FileActionOptions;
+type FileArchivingOptions = squared.base.FileArchivingOptions;
+type FileCopyingOptions = squared.base.FileCopyingOptions;
 type View = android.base.View;
 
 const $lib = squared.lib;
@@ -28,7 +27,7 @@ type ItemValue = {
 };
 
 const ASSETS = Resource.ASSETS;
-const STORED = <ResourceStoredMap> Resource.STORED;
+const STORED = Resource.STORED as AndroidResourceStoredMap;
 const REGEX_FILENAME = /^(.+)\/(.+?\.\w+)$/;
 const REGEX_DRAWABLE_UNIT = /"(-?[\d.]+)px"/g;
 const REGEX_THEME_UNIT = />(-?[\d.]+)px</g;
@@ -138,7 +137,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         });
     }
 
-    public resourceAllToXml(options: FileOutputOptions = {}) {
+    public resourceAllToXml(options: FileUniversalOptions = {}) {
         const { directory, filename } = options;
         const result = {
             string: this.resourceStringToXml(),
@@ -189,7 +188,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return result;
     }
 
-    public resourceStringToXml(options: FileOutputOptions = {}): string[] {
+    public resourceStringToXml(options: FileUniversalOptions = {}): string[] {
         const item: ObjectMap<ItemValue[]> = { string: [] };
         const itemArray = item.string;
         if (!STORED.strings.has('app_name')) {
@@ -209,7 +208,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         ], options);
     }
 
-    public resourceStringArrayToXml(options: FileOutputOptions = {}): string[] {
+    public resourceStringArrayToXml(options: FileUniversalOptions = {}): string[] {
         if (STORED.arrays.size) {
             const item: ObjectMap<any[]> = { 'string-array': [] };
             const itemArray = item['string-array'];
@@ -232,7 +231,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return [];
     }
 
-    public resourceFontToXml(options: FileOutputOptions = {}): string[] {
+    public resourceFontToXml(options: FileUniversalOptions = {}): string[] {
         if (STORED.fonts.size) {
             const resource = this.resource;
             const { insertSpaces, targetAPI } = this.userSettings;
@@ -242,7 +241,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             const result: string[] = [];
             for (const [name, font] of Array.from(STORED.fonts.entries()).sort()) {
                 const item: StandardMap = { 'xmlns:android': xmlns, font: [] };
-                const itemArray = <StringMap[]> item.font;
+                const itemArray = item.font as StringMap[];
                 for (const attr in font) {
                     const [fontFamily, fontStyle, fontWeight] = attr.split('|');
                     let fontName = name;
@@ -277,7 +276,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return [];
     }
 
-    public resourceColorToXml(options: FileOutputOptions = {}): string[] {
+    public resourceColorToXml(options: FileUniversalOptions = {}): string[] {
         if (STORED.colors.size) {
             const item: ObjectMap<ItemValue[]> = { color: [] };
             const itemArray = item.color;
@@ -296,7 +295,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return [];
     }
 
-    public resourceStyleToXml(options: FileOutputOptions = {}): string[] {
+    public resourceStyleToXml(options: FileUniversalOptions = {}): string[] {
         const result: string[] = [];
         if (STORED.styles.size) {
             const item: ObjectMap<any[]> = { style: [] };
@@ -362,7 +361,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return this.checkFileAssets(result, options);
     }
 
-    public resourceDimenToXml(options: FileOutputOptions = {}): string[] {
+    public resourceDimenToXml(options: FileUniversalOptions = {}): string[] {
         if (STORED.dimens.size) {
             const convertPixels = this.userSettings.convertPixels;
             const item: ObjectMap<ItemValue[]> = { dimen: [] };
@@ -379,7 +378,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return [];
     }
 
-    public resourceDrawableToXml(options: FileOutputOptions = {}): string[] {
+    public resourceDrawableToXml(options: FileUniversalOptions = {}): string[] {
         if (STORED.drawables.size) {
             const { convertPixels, insertSpaces } = this.userSettings;
             const directory = this.directory.image;
@@ -399,7 +398,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return [];
     }
 
-    public resourceAnimToXml(options: FileOutputOptions = {}): string[] {
+    public resourceAnimToXml(options: FileUniversalOptions = {}): string[] {
         if (STORED.animators.size) {
             const insertSpaces = this.userSettings.insertSpaces;
             const result: string[] = [];
@@ -415,7 +414,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return [];
     }
 
-    public resourceDrawableImageToString(options: FileOutputOptions = {}): string[] {
+    public resourceDrawableImageToString(options: FileUniversalOptions = {}): string[] {
         if (STORED.images.size) {
             const { directory, filename } = options;
             const imageDirectory = this.directory.image;
@@ -457,7 +456,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return [];
     }
 
-    public resourceRawVideoToString(options: FileOutputOptions = {}): string[] {
+    public resourceRawVideoToString(options: FileUniversalOptions = {}): string[] {
         if (ASSETS.video.size) {
             const { directory, filename } = options;
             const videoDirectory = this.directory.video;
@@ -480,7 +479,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return [];
     }
 
-    public resourceRawAudioToString(options: FileOutputOptions = {}): string[] {
+    public resourceRawAudioToString(options: FileUniversalOptions = {}): string[] {
         if (ASSETS.video.size) {
             const { directory, filename } = options;
             const audioDirectory = this.directory.audio;
@@ -503,7 +502,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         return [];
     }
 
-    public layoutAllToXml(layouts: FileAsset[], options: FileOutputOptions = {}) {
+    public layoutAllToXml(layouts: FileAsset[], options: FileUniversalOptions = {}) {
         const { directory, filename } = options;
         const actionable = directory || filename;
         const result = {};
@@ -580,7 +579,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         );
     }
 
-    protected checkFileAssets(content: string[], options: FileOutputOptions) {
+    protected checkFileAssets(content: string[], options: FileUniversalOptions) {
         const { directory, filename } = options;
         if (directory || filename) {
             options.assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content).concat(options.assets || []);

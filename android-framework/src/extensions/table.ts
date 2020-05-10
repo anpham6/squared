@@ -1,5 +1,3 @@
-import { TableData, TableCellData } from '../../../@types/base/extension';
-
 import View from '../view';
 
 import { CONTAINER_NODE } from '../lib/enumeration';
@@ -133,7 +131,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 node.android('layout_columnSpan', colSpan.toString());
             }
             if (spaceSpan) {
-                const controller = <android.base.Controller<T>> this.controller;
+                const controller = this.controller as android.base.Controller<T>;
                 controller.addAfterOutsideTemplate(
                     node.id,
                     controller.renderSpace({

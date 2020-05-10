@@ -1,17 +1,15 @@
-import * as node from '../base/node-ui';
-
-export interface LocalSettings extends node.LocalSettings {
+interface AndroidLocalSettingsUI extends LocalSettingsUI {
     supportRTL: boolean;
     floatPrecision: number;
 }
 
-export interface CachedValue<T> extends node.CachedValue<T> {}
+interface AndroidCachedValueUI<T> extends CachedValueUI<T> {}
 
-export interface Support extends node.Support {
+interface AndroidSupport extends SupportUI {
     maxDimension: boolean;
 }
 
-export interface CreateNodeWrapperOptions<T> extends node.ExcludeOptions {
+interface CreateNodeWrapperOptions<T> extends ExcludeOptions {
     children?: T[];
     containerType?: number;
     alignmentType?: number;
@@ -21,13 +19,13 @@ export interface CreateNodeWrapperOptions<T> extends node.ExcludeOptions {
     inheritContentBox?: boolean;
 }
 
-export interface ViewAttribute extends ObjectMap<any> {
+interface ViewAttribute extends ObjectMap<any> {
     android: StringMap;
     app?: StringMap;
     documentId?: string;
 }
 
-export interface Constraint {
+interface Constraint {
     horizontal: boolean;
     vertical: boolean;
     current: ObjectMap<{ documentId: string; horizontal: boolean }>;

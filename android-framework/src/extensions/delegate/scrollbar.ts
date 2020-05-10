@@ -1,5 +1,3 @@
-import { NodeXmlTemplate } from '../../../../@types/base/application';
-
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
@@ -118,11 +116,11 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                 this.application.addLayoutTemplate(
                     (item.renderParent || parent) as T,
                     item,
-                    <NodeXmlTemplate<T>> {
+                    {
                         type: NODE_TEMPLATE.XML,
                         node: item,
                         controlName: item.controlName
-                    }
+                    } as NodeXmlTemplate<T>
                 );
             }
             children.forEach(child => {

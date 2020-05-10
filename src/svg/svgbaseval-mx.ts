@@ -1,6 +1,7 @@
 import SvgBuild from './svgbuild';
 
 type SvgElement = squared.svg.SvgElement;
+
 const { getNamedItem } = squared.lib.dom;
 
 function adjustPoints(values: SvgPoint[], x: number, y: number, scaleX: number, scaleY: number) {

@@ -1,5 +1,3 @@
-import { ColumnData } from '../../../@types/base/extension';
-
 import ExtensionUI from '../extension-ui';
 
 import { EXT_NAME } from '../lib/constant';
@@ -61,7 +59,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
             columnGap = (columnWidth > 0 && !isNaN(maxSize) && maxSize !== Infinity ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
             columnSized = Math.ceil(getColumnSizing());
         }
-        node.data(EXT_NAME.COLUMN, 'mainData', <ColumnData<T>> {
+        node.data(EXT_NAME.COLUMN, 'mainData', {
             rows,
             columnCount,
             columnWidth,
@@ -74,7 +72,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
             },
             boxWidth: parent.actualBoxWidth(boxWidth),
             multiline
-        });
+        } as ColumnData<T>);
         return undefined;
     }
 }

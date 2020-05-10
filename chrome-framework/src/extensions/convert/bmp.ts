@@ -1,6 +1,3 @@
-import { RequestAsset } from '../../../../@types/chrome/file';
-import { ConvertOptions } from '../../../../@types/chrome/extension';
-
 import Extension from '../../extension';
 
 type View = chrome.base.View;
@@ -14,7 +11,7 @@ export default class Bmp<T extends View> extends Extension<T> {
         replaceWith: true
     };
 
-    public processFile(data: RequestAsset, override = false) {
+    public processFile(data: ChromeAsset, override = false) {
         const mimeType = data.mimeType;
         if (mimeType && !/bmp[(%@:]/.test(mimeType)) {
             const mimeTypes = this.options.mimeTypes;

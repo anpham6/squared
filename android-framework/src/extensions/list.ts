@@ -1,6 +1,3 @@
-import { NodeXmlTemplate } from '../../../@types/base/application';
-import { ListData } from '../../../@types/base/extension';
-
 import View from '../view';
 
 import { CONTAINER_ANDROID } from '../lib/constant';
@@ -51,7 +48,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
         const mainData: ListData = node.data(LIST, 'mainData');
         if (mainData) {
             const application = this.application;
-            const controller = <android.base.Controller<T>> this.controller;
+            const controller = this.controller as android.base.Controller<T>;
             const firstChild = parent.firstStaticChild === node;
             const marginTop = node.marginTop;
             let value = mainData.ordinal || '';
@@ -123,7 +120,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 let top = 0, left = 0;
                 let image: Undef<string>;
                 if (mainData.imageSrc !== '') {
-                    const resource = <android.base.Resource<T>> this.resource;
+                    const resource = this.resource as android.base.Resource<T>;
                     if (mainData.imagePosition) {
                         ({ top, left } = getBackgroundPosition(mainData.imagePosition, node.actualDimension, {
                             fontSize: node.fontSize,
@@ -217,11 +214,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     application.addLayoutTemplate(
                         parent,
                         ordinal,
-                        <NodeXmlTemplate<T>> {
+                        {
                             type: NODE_TEMPLATE.XML,
                             node: ordinal,
                             controlName: ordinal.controlName
-                        }
+                        } as NodeXmlTemplate<T>
                     );
                 }
             }

@@ -1,6 +1,3 @@
-import * as file from '../../@types/base/file';
-import * as file_chrome from '../../@types/chrome/file';
-
 declare namespace Express {
     type Environment = "production" | "development";
 
@@ -15,14 +12,12 @@ declare namespace Express {
         path?: string;
     }
 
-    interface RequestAsset extends file_chrome.RequestAsset {
+    interface ExpressAsset extends ChromeAsset {
         filepath?: string;
         excluded?: boolean;
         originalName?: string;
         dataMap?: DataMap;
     }
-
-    interface ResultOfFileAction extends file.ResultOfFileAction {}
 
     interface DataMap {
         unusedStyles?: string[];

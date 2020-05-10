@@ -1,6 +1,3 @@
-import { RequestAsset } from '../../@types/chrome/file';
-import { CompressOptions, ConvertOptions } from '../../@types/chrome/extension';
-
 const getSizeRange = (options: CompressOptions) => '(' + Math.max(options.largerThan, 0) + ',' + (options.smallerThan < Infinity ? options.smallerThan : '*') + ')';
 
 export default abstract class Extension<T extends chrome.base.View> extends squared.base.Extension<T> implements chrome.base.Extension<T> {
@@ -23,7 +20,7 @@ export default abstract class Extension<T extends chrome.base.View> extends squa
 
     public application!: chrome.base.Application<T>;
 
-    public processFile(data: RequestAsset, override = false) {
+    public processFile(data: ChromeAsset, override = false) {
         return false;
     }
 }

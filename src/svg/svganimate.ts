@@ -114,7 +114,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         switch (attributeName) {
                             case 'fill':
                             case 'stroke': {
-                                const rgbaA = (<ColorData> currentValue[0]).rgba, rgbaB = (<ColorData> nextValue[0]).rgba;
+                                const rgbaA = (currentValue[0] as ColorData).rgba, rgbaB = (nextValue[0] as ColorData).rgba;
                                 const rgb = getHexCode(
                                     SvgAnimate.getSplitValue(rgbaA.r, rgbaB.r, percent),
                                     SvgAnimate.getSplitValue(rgbaA.g, rgbaB.g, percent),
@@ -127,8 +127,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             case 'points': {
                                 let j = 0;
                                 while (j < length) {
-                                    const current = <Point> currentValue[j];
-                                    const next = <Point> nextValue[j++];
+                                    const current = currentValue[j] as Point;
+                                    const next = nextValue[j++] as Point;
                                     result.push(SvgAnimate.getSplitValue(current.x, next.x, percent) + ',' + SvgAnimate.getSplitValue(current.y, next.y, percent));
                                 }
                                 break;

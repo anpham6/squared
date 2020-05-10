@@ -1,6 +1,3 @@
-import { VisibleStyle } from '../../../@types/base/node';
-import { ListData } from '../../../@types/base/extension';
-
 import ExtensionUI from '../extension-ui';
 
 import { EXT_NAME } from '../lib/constant';

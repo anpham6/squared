@@ -1,28 +1,28 @@
-export interface AccessibilityOptions {
+interface AccessibilityOptions {
     displayLabel: boolean;
 }
 
-export interface ConstraintGuidelineOptions {
+interface ConstraintGuidelineOptions {
     circlePosition: boolean;
 }
 
-export interface ResourceSvgOptions {
+interface ResourceSvgOptions {
     transformExclude: SvgTransformExclude;
     floatPrecisionKeyTime: number;
     floatPrecisionValue: number;
     animateInterpolator: string;
 }
 
-export interface ResourceBackgroundOptions {
+interface ResourceBackgroundOptions {
     drawOutlineAsInsetBorder: boolean;
 }
 
-export interface ResourceStringsOptions {
+interface ResourceStringsOptions {
     numberResourceValue: boolean;
     fontVariantSmallCapsReduction: number;
 }
 
-export interface ResourceFontsOptions {
+interface ResourceFontsOptions {
     systemDefaultFont: string;
     disableFontAlias: boolean;
 }

@@ -1,12 +1,13 @@
-import { AppProcessing, AppSession, AppViewModel } from '../../@types/base/internal';
-import { FileActionOptions, UserSettings } from '../../@types/base/application';
-
 import Controller from './controller';
 import Extension from './extension';
 import ExtensionManager from './extensionmanager';
 import Node from './node';
 import NodeList from './nodelist';
 import Resource from './resource';
+
+type AppVieModel = squared.base.AppViewModel;
+type FileActionOptions = squared.base.FileActionOptions;
+type PreloadImage = HTMLImageElement | string;
 
 const $lib = squared.lib;
 
@@ -17,8 +18,6 @@ const { CHAR, FILE, STRING, XML } = $lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = $lib.session;
 
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
-
-type PreloadImage = HTMLImageElement | string;
 
 const REGEX_MEDIATEXT = /all|screen/;
 const REGEX_BACKGROUND = /^background/;
@@ -86,10 +85,10 @@ export default abstract class Application<T extends Node> implements squared.bas
     public systemName = '';
     public readonly Node: Constructor<T>;
     public readonly rootElements = new Set<HTMLElement>();
-    public readonly session: AppSession<T> = {
+    public readonly session: squared.base.AppSession = {
         active: []
     };
-    public readonly processing: AppProcessing<T> = {
+    public readonly processing: squared.base.AppProcessing<T> = {
         cache: new NodeList<T>(),
         excluded: new NodeList<T>(),
         unusedStyles: new Set<string>(),
@@ -116,9 +115,9 @@ export default abstract class Application<T extends Node> implements squared.bas
     {
         const cache = this.processing.cache;
         this._cache = cache;
-        this._controllerHandler = <Controller<T>> (new ControllerConstructor(this, cache) as unknown);
-        this._resourceHandler = <Resource<T>> (new ResourceConstructor(this, cache) as unknown);
-        this._extensionManager = <ExtensionManager<T>> (new (ExtensionManagerConstructor || ExtensionManager)(this, cache) as unknown);
+        this._controllerHandler = (new ControllerConstructor(this, cache) as unknown) as Controller<T>;
+        this._resourceHandler = (new ResourceConstructor(this, cache) as unknown) as Resource<T>;
+        this._extensionManager = (new (ExtensionManagerConstructor || ExtensionManager)(this, cache) as unknown) as ExtensionManager<T>;
         this._afterInsertNode = this._controllerHandler.afterInsertNode;
         this.Node = nodeConstructor;
     }
@@ -128,8 +127,8 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract afterCreateCache(node: T): void;
     public abstract finalize(): void;
 
-    public abstract set viewModel(data: Undef<AppViewModel>);
-    public abstract get viewModel(): Undef<AppViewModel>;
+    public abstract set viewModel(data: Undef<AppVieModel>);
+    public abstract get viewModel(): Undef<AppVieModel>;
 
     public copyToDisk(directory: string, options?: FileActionOptions) {
         return this.fileHandler?.copyToDisk(directory, options) || frameworkNotInstalled();
@@ -319,7 +318,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             .catch((error: Error | Event | HTMLImageElement) => {
                 let target = error;
                 if (error instanceof Event) {
-                    target = <HTMLImageElement> error.target;
+                    target = error.target as HTMLImageElement;
                 }
                 const message = target instanceof HTMLImageElement ? target.src : '';
                 return !this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`) ? resumeThread() : [];
@@ -351,7 +350,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             catch {
             }
             if (!isString(mediaText) || REGEX_MEDIATEXT.test(mediaText)) {
-                this.applyStyleSheet(<CSSStyleSheet> styleSheet);
+                this.applyStyleSheet(styleSheet as CSSStyleSheet);
             }
         }
     }
@@ -408,7 +407,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             let inlineText = true;
             let i = 0, j = 0, k = 0;
             while (i < length) {
-                const element = <HTMLElement> childNodes[i++];
+                const element = childNodes[i++] as HTMLElement;
                 let child: Undef<T>;
                 if (element.nodeName.charAt(0) === '#') {
                     if (isTextNode(element)) {
@@ -472,7 +471,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const cssText = item.cssText;
         switch (item.type) {
             case CSSRule.SUPPORTS_RULE:
-                this.applyCSSRuleList((<CSSSupportsRule> (item as unknown)).cssRules);
+                this.applyCSSRuleList(((item as unknown) as CSSSupportsRule).cssRules);
                 break;
             case CSSRule.STYLE_RULE: {
                 const cssStyle = item.style;
@@ -644,7 +643,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         const length = rules.length;
         let i = 0;
         while (i < length) {
-            this.applyStyleRule(<CSSStyleRule> rules[i++]);
+            this.applyStyleRule(rules[i++] as CSSStyleRule);
         }
     }
 
@@ -659,24 +658,24 @@ export default abstract class Application<T extends Node> implements squared.bas
                     switch (rule.type) {
                         case CSSRule.STYLE_RULE:
                         case CSSRule.FONT_FACE_RULE:
-                            this.applyStyleRule(<CSSStyleRule> rule);
+                            this.applyStyleRule(rule as CSSStyleRule);
                             break;
                         case CSSRule.IMPORT_RULE: {
-                            const uri = resolvePath((<CSSImportRule> rule).href, rule.parentStyleSheet?.href || location.href);
+                            const uri = resolvePath((rule as CSSImportRule).href, rule.parentStyleSheet?.href || location.href);
                             if (uri !== '') {
                                 this.resourceHandler.addRawData(uri, 'text/css', 'utf8', '');
                             }
-                            this.applyStyleSheet((<CSSImportRule> rule).styleSheet);
+                            this.applyStyleSheet((rule as CSSImportRule).styleSheet);
                             break;
                         }
                         case CSSRule.MEDIA_RULE:
-                            if (checkMediaRule((<CSSConditionRule> rule).conditionText || parseConditionText('media', rule.cssText))) {
-                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
+                            if (checkMediaRule((rule as CSSConditionRule).conditionText || parseConditionText('media', rule.cssText))) {
+                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules);
                             }
                             break;
                         case CSSRule.SUPPORTS_RULE:
-                            if (CSS.supports && CSS.supports((<CSSConditionRule> rule).conditionText || parseConditionText('supports', rule.cssText))) {
-                                this.applyCSSRuleList((<CSSConditionRule> rule).cssRules);
+                            if (CSS.supports && CSS.supports((rule as CSSConditionRule).conditionText || parseConditionText('supports', rule.cssText))) {
+                                this.applyCSSRuleList((rule as CSSConditionRule).cssRules);
                             }
                             break;
                     }

@@ -1,6 +1,3 @@
-import { UserSettings } from '../../@types/base/application';
-import { ResourceAssetMap } from '../../@types/base/resource';
-
 const $lib = squared.lib;
 
 const { STRING, XML } = $lib.regex;

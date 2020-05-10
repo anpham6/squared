@@ -1,8 +1,3 @@
-import { LayoutType, CreateNodeGroupOptions, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
-import { FileAsset, ImageAsset } from '../../@types/base/file';
-import { ControllerSettings, GuidelineOptions, RenderNodeStaticAttribute, RenderSpaceAttribute } from '../../@types/android/application';
-import { LocalSettings, ViewAttribute, CreateNodeWrapperOptions } from '../../@types/android/node';
-
 import Resource from './resource';
 import View from './view';
 import ViewGroup from './viewgroup';
@@ -11,7 +6,7 @@ import { CONTAINER_ANDROID, CONTAINER_ANDROID_X } from './lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
 import { adjustAbsolutePaddingOffset, createViewAttribute, getDocumentId, getRootNs } from './lib/util';
 
-type LayoutUI = squared.base.LayoutUI<View>;
+import LayoutUI = squared.base.LayoutUI;
 
 interface RelativeLayoutData {
     clearMap: Map<View, string>;
@@ -63,7 +58,7 @@ function sortHorizontalFloat(list: View[]) {
 }
 
 function getSortOrderStandard(above: View, below: View): number {
-    const parentA = <View> above.actualParent, parentB = <View> below.actualParent;
+    const parentA = above.actualParent as View, parentB = below.actualParent as View;
     if (above === parentB) {
         return -1;
     }
@@ -87,8 +82,8 @@ function getSortOrderStandard(above: View, below: View): number {
 function getSortOrderInvalid(above: View, below: View): number {
     const depthA = above.depth, depthB = below.depth;
     if (depthA === depthB) {
-        const parentA = <View> above.actualParent;
-        const parentB = <View> below.actualParent;
+        const parentA = above.actualParent as View;
+        const parentB = below.actualParent as View;
         if (above === parentB) {
             return -1;
         }
@@ -220,7 +215,7 @@ function causesLineBreak(element: Element) {
 }
 
 function setReadOnly(node: View) {
-    const element = <HTMLInputElement> node.element;
+    const element = node.element as HTMLInputElement;
     if (element.readOnly) {
         node.android('focusable', 'false');
     }
@@ -331,11 +326,11 @@ function checkClearMap(node: View, clearMap: Map<View, string>) {
         return node.some((item: View) => item.naturalChild && clearMap.has(item), { cascade: true });
     }
     else {
-        return clearMap.has(<View> node.innerMostWrapped);
+        return clearMap.has(node.innerMostWrapped as View);
     }
 }
 
-function isConstraintLayout(layout: LayoutUI, vertical: boolean) {
+function isConstraintLayout(layout: LayoutUI<View>, vertical: boolean) {
     const parent = layout.parent;
     if (parent.flexElement && (parent.css('alignItems') === 'baseline' || layout.some(item => item.flexbox.alignSelf === 'baseline'))) {
         return false;
@@ -346,7 +341,7 @@ function isConstraintLayout(layout: LayoutUI, vertical: boolean) {
 
 function adjustBodyMargin(node: View, position: string) {
     if (node.leftTopAxis) {
-        const parent = <View> node.absoluteParent;
+        const parent = node.absoluteParent as View;
         if (parent.documentBody) {
             switch (position) {
                 case 'top':
@@ -453,14 +448,14 @@ const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWi
 const isBaselineImage = (item: View) => item.imageOrSvgElement && item.baseline;
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
-const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderInvalid(<View> a.node.innerMostWrapped, <View> b.node.innerMostWrapped);
-const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderStandard(<View> a.node.innerMostWrapped, <View> b.node.innerMostWrapped);
-const hasCleared = (layout: LayoutUI, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
+const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderInvalid(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
+const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
+const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
 const requireSorting = (node: View) => node.zIndex !== 0 || !node.pageFlow;
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
-const getVerticalLayout = (layout: LayoutUI) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
-const getVerticalAlignedLayout = (layout: LayoutUI) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
+const getVerticalLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
+const getVerticalAlignedLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
 const getAnchorDirection = (reverse = false) => reverse ? { anchorStart: 'right', anchorEnd: 'left', chainStart: 'rightLeft', chainEnd: 'leftRight' } : { anchorStart: 'left', anchorEnd: 'right', chainStart: 'leftRight', chainEnd: 'rightLeft' };
 const isUnknownParent = (parent: View, value: number, length: number) => parent.containerType === value && parent.length === length && (parent.alignmentType === 0 || parent.hasAlign(NODE_ALIGNMENT.UNKNOWN));
 
@@ -470,7 +465,7 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
         return renderParent.box.width;
     }
     else {
-        const parent = <Null<View>> node.actualParent;
+        const parent = node.actualParent as Null<View>;
         if (parent) {
             if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === renderParent) {
                 const { left, width } = parent.box;
@@ -514,7 +509,7 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
     if (orientation && value !== orientation) {
         return;
     }
-    let documentParent = <View> node.documentParent;
+    let documentParent = node.documentParent as View;
     if (parent.nodeGroup && !documentParent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
         documentParent = parent;
     }
@@ -549,7 +544,7 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
             const siblingsLeading = node.siblingsLeading;
             const length = siblingsLeading.length;
             if (length && !node.alignedVertically()) {
-                const previousSibling = <View> siblingsLeading[length - 1];
+                const previousSibling = siblingsLeading[length - 1] as View;
                 if (previousSibling.pageFlow && previousSibling.renderParent === node.renderParent) {
                     node.anchor(horizontal ? 'leftRight' : 'top', previousSibling.documentId, true);
                     node.constraint[value] = true;
@@ -563,11 +558,11 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
             const length = renderChildren.length;
             let i = 0;
             while (i < length) {
-                const item = <View> renderChildren[i++];
+                const item = renderChildren[i++] as View;
                 if (item === node || item.plainText || item.pseudoElement || item.originalRoot) {
                     continue;
                 }
-                const itemA = <View> item.innerMostWrapped;
+                const itemA = item.innerMostWrapped as View;
                 if (itemA.pageFlow || item.constraint[value]) {
                     const { linear: linearA, bounds: boundsA } = itemA;
                     let position: Undef<string>;
@@ -623,11 +618,11 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
             let nearest: Undef<View>, adjacent: Undef<View>;
             i = 0;
             while (i < length) {
-                const item = <View> renderChildren[i++];
+                const item = renderChildren[i++] as View;
                 if (item === node || item.pageFlow || item.originalRoot || !item.constraint[value]) {
                     continue;
                 }
-                const itemA = <View> item.innerMostWrapped;
+                const itemA = item.innerMostWrapped as View;
                 const boundsA = itemA.bounds;
                 if (withinRange(bounds[TL], boundsA[TL]) || withinRange(linear[TL], itemA.linear[TL])) {
                     const offset = bounds[LT] - boundsA[RB];
@@ -657,7 +652,7 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
             }
         }
     }
-    const absoluteParent = <View> node.absoluteParent;
+    const absoluteParent = node.absoluteParent as View;
     const bounds = node.positionStatic ? node.bounds : linear;
     let attr = 'layout_constraintGuide_';
     let location = 0;
@@ -825,7 +820,7 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly = fa
 }
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
-    public readonly localSettings: ControllerSettings = {
+    public readonly localSettings: AndroidControllerSettingsUI = {
         layout: {
             pathName: 'res/layout',
             fileExtension: 'xml',
@@ -890,7 +885,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     protected _screenDimension!: Dimension;
 
-    private _defaultViewSettings!: LocalSettings;
+    private _defaultViewSettings!: AndroidLocalSettingsUI;
     private _targetAPI!: number;
 
     constructor(
@@ -932,10 +927,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 const parent = this.application.resolveTarget(target);
                 if (parent) {
-                    const template = <NodeTemplate<T>> node.removeTry({ alignSiblings: true });
+                    const template = node.removeTry({ alignSiblings: true }) as NodeTemplate<T>;
                     if (template) {
                         const renderChildren = parent.renderChildren;
-                        const renderTemplates = safeNestedArray(<StandardMap> parent, 'renderTemplates');
+                        const renderTemplates = safeNestedArray(parent as StandardMap, 'renderTemplates');
                         const index = parseInt(node.dataset.androidTargetIndex as string);
                         if (!isNaN(index) && index >= 0 && index < renderChildren.length) {
                             renderChildren.splice(index, 0, node);
@@ -960,13 +955,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         });
     }
 
-    public processUnknownParent(layout: squared.base.LayoutUI<T>) {
+    public processUnknownParent(layout: LayoutUI<T>) {
         const node = layout.node;
         if (layout.some(item => !item.pageFlow && !item.autoPosition)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.ABSOLUTE | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (layout.length <= 1) {
-            const child = <Undef<T>> node.item(0);
+            const child = node.item(0) as Undef<T>;
             if (child) {
                 if (node.originalRoot && child.target) {
                     node.hide();
@@ -1064,7 +1059,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return { layout };
     }
 
-    public processUnknownChild(layout: squared.base.LayoutUI<T>) {
+    public processUnknownChild(layout: LayoutUI<T>) {
         const node = layout.node;
         const background = node.visibleStyle.background;
         if (node.inlineText && (!node.textEmpty || background)) {
@@ -1095,7 +1090,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     layout.setContainerType(CONTAINER_NODE.TEXT);
                     break;
                 default: {
-                    if (node.textContent !== '' && (background || node.pseudoElement && getPseudoElt(<Element> node.element, node.sessionId) === '::after')) {
+                    if (node.textContent !== '' && (background || node.pseudoElement && getPseudoElt(node.element as Element, node.sessionId) === '::after')) {
                         layout.setContainerType(CONTAINER_NODE.TEXT);
                         node.inlineText = true;
                     }
@@ -1108,7 +1103,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return { layout };
     }
 
-    public processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]) {
+    public processTraverseHorizontal(layout: LayoutUI<T>, siblings: T[]) {
         const parent = layout.parent;
         if (layout.floated.size === 1 && layout.every(item => item.floating)) {
             if (isUnknownParent(parent, CONTAINER_NODE.CONSTRAINT, layout.length)) {
@@ -1139,7 +1134,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return layout;
     }
 
-    public processTraverseVertical(layout: squared.base.LayoutUI<T>) {
+    public processTraverseVertical(layout: LayoutUI<T>) {
         const parent = layout.parent;
         const clearMap = this.application.clearMap;
         const floatSize = layout.floated.size;
@@ -1229,7 +1224,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return layout;
     }
 
-    public processLayoutHorizontal(layout: squared.base.LayoutUI<T>) {
+    public processLayoutHorizontal(layout: LayoutUI<T>) {
         if (this.checkConstraintFloat(layout)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, layout.every(item => item.floating) ? NODE_ALIGNMENT.FLOAT : NODE_ALIGNMENT.INLINE);
         }
@@ -1321,7 +1316,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return templates;
     }
 
-    public checkFrameHorizontal(layout: squared.base.LayoutUI<T>) {
+    public checkFrameHorizontal(layout: LayoutUI<T>) {
         switch (layout.floated.size) {
             case 1:
                 if (layout.node.cssAscend('textAlign', true) === 'center' && layout.some(node => node.pageFlow)) {
@@ -1344,7 +1339,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     return pageFlow > 0 && !layout.singleRowAligned;
                 }
-                return (<View> layout.item(0)).floating && (
+                return (layout.item(0) as View).floating && (
                     layout.linearY ||
                     layout.length > 2 && !layout.singleRowAligned && !layout.every(item => item.inlineFlow) ||
                     layout.every(item => item.floating || item.block && (!item.isEmpty || !(item.textElement || item.inputElement || item.imageElement || item.svgElement || item.controlElement)))
@@ -1355,7 +1350,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return false;
     }
 
-    public checkConstraintFloat(layout: squared.base.LayoutUI<T>) {
+    public checkConstraintFloat(layout: LayoutUI<T>) {
         const length = layout.length;
         if (length > 1) {
             const clearMap = this.application.clearMap;
@@ -1380,7 +1375,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return false;
     }
 
-    public checkConstraintHorizontal(layout: squared.base.LayoutUI<T>) {
+    public checkConstraintHorizontal(layout: LayoutUI<T>) {
         if (layout.length > 1 && layout.singleRowAligned) {
             const floatedSize = layout.floated.size;
             if (floatedSize && (
@@ -1397,7 +1392,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         return false;
     }
 
-    public checkLinearHorizontal(layout: squared.base.LayoutUI<T>) {
+    public checkLinearHorizontal(layout: LayoutUI<T>) {
         const floated = layout.floated;
         const floatSize = floated.size;
         if ((floatSize === 0 || floatSize === 1 && floated.has('left')) && layout.node.lineHeight === 0 && layout.singleRowAligned) {
@@ -1499,7 +1494,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         });
     }
 
-    public renderNodeGroup(layout: squared.base.LayoutUI<T>) {
+    public renderNodeGroup(layout: LayoutUI<T>) {
         const { node, containerType } = layout;
         const options = createViewAttribute();
         let valid = false;
@@ -1534,23 +1529,23 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.addAlign(layout.alignmentType);
             node.render(layout.parent);
             node.apply(options);
-            return <NodeXmlTemplate<T>> {
+            return {
                 type: NODE_TEMPLATE.XML,
                 node,
                 controlName: node.controlName
-            };
+            } as NodeXmlTemplate<T>;
         }
         return undefined;
     }
 
-    public renderNode(layout: squared.base.LayoutUI<T>): NodeXmlTemplate<T> {
+    public renderNode(layout: LayoutUI<T>): NodeXmlTemplate<T> {
         let { parent, containerType } = layout;
         const node = layout.node;
         let controlName = View.getControlName(containerType, node.api);
         switch (node.tagName) {
             case 'IMG': {
                 const application = this.application;
-                const element = <HTMLImageElement> node.element;
+                const element = node.element as HTMLImageElement;
                 const absoluteParent = node.absoluteParent || node.documentParent;
                 let width = node.toFloat('width', 0);
                 let height = node.toFloat('height', 0);
@@ -1678,11 +1673,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     application.addLayoutTemplate(
                         parent,
                         container,
-                        <NodeXmlTemplate<T>> {
+                        {
                             type: NODE_TEMPLATE.XML,
                             node: container,
                             controlName: CONTAINER_ANDROID.FRAME
-                        }
+                        } as NodeXmlTemplate<T>
                     );
                     parent = container;
                     layout.parent = container;
@@ -1690,7 +1685,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 break;
             }
             case 'INPUT': {
-                const element = <HTMLInputElement> node.element;
+                const element = node.element as HTMLInputElement;
                 const type = element.type;
                 switch (type) {
                     case 'radio':
@@ -1758,7 +1753,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 });
                 break;
             case 'TEXTAREA': {
-                const { cols, maxLength, placeholder, rows } = <HTMLTextAreaElement> node.element;
+                const { cols, maxLength, placeholder, rows } = node.element as HTMLTextAreaElement;
                 node.android('minLines', rows > 0 ? rows.toString() : '2');
                 switch (node.css('verticalAlign')) {
                     case 'middle':
@@ -1797,7 +1792,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             case 'METER':
             case 'PROGRESS': {
-                const { min, max, value } = <HTMLMeterElement> node.element;
+                const { min, max, value } = node.element as HTMLMeterElement;
                 let foregroundColor: Undef<string>;
                 let backgroundColor: Undef<string>;
                 if (node.tagName === 'METER') {
@@ -1836,7 +1831,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'AUDIO':
             case 'VIDEO': {
                 const videoMimeType = this.localSettings.mimeType.video;
-                const element = <HTMLVideoElement> node.element;
+                const element = node.element as HTMLVideoElement;
                 let src = element.src;
                 let mimeType: Undef<string>;
                 if (hasMimeType(videoMimeType, src)) {
@@ -1948,8 +1943,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!node.companion && node.hasProcedure(NODE_PROCEDURE.ACCESSIBILITY)) {
                     [node.previousSibling, node.nextSibling].some((sibling: T) => {
                         if (sibling?.visible && sibling.pageFlow) {
-                            const element = <HTMLInputElement> node.element;
-                            const labelElement = <HTMLLabelElement> sibling.element;
+                            const element = node.element as HTMLInputElement;
+                            const labelElement = sibling.element as HTMLLabelElement;
                             const labelParent = sibling.documentParent.tagName === 'LABEL' && sibling.documentParent as T;
                             if (element.id && element.id === labelElement.htmlFor) {
                                 sibling.android('labelFor', node.documentId);
@@ -1963,7 +1958,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         return false;
                     });
                 }
-                if ((<HTMLInputElement> node.element).list?.children.length) {
+                if ((node.element as HTMLInputElement).list?.children.length) {
                     controlName = CONTAINER_ANDROID.EDIT_LIST;
                 }
                 else if (node.api >= BUILD_ANDROID.OREO) {
@@ -2395,7 +2390,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     let siblings: Undef<Element[]>;
                     if (item.styleText && !item.hasPX('width')) {
                         const textBounds = item.textBounds;
-                        if (textBounds && (<number> textBounds.numberOfLines > 1 || Math.ceil(textBounds.width) < item.box.width)) {
+                        if (textBounds && (textBounds.numberOfLines as number > 1 || Math.ceil(textBounds.width) < item.box.width)) {
                             bounds = textBounds;
                         }
                     }
@@ -2416,7 +2411,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (previous) {
                         relativeData.retainMultiline = false;
                         const textNewRow = item.textElement && relativeNewRow(item, previous, previousRowLeft, bounds, multiline, i, rowWidth, relativeData);
-                        siblings = item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, <Element> item.element) : undefined;
+                        siblings = item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element as Element) : undefined;
                         if (previous.floating && adjustFloatingNegativeMargin(item, previous)) {
                             alignSibling = '';
                         }
@@ -2500,7 +2495,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     if (siblings?.some(element => !!getElementAsNode(element, item.sessionId) || causesLineBreak(element)) === false) {
                         const betweenStart = getRangeClientRect(siblings[0]);
                         if (!betweenStart.numberOfLines) {
-                            const betweenEnd = siblings.length > 1 && getRangeClientRect(<Element> siblings.pop());
+                            const betweenEnd = siblings.length > 1 && getRangeClientRect(siblings.pop() as Element);
                             if (!betweenEnd || !betweenEnd.numberOfLines) {
                                 rowWidth += betweenEnd ? betweenStart.left - betweenEnd.right : betweenStart.width;
                             }
@@ -2527,7 +2522,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const q = items.length;
                 if (q > 1) {
                     const bottomAligned = getTextBottom(items);
-                    let textBottom = <Undef<T>> bottomAligned[0];
+                    let textBottom = bottomAligned[0] as Undef<T>;
                     baseline = NodeUI.baseline(bottomAligned.length ? items.filter(item => !bottomAligned.includes(item)) : items);
                     if (baseline && textBottom) {
                         if (baseline !== textBottom && baseline.bounds.height < textBottom.bounds.height) {
@@ -2727,21 +2722,21 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                             application.addLayoutTemplate(
                                 group,
                                 item,
-                                <NodeXmlTemplate<T>> {
+                                {
                                     type: NODE_TEMPLATE.XML,
                                     node: item,
                                     controlName: item.controlName
-                                }
+                                } as NodeXmlTemplate<T>
                             );
                         });
                         application.addLayoutTemplate(
                             node,
                             group,
-                            <NodeXmlTemplate<T>> {
+                            {
                                 type: NODE_TEMPLATE.XML,
                                 node: group,
                                 controlName: group.controlName
-                            },
+                            } as NodeXmlTemplate<T>,
                             renderIndex
                         );
                         if (previousBaseline) {
@@ -2785,7 +2780,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         node.horizontalRows = rowsRight ? rowsLeft.concat(rowsRight) : rowsLeft;
         if (autoPosition) {
             const renderChildren = node.renderChildren;
-            const renderTemplates = <NodeTemplate<T>[]> node.renderTemplates;
+            const renderTemplates = node.renderTemplates as NodeTemplate<T>[];
             const templates: NodeTemplate<T>[] = [];
             for (let i = 0; i < renderChildren.length; ++i) {
                if (!renderChildren[i].pageFlow) {
@@ -3211,7 +3206,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         node.horizontalRows = horizontal;
     }
 
-    protected createLayoutGroup(layout: squared.base.LayoutUI<T>) {
+    protected createLayoutGroup(layout: LayoutUI<T>) {
         return this.createNodeGroup(layout.node, layout.children, { parent: layout.parent });
     }
 

@@ -1,25 +1,20 @@
-
-import { FileActionAttribute } from './file';
-
-import * as application from '../base/application';
-
-export interface UserSettings extends application.UserSettings {
+interface ChromeUserSettings extends UserSettings {
     excludePlainText: boolean;
     outputFileExclusions: string[];
 }
 
-export interface NodeOptions {
-    element: Element;
-}
-
-export interface FileOutputAttribute {
+interface FileUniversalAttribute {
     saveAsWebPage?: boolean;
     productionRelease?: boolean;
     removeUnusedStyles?: boolean;
 }
 
-export interface FileActionOptions extends application.FileActionOptions, FileActionAttribute, FileOutputAttribute {}
+interface ChromeFileActionOptions extends squared.base.FileActionOptions, FileActionAttribute, FileUniversalAttribute {}
 
-export interface FileCopyingOptions extends application.FileCopyingOptions, FileActionOptions {}
+interface ChromeFileCopyingOptions extends squared.base.FileCopyingOptions, ChromeFileActionOptions {}
 
-export interface FileArchivingOptions extends application.FileArchivingOptions, FileActionOptions {}
+interface ChromeFileArchivingOptions extends squared.base.FileArchivingOptions, ChromeFileActionOptions {}
+
+interface NodeOptions {
+    element: Element;
+}

@@ -1,5 +1,3 @@
-import { RawAsset } from '../../../@types/base/file';
-
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 
@@ -23,7 +21,7 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
     public processNode(node: T, parent: T) {
         const mainData: SpriteData = node.data(SPRITE, 'mainData');
         if (mainData) {
-            const drawable = (<android.base.Resource<T>> this.resource).addImageSrc(node.backgroundImage);
+            const drawable = (this.resource as android.base.Resource<T>).addImageSrc(node.backgroundImage);
             if (drawable !== '') {
                 const { width, height } = mainData.image;
                 const { top, left } = mainData.position;

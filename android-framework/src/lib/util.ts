@@ -1,6 +1,3 @@
-import { StyleAttribute } from '../../../@types/android/application';
-import { ViewAttribute } from '../../../@types/android/node';
-
 type View = android.base.View;
 
 import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';

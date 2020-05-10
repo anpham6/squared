@@ -8,6 +8,11 @@ import { KEYSPLINE_NAME, STRING_CUBICBEZIER } from './lib/constant';
 import { TRANSFORM, calculateStyle, getAttribute } from './lib/util';
 
 type SvgElement = squared.svg.SvgElement;
+type AttributeMap = ObjectMap<AttributeData[]>;
+
+interface AttributeData extends NumberValue {
+    transformOrigin?: Point;
+}
 
 const $lib = squared.lib;
 
@@ -16,12 +21,6 @@ const { isWinEdge } = $lib.client;
 const { getNamedItem } = $lib.dom;
 const { XML } = $lib.regex;
 const { isString, iterateArray, replaceMap, safeNestedArray, sortNumber } = $lib.util;
-
-type AttributeMap = ObjectMap<AttributeData[]>;
-
-interface AttributeData extends NumberValue {
-    transformOrigin?: Point;
-}
 
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',
@@ -127,20 +126,20 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     times.forEach(time => addAnimation(new SvgAnimation(element, item), time));
                                     break;
                                 case 'animate':
-                                    times.forEach(time => addAnimation(new SvgAnimate(element, <SVGAnimateElement> item), time));
+                                    times.forEach(time => addAnimation(new SvgAnimate(element, item as SVGAnimateElement), time));
                                     break;
                                 case 'animateTransform':
                                     times.forEach(time => {
-                                        const animate = new SvgAnimateTransform(element, <SVGAnimateTransformElement> item);
+                                        const animate = new SvgAnimateTransform(element, item as SVGAnimateTransformElement);
                                         if (SvgBuild.isShape(this) && this.path) {
-                                            animate.transformFrom = SvgBuild.drawRefit(<SVGGraphicsElement> element, this.parent, this.viewport?.precision);
+                                            animate.transformFrom = SvgBuild.drawRefit(element as SVGGraphicsElement, this.parent, this.viewport?.precision);
                                         }
                                         addAnimation(animate, time);
                                     });
                                     break;
                                 case 'animateMotion':
                                     times.forEach(time => {
-                                        const animate = new SvgAnimateMotion(element, <SVGAnimateMotionElement> item);
+                                        const animate = new SvgAnimateMotion(element, item as SVGAnimateMotionElement);
                                         const motionPathElement = animate.motionPathElement;
                                         if (motionPathElement) {
                                             animate.path = SvgBuild.drawRefit(motionPathElement, this.parent, this.viewport?.precision);
@@ -341,7 +340,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         continue;
                                     case 'offset-distance':
                                         animate = new SvgAnimateMotion(element);
-                                        (<SvgAnimateMotion> animate).rotateData = attrMap['offset-rotate'];
+                                        (animate as SvgAnimateMotion).rotateData = attrMap['offset-rotate'];
                                         break;
                                     case 'rotate':
                                     case 'scale':
@@ -349,7 +348,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     case 'skewY':
                                     case 'translate':
                                         animate = new SvgAnimateTransform(element);
-                                        (<SvgAnimateTransform> animate).setType(name);
+                                        (animate as SvgAnimateTransform).setType(name);
                                         break;
                                     default:
                                         animate = new SvgAnimate(element);
@@ -362,12 +361,12 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 const timingFunction = cssData['animation-timing-function'][i];
                                 sortAttribute(animation);
                                 if (name === 'offset-distance') {
-                                    const animateMotion = <SvgAnimateMotion> animate;
+                                    const animateMotion = animate as SvgAnimateMotion;
                                     if (animation[0].key !== 0) {
                                         animateMotion.addKeyPoint({ key: 0, value: animateMotion.distance });
                                     }
                                     animation.forEach(item => animateMotion.addKeyPoint(item));
-                                    if ((<NumberValue> animation.pop()).key !== 1) {
+                                    if ((animation.pop() as NumberValue).key !== 1) {
                                         animateMotion.addKeyPoint({ key: 1, value: animateMotion.distance });
                                     }
                                     if (isString(timingFunction)) {
@@ -391,7 +390,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         }
                                         const transformOrigin = item.transformOrigin;
                                         if (transformOrigin && SvgBuild.asAnimateTransform(animate)) {
-                                            safeNestedArray(<StandardMap> animate, 'transformOrigin')[j] = transformOrigin;
+                                            safeNestedArray(animate as StandardMap, 'transformOrigin')[j] = transformOrigin;
                                         }
                                     }
                                     if (includeKeySplines && !keySplines.every(value => value === 'linear')) {

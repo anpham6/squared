@@ -55,9 +55,9 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     }
 
     get animations() {
-        let result = <SvgAnimation[]> super.animations;
+        let result = super.animations as SvgAnimation[];
         if (!this.__get_animations) {
-            result = result.concat(<SvgAnimation[]> this.getAnimations(this.shapeElement));
+            result = result.concat(this.getAnimations(this.shapeElement) as SvgAnimation[]);
             this._animations = result;
             this.__get_animations = true;
         }

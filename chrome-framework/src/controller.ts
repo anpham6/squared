@@ -1,5 +1,3 @@
-import { ControllerSettings } from '../../@types/base/application';
-
 import View from './view';
 
 const $lib = squared.lib;
@@ -53,12 +51,12 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public cacheElement(node: T) {
-        this._elementMap.set(<Element> node.element, node);
+        this._elementMap.set(node.element as Element, node);
     }
 
     public cacheElementList(list: squared.base.NodeList<T>) {
         const elementMap = this._elementMap;
-        list.each(node => elementMap.set(<Element> node.element, node));
+        list.each(node => elementMap.set(node.element as Element, node));
     }
 
     get elementMap() {

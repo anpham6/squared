@@ -1,5 +1,3 @@
-import { LayoutOptions, LayoutType } from '../../@types/base/application';
-
 import NodeUI from './node-ui';
 
 const { hasBit } = squared.lib.util;

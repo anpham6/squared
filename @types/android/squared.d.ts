@@ -1,8 +1,3 @@
-import { FileAsset } from '../base/file';
-import { AppViewModel } from './internal';
-import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, RenderSpaceAttribute, ResourceStoredMap, StyleAttribute, UserSettings } from './application';
-import { Constraint, CreateNodeWrapperOptions, LocalSettings, Support, ViewAttribute } from './node';
-
 import * as squared from '../squared';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -10,8 +5,13 @@ import LayoutUI = squared.base.LayoutUI;
 type View = base.View;
 
 declare namespace base {
+    interface AppViewModel extends squared.base.AppViewModel {
+        import?: string[];
+        variable?: { name: string; type: string }[];
+    }
+
     class Application<T extends View>  extends squared.base.ApplicationUI<T> {
-        readonly userSettings: UserSettings;
+        readonly userSettings: AndroidUserSettingsUI;
         readonly controllerHandler: Controller<T>;
         readonly resourceHandler: Resource<T>;
         readonly fileHandler: File<T>;
@@ -35,12 +35,12 @@ declare namespace base {
         addBarrier(nodes: T[], barrierDirection: string): string;
         evaluateAnchors(nodes: T[]): void;
         createNodeWrapper(node: T, parent: T, options?: CreateNodeWrapperOptions<T>): T;
-        get userSettings(): UserSettings;
+        get userSettings(): AndroidUserSettingsUI;
         get screenDimension(): Dimension;
     }
 
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
-        public static STORED: ResourceStoredMap;
+        public static STORED: AndroidResourceStoredMap;
         public static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
         public static formatName(value: string): string;
         public static addTheme(theme: StyleAttribute): boolean;
@@ -49,27 +49,27 @@ declare namespace base {
         public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
-        get userSettings(): UserSettings;
+        get userSettings(): AndroidUserSettingsUI;
         addImageSrc(element: HTMLImageElement | string, prefix?: string, imageSet?: ImageSrcSet[]): string;
         addImageSet(images: StringMap, prefix?: string): string;
     }
 
     class File<T extends View> extends squared.base.FileUI<T> {
         resource: Resource<T>;
-        get userSettings(): UserSettings;
-        resourceAllToXml(options?: FileOutputOptions): {};
-        resourceStringToXml(options?: FileOutputOptions): string[];
-        resourceStringArrayToXml(options?: FileOutputOptions): string[];
-        resourceFontToXml(options?: FileOutputOptions): string[];
-        resourceColorToXml(options?: FileOutputOptions): string[];
-        resourceStyleToXml(options?: FileOutputOptions): string[];
-        resourceDimenToXml(options?: FileOutputOptions): string[];
-        resourceDrawableToXml(options?: FileOutputOptions): string[];
-        resourceAnimToXml(options?: FileOutputOptions): string[];
-        resourceDrawableImageToString(options?: FileOutputOptions): string[];
-        resourceRawVideoToString(options?: FileOutputOptions): string[];
-        resourceRawAudioToString(options?: FileOutputOptions): string[];
-        layoutAllToXml(layouts: FileAsset[], options?: FileOutputOptions): {};
+        get userSettings(): AndroidUserSettingsUI;
+        resourceAllToXml(options?: FileUniversalOptions): {};
+        resourceStringToXml(options?: FileUniversalOptions): string[];
+        resourceStringArrayToXml(options?: FileUniversalOptions): string[];
+        resourceFontToXml(options?: FileUniversalOptions): string[];
+        resourceColorToXml(options?: FileUniversalOptions): string[];
+        resourceStyleToXml(options?: FileUniversalOptions): string[];
+        resourceDimenToXml(options?: FileUniversalOptions): string[];
+        resourceDrawableToXml(options?: FileUniversalOptions): string[];
+        resourceAnimToXml(options?: FileUniversalOptions): string[];
+        resourceDrawableImageToString(options?: FileUniversalOptions): string[];
+        resourceRawVideoToString(options?: FileUniversalOptions): string[];
+        resourceRawAudioToString(options?: FileUniversalOptions): string[];
+        layoutAllToXml(layouts: FileAsset[], options?: FileUniversalOptions): {};
     }
 
     class View extends squared.base.NodeUI {
@@ -100,7 +100,7 @@ declare namespace base {
         set anchored(value);
         get anchored(): boolean;
         set localSettings(value);
-        get localSettings(): LocalSettings;
+        get localSettings(): AndroidLocalSettingsUI;
         get anchorTarget(): View;
         get imageOrSvgElement(): boolean;
         get layoutFrame(): boolean;
@@ -117,7 +117,7 @@ declare namespace base {
         get flexibleWidth(): boolean;
         get flexibleHeight(): boolean;
         get target(): Null<HTMLElement>;
-        get support(): Support;
+        get support(): AndroidSupport;
     }
 
     class ViewGroup extends View {}
@@ -410,13 +410,13 @@ declare namespace lib {
             [index: number]: CustomizationsData;
         }
         interface CustomizationsData {
-            android: ObjectMap<boolean | CustomizationResult>;
+            android: ObjectMap<boolean | CustomizationResult<View>>;
             assign: {
                 [namespace: string]: ObjectMap<StringMap>;
             };
         }
         interface Deprecations {
-            android: ObjectMap<CustomizationResult>;
+            android: ObjectMap<CustomizationResult<View>>;
         }
 
         const API_ANDROID: Customizations;

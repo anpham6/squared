@@ -1,6 +1,3 @@
-import { NodeXmlTemplate } from '../../@types/base/application';
-import { UserSettings } from '../../@types/android/application';
-
 import { WIDGET_NAME } from '../lib/constant';
 
 type View = android.base.View;
@@ -77,11 +74,11 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
         node.setLayoutWidth('match_parent');
         node.setLayoutHeight('match_parent');
         return {
-            output: <NodeXmlTemplate<T>> {
+            output: {
                 type: NODE_TEMPLATE.XML,
                 node,
                 controlName
-            },
+            } as NodeXmlTemplate<T>,
             complete: true,
             include: true,
             remove: true
@@ -102,7 +99,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
                 assignEmptyValue(app, 'headerLayout', `@layout/${headerLayout}`);
             }
             if (menu || headerLayout) {
-                const controller = <android.base.Controller<T>> this.controller;
+                const controller = this.controller as android.base.Controller<T>;
                 assignEmptyValue(options, 'android', 'id', `@+id/${node.controlId}_navigation`);
                 assignEmptyValue(options, 'android', 'fitsSystemWindows', 'true');
                 assignEmptyValue(options, 'android', 'layout_gravity', node.localizeString('left'));
@@ -132,7 +129,7 @@ export default class Drawer<T extends View> extends squared.base.ExtensionUI<T> 
     }
 
     public setStyleTheme(api: number) {
-        const settings = <UserSettings> this.application.userSettings;
+        const settings = this.application.userSettings as AndroidUserSettingsUI;
         const options = createStyleAttribute(this.options.resource);
         assignEmptyValue(options, 'name', settings.manifestThemeName);
         assignEmptyValue(options, 'parent', settings.manifestParentThemeName);

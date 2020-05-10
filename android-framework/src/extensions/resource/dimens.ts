@@ -1,5 +1,3 @@
-import { ResourceStoredMap } from '../../../../@types/android/application';
-
 import Resource from '../../resource';
 
 type View = android.base.View;
@@ -9,7 +7,7 @@ const $lib = squared.lib;
 const { XML } = $lib.regex;
 const { convertUnderscore, fromLastIndexOf, safeNestedArray, safeNestedMap } = $lib.util;
 
-const STORED = <ResourceStoredMap> Resource.STORED;
+const STORED = Resource.STORED as AndroidResourceStoredMap;
 const REGEX_UNIT = /\dpx$/;
 const REGEX_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/g;
 
@@ -54,7 +52,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             }
         });
         for (const containerName in groups) {
-            const group = <ObjectMap<T[]>> groups[containerName];
+            const group = groups[containerName] as ObjectMap<T[]>;
             for (const name in group) {
                 const [namespace, attr, value] = name.split(XML.SEPARATOR);
                 const key = getResourceName(dimens, getDisplayName(containerName) + '_' + convertUnderscore(attr), value);

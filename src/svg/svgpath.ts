@@ -86,7 +86,7 @@ function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
         const seg = path[i++];
         if (seg.key.toUpperCase() === 'A') {
             if (rx !== undefined) {
-                const offset = rx - <number> seg.radiusX;
+                const offset = rx - (seg.radiusX as number);
                 seg.radiusX = rx;
                 seg.coordinates[0] = rx * 2 * (seg.coordinates[0] < 0 ? -1 : 1);
                 if (i === 1) {
@@ -136,7 +136,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                 }
                 const value = parseFloat(values[i]);
                 if (!isNaN(value)) {
-                    const path = i < length - 1 ? <SvgPathCommand[]> cloneArray(commands, [], true) : commands;
+                    const path = i < length - 1 ? cloneArray(commands, [], true) as SvgPathCommand[] : commands;
                     switch (attr) {
                         case 'x':
                         case 'x1':
@@ -239,8 +239,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             ({ residual, precision } = options);
         }
         const element = this.element;
-        const parent = <SvgContainer> this.parent;
-        const patternParent = <SvgShapePattern> this.patternParent;
+        const parent = this.parent as SvgContainer;
+        const patternParent = this.patternParent as SvgShapePattern;
         const requireRefit = parent?.requireRefit === true;
         const patternRefit = patternParent?.patternContentUnits === REGION_UNIT.OBJECT_BOUNDING_BOX;
         this.transformed = undefined;
@@ -332,7 +332,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                     this.transformed = transforms;
                 }
             }
-            const pt = <Required<SvgPoint>> points[0];
+            const pt = points[0] as Required<SvgPoint>;
             const drawEllipse = () => SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, precision);
             this.baseValue = drawEllipse();
             if (requireRefit) {

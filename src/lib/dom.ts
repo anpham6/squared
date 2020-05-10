@@ -104,7 +104,7 @@ export function getRangeClientRect(element: Element) {
     let length = clientRects.length;
     let i = 0;
     while (i < length) {
-        const item = <ClientRect> clientRects.item(i++);
+        const item = clientRects.item(i++) as ClientRect;
         if (Math.round(item.width) > 0 && !withinRange(item.left, item.right, 0.5)) {
             domRect.push(item);
         }

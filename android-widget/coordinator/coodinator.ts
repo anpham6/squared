@@ -1,5 +1,3 @@
-import { NodeXmlTemplate } from '../../@types/base/application';
-
 import { WIDGET_NAME } from '../lib/constant';
 
 type View = android.base.View;
@@ -37,11 +35,11 @@ export default class Coordinator<T extends View> extends squared.base.ExtensionU
         node.render(parent);
         node.renderExclude = false;
         return {
-            output: <NodeXmlTemplate<T>> {
+            output: {
                 type: NODE_TEMPLATE.XML,
                 node,
                 controlName
-            }
+            } as NodeXmlTemplate<T>
         };
     }
 

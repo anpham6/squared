@@ -1015,7 +1015,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
                         default: {
                             const color = findColorName(value);
                             if (color) {
-                                rgba = <RGBA> { ...color.rgb, a: parseOpacity(opacity) };
+                                rgba = { ...color.rgb, a: parseOpacity(opacity) } as RGBA;
                                 key = value;
                             }
                             break;
@@ -1035,7 +1035,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
                 }
                 opacity = a / 255;
                 value = `#${hexAsString}`;
-                colorData = <ColorData> {
+                colorData = {
                     key,
                     value,
                     valueAsRGBA,
@@ -1044,7 +1044,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
                     hsl: convertHSLA(rgba),
                     opacity,
                     transparent: opacity === 0
-                };
+                } as ColorData;
                 if (opacity === 1) {
                     CACHE_COLORDATA[value] = colorData;
                 }
@@ -1075,14 +1075,14 @@ export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
     }
     const base = percent < 0 ? 0 : 255;
     percent = Math.abs(percent);
-    const result = <ColorData> parseColor(
+    const result = parseColor(
         formatRGBA({
             r: (r + Math.round((base - r) * percent)) % 255,
             g: (g + Math.round((base - g) * percent)) % 255,
             b: (b + Math.round((base - b) * percent)) % 255,
             a: value.a
         })
-    );
+    ) as ColorData;
     if (cacheName) {
         CACHE_COLORDATA[cacheName] = result;
     }
@@ -1123,12 +1123,12 @@ export function parseRGBA(value: string) {
                 break;
         }
         if (value.length === 6) {
-            return <RGBA> {
+            return {
                 r: parseInt(value.substring(0, 2), 16),
                 g: parseInt(value.substring(2, 4), 16),
                 b: parseInt(value.substring(4), 16),
                 a
-            };
+            } as RGBA;
         }
     }
     return undefined;

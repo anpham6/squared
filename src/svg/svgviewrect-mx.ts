@@ -42,7 +42,7 @@ export default <T extends Constructor<SvgBaseVal>>(Base: T) => {
                 case 'svg':
                 case 'use':
                 case 'image':
-                    return <SVGSVGElement> element;
+                    return element as SVGSVGElement;
                 default:
                     return null;
             }

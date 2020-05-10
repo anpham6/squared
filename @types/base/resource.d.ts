@@ -1,6 +1,4 @@
-import { Asset, ImageAsset, RawAsset } from './file';
-
-export interface ResourceAssetMap {
+interface ResourceAssetMap {
     ids: Map<string, string[]>;
     fonts: Map<string, FontFaceData[]>;
     image: Map<string, ImageAsset>;
@@ -9,7 +7,7 @@ export interface ResourceAssetMap {
     rawData: Map<string, RawAsset>;
 }
 
-export interface ResourceStoredMap {
+interface ResourceStoredMap {
     strings: Map<string, string>;
     arrays: Map<string, string[]>;
     fonts: Map<string, ObjectMap<string>>;

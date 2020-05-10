@@ -1,12 +1,7 @@
-import { LayoutResult, LayoutType, CreateNodeGroupOptions, NodeIncludeTemplate, NodeTemplate, NodeXmlTemplate } from '../../@types/base/application';
-import { ControllerSettings, UserSettings } from '../../@types/base/application-ui';
-import { FileAsset } from '../../@types/base/file';
-
 import Controller from './controller';
 
 import { NODE_TEMPLATE } from './lib/enumeration';
 
-type LayoutUI = squared.base.LayoutUI<NodeUI>;
 type NodeUI = squared.base.NodeUI;
 
 const $lib = squared.lib;
@@ -62,7 +57,7 @@ function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: str
 const getNumberValue = (style: CSSStyleDeclaration, attr: string) => parseInt(style.getPropertyValue(attr));
 
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
-    public abstract readonly localSettings: ControllerSettings;
+    public abstract readonly localSettings: ControllerSettingsUI;
 
     private _requireFormat = false;
     private _beforeOutside: ObjectIndex<string[]> = {};
@@ -72,20 +67,20 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     private _unsupportedCascade!: Set<string>;
     private _unsupportedTagName!: Set<string>;
 
-    public abstract processUnknownParent(layout: LayoutUI): LayoutResult<T>;
-    public abstract processUnknownChild(layout: LayoutUI): LayoutResult<T>;
-    public abstract processTraverseHorizontal(layout: LayoutUI, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
-    public abstract processTraverseVertical(layout: LayoutUI, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
-    public abstract processLayoutHorizontal(layout: LayoutUI): squared.base.LayoutUI<T>;
+    public abstract processUnknownParent(layout: squared.base.LayoutUI<T>): squared.base.LayoutResult<T>;
+    public abstract processUnknownChild(layout: squared.base.LayoutUI<T>): squared.base.LayoutResult<T>;
+    public abstract processTraverseHorizontal(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
+    public abstract processTraverseVertical(layout: squared.base.LayoutUI<T>, siblings: T[]): Undef<squared.base.LayoutUI<T>>;
+    public abstract processLayoutHorizontal(layout: squared.base.LayoutUI<T>): squared.base.LayoutUI<T>;
     public abstract createNodeGroup(node: T, children: T[], options?: CreateNodeGroupOptions<T>): T;
-    public abstract renderNode(layout: LayoutUI): Undef<NodeTemplate<T>>;
-    public abstract renderNodeGroup(layout: LayoutUI): Undef<NodeTemplate<T>>;
+    public abstract renderNode(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
+    public abstract renderNodeGroup(layout: squared.base.LayoutUI<T>): Undef<NodeTemplate<T>>;
     public abstract sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
     public abstract setConstraints(): void;
     public abstract optimize(nodes: T[]): void;
     public abstract finalize(layouts: FileAsset[]): void;
 
-    public abstract get userSettings(): UserSettings;
+    public abstract get userSettings(): UserSettingsUI;
     public abstract get screenDimension(): Dimension;
     public abstract get containerTypeHorizontal(): LayoutType;
     public abstract get containerTypeVertical(): LayoutType;
@@ -155,7 +150,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         }
                         break;
                     case 'INPUT':
-                        switch ((<HTMLInputElement> element).type) {
+                        switch ((element as HTMLInputElement).type) {
                             case 'text':
                             case 'password':
                             case 'time':
@@ -189,7 +184,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             }
             switch (tagName) {
                 case 'INPUT': {
-                    const type = (<HTMLInputElement> element).type;
+                    const type = (element as HTMLInputElement).type;
                     switch (type) {
                         case 'radio':
                         case 'checkbox':
@@ -342,7 +337,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public includeElement(element: Element) {
-        return !(this._unsupportedTagName.has(element.tagName) || element.tagName === 'INPUT' && this._unsupportedTagName.has(element.tagName + ':' + (<HTMLInputElement> element).type)) || (<HTMLElement> element).contentEditable === 'true';
+        return !(this._unsupportedTagName.has(element.tagName) || element.tagName === 'INPUT' && this._unsupportedTagName.has(element.tagName + ':' + (element as HTMLInputElement).type)) || (element as HTMLElement).contentEditable === 'true';
     }
 
     public visibleElement(element: Element, pseudoElt?: string) {
@@ -597,7 +592,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             const node = item.node;
             switch (item.type) {
                 case NODE_TEMPLATE.XML: {
-                    const { controlName, attributes } = <NodeXmlTemplate<T>> item;
+                    const { controlName, attributes } = item as NodeXmlTemplate<T>;
                     const { id, renderTemplates } = node;
                     const next = depth + 1;
                     const previous = node.depth < 0 ? depth + node.depth : depth;
@@ -607,7 +602,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     if (renderTemplates || beforeInside !== '' || afterInside !== '') {
                         template += '>\n' +
                                     beforeInside +
-                                    (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, <NodeTemplate<T>[]> renderTemplates), next) : '') +
+                                    (renderTemplates ? this.cascadeDocument(this.sortRenderPosition(node, renderTemplates as NodeTemplate<T>[]), next) : '') +
                                     afterInside +
                                     indent + `</${controlName}>\n`;
                     }
@@ -618,7 +613,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     break;
                 }
                 case NODE_TEMPLATE.INCLUDE: {
-                    const content = (<NodeIncludeTemplate<T>> item).content;
+                    const content = (item as NodeIncludeTemplate<T>).content;
                     if (content) {
                         output += pushIndent(content, depth);
                     }
@@ -659,7 +654,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 if (value && isLength(value)) {
                     const attrMax = `max${capitalize(attr)}`;
                     if (!isString(styleMap[attrMax]) || !isPercent(attrMax)) {
-                        const image = this.application.resourceHandler.getImage((<HTMLImageElement> element).src);
+                        const image = this.application.resourceHandler.getImage((element as HTMLImageElement).src);
                         if (image && image.width > 0 && image.height > 0) {
                             styleMap[attr] = formatPX(image[attr] * parseFloat(value) / image[opposing]);
                         }

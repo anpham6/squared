@@ -1,7 +1,3 @@
-import { NodeTemplate } from '../../@types/base/application';
-import { BoxOptions, BoxType, InitialData, SiblingOptions } from '../../@types/base/node';
-import { CachedValue, ExcludeOptions, HideOptions, LinearData, LocalSettings, RemoveTryOptions, ReplaceTryOptions, Support, TranslateOptions } from '../../@types/base/node-ui';
-
 import Node from './node';
 
 import { CSS_SPACING } from './lib/constant';
@@ -90,7 +86,7 @@ function traverseElementSibling(element: Null<Element>, direction: "previousSibl
                 }
             }
         }
-        element = <Element> element[direction];
+        element = element[direction] as Element;
     }
     return result;
 }
@@ -452,7 +448,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public lineBreakTrailing = false;
     public baselineActive = false;
     public baselineAltered = false;
-    public abstract localSettings: LocalSettings;
+    public abstract localSettings: LocalSettingsUI;
     public abstract renderParent?: T;
     public abstract renderExtension?: squared.base.ExtensionUI<T>[];
     public abstract renderTemplates?: NodeTemplate<T>[];
@@ -469,7 +465,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     protected _preferInitial = true;
     protected _documentParent?: T;
     protected _controlName?: string;
-    protected abstract _cached: CachedValue<T>;
+    protected abstract _cached: CachedValueUI<T>;
     protected abstract _namespaces: string[];
     protected abstract _boxAdjustment: BoxModel;
     protected abstract _boxReset: BoxModel;
@@ -506,7 +502,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract get controlId(): string;
     public abstract get documentId(): string;
     public abstract get baselineHeight(): number;
-    public abstract get support(): Support;
+    public abstract get support(): SupportUI;
     public abstract set renderExclude(value: boolean);
     public abstract get renderExclude(): boolean;
     public abstract set positioned(value);
@@ -648,7 +644,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
                 case 'initial':
-                    cloneObject(<InitialData<T>> node.unsafe('initial'), this.initial);
+                    cloneObject(node.unsafe('initial') as InitialData<T>, this.initial);
                     break;
                 case 'alignment': {
                     const styleMap = this._styleMap;
@@ -770,7 +766,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public setExclusions(systemName?: string) {
         if (this.naturalElement) {
-            const element = <HTMLElement> this._element;
+            const element = this._element as HTMLElement;
             const dataset = element.dataset;
             const parentDataset = element.parentElement?.dataset || {};
             if (hasKeys(dataset) || hasKeys(parentDataset)) {
@@ -1005,11 +1001,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public previousSiblings(options?: SiblingOptions) {
-        return traverseElementSibling(<Element> (this.nodeGroup ? this.firstChild?.element?.previousSibling : this.innerMostWrapped.element?.previousSibling), 'previousSibling', this.sessionId, options);
+        return traverseElementSibling((this.nodeGroup ? this.firstChild?.element?.previousSibling : this.innerMostWrapped.element?.previousSibling) as Element, 'previousSibling', this.sessionId, options);
     }
 
     public nextSiblings(options?: SiblingOptions) {
-        return traverseElementSibling(<Element> (this.nodeGroup ? this.firstChild?.element?.nextSibling : this.innerMostWrapped.element?.nextSibling), 'nextSibling', this.sessionId, options);
+        return traverseElementSibling((this.nodeGroup ? this.firstChild?.element?.nextSibling : this.innerMostWrapped.element?.nextSibling) as Element, 'nextSibling', this.sessionId, options);
     }
 
     public modifyBox(region: number, offset?: number, negative = true) {
@@ -1116,7 +1112,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             node = boxRegister[region];
         }
         while (node) {
-            const next: Undef<NodeUI> = (<ObjectIndex<T>> node.unsafe('boxRegister'))[region];
+            const next: Undef<NodeUI> = (node.unsafe('boxRegister') as ObjectIndex<T>)[region];
             if (next) {
                 node = next;
             }
@@ -1270,7 +1266,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get element() {
-        return this._element || !!this.innerWrapped && <Null<Element>> this.innerMostWrapped.unsafe('element') || null;
+        return this._element || !!this.innerWrapped && this.innerMostWrapped.unsafe('element') as Null<Element> || null;
     }
 
     set naturalChild(value) {
@@ -1302,7 +1298,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._documentParent = value;
     }
     get documentParent() {
-        return <NodeUI> (this._documentParent || this.absoluteParent || this.actualParent || this.parent || this);
+        return (this._documentParent || this.absoluteParent || this.actualParent || this.parent || this) as NodeUI;
     }
 
     set containerName(value) {
@@ -1311,7 +1307,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get containerName() {
         let result = this._cached.containerName;
         if (result === undefined) {
-            const element = <HTMLInputElement> this.element;
+            const element = this.element as HTMLInputElement;
             if (element) {
                 if (isTextNode(element)) {
                     result = 'PLAINTEXT';
@@ -1469,7 +1465,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get actualParent(): Null<T> {
         let result = this._cached.actualParent;
         if (result === undefined) {
-            result = <Null<T>> super.actualParent;
+            result = super.actualParent as Null<T>;
             if (result === null) {
                 result = this.innerMostWrapped.actualParent;
             }
@@ -1495,7 +1491,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get previousSibling() {
         const parent = this.actualParent;
         if (parent) {
-            const children = <NodeUI[]> parent.naturalChildren;
+            const children = parent.naturalChildren as NodeUI[];
             const index = children.indexOf(this);
             if (index !== -1) {
                 let i = index - 1;
@@ -1513,7 +1509,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get nextSibling() {
         const parent = this.actualParent;
         if (parent) {
-            const children = <NodeUI[]> parent.naturalChildren;
+            const children = parent.naturalChildren as NodeUI[];
             const index = children.indexOf(this);
             if (index !== -1) {
                 const length = children.length;
@@ -1530,12 +1526,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get firstChild(): Null<NodeUI> {
-        return <NodeUI> this.naturalChildren[0] || null;
+        return this.naturalChildren[0] as NodeUI || null;
     }
 
     get lastChild(): Null<NodeUI> {
         const children = this.naturalChildren;
-        return <NodeUI> children[children.length - 1] || null;
+        return children[children.length - 1] as NodeUI || null;
     }
 
     get onlyChild() {

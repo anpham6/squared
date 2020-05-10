@@ -62,7 +62,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                 let target = child;
                 while (DOCTYPE_HTML && target[marginName] === 0 && target[borderWidth] === 0 && target[paddingName] === 0 && canResetChild(target)) {
                     if (direction) {
-                        const endChild = <NodeUI> target.firstStaticChild;
+                        const endChild = target.firstStaticChild as NodeUI;
                         if (isBlockElement(endChild, direction)) {
                             target = endChild;
                         }
@@ -137,9 +137,9 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                         resetBox(target, region);
                         if (!direction && target.floating) {
                             const bounds = target.bounds;
-                            (<NodeUI> target.actualParent).naturalChildren.forEach(item => {
+                            (target.actualParent as NodeUI).naturalChildren.forEach(item => {
                                 if (item.floating && item !== target && item.intersectY(bounds, 'bounds')) {
-                                    resetBox(<NodeUI> item, region);
+                                    resetBox(item as NodeUI, region);
                                 }
                             });
                         }
@@ -160,7 +160,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
             else if (child[marginName] === 0 && child[borderWidth] === 0 && canResetChild(child)) {
                 let blockAll = true;
                 do {
-                    const endChild = <NodeUI> (direction ? child.firstStaticChild : child.lastStaticChild);
+                    const endChild = (direction ? child.firstStaticChild : child.lastStaticChild) as NodeUI;
                     if (endChild && endChild[marginName] === 0 && endChild[borderWidth] === 0 && !endChild.visibleStyle.background && canResetChild(endChild)) {
                         const value = endChild[paddingName];
                         if (value > 0) {
@@ -204,11 +204,11 @@ function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
         }
         if (direction !== undefined) {
             if (direction) {
-                const firstChild = <NodeUI> node.firstStaticChild;
+                const firstChild = node.firstStaticChild as NodeUI;
                 return isBlockElement(firstChild) && validAboveChild(firstChild, false);
             }
             else {
-                const lastChild = <NodeUI> node.lastStaticChild;
+                const lastChild = node.lastStaticChild as NodeUI;
                 return isBlockElement(lastChild) && validBelowChild(lastChild, false);
             }
         }
@@ -244,7 +244,7 @@ function getMarginOffset<T extends NodeUI>(below: T, above: T, lineHeight: numbe
 function getBottomChild(node: NodeUI) {
     let bottomChild: Undef<NodeUI>;
     if (!node.floatContainer) {
-        bottomChild = <NodeUI> node.lastStaticChild;
+        bottomChild = node.lastStaticChild as NodeUI;
         if (!isBlockElement(node, false) || node.hasHeight && Math.floor(bottomChild.linear.bottom) < node.box.bottom) {
             bottomChild = undefined;
         }
@@ -254,7 +254,7 @@ function getBottomChild(node: NodeUI) {
         const children = node.naturalChildren;
         let j = children.length - 1;
         while (j >= 0) {
-            const item = <NodeUI> children[j--];
+            const item = children[j--] as NodeUI;
             if (item.floating) {
                 if (!bottomChild) {
                     const bottom = item.linear.bottom;
@@ -533,7 +533,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                     return;
                                                 });
                                                 if (float) {
-                                                    const clear = (<Undef<StringMap>> getElementCache(<Element> previous.element, 'styleMap::after', previous.sessionId))?.clear;
+                                                    const clear = (getElementCache(previous.element as Element, 'styleMap::after', previous.sessionId) as Undef<StringMap>)?.clear;
                                                     valid = !(clear === 'both' || clear === float);
                                                 }
                                             }
@@ -875,8 +875,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         if (top <= Math.floor(previous.bounds.top)) {
                                             let floatingRenderParent = previous.outerMostWrapper.renderParent;
                                             if (floatingRenderParent) {
-                                                renderParent = <NodeUI> renderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() || renderParent;
-                                                floatingRenderParent = <NodeUI> floatingRenderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() || floatingRenderParent;
+                                                renderParent = renderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() as NodeUI || renderParent;
+                                                floatingRenderParent = floatingRenderParent.ascend({ error: parent => parent.naturalChild, attr: 'renderParent' }).pop() as NodeUI || floatingRenderParent;
                                                 if (renderParent !== floatingRenderParent) {
                                                     outerWrapper.modifyBox(BOX_STANDARD.MARGIN_TOP, (floatingRenderParent !== node ? floatingRenderParent : previous).linear.height * -1, false);
                                                 }

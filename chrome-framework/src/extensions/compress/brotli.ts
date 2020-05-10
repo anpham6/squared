@@ -1,6 +1,3 @@
-import { RequestAsset } from '../../../../@types/chrome/file';
-import { CompressOptions } from '../../../../@types/chrome/extension';
-
 import Extension from '../../extension';
 
 type View = chrome.base.View;
@@ -16,7 +13,7 @@ export default class Brotli<T extends View> extends Extension<T> {
         level: 11
     };
 
-    public processFile(data: RequestAsset, override = false) {
+    public processFile(data: ChromeAsset, override = false) {
         if (!override) {
             const mimeType = data.mimeType;
             if (mimeType) {
@@ -25,7 +22,7 @@ export default class Brotli<T extends View> extends Extension<T> {
             }
         }
         if (override) {
-            safeNestedArray(<StandardMap> data, 'compress').push({ format: 'br', level: this.options.level, condition: Extension.getCompressOptions(this.options) });
+            safeNestedArray(data as StandardMap, 'compress').push({ format: 'br', level: this.options.level, condition: Extension.getCompressOptions(this.options) });
             return true;
         }
         return false;

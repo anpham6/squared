@@ -1,11 +1,31 @@
-import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@types/base/extension';
-
 import ExtensionUI from '../extension-ui';
 
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
+type RowData = Undef<NodeUI[]>[][];
+
+interface GridAlignment extends StringMap {
+    alignItems: string;
+    alignContent: string;
+    justifyItems: string;
+    justifyContent: string;
+    gridAutoFlow: string;
+}
+
+interface GridLayout {
+    placement: number[];
+    rowSpan: number;
+    columnSpan: number;
+    outerCoord: number;
+}
+
+interface RepeatItem {
+    name?: string;
+    unit?: string;
+    unitMin?: string;
+}
 
 const $lib = squared.lib;
 
@@ -15,25 +35,6 @@ const { isNumber, safeNestedArray, trimString, withinRange } = $lib.util;
 
 const CSS_GRID = EXT_NAME.CSS_GRID;
 
-type GridAlignment = {
-    alignItems: string;
-    alignContent: string;
-    justifyItems: string;
-    justifyContent: string;
-    gridAutoFlow: string;
-};
-type GridLayout = {
-    placement: number[];
-    rowSpan: number;
-    columnSpan: number;
-    outerCoord: number;
-};
-type RepeatItem = {
-    name?: string;
-    unit?: string;
-    unitMin?: string;
-};
-type RowData = Undef<NodeUI[]>[][];
 
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
@@ -228,7 +229,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
-        const mainData = CssGrid.createDataAttribute(<GridAlignment> node.cssAsObject('alignItems', 'alignContent', 'justifyItems', 'justifyContent', 'gridAutoFlow'));
+        const mainData = CssGrid.createDataAttribute(node.cssAsObject('alignItems', 'alignContent', 'justifyItems', 'justifyContent', 'gridAutoFlow') as GridAlignment);
         const { column, dense, row, rowDirection: horizontal } = mainData;
         const [rowA, colA, rowB, colB] = horizontal ? [0, 1, 2, 3] : [1, 0, 3, 2];
         const rowData: Undef<T[]>[][] = [];
@@ -699,12 +700,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (placement[3] === 0 && placement[1] > 0) {
                     placement[3] = placement[1] + columnSpan;
                 }
-                layout[index] = <GridLayout> {
+                layout[index] = {
                     outerCoord: horizontal ? item.bounds.top : item.bounds.left,
                     placement,
                     rowSpan,
                     columnSpan
-                };
+                } as GridLayout;
                 previousPlacement = placement;
             });
         }
@@ -937,12 +938,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         rowSpanMultiple[i++] = true;
                     }
                 }
-                item.data(CSS_GRID, 'cellData', <CssGridCellData> {
+                item.data(CSS_GRID, 'cellData', {
                     rowStart,
                     rowSpan: rowCount,
                     columnStart,
                     columnSpan: d - b
-                });
+                } as CssGridCellData);
             }
         });
         if (rowData.length) {
@@ -1004,7 +1005,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             if (columnItem) {
                                 columnItem.forEach((item: T) => {
                                     if (!modified.has(item)) {
-                                        const { columnSpan, rowSpan } = <CssGridCellData> item.data(CSS_GRID, 'cellData');
+                                        const { columnSpan, rowSpan } = item.data(CSS_GRID, 'cellData') as CssGridCellData;
                                         const x = j + columnSpan - 1;
                                         const y = i + rowSpan - 1;
                                         if (columnGap > 0 && x < columnCount - 1) {

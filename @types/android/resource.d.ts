@@ -1,4 +1,4 @@
-export interface GradientTemplate {
+interface GradientTemplate {
     type: string;
     positioning: boolean;
     item?: { color: string; offset: string }[];

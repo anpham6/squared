@@ -1,6 +1,3 @@
-import { AppFramework } from '../@types/base/internal';
-import { FileActionOptions, UserSettings } from '../@types/base/application';
-
 import Container from './lib/base/container';
 import ArrayIterator from './lib/base/arrayiterator';
 import ListIterator from './lib/base/listiterator';
@@ -16,17 +13,17 @@ import * as util from './lib/util';
 import * as xml from './lib/xml';
 
 type Node = squared.base.Node;
-type Application = squared.base.Application<Node>;
 type Extension = squared.base.Extension<Node>;
+type FileActionOptions = squared.base.FileActionOptions;
 type ExtensionRequest = Null<Extension | string>;
 
 const extensionsQueue = new Set<Extension>();
-const optionsQueue = new Map<string, StandardMap>();
-const settings = <UserSettings> {};
 const extensionsExternal = new Set<Extension>();
-const system = <FunctionMap<any>> {};
-let main: Undef<Application>;
-let framework: AppFramework<Node>;
+const optionsQueue = new Map<string, StandardMap>();
+const settings = {} as UserSettings;
+const system = {} as FunctionMap<any>;
+let main: Undef<squared.base.Application<Node>>;
+let framework: squared.base.AppFramework<Node>;
 
 function includeExtension(extensions: Extension[], ext: Extension) {
     if (main && !extensions.includes(ext)) {
@@ -41,7 +38,7 @@ function deleteProperties(data: {}) {
     }
 }
 
-const checkWritable = (app: Undef<Application>): app is Application => app?.initializing === false && app.length > 0;
+const checkWritable = (app: Undef<squared.base.Application<Node>>): app is squared.base.Application<Node> => app?.initializing === false && app.length > 0;
 
 export function setHostname(value: string) {
     if (main?.fileHandler) {
@@ -52,7 +49,7 @@ export function setHostname(value: string) {
     }
 }
 
-export function setFramework(value: AppFramework<Node>, options?: ObjectMap<any>, cached = false) {
+export function setFramework(value: squared.base.AppFramework<Node>, options?: ObjectMap<any>, cached = false) {
     const reloading = framework !== undefined;
     if (framework !== value) {
         const appBase = cached ? value.cached() : value.create();

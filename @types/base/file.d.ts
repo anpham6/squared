@@ -1,10 +1,10 @@
-export interface Asset {
+interface Asset {
     uri?: string;
     index?: number;
     mimeType?: string;
 }
 
-export interface FileAsset extends Asset {
+interface FileAsset extends Asset {
     pathname: string;
     filename: string;
     content?: string;
@@ -12,32 +12,32 @@ export interface FileAsset extends Asset {
     exclusions?: Exclusions;
 }
 
-export interface ImageAsset extends Omit<Asset, "index"> {
+interface ImageAsset extends Omit<Asset, "index"> {
     width: number;
     height: number;
 }
 
-export interface RequestAsset extends Omit<FileAsset, "index"> {
+interface RequestAsset extends Omit<FileAsset, "index"> {
     base64?: string;
     dataMap?: StandardMap;
 }
 
-export interface RawAsset extends RequestAsset, Partial<ImageAsset> {}
+interface RawAsset extends RequestAsset, Partial<ImageAsset> {}
 
-export interface Exclusions {
+interface Exclusions {
     pathname?: string[];
     filename?: string[];
     extension?: string[];
     pattern?: string[];
 }
 
-export interface CompressFormat {
+interface CompressFormat {
     format: string;
     level?: number;
     condition?: string;
 }
 
-export interface ResultOfFileAction {
+interface ResultOfFileAction {
     success: boolean;
     zipname?: string;
     bytes?: number;

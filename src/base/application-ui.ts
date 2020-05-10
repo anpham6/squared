@@ -1,9 +1,3 @@
-import { FileActionOptions, CreateNodeOptions, LayoutResult, LayoutRoot, NodeTemplate } from '../../@types/base/application';
-import { FileAsset } from '../../@types/base/file';
-
-import { AppSession } from '../../@types/base/internal-ui';
-import { ControllerSettings, UserSettings } from '../../@types/base/application-ui';
-
 import Application from './application';
 import NodeList from './nodelist';
 import ControllerUI from './controller-ui';
@@ -15,6 +9,7 @@ import ResourceUI from './resource-ui';
 
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
+type FileActionOptions = squared.base.FileActionOptions;
 type LayoutMap = Map<number, Map<number, NodeUI>>;
 
 const $lib = squared.lib;
@@ -132,7 +127,7 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
 }
 
 function checkPseudoAfter(element: Element) {
-    const previousSibling = <Element> element.childNodes[element.childNodes.length - 1];
+    const previousSibling = element.childNodes[element.childNodes.length - 1] as Element;
     if (isTextNode(previousSibling)) {
         return !/\s+$/.test(previousSibling.textContent as string);
     }
@@ -162,7 +157,7 @@ const setMapDepth = (map: LayoutMap, depth: number, id: number, node: NodeUI) =>
 const getMapIndex = (value: number) => (value * -1) - 2;
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
-    public readonly session: AppSession<T> = {
+    public readonly session: squared.base.AppSessionUI<T> = {
         cache: new NodeList<T>(),
         excluded: new NodeList<T>(),
         extensionMap: new Map<number, ExtensionUI<T>[]>(),
@@ -174,10 +169,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly controllerHandler!: ControllerUI<T>;
     public readonly resourceHandler!: ResourceUI<T>;
     public readonly fileHandler!: FileUI<T>;
-    public abstract userSettings: UserSettings;
+    public abstract userSettings: UserSettingsUI;
 
     private readonly _layouts: FileAsset[] = [];
-    private readonly _controllerSettings!: ControllerSettings;
+    private readonly _controllerSettings!: ControllerSettingsUI;
     private readonly _excluded!: Set<string>;
 
     protected constructor(
@@ -224,7 +219,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 ext.postOptimize(node);
             }
         });
-        const documentRoot: LayoutRoot<T>[] = [];
+        const documentRoot: squared.base.LayoutRoot<T>[] = [];
         i = 0;
         while (i < j) {
             const node = rendered[i++];
@@ -253,7 +248,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (renderTemplates) {
                 this.saveDocument(
                     layout.layoutName,
-                    baseTemplate + controllerHandler.cascadeDocument(<NodeTemplate<T>[]> renderTemplates, Math.abs(node.depth)),
+                    baseTemplate + controllerHandler.cascadeDocument(renderTemplates as NodeTemplate<T>[], Math.abs(node.depth)),
                     node.dataset['pathname' + systemName],
                     node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
                 );
@@ -321,7 +316,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public insertNode(element: Element, parent?: T, pseudoElt?: string) {
         if (isTextNode(element)) {
-            if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (<Element> parent.element).childElementCount === 0)) {
+            if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (parent.element as Element).childElementCount === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode({ parent, element, append: false });
                 if (parent) {
@@ -331,7 +326,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 return node;
             }
         }
-        else if (this.conditionElement(<HTMLElement> element, pseudoElt)) {
+        else if (this.conditionElement(element as HTMLElement, pseudoElt)) {
             this.controllerHandler.applyDefaultStyles(element);
             return this.createNode({ parent, element, append: false });
         }
@@ -388,7 +383,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (template) {
             if (!node.renderExclude) {
                 if (node.renderParent) {
-                    const renderTemplates = safeNestedArray(<StandardMap> parent, 'renderTemplates');
+                    const renderTemplates = safeNestedArray(parent as StandardMap, 'renderTemplates');
                     if (index === undefined || !(index >= 0 && index < parent.renderChildren.length)) {
                         parent.renderChildren.push(node);
                         renderTemplates.push(template);
@@ -434,7 +429,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const node = this.createRootNode(documentRoot);
         if (node) {
             const controllerHandler = this.controllerHandler;
-            const cache = <NodeList<T>> this._cache;
+            const cache = this._cache as NodeList<T>;
             const excluded = this.processing.excluded;
             const parent = node.parent as T;
             const preAlignment: ObjectIndex<StringMap> = {};
@@ -453,7 +448,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             node.documentParent = parent;
             cache.each(item => {
                 if (item.styleElement) {
-                    const element = <HTMLElement> item.element;
+                    const element = item.element as HTMLElement;
                     if (item.length) {
                         const textAlign = item.cssInitial('textAlign');
                         switch (textAlign) {
@@ -495,7 +490,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (pseudoElements.length) {
                 const pseudoMap: { item: T; id: string; parentElement: Element; styleElement?: HTMLStyleElement }[] = [];
                 pseudoElements.forEach((item: T) => {
-                    const parentElement = <HTMLElement> (item.actualParent as T).element;
+                    const parentElement = (item.actualParent as T).element as HTMLElement;
                     let id = parentElement.id;
                     let styleElement: Undef<HTMLStyleElement>;
                     if (item.pageFlow) {
@@ -503,7 +498,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             id = STRING_PSEUDOPREFIX + Math.round(Math.random() * new Date().getTime());
                             parentElement.id = id;
                         }
-                        styleElement = insertStyleSheetRule(`#${id + getPseudoElt(<Element> item.element, item.sessionId)} { display: none !important; }`);
+                        styleElement = insertStyleSheetRule(`#${id + getPseudoElt(item.element as Element, item.sessionId)} { display: none !important; }`);
                     }
                     if (item.cssTry('display', item.display)) {
                         pseudoMap.push({ item, id, parentElement, styleElement });
@@ -536,7 +531,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             });
             cache.each(item => {
                 if (item.styleElement) {
-                    const element = <HTMLElement> item.element;
+                    const element = item.element as HTMLElement;
                     const reset = preAlignment[item.id];
                     if (reset) {
                         for (const attr in reset) {
@@ -587,7 +582,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (depth === 0) {
                 this._cache.append(node);
                 for (const name of node.extensions) {
-                    if ((<ExtensionUI<T>> this.extensionManager.retrieve(name))?.cascadeAll) {
+                    if ((this.extensionManager.retrieve(name) as ExtensionUI<T>)?.cascadeAll) {
                         this._cascadeAll = true;
                         break;
                     }
@@ -607,7 +602,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             let inlineText = true;
             let i = 0, j = 0, k = 0;
             while (i < length) {
-                const element = <HTMLElement> childNodes[i++];
+                const element = childNodes[i++] as HTMLElement;
                 let child: Undef<T>;
                 if (element === beforeElement) {
                     child = this.insertNode(beforeElement, undefined, '::before');
@@ -636,7 +631,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else if (controllerHandler.includeElement(element)) {
                     if (extensions) {
-                        prioritizeExtensions(this.getDatasetName('use', element), extensions).some(item => (<any> item.init)(element));
+                        prioritizeExtensions(this.getDatasetName('use', element), extensions).some(item => (item.init as BindGeneric<HTMLElement, boolean>)(element));
                     }
                     if (!this.rootElements.has(element)) {
                         child = this.cascadeParentNode(element, depth + 1, extensions);
@@ -837,7 +832,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     continue;
                 }
                 const floatContainer = parent.floatContainer;
-                const renderExtension = <Undef<ExtensionUI<T>[]>> parent.renderExtension;
+                const renderExtension = parent.renderExtension as Undef<ExtensionUI<T>[]>;
                 const axisY = parent.duplicate() as T[];
                 const length = axisY.length;
                 for (let i = 0; i < length; ++i) {
@@ -1005,7 +1000,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
-                        const descendant = <ExtensionUI<T>[]> extensionMap.get(nodeY.id);
+                        const descendant = extensionMap.get(nodeY.id) as ExtensionUI<T>[];
                         let combined = descendant ? (renderExtension ? renderExtension.concat(descendant) : descendant) : renderExtension;
                         let next = false;
                         if (combined) {
@@ -1055,7 +1050,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             }
                                             parentY = result.parent || parentY;
                                             if (result.include) {
-                                                safeNestedArray(<StandardMap> nodeY, 'renderExtension').push(ext);
+                                                safeNestedArray(nodeY as StandardMap, 'renderExtension').push(ext);
                                                 ext.subscribers.add(nodeY);
                                             }
                                             else if (result.subscribe) {
@@ -1084,7 +1079,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.RENDER)) {
                         let layout = this.createLayoutControl(parentY, nodeY);
                         if (layout.containerType === 0) {
-                            const result: LayoutResult<T> = nodeY.length ? controllerHandler.processUnknownParent(layout) : controllerHandler.processUnknownChild(layout);
+                            const result: squared.base.LayoutResult<T> = nodeY.length ? controllerHandler.processUnknownParent(layout) : controllerHandler.processUnknownChild(layout);
                             if (result.next) {
                                 continue;
                             }
@@ -1506,7 +1501,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         const length = childNodes.length;
                         let i = 0;
                         while (i < length) {
-                            const child = <Element> childNodes[i++];
+                            const child = childNodes[i++] as Element;
                             if (isTextNode(child)) {
                                 if ((child.textContent as string).trim() !== '') {
                                     break;
@@ -1641,7 +1636,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     while (current) {
                                         ascending = false;
                                         if (current.previousElementSibling) {
-                                            current = <Null<HTMLElement>> current.previousElementSibling;
+                                            current = current.previousElementSibling as Null<HTMLElement>;
                                             if (current) {
                                                 cascadeCounterSibling(current);
                                             }
@@ -1711,7 +1706,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                     const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
                     if (tagName === 'img') {
-                        (<HTMLImageElement> pseudoElement).src = content;
+                        (pseudoElement as HTMLImageElement).src = content;
                         const image = this.resourceHandler.getImage(content);
                         if (image) {
                             if (!isString(styleMap.width) && image.width > 0) {

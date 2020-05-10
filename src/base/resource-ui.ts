@@ -1,6 +1,3 @@
-import { UserSettings } from '../../@types/base/application-ui';
-import { ResourceStoredMap } from '../../@types/base/resource';
-import { FileAsset, RawAsset } from '../../@types/base/file';
 
 import Resource from './resource';
 import NodeUI from './node-ui';
@@ -26,7 +23,7 @@ const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
 const REGEX_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
-    const { width, height } = <Dimension> gradient.dimension;
+    const { width, height } = gradient.dimension as Dimension;
     const result: ColorStop[] = [];
     let repeat = false;
     let horizontal = true;
@@ -34,7 +31,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     let size: number;
     switch (gradient.type) {
        case 'linear': {
-            const { repeating, angle } = <LinearGradient> gradient;
+            const { repeating, angle } = gradient as LinearGradient;
             repeat = repeating;
             switch (angle) {
                 case 0:
@@ -56,7 +53,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
             break;
         }
         case 'radial': {
-            const { repeating, radiusExtent, radius } = <RadialGradient> gradient;
+            const { repeating, radiusExtent, radius } = gradient as RadialGradient;
             horizontal = node.actualWidth >= node.actualHeight;
             repeat = repeating;
             extent = radiusExtent / radius;
@@ -239,7 +236,7 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
                 case 'inherit':
                 case 'currentcolor':
                 case 'currentColor':
-                    color = getInheritedStyle(<HTMLElement> node.element, border[2]);
+                    color = getInheritedStyle(node.element as HTMLElement, border[2]);
                     break;
             }
             if (width === '2px' && (style === 'inset' || style === 'outset')) {
@@ -247,11 +244,11 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
             }
             color = parseColor(color, 1, true);
             if (color) {
-                boxStyle[attr] = <BorderAttribute> {
+                boxStyle[attr] = {
                     width,
                     style,
                     color
-                };
+                } as BorderAttribute;
             }
         }
     }
@@ -310,7 +307,7 @@ function getAngle(value: string, fallback = 0) {
 }
 
 const replaceAmpersand = (value: string) => value.replace(/&/g, '&amp;');
-const getGradientPosition = (value: string) => isString(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : <RegExpExecArray> [value, value]) : null;
+const getGradientPosition = (value: string) => isString(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray) : null;
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
     public static STORED: ResourceStoredMap = {
@@ -485,13 +482,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                         )
                                     );
                             }
-                            const linear = <LinearGradient> {
+                            const linear = {
                                 type,
                                 repeating,
                                 dimension,
                                 angle,
                                 angleExtent: { x, y }
-                            };
+                            } as LinearGradient;
                             linear.colorStops = parseColorStops(node, linear, match[4]);
                             gradient = linear;
                             break;
@@ -538,7 +535,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 closestSide = Math.min(side, closestSide);
                                 farthestSide = Math.max(side, farthestSide);
                             });
-                            const radial = <RadialGradient> {
+                            const radial = {
                                 type,
                                 repeating,
                                 dimension,
@@ -548,7 +545,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 farthestSide,
                                 closestCorner,
                                 farthestCorner
-                            };
+                            } as RadialGradient;
                             if (radius === 0 && radiusExtent === 0) {
                                 radius = farthestCorner;
                                 const extent = position?.[1]?.split(' ').pop() || '';
@@ -578,12 +575,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                         case 'conic': {
                             const position = getGradientPosition(direction);
-                            const conic = <ConicGradient> {
+                            const conic = {
                                 type,
                                 dimension,
                                 angle: getAngle(direction),
                                 center: getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension })
-                            };
+                            } as ConicGradient;
                             conic.colorStops = parseColorStops(node, conic, match[4]);
                             gradient = conic;
                             break;
@@ -642,7 +639,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             return node.naturalElements.some(item => item.lineBreak);
         }
         else if (!lineBreak && node.naturalChild) {
-            const element = <Element> node.element;
+            const element = node.element as Element;
             let value = element.textContent as string;
             if (trim) {
                 value = value.trim();
@@ -654,16 +651,16 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]> {
         if (node.plainText) {
-            const parent = <NodeUI> node.actualParent;
+            const parent = node.actualParent as NodeUI;
             if (parent?.preserveWhiteSpace && parent.ascend({ condition: item => item.tagName === 'PRE', startSelf: true }).length) {
-                let nextSibling = <Undef<NodeUI>> node.nextSibling;
+                let nextSibling = node.nextSibling as Undef<NodeUI>;
                 if (nextSibling?.naturalElement) {
                     const textContent = node.textContent;
                     if (textContent.trim() !== '') {
                         const match = REGEX_TRAILINGINDENT.exec(textContent);
                         if (match) {
                             if (!nextSibling.textElement) {
-                                nextSibling = <Undef<NodeUI>> nextSibling.find(item => item.naturalChild && item.textElement, { cascade: true, error: item => item.naturalChild && !item.textElement && item.length === 0 });
+                                nextSibling = nextSibling.find(item => item.naturalChild && item.textElement, { cascade: true, error: item => item.naturalChild && !item.textElement && item.length === 0 }) as Undef<NodeUI>;
                             }
                             if (nextSibling) {
                                 return [match[1] ? match[0] : '', nextSibling];
@@ -678,7 +675,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public fileHandler?: squared.base.FileUI<T>;
 
-    public abstract get userSettings(): UserSettings;
+    public abstract get userSettings(): UserSettingsUI;
 
     public finalize(layouts: FileAsset[]) {}
 
@@ -693,7 +690,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public writeRawImage(filename: string, base64: string) {
         const fileHandler = this.fileHandler;
         if (fileHandler) {
-            const asset = <Partial<RawAsset>> { pathname: appendSeparator(this.userSettings.outputDirectory, this.controllerSettings.directory.image), filename, base64 };
+            const asset = { pathname: appendSeparator(this.userSettings.outputDirectory, this.controllerSettings.directory.image), filename, base64 } as Partial<RawAsset>;
             fileHandler.addAsset(asset);
             return asset;
         }
@@ -702,7 +699,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public setBoxStyle(node: T) {
         if ((node.styleElement || node.visibleStyle.background) && node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
-            const boxStyle = <BoxStyle> (node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY') as unknown);
+            const boxStyle = (node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY') as unknown) as BoxStyle;
             if (setBackgroundOffset(node, boxStyle, 'backgroundClip')) {
                 setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
             }
@@ -777,18 +774,18 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         break;
                 }
             }
-            node.data(ResourceUI.KEY_NAME, 'fontStyle', <FontAttribute> {
+            node.data(ResourceUI.KEY_NAME, 'fontStyle', {
                 fontFamily: node.css('fontFamily').trim(),
                 fontStyle: node.css('fontStyle'),
                 fontSize: node.fontSize,
                 fontWeight,
                 color: color?.valueAsRGBA || ''
-            });
+            } as FontAttribute);
         }
     }
 
     public setValueString(node: T) {
-        const element = <HTMLInputElement> node.element;
+        const element = node.element as HTMLInputElement;
         if (element) {
             let key = '';
             let value = '';
@@ -864,12 +861,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             break;
                         case 'color': {
                             const borderColor = this.controllerSettings.style.inputColorBorderColor;
-                            const backgroundColor = (<ColorData> parseColor(value) || parseColor('rgb(0, 0, 0)')).valueAsRGBA;
+                            const backgroundColor = (parseColor(value) as ColorData || parseColor('rgb(0, 0, 0)')).valueAsRGBA;
                             const { width, height } = node.actualDimension;
                             const backgroundSize = `${width - 10}px ${height - 10}px, ${width - 8}px ${height - 8}px`;
                             const backgroundRepeat = 'no-repeat, no-repeat';
                             const backgroundPositionX = 'center, center', backgroundPositionY = 'center, center';
-                            const backgroundImage = <Gradient[]> ResourceUI.parseBackgroundImage(node, `linear-gradient(${backgroundColor}, ${backgroundColor}), linear-gradient(${borderColor}, ${borderColor})`);
+                            const backgroundImage = ResourceUI.parseBackgroundImage(node, `linear-gradient(${backgroundColor}, ${backgroundColor}), linear-gradient(${borderColor}, ${borderColor})`) as Gradient[];
                             value = '';
                             let boxStyle: BoxStyle = node.data(ResourceUI.KEY_NAME, 'boxStyle');
                             if (boxStyle) {
@@ -884,7 +881,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 }
                             }
                             else {
-                                boxStyle = <BoxStyle> {};
+                                boxStyle = {} as BoxStyle;
                             }
                             node.data(ResourceUI.KEY_NAME, 'boxStyle', Object.assign(boxStyle, {
                                 backgroundSize,
@@ -1042,6 +1039,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     get controllerSettings() {
-        return (<squared.base.ControllerUI<T>> this.application.controllerHandler).localSettings;
+        return (this.application.controllerHandler as squared.base.ControllerUI<T>).localSettings;
     }
 }

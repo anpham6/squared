@@ -1,8 +1,3 @@
-import { NodeTemplate } from '../../@types/base/application';
-import { AutoMargin, BoxType } from '../../@types/base/node';
-import { HideOptions, RemoveTryOptions, TranslateOptions } from '../../@types/base/node-ui';
-import { CachedValue, Constraint, LocalSettings, Support } from '../../@types/android/node';
-
 import { CONTAINER_ANDROID, CONTAINER_ANDROID_X, ELEMENT_ANDROID, LAYOUT_ANDROID, RESERVED_JAVA, STRING_ANDROID } from './lib/constant';
 import { API_ANDROID, DEPRECATED_ANDROID } from './lib/customization';
 import { BUILD_ANDROID, CONTAINER_NODE } from './lib/enumeration';
@@ -152,7 +147,7 @@ function setMarginOffset(this: T, lineHeight: number, inlineStyle: boolean, top:
             else if (this.inputElement) {
                 const element = createElement(document.body, 'div', { ...this.textStyle, visibility: 'hidden' });
                 element.innerText = 'AgjpyZ';
-                const rowHeight = actualTextRangeRect(<Element> element).height;
+                const rowHeight = actualTextRangeRect(element).height;
                 document.body.removeChild(element);
                 let rows = 1;
                 switch (this.tagName)  {
@@ -193,7 +188,7 @@ function getLineSpacingExtra(this: T, lineHeight: number) {
             'white-space': 'nowrap'
         });
         if (values) {
-            height = actualTextRangeRect(<Element> this.element).height;
+            height = actualTextRangeRect(this.element as Element).height;
             this.cssFinally(values);
         }
     }
@@ -353,7 +348,7 @@ function ascendFlexibleWidth(this: T) {
     if (this.documentRoot && (this.hasWidth || this.blockStatic || this.blockWidth)) {
         return true;
     }
-    let parent = <Undef<T>> this.renderParent;
+    let parent = this.renderParent as Undef<T>;
     let i = 0;
     while (parent) {
         if (!parent.inlineWidth && (parent.hasWidth || parseInt(parent.layoutWidth) > 0 || parent.of(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.BLOCK) || parent.documentRoot && (parent.blockWidth || parent.blockStatic))) {
@@ -376,7 +371,7 @@ function ascendFlexibleHeight(this: T) {
     if (this.documentRoot && this.hasHeight) {
         return true;
     }
-    const parent = <Undef<T>> this.renderParent;
+    const parent = this.renderParent as Undef<T>;
     return !!parent && (parent.hasHeight || parent.layoutConstraint && parent.blockHeight) || this.absoluteParent?.hasHeight === true;
 }
 
@@ -655,7 +650,7 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
     }
     if (margin) {
         if (this.floating) {
-            let node = <Undef<T>> (this.renderParent as T).renderChildren.find(item => !item.floating);
+            let node = (this.renderParent as T).renderChildren.find(item => !item.floating) as Undef<T>;
             if (node) {
                 const boundsTop = Math.floor(this.bounds.top);
                 let actualNode: Undef<T>;
@@ -927,10 +922,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         };
 
         protected _namespaces = ['android', 'app'];
-        protected _cached: CachedValue<T> = {};
+        protected _cached: AndroidCachedValueUI<T> = {};
         protected _containerType = 0;
         protected _controlName = '';
-        protected _localSettings!: LocalSettings;
+        protected _localSettings!: AndroidLocalSettingsUI;
         protected _documentParent?: T;
         protected _boxAdjustment = newBoxModel();
         protected _boxReset = newBoxModel();
@@ -1128,7 +1123,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     return;
                                 }
                                 else if (this.cssTry('display', 'inline-block')) {
-                                    const width = Math.ceil(actualTextRangeRect(<Element> this.element).width);
+                                    const width = Math.ceil(actualTextRangeRect(this.element as Element).width);
                                     layoutWidth = width >= actualParent.box.width ? 'wrap_content' : 'match_parent';
                                     this.cssFinally('display');
                                     return;
@@ -2361,7 +2356,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (controlName) {
                     let name: Undef<string>;
                     if (this.styleElement) {
-                        const value = this.elementId?.trim() || getNamedItem(<HTMLElement> this.element, 'name');
+                        const value = this.elementId?.trim() || getNamedItem(this.element as HTMLElement, 'name');
                         if (value !== '') {
                             name = value.replace(REGEX_STRINGVALID, '_').toLowerCase();
                             if (name === 'parent' || RESERVED_JAVA.includes(name)) {
@@ -2390,16 +2385,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         get support() {
             let result = this._cached.support;
             if (result === undefined) {
-                result = <Support> {
+                result = {
                     positionTranslation: this.layoutConstraint,
                     positionRelative: this.layoutRelative,
                     maxDimension: this.textElement || this.imageOrSvgElement
-                };
+                } as AndroidSupport;
                 if (this.containerType !== 0) {
                     this._cached.support = result;
                 }
             }
-            return <Support> result;
+            return result as AndroidSupport;
         }
 
         set renderExclude(value) {

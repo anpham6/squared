@@ -1,6 +1,3 @@
-import { ExtensionResult, NodeXmlTemplate } from '../../@types/base/application';
-import { ViewAttribute } from '../../@types/android/node';
-
 type View = android.base.View;
 
 const $lib = android.lib;
@@ -118,7 +115,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        return this.included(<HTMLElement> node.element);
+        return this.included(node.element as HTMLElement);
     }
 
     public processNode(node: T, parent: T) {
@@ -137,11 +134,11 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         node.dataset['pathname' + capitalize(this.application.systemName)] = appendSeparator(this.controller.userSettings.outputDirectory, 'res/menu');
         return {
             outerParent,
-            output: <NodeXmlTemplate<T>> {
+            output: {
                 type: NODE_TEMPLATE.XML,
                 node,
                 controlName: NAVIGATION.MENU
-            },
+            } as NodeXmlTemplate<T>,
             complete: true
         };
     }
@@ -153,7 +150,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         }
         const options = createViewAttribute();
         const android = options.android;
-        const element = <HTMLElement> node.element;
+        const element = node.element as HTMLElement;
         let controlName: string;
         let title: string;
         if (node.tagName === 'NAV') {
@@ -193,7 +190,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
             case NAVIGATION.ITEM:
                 parseDataSet(REGEX_ITEM, element, options);
                 if (!android.icon) {
-                    const resource = <android.base.Resource<T>> this.resource;
+                    const resource = this.resource as android.base.Resource<T>;
                     let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);
                     if (src !== '') {
                         android.icon = `@drawable/${src}`;
@@ -201,7 +198,7 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
                     else {
                         const image = node.find(item => item.imageElement);
                         if (image) {
-                            src = resource.addImageSrc(<HTMLImageElement> image.element, PREFIX_MENU);
+                            src = resource.addImageSrc(image.element as HTMLImageElement, PREFIX_MENU);
                             if (src !== '') {
                                 android.icon = `@drawable/${src}`;
                             }
@@ -221,11 +218,11 @@ export default class Menu<T extends View> extends squared.base.ExtensionUI<T> {
         node.render(parent);
         node.apply(options);
         return {
-            output: <NodeXmlTemplate<T>> {
+            output: {
                 type: NODE_TEMPLATE.XML,
                 node,
                 controlName
-            },
+            } as NodeXmlTemplate<T>,
             complete: true,
             next: controlName === NAVIGATION.MENU
         };

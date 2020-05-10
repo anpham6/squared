@@ -1,11 +1,8 @@
-import { FileAsset } from '../../@types/base/file';
-import { FileActionOptions, FileArchivingOptions, FileCopyingOptions } from '../../@types/chrome/application';
-import { FileActionAttribute, RequestAsset, SaveAsOptions, UriOptions } from '../../@types/chrome/file';
-
 import Resource from './resource';
 
 type View = chrome.base.View;
-type BundleIndex = ObjectMap<RequestAsset[]>;
+type Extension = chrome.base.Extension<View>;
+type BundleIndex = ObjectMap<ChromeAsset[]>;
 
 const $lib = squared.lib;
 
@@ -79,15 +76,15 @@ function getExtensions(element: Null<HTMLElement>) {
     return [];
 }
 
-function processExtensions(this: chrome.base.File<View>, data: RequestAsset, extensions: string[]) {
-    const processed: chrome.base.Extension<View>[] = [];
+function processExtensions(this: chrome.base.File<View>, data: ChromeAsset, extensions: string[]) {
+    const processed: Extension[] = [];
     this.application.extensions.forEach(ext => {
         if (ext.processFile(data)) {
             processed.push(ext);
         }
     });
     for (const name of extensions) {
-        const ext = <chrome.base.Extension<View>> this.application.extensionManager.retrieve(name, true);
+        const ext = this.application.extensionManager.retrieve(name, true) as Extension;
         if (ext && !processed.includes(ext)) {
             ext.processFile(data, true);
         }
@@ -107,19 +104,19 @@ function setBundleIndex(bundleIndex: BundleIndex) {
     }
 }
 
-function createBundleAsset(bundles: RequestAsset[], element: HTMLElement, saveTo: string, format?: string, preserve?: boolean) {
+function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo: string, format?: string, preserve?: boolean) {
     const content = element.innerHTML.trim();
     if (content) {
         const [moveTo, pathname, filename] = getFilePath(saveTo);
         const index = iterateReverseArray(bundles, item => {
             if ((item.moveTo === moveTo || !item.moveTo && !moveTo) && item.pathname === pathname && item.filename === filename) {
-                safeNestedArray(<StandardMap> item, 'trailingContent').push({ value: content, format, preserve });
+                safeNestedArray(item as StandardMap, 'trailingContent').push({ value: content, format, preserve });
                 return true;
             }
             return;
         });
         if (index !== Infinity) {
-            return <RequestAsset> {
+            return {
                 uri: resolvePath(saveTo, location.href),
                 pathname,
                 filename,
@@ -127,14 +124,14 @@ function createBundleAsset(bundles: RequestAsset[], element: HTMLElement, saveTo
                 content,
                 format,
                 preserve
-            };
+            } as ChromeAsset;
         }
     }
     return undefined;
 }
 
 export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
-    public static parseUri(uri: string, options: UriOptions = {}): Undef<RequestAsset> {
+    public static parseUri(uri: string, options: UriOptions = {}): Undef<ChromeAsset> {
         const { preserveCrossOrigin, saveTo } = options;
         let { saveAs, format, preserve } = options;
         let value = trimEnd(uri, '/');
@@ -234,33 +231,33 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         this._outputFileExclusions = undefined;
     }
 
-    public copyToDisk(directory: string, options?: FileCopyingOptions) {
+    public copyToDisk(directory: string, options?: ChromeFileCopyingOptions) {
         return this.copying({
             ...options,
-            assets: <FileAsset[]> this.getAssetsAll().concat(options?.assets || []),
+            assets: this.getAssetsAll().concat(options?.assets || []) as FileAsset[],
             directory
         });
     }
 
-    public appendToArchive(pathname: string, options?: FileArchivingOptions) {
+    public appendToArchive(pathname: string, options?: ChromeFileArchivingOptions) {
         return this.archiving({
             filename: this.userSettings.outputArchiveName,
             ...options,
-            assets: <FileAsset[]> this.getAssetsAll(options).concat(options?.assets || []),
+            assets: this.getAssetsAll(options).concat(options?.assets || []) as FileAsset[],
             appendTo: pathname
         });
     }
 
-    public saveToArchive(filename: string, options?: FileArchivingOptions) {
+    public saveToArchive(filename: string, options?: ChromeFileArchivingOptions) {
         return this.archiving({
             ...options,
-            assets: <FileAsset[]> this.getAssetsAll(options).concat(options?.assets || []),
+            assets: this.getAssetsAll(options).concat(options?.assets || []) as FileAsset[],
             filename
         });
     }
 
     public getHtmlPage(options?: FileActionAttribute) {
-        const result: RequestAsset[] = [];
+        const result: ChromeAsset[] = [];
         const href = location.href;
         const element = document.querySelector('html');
         const saveAs = options?.saveAs?.html;
@@ -303,7 +300,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             preserveCrossOrigin = options.preserveCrossOrigin;
             saveAs = options.saveAs?.script;
         }
-        const result: RequestAsset[] = [];
+        const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
         document.querySelectorAll('script').forEach(element => {
             const src = element.src.trim();
@@ -320,7 +317,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                         outerHTML = element.outerHTML;
                     }
                 }
-                let data: Undef<RequestAsset>;
+                let data: Undef<ChromeAsset>;
                 if (src !== '') {
                     data = File.parseUri(resolvePath(src), { preserveCrossOrigin, saveAs: file, format });
                 }
@@ -358,12 +355,12 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             ({ rel, preserveCrossOrigin } = options);
             saveAs = options.saveAs?.link;
         }
-        const result: RequestAsset[] = [];
+        const result: ChromeAsset[] = [];
         const bundleIndex: BundleIndex = {};
         document.querySelectorAll((rel ? `link[rel="${rel}"]` : 'link') + ', style').forEach((element: HTMLLinkElement | HTMLStyleElement) => {
             let file = element.dataset.chromeFile;
             if (file !== 'exclude') {
-                let data: Undef<RequestAsset>;
+                let data: Undef<ChromeAsset>;
                 let mimeType: Undef<string>;
                 let format: Undef<string>;
                 let preserve: Undef<boolean>;
@@ -438,7 +435,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             preserveCrossOrigin = options.preserveCrossOrigin;
             saveAs = options.saveAs?.base64;
         }
-        const result: RequestAsset[] = [];
+        const result: ChromeAsset[] = [];
         const processUri = (element: Null<HTMLElement>, uri: string, mimeType?: string) => {
             if (uri !== '') {
                 let file: Undef<string>;
@@ -485,7 +482,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             else {
                 const { base64, content, filename } = rawData;
                 let mimeType = rawData.mimeType;
-                let data: Undef<RequestAsset>;
+                let data: Undef<ChromeAsset>;
                 if (base64) {
                     if (saveAs) {
                         const format = saveAs.format;
@@ -539,7 +536,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     public getFontAssets(options?: FileActionAttribute) {
         const preserveCrossOrigin = options?.preserveCrossOrigin;
-        const result: RequestAsset[] = [];
+        const result: ChromeAsset[] = [];
         for (const fonts of ASSETS.fonts.values()) {
             fonts.forEach(font => {
                 const url = font.srcUrl;
@@ -555,22 +552,22 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
-    public getDataMap(options: FileActionOptions) {
+    public getDataMap(options: ChromeFileActionOptions) {
         if (options.removeUnusedStyles) {
             return { unusedStyles: Array.from(this.application.processing.unusedStyles) };
         }
         return undefined;
     }
 
-    public getCopyQueryParameters(options: FileCopyingOptions) {
+    public getCopyQueryParameters(options: ChromeFileCopyingOptions) {
         return options.productionRelease ? '&release=1' : '';
     }
 
-    public getArchiveQueryParameters(options: FileArchivingOptions) {
+    public getArchiveQueryParameters(options: ChromeFileArchivingOptions) {
         return options.productionRelease ? '&release=1' : '';
     }
 
-    protected validFile(data: Undef<RequestAsset>): data is RequestAsset {
+    protected validFile(data: Undef<ChromeAsset>): data is ChromeAsset {
         if (data) {
             const fullpath = data.pathname + '/' + data.filename;
             return !this.outputFileExclusions.some(pattern => pattern.test(fullpath));
@@ -580,7 +577,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     protected getRawAssets(tagName: string, options?: FileActionAttribute) {
         const preserveCrossOrigin = options?.preserveCrossOrigin;
-        const result: RequestAsset[] = [];
+        const result: ChromeAsset[] = [];
         document.querySelectorAll(tagName).forEach((element: HTMLVideoElement | HTMLAudioElement) => {
             const items = new Map<HTMLElement, string>();
             resolveAssetSource(items, element);
@@ -596,7 +593,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return result;
     }
 
-    protected getAssetsAll(options: FileArchivingOptions = {}) {
+    protected getAssetsAll(options: ChromeFileArchivingOptions = {}) {
         const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options.saveAsWebPage) {
             result.forEach(item => {

@@ -4,6 +4,9 @@
     "outDir": "../build"
   },
   "include": [
+    "../@types/base/object.d.ts",
+    "../@types/lib/object.d.ts",
+    "../@types/chrome/object.d.ts",
     "../@types/index.d.ts",
     "../@types/chrome/index.d.ts",
     "**/*.ts"

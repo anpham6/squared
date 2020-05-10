@@ -1,5 +1,3 @@
-import { NodeXmlTemplate } from '../../../../@types/base/application';
-
 import { CONTAINER_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
@@ -39,11 +37,11 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
     }
 
     public condition(node: T) {
-        return getInputName(<HTMLInputElement> node.element) !== '' && !node.data(this.name, 'siblings');
+        return getInputName(node.element as HTMLInputElement) !== '' && !node.data(this.name, 'siblings');
     }
 
     public processNode(node: T, parent: T) {
-        const inputName = getInputName(<HTMLInputElement> node.element);
+        const inputName = getInputName(node.element as HTMLInputElement);
         const radiogroup: T[] = [];
         const removeable: T[] = [];
         let first = -1;
@@ -57,7 +55,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 }
                 item = renderAs;
             }
-            if (item.is(CONTAINER_NODE.RADIO) && !item.rendered && getInputName(<HTMLInputElement> item.element) === inputName) {
+            if (item.is(CONTAINER_NODE.RADIO) && !item.rendered && getInputName(item.element as HTMLInputElement) === inputName) {
                 radiogroup.push(item);
                 if (first === -1) {
                     first = index;
@@ -97,18 +95,18 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
             this.subscribers.add(container);
             return {
                 renderAs: container,
-                outputAs: <NodeXmlTemplate<T>> {
+                outputAs: {
                     type: NODE_TEMPLATE.XML,
                     node: container,
                     controlName
-                },
+                } as NodeXmlTemplate<T>,
                 parent: container,
                 complete: true
             };
         }
         else {
             radiogroup.length = 0;
-            const name = getInputName(<HTMLInputElement> node.element);
+            const name = getInputName(node.element as HTMLInputElement);
             const sessionId = node.sessionId;
             document.querySelectorAll(`input[type=radio][name=${name}]`).forEach((element: Element) => {
                 const item = getElementAsNode(element, sessionId) as T;
@@ -136,7 +134,7 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                     if (value === length) {
                         group.unsafe('controlName', controlName);
                         group.containerType = CONTAINER_NODE.RADIO;
-                        const template = <NodeXmlTemplate<T>> group.renderParent?.renderTemplates?.find(item => item.node === group);
+                        const template = group.renderParent?.renderTemplates?.find(item => item.node === group) as Undef<NodeXmlTemplate<T>>;
                         if (template) {
                             template.controlName = controlName;
                         }

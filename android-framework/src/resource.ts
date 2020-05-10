@@ -1,6 +1,3 @@
-import { ResourceStoredMap, StyleAttribute } from '../../@types/android/application';
-import { ViewAttribute } from '../../@types/android/node';
-
 import { RESERVED_JAVA } from './lib/constant';
 
 type View = android.base.View;
@@ -12,7 +9,7 @@ const { extractURL, getSrcSet } = $lib.css;
 const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
 const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = $lib.util;
 
-const STORED = <ResourceStoredMap> squared.base.ResourceUI.STORED;
+const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
 const REGEX_NONWORD = /[^\w]+/g;
 let CACHE_IMAGE: StringMap = {};
 
@@ -113,8 +110,8 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         }
         name = appTheme + (name.charAt(0) === '.' ? name : '');
         theme.name = name;
-        Resource.formatOptions(<ViewAttribute> items);
-        const storedTheme = <StyleAttribute> storedFile.get(name);
+        Resource.formatOptions(items as ViewAttribute);
+        const storedTheme = storedFile.get(name) as StyleAttribute;
         if (storedTheme) {
             const storedItems = storedTheme.items;
             for (const attr in items) {
@@ -299,7 +296,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     public writeRawImage(filename: string, base64: string) {
         const asset = super.writeRawImage(filename, base64);
         if (asset && this.userSettings.compressImages && Resource.canCompressImage(filename)) {
-            safeNestedArray(<StandardMap> asset, 'compress').unshift({ format: 'png' });
+            safeNestedArray(asset as StandardMap, 'compress').unshift({ format: 'png' });
         }
         return asset;
     }

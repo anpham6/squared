@@ -15,8 +15,7 @@
     "noImplicitThis": true,
     "noImplicitReturns": true,
     "suppressImplicitAnyIndexErrors": true,
-    "allowUmdGlobalAccess": true,
-    "allowSyntheticDefaultImports": true
+    "allowUmdGlobalAccess": true
   },
   "exclude": [
     "md5",

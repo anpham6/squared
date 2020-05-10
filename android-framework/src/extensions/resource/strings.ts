@@ -1,5 +1,3 @@
-import { ResourceStringsOptions } from '../../../../@types/android/extension';
-
 import Resource from '../../resource';
 
 import { CONTAINER_ANDROID } from '../../lib/constant';
@@ -36,7 +34,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
                 switch (node.tagName) {
                     case 'SELECT': {
-                        const name = this.createOptionArray(<HTMLSelectElement> node.element, node.controlId);
+                        const name = this.createOptionArray(node.element as HTMLSelectElement, node.controlId);
                         if (name !== '') {
                             node.android('entries', `@array/${name}`);
                         }
@@ -140,9 +138,9 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             }
                             if (node.inputElement) {
                                 if (node.controlName === CONTAINER_ANDROID.EDIT_LIST) {
-                                    const list = (<HTMLInputElement> node.element).list;
+                                    const list = (node.element as HTMLInputElement).list;
                                     if (list) {
-                                        this.createOptionArray(<HTMLSelectElement> list, node.controlId);
+                                        this.createOptionArray(list as HTMLSelectElement, node.controlId);
                                         if (!node.hasPX('width')) {
                                             node.css('width', formatPX(node.actualWidth));
                                         }

@@ -1,5 +1,3 @@
-import { SiblingOptions } from '../../@types/base/node';
-
 import NodeUI from './node-ui';
 
 import { NODE_ALIGNMENT } from './lib/enumeration';
@@ -25,13 +23,13 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     public previousSiblings(options?: SiblingOptions) {
-        const node = <NodeUI> (this._initial?.children || this.children)[0];
+        const node = (this._initial?.children || this.children)[0] as NodeUI;
         return node?.previousSiblings(options) || [];
     }
 
     public nextSiblings(options?: SiblingOptions) {
         const children = this._initial?.children || this.children;
-        const node = <NodeUI> children[children.length - 1];
+        const node = children[children.length - 1] as NodeUI;
         return node?.nextSiblings(options) || [];
     }
 
@@ -189,12 +187,12 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get firstChild() {
-        return <NodeUI> this.children[0] || null;
+        return this.children[0] as NodeUI || null;
     }
 
     get lastChild() {
         const children = this.children;
-        return <NodeUI> children[children.length - 1] || null;
+        return children[children.length - 1] as NodeUI || null;
     }
 
     set childIndex(value) {
@@ -215,7 +213,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     get containerIndex() {
         let result = super.containerIndex;
         if (result === Infinity) {
-            this.each(node => result = Math.min((<NodeUI> node).containerIndex, result));
+            this.each(node => result = Math.min((node as NodeUI).containerIndex, result));
             super.containerIndex = result;
         }
         return result;

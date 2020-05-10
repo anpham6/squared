@@ -1,6 +1,3 @@
-import { ResourceBackgroundOptions } from '../../../../@types/android/extension';
-import { GradientTemplate } from '../../../../@types/android/resource';
-
 import Resource from '../../resource';
 import ResourceSvg from './svg';
 import View from '../../view';
@@ -293,10 +290,10 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
     const { colorStops, type } = gradient;
     const length = colorStops.length;
     let positioning = api >= BUILD_ANDROID.LOLLIPOP;
-    const result = <GradientTemplate> { type, positioning };
+    const result = { type, positioning } as GradientTemplate;
     switch (type) {
         case 'conic': {
-            const center = (<ConicGradient> gradient).center;
+            const center = (gradient as ConicGradient).center;
             result.type = 'sweep';
             if (positioning) {
                 result.centerX = (center.left * 2).toString();
@@ -309,7 +306,7 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
             break;
         }
         case 'radial': {
-            const { center, radius } = <RadialGradient> gradient;
+            const { center, radius } = gradient as RadialGradient;
             if (positioning) {
                 result.gradientRadius = radius.toString();
                 result.centerX = center.left.toString();
@@ -324,13 +321,13 @@ function createBackgroundGradient(gradient: Gradient, api = BUILD_ANDROID.LATEST
         }
         case 'linear': {
             if (!positioning || borderRadius && colorStops[length - 1].offset === 1 && (length === 2 || length === 3 && colorStops[1].offset === 0.5)) {
-                result.angle = ((<LinearGradient> gradient).angle + 90).toString();
+                result.angle = ((gradient as LinearGradient).angle + 90).toString();
                 result.positioning = false;
                 positioning = false;
             }
             else {
-                const { angle, angleExtent, dimension } = <LinearGradient> gradient;
-                const { width, height } = <Dimension> dimension;
+                const { angle, angleExtent, dimension } = gradient as LinearGradient;
+                const { width, height } = dimension!;
                 let { x, y } = angleExtent;
                 if (angle <= 90) {
                     y += height;
@@ -521,11 +518,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     private _resourceSvgInstance?: ResourceSvg<T>;
 
     public beforeParseDocument() {
-        this._resourceSvgInstance = this.controller.localSettings.svg.enabled ? <ResourceSvg<T>> this.application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] : undefined;
+        this._resourceSvgInstance = this.controller.localSettings.svg.enabled ? this.application.builtInExtensions[EXT_ANDROID.RESOURCE_SVG] as ResourceSvg<T> : undefined;
     }
 
     public afterResources() {
-        const settings = (<android.base.Application<T>> this.application).userSettings;
+        const settings = (this.application as android.base.Application<T>).userSettings;
         const drawOutline = this.options.drawOutlineAsInsetBorder;
         let themeBackground = false;
         const setBodyBackground = (name: string, parent: string, value: string) => {
@@ -566,7 +563,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 if (node.inputElement) {
                     const companion = node.companion;
                     if (companion?.tagName === 'LABEL' && !companion.visible) {
-                        const backgroundColor = (<BoxStyle> companion.data(Resource.KEY_NAME, 'boxStyle'))?.backgroundColor;
+                        const backgroundColor = (companion.data(Resource.KEY_NAME, 'boxStyle') as BoxStyle)?.backgroundColor;
                         if (backgroundColor) {
                             stored.backgroundColor = backgroundColor;
                         }
@@ -730,7 +727,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         const backgroundImage = data.backgroundImage;
         const embedded: Undef<T[]> = node.data(Resource.KEY_NAME, 'embedded');
         if (backgroundImage || embedded) {
-            const resource = <android.base.Resource<T>> this.resource;
+            const resource = this.resource as android.base.Resource<T>;
             const screenDimension = node.localSettings.screenDimension;
             const { bounds, fontSize } = node;
             const { width: boundsWidth, height: boundsHeight } = bounds;
@@ -759,7 +756,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 if (parentElement && element) {
                                     const drawable = svgInstance.createSvgDrawable(node, element);
                                     if (drawable !== '') {
-                                        const dimension = <DOMRect> node.data(Resource.KEY_NAME, 'svgViewBox') || { width: element.width.baseVal.value, height: element.height.baseVal.value };
+                                        const dimension = node.data(Resource.KEY_NAME, 'svgViewBox') as DOMRect || { width: element.width.baseVal.value, height: element.height.baseVal.value };
                                         if (!node.svgElement) {
                                             let { width, height } = dimension;
                                             if (width > boundsWidth || height > boundsHeight) {
@@ -802,7 +799,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                             const { base64, filename } = rawData;
                                             if (base64) {
                                                 images[length] = filename.substring(0, filename.lastIndexOf('.'));
-                                                imageDimensions[length] = rawData.width && rawData.height ? <Dimension> rawData : undefined;
+                                                imageDimensions[length] = rawData.width && rawData.height ? rawData as Dimension : undefined;
                                                 resource.writeRawImage(filename, base64);
                                                 valid = true;
                                             }
@@ -857,7 +854,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundSize.length = 0;
                 }
                 embedded.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE')).forEach(image => {
-                    const element = <HTMLImageElement> image.element;
+                    const element = image.element as HTMLImageElement;
                     const src = resource.addImageSrc(element);
                     if (src !== '') {
                         const imageDimension = image.bounds;

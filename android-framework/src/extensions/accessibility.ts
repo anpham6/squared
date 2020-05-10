@@ -1,5 +1,3 @@
-import { AccessibilityOptions } from '../../../@types/android/extension';
-
 import Resource from '../resource';
 
 const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;

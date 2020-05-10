@@ -1,5 +1,3 @@
-import { AscendOptions, BoxType, CachedValue, HasOptions, InitialData, QueryAttribute, QueryData } from '../../@types/base/node';
-
 import { NODE_ALIGNMENT } from './lib/enumeration';
 
 type T = Node;
@@ -51,7 +49,7 @@ function setNaturalChildren(this: T): T[] {
         const sessionId = this.sessionId;
         children = [];
         let i = 0;
-        (<HTMLElement> this.element).childNodes.forEach((element: Element) => {
+        (this.element as HTMLElement).childNodes.forEach((element: Element) => {
             const item = getElementAsNode<T>(element, sessionId);
             if (item) {
                 item.childIndex = i++;
@@ -93,7 +91,7 @@ function setDimension(this: T, styleMap: StringMap, attr: DimensionAttr, attrMin
     const baseValue = this.parseUnit(valueA, attr);
     let value = Math.max(baseValue, this.parseUnit(styleMap[attrMin], attr));
     if (value === 0 && this.styleElement) {
-        const element = <HTMLInputElement> this.element;
+        const element =  this.element as HTMLInputElement;
         switch (element.tagName) {
             case 'IMG':
             case 'INPUT':
@@ -141,7 +139,7 @@ function setDimension(this: T, styleMap: StringMap, attr: DimensionAttr, attrMin
 function setOverflow(this: T) {
     let result = 0;
     if (this.htmlElement && !this.inputElement && !this.imageElement && this.tagName !== 'HR' && !this.documentBody) {
-        const element = <HTMLElement> this.element;
+        const element = this.element as HTMLElement;
         const { overflowX, overflowY } = this.cssAsObject('overflowX', 'overflowY');
         if (this.hasHeight && (this.hasPX('height') || this.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
             result |= NODE_ALIGNMENT.VERTICAL;
@@ -277,7 +275,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                 case ':nth-last-child(n)':
                     break;
                 case ':empty':
-                    if ((<HTMLElement> child.element).childNodes.length) {
+                    if ((child.element as HTMLElement).childNodes.length) {
                         return false;
                     }
                     break;
@@ -308,14 +306,14 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                     }
                     break;
                 case ':read-only': {
-                    const element = <HTMLInputElement | HTMLTextAreaElement> child.element;
+                    const element = child.element as HTMLInputElement | HTMLTextAreaElement;
                     if (element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && !element.readOnly) {
                         return false;
                     }
                     break;
                 }
                 case ':read-write': {
-                    const element = <HTMLInputElement | HTMLTextAreaElement> child.element;
+                    const element = child.element as HTMLInputElement | HTMLTextAreaElement;
                     if (!element.isContentEditable || (tagName === 'INPUT' || tagName === 'TEXTAREA') && element.readOnly) {
                         return false;
                     }
@@ -339,7 +337,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                 case ':default':
                     switch (tagName) {
                         case 'INPUT': {
-                            const element = <HTMLInputElement> child.element;
+                            const element =  child.element as HTMLInputElement;
                             switch (element.type) {
                                 case 'radio':
                                 case 'checkbox':
@@ -353,7 +351,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                             break;
                         }
                         case 'OPTION':
-                            if ((<HTMLOptionElement> child.element).attributes['selected'] === undefined) {
+                            if ((child.element as HTMLOptionElement).attributes['selected'] === undefined) {
                                 return false;
                             }
                             break;
@@ -361,8 +359,8 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                             const form = child.ascend({ condition: item => item.tagName === 'FORM' })[0];
                             if (form) {
                                 let valid = false;
-                                const element = <HTMLElement> child.element;
-                                iterateArray((<Element> form.element).querySelectorAll('*'), (item: HTMLInputElement) => {
+                                const element = child.element as HTMLElement;
+                                iterateArray((form.element as Element).querySelectorAll('*'), (item: HTMLInputElement) => {
                                     switch (item.tagName) {
                                         case 'BUTTON':
                                             valid = element === item;
@@ -391,7 +389,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                 case ':in-range':
                 case ':out-of-range':
                     if (tagName === 'INPUT') {
-                        const element = <HTMLInputElement> child.element;
+                        const element =  child.element as HTMLInputElement;
                         const value = parseFloat(element.value);
                         if (!isNaN(value)) {
                             const min = parseFloat(element.min);
@@ -415,7 +413,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                     break;
                 case ':indeterminate':
                     if (tagName === 'INPUT') {
-                        const element = <HTMLInputElement> child.element;
+                        const element =  child.element as HTMLInputElement;
                         switch (element.type) {
                             case 'checkbox':
                                 if (!element.indeterminate) {
@@ -450,7 +448,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                         return false;
                     }
                     else {
-                        const element = <HTMLAnchorElement> child.element;
+                        const element = child.element as HTMLAnchorElement;
                         if (!(location.hash === `#${element.id}` || tagName === 'A' && location.hash === `#${element.name}`)) {
                             return false;
                         }
@@ -475,7 +473,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                 case ':valid':
                 case ':invalid': {
                     const element = child.element;
-                    if (iterateArray((<HTMLElement> parent.element).querySelectorAll(':scope > ' + pseudo), item => item === element) !== Infinity) {
+                    if (iterateArray((parent.element as HTMLElement).querySelectorAll(':scope > ' + pseudo), item => item === element) !== Infinity) {
                         return false;
                     }
                     break;
@@ -618,7 +616,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
         }
     }
     if (classList) {
-        const elementList = (<HTMLElement> child.element).classList;
+        const elementList = (child.element as HTMLElement).classList;
         for (const className of classList) {
             if (!elementList.contains(className)) {
                 return false;
@@ -744,14 +742,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._documentBody = element === document.body;
         }
         else {
-            this.style = <CSSStyleDeclaration> {};
+            this.style = {} as CSSStyleDeclaration;
             this._styleMap = {};
             this._cssStyle = {};
         }
     }
 
     public init() {
-        const element = <HTMLElement> this._element;
+        const element = this._element as HTMLElement;
         if (element) {
             const styleElement = this.styleElement;
             const sessionId = this.sessionId;
@@ -942,7 +940,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public ascend(options: AscendOptions) {
+    public ascend(options: AscendOptions<T>) {
         let attr = options.attr;
         if (!isString(attr)) {
             attr = 'actualParent';
@@ -1137,12 +1135,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result: Undef<number>;
         if (this.styleElement) {
             if (this.pseudoElement) {
-                const element = <Element> this._element;
+                const element = this._element as Element;
                 const sessionId = this.sessionId;
-                result = getElementCache(<Element> element.parentElement, `styleSpecificity${getPseudoElt(element, sessionId)}`, sessionId)?.[attr] as number;
+                result = getElementCache(element.parentElement as Element, `styleSpecificity${getPseudoElt(element, sessionId)}`, sessionId)?.[attr] as number;
             }
             else {
-                result = getElementCache(<Element> this._element, 'styleSpecificity', this.sessionId)?.[attr] as number;
+                result = getElementCache(this._element as Element, 'styleSpecificity', this.sessionId)?.[attr] as number;
             }
         }
         return result || 0;
@@ -1150,7 +1148,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssTry(attr: string, value: string) {
         if (this.styleElement) {
-            const element = <HTMLElement> this._element;
+            const element = this._element as HTMLElement;
             return setStyleCache(element, attr, this.sessionId, value, getStyle(element).getPropertyValue(attr));
         }
         return false;
@@ -1159,11 +1157,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssFinally(attrs: string | StringMap) {
         if (this.styleElement) {
             if (typeof attrs === 'string') {
-                deleteStyleCache(<HTMLElement> this._element, attrs, this.sessionId);
+                deleteStyleCache(this._element as HTMLElement, attrs, this.sessionId);
             }
             else {
                 const sessionId = this.sessionId;
-                const element = <HTMLElement> this._element;
+                const element = this._element as HTMLElement;
                 for (const attr in attrs) {
                     deleteStyleCache(element, attr, sessionId);
                 }
@@ -1174,7 +1172,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssTryAll(values: StringMap) {
         if (this.styleElement) {
             const sessionId = this.sessionId;
-            const element = <HTMLElement> this._element;
+            const element = this._element as HTMLElement;
             const style = getStyle(element);
             const valid: string[] = [];
             for (const attr in values) {
@@ -1323,13 +1321,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let bounds: Undef<BoxRectDimension>;
         if (this.styleElement) {
             if (!cache) {
-                deleteElementCache(<Element> this._element, 'clientRect', this.sessionId);
+                deleteElementCache(this._element as Element, 'clientRect', this.sessionId);
             }
-            bounds = assignRect(actualClientRect(<Element> this._element, this.sessionId));
+            bounds = assignRect(actualClientRect(this._element as Element, this.sessionId));
             this._bounds = bounds;
         }
         else if (this.plainText) {
-            const rect = getRangeClientRect(<Element> this._element);
+            const rect = getRangeClientRect(this._element as Element);
             bounds = assignRect(rect);
             const lines = rect.numberOfLines as number;
             bounds.numberOfLines = lines;
@@ -1512,7 +1510,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
                 length = queryMap.length;
                 if (selectors.length && offset !== -1 && offset < length) {
-                    const dataEnd = <QueryData> selectors.pop();
+                    const dataEnd = selectors.pop() as QueryData;
                     const lastEnd = selectors.length === 0;
                     const currentCount = result.length;
                     let pending: T[];
@@ -1684,7 +1682,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get tagName() {
         let result = this._cached.tagName;
         if (result === undefined) {
-            const element = <HTMLElement> this._element;
+            const element = this._element as HTMLElement;
             if (element) {
                 const nodeName = element.nodeName;
                 result = nodeName.charAt(0) === '#' ? nodeName : element.tagName;
@@ -1886,7 +1884,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get dataset(): DOMStringMap {
         if (this.styleElement) {
-            return (<HTMLElement> this._element).dataset;
+            return (this._element as HTMLElement).dataset;
         }
         else {
             let result = this._dataset;
@@ -1938,7 +1936,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 };
             }
             else {
-                result = <FlexBox> {};
+                result = {} as FlexBox;
             }
             this._cached.flexbox = result;
         }
@@ -2327,7 +2325,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     break;
                 case 'inline':
                     if (this.tagName === 'svg' && this.actualParent!.htmlElement) {
-                        result = !this.hasPX('width') && convertFloat(getNamedItem(<SVGSVGElement> this._element, 'width')) === 0;
+                        result = !this.hasPX('width') && convertFloat(getNamedItem(this._element as SVGSVGElement, 'width')) === 0;
                         break;
                     }
                 default:
@@ -2485,7 +2483,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get textContent() {
         let result = this._cached.textContent;
         if (result === undefined) {
-            result = this.naturalChild && !this.svgElement ? (<Element> this._element).textContent as string : '';
+            result = this.naturalChild && !this.svgElement ? (this._element as Element).textContent as string : '';
             this._cached.textContent = result;
         }
         return result;
@@ -2549,7 +2547,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             result = null;
             if (this.naturalChild) {
                 if (this.textElement) {
-                    result = actualTextRangeRect(<Element> this._element, this.sessionId);
+                    result = actualTextRangeRect(this._element as Element, this.sessionId);
                 }
                 else {
                     const children = this.naturalChildren;
@@ -2561,7 +2559,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         while (i < length) {
                             const node = children[i++];
                             if (node.textElement) {
-                                const rect = actualTextRangeRect(<Element> node.element, node.sessionId);
+                                const rect = actualTextRangeRect(node.element as Element, node.sessionId);
                                 top = Math.min(rect.top, top);
                                 right = Math.max(rect.right, right);
                                 left = Math.min(rect.left, left);
@@ -2592,10 +2590,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.multiline;
         if (result === undefined) {
             if (this.plainText) {
-                result = Math.floor(getRangeClientRect(<Element> this._element).width) > (this.actualParent as T).box.width;
+                result = Math.floor(getRangeClientRect(this._element as Element).width) > (this.actualParent as T).box.width;
             }
             else if (this.styleText && (this.inlineFlow || this.naturalElements.length === 0)) {
-                result = <number> this.textBounds?.numberOfLines > 1;
+                result = this.textBounds?.numberOfLines as number > 1;
             }
             else {
                 result = false;
@@ -2906,11 +2904,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             result = {};
             if (this.styleElement) {
-                const attributes = (<Element> this._element).attributes;
+                const attributes = (this._element as Element).attributes;
                 const length = attributes.length;
                 let i = 0;
                 while (i < length) {
-                    const { name, value } = <Attr> attributes.item(i++);
+                    const { name, value } = attributes.item(i++) as Attr;
                     result[name] = value;
                 }
             }
@@ -2920,7 +2918,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get boundingClientRect() {
-        return <DOMRect> (this.naturalElement && this._element?.getBoundingClientRect() || this._bounds || newBoxRectDimension());
+        return (this.naturalElement && this._element?.getBoundingClientRect() || this._bounds || newBoxRectDimension()) as DOMRect;
     }
 
     get fontSize(): number {
@@ -2975,7 +2973,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get dir(): string {
         let result = this._cached.dir;
         if (result === undefined) {
-            result = this.naturalElement ? (<HTMLElement> this._element).dir : '';
+            result = this.naturalElement ? (this._element as HTMLElement).dir : '';
             if (result === '') {
                 let parent = this.actualParent;
                 while (parent) {

@@ -58,7 +58,7 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
 
     public postConstraints(node: T) {
         if (node.layoutHorizontal) {
-            for (const children of (<T[][]> node.horizontalRows || [node.renderChildren])) {
+            for (const children of (node.horizontalRows as T[][] || [node.renderChildren])) {
                 const aboveBaseline: T[] = [];
                 let minTop = Infinity;
                 let baseline: Undef<T>;

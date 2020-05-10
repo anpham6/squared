@@ -1,5 +1,3 @@
-import { ExtensionResult, LayoutRoot } from '../../@types/base/application';
-
 import Extension from './extension';
 
 type NodeUI = squared.base.NodeUI;
@@ -10,11 +8,11 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public static findNestedElement(node: NodeUI, name: string) {
         if (node.styleElement) {
             const systemName = capitalize(node.localSettings.systemName);
-            const children = (<HTMLElement> node.element).children;
+            const children = (node.element as HTMLElement).children;
             const length = children.length;
             let i = 0;
             while (i < length) {
-                const item = <HTMLElement> children[i++];
+                const item = children[i++] as HTMLElement;
                 if (includes(item.dataset['use' + systemName] || item.dataset.use, name)) {
                     return item;
                 }
@@ -55,7 +53,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     }
 
     public condition(node: T, parent?: T) {
-        return node.use ? this.included(<HTMLElement> node.element) : !this._isAll;
+        return node.use ? this.included(node.element as HTMLElement) : !this._isAll;
     }
 
     public included(element: HTMLElement) {
@@ -93,7 +91,7 @@ export default abstract class ExtensionUI<T extends NodeUI> extends Extension<T>
     public afterResources() {}
 
     public beforeBaseLayout() {}
-    public beforeCascade(documentRoot: LayoutRoot<T>[]) {}
+    public beforeCascade(documentRoot: squared.base.LayoutRoot<T>[]) {}
     public afterFinalize() {}
 
     set application(value) {

@@ -1,7 +1,3 @@
-import { NodeOptions, UserSettings } from './application';
-import { FileActionAttribute, RequestAsset, UriOptions } from './file';
-import { CompressOptions, ConvertOptions } from './extension';
-
 import * as squared from '../squared';
 
 type View = base.View;
@@ -11,9 +7,17 @@ declare function getElementById(value: string, cache?: boolean): Promise<Null<Vi
 declare function querySelector(value: string): Promise<Null<View>>;
 declare function querySelectorAll(value: string): Promise<Null<View>>;
 
+declare interface ChromeFramework<T extends View> extends squared.base.AppFramework<T> {
+    getElement: (element: HTMLElement, cache?: boolean) => Promise<Null<View>>;
+    getElementById: (value: string, cache?: boolean) => Promise<Null<View>>;
+    querySelector: (value: string) => Promise<Null<View>>;
+    querySelectorAll: (value: string) => Promise<View[]>;
+    saveAsWebPage: (filename?: string, options?: squared.base.FileArchivingOptions) => Promise<View[] | void>;
+}
+
 declare namespace base {
     class Application<T extends View> extends squared.base.Application<T> {
-        userSettings: UserSettings;
+        userSettings: ChromeUserSettings;
         queryState: number;
         readonly builtInExtensions: ObjectMap<Extension<T>>;
         readonly extensions: Extension<T>[];
@@ -23,36 +27,36 @@ declare namespace base {
     class Controller<T extends View> extends squared.base.Controller<T> {
         application: Application<T>;
         get elementMap(): Map<Element, T>;
-        get userSettings(): UserSettings;
+        get userSettings(): ChromeUserSettings;
         cacheElement(node: T): void;
         cacheElementList(list: squared.base.NodeList<T>): void;
     }
 
     class Resource<T extends View> extends squared.base.Resource<T> {
         application: Application<T>;
-        get userSettings(): UserSettings;
+        get userSettings(): ChromeUserSettings;
     }
 
     class File<T extends View> extends squared.base.File<T> {
-        public static parseUri(uri: string, options?: UriOptions): Undef<RequestAsset>;
+        public static parseUri(uri: string, options?: UriOptions): Undef<ChromeAsset>;
         resource: Resource<T>;
         get application(): Application<T>;
-        get userSettings(): UserSettings;
+        get userSettings(): ChromeUserSettings;
         get outputFileExclusions(): RegExp[];
-        getHtmlPage(options?: FileActionAttribute): RequestAsset[];
-        getScriptAssets(options?: FileActionAttribute): RequestAsset[];
-        getLinkAssets(options?: FileActionAttribute): RequestAsset[];
-        getImageAssets(options?: FileActionAttribute): RequestAsset[];
-        getVideoAssets(options?: FileActionAttribute): RequestAsset[];
-        getAudioAssets(options?: FileActionAttribute): RequestAsset[];
-        getFontAssets(options?: FileActionAttribute): RequestAsset[];
+        getHtmlPage(options?: FileActionAttribute): ChromeAsset[];
+        getScriptAssets(options?: FileActionAttribute): ChromeAsset[];
+        getLinkAssets(options?: FileActionAttribute): ChromeAsset[];
+        getImageAssets(options?: FileActionAttribute): ChromeAsset[];
+        getVideoAssets(options?: FileActionAttribute): ChromeAsset[];
+        getAudioAssets(options?: FileActionAttribute): ChromeAsset[];
+        getFontAssets(options?: FileActionAttribute): ChromeAsset[];
     }
 
     class Extension<T extends View> extends squared.base.Extension<T> {
         public static getConvertOptions(name: string, options: ConvertOptions): Undef<string>;
         public static getCompressOptions(name: string, options: CompressOptions): string;
         application: Application<T>;
-        processFile(data: RequestAsset, override?: boolean): boolean;
+        processFile(data: ChromeAsset, override?: boolean): boolean;
     }
 
     class ExtensionManager<T extends View> extends squared.base.ExtensionManager<T> {}

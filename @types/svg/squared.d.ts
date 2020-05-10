@@ -1,7 +1,7 @@
 declare module "svg" {
     type SvgGroup = Svg | SvgG | SvgUseSymbol | SvgPattern | SvgShapePattern | SvgUsePattern;
 
-    export class SvgBuild {
+    class SvgBuild {
         public static isContainer(object: SvgElement): object is SvgGroup;
         public static isElement(object: SvgElement): object is SvgElement;
         public static isShape(object: SvgElement): object is SvgShape;

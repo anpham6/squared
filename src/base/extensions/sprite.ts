@@ -1,5 +1,3 @@
-import { ImageAsset } from '../../../@types/base/file';
-
 import ExtensionUI from '../extension-ui';
 
 import { EXT_NAME } from '../lib/constant';
@@ -17,8 +15,8 @@ export default abstract class Sprite<T extends NodeUI> extends ExtensionUI<T> {
 
     public condition(node: T) {
         const backgroundImage = node.backgroundImage;
-        if (backgroundImage !== '' && (!node.use || this.included(<HTMLElement> node.element))) {
-            const image = <ImageAsset> (this.resource.getRawData(backgroundImage) || this.resource.getImage(resolveURL(backgroundImage)));
+        if (backgroundImage !== '' && (!node.use || this.included(node.element as HTMLElement))) {
+            const image = (this.resource.getRawData(backgroundImage) || this.resource.getImage(resolveURL(backgroundImage))) as ImageAsset;
             if (image) {
                 const dimension = node.actualDimension;
                 const { backgroundPositionX, backgroundPositionY } = node.cssAsObject('backgroundPositionX', 'backgroundPositionY');

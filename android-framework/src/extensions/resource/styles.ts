@@ -1,5 +1,3 @@
-import { ResourceStoredMap } from '../../../../@types/android/application';
-
 import Resource from '../../resource';
 
 import { createStyleAttribute } from '../../lib/util';
@@ -11,7 +9,7 @@ const $lib = squared.lib;
 const { XML } = $lib.regex;
 const { capitalize, trimString } = $lib.util;
 
-const STORED = <ResourceStoredMap> Resource.STORED;
+const STORED = Resource.STORED as AndroidResourceStoredMap;
 const REGEX_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;
 
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {

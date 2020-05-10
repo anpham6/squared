@@ -1,6 +1,6 @@
 import { Arguments, IChrome, ICompress, IFileManager, IExpress, IImage, INode, Settings } from './@types/node';
-import { DataMap, Environment, RequestAsset, ResultOfFileAction, Routing } from './@types/express';
-import { CompressFormat, Exclusions, External } from './@types/content';
+import { DataMap, Environment, ExpressAsset, Routing } from './@types/express';
+import { External } from './@types/content';
 
 import path = require('path');
 import zlib = require('zlib');
@@ -43,7 +43,7 @@ let Image: IImage;
     let EXTERNAL: Undef<External>;
 
     try {
-        const settings = <Settings> require('./squared.settings.json');
+        const settings = require('./squared.settings.json') as Settings;
         const {
             disk_read,
             disk_write,
@@ -102,7 +102,7 @@ let Image: IImage;
         console.log(`${chalk.bold.bgGrey.blackBright('FAIL')}: ${err}`);
     }
 
-    const argv = <Arguments> (yargs
+    const argv = (yargs
         .usage('$0 [args]')
         .option('access-all', {
             type: 'boolean',
@@ -159,7 +159,7 @@ let Image: IImage;
             nargs: 1
         })
         .epilogue('For more information and source: https://github.com/anpham6/squared')
-        .argv as unknown);
+        .argv as unknown) as Arguments;
 
     if (argv.accessAll) {
         DISK_READ = true;
@@ -356,7 +356,7 @@ let Image: IImage;
             }
             return moveTo + value;
         }
-        getFullUri(file: RequestAsset, filename?: string) {
+        getFullUri(file: ExpressAsset, filename?: string) {
             return path.join(file.moveTo || '', file.pathname, filename || file.filename).replace(/\\/g, '/');
         }
         resolvePath(value: string, href: string, hostname = true) {
@@ -824,7 +824,7 @@ let Image: IImage;
         findCompress(compress: Undef<CompressFormat[]>) {
             return this.tinify_api_key ? Compress.findFormat(compress, 'png') : undefined;
         }
-        isJpeg(file: RequestAsset, filepath?: string) {
+        isJpeg(file: ExpressAsset, filepath?: string) {
             if (file.mimeType?.endsWith('image/jpeg')) {
                 return true;
             }
@@ -887,14 +887,14 @@ class FileManager implements IFileManager {
     public delayed = 0;
     public readonly files = new Set<string>();
     public readonly filesToRemove = new Set<string>();
-    public readonly filesToCompare = new Map<RequestAsset, string[]>();
+    public readonly filesToCompare = new Map<ExpressAsset, string[]>();
     public readonly contentToAppend = new Map<string, string[]>();
-    public readonly requestMain?: RequestAsset;
+    public readonly requestMain?: ExpressAsset;
     public readonly dataMap?: DataMap;
 
     constructor(
         public readonly dirname: string,
-        public readonly assets: RequestAsset[])
+        public readonly assets: ExpressAsset[])
     {
         this.requestMain = assets.find(item => item.requestMain);
         this.dataMap = assets[0].dataMap;
@@ -906,7 +906,7 @@ class FileManager implements IFileManager {
     delete(value: string) {
         this.files.delete(value.substring(this.dirname.length + 1));
     }
-    replace(file: RequestAsset, replaceWith: string) {
+    replace(file: ExpressAsset, replaceWith: string) {
         const filepath = file.filepath;
         if (filepath) {
             this.filesToRemove.add(filepath);
@@ -918,7 +918,7 @@ class FileManager implements IFileManager {
             this.add(replaceWith);
         }
     }
-    validate(file: RequestAsset, exclusions: Exclusions) {
+    validate(file: ExpressAsset, exclusions: Exclusions) {
         const pathname = file.pathname.replace(/[\\/]$/, '');
         const filename = file.filename;
         const winOS = path.sep === '/' ? '' : 'i';
@@ -957,13 +957,13 @@ class FileManager implements IFileManager {
         }
         return true;
     }
-    getFileOutput(file: RequestAsset) {
+    getFileOutput(file: ExpressAsset) {
         const pathname = path.join(this.dirname, file.moveTo || '', file.pathname);
         const filepath = path.join(pathname, file.filename);
         file.filepath = filepath;
         return { pathname, filepath };
     }
-    getRelativeUrl(file: RequestAsset, url: string) {
+    getRelativeUrl(file: ExpressAsset, url: string) {
         let asset = this.assets.find(item => item.uri === url);
         let origin: Undef<string> = file.uri;
         if (!asset && origin) {
@@ -1014,7 +1014,7 @@ class FileManager implements IFileManager {
         }
         return undefined;
     }
-    appendContent(file: RequestAsset, content: string, outputOnly = false) {
+    appendContent(file: ExpressAsset, content: string, outputOnly = false) {
         const filepath = file.filepath || this.getFileOutput(file).filepath;
         if (filepath && file.bundleIndex !== undefined) {
             const { mimeType, format } = file;
@@ -1055,7 +1055,7 @@ class FileManager implements IFileManager {
         }
         return undefined;
     }
-    compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
+    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void) {
         const compress = file.compress;
         const jpeg = Image.isJpeg(file, filepath) && Compress.findFormat(compress, 'jpeg');
         const resumeThread = () => {
@@ -1148,7 +1148,7 @@ class FileManager implements IFileManager {
             resumeThread();
         }
     }
-    transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
+    transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void) {
         let mimeType = file.mimeType as string;
         if (!mimeType || mimeType.charAt(0) === '&') {
             return;
@@ -1532,7 +1532,7 @@ class FileManager implements IFileManager {
                 break;
         }
     }
-    getTrailingContent(file: RequestAsset) {
+    getTrailingContent(file: ExpressAsset) {
         let output = '';
         const trailingContent = file.trailingContent;
         if (trailingContent) {
@@ -1566,7 +1566,7 @@ class FileManager implements IFileManager {
         }
         return output || undefined;
     }
-    transformCss(file: RequestAsset, content: string) {
+    transformCss(file: ExpressAsset, content: string) {
         const baseUrl = file.uri!;
         if (this.requestMain && Express.fromSameOrigin(this.requestMain.uri!, baseUrl)) {
             const assets = this.assets;
@@ -1619,7 +1619,7 @@ class FileManager implements IFileManager {
         }
         return undefined;
     }
-    writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void) {
+    writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void) {
         const png = Image.findCompress(file.compress);
         if (png && Compress.withinSizeRange(filepath, png.condition)) {
             try {
@@ -1645,12 +1645,12 @@ class FileManager implements IFileManager {
     processAssetsSync(empty: boolean, finalize: (filepath?: string) => void) {
         const emptyDir = new Set<string>();
         const notFound: ObjectMap<boolean> = {};
-        const processing: ObjectMap<RequestAsset[]> = {};
-        const appending: ObjectMap<RequestAsset[]> = {};
+        const processing: ObjectMap<ExpressAsset[]> = {};
+        const appending: ObjectMap<ExpressAsset[]> = {};
         const completed: string[] = [];
         const assets = this.assets;
         const exclusions = assets[0].exclusions;
-        const checkQueue = (file: RequestAsset, filepath: string, content = false) => {
+        const checkQueue = (file: ExpressAsset, filepath: string, content = false) => {
             const bundleIndex = file.bundleIndex;
             if (bundleIndex !== undefined) {
                 if (appending[filepath] === undefined) {
@@ -1685,7 +1685,7 @@ class FileManager implements IFileManager {
             }
             return false;
         };
-        const processQueue = (file: RequestAsset, filepath: string, bundleMain?: RequestAsset) => {
+        const processQueue = (file: ExpressAsset, filepath: string, bundleMain?: ExpressAsset) => {
             if (file.bundleIndex !== undefined) {
                 if (file.bundleIndex === 0) {
                     if (Compress.getFileSize(filepath) > 0 && !file.excluded) {
@@ -1787,7 +1787,7 @@ class FileManager implements IFileManager {
                 finalize(filepath);
             }
         };
-        const errorRequest = (file: RequestAsset, filepath: string, message: Error | string, stream?: fs.WriteStream) => {
+        const errorRequest = (file: ExpressAsset, filepath: string, message: Error | string, stream?: fs.WriteStream) => {
             const uri = file.uri!;
             if (!notFound[uri]) {
                 if (appending[filepath]?.length) {
@@ -2036,7 +2036,7 @@ app.post('/api/assets/copy', (req, res) => {
             return;
         }
         let cleared = false;
-        const manager = new FileManager(dirname, <RequestAsset[]> req.body);
+        const manager = new FileManager(dirname, req.body as ExpressAsset[]);
         const finalize = (filepath?: string) => {
             if (manager.delayed === Infinity) {
                 return;
@@ -2046,7 +2046,7 @@ app.post('/api/assets/copy', (req, res) => {
             }
             if (filepath === undefined || --manager.delayed === 0 && cleared) {
                 manager.finalizeAssetsAsync(req.query.release === '1').then(() => {
-                    res.json(<ResultOfFileAction> { success: manager.files.size > 0, files: Array.from(manager.files) });
+                    res.json({ success: manager.files.size > 0, files: Array.from(manager.files) } as ResultOfFileAction);
                     manager.delayed = Infinity;
                 });
             }
@@ -2109,7 +2109,7 @@ app.post('/api/assets/archive', (req, res) => {
             format = 'zip';
             break;
     }
-    const manager = new FileManager(dirname, <RequestAsset[]> req.body);
+    const manager = new FileManager(dirname, req.body as ExpressAsset[]);
     const resumeThread = (unzip_to = '') => {
         const archive = archiver(format, { zlib: { level: Compress.gzip_level } });
         zipname = path.join(dirname_zip, (req.query.filename || zipname || uuid.v4()) + '.' + format);
@@ -2186,7 +2186,7 @@ app.post('/api/assets/archive', (req, res) => {
                 const unzip_to = path.join(dirname_zip, zipname);
                 decompress(zippath, unzip_to)
                     .then(() => {
-                        format = <archiver.Format> match[2].toLowerCase();
+                        format = match[2].toLowerCase() as archiver.Format;
                         resumeThread(unzip_to);
                     })
                     .catch(err => {
@@ -2232,7 +2232,7 @@ app.post('/api/assets/archive', (req, res) => {
                 }
             }
             catch (err) {
-                Node.writeFail(zippath, <Error> err);
+                Node.writeFail(zippath,  err as Error);
             }
         }
         else {

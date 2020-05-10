@@ -1,5 +1,5 @@
-import { RequestAsset, Routing } from './express';
-import { CompressFormat, Exclusions, External, ResizeMode } from './content';
+import { ExpressAsset, Routing } from './express';
+import { External, ResizeMode } from './content';
 
 import * as fs from "fs";
 import * as cors from "cors";
@@ -27,7 +27,7 @@ declare namespace Node {
         fromSameOrigin(base: string, other: string): boolean;
         getBaseDirectory(location: string, asset: string): [string[], string[]];
         getAbsoluteUrl(value: string, href: string): string;
-        getFullUri(file: RequestAsset, filename?: string): string;
+        getFullUri(file: ExpressAsset, filename?: string): string;
         resolvePath(value: string, href: string, hostname?: boolean): Undef<string>;
     }
 
@@ -47,7 +47,7 @@ declare namespace Node {
     interface IImage {
         readonly tinify_api_key: boolean;
         findCompress(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
-        isJpeg(file: RequestAsset, filepath?: string): boolean;
+        isJpeg(file: ExpressAsset, filepath?: string): boolean;
         parseResizeMode(value: string): ResizeMode;
         resize(image: jimp, width: Undef<number>, height: Undef<number>, mode?: string): jimp;
     }
@@ -68,23 +68,23 @@ declare namespace Node {
         delayed: number;
         readonly files: Set<string>;
         readonly filesToRemove: Set<string>;
-        readonly filesToCompare: Map<RequestAsset, string[]>;
+        readonly filesToCompare: Map<ExpressAsset, string[]>;
         readonly contentToAppend: Map<string, string[]>;
-        readonly assets: RequestAsset[];
+        readonly assets: ExpressAsset[];
         readonly dirname: string;
-        readonly requestMain?: RequestAsset;
+        readonly requestMain?: ExpressAsset;
         add(value: string): void;
         delete(value: string): void;
-        replace(file: RequestAsset, replaceWith: string): void;
-        validate(file: RequestAsset, exclusions: Exclusions): boolean;
-        getFileOutput(file: RequestAsset): { pathname: string; filepath: string };
-        getRelativeUrl(file: RequestAsset, url: string): Undef<string>;
-        getTrailingContent(file: RequestAsset): Undef<string>;
-        appendContent(file: RequestAsset, content: string, outputOnly?: boolean): Undef<string>;
-        compressFile(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
-        transformBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
-        transformCss(file: RequestAsset, content: string): Undef<string>;
-        writeBuffer(assets: RequestAsset[], file: RequestAsset, filepath: string, finalize: (filepath?: string) => void): void;
+        replace(file: ExpressAsset, replaceWith: string): void;
+        validate(file: ExpressAsset, exclusions: Exclusions): boolean;
+        getFileOutput(file: ExpressAsset): { pathname: string; filepath: string };
+        getRelativeUrl(file: ExpressAsset, url: string): Undef<string>;
+        getTrailingContent(file: ExpressAsset): Undef<string>;
+        appendContent(file: ExpressAsset, content: string, outputOnly?: boolean): Undef<string>;
+        compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void): void;
+        transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void): void;
+        transformCss(file: ExpressAsset, content: string): Undef<string>;
+        writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void): void;
         processAssetsSync(empty: boolean, finalize: (filepath?: string) => void): void;
         finalizeAssetsAsync(release: boolean): Promise<void>;
     }

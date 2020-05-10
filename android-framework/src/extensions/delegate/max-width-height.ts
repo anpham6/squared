@@ -26,7 +26,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         );
         const maxHeight = node.hasPX('maxHeight') && (parent.hasHeight || parent.gridElement || parent.tableElement);
         if (maxWidth || maxHeight) {
-            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', <MaxWidthHeightData> { maxWidth, maxHeight });
+            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', { maxWidth, maxHeight } as MaxWidthHeightData);
             return true;
         }
         return false;
@@ -35,7 +35,7 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
     public processNode(node: T, parent: T) {
         const mainData: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
         if (mainData) {
-            const container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.BLOCK, resetMargin: true });
+            const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.BLOCK, resetMargin: true });
             if (mainData.maxWidth) {
                 node.setLayoutWidth('0px');
                 container.setLayoutWidth('match_parent');

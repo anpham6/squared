@@ -172,7 +172,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (parent?.requireRefit) {
                 parent.refitPoints(points);
             }
-            const pt = <Required<SvgPoint>> points[0];
+            const pt = points[0] as Required<SvgPoint>;
             value = SvgBuild.drawEllipse(pt.x, pt.y, pt.rx, pt.ry, precision);
         }
         else if (SVG.rect(element)) {
@@ -206,7 +206,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             if (points.length) {
                 const transformed = isArray(transforms);
                 if (transformed) {
-                    points = SvgBuild.applyTransforms(<SvgTransform[]> transforms, points, parent && TRANSFORM.origin(parent.element));
+                    points = SvgBuild.applyTransforms(transforms as SvgTransform[], points, parent && TRANSFORM.origin(parent.element));
                 }
                 if (container?.requireRefit) {
                     container.refitPoints(points);
@@ -218,7 +218,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static getOffsetPath(value: string, rotation = 'auto 0deg') {
-        const element = <SVGGeometryElement> (createPath(value) as unknown);
+        const element = (createPath(value) as unknown) as SVGGeometryElement;
         const totalLength = Math.ceil(element.getTotalLength());
         const result: SvgOffsetPath[] = [];
         if (totalLength) {

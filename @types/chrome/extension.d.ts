@@ -1,4 +1,4 @@
-export interface CompressOptions {
+interface CompressOptions {
     level?: number;
     mimeTypes: MIMEOrAll;
     largerThan: number;
@@ -6,7 +6,7 @@ export interface CompressOptions {
     whenSmaller: boolean;
 }
 
-export interface ConvertOptions extends CompressOptions {
+interface ConvertOptions extends CompressOptions {
     mimeTypes: string[];
     replaceWith: boolean;
 }

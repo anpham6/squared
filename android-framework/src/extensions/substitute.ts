@@ -1,5 +1,3 @@
-import { NodeXmlTemplate } from '../../../@types/base/application';
-
 import Resource from '../resource';
 
 import { EXT_ANDROID } from '../lib/constant';
@@ -42,11 +40,11 @@ export default class Substitute<T extends View> extends squared.base.ExtensionUI
                     });
                 }
                 return {
-                    output: <NodeXmlTemplate<T>> {
+                    output: {
                         type: NODE_TEMPLATE.XML,
                         node,
                         controlName
-                    },
+                    } as NodeXmlTemplate<T>,
                     include: true
                 };
             }

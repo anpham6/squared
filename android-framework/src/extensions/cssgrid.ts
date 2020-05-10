@@ -1,7 +1,3 @@
-import { NodeTemplate, NodeXmlTemplate } from '../../../@types/base/application';
-import { CssGridCellData, CssGridData, CssGridDirectionData } from '../../../@types/base/extension';
-import { RenderSpaceAttribute } from '../../../@types/android/application';
-
 import Resource from '../resource';
 
 import { CONTAINER_ANDROID, STRING_ANDROID } from '../lib/constant';
@@ -68,7 +64,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
             else {
                 let size = 0;
                 conditionArray(
-                    <View[][]> mainData.rowData[i],
+                    mainData.rowData[i] as View[][],
                     item => isArray(item),
                     item => size = Math.min(size, ...item.map(child => child.bounds[dimension]))
                 );
@@ -347,7 +343,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
         let renderAs: Undef<T>;
         let outputAs: Undef<NodeTemplate<T>>;
         if (CssGrid.isJustified(node) || CssGrid.isAligned(node)) {
-            container = (<android.base.Controller<T>> this.controller).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET });
+            container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET });
             container.inherit(node, 'styleMap', 'boxStyle');
             node.resetBox(BOX_STANDARD.MARGIN, container);
             node.resetBox(BOX_STANDARD.PADDING, container);
@@ -582,7 +578,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             item.anchorStyle('horizontal', 0, 'spread');
                         }
                         else {
-                            const previousSibling = <Null<T>> item.innerMostWrapped.previousSibling;
+                            const previousSibling = item.innerMostWrapped.previousSibling as Null<T>;
                             if (previousSibling) {
                                 previousSibling.anchor('rightLeft', item.documentId);
                                 item.anchor('leftRight', previousSibling.anchorTarget.documentId);
@@ -736,7 +732,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
             const [rowStart, rowSpan] = applyLayout(target, false, 'height');
-            if (alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (<BoxRectDimension> node.data(CSS_GRID, 'boundsData'))?.height && checkRowSpan(node, mainData, rowSpan, rowStart)) {
+            if (alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (node.data(CSS_GRID, 'boundsData') as BoxRectDimension)?.height && checkRowSpan(node, mainData, rowSpan, rowStart)) {
                 target.css('minHeight', formatPX(node.box.height));
             }
             else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && alignContent.startsWith('space') && !REGEX_ALIGNSELF.test(mainData.alignItems))) {
@@ -752,7 +748,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public postBaseLayout(node: T) {
         const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
-            const controller = <android.base.Controller<T>> this.controller;
+            const controller = this.controller as android.base.Controller<T>;
             const { alignContent, children, column, emptyRows, justifyContent, row, rowDirection, rowData } = mainData;
             const wrapped = node.data(CSS_GRID, 'unsetContentBox') === true;
             const insertId = children[children.length - 1].id;
@@ -821,7 +817,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 }
             }
             if (CssGrid.isAligned(node)) {
-                setContentSpacing(node, mainData, alignContent, false, 'height', wrapped, BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, 0, (<android.base.Controller<T>> this.controller).userSettings.resolutionScreenHeight);
+                setContentSpacing(node, mainData, alignContent, false, 'height', wrapped, BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, 0, (this.controller as android.base.Controller<T>).userSettings.resolutionScreenHeight);
                 if (wrapped) {
                     switch (alignContent) {
                         case 'center':
@@ -919,7 +915,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             previousItem = item;
                         }
                         else if (previousItem) {
-                            const options = <RenderSpaceAttribute> {
+                            const options = {
                                 width: '0px',
                                 height: 'wrap_content',
                                 android: {},
@@ -934,7 +930,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                     layout_constraintVertical_chainStyle: i === 0 ? 'packed' : '',
                                     layout_constraintWidth_percent: (column.unit.slice(j, length).reduce((a, b) => a + parseFloat(b), 0) / column.frTotal).toString()
                                 }
-                            };
+                            } as RenderSpaceAttribute;
                             controller.addAfterInsideTemplate(node.id, controller.renderSpace(options), false);
                             previousItem.anchor('rightLeft', options.documentId);
                             break;

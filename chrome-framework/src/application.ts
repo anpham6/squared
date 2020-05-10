@@ -1,5 +1,3 @@
-import { NodeOptions, UserSettings } from '../../@types/chrome/application';
-
 import Resource from './resource';
 
 import { APP_QUERYSTATE } from './lib/enumeration';
@@ -11,7 +9,7 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     public extensions: chrome.base.Extension<T>[] = [];
     public systemName = 'chrome';
     public queryState = 0;
-    public userSettings!: UserSettings;
+    public userSettings!: ChromeUserSettings;
 
     public finalize() {}
 
@@ -37,10 +35,10 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     public afterCreateCache(node: T) {
         switch (this.queryState) {
             case APP_QUERYSTATE.SINGLE:
-                (<chrome.base.Controller<T>> this.controllerHandler).cacheElement(node);
+                (this.controllerHandler as chrome.base.Controller<T>).cacheElement(node);
                 break;
             default:
-                (<chrome.base.Controller<T>> this.controllerHandler).cacheElementList(this.processing.cache);
+                (this.controllerHandler as chrome.base.Controller<T>).cacheElementList(this.processing.cache);
                 break;
         }
     }

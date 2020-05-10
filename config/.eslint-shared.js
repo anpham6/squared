@@ -70,7 +70,6 @@ module.exports = {
         "use-isnan": "error",
         "id-match": "error",
         "new-parens": "error",
-        "spaced-comment": "error",
         "valid-typeof": "error",
         "no-console": "error",
         "comma-style": "error",
@@ -92,6 +91,7 @@ module.exports = {
         "explicit-function-return-type": "off",
         "quote-props": "off",
         "radix": "off",
+        "spaced-comment": "off",
         "no-var": "warn",
         "no-unused-expressions": "off",
         "no-constant-condition": "off",
@@ -100,7 +100,7 @@ module.exports = {
         "no-undef": "off",
         "no-unused-vars": "off",
         "no-invalid-this": "off",
-        "@typescript-eslint/prefer-for-of": "error",
+        "@typescript-eslint/consistent-type-assertions": "error",
         "@typescript-eslint/prefer-function-type": "error",
         "@typescript-eslint/unified-signatures": "error",
         "@typescript-eslint/member-ordering": ["error", {
@@ -112,9 +112,10 @@ module.exports = {
                 "private-method"
             ]
         }],
+        "@typescript-eslint/triple-slash-reference": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/array-type": "off",
-        "@typescript-eslint/consistent-type-assertions": "off",
+        "@typescript-eslint/prefer-for-of": "off",
         "@typescript-eslint/consistent-type-definitions": "off",
         "@typescript-eslint/interface-name-prefix": "off",
         "@typescript-eslint/no-empty-function": "off",

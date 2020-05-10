@@ -1,7 +1,4 @@
-import { LayoutUI, NodeUI } from './squared';
-import { FileAsset, Exclusions } from './file';
-
-export interface UserSettings {
+interface UserSettings {
     builtInExtensions: string[];
     preloadImages: boolean;
     showErrorMessages: boolean;
@@ -11,7 +8,18 @@ export interface UserSettings {
     outputArchiveName: string;
 }
 
-export interface ControllerSettings {
+interface UserSettingsUI extends UserSettings {
+    framesPerSecond: number;
+    supportNegativeLeftTop: boolean;
+    showAttributes: boolean;
+    insertSpaces: number;
+    autoCloseOnWrite: boolean;
+    outputDirectory: string;
+    resolutionScreenWidth?: number;
+    resolutionScreenHeight?: number;
+}
+
+interface ControllerSettings {
     mimeType: {
         font: MIMEOrAll;
         image: MIMEOrAll;
@@ -20,12 +28,50 @@ export interface ControllerSettings {
     };
 }
 
-export interface ExtensionDependency {
+interface ControllerSettingsUI extends ControllerSettings {
+    layout: {
+        pathName: string;
+        fileExtension: string;
+        baseTemplate: string;
+    };
+    directory: {
+        string: string;
+        font: string;
+        image: string;
+        video: string;
+        audio: string;
+    };
+    style: {
+        inputBorderColor: string;
+        inputBackgroundColor: string;
+        inputColorBorderColor: string;
+        meterForegroundColor?: string;
+        meterBackgroundColor?: string;
+        progressForegroundColor?: string;
+        progressBackgroundColor?: string;
+    };
+    svg: {
+        enabled: boolean;
+    };
+    unsupported: {
+        cascade: Set<string>;
+        excluded: Set<string>;
+        tagName: Set<string>;
+    };
+    precision: {
+        standardFloat: number;
+    };
+    deviations: {
+        textMarginBoundarySize: number;
+    };
+}
+
+interface ExtensionDependency {
     name: string;
     preload: boolean;
 }
 
-export interface ExtensionResult<T> {
+interface ExtensionResult<T> {
     output?: NodeTemplate<T>;
     parent?: T;
     outerParent?: T;
@@ -39,13 +85,28 @@ export interface ExtensionResult<T> {
     remove?: boolean;
 }
 
-export interface LayoutType {
+interface NodeTemplate<T> {
+    type: number;
+    node: T;
+    parent?: T;
+}
+
+interface NodeXmlTemplate<T> extends NodeTemplate<T> {
+    controlName?: string;
+    attributes?: string;
+}
+
+interface NodeIncludeTemplate<T> extends NodeTemplate<T> {
+    content: string;
+}
+
+interface LayoutType {
     containerType: number;
     alignmentType: number;
     renderType?: number;
 }
 
-export interface LayoutOptions<T> extends Partial<LayoutType> {
+interface LayoutOptions<T> extends Partial<LayoutType> {
     parent: T;
     node: T;
     containerType?: number;
@@ -56,33 +117,7 @@ export interface LayoutOptions<T> extends Partial<LayoutType> {
     columnCount?: number;
 }
 
-export interface LayoutResult<T extends NodeUI> {
-    layout: LayoutUI<T>;
-    next?: boolean;
-    renderAs?: T;
-}
-
-export interface LayoutRoot<T extends NodeUI> {
-    node: T;
-    layoutName: string;
-}
-
-export interface NodeTemplate<T> {
-    type: number;
-    node: T;
-    parent?: T;
-}
-
-export interface NodeXmlTemplate<T> extends NodeTemplate<T> {
-    controlName?: string;
-    attributes?: string;
-}
-
-export interface NodeIncludeTemplate<T> extends NodeTemplate<T> {
-    content: string;
-}
-
-export interface CreateNodeOptions<T> {
+interface CreateNodeOptions<T> {
     parent?: T;
     element?: Null<Element>;
     children?: T[];
@@ -92,25 +127,8 @@ export interface CreateNodeOptions<T> {
     cascade?: boolean;
 }
 
-export interface CreateNodeGroupOptions<T> {
+interface CreateNodeGroupOptions<T> {
     parent?: T;
     delegate?: boolean;
     cascade?: boolean;
-}
-
-export interface FileActionOptions {
-    assets?: FileAsset[];
-    exclusions?: Exclusions;
-    callback?: CallbackResult;
-}
-
-export interface FileCopyingOptions extends FileActionOptions {
-    directory?: string;
-}
-
-export interface FileArchivingOptions extends FileActionOptions {
-    filename?: string;
-    format?: string;
-    copyTo?: string;
-    appendTo?: string;
 }

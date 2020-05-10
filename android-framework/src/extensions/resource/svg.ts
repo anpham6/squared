@@ -1,7 +1,3 @@
-import { ResourceStoredMap } from '../../../../@types/android/application';
-import { ResourceSvgOptions } from '../../../../@types/android/extension';
-import { GradientTemplate } from '../../../../@types/android/resource';
-
 import Resource from '../../resource';
 
 import { convertColorStops } from './background';
@@ -149,7 +145,7 @@ interface AnimateGroup {
     pathData?: string;
 }
 
-const STORED = <ResourceStoredMap> Resource.STORED;
+const STORED = Resource.STORED as AndroidResourceStoredMap;
 const INTERPOLATOR_ANDROID = {
     accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',
     accelerate:	'@android:anim/accelerate_interpolator',
@@ -257,7 +253,7 @@ function getViewport(element: SVGGraphicsElement) {
     const result: SVGGraphicsElement[] = [];
     let parent = element.parentElement;
     while (parent) {
-        result.push(<SVGGraphicsElement> (parent as unknown));
+        result.push((parent as unknown) as SVGGraphicsElement);
         parent = parent.parentElement;
         if (parent instanceof HTMLElement) {
             break;
@@ -352,7 +348,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
                     break;
                 case SVGTransform.SVG_TRANSFORM_ROTATE:
                     while (rotateOrigin.length) {
-                        const origin = <SvgPoint> rotateOrigin.shift();
+                        const origin = rotateOrigin.shift() as SvgPoint;
                         if (origin.angle === item.angle) {
                             if (origin.x !== 0 || origin.y !== 0) {
                                 item.origin = origin;
@@ -518,7 +514,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
     const result: GradientTemplate = { type, item: convertColorStops(colorStops, precision), positioning: false };
     switch (type) {
         case 'radial': {
-            const { cxAsString, cyAsString, rAsString, spreadMethod } = <SvgRadialGradient> gradient;
+            const { cxAsString, cyAsString, rAsString, spreadMethod } = gradient as SvgRadialGradient;
             const element = path.element;
             let points: Point[] = [];
             let cx!: number;
@@ -575,7 +571,7 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
             break;
         }
         case 'linear': {
-            const { x1, y1, x2, y2, spreadMethod } = <SvgLinearGradient> gradient;
+            const { x1, y1, x2, y2, spreadMethod } = gradient as SvgLinearGradient;
             result.startX = x1.toString();
             result.startY = y1.toString();
             result.endX = x2.toString();
@@ -607,13 +603,13 @@ function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, tar
                 objectAnimator: []
             };
             templateSet.forEach(item => {
-                setData.set = setData.set.concat(<SetData[]> item.set);
+                setData.set = setData.set.concat(item.set as SetData[]);
                 setData.objectAnimator = setData.objectAnimator.concat(item.objectAnimator);
             });
             targetSetTemplate = setData;
         }
         while (targetSetTemplate.set.length === 1) {
-            const setData = <SetTemplate> targetSetTemplate.set[0];
+            const setData = targetSetTemplate.set[0] as SetTemplate;
             if ((!modified || setData.ordering === '') && setData.objectAnimator.length === 0) {
                 targetSetTemplate = setData;
                 modified = true;
@@ -691,7 +687,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     [parentElement, element] = this.createSvgElement(node, node.toElementString('src'));
                 }
                 else if (node.svgElement) {
-                    element = <SVGSVGElement> node.element;
+                    element = node.element as SVGSVGElement;
                 }
                 if (element) {
                     const drawable = this.createSvgDrawable(node, element);
@@ -734,7 +730,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (FILE.SVG.test(src) || src.startsWith('data:image/svg+xml')) {
             const fileAsset = this.resource.getRawData(src);
             if (fileAsset) {
-                const parentElement = <HTMLElement> (node.actualParent || node.documentParent).element;
+                const parentElement = (node.actualParent || node.documentParent).element as HTMLElement;
                 parentElement.insertAdjacentHTML('beforeend', fileAsset.content!);
                 const lastElementChild = parentElement.lastElementChild;
                 if (lastElementChild instanceof SVGSVGElement) {
@@ -824,15 +820,15 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         }
                     }
                     else if (SvgBuild.isAnimate(item)) {
-                        const children = companions.filter((child: SvgAnimation) => (<AnimateCompanion> child.companion).value === item);
+                        const children = companions.filter((child: SvgAnimation) => (child.companion as AnimateCompanion).value === item);
                         if (children.length) {
-                            children.sort((a, b) => (<AnimateCompanion> a.companion).key >= (<AnimateCompanion> b.companion).key ? 1 : 0);
+                            children.sort((a, b) => (a.companion as AnimateCompanion).key >= (b.companion as AnimateCompanion).key ? 1 : 0);
                             const sequentially: SvgAnimation[] = [];
                             const after: SvgAnimation[] = [];
                             const q = children.length;
                             for (let j = 0; j < q; ++j) {
                                 const child = children[j];
-                                if ((<AnimateCompanion> child.companion).key <= 0) {
+                                if ((child.companion as AnimateCompanion).key <= 0) {
                                     sequentially.push(child);
                                     if (j === 0) {
                                         child.delay += item.delay;
@@ -844,7 +840,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 }
                             }
                             sequentially.push(item);
-                            sequentialMap.set(`sequentially_companion_${i}`, <SvgAnimate[]> sequentially.concat(after));
+                            sequentialMap.set(`sequentially_companion_${i}`, sequentially.concat(after) as SvgAnimate[]);
                         }
                         else {
                             const synchronized = item.synchronized;
@@ -1428,7 +1424,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             }
         }
         if (imageLength) {
-            const resource = <android.base.Resource<T>> this.resource;
+            const resource = this.resource as android.base.Resource<T>;
             const item: StandardMap[] = [];
             const layerData: StandardMap[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
             if (vectorName !== '') {
@@ -1897,7 +1893,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         let result = 0;
         clipPath.split(';').forEach((value, index, array) => {
             if (value.charAt(0) === '#') {
-                const element = <SVGGElement> (definitions.clipPath.get(value) as unknown);
+                const element = (definitions.clipPath.get(value) as unknown) as SVGGElement;
                 if (element) {
                     const g = new SvgG(element);
                     g.build({ exclude, residual: partitionTransforms, precision });

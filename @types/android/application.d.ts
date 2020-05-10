@@ -1,12 +1,4 @@
-import { ViewAttribute } from './node';
-
-import * as application from '../base/application';
-import * as application_ui from '../base/application-ui';
-import * as resource from '../base/resource';
-
-type View = android.base.View;
-
-export interface UserSettings extends application_ui.UserSettings {
+interface AndroidUserSettingsUI extends UserSettingsUI {
     targetAPI: number;
     resolutionDPI: number;
     resolutionScreenWidth: number;
@@ -22,7 +14,7 @@ export interface UserSettings extends application_ui.UserSettings {
     outputMainFileName: string;
 }
 
-export interface ControllerSettings extends application_ui.ControllerSettings {
+interface AndroidControllerSettingsUI extends ControllerSettingsUI {
     deviations: {
         textMarginBoundarySize: number;
         subscriptBottomOffset: number;
@@ -31,7 +23,7 @@ export interface ControllerSettings extends application_ui.ControllerSettings {
     };
 }
 
-export interface ResourceStoredMap extends resource.ResourceStoredMap {
+interface AndroidResourceStoredMap extends ResourceStoredMap {
     styles: Map<string, StyleAttribute>;
     themes: Map<string, Map<string, StyleAttribute>>;
     dimens: Map<string, string>;
@@ -39,15 +31,15 @@ export interface ResourceStoredMap extends resource.ResourceStoredMap {
     animators: Map<string, string>;
 }
 
-export interface FileOutputOptions extends application.FileCopyingOptions, application.FileArchivingOptions {}
+interface FileUniversalOptions extends squared.base.FileCopyingOptions, squared.base.FileArchivingOptions {}
 
-export interface GuidelineOptions {
+interface GuidelineOptions {
     orientation?: string;
     percent?: boolean;
     opposing?: boolean;
 }
 
-export interface RenderSpaceAttribute extends ViewAttribute {
+interface RenderSpaceAttribute extends ViewAttribute {
     width?: string;
     height?: string;
     column?: number;
@@ -56,7 +48,7 @@ export interface RenderSpaceAttribute extends ViewAttribute {
     rowSpan?: number;
 }
 
-export interface RenderNodeStaticAttribute {
+interface RenderNodeStaticAttribute {
     controlName?: string;
     controlType?: number;
     width?: string;
@@ -64,7 +56,7 @@ export interface RenderNodeStaticAttribute {
     content?: string;
 }
 
-export interface StyleAttribute {
+interface StyleAttribute {
     name: string;
     parent: string;
     items: StringMap | StringValue[];
@@ -75,4 +67,4 @@ export interface StyleAttribute {
     ids?: number[];
 }
 
-export type CustomizationResult = (result: {}, api?: number, node?: View) => boolean;
+type CustomizationResult<T> = (result: {}, api?: number, node?: T) => boolean;

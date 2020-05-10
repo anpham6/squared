@@ -1,6 +1,3 @@
-import { ResourceStoredMap, StyleAttribute } from '../../../../@types/android/application';
-import { ResourceFontsOptions } from '../../../../@types/android/extension';
-
 import Resource from '../../resource';
 
 import { BUILD_ANDROID } from '../../lib/enumeration';
@@ -21,7 +18,7 @@ type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
-const STORED = <ResourceStoredMap> Resource.STORED;
+const STORED = Resource.STORED as AndroidResourceStoredMap;
 const REGEX_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
 const REGEX_DOUBLEQUOTE = /"/g;
 const FONT_ANDROID = {
@@ -121,7 +118,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
     public readonly eventOnly = true;
 
     public afterParseDocument() {
-        const resource = <android.base.Resource<T>> this.resource;
+        const resource = this.resource as android.base.Resource<T>;
         const disableFontAlias = this.options.disableFontAlias;
         const convertPixels = resource.userSettings.convertPixels === 'dp';
         const { fonts, styles } = STORED;
@@ -378,8 +375,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 let c: number | string = (a.ids as []).length;
                 let d: number | string = (b.ids as []).length;
                 if (c === d) {
-                    c = (<StringValue[]> a.items).length;
-                    d = (<StringValue[]> b.items).length;
+                    c = (a.items as StringValue[]).length;
+                    d = (b.items as StringValue[]).length;
                     if (c === d) {
                         c = a.name;
                         d = b.name;
@@ -421,7 +418,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         if (index === 0) {
                             parent = name;
                             if (array.length === 1) {
-                                items = <StringValue[]> styleData.items;
+                                items = styleData.items as StringValue[];
                             }
                             else if (!styles.has(name)) {
                                 styles.set(name, { name, parent: '', items: styleData.items });
@@ -429,19 +426,19 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                         else {
                             if (items) {
-                                (<StringValue[]> styleData.items).forEach(item => {
+                                (styleData.items as StringValue[]).forEach(item => {
                                     const key = item.key;
-                                    const previousIndex = (<StringValue[]> items).findIndex(previous => previous.key === key);
+                                    const previousIndex = (items as StringValue[]).findIndex(previous => previous.key === key);
                                     if (previousIndex !== -1) {
-                                        (<StringValue[]> items)[previousIndex] = item;
+                                        (items as StringValue[])[previousIndex] = item;
                                     }
                                     else {
-                                        (<StringValue[]> items).push(item);
+                                        (items as StringValue[]).push(item);
                                     }
                                 });
                             }
                             else {
-                                items = (<StringValue[]> styleData.items).slice(0);
+                                items = (styleData.items as StringValue[]).slice(0);
                             }
                             styleName.push(name);
                         }

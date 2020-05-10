@@ -1,4 +1,4 @@
-export interface CssGridData<T> {
+interface CssGridData<T> {
     children: T[];
     row: CssGridDirectionData;
     column: CssGridDirectionData;
@@ -15,7 +15,7 @@ export interface CssGridData<T> {
     minCellHeight: number;
 }
 
-export interface CssGridDirectionData {
+interface CssGridDirectionData {
     length: number;
     gap: number;
     unit: string[];
@@ -31,20 +31,20 @@ export interface CssGridDirectionData {
     frTotal: number;
 }
 
-export interface CssGridCellData {
+interface CssGridCellData {
     rowStart: number;
     rowSpan: number;
     columnStart: number;
     columnSpan: number;
 }
 
-export interface FlexboxData<T> extends Required<FlexData> {
+interface FlexboxData<T> extends Required<FlexData> {
     rowCount: number;
     columnCount: number;
     children: T[];
 }
 
-export interface GridCellData<T> extends ObjectMap<any> {
+interface GridCellData<T> extends ObjectMap<any> {
     rowSpan: number;
     columnSpan: number;
     index: number;
@@ -55,13 +55,13 @@ export interface GridCellData<T> extends ObjectMap<any> {
     siblings?: T[];
 }
 
-export interface ListData {
+interface ListData {
     ordinal: string;
     imageSrc: string;
     imagePosition: string;
 }
 
-export interface TableData {
+interface TableData {
     layoutType: number;
     layoutFixed: boolean;
     borderCollapse: boolean;
@@ -70,7 +70,7 @@ export interface TableData {
     columnCount: number;
 }
 
-export interface TableCellData {
+interface TableCellData {
     rowSpan: number;
     colSpan: number;
     spaceSpan?: number;
@@ -82,7 +82,7 @@ export interface TableCellData {
     flexible?: boolean;
 }
 
-export interface ColumnData<T> {
+interface ColumnData<T> {
     rows: T[][];
     columnCount: number;
     columnWidth: number;
