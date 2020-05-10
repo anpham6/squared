@@ -4,11 +4,11 @@ export interface RequestAsset extends file.RequestAsset {
     rootDir?: string;
     moveTo?: string;
     format?: string;
-    bundleIndex?: number;
     requestMain?: boolean;
-    outerHTML?: string;
+    bundleIndex?: number;
     preserve?: boolean;
     trailingContent?: FormattableContent[];
+    outerHTML?: string;
 }
 
 export interface FileActionAttribute {

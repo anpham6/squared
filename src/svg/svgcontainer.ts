@@ -1,5 +1,3 @@
-import { SvgAspectRatio, SvgBuildOptions, SvgPoint, SvgSynchronizeOptions } from '../../@types/svg/object';
-
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';

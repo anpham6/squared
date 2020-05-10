@@ -1,5 +1,3 @@
-import { SvgAnimationAttribute, SvgAnimationIntervalAttributeMap, SvgAnimationIntervalValue } from '../../@types/svg/object';
-
 import SvgBuild from './svgbuild';
 
 import { FILL_MODE } from './lib/constant';
@@ -7,7 +5,7 @@ import { TRANSFORM } from './lib/util';
 
 type SvgAnimate = squared.svg.SvgAnimate;
 type SvgAnimation = squared.svg.SvgAnimation;
-type IntervalMap = ObjectMap<ObjectIndex<SvgAnimationIntervalValue[]>>;
+type IntervalMap = ObjectMap<ObjectIndex<SvgAnimationIntervalValue<SvgAnimation>[]>>;
 type IntervalTime = ObjectMap<Set<number>>;
 
 const { hasValue, safeNestedArray, sortNumber } = squared.lib.util;
@@ -33,7 +31,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
     public static getGroupEndTime = (item: SvgAnimationAttribute) => item.iterationCount === 'infinite' ? Infinity : item.delay + item.duration * parseInt(item.iterationCount);
     public static getKeyName = (item: SvgAnimation) => item.attributeName + (SvgBuild.isAnimateTransform(item) ? ':' + TRANSFORM.typeAsName(item.type) : '');
 
-    public map: SvgAnimationIntervalAttributeMap;
+    public map: SvgAnimationIntervalAttributeMap<SvgAnimation>;
 
     constructor(animations: SvgAnimation[], ...attrs: string[]) {
         animations = (attrs.length ? animations.filter(item => attrs.includes(item.attributeName)) : animations.slice(0)).sort((a, b) => {
@@ -49,11 +47,11 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 attrs.push(value);
             }
         });
-        const map: SvgAnimationIntervalAttributeMap = {};
+        const map: SvgAnimationIntervalAttributeMap<SvgAnimation> = {};
         const intervalMap: IntervalMap = {};
         const intervalTimes: IntervalTime = {};
         attrs.forEach(keyName => {
-            map[keyName] = new Map<number, SvgAnimationIntervalValue[]>();
+            map[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
             intervalMap[keyName] = {};
             intervalTimes[keyName] = new Set<number>();
             const attributeName = keyName.split(':')[0];
@@ -234,7 +232,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 if (!animation) {
                     return true;
                 }
-                return (<SvgAnimationIntervalValue[]> map.get(time)).findIndex(item => item.animation === animation) !== -1;
+                return (<SvgAnimationIntervalValue<SvgAnimation>[]> map.get(time)).findIndex(item => item.animation === animation) !== -1;
             }
             return false;
         }

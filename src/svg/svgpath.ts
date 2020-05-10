@@ -1,5 +1,3 @@
-import { SvgBuildOptions, SvgPathCommand, SvgPathExtendData, SvgPoint, SvgStrokeDash, SvgTransform, SvgTransformResidual } from '../../@types/svg/object';
-
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
 import SvgAnimate from './svganimate';

@@ -1,5 +1,3 @@
-import { MIMEOrAll } from '../lib/data';
-
 export interface CompressOptions {
     level?: number;
     mimeTypes: MIMEOrAll;

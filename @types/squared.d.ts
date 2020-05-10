@@ -21,8 +21,8 @@ export function close(): void;
 export function reset(): void;
 export function toString(): string;
 
-export * as lib from './lib/squared';
+export * as lib from './lib/index';
 export * as base from './base/squared';
-export * as svg from './svg/squared';
+export * as svg from './svg/index';
 
 export as namespace squared;

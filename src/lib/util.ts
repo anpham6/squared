@@ -1,5 +1,3 @@
-import { DelimitStringOptions, MIMEOrAll } from '../../@types/lib/data';
-
 import { CHAR, COMPONENT, UNIT, XML } from './regex';
 
 const UUID_ALPHA = '0123456789abcdef';

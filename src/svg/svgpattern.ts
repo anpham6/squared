@@ -1,5 +1,3 @@
-import { SvgBuildOptions } from '../../@types/svg/object';
-
 import SvgView$MX from './svgview-mx';
 import SvgAnimation from './svganimation';
 import SvgContainer from './svgcontainer';

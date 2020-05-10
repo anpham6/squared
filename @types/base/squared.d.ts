@@ -9,8 +9,6 @@ import { AppProcessing as AppProcessingUI, AppSession as AppSessionUI } from './
 import { ControllerSettings as ControllerUISettings, UserSettings as UserUISettings } from './application-ui';
 import { HideOptions, ExcludeOptions, LinearData, LocalSettings, RemoveTryOptions, ReplaceTryOptions, Support, TranslateOptions } from './node-ui';
 
-import { FontFaceData, MIMEOrAll } from '../lib/data';
-
 declare interface FileActionAsync {
     copyToDisk(directory: string, options?: FileActionOptions): Promise<ResultOfFileAction | void>;
     appendToArchive(pathname: string, options?: FileActionOptions): Promise<ResultOfFileAction | void>;

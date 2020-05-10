@@ -1,5 +1,3 @@
-import { SvgBuildOptions, SvgSynchronizeOptions } from '../../@types/svg/object';
-
 import SvgContainer from './svgcontainer';
 
 import { INSTANCE_TYPE } from './lib/constant';

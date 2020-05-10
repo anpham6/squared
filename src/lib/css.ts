@@ -1,5 +1,3 @@
-import { BackgroundPositionOptions, CalculateOptions, CalculateVarOptions, CalculateVarAsStringOptions, KeyframesData } from '../../@types/lib/data';
-
 import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';

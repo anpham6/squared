@@ -1,5 +1,3 @@
-import { SvgTransformExclude } from '../svg/object';
-
 export interface AccessibilityOptions {
     displayLabel: boolean;
 }

@@ -4,6 +4,7 @@
       "inlineSourceMap": true
     },
     "include": [
+      "../@types/**/object.d.ts",
       "../@types/index.d.ts",
       "../@types/android/index.d.ts",
       "../src/**/*.ts",

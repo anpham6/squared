@@ -1,6 +1,6 @@
-export interface SvgRect extends Point, Dimension {}
+interface SvgRect extends Point, Dimension {}
 
-export interface SvgAspectRatio extends SvgRect {
+interface SvgAspectRatio extends SvgRect {
     position: Point;
     parent: Point;
     unit: number;
@@ -10,12 +10,12 @@ export interface SvgAspectRatio extends SvgRect {
     alignY: boolean;
 }
 
-export interface SvgGradient extends Gradient {
+interface SvgGradient extends Gradient {
     element: SVGGradientElement;
     spreadMethod?: number;
 }
 
-export interface SvgLinearGradient extends SvgGradient {
+interface SvgLinearGradient extends SvgGradient {
     x1: number;
     y1: number;
     x2: number;
@@ -26,7 +26,7 @@ export interface SvgLinearGradient extends SvgGradient {
     y2AsString: string;
 }
 
-export interface SvgRadialGradient extends SvgGradient {
+interface SvgRadialGradient extends SvgGradient {
     cx: number;
     cy: number;
     r: number;
@@ -41,7 +41,7 @@ export interface SvgRadialGradient extends SvgGradient {
     frAsString: string;
 }
 
-export interface SvgPathCommand extends KeyValue<string, SvgPoint[]> {
+interface SvgPathCommand extends KeyValue<string, SvgPoint[]> {
     start: SvgPoint;
     end: SvgPoint;
     relative: boolean;
@@ -53,7 +53,7 @@ export interface SvgPathCommand extends KeyValue<string, SvgPoint[]> {
     sweepFlag?: number;
 }
 
-export interface SvgTransform {
+interface SvgTransform {
     type: number;
     angle: number;
     matrix: SvgMatrix | DOMMatrix;
@@ -65,7 +65,7 @@ export interface SvgTransform {
     fromCSS?: boolean;
 }
 
-export interface SvgMatrix {
+interface SvgMatrix {
     a: number;
     b: number;
     c: number;
@@ -74,13 +74,13 @@ export interface SvgMatrix {
     f: number;
 }
 
-export interface SvgPoint extends Point {
+interface SvgPoint extends Point {
     rx?: number;
     ry?: number;
     angle?: number;
 }
 
-export interface SvgTransformExclude {
+interface SvgTransformExclude {
     path?: number[];
     line?: number[];
     rect?: number[];
@@ -91,13 +91,13 @@ export interface SvgTransformExclude {
     image?: number[];
 }
 
-export interface SvgAnimationGroup {
+interface SvgAnimationGroup {
     id: number;
     name: string;
     ordering?: SvgAnimationAttribute[];
 }
 
-export interface SvgAnimationAttribute {
+interface SvgAnimationAttribute {
     name: string;
     attributes: string[];
     paused: boolean;
@@ -107,18 +107,18 @@ export interface SvgAnimationAttribute {
     fillMode: string;
 }
 
-export interface SvgStrokeDash {
+interface SvgStrokeDash {
     start: number;
     end: number;
     length?: number;
     offset?: number;
 }
 
-export interface SvgOffsetPath extends NumberValue<DOMPoint> {
+interface SvgOffsetPath extends NumberValue<DOMPoint> {
     rotate: number;
 }
 
-export interface SvgBuildOptions {
+interface SvgBuildOptions {
     exclude?: SvgTransformExclude;
     transforms?: SvgTransform[];
     residual?: SvgTransformResidual;
@@ -129,14 +129,14 @@ export interface SvgBuildOptions {
     initialize?: boolean;
 }
 
-export interface SvgSynchronizeOptions {
+interface SvgSynchronizeOptions {
     keyTimeMode?: number;
     framesPerSecond?: number;
     precision?: number;
     element?: SVGGeometryElement;
 }
 
-export interface SvgPathExtendData {
+interface SvgPathExtendData {
     items: SvgStrokeDash[];
     dashArray: number[];
     dashArrayTotal: number;
@@ -149,11 +149,11 @@ export interface SvgPathExtendData {
     leadingOffset?: number;
 }
 
-export interface SvgAnimationIntervalAttributeMap {
-    [key: string]: Map<number, SvgAnimationIntervalValue[]>;
+interface SvgAnimationIntervalAttributeMap<T> {
+    [key: string]: Map<number, SvgAnimationIntervalValue<T>[]>;
 }
 
-export interface SvgAnimationIntervalValue {
+interface SvgAnimationIntervalValue<T> {
     time: number;
     value: string;
     endTime: number;
@@ -162,7 +162,7 @@ export interface SvgAnimationIntervalValue {
     fillMode: number;
     infinite: boolean;
     valueFrom?: string;
-    animation?: squared.svg.SvgAnimation;
+    animation?: T;
 }
 
-export type SvgTransformResidual = (e: SVGGraphicsElement, t: SvgTransform[], rx?: number, ry?: number) => [SvgTransform[][], SvgTransform[]];
+type SvgTransformResidual = (e: SVGGraphicsElement, t: SvgTransform[], rx?: number, ry?: number) => [SvgTransform[][], SvgTransform[]];

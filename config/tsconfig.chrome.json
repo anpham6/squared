@@ -4,6 +4,7 @@
       "inlineSourceMap": true
     },
     "include": [
+      "../@types/**/object.d.ts",
       "../@types/index.d.ts",
       "../@types/chrome/index.d.ts",
       "../src/**/*.ts",

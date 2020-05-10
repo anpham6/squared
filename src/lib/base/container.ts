@@ -1,5 +1,3 @@
-import { ContainerCascadeOptions, ContainerFindOptions } from '../../../@types/lib/data';
-
 import ListIterator from './listiterator';
 
 import { iterateArray, objectMap, partitionArray, sameArray } from '../util';

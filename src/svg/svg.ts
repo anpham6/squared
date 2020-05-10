@@ -1,5 +1,3 @@
-import { SvgBuildOptions, SvgGradient, SvgSynchronizeOptions } from '../../@types/svg/object';
-
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgView$MX from './svgview-mx';
@@ -70,6 +68,7 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
             this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
         }
         super.synchronize(options);
+        squared.svg.SvgAnimate
     }
 
     protected init() {

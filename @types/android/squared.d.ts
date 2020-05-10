@@ -3,8 +3,6 @@ import { AppViewModel } from './internal';
 import { CustomizationResult, FileOutputOptions, GuidelineOptions, RenderNodeStaticAttribute, RenderSpaceAttribute, ResourceStoredMap, StyleAttribute, UserSettings } from './application';
 import { Constraint, CreateNodeWrapperOptions, LocalSettings, Support, ViewAttribute } from './node';
 
-import { MIMEOrAll } from '../lib/data';
-
 import * as squared from '../squared';
 
 import LayoutUI = squared.base.LayoutUI;

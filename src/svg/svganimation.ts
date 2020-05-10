@@ -1,5 +1,3 @@
-import { SvgAnimationGroup } from '../../@types/svg/object';
-
 import SvgBuild from './svgbuild';
 
 import { FILL_MODE, INSTANCE_TYPE } from './lib/constant';
@@ -274,7 +272,7 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     get parentContainer() {
-        let result = <Undef<SvgContainer>> this._parent;
+        let result = this._parent as Undef<SvgContainer>;
         while (result && !SvgBuild.isContainer(result)) {
             result = result.parent;
         }

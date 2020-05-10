@@ -1,8 +1,6 @@
 import { LayoutUI, NodeUI } from './squared';
 import { FileAsset, Exclusions } from './file';
 
-import { MIMEOrAll } from '../lib/data';
-
 export interface UserSettings {
     builtInExtensions: string[];
     preloadImages: boolean;

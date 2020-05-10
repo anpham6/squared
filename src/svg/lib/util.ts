@@ -1,5 +1,3 @@
-import { SvgMatrix, SvgPoint, SvgTransform } from '../../../@types/svg/object';
-
 const $lib = squared.lib;
 
 const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, convertAngle, getFontSize, isLength, isPercent, parseUnit } = $lib.css;

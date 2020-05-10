@@ -1,5 +1,3 @@
-import { SvgPoint, SvgSynchronizeOptions } from '../../@types/svg/object';
-
 import SvgAnimate from './svganimate';
 import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
@@ -594,7 +592,7 @@ function insertInterpolator(item: SvgAnimate, time: number, keySplines: Undef<st
         map.set(time, value);
     }
     if (transformOriginMap) {
-        setTransformOrigin(transformOriginMap, item, time, index);
+        setTransformOrigin(transformOriginMap, item as SvgAnimateTransform, time, index);
     }
 }
 
@@ -623,7 +621,7 @@ function setStartItemValues(map: SvgAnimationIntervalMap, forwardMap: ForwardMap
     }
 }
 
-function setTransformOrigin(map: TransformOriginMap, item: SvgAnimate, time: number, index: number) {
+function setTransformOrigin(map: TransformOriginMap, item: SvgAnimateTransform, time: number, index: number) {
     if (SvgBuild.asAnimateTransform(item)) {
         const point = item.transformOrigin?.[index];
         if (point) {

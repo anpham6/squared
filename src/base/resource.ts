@@ -1,8 +1,6 @@
 import { UserSettings } from '../../@types/base/application';
 import { ResourceAssetMap } from '../../@types/base/resource';
 
-import { FontFaceData } from '../../@types/lib/data';
-
 const $lib = squared.lib;
 
 const { STRING, XML } = $lib.regex;

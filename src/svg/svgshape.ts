@@ -1,5 +1,3 @@
-import { SvgBuildOptions, SvgSynchronizeOptions } from '../../@types/svg/object';
-
 import SvgSynchronize$MX from './svgsynchronize-mx';
 import SvgView$MX from './svgview-mx';
 import SvgElement from './svgelement';

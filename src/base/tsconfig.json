@@ -5,6 +5,7 @@
   },
   "include": [
     "../../@types/index.d.ts",
+    "../../@types/lib/object.d.ts",
     "../../@types/base/index.d.ts",
     "**/*"
   ],

@@ -1,5 +1,3 @@
-import { SvgAnimationAttribute, SvgTransform } from '../../@types/svg/object';
-
 import SvgAnimate from './svganimate';
 import SvgAnimateMotion from './svganimatemotion';
 import SvgAnimateTransform from './svganimatetransform';
@@ -198,7 +196,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 const key = parseFloat(percent) / 100;
                                 const data = keyframes[percent];
                                 for (const attr in data) {
-                                    let value: Undef<string> = data[attr];
+                                    let value: string = data[attr];
                                     if (hasCalc(value)) {
                                         value = calculateStyle(element, attr, value);
                                     }

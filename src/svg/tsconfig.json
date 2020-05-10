@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../build"
+    "outDir": "../../build",
   },
   "include": [
+    "../../@types/svg/object.d.ts",
     "../../@types/index.d.ts",
-    "../../@types/svg/index.d.ts",
     "**/*"
   ],
   "exclude": []

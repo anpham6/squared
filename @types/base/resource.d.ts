@@ -1,7 +1,5 @@
 import { Asset, ImageAsset, RawAsset } from './file';
 
-import { FontFaceData } from '../lib/data';
-
 export interface ResourceAssetMap {
     ids: Map<string, string[]>;
     fonts: Map<string, FontFaceData[]>;

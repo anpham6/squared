@@ -1,8 +1,6 @@
 import { ResourceStoredMap, StyleAttribute } from '../../@types/android/application';
 import { ViewAttribute } from '../../@types/android/node';
 
-import { MIMEOrAll } from '../../@types/lib/data';
-
 import { RESERVED_JAVA } from './lib/constant';
 
 type View = android.base.View;

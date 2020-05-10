@@ -1,7 +1,7 @@
 
-export interface KeyframesData extends ObjectMap<StringMap> {}
+interface KeyframesData extends ObjectMap<StringMap> {}
 
-export interface FontFaceData {
+interface FontFaceData {
     fontFamily: string;
     fontWeight: number;
     fontStyle: string;
@@ -10,23 +10,23 @@ export interface FontFaceData {
     srcLocal?: string;
 }
 
-export interface ContainerCascadeOptions<T> {
+interface ContainerCascadeOptions<T> {
     also?: BindGeneric<T, void>;
     error?: IteratorPredicate<T, boolean>;
 }
 
-export interface ContainerFindOptions<T> extends ContainerCascadeOptions<T> {
+interface ContainerFindOptions<T> extends ContainerCascadeOptions<T> {
     cascade?: boolean;
 }
 
-export interface BackgroundPositionOptions {
+interface BackgroundPositionOptions {
     fontSize?: number;
     imageDimension?: Dimension;
     imageSize?: string;
     screenDimension?: Dimension;
 }
 
-export interface CalculateOptions {
+interface CalculateOptions {
     min?: number;
     max?: number;
     boundingSize?: number;
@@ -34,7 +34,7 @@ export interface CalculateOptions {
     fontSize?: number;
 }
 
-export interface CalculateVarAsStringOptions extends CalculateOptions {
+interface CalculateVarAsStringOptions extends CalculateOptions {
     boundingBox?: Dimension;
     dimension?: DimensionAttr[] | DimensionAttr;
     orderedSize?: number[];
@@ -47,11 +47,11 @@ export interface CalculateVarAsStringOptions extends CalculateOptions {
     errorString?: RegExp;
 }
 
-export interface CalculateVarOptions extends Omit<CalculateVarAsStringOptions, "orderedSize" | "checkUnit" | "separator"> {
+interface CalculateVarOptions extends Omit<CalculateVarAsStringOptions, "orderedSize" | "checkUnit" | "separator"> {
     dimension?: DimensionAttr;
 }
 
-export interface DelimitStringOptions {
+interface DelimitStringOptions {
     value: string;
     delimiter?: string;
     remove?: boolean;
@@ -59,4 +59,4 @@ export interface DelimitStringOptions {
     not?: string[];
 }
 
-export type MIMEOrAll = string[] | "*";
+type MIMEOrAll = string[] | "*";

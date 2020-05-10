@@ -1,5 +1,3 @@
-import { SvgBuildOptions, SvgPoint } from '../../@types/svg/object';
-
 import SvgBaseVal$MX from './svgbaseval-mx';
 import SvgPaint$MX from './svgpaint-mx';
 import SvgView$MX from './svgview-mx';
