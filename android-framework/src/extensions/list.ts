@@ -1,10 +1,10 @@
-import View from '../view';
-
 import { CONTAINER_ANDROID } from '../lib/constant';
 import { CONTAINER_NODE } from '../lib/enumeration';
 import { createViewAttribute } from '../lib/util';
 
 import LayoutUI = squared.base.LayoutUI;
+
+type View = android.base.View;
 
 const $lib = squared.lib;
 const $base_lib = squared.base.lib;

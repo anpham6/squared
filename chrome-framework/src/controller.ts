@@ -1,4 +1,5 @@
-import View from './view';
+
+type View = chrome.base.View;
 
 const $lib = squared.lib;
 

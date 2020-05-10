@@ -1,7 +1,3 @@
-import { Arguments, IChrome, ICompress, IFileManager, IExpress, IImage, INode, Settings } from './@types/node';
-import { DataMap, Environment, ExpressAsset, Routing } from './@types/express';
-import { External } from './@types/content';
-
 import path = require('path');
 import zlib = require('zlib');
 import fs = require('fs-extra');
@@ -19,11 +15,11 @@ import chalk = require('chalk');
 
 const app = express();
 
-let Node: INode;
-let Express: IExpress;
-let Compress: ICompress;
-let Chrome: IChrome;
-let Image: IImage;
+let Node: serve.INode;
+let Express: serve.IExpress;
+let Compress: serve.ICompress;
+let Chrome: serve.IChrome;
+let Image: serve.IImage;
 
 {
     let DISK_READ = false;
@@ -35,15 +31,15 @@ let Image: IImage;
     let JPEG_QUALITY = 100;
     let TINIFY_API_KEY = false;
 
-    let ROUTING: Undef<Routing>;
+    let ROUTING: Undef<serve.Routing>;
     let CORS: Undef<cors.CorsOptions>;
-    let ENV: Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
+    let ENV: serve.Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
     let PORT = process.env.PORT || '3000';
 
-    let EXTERNAL: Undef<External>;
+    let EXTERNAL: Undef<ExternalModules>;
 
     try {
-        const settings = require('./squared.settings.json') as Settings;
+        const settings = require('./squared.settings.json') as serve.Settings;
         const {
             disk_read,
             disk_write,
@@ -159,7 +155,7 @@ let Image: IImage;
             nargs: 1
         })
         .epilogue('For more information and source: https://github.com/anpham6/squared')
-        .argv as unknown) as Arguments;
+        .argv as unknown) as serve.Arguments;
 
     if (argv.accessAll) {
         DISK_READ = true;
@@ -250,7 +246,7 @@ let Image: IImage;
     app.use(body_parser.urlencoded({ extended: true }));
     app.listen(argv.port, () => console.log(`\n${chalk[ENV === 'production' ? 'green' : 'yellow'](ENV.toUpperCase())}: Express server listening on port ${chalk.bold(argv.port)}\n`));
 
-    Node = new class implements INode {
+    Node = new class implements serve.INode {
         public major: number;
         public minor: number;
         public patch: number;
@@ -319,7 +315,7 @@ let Image: IImage;
     }
     (DISK_READ, DISK_WRITE, UNC_READ, UNC_WRITE);
 
-    Express = new class implements IExpress {
+    Express = new class implements serve.IExpress {
         public PATTERN_URL = /^([A-Za-z]+:\/\/[A-Za-z\d.-]+(?::\d+)?)(\/.*)/;
 
         fromSameOrigin(base: string, other: string) {
@@ -392,7 +388,7 @@ let Image: IImage;
         }
     }();
 
-    Compress = new class implements ICompress {
+    Compress = new class implements serve.ICompress {
         constructor(
             public gzip_level: number,
             public brotli_quality: number,
@@ -461,8 +457,8 @@ let Image: IImage;
     }
     (GZIP_LEVEL, BROTLI_QUALITY, JPEG_QUALITY);
 
-    Chrome = new class implements IChrome {
-        constructor(public external: Undef<External>) {}
+    Chrome = new class implements serve.IChrome {
+        constructor(public external: Undef<ExternalModules>) {}
 
         findExternalPlugin(data: ObjectMap<StandardMap>, format: string): [string, StandardMap] {
             for (const name in data) {
@@ -818,7 +814,7 @@ let Image: IImage;
     }
     (EXTERNAL);
 
-    Image = new class implements IImage {
+    Image = new class implements serve.IImage {
         constructor(public tinify_api_key: boolean) {}
 
         findCompress(compress: Undef<CompressFormat[]>) {
@@ -883,7 +879,7 @@ function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>>
     };
 }
 
-class FileManager implements IFileManager {
+class FileManager implements serve.IFileManager {
     public delayed = 0;
     public readonly files = new Set<string>();
     public readonly filesToRemove = new Set<string>();

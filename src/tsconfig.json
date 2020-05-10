@@ -4,8 +4,6 @@
     "outDir": "../build"
   },
   "include": [
-    "../@types/lib/object.d.ts",
-    "../@types/base/object.d.ts",
     "../@types/index.d.ts",
     "main.ts",
     "lib/**/*.ts"

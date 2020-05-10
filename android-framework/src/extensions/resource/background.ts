@@ -1,6 +1,5 @@
 import Resource from '../../resource';
 import ResourceSvg from './svg';
-import View from '../../view';
 
 import { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
@@ -8,6 +7,8 @@ import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 import LAYERLIST_TMPL from '../../template/layer-list';
 import SHAPE_TMPL from '../../template/shape';
 import VECTOR_TMPL from '../../template/vector';
+
+type View = android.base.View;
 
 const $lib = squared.lib;
 const $base = squared.base;

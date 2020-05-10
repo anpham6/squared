@@ -4,10 +4,8 @@
     "outDir": "../../build"
   },
   "include": [
-    "../../@types/lib/object.d.ts",
-    "../../@types/base/object.d.ts",
     "../../@types/index.d.ts",
-    "../../@types/base/index.d.ts",
+    "../../@types/lib/index.d.ts",
     "**/*"
   ],
   "exclude": []

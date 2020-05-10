@@ -7,7 +7,6 @@
     "../@types/base/object.d.ts",
     "../@types/lib/object.d.ts",
     "../@types/svg/object.d.ts",
-    "../@types/android/object.d.ts",
     "../@types/index.d.ts",
     "../@types/android/index.d.ts",
     "**/*.ts"

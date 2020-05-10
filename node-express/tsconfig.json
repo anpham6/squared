@@ -11,7 +11,7 @@
     "../@types/type.d.ts",
     "../@types/object.d.ts",
     "@types/index.d.ts",
-    "**/*.ts"
+    "*.ts"
   ],
   "exclude": []
 }
