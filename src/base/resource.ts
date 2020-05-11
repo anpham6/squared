@@ -1,8 +1,6 @@
-const $lib = squared.lib;
-
-const { STRING, XML } = $lib.regex;
-const { extractURL } = $lib.css;
-const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = $lib.util;
+const { STRING, XML } = squared.lib.regex;
+const { extractURL } = squared.lib.css;
+const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = squared.lib.util;
 
 const REGEX_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 

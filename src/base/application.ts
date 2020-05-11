@@ -9,13 +9,11 @@ type AppVieModel = squared.base.AppViewModel;
 type FileActionOptions = squared.base.FileActionOptions;
 type PreloadImage = HTMLImageElement | string;
 
-const $lib = squared.lib;
-
-const { checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = $lib.css;
-const { isTextNode } = $lib.dom;
-const { capitalize, convertCamelCase, isString, objectMap, promisify, resolvePath } = $lib.util;
-const { CHAR, FILE, STRING, XML } = $lib.regex;
-const { frameworkNotInstalled, getElementCache, setElementCache } = $lib.session;
+const { checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
+const { isTextNode } = squared.lib.dom;
+const { capitalize, convertCamelCase, isString, objectMap, promisify, resolvePath } = squared.lib.util;
+const { CHAR, FILE, STRING, XML } = squared.lib.regex;
+const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
 
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 

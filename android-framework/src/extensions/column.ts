@@ -3,17 +3,14 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-const $base_lib = squared.base.lib;
+const { formatPX } = squared.lib.css;
+const { createElement } = squared.lib.dom;
+const { maxArray, truncate } = squared.lib.math;
+const { safeNestedArray } = squared.lib.util;
 
-const { formatPX } = $lib.css;
-const { createElement } = $lib.dom;
-const { maxArray, truncate } = $lib.math;
-const { safeNestedArray } = $lib.util;
+const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base_lib.enumeration;
-
-const COLUMN = $base_lib.constant.EXT_NAME.COLUMN;
+const COLUMN = squared.base.lib.constant.EXT_NAME.COLUMN;
 
 export default class <T extends View> extends squared.base.extensions.Column<T> {
     public processNode(node: T, parent: T) {

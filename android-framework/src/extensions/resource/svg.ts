@@ -29,17 +29,14 @@ type SvgGroup = squared.svg.SvgGroup;
 type SvgImage = squared.svg.SvgImage;
 type SvgView = squared.svg.SvgView;
 
-const $lib = squared.lib;
-const $svg_lib = squared.svg.lib;
+const { extractURL, formatPX, isPercent } = squared.lib.css;
+const { truncate } = squared.lib.math;
+const { CHAR, FILE } = squared.lib.regex;
+const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = squared.lib.util;
+const { applyTemplate } = squared.lib.xml;
 
-const { extractURL, formatPX, isPercent } = $lib.css;
-const { truncate } = $lib.math;
-const { CHAR, FILE } = $lib.regex;
-const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = $lib.util;
-const { applyTemplate } = $lib.xml;
-
-const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = $svg_lib.constant;
-const { MATRIX, SVG, TRANSFORM } = $svg_lib.util;
+const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
+const { MATRIX, SVG, TRANSFORM } = squared.svg.lib.util;
 
 const NodeUI = squared.base.NodeUI;
 

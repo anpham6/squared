@@ -8,11 +8,9 @@ type SvgGroup = squared.svg.SvgGroup;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
-const $lib = squared.lib;
-
-const { STRING } = $lib.regex;
-const { extractURL } = $lib.css;
-const { cloneObject, iterateArray } = $lib.util;
+const { STRING } = squared.lib.regex;
+const { extractURL } = squared.lib.css;
+const { cloneObject, iterateArray } = squared.lib.util;
 
 const REGEX_LENGTHPERCENTAGE = new RegExp(STRING.LENGTH_PERCENTAGE);
 

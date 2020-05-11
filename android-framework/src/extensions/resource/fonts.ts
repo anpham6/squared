@@ -10,10 +10,8 @@ type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
-const $lib = squared.lib;
-
-const { XML } = $lib.regex;
-const { capitalize, convertInt, convertWord, hasKeys, safeNestedArray, safeNestedMap, objectMap, spliceArray, trimBoth } = $lib.util;
+const { XML } = squared.lib.regex;
+const { capitalize, convertInt, convertWord, hasKeys, safeNestedArray, safeNestedMap, objectMap, spliceArray, trimBoth } = squared.lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 

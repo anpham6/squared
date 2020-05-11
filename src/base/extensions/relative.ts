@@ -4,10 +4,8 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const $lib = squared.lib;
-
-const { assignRect } = $lib.dom;
-const { convertFloat, withinRange } = $lib.util;
+const { assignRect } = squared.lib.dom;
+const { convertFloat, withinRange } = squared.lib.util;
 
 const TRANSLATE_OPTIONS = { relative: true };
 

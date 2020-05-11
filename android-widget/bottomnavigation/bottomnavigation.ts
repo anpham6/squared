@@ -2,15 +2,12 @@ import { WIDGET_NAME } from '../lib/constant';
 
 type View = android.base.View;
 
-const $lib = android.lib;
-
 const { assignEmptyValue, capitalize, iterateArray, safeNestedMap } = squared.lib.util;
+const { createStyleAttribute, createViewAttribute } = android.lib.util;
 
 const { NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-
-const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $lib.constant;
-const { BUILD_ANDROID, CONTAINER_NODE } = $lib.enumeration;
-const { createStyleAttribute, createViewAttribute } = $lib.util;
+const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { BUILD_ANDROID, CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 

@@ -4,14 +4,11 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
 
-const $base = squared.base;
-
 const { CSS_UNIT, isLength } = squared.lib.css;
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
 
-const CssGrid = $base.extensions.CssGrid;
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const RESOURCE_IGNORE = NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING;
+const CssGrid = squared.base.extensions.CssGrid;
 
 const hasVisibleWidth = (node: View) => !node.blockStatic && !node.hasPX('width') || node.has('width', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' }) && node.css('minWidth') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' });
 const hasFullHeight = (node: View) => node.css('height') === '100%' || node.css('minHeight') === '100%';
@@ -44,7 +41,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         const fixed = node.css('backgroundAttachment') === 'fixed';
         if (backgroundColor !== '') {
             if (!(backgroundImageA && backgroundRepeatX && backgroundRepeatY)) {
-                container = controller.createNodeWrapper(node, renderParent, { resource: RESOURCE_IGNORE });
+                container = controller.createNodeWrapper(node, renderParent, { resource: NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING });
                 container.css('backgroundColor', backgroundColor);
                 container.setCacheValue('backgroundColor', backgroundColor);
                 if (!parentVisible) {
@@ -81,7 +78,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
                 }
             }
             else {
-                container = controller.createNodeWrapper(node, renderParent, { resource: RESOURCE_IGNORE });
+                container = controller.createNodeWrapper(node, renderParent, { resource: NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING });
             }
             container.setLayoutWidth('match_parent');
             const height = parent.cssInitial('height');

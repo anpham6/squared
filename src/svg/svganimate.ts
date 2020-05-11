@@ -3,13 +3,11 @@ import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE, KEYSPLINE_NAME, STRING_CUBICBEZIER } from './lib/constant';
 
-const $lib = squared.lib;
-
-const { getHexCode, parseColor } = $lib.color;
-const { getFontSize, isLength, parseUnit } = $lib.css;
-const { getNamedItem } = $lib.dom;
-const { CHAR, XML } = $lib.regex;
-const { hasValue, isNumber, replaceMap, sortNumber, trimEnd } = $lib.util;
+const { getHexCode, parseColor } = squared.lib.color;
+const { getFontSize, isLength, parseUnit } = squared.lib.css;
+const { getNamedItem } = squared.lib.dom;
+const { CHAR, XML } = squared.lib.regex;
+const { hasValue, isNumber, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
 const REGEX_BEZIER = /^\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$/;
 

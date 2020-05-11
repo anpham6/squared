@@ -1,10 +1,8 @@
 
 type View = chrome.base.View;
 
-const $lib = squared.lib;
-
-const { isTextNode } = $lib.dom;
-const { setElementCache } = $lib.session;
+const { isTextNode } = squared.lib.dom;
+const { setElementCache } = squared.lib.session;
 
 export default class Controller<T extends View> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
     public readonly localSettings: ControllerSettings = {

@@ -7,13 +7,11 @@ type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
-const $lib = squared.lib;
-
-const { parseColor } = $lib.color;
-const { extractURL, getFontSize, hasCalc, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = $lib.css;
-const { truncate } = $lib.math;
-const { STRING, XML } = $lib.regex;
-const { convertCamelCase, convertFloat, isNumber, isString, joinArray, objectMap } = $lib.util;
+const { parseColor } = squared.lib.color;
+const { extractURL, getFontSize, hasCalc, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
+const { truncate } = squared.lib.math;
+const { STRING, XML } = squared.lib.regex;
+const { convertCamelCase, convertFloat, isNumber, isString, joinArray, objectMap } = squared.lib.util;
 
 const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
 const REGEX_CACHE: ObjectMap<RegExp> = {

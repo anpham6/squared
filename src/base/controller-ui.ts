@@ -4,14 +4,12 @@ import { NODE_TEMPLATE } from './lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
 
-const $lib = squared.lib;
-
-const { USER_AGENT, isUserAgent, isWinEdge } = $lib.client;
-const { BOX_BORDER, BOX_PADDING, formatPX, getStyle, isLength, isPercent } = $lib.css;
-const { isTextNode, withinViewport } = $lib.dom;
-const { capitalize, convertFloat, flatArray, isString, iterateArray, safeNestedArray } = $lib.util;
-const { actualClientRect, getElementCache, setElementCache } = $lib.session;
-const { pushIndent, pushIndentArray } = $lib.xml;
+const { USER_AGENT, isUserAgent, isWinEdge } = squared.lib.client;
+const { BOX_BORDER, BOX_PADDING, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
+const { isTextNode, withinViewport } = squared.lib.dom;
+const { capitalize, convertFloat, flatArray, isString, iterateArray, safeNestedArray } = squared.lib.util;
+const { actualClientRect, getElementCache, setElementCache } = squared.lib.session;
+const { pushIndent, pushIndentArray } = squared.lib.xml;
 
 function positionAbsolute(style: CSSStyleDeclaration) {
     switch (style.getPropertyValue('position')) {

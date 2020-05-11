@@ -10,13 +10,11 @@ interface SpriteData {
     position: BoxRectPosition;
 }
 
-const $base_lib = squared.base.lib;
-
 const { formatPX } = squared.lib.css;
 
-const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
+const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
-const SPRITE = $base_lib.constant.EXT_NAME.SPRITE;
+const SPRITE = squared.base.lib.constant.EXT_NAME.SPRITE;
 
 export default class <T extends View> extends squared.base.extensions.Sprite<T> {
     public processNode(node: T, parent: T) {

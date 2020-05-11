@@ -5,14 +5,12 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 
 type T = NodeUI;
 
-const $lib = squared.lib;
-
-const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = $lib.css;
-const { isTextNode } = $lib.dom;
-const { equal } = $lib.math;
-const { getElementAsNode } = $lib.session;
-const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = $lib.util;
-const { XML } = $lib.regex;
+const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = squared.lib.css;
+const { isTextNode } = squared.lib.dom;
+const { equal } = squared.lib.math;
+const { getElementAsNode } = squared.lib.session;
+const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
+const { XML } = squared.lib.regex;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];

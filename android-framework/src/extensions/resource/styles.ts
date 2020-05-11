@@ -4,10 +4,8 @@ import { createStyleAttribute } from '../../lib/util';
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-
-const { XML } = $lib.regex;
-const { capitalize, trimString } = $lib.util;
+const { XML } = squared.lib.regex;
+const { capitalize, trimString } = squared.lib.util;
 
 const STORED = Resource.STORED as AndroidResourceStoredMap;
 const REGEX_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;

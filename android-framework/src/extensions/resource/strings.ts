@@ -5,12 +5,10 @@ import { BUILD_ANDROID } from '../../lib/enumeration';
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-
-const { formatPX } = $lib.css;
-const { measureTextWidth } = $lib.dom;
-const { capitalizeString, lowerCaseString, isNumber, isString } = $lib.util;
-const { STRING_SPACE, replaceCharacterData } = $lib.xml;
+const { formatPX } = squared.lib.css;
+const { measureTextWidth } = squared.lib.dom;
+const { capitalizeString, lowerCaseString, isNumber, isString } = squared.lib.util;
+const { STRING_SPACE, replaceCharacterData } = squared.lib.xml;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 

@@ -7,11 +7,9 @@ type SvgContainer = squared.svg.SvgContainer;
 type SvgView = squared.svg.SvgView;
 type SvgPath = squared.svg.SvgPath;
 
-const $lib = squared.lib;
-
-const { getFontSize, isLength, parseUnit } = $lib.css;
-const { getNamedItem } = $lib.dom;
-const { capitalize, hasBit, isNumber, isString } = $lib.util;
+const { getFontSize, isLength, parseUnit } = squared.lib.css;
+const { getNamedItem } = squared.lib.dom;
+const { capitalize, hasBit, isNumber, isString } = squared.lib.util;
 
 const REGEX_MS = /-?\d+ms$/;
 const REGEX_S = /-?\d+s$/;

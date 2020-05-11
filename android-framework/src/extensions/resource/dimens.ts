@@ -2,10 +2,8 @@ import Resource from '../../resource';
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-
-const { XML } = $lib.regex;
-const { convertUnderscore, fromLastIndexOf, safeNestedArray, safeNestedMap } = $lib.util;
+const { XML } = squared.lib.regex;
+const { convertUnderscore, fromLastIndexOf, safeNestedArray, safeNestedMap } = squared.lib.util;
 
 const STORED = Resource.STORED as AndroidResourceStoredMap;
 const REGEX_UNIT = /\dpx$/;

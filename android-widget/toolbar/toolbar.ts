@@ -7,18 +7,14 @@ interface ToolbarThemeData {
     popupOverlay: string;
 }
 
-const $lib = squared.lib;
-const $libA = android.lib;
-
-const { formatPX } = $lib.css;
-const { getElementAsNode } = $lib.session;
-const { assignEmptyValue, capitalize, includes, isString, iterateArray, safeNestedMap } = $lib.util;
+const { formatPX } = squared.lib.css;
+const { getElementAsNode } = squared.lib.session;
+const { assignEmptyValue, capitalize, includes, isString, iterateArray, safeNestedMap } = squared.lib.util;
+const { createStyleAttribute, createViewAttribute, getDocumentId } = android.lib.util;
 
 const { NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-
-const { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
-const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
-const { createStyleAttribute, createViewAttribute, getDocumentId } = $libA.util;
+const { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { BUILD_ANDROID, CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 

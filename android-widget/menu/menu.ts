@@ -1,14 +1,11 @@
 type View = android.base.View;
 
-const $lib = android.lib;
-
 const { appendSeparator, capitalize, isNumber, sameArray, safeNestedMap } = squared.lib.util;
+const { createViewAttribute } = android.lib.util;
 
 const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-
-const { EXT_ANDROID } = $lib.constant;
-const { CONTAINER_NODE } = $lib.enumeration;
-const { createViewAttribute } = $lib.util;
+const { EXT_ANDROID } = android.lib.constant;
+const { CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 

@@ -7,11 +7,9 @@ import SvgContainer from './svgcontainer';
 import { INSTANCE_TYPE } from './lib/constant';
 import { SVG, getDOMRect, getTargetElement } from './lib/util';
 
-const $lib = squared.lib;
-
-const { parseColor } = $lib.color;
-const { getNamedItem } = $lib.dom;
-const { cloneObject } = $lib.util;
+const { parseColor } = squared.lib.color;
+const { getNamedItem } = squared.lib.dom;
+const { cloneObject } = squared.lib.util;
 
 function getColorStop(element: SVGGradientElement) {
     const result: ColorStop[] = [];

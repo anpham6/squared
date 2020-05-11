@@ -14,13 +14,11 @@ interface AttributeData extends NumberValue {
     transformOrigin?: Point;
 }
 
-const $lib = squared.lib;
-
-const { getFontSize, getKeyframesRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = $lib.css;
-const { isWinEdge } = $lib.client;
-const { getNamedItem } = $lib.dom;
-const { XML } = $lib.regex;
-const { isString, iterateArray, replaceMap, safeNestedArray, sortNumber } = $lib.util;
+const { getFontSize, getKeyframesRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = squared.lib.css;
+const { isWinEdge } = squared.lib.client;
+const { getNamedItem } = squared.lib.dom;
+const { XML } = squared.lib.regex;
+const { isString, iterateArray, replaceMap, safeNestedArray, sortNumber } = squared.lib.util;
 
 const ANIMATION_DEFAULT = {
     'animation-delay': '0s',

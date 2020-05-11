@@ -2,18 +2,13 @@ import { WIDGET_NAME } from '../lib/constant';
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-const $libA = android.lib;
-
-const { parseColor } = $lib.color;
-const { assignEmptyValue, safeNestedMap } = $lib.util;
+const { parseColor } = squared.lib.color;
+const { assignEmptyValue, safeNestedMap } = squared.lib.util;
+const { adjustAbsolutePaddingOffset, createViewAttribute, getHorizontalBias, getVerticalBias } = android.lib.util;
 
 const { BOX_STANDARD, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
-
-const { adjustAbsolutePaddingOffset, createViewAttribute, getHorizontalBias, getVerticalBias } = $libA.util;
-
-const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = $libA.constant;
-const { BUILD_ANDROID, CONTAINER_NODE } = $libA.enumeration;
+const { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X } = android.lib.constant;
+const { BUILD_ANDROID, CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 

@@ -1,11 +1,9 @@
-const $lib = squared.lib;
-
-const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, convertAngle, getFontSize, isLength, isPercent, parseUnit } = $lib.css;
-const { getNamedItem } = $lib.dom;
-const { clamp, convertRadian, hypotenuse } = $lib.math;
-const { STRING } = $lib.regex;
-const { getStyleValue } = $lib.session;
-const { convertCamelCase, convertFloat, isString } = $lib.util;
+const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, convertAngle, getFontSize, isLength, isPercent, parseUnit } = squared.lib.css;
+const { getNamedItem } = squared.lib.dom;
+const { clamp, convertRadian, hypotenuse } = squared.lib.math;
+const { STRING } = squared.lib.regex;
+const { getStyleValue } = squared.lib.session;
+const { convertCamelCase, convertFloat, isString } = squared.lib.util;
 
 const STRING_DECIMAL = `(${STRING.DECIMAL})`;
 const SHAPES = {
@@ -48,6 +46,11 @@ function getDataSetValue(element: SVGElement, attr: string) {
         }
     }
     return '';
+}
+
+function getViewportArea(min: boolean, viewBox: DOMRect) {
+    const { width, height } = viewBox;
+    return min ? Math.min(width, height) : hypotenuse(width, height);
 }
 
 export const SVG = {
@@ -398,11 +401,6 @@ export function getDOMRect(element: SVGElement) {
     result.x = result.left;
     result.y = result.top;
     return result as DOMRect;
-}
-
-function getViewportArea(min: boolean, viewBox: DOMRect) {
-    const { width, height } = viewBox;
-    return min ? Math.min(width, height) : hypotenuse(width, height);
 }
 
 export function calculateStyle(element: SVGElement, attr: string, value: string) {

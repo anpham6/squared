@@ -5,12 +5,10 @@ import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
 
-const $lib = squared.lib;
-
-const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength, isPercent } = $lib.css;
-const { getNamedItem } = $lib.dom;
-const { maxArray } = $lib.math;
-const { isNumber, replaceMap, safeNestedArray, withinRange } = $lib.util;
+const { formatPercent, formatPX, getInheritedStyle, getStyle, isLength, isPercent } = squared.lib.css;
+const { getNamedItem } = squared.lib.dom;
+const { maxArray } = squared.lib.math;
+const { isNumber, replaceMap, safeNestedArray, withinRange } = squared.lib.util;
 
 const enum LAYOUT_TABLE {
     NONE = 0,

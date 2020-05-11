@@ -4,17 +4,15 @@ import NodeUI from './node-ui';
 
 import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
 
-const $lib = squared.lib;
-
-const { USER_AGENT, isUserAgent } = $lib.client;
-const { parseColor } = $lib.color;
-const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = $lib.css;
-const { getNamedItem } = $lib.dom;
-const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = $lib.math;
-const { CHAR, ESCAPE, STRING, XML } = $lib.regex;
-const { getElementAsNode } = $lib.session;
-const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, trimEnd, trimStart } = $lib.util;
-const { STRING_SPACE, STRING_TABSPACE } = $lib.xml;
+const { USER_AGENT, isUserAgent } = squared.lib.client;
+const { parseColor } = squared.lib.color;
+const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
+const { getNamedItem } = squared.lib.dom;
+const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
+const { CHAR, ESCAPE, STRING, XML } = squared.lib.regex;
+const { getElementAsNode } = squared.lib.session;
+const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, trimEnd, trimStart } = squared.lib.util;
+const { STRING_SPACE, STRING_TABSPACE } = squared.lib.xml;
 
 const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
 const REGEX_NOBREAKSPACE = /\u00A0/g;

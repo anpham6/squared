@@ -4,15 +4,12 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
 
-const $lib = squared.lib;
-const $base_lib = squared.base.lib;
+const { CSS_UNIT, formatPX } = squared.lib.css;
+const { convertFloat, convertInt, trimEnd } = squared.lib.util;
 
-const { CSS_UNIT, formatPX } = $lib.css;
-const { convertFloat, convertInt, trimEnd } = $lib.util;
+const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
-const { NODE_ALIGNMENT } = $base_lib.enumeration;
-
-const TABLE = $base_lib.constant.EXT_NAME.TABLE;
+const TABLE = squared.base.lib.constant.EXT_NAME.TABLE;
 
 function setLayoutHeight(node: View) {
     if (node.hasPX('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {

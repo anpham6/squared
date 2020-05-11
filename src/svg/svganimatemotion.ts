@@ -4,12 +4,10 @@ import SvgBuild from './svgbuild';
 import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 import { SVG, getAttribute, getPathLength, getTargetElement } from './lib/util';
 
-const $lib = squared.lib;
-
-const { isPercent, parseAngle } = $lib.css;
-const { getNamedItem } = $lib.dom;
-const { truncateFraction } = $lib.math;
-const { isEqual, isNumber, isString, iterateArray, objectMap } = $lib.util;
+const { isPercent, parseAngle } = squared.lib.css;
+const { getNamedItem } = squared.lib.dom;
+const { truncateFraction } = squared.lib.math;
+const { isEqual, isNumber, isString, iterateArray, objectMap } = squared.lib.util;
 
 const equalPoint = (item: Undef<SvgOffsetPath>, time: number, point: DOMPoint, rotate: number) => !!item && item.key === time && item.rotate === rotate && isEqual(item.value, point);
 

@@ -12,15 +12,13 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 type FileActionOptions = squared.base.FileActionOptions;
 type LayoutMap = Map<number, Map<number, NodeUI>>;
 
-const $lib = squared.lib;
-
-const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = $lib.css;
-const { getNamedItem, isTextNode, removeElementsByClassName } = $lib.dom;
-const { maxArray } = $lib.math;
-const { appendSeparator, capitalize, convertFloat, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = $lib.util;
-const { XML } = $lib.regex;
-const { getElementCache, getPseudoElt, setElementCache } = $lib.session;
-const { isPlainText } = $lib.xml;
+const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = squared.lib.css;
+const { getNamedItem, isTextNode, removeElementsByClassName } = squared.lib.dom;
+const { maxArray } = squared.lib.math;
+const { appendSeparator, capitalize, convertFloat, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
+const { XML } = squared.lib.regex;
+const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
+const { isPlainText } = squared.lib.xml;
 
 const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
 const STRING_PSEUDOPREFIX = '__squared_';

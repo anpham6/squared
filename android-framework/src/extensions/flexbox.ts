@@ -12,19 +12,16 @@ interface FlexBasis {
     grow: number;
 }
 
-const { lib: $lib, base: $base } = squared;
-const $base_lib = $base.lib;
+const { isLength } = squared.lib.css;
+const { truncate } = squared.lib.math;
+const { capitalize, sameArray, withinRange } = squared.lib.util;
 
-const { isLength } = $lib.css;
-const { truncate } = $lib.math;
-const { capitalize, sameArray, withinRange } = $lib.util;
+const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
-const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
+const NodeUI = squared.base.NodeUI;
 
-const NodeUI = $base.NodeUI;
-const FLEXBOX = $base_lib.constant.EXT_NAME.FLEXBOX;
-
-const MAP_horizontal = {
+const FLEXBOX = squared.base.lib.constant.EXT_NAME.FLEXBOX;
+const MAP_HORIZONAL = {
     orientation: 'horizontal',
     orientationInverse: 'vertical',
     WHL: 'width',
@@ -36,7 +33,7 @@ const MAP_horizontal = {
     LRTB: 'leftRight',
     RLBT: 'rightLeft'
 };
-const MAP_vertical = {
+const MAP_VERTICAL = {
     orientation: 'vertical',
     orientationInverse: 'horizontal',
     WHL: 'height',
@@ -378,7 +375,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                 if (length === 0) {
                     return;
                 }
-                const { orientation, orientationInverse, WHL, HWL, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_horizontal : MAP_vertical;
+                const { orientation, orientationInverse, WHL, HWL, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_HORIZONAL : MAP_VERTICAL;
                 const [dimension, dimensionInverse] = horizontal ? [node.hasHeight, node.hasWidth] : [node.hasWidth, node.hasHeight];
                 const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
                 for (let i = 0; i < length; ++i) {

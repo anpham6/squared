@@ -5,10 +5,8 @@ import { NODE_RESOURCE } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
 
-const $lib = squared.lib;
-
-const { convertListStyle } = $lib.css;
-const { isNumber } = $lib.util;
+const { convertListStyle } = squared.lib.css;
+const { isNumber } = squared.lib.util;
 
 const hasSingleImage = (visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat;
 

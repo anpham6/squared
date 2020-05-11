@@ -2,10 +2,8 @@ type FileActionOptions = squared.base.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 
-const $lib = squared.lib;
-
-const { frameworkNotInstalled } = $lib.session;
-const { fromLastIndexOf, isString, trimEnd } = $lib.util;
+const { frameworkNotInstalled } = squared.lib.session;
+const { fromLastIndexOf, isString, trimEnd } = squared.lib.util;
 
 export default abstract class File<T extends squared.base.Node> implements squared.base.File<T> {
     public static downloadFile(data: Blob, filename: string, mimeType?: string) {

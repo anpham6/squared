@@ -3,10 +3,8 @@ import { BUILD_ANDROID } from './enumeration';
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-
-const { truncate } = $lib.math;
-const { capitalize, isPlainObject } = $lib.util;
+const { truncate } = squared.lib.math;
+const { capitalize, isPlainObject } = squared.lib.util;
 
 const { BOX_STANDARD } = squared.base.lib.enumeration;
 

@@ -19,13 +19,11 @@ type SvgUsePattern = squared.svg.SvgUsePattern;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 type SvgView = squared.svg.SvgView;
 
-const $lib = squared.lib;
-
-const { isAngle, parseAngle } = $lib.css;
-const { getNamedItem } = $lib.dom;
-const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = $lib.math;
-const { CHAR, STRING, XML } = $lib.regex;
-const { convertWord, hasBit, isArray, isString, objectMap } = $lib.util;
+const { isAngle, parseAngle } = squared.lib.css;
+const { getNamedItem } = squared.lib.dom;
+const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, truncateString } = squared.lib.math;
+const { CHAR, STRING, XML } = squared.lib.regex;
+const { convertWord, hasBit, isArray, isString, objectMap } = squared.lib.util;
 
 const REGEX_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
 const REGEX_COMMAND = /([A-Za-z])([^A-Za-z]+)?/g;

@@ -20,10 +20,11 @@ type FileActionOptions = squared.base.FileActionOptions;
 type ExtensionRequest = Null<Extension | string>;
 
 const extensionsQueue = new Set<Extension>();
+const extensionsExternal = new Set<Extension>();
 const optionsQueue = new Map<string, StandardMap>();
 const settings = {} as UserSettings;
-const extensionsExternal = new Set<Extension>();
 const system = {} as FunctionMap<any>;
+
 let main: Undef<Main>;
 let framework: Framework;
 

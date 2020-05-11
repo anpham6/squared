@@ -2,12 +2,10 @@ import { RESERVED_JAVA } from './lib/constant';
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-
-const { findColorShade, parseColor } = $lib.color;
-const { extractURL, getSrcSet } = $lib.css;
-const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
-const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = $lib.util;
+const { findColorShade, parseColor } = squared.lib.color;
+const { extractURL, getSrcSet } = squared.lib.css;
+const { CHAR, COMPONENT, FILE, XML } = squared.lib.regex;
+const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = squared.lib.util;
 
 const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
 const REGEX_NONWORD = /[^\w]+/g;

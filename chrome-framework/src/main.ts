@@ -28,6 +28,7 @@ const { flatArray, isString, isObject, promisify } = util;
 const { frameworkNotInstalled } = session;
 
 const framework = squared.base.lib.enumeration.APP_FRAMEWORK.CHROME;
+
 let initialized = false;
 let application: Application<View>;
 let controller: Controller<View>;

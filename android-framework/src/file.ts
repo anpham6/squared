@@ -21,10 +21,8 @@ interface ItemValue {
     innerText: string;
 }
 
-const $lib = squared.lib;
-
-const { fromLastIndexOf, objectMap, parseMimeType } = $lib.util;
-const { applyTemplate, replaceTab } = $lib.xml;
+const { fromLastIndexOf, objectMap, parseMimeType } = squared.lib.util;
+const { applyTemplate, replaceTab } = squared.lib.xml;
 
 const ASSETS = Resource.ASSETS;
 const STORED = Resource.STORED as AndroidResourceStoredMap;

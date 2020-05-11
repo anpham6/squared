@@ -27,15 +27,11 @@ interface RepeatItem {
     unitMin?: string;
 }
 
-const $lib = squared.lib;
-
-const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
-const { CHAR, CSS } = $lib.regex;
-const { isNumber, safeNestedArray, trimString, withinRange } = $lib.util;
+const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
+const { CHAR, CSS } = squared.lib.regex;
+const { isNumber, safeNestedArray, trimString, withinRange } = squared.lib.util;
 
 const CSS_GRID = EXT_NAME.CSS_GRID;
-
-
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
 const STRING_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';

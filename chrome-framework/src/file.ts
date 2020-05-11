@@ -4,10 +4,8 @@ type View = chrome.base.View;
 type Extension = chrome.base.Extension<View>;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
-const $lib = squared.lib;
-
-const { CHAR, COMPONENT, FILE, XML } = $lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, objectMap, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, safeNestedArray, trimEnd } = $lib.util;
+const { CHAR, COMPONENT, FILE, XML } = squared.lib.regex;
+const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, objectMap, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, safeNestedArray, trimEnd } = squared.lib.util;
 
 const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /[\s\n]*(.+?\.[^\s,]+).*?,?/g;

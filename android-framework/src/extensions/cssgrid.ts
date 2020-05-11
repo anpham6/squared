@@ -7,20 +7,16 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { lib: $lib, base: $base } = squared;
-const $base_lib = $base.lib;
+const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
+const { maxArray, truncate } = squared.lib.math;
+const { CHAR } = squared.lib.regex;
+const { conditionArray, flatArray, hasValue, isArray } = squared.lib.util;
 
-const { formatPercent, formatPX, isLength, isPercent } = $lib.css;
-const { maxArray, truncate } = $lib.math;
-const { CHAR } = $lib.regex;
-const { conditionArray, flatArray, hasValue, isArray } = $lib.util;
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = $base_lib.enumeration;
+const CssGrid = squared.base.extensions.CssGrid;
 
-const CssGrid = $base.extensions.CssGrid;
-
-const CSS_GRID = $base_lib.constant.EXT_NAME.CSS_GRID;
-
+const CSS_GRID = squared.base.lib.constant.EXT_NAME.CSS_GRID;
 const REGEX_JUSTIFYSELF = /start|left|center|right|end/;
 const REGEX_JUSTIFYLEFT = /(start|left|baseline)$/;
 const REGEX_JUSTIFYRIGHT = /(right|end)$/;

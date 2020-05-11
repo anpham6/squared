@@ -13,11 +13,9 @@ type SvgContainer = squared.svg.SvgContainer;
 type SvgShape = squared.svg.SvgShape;
 type SvgShapePattern = squared.svg.SvgShapePattern;
 
-const $lib = squared.lib;
-
-const { getNamedItem } = $lib.dom;
-const { equal, lessEqual, multipleOf, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = $lib.math;
-const { cloneArray, convertInt, convertFloat } = $lib.util;
+const { getNamedItem } = squared.lib.dom;
+const { equal, lessEqual, multipleOf, offsetAngleX, offsetAngleY, relativeAngle, truncateFraction } = squared.lib.math;
+const { cloneArray, convertInt, convertFloat } = squared.lib.util;
 
 interface DashGroup {
     items: SvgStrokeDash[];

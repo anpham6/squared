@@ -3,13 +3,11 @@ import { CONTAINER_NODE } from '../../lib/enumeration';
 
 type View = android.base.View;
 
-const $base = squared.base;
-
 const { getElementAsNode } = squared.lib.session;
 
-const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
+const { NODE_ALIGNMENT, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const NodeUI = $base.NodeUI;
+const NodeUI = squared.base.NodeUI;
 
 function setBaselineIndex(children: View[], container: View, name: string) {
     let valid = false;

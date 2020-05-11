@@ -6,16 +6,13 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-const $base_lib = squared.base.lib;
+const { formatPX, getBackgroundPosition } = squared.lib.css;
+const { convertInt } = squared.lib.util;
+const { STRING_SPACE } = squared.lib.xml;
 
-const { formatPX, getBackgroundPosition } = $lib.css;
-const { convertInt } = $lib.util;
-const { STRING_SPACE } = $lib.xml;
+const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = $base_lib.enumeration;
-
-const LIST = $base_lib.constant.EXT_NAME.LIST;
+const LIST = squared.base.lib.constant.EXT_NAME.LIST;
 
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {

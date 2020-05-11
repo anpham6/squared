@@ -25,11 +25,9 @@ interface ForwardValue extends NumberValue<AnimateValue> {
     time: number;
 }
 
-const $lib = squared.lib;
-
-const { clamp, equal, multipleOf } = $lib.math;
-const { CHAR } = $lib.regex;
-const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, objectMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = $lib.util;
+const { clamp, equal, multipleOf } = squared.lib.math;
+const { CHAR } = squared.lib.regex;
+const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, objectMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = squared.lib.util;
 
 const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
 const RECT_ARGS = ['width', 'height', 'x', 'y'];

@@ -4,11 +4,9 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-
-const { formatPX } = $lib.css;
-const { hypotenuse } = $lib.math;
-const { withinRange } = $lib.util;
+const { formatPX } = squared.lib.css;
+const { hypotenuse } = squared.lib.math;
+const { withinRange } = squared.lib.util;
 
 const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 

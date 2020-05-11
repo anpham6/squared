@@ -44,9 +44,8 @@ import * as customization from './lib/customization';
 
 import SETTINGS from './settings';
 
-const $lib = squared.base.lib;
+const framework = squared.base.lib.enumeration.APP_FRAMEWORK.ANDROID;
 
-const framework = $lib.enumeration.APP_FRAMEWORK.ANDROID;
 let initialized = false;
 let application: Application<View>;
 let file: File<View>;
@@ -309,7 +308,7 @@ const appBase: squared.base.AppFramework<View> = {
         }
     },
     create() {
-        const EN = $lib.constant.EXT_NAME;
+        const EN = squared.base.lib.constant.EXT_NAME;
         const EA = constant.EXT_ANDROID;
         application = new Application<View>(framework, View, Controller, Resource);
         file = new File();

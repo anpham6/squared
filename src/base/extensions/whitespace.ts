@@ -3,12 +3,10 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
-const $lib = squared.lib;
-
-const { formatPX } = $lib.css;
-const { maxArray } = $lib.math;
-const { getElementCache } = $lib.session;
-const { iterateReverseArray } = $lib.util;
+const { formatPX } = squared.lib.css;
+const { maxArray } = squared.lib.math;
+const { getElementCache } = squared.lib.session;
+const { iterateReverseArray } = squared.lib.util;
 
 const DOCTYPE_HTML = document.doctype?.name === 'html';
 const COLLAPSE_TOP: [string, string, string, number] = ['marginTop', 'borderTopWidth', 'paddingTop', BOX_STANDARD.MARGIN_TOP];

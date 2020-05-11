@@ -6,17 +6,14 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-const $base_lib = squared.base.lib;
+const { formatPX } = squared.lib.css;
+const { withinRange } = squared.lib.util;
 
-const { formatPX } = $lib.css;
-const { withinRange } = $lib.util;
-
-const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
+const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const Grid = squared.base.extensions.Grid;
 
-const GRID = $base_lib.constant.EXT_NAME.GRID;
+const GRID = squared.base.lib.constant.EXT_NAME.GRID;
 
 export default class <T extends View> extends squared.base.extensions.Grid<T> {
     public processNode(node: T, parent: T) {
