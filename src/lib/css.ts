@@ -1357,7 +1357,9 @@ export function parseKeyframes(rules: CSSRuleList) {
 }
 
 export function checkMediaRule(value: string, fontSize?: number) {
-    switch (value) {
+    switch (value.trim()) {
+        case 'all':
+        case 'screen':
         case 'only all':
         case 'only screen':
             return true;
@@ -2456,7 +2458,7 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
             case 'ch':
                 return result * (fontSize ?? (getFontSize(document.body) || 16));
             case 'rem':
-                return result * (getFontSize(document.body) || 16);
+                return result * (getFontSize(document.querySelector('html') || document.body) || 16);
             case 'pc':
                 result *= 12;
             case 'pt':

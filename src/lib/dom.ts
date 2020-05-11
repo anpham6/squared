@@ -219,7 +219,3 @@ export function measureTextWidth(value: string, fontFamily: string, fontSize: nu
 export function getNamedItem(element: Element, attr: string) {
     return element.attributes.getNamedItem(attr)?.value.trim() || '';
 }
-
-export function isTextNode(element: Element) {
-    return element.nodeName === '#text';
-}

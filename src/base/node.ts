@@ -2012,9 +2012,19 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                 }
                 else {
-                    const parent = this.ascend({ condition: item => item.lineHeight > 0 })[0];
+                    let parent = this.ascend({ condition: item => item.has('lineHeight') })[0];
                     if (parent) {
-                        value = parent.lineHeight;
+                        const lineHeight = parent.css('lineHeight');
+                        if (isNumber(lineHeight)) {
+                            value = parseFloat(lineHeight) * this.fontSize;
+                            hasOwnStyle = true;
+                        }
+                    }
+                    if (value === 0) {
+                        parent = this.ascend({ condition: item => item.lineHeight > 0 })[0];
+                        if (parent) {
+                            value = parent.lineHeight;
+                        }
                     }
                     if (this.styleElement) {
                         const fontSize = getInitialValue.call(this, 'fontSize');

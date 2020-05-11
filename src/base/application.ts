@@ -10,14 +10,12 @@ type FileActionOptions = squared.base.FileActionOptions;
 type PreloadImage = HTMLImageElement | string;
 
 const { checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
-const { isTextNode } = squared.lib.dom;
 const { capitalize, convertCamelCase, isString, objectMap, promisify, resolvePath } = squared.lib.util;
 const { CHAR, FILE, STRING, XML } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
 
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 
-const REGEX_MEDIATEXT = /all|screen/;
 const REGEX_BACKGROUND = /^background/;
 const REGEX_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
 const REGEX_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
@@ -319,7 +317,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     target = error.target as HTMLImageElement;
                 }
                 const message = target instanceof HTMLImageElement ? target.src : '';
-                return !this.userSettings.showErrorMessages || !isString(message) || confirm(`FAIL: ${message}`) ? resumeThread() : [];
+                return !isString(message) || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? resumeThread() : [];
             });
         }
         else {
@@ -347,7 +345,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             catch {
             }
-            if (!isString(mediaText) || REGEX_MEDIATEXT.test(mediaText)) {
+            if (!isString(mediaText) || checkMediaRule(mediaText)) {
                 this.applyStyleSheet(styleSheet as CSSStyleSheet);
             }
         }
@@ -408,7 +406,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const element = childNodes[i++] as HTMLElement;
                 let child: Undef<T>;
                 if (element.nodeName.charAt(0) === '#') {
-                    if (isTextNode(element)) {
+                    if (element.nodeName === '#text') {
                         child = this.insertNode(element, node);
                     }
                 }
@@ -681,12 +679,11 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
         }
         catch (error) {
-            if (this.userSettings.showErrorMessages) {
-                alert('CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' +
-                      'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
-                      'See the README for more detailed instructions.\n\n' +
-                      item.href + '\n\n' + error);
-            }
+            (this.userSettings.showErrorMessages ? alert : console.log)(
+                'CSS cannot be parsed inside <link> tags when loading files directly from your hard drive or from external websites. ' +
+                'Either use a local web server, embed your CSS into a <style> tag, or you can also try using a different browser. ' +
+                'See the README for more detailed instructions.\n\n' +
+                item.href + '\n\n' + error);
         }
     }
 

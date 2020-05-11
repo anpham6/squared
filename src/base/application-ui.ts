@@ -13,7 +13,7 @@ type FileActionOptions = squared.base.FileActionOptions;
 type LayoutMap = Map<number, Map<number, NodeUI>>;
 
 const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = squared.lib.css;
-const { getNamedItem, isTextNode, removeElementsByClassName } = squared.lib.dom;
+const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { maxArray } = squared.lib.math;
 const { appendSeparator, capitalize, convertFloat, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
 const { XML } = squared.lib.regex;
@@ -92,7 +92,7 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
 
 function checkPseudoAfter(element: Element) {
     const previousSibling = element.childNodes[element.childNodes.length - 1] as Element;
-    if (isTextNode(previousSibling)) {
+    if (previousSibling.nodeName === '#text') {
         return !/\s+$/.test(previousSibling.textContent as string);
     }
     return false;
@@ -279,7 +279,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     }
 
     public insertNode(element: Element, parent?: T, pseudoElt?: string) {
-        if (isTextNode(element)) {
+        if (element.nodeName === '#text') {
             if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (parent.element as Element).childElementCount === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode({ parent, element, append: false });
@@ -591,7 +591,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
                 else if (element.nodeName.charAt(0) === '#') {
-                    if (isTextNode(element)) {
+                    if (element.nodeName === '#text') {
                         child = this.insertNode(element, node);
                     }
                 }
@@ -1476,7 +1476,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         let i = 0;
                         while (i < length) {
                             const child = childNodes[i++] as Element;
-                            if (isTextNode(child)) {
+                            if (child.nodeName === '#text') {
                                 if ((child.textContent as string).trim() !== '') {
                                     break;
                                 }

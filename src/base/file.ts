@@ -98,11 +98,8 @@ export default abstract class File<T extends squared.base.Node> implements squar
                             if (typeof options.callback === 'function') {
                                 options.callback(result);
                             }
-                            if (this.userSettings.showErrorMessages) {
-                                const { application, system } = result;
-                                if (system) {
-                                    alert(application + '\n\n' + system);
-                                }
+                            else if (result.system) {
+                                (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
                             }
                         }
                         return result;
@@ -110,8 +107,8 @@ export default abstract class File<T extends squared.base.Node> implements squar
                 }
             }
         }
-        else if (this.userSettings.showErrorMessages) {
-            alert('SERVER (required): See README for instructions');
+        else {
+            (this.userSettings.showErrorMessages ? alert : console.log)('SERVER (required): See README for instructions');
         }
         return frameworkNotInstalled();
     }
@@ -149,11 +146,8 @@ export default abstract class File<T extends squared.base.Node> implements squar
                                 fetch('/api/browser/download?filepath=' + encodeURIComponent(zipname))
                                     .then(async (download: Response) => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
                             }
-                            else if (this.userSettings.showErrorMessages) {
-                                const { application, system } = result;
-                                if (system) {
-                                    alert(application + '\n\n' + system);
-                                }
+                            else if (result.system) {
+                                (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
                             }
                         }
                         return result;
@@ -161,8 +155,8 @@ export default abstract class File<T extends squared.base.Node> implements squar
                 }
             }
         }
-        else if (this.userSettings.showErrorMessages) {
-            alert('SERVER (required): See README for instructions');
+        else {
+            (this.userSettings.showErrorMessages ? alert : console.log)('SERVER (required): See README for instructions');
         }
         return frameworkNotInstalled();
     }

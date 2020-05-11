@@ -15,21 +15,19 @@ interface RelativeLayoutData {
     items?: View[];
 }
 
-const { lib: $lib, base: $base } = squared;
+const { PLATFORM, isPlatform } = squared.lib.client;
+const { parseColor } = squared.lib.color;
+const { formatPX, getSrcSet, hasComputedStyle, isLength, isPercent } = squared.lib.css;
+const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
+const { truncate } = squared.lib.math;
+const { CHAR } = squared.lib.regex;
+const { getElementAsNode, getPseudoElt } = squared.lib.session;
+const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, objectMap, parseMimeType, partitionArray, safeNestedArray, withinRange } = squared.lib.util;
+const { STRING_XMLENCODING, replaceTab } = squared.lib.xml;
 
-const { PLATFORM, isPlatform } = $lib.client;
-const { parseColor } = $lib.color;
-const { formatPX, getSrcSet, hasComputedStyle, isLength, isPercent } = $lib.css;
-const { getElementsBetweenSiblings, getRangeClientRect } = $lib.dom;
-const { truncate } = $lib.math;
-const { CHAR } = $lib.regex;
-const { getElementAsNode, getPseudoElt } = $lib.session;
-const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, objectMap, parseMimeType, partitionArray, safeNestedArray, withinRange } = $lib.util;
-const { STRING_XMLENCODING, replaceTab } = $lib.xml;
+const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = $base.lib.enumeration;
-
-const NodeUI = $base.NodeUI;
+const NodeUI = squared.base.NodeUI;
 
 const REGEX_TEXTSHADOW = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)\s+(-?[\d.]+[a-z]+)\s*([\d.]+[a-z]+)?/;
 
@@ -418,7 +416,7 @@ function constraintAlignTop(parent: View, node: View) {
 }
 
 const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, boxWidth: number, data: RelativeLayoutData) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + node.actualWidth) < boxWidth);
-const isBaselineImage = (item: View) => item.imageOrSvgElement && item.baseline;
+const isBaselineImage = (node: View) => node.imageOrSvgElement && node.baseline;
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
 const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderInvalid(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);

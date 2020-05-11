@@ -6,7 +6,7 @@ type NodeUI = squared.base.NodeUI;
 
 const { USER_AGENT, isUserAgent, isWinEdge } = squared.lib.client;
 const { BOX_BORDER, BOX_PADDING, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
-const { isTextNode, withinViewport } = squared.lib.dom;
+const { withinViewport } = squared.lib.dom;
 const { capitalize, convertFloat, flatArray, isString, iterateArray, safeNestedArray } = squared.lib.util;
 const { actualClientRect, getElementCache, setElementCache } = squared.lib.session;
 const { pushIndent, pushIndentArray } = squared.lib.xml;
@@ -104,7 +104,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public applyDefaultStyles(element: Element) {
         const sessionId = this.sessionId;
         let styleMap: StringMap;
-        if (isTextNode(element)) {
+        if (element.nodeName === '#text') {
             styleMap = {
                 position: 'static',
                 display: 'inline',

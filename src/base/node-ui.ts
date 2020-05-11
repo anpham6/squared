@@ -6,7 +6,6 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 type T = NodeUI;
 
 const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = squared.lib.css;
-const { isTextNode } = squared.lib.dom;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
@@ -1298,7 +1297,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             const element = this.element as HTMLInputElement;
             if (element) {
-                if (isTextNode(element)) {
+                if (element.nodeName === '#text') {
                     result = 'PLAINTEXT';
                 }
                 else if (element.tagName === 'INPUT') {

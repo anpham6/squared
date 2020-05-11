@@ -150,7 +150,6 @@ declare module "lib" {
         function getNamedItem(element: Element, attr: string): string;
         function createElement(parent: HTMLElement, tagName: string, attrs: StringMap): HTMLElement;
         function measureTextWidth(value: string, fontFamily: string, fontSize: number): number;
-        function isTextNode(element: Element): boolean;
     }
 
     namespace math {

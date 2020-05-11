@@ -5,18 +5,16 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 
 type T = android.base.View;
 
-const { lib: $lib, base: $base } = squared;
+const { BOX_MARGIN, BOX_PADDING, CSS_UNIT, formatPX, isLength, isPercent } = squared.lib.css;
+const { createElement, getNamedItem, newBoxModel } = squared.lib.dom;
+const { clamp, truncate } = squared.lib.math;
+const { actualTextRangeRect } = squared.lib.session;
+const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isPlainObject, isString, replaceMap } = squared.lib.util;
 
-const { BOX_MARGIN, BOX_PADDING, CSS_UNIT, formatPX, isLength, isPercent } = $lib.css;
-const { createElement, getNamedItem, newBoxModel } = $lib.dom;
-const { clamp, truncate } = $lib.math;
-const { actualTextRangeRect } = $lib.session;
-const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isPlainObject, isString, replaceMap } = $lib.util;
+const { EXT_NAME } = squared.base.lib.constant;
+const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
-const { EXT_NAME } = $base.lib.constant;
-const { BOX_STANDARD, NODE_ALIGNMENT } = $base.lib.enumeration;
-
-const ResourceUI = $base.ResourceUI;
+const ResourceUI = squared.base.ResourceUI;
 
 const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_ANDROID;
 const DEPRECATED = DEPRECATED_ANDROID.android;
@@ -1394,6 +1392,28 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             }
+            if (this.flexElement && this.textElement) {
+                switch (this.css('justifyContent')) {
+                    case 'center':
+                    case 'space-around':
+                    case 'space-evenly':
+                        this.mergeGravity('gravity', 'center_horizontal');
+                        break;
+                    case 'flex-end':
+                        this.mergeGravity('gravity', 'right');
+                        break;
+                }
+                if (this.hasHeight) {
+                    switch (this.css('alignItems')) {
+                        case 'center':
+                            this.mergeGravity('gravity', 'center_vertical');
+                            break;
+                        case 'flex-end':
+                            this.mergeGravity('gravity', 'bottom');
+                            break;
+                    }
+                }
+            }
             if (autoMargin.vertical && (renderParent.layoutFrame || renderParent.layoutVertical && renderParent.layoutLinear)) {
                 node.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : (autoMargin.top ? 'bottom' : 'top'));
             }
@@ -2294,7 +2314,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (this.layoutLinear) {
                 const children = this.renderChildren;
                 if (this.layoutVertical) {
-                    if (!renderParent.layoutFrame && !this.documentRoot && children.length && (this.baselineElement || children.every(node => node.textElement))) {
+                    if (!renderParent.layoutFrame && !this.documentRoot && children.length && (this.baselineElement || !children[0].multiline && children.every(node => node.textElement))) {
                         this.android('baselineAlignedChildIndex', '0');
                     }
                 }

@@ -233,7 +233,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     parent.modifyBox(BOX_STANDARD.MARGIN_LEFT, resetPadding);
                 }
             }
-            if (columnCount > 0) {
+            if (columnCount > 0 && node.ascend({ condition: item => !item.blockStatic && !item.hasWidth, error: item => item.hasWidth, startSelf: node.naturalElement }).length === 0) {
                 container.setLayoutWidth('0px');
                 container.android('layout_columnWeight', '1');
             }

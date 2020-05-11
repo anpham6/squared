@@ -2,8 +2,6 @@ import Resource from './resource';
 
 import { APP_QUERYSTATE } from './lib/enumeration';
 
-const { isTextNode } = squared.lib.dom;
-
 export default class Application<T extends chrome.base.View> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public builtInExtensions: ObjectMap<chrome.base.Extension<T>> = {};
     public extensions: chrome.base.Extension<T>[] = [];
@@ -18,7 +16,7 @@ export default class Application<T extends chrome.base.View> extends squared.bas
     }
 
     public insertNode(element: Element, parent?: T) {
-        if (isTextNode(element)) {
+        if (element.nodeName === '#text') {
             if (this.userSettings.excludePlainText) {
                 return undefined;
             }

@@ -1,7 +1,6 @@
 
 type View = chrome.base.View;
 
-const { isTextNode } = squared.lib.dom;
 const { setElementCache } = squared.lib.session;
 
 export default class Controller<T extends View> extends squared.base.Controller<T> implements chrome.base.Controller<T> {
@@ -34,7 +33,7 @@ export default class Controller<T extends View> extends squared.base.Controller<
     }
 
     public applyDefaultStyles(element: Element) {
-        if (isTextNode(element)) {
+        if (element.nodeName === '#text') {
             setElementCache(element, 'styleMap', this.sessionId, {
                 position: 'static',
                 display: 'inline',
