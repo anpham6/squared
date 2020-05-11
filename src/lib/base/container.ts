@@ -2,11 +2,17 @@ import ListIterator from './listiterator';
 
 import { iterateArray, objectMap, partitionArray, sameArray } from '../util';
 
-function* iterator<T>(children: T[]) {
-    const length = children.length;
-    let i = 0;
-    while (i < length) {
-        yield children[i++];
+class Iter<T> implements Iterator<T> {
+    public index = -1;
+    public length: number;
+
+    constructor(public children: T[]) {
+        this.length = children.length;
+    }
+
+    public next() {
+        const i = ++this.index;
+        return (i < this.length ? { value: this.children[i] } : { done: true }) as IteratorResult<T>;
     }
 }
 
@@ -18,7 +24,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public [Symbol.iterator]() {
-        return iterator(this._children);
+        return new Iter(this._children);
     }
 
     public item(index?: number, value?: T): Undef<T> {
