@@ -1,4 +1,3 @@
-
 interface KeyframesData extends ObjectMap<StringMap> {}
 
 interface FontFaceData {

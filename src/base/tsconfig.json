@@ -5,7 +5,6 @@
   },
   "include": [
     "../../@types/index.d.ts",
-    "../../@types/lib/index.d.ts",
     "**/*"
   ],
   "exclude": []

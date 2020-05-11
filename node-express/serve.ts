@@ -115,22 +115,22 @@ let Image: serve.IImage;
             description: 'Grant full UNC privileges'
         })
         .option('disk-read', {
-            alias: 'dr',
+            alias: 'r',
             type: 'boolean',
             description: 'Grant disk +r (read only)'
         })
         .option('disk-write', {
-            alias: 'dw',
+            alias: 'w',
             type: 'boolean',
             description: 'Grant disk +w (write only)'
         })
         .option('unc-read', {
-            alias: 'ur',
+            alias: 'y',
             type: 'boolean',
             description: 'Grant UNC +r (read only)'
         })
         .option('unc-write', {
-            alias: 'uw',
+            alias: 'z',
             type: 'boolean',
             description: 'Grant UNC +w (write only)'
         })
