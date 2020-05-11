@@ -9,13 +9,12 @@ const { replaceMap } = squared.lib.util;
 
 export default class SvgAnimateTransform extends SvgAnimate implements squared.svg.SvgAnimateTransform {
     public static toRotateList(values: string[]) {
-        const result: number[][] = [];
         const length = values.length;
-        let i = 0;
-        while (i < length) {
-            const value = values[i++];
+        const result: number[][] = new Array(length);
+        for (let i = 0; i < length; ++i) {
+            const value = values[i];
             if (value === '') {
-                result.push([0, 0, 0]);
+                result[i] = [0, 0, 0];
             }
             else {
                 const seg = SvgBuild.parseCoordinates(value);
@@ -23,7 +22,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     seg[2] = 0;
                 }
                 if (seg.length === 3) {
-                    result.push(seg);
+                    result[i] = seg;
                 }
                 else {
                     return undefined;
@@ -34,13 +33,12 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public static toScaleList(values: string[]) {
-        const result: number[][] = [];
         const length = values.length;
-        let i = 0;
-        while (i < length) {
-            const value = values[i++];
+        const result: number[][] = new Array(length);
+        for (let i = 0; i < length; ++i) {
+            const value = values[i];
             if (value === '') {
-                result.push([1, 1, 0, 0]);
+                result[i] = [1, 1, 0, 0];
             }
             else {
                 const seg = SvgBuild.parseCoordinates(value);
@@ -52,7 +50,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     seg[3] = 0;
                 }
                 if (seg.length === 4) {
-                    result.push(seg);
+                    result[i] = seg;
                 }
                 else {
                     return undefined;
@@ -63,13 +61,12 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public static toTranslateList(values: string[]) {
-        const result: number[][] = [];
         const length = values.length;
-        let i = 0;
-        while (i < length) {
-            const value = values[i++];
+        const result: number[][] = new Array(length);
+        for (let i = 0; i < length; ++i) {
+            const value = values[i];
             if (value === '') {
-                result.push([0, 0]);
+                result[i] = [0, 0];
             }
             else {
                 const seg = SvgBuild.parseCoordinates(value);
@@ -77,7 +74,7 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
                     seg[1] = 0;
                 }
                 if (seg.length === 2) {
-                    result.push(seg);
+                    result[i] = seg;
                 }
                 else {
                     return undefined;
@@ -88,18 +85,17 @@ export default class SvgAnimateTransform extends SvgAnimate implements squared.s
     }
 
     public static toSkewList(values: string[]) {
-        const result: number[][] = [];
         const length = values.length;
-        let i = 0;
-        while (i < length) {
-            const value = values[i++];
+        const result: number[][] = new Array(length);
+        for (let i = 0; i < length; ++i) {
+            const value = values[i];
             if (value === '') {
-                result.push([0]);
+                result[i] = [0];
             }
             else {
                 const seg = SvgBuild.parseCoordinates(value);
                 if (seg.length === 1) {
-                    result.push(seg);
+                    result[i] = seg;
                 }
                 else {
                     return undefined;

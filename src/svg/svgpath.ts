@@ -780,8 +780,6 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 case 'stroke-dashoffset': {
                                     const duration = item.duration;
                                     const startOffset = parseFloat(item.values[0]);
-                                    const values: string[] = [];
-                                    const keyTimes: number[] = [];
                                     let keyTime = 0;
                                     let previousRemaining = 0;
                                     if (valueOffset !== startOffset && item.delay === 0 && !item.fillReplace) {
@@ -828,9 +826,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                     }
                                     const keyTimesBase = item.keyTimes;
                                     const valuesBase = item.values;
+                                    const values: string[] = [];
+                                    const keyTimes: number[] = [];
                                     const length = keyTimesBase.length;
-                                    let j = -1;
-                                    while (++j < length) {
+                                    for (let j = 0; j < length; ++j) {
                                         const offsetFrom = j === 0 ? valueOffset : parseFloat(valuesBase[j - 1]);
                                         const offsetTo = parseFloat(valuesBase[j]);
                                         const offsetValue = Math.abs(offsetTo - offsetFrom);

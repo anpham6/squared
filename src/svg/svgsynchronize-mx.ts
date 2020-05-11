@@ -326,10 +326,10 @@ function getItemSplitValue(fraction: number, previousFraction: number, previousV
             const nextArray = replaceMap(nextValue.split(' '), (value: string) => parseFloat(value));
             const length = previousArray.length;
             if (length === nextArray.length) {
-                const result: number[] = [];
+                const result: number[] = new Array(length);
                 let i = 0;
                 while (i < length) {
-                    result.push(getItemSplitValue(fraction, previousFraction, previousArray[i], nextFraction, nextArray[i++]) as number);
+                    result[i] = getItemSplitValue(fraction, previousFraction, previousArray[i], nextFraction, nextArray[i++]) as number;
                 }
                 return result.join(' ');
             }

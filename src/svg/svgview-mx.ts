@@ -365,15 +365,15 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 }
                                 else {
                                     attributes.push(name);
-                                    const keyTimes: number[] = [];
-                                    const values: string[] = [];
                                     const keySplines: string[] = [];
                                     let q = animation.length;
+                                    const keyTimes: number[] = new Array(q);
+                                    const values: string[] = new Array(q);
                                     for (let j = 0; j < q; ++j) {
                                         const item = animation[j];
                                         const { key, value } = item;
-                                        keyTimes.push(key);
-                                        values.push(value);
+                                        keyTimes[j] = key;
+                                        values[j] = value;
                                         if (includeKeySplines && j < q - 1) {
                                             const spline = keyframeMap['animation-timing-function']?.find(timing => timing.key === key);
                                             keySplines.push(spline?.value || timingFunction);

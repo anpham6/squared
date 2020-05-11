@@ -102,8 +102,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     const keyTimeTotal = keyTimes[index + 1] - keyTimes[index];
                     const stepSize = parseInt(match[1]);
                     const interval = 100 / stepSize;
-                    const splitTimes: number[] = [];
-                    const splitValues: string[] = [];
+                    const splitTimes: number[] = new Array(stepSize + 1);
+                    const splitValues: string[] = new Array(stepSize + 1);
                     for (let i = 0; i <= stepSize; ++i) {
                         const offset = i === 0 && match[2] === 'start' ? 1 : 0;
                         const time = keyTimes[index] + keyTimeTotal * (i / stepSize);
@@ -132,16 +132,16 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                                 break;
                             }
                             default: {
-                                let j = 0;
-                                while (j < length) {
-                                    result.push(SvgAnimate.getSplitValue(currentValue[j] as number, nextValue[j++] as number, percent).toString());
+                                let k = 0;
+                                while (k < length) {
+                                    result.push(SvgAnimate.getSplitValue(currentValue[k] as number, nextValue[k++] as number, percent).toString());
                                 }
                                 break;
                             }
                         }
                         if (result.length) {
-                            splitTimes.push(time);
-                            splitValues.push(result.join(' '));
+                            splitTimes[i] = time;
+                            splitValues[i] = result.join(' ');
                         }
                         else {
                             return undefined;
@@ -239,10 +239,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             const fromCoords = SvgBuild.parseCoordinates(value);
                             const length = fromCoords.length;
                             if (byCoords.length === length) {
-                                const to: number[] = [];
+                                const to: number[] = new Array(length);
                                 let i = 0;
                                 while (i < length) {
-                                    to.push(fromCoords[i] + byCoords[i++]);
+                                    to[i] = fromCoords[i] + byCoords[i++];
                                 }
                                 this.to = to.join(',');
                             }
@@ -293,11 +293,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                     this.keySplines = flatString(getNamedItem(animationElement, 'keySplines').split(';'), value => value.trim());
                 case 'linear':
                     if (keyTimesBase[0] !== 0 && keyTimesBase[keyTimesBase.length - 1] !== 1) {
-                        const keyTimes: number[] = [];
                         const length = this.values.length;
+                        const keyTimes: number[] = new Array(length);
                         let i = 0;
                         while (i < length) {
-                            keyTimes.push(i++ / (length - 1));
+                            keyTimes[i] = i++ / (length - 1);
                         }
                         this._keyTimes = keyTimes;
                         this._keySplines = undefined;
