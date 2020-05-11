@@ -1,5 +1,3 @@
-type View = android.base.View;
-
-export default class <T extends View> extends squared.base.extensions.WhiteSpace<T> {
+export default class <T extends android.base.View> extends squared.base.extensions.WhiteSpace<T> {
     public readonly eventOnly = true;
 }

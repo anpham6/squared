@@ -5,12 +5,12 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
-
 interface MaxWidthHeightData {
     maxWidth: boolean;
     maxHeight: boolean;
 }
+
+const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 export default class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {

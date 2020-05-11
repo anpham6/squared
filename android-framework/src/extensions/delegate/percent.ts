@@ -18,15 +18,13 @@ function hasPercentHeight(node: View) {
     return value > 0 && value < 1;
 }
 
-const isFlexible = (node: View) => !node.documentParent.layoutElement && !node.display.startsWith('table');
-
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
         return node.pageFlow;
     }
 
     public condition(node: T, parent: T) {
-        return isFlexible(node) && (
+        return !node.documentParent.layoutElement && !node.display.startsWith('table') && (
             hasPercentWidth(node) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width'))) ||
             hasPercentHeight(node) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || parent.hasHeight)
         );

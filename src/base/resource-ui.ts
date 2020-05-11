@@ -282,18 +282,6 @@ function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: 'background
     return false;
 }
 
-function getStoredName(asset: string, value: any): string {
-    const stored = ResourceUI.STORED[asset];
-    if (stored) {
-        for (const [name, data] of stored.entries()) {
-            if (isEqual(value, data)) {
-                return name;
-            }
-        }
-    }
-    return '';
-}
-
 function getAngle(value: string, fallback = 0) {
     value = value.trim();
     if (value !== '') {
@@ -306,7 +294,6 @@ function getAngle(value: string, fallback = 0) {
     return fallback;
 }
 
-const replaceAmpersand = (value: string) => value.replace(/&/g, '&amp;');
 const getGradientPosition = (value: string) => isString(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray) : null;
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
@@ -347,14 +334,22 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static insertStoredAsset(asset: string, name: string, value: any) {
         const stored: Map<string, any> = ResourceUI.STORED[asset];
         if (stored && hasValue(value)) {
-            let result = getStoredName(asset, value);
+            let result = '';
+            if (stored) {
+                for (const [id, data] of stored.entries()) {
+                    if (isEqual(value, data)) {
+                        result = id;
+                        break;
+                    }
+                }
+            }
             if (result === '') {
                 if (isNumber(name)) {
                     name = '__' + name;
                 }
                 let i = 0;
                 do {
-                    result = name + (i > 0 ? '_' + i : '');
+                    result = i === 0 ? name : name + '_' + i;
                     if (!stored.has(result)) {
                         stored.set(result, value);
                         break;
@@ -908,12 +903,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const textContent = node.textContent;
                     if (node.plainText || node.pseudoElement) {
                         key = textContent.trim();
-                        [value, inlined, trimming] = replaceWhiteSpace(node, replaceAmpersand(textContent));
+                        [value, inlined, trimming] = replaceWhiteSpace(node, textContent.replace(/&/g, '&amp;'));
                         inlined = true;
                     }
                     else if (node.inlineText) {
                         key = textContent.trim();
-                        [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(NODE_ALIGNMENT.INLINE) ? replaceAmpersand(textContent) : this.removeExcludedFromText(node, element));
+                        [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(NODE_ALIGNMENT.INLINE) ? textContent.replace(/&/g, '&amp;') : this.removeExcludedFromText(node, element));
                     }
                     else if (node.naturalChildren.length === 0 && textContent?.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
                         value = textContent;

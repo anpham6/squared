@@ -16,15 +16,15 @@ type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 type View = android.base.View;
 
+interface ItemValue {
+    name: string;
+    innerText: string;
+}
+
 const $lib = squared.lib;
 
 const { fromLastIndexOf, objectMap, parseMimeType } = $lib.util;
 const { applyTemplate, replaceTab } = $lib.xml;
-
-type ItemValue = {
-    name: string;
-    innerText: string;
-};
 
 const ASSETS = Resource.ASSETS;
 const STORED = Resource.STORED as AndroidResourceStoredMap;
@@ -103,11 +103,6 @@ function getOutputDirectory(value: string) {
     value = value.trim().replace(/\\/g, '/');
     return value + (!value.endsWith('/') ? '/' : '');
 }
-
-const createFileAsset = (pathname: string, filename: string, content: string): FileAsset => ({ pathname, filename, content });
-const replaceDrawableLength = (value: string, format: string) => format === 'dp' ? value.replace(REGEX_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], false) + '"') : value;
-const replaceThemeLength = (value: string, format: string) => format === 'dp' ? value.replace(REGEX_THEME_UNIT, (match, ...capture) => '>' + convertLength(capture[0], false) + '<') : value;
-const caseInsensitive = (a: string | string[], b: string | string[]) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1;
 
 export default class File<T extends View> extends squared.base.FileUI<T> implements android.base.File<T> {
     public resource!: android.base.Resource<T>;
@@ -194,7 +189,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         if (!STORED.strings.has('app_name')) {
             itemArray.push({ name: 'app_name', innerText: this.userSettings.manifestLabelAppName });
         }
-        for (const [name, innerText] of Array.from(STORED.strings.entries()).sort(caseInsensitive)) {
+        for (const [name, innerText] of Array.from(STORED.strings.entries()).sort((a, b) => a.toString().toLowerCase() >= b.toString().toLowerCase() ? 1 : -1)) {
             itemArray.push({ name, innerText });
         }
         return this.checkFileAssets([
@@ -344,12 +339,10 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                             appTheme[filename] = true;
                         }
                     }
+                    const value = applyTemplate('resources', STYLE_TMPL, [item]);
                     result.push(
                         replaceTab(
-                            replaceThemeLength(
-                                applyTemplate('resources', STYLE_TMPL, [item]),
-                                convertPixels
-                            ),
+                            convertPixels === 'dp' ? value.replace(REGEX_THEME_UNIT, (found, ...capture) => '>' + convertLength(capture[0], false) + '<') : value,
                             insertSpaces
                         ),
                         match[1],
@@ -386,7 +379,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             for (const [name, value] of STORED.drawables.entries()) {
                 result.push(
                     replaceTab(
-                        replaceDrawableLength(value, convertPixels),
+                        convertPixels === 'dp' ? value.replace(REGEX_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], false) + '"') : value,
                         insertSpaces
                     ),
                     directory,
@@ -512,7 +505,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             const { content, filename: filenameA, pathname } = layouts[i];
             result[filenameA] = [content];
             if (actionable) {
-                assets.push(createFileAsset(pathname, i === 0 ? this.userSettings.outputMainFileName : `${filenameA}.xml`, content!));
+                assets.push({ pathname, filename: i === 0 ? this.userSettings.outputMainFileName : `${filenameA}.xml`, content } as FileAsset);
             }
         }
         if (actionable) {

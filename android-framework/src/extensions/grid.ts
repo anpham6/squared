@@ -18,29 +18,6 @@ const Grid = squared.base.extensions.Grid;
 
 const GRID = $base_lib.constant.EXT_NAME.GRID;
 
-function transferData(parent: View, siblings: View[])  {
-    const data = Grid.createDataCellAttribute();
-    siblings.forEach(item => {
-        const source: GridCellData<View> = item.data(GRID, 'cellData');
-        if (source) {
-            if (source.cellStart) {
-                data.cellStart = true;
-            }
-            if (source.cellEnd) {
-                data.cellEnd = true;
-            }
-            if (source.rowEnd) {
-                data.rowEnd = true;
-            }
-            if (source.rowStart) {
-                data.rowStart = true;
-            }
-            item.data(GRID, 'cellData', null);
-        }
-    });
-    parent.data(GRID, 'cellData', data);
-}
-
 export default class <T extends View> extends squared.base.extensions.Grid<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
@@ -71,6 +48,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
             let layout: Undef<LayoutUI<T>>;
             if (siblings) {
                 const controller = this.controller as android.base.Controller<T>;
+                const data = Grid.createDataCellAttribute();
                 siblings.unshift(node);
                 layout = controller.processLayoutHorizontal(
                     new LayoutUI(
@@ -82,7 +60,25 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                     )
                 );
                 node = layout.node;
-                transferData(node, siblings);
+                siblings.forEach(item => {
+                    const source: GridCellData<View> = item.data(GRID, 'cellData');
+                    if (source) {
+                        if (source.cellStart) {
+                            data.cellStart = true;
+                        }
+                        if (source.cellEnd) {
+                            data.cellEnd = true;
+                        }
+                        if (source.rowEnd) {
+                            data.rowEnd = true;
+                        }
+                        if (source.rowStart) {
+                            data.rowStart = true;
+                        }
+                        item.data(GRID, 'cellData', null);
+                    }
+                });
+                node.data(GRID, 'cellData', data);
             }
             if (cellData.rowSpan > 1) {
                 node.android('layout_rowSpan', cellData.rowSpan.toString());

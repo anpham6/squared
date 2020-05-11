@@ -7,12 +7,12 @@ import LayoutUI = squared.base.LayoutUI;
 
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
-type NegativeXData = {
+interface NegativeXData {
     container: View;
     children: View[];
     offsetLeft: number;
     firstChild?: View;
-};
+}
 
 function outsideX(node: View, parent: View) {
     if (node.pageFlow) {

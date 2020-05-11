@@ -5,13 +5,13 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
-
 interface PositiveXData {
     children: View[];
     right: boolean;
     bottom: boolean;
 }
+
+const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const checkMarginLeft = (node: View, item: View) => item.marginLeft < 0 && (node.originalRoot || item.linear.left < Math.floor(node.box.left));
 const checkMarginRight = (node: View, item: View) => item.marginRight < 0 && (node.originalRoot || item.linear.right > Math.ceil(node.box.right));

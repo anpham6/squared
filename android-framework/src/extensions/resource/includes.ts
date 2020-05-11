@@ -3,14 +3,14 @@ import { getRootNs } from '../../lib/util';
 type View = android.base.View;
 type RenderIndex = Undef<NodeRenderIndex[]>;
 
-const { NODE_TEMPLATE } = squared.base.lib.enumeration;
-
-type NodeRenderIndex = {
+interface NodeRenderIndex {
     item: View;
     name?: string;
     index: number;
     include: boolean;
-};
+}
+
+const { NODE_TEMPLATE } = squared.base.lib.enumeration;
 
 export default class ResourceIncludes<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;

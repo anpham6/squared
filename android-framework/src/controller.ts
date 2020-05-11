@@ -10,12 +10,9 @@ import LayoutUI = squared.base.LayoutUI;
 
 interface RelativeLayoutData {
     clearMap: Map<View, string>;
-    lineWrap: boolean;
-    boxWidth: number;
     textIndent: number;
     rowLength: number;
     items?: View[];
-    retainMultiline: boolean;
 }
 
 const { lib: $lib, base: $base } = squared;
@@ -383,7 +380,7 @@ function segmentLeftAligned<T extends View>(children: T[]) {
     return partitionArray<T>(children, item => item.float === 'left' || item.autoMargin.right === true);
 }
 
-function relativeWrapWidth(node: View, bounds: BoxRectDimension, multiline: boolean, previousRowLeft: Undef<View>, rowWidth: number, data: RelativeLayoutData) {
+function relativeWrapWidth(node: View, bounds: BoxRectDimension, multiline: boolean, previousRowLeft: Undef<View>, rowWidth: number, boxWidth: number, data: RelativeLayoutData) {
     let maxWidth = 0;
     let baseWidth = rowWidth + node.marginLeft;
     if (previousRowLeft && !data.items!.includes(previousRowLeft)) {
@@ -395,7 +392,7 @@ function relativeWrapWidth(node: View, bounds: BoxRectDimension, multiline: bool
     if (node.marginRight < 0) {
         baseWidth += node.marginRight;
     }
-    maxWidth = data.boxWidth;
+    maxWidth = boxWidth;
     if (data.textIndent !== 0) {
         if (data.textIndent < 0) {
             if (data.rowLength <= 1) {
@@ -413,30 +410,6 @@ function relativeWrapWidth(node: View, bounds: BoxRectDimension, multiline: bool
     return Math.floor(baseWidth) > maxWidth;
 }
 
-function relativeNewRow(node: View, previous: View, previousRowLeft: Undef<View>, bounds: BoxRectDimension, multiline: boolean, index: number, rowWidth: number, data: RelativeLayoutData) {
-    if (previous.textElement) {
-        if (index === 1 && node.plainText && node.previousSibling === previous && !CHAR.TRAILINGSPACE.test(previous.textContent) && !CHAR.LEADINGSPACE.test(node.textContent)) {
-            data.retainMultiline = true;
-            return false;
-        }
-        else if (data.lineWrap && previous.multiline && (previous.bounds.width >= data.boxWidth || node.plainText && Resource.hasLineBreak(previous, false, true))) {
-            return true;
-        }
-    }
-    if (relativeFloatWrap(node, previous, multiline, rowWidth, data)) {
-        return false;
-    }
-    else if (data.lineWrap) {
-        if (relativeWrapWidth(node, bounds, multiline, previousRowLeft, rowWidth, data)) {
-            return true;
-        }
-        else if (!(node.actualParent?.tagName === 'CODE')) {
-            return multiline && node.plainText || isMultiline(node);
-        }
-    }
-    return false;
-}
-
 function constraintAlignTop(parent: View, node: View) {
     node.anchorParent('vertical', 0);
     node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: Math.max(node.bounds.top - parent.box.top, Math.min(convertFloat(node.verticalAlign) * -1, 0)) });
@@ -444,7 +417,7 @@ function constraintAlignTop(parent: View, node: View) {
     return false;
 }
 
-const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, data: RelativeLayoutData) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + node.actualWidth) < data.boxWidth);
+const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, boxWidth: number, data: RelativeLayoutData) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + node.actualWidth) < boxWidth);
 const isBaselineImage = (item: View) => item.imageOrSvgElement && item.baseline;
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
@@ -452,7 +425,6 @@ const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>)
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
-const requireSorting = (node: View) => node.zIndex !== 0 || !node.pageFlow;
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
 const getVerticalLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
 const getVerticalAlignedLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
@@ -1250,7 +1222,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
         }
         else if (parent.layoutConstraint) {
-            if (templates.some(item => requireSorting(item.node))) {
+            if (templates.some(item => item.node.zIndex !== 0 || !item.node.pageFlow)) {
                 let result: NodeXmlTemplate<T>[] = [];
                 const originalParent = parent.innerMostWrapped as T;
                 const actualParent: T[] = [];
@@ -2316,12 +2288,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             const relativeData: RelativeLayoutData = {
-                boxWidth,
                 clearMap,
-                lineWrap,
                 textIndent,
-                rowLength: 0,
-                retainMultiline: false
+                rowLength: 0
             };
             segmentRightAligned(children).forEach((seg: T[], index) => {
                 const length = seg.length;
@@ -2409,16 +2378,37 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     if (previous) {
-                        relativeData.retainMultiline = false;
-                        const textNewRow = item.textElement && relativeNewRow(item, previous, previousRowLeft, bounds, multiline, i, rowWidth, relativeData);
                         siblings = item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element as Element) : undefined;
+                        let retainMultiline = false;
+                        let textNewRow = false;
+                        if (item.textElement) {
+                            let checkWidth = true;
+                            if (previous.textElement) {
+                                if (i === 1 && item.plainText && item.previousSibling === previous && !CHAR.LEADINGSPACE.test(item.textContent) && !CHAR.TRAILINGSPACE.test(previous.textContent)) {
+                                    retainMultiline = true;
+                                    checkWidth = false;
+                                }
+                                else if (lineWrap && previous.multiline && (previous.bounds.width >= boxWidth || item.plainText && Resource.hasLineBreak(previous, false, true))) {
+                                    textNewRow = true;
+                                    checkWidth = false;
+                                }
+                            }
+                            if (checkWidth && lineWrap && !relativeFloatWrap(item, previous, multiline, rowWidth, boxWidth, relativeData)) {
+                                if (relativeWrapWidth(item, bounds, multiline, previousRowLeft, rowWidth, boxWidth, relativeData)) {
+                                    textNewRow = true;
+                                }
+                                else if (item.actualParent!.tagName !== 'CODE') {
+                                    textNewRow = multiline && item.plainText || isMultiline(item);
+                                }
+                            }
+                        }
                         if (previous.floating && adjustFloatingNegativeMargin(item, previous)) {
                             alignSibling = '';
                         }
                         if (textNewRow ||
                             item.nodeGroup && !item.hasAlign(NODE_ALIGNMENT.SEGMENTED) ||
                             Math.ceil(item.bounds.top) >= previous.bounds.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
-                            !item.textElement && relativeWrapWidth(item, bounds, multiline, previousRowLeft, rowWidth, relativeData) && !relativeFloatWrap(item, previous, multiline, rowWidth, relativeData) ||
+                            !item.textElement && relativeWrapWidth(item, bounds, multiline, previousRowLeft, rowWidth, boxWidth, relativeData) && !relativeFloatWrap(item, previous, multiline, rowWidth, boxWidth, relativeData) ||
                             !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
                             previous.autoMargin.horizontal ||
                             clearMap.has(item) ||
@@ -2465,7 +2455,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     previous.anchor(alignSibling, item.documentId);
                                 }
                             }
-                            if (multiline && !item.hasPX('width') && !previous.floating && !relativeData.retainMultiline) {
+                            if (multiline && !item.hasPX('width') && !previous.floating && !retainMultiline) {
                                 item.multiline = false;
                             }
                             items.push(item);

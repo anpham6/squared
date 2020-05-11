@@ -20,7 +20,6 @@ const isParentVisible = (node: View, parent: View) => parent.visibleStyle.backgr
 const isParentTransfer = (parent: View) => parent.tagName === 'HTML' && (parent.contentBoxWidth > 0 || parent.contentBoxHeight > 0 || hasMargin(parent));
 const isWrapped = (node: View, parent: View, backgroundColor: boolean, backgroundImage: boolean, borderWidth: boolean) => (backgroundColor || backgroundImage) && !isParentVisible(node, parent) && (borderWidth || node.gridElement && (CssGrid.isJustified(node) || CssGrid.isAligned(node)));
 const isBackgroundSeparate = (node: View, parent: View, backgroundColor: boolean, backgroundImage: boolean, backgroundRepeatX: boolean, backgroundRepeatY: boolean, borderWidth: boolean) => backgroundColor && backgroundImage && ((!backgroundRepeatX || !backgroundRepeatY) && (node.has('backgroundPositionX') || node.has('backgroundPositionY') || borderWidth && (hasVisibleWidth(node) || !hasFullHeight(parent) || !hasFullHeight(node))) || node.css('backgroundAttachment') === 'fixed');
-const isHideMargin = (node: View, backgroundImage: boolean) => backgroundImage && hasMargin(node);
 
 export default class Background<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
@@ -29,7 +28,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
 
     public condition(node: T, parent: T) {
         const { backgroundColor, backgroundImage, backgroundRepeatX, backgroundRepeatY, borderWidth } = node.visibleStyle;
-        return isWrapped(node, parent, backgroundColor, backgroundImage, borderWidth) || isBackgroundSeparate(node, parent, backgroundColor, backgroundImage, backgroundRepeatX, backgroundRepeatY, borderWidth) || isHideMargin(node, backgroundImage) || isParentTransfer(parent);
+        return isWrapped(node, parent, backgroundColor, backgroundImage, borderWidth) || isBackgroundSeparate(node, parent, backgroundColor, backgroundImage, backgroundRepeatX, backgroundRepeatY, borderWidth) || backgroundImage && hasMargin(node) || isParentTransfer(parent);
     }
 
     public processNode(node: T, parent: T) {

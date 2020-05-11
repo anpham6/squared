@@ -1,12 +1,12 @@
 import { ESCAPE } from './regex';
 import { isPlainObject, joinArray } from './util';
 
-type XMLTagData = {
+interface XMLTagData {
     tag: string;
     tagName: string;
     value: string;
     closing: boolean;
-};
+}
 
 const REGEX_INDENT = /^(\t+)(.*)$/;
 const REGEX_FORMAT = {

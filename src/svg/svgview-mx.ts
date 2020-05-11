@@ -48,11 +48,6 @@ function parseAttribute(element: SVGElement, attr: string) {
     return value.split(XML.SEPARATOR);
 }
 
-function isVisible(element: SVGElement) {
-    const value = getAttribute(element, 'visibility');
-    return value !== 'hidden' && value !== 'collapse' && getAttribute(element, 'display') !== 'none';
-}
-
 function sortAttribute(value: NumberValue[]) {
     return value.sort((a, b) => {
         if (a.key !== b.key) {
@@ -75,10 +70,7 @@ function convertRotate(value: string) {
 
 function getKeyframeOrigin(attrMap: AttributeMap, element: SVGGraphicsElement, order: number) {
     const origin = attrMap['transform-origin']?.find(item => item.key === order);
-    if (origin) {
-        return TRANSFORM.origin(element, origin.value);
-    }
-    return undefined;
+    return origin ? TRANSFORM.origin(element, origin.value) : undefined;
 }
 
 export default <T extends Constructor<SvgElement>>(Base: T) => {
@@ -491,7 +483,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         get visible() {
-            return isVisible(this.element);
+            const value = getAttribute(this.element, 'visibility');
+            return value !== 'hidden' && value !== 'collapse' && getAttribute(this.element, 'display') !== 'none';
         }
 
         get opacity() {

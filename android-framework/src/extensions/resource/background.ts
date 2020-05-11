@@ -10,20 +10,6 @@ import VECTOR_TMPL from '../../template/vector';
 
 type View = android.base.View;
 
-const $lib = squared.lib;
-const $base = squared.base;
-
-const { reduceRGBA } = $lib.color;
-const { extractURL, formatPercent, formatPX, getBackgroundPosition } = $lib.css;
-const { truncate } = $lib.math;
-const { CHAR, XML } = $lib.regex;
-const { delimitString, flatArray, isEqual, objectMap, resolvePath } = $lib.util;
-const { applyTemplate } = $lib.xml;
-
-const { BOX_STANDARD, NODE_RESOURCE } = $base.lib.enumeration;
-
-const NodeUI = $base.NodeUI;
-
 interface PositionAttribute {
     top?: string;
     right?: string;
@@ -57,6 +43,20 @@ interface ShapeStrokeData {
     dashWidth: string;
     dashGap: string;
 }
+
+const $lib = squared.lib;
+const $base = squared.base;
+
+const { reduceRGBA } = $lib.color;
+const { extractURL, formatPercent, formatPX, getBackgroundPosition } = $lib.css;
+const { truncate } = $lib.math;
+const { CHAR, XML } = $lib.regex;
+const { delimitString, flatArray, isEqual, objectMap, resolvePath } = $lib.util;
+const { applyTemplate } = $lib.xml;
+
+const { BOX_STANDARD, NODE_RESOURCE } = $base.lib.enumeration;
+
+const NodeUI = $base.NodeUI;
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeStrokeData {
     const { style, color } = border;

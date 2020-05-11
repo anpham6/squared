@@ -4,6 +4,14 @@ import { CONTAINER_NODE } from '../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
 
+interface FlexBasis {
+    item: View;
+    basis: number;
+    dimension: number;
+    shrink: number;
+    grow: number;
+}
+
 const { lib: $lib, base: $base } = squared;
 const $base_lib = $base.lib;
 
@@ -15,14 +23,6 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = $base_lib.enumeration;
 
 const NodeUI = $base.NodeUI;
 const FLEXBOX = $base_lib.constant.EXT_NAME.FLEXBOX;
-
-type FlexBasis = {
-    item: View;
-    basis: number;
-    dimension: number;
-    shrink: number;
-    grow: number;
-};
 
 const MAP_horizontal = {
     orientation: 'horizontal',

@@ -54,8 +54,6 @@ function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: str
     }
 }
 
-const getNumberValue = (style: CSSStyleDeclaration, attr: string) => parseInt(style.getPropertyValue(attr));
-
 export default abstract class ControllerUI<T extends NodeUI> extends Controller<T> implements squared.base.ControllerUI<T> {
     public abstract readonly localSettings: ControllerSettingsUI;
 
@@ -378,7 +376,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             return (
                 width > 0 && style.getPropertyValue('float') !== 'none' ||
                 !!pseudoElt && style.getPropertyValue('clear') !== 'none' ||
-                style.getPropertyValue('display') === 'block' && (getNumberValue(style, 'margin-top') !== 0 || getNumberValue(style, 'margin-bottom') !== 0)
+                style.getPropertyValue('display') === 'block' && (parseInt(style.getPropertyValue('margin-top')) !== 0 || parseInt(style.getPropertyValue('margin-bottom')) !== 0)
             );
         }
         return false;

@@ -4,6 +4,11 @@ import { BUILD_ANDROID } from '../../lib/enumeration';
 import { convertLength } from '../../lib/util';
 
 type View = android.base.View;
+type StyleList = ObjectMap<number[]>;
+type SharedAttributes = ObjectMapNested<number[]>;
+type AttributeMap = ObjectMap<number[]>;
+type TagNameMap = ObjectMap<StyleAttribute[]>;
+type NodeStyleMap = ObjectMap<string[]>;
 
 const $lib = squared.lib;
 
@@ -11,12 +16,6 @@ const { XML } = $lib.regex;
 const { capitalize, convertInt, convertWord, hasKeys, safeNestedArray, safeNestedMap, objectMap, spliceArray, trimBoth } = $lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
-
-type StyleList = ObjectMap<number[]>;
-type SharedAttributes = ObjectMapNested<number[]>;
-type AttributeMap = ObjectMap<number[]>;
-type TagNameMap = ObjectMap<StyleAttribute[]>;
-type NodeStyleMap = ObjectMap<string[]>;
 
 const STORED = Resource.STORED as AndroidResourceStoredMap;
 const REGEX_TAGNAME = /^(\w*?)(?:_(\d+))?$/;

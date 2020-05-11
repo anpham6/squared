@@ -1,7 +1,7 @@
-type View = android.base.View;
-
 import { LOCALIZE_ANDROID, XMLNS_ANDROID } from './constant';
 import { BUILD_ANDROID } from './enumeration';
+
+type View = android.base.View;
 
 const $lib = squared.lib;
 

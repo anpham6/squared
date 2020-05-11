@@ -25,24 +25,6 @@ const { isPlainText } = $lib.xml;
 const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
 const STRING_PSEUDOPREFIX = '__squared_';
 
-function createPseudoElement(parent: HTMLElement, tagName = 'span', index = -1) {
-    const element = document.createElement(tagName);
-    element.className = '__squared.pseudo';
-    element.style.setProperty('display', 'none');
-    if (index >= 0 && index < parent.childNodes.length) {
-        parent.insertBefore(element, parent.childNodes[index]);
-    }
-    else {
-        parent.appendChild(element);
-    }
-    return element;
-}
-
-function saveAlignment(preAlignment: ObjectIndex<StringMap>, element: HTMLElement, id: number, attr: string, value: string, restoreValue: string) {
-    safeNestedMap(preAlignment, id)[attr] = restoreValue;
-    element.style.setProperty(attr, value);
-}
-
 function getCounterValue(name: string, counterName: string, fallback = 1) {
     if (name !== 'none') {
         const pattern = /\s*([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\s*/g;
@@ -60,22 +42,6 @@ function getCounterValue(name: string, counterName: string, fallback = 1) {
 function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) {
     const counterIncrement: string | undefined = getElementCache(parent, `styleMap${pseudoElt}`, sessionId)?.counterIncrement;
     return counterIncrement && getCounterValue(counterIncrement, counterName, fallback);
-}
-
-function checkTraverseHorizontal(node: NodeUI, horizontal: NodeUI[], vertical: NodeUI[]) {
-    if (vertical.length) {
-        return false;
-    }
-    horizontal.push(node);
-    return true;
-}
-
-function checkTraverseVertical(node: NodeUI, horizontal: NodeUI[], vertical: NodeUI[]) {
-    if (horizontal.length) {
-        return false;
-    }
-    vertical.push(node);
-    return true;
 }
 
 function prioritizeExtensions<T extends NodeUI>(value: Undef<string>, extensions: ExtensionUI<T>[]) {
@@ -153,7 +119,7 @@ const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMarg
 const requirePadding = (node: NodeUI): boolean => node.textElement && (node.blockStatic || node.multiline);
 const getRelativeOffset = (node: NodeUI, fromRight: boolean) => node.positionRelative ? (node.hasPX('left') ? node.left * (fromRight ? 1 : -1) : node.right * (fromRight ? -1 : 1)) : 0;
 const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => !!item.use }).length > 0;
-const setMapDepth = (map: LayoutMap, depth: number, id: number, node: NodeUI) => map.get(depth)?.set(id, node) || map.set(depth, new Map<number, NodeUI>([[id, node]]));
+const setMapDepth = (map: LayoutMap, depth: number, node: NodeUI) => map.get(depth)?.set(node.id, node) || map.set(depth, new Map<number, NodeUI>([[node.id, node]]));
 const getMapIndex = (value: number) => (value * -1) - 2;
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
@@ -455,14 +421,16 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             case 'center':
                             case 'right':
                             case 'end':
-                                saveAlignment(preAlignment, element, item.id, 'text-align', 'left', textAlign);
+                                safeNestedMap(preAlignment, item.id)['text-align'] = textAlign;
+                                element.style.setProperty('text-align', 'left');
                                 break;
                         }
                     }
                     if (item.positionRelative) {
                         BOX_POSITION.forEach(attr => {
                             if (item.hasPX(attr) && item[attr] !== 0) {
-                                saveAlignment(preAlignment, element, item.id, attr, 'auto', item.css(attr));
+                                safeNestedMap(preAlignment, item.id)[attr] = item.css(attr);
+                                element.style.setProperty(attr, 'auto');
                                 resetBounds = true;
                             }
                         });
@@ -748,11 +716,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         let extensions = this.extensionsTraverse;
         {
             let maxDepth = 0;
-            setMapDepth(mapY, -1, 0, documentRoot.parent as T);
+            setMapDepth(mapY, -1, documentRoot.parent as T);
             cache.each(node => {
                 if (node.length) {
                     const depth = node.depth;
-                    setMapDepth(mapY, depth, node.id, node);
+                    setMapDepth(mapY, depth, node);
                     maxDepth = Math.max(depth, maxDepth);
                     if (node.floatContainer) {
                         const floated = new Set<string>();
@@ -812,13 +780,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 mapY.set(getMapIndex(i++), new Map<number, T>());
             }
             cache.afterAppend = (node: T, cascade = false) => {
-                setMapDepth(mapY, getMapIndex(node.depth), node.id, node);
+                setMapDepth(mapY, getMapIndex(node.depth), node);
                 if (cascade && node.length) {
                     node.cascade((item: T) => {
                         if (item.length) {
                             const depth = item.depth;
                             mapY.get(depth)?.delete(item.id);
-                            setMapDepth(mapY, getMapIndex(depth), item.id, item);
+                            setMapDepth(mapY, getMapIndex(depth), item);
                         }
                         return false;
                     });
@@ -923,21 +891,29 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                     }
                                                     break traverse;
                                                 }
-                                                if (!checkTraverseVertical(item, horizontal, vertical)) {
+                                                if (horizontal.length) {
                                                     break traverse;
                                                 }
+                                                vertical.push(item);
                                             }
-                                            else if (!checkTraverseHorizontal(item, horizontal, vertical)) {
+                                            else if (vertical.length) {
                                                 break traverse;
+                                            }
+                                            else {
+                                                horizontal.push(item);
                                             }
                                         }
                                         else if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
-                                            if (!checkTraverseVertical(item, horizontal, vertical)) {
+                                            if (horizontal.length) {
                                                 break traverse;
                                             }
+                                            vertical.push(item);
                                         }
-                                        else if (!checkTraverseHorizontal(item, horizontal, vertical)) {
+                                        else if (vertical.length) {
                                             break traverse;
+                                        }
+                                        else {
+                                            horizontal.push(item);
                                         }
                                     }
                                     else {
@@ -1704,7 +1680,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (tagName === '') {
                         tagName = /^(inline|table)/.test(styleMap.display) ? 'span' : 'div';
                     }
-                    const pseudoElement = createPseudoElement(element, tagName, pseudoElt === '::before' ? 0 : -1);
+                    const pseudoElement = document.createElement(tagName);
+                    pseudoElement.className = '__squared.pseudo';
+                    pseudoElement.style.setProperty('display', 'none');
+                    if (pseudoElt === '::before') {
+                        element.insertBefore(pseudoElement, element.childNodes[0]);
+                    }
+                    else {
+                        element.appendChild(pseudoElement);
+                    }
                     if (tagName === 'img') {
                         (pseudoElement as HTMLImageElement).src = content;
                         const image = this.resourceHandler.getImage(content);

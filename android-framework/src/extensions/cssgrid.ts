@@ -44,9 +44,7 @@ function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
         }
         return result;
     }
-    else {
-        return rowData;
-    }
+    return rowData;
 }
 
 function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolean, maxScreenWidth: number, maxScreenHeight: number) {
@@ -308,8 +306,6 @@ function isFlexibleParent(item: View) {
     return false;
 }
 
-const checkFlexibleParent = (node: View) => node.ascend({ condition: isFlexibleParent, error: item => item.hasWidth }).length > 0;
-
 function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     const { gap, length, unit } = data;
     let size = 0;
@@ -392,7 +388,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 rowCount: row.length,
                 columnCount
             });
-            if (!node.originalRoot && !node.hasWidth && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => CssGrid.isFr(value)) && checkFlexibleParent(node)) {
+            if (!node.originalRoot && !node.hasWidth && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => CssGrid.isFr(value)) && node.ascend({ condition: isFlexibleParent, error: item => item.hasWidth }).length > 0) {
                 const rowData = mainData.rowData;
                 const rowCount = rowData.length;
                 const constraintData: T[][] = new Array(rowCount);

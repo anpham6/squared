@@ -175,18 +175,28 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Undef<SvgC
         let points: Undef<SvgPoint[]>;
         switch (tagName) {
             case 'line':
-                points = getLinePoints(values as number[]);
+                points = [
+                    { x: values[0], y: values[1] },
+                    { x: values[2], y: values[4] }
+                ] as Point[];
                 break;
-            case 'rect':
-                points = getRectPoints(values as number[]);
+            case 'rect': {
+                const [width, height, x, y] = values as number[];
+                points = [
+                    { x, y },
+                    { x: x + width, y },
+                    { x: x + width, y: y + height },
+                    { x, y: y + height }
+                ] as Point[];
                 break;
+            }
             case 'polygon':
             case 'polyline':
                 points = values[0] as Point[];
                 break;
             case 'circle':
             case 'ellipse':
-                points = getEllipsePoints(values as number[]);
+                points = [{ x: values[0] as number, y: values[1] as number, rx: values[2] as number, ry: values[values.length - 1] as number }];
                 break;
         }
         if (points) {
@@ -217,23 +227,6 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Undef<SvgC
         }
     }
     return result;
-}
-
-function getLinePoints(values: number[]): Point[] {
-    return [
-        { x: values[0], y: values[1] },
-        { x: values[2], y: values[4] }
-    ];
-}
-
-function getRectPoints(values: number[]): Point[] {
-    const [width, height, x, y] = values;
-    return [
-        { x, y },
-        { x: x + width, y },
-        { x: x + width, y: y + height },
-        { x, y: y + height }
-    ];
 }
 
 function createKeyTimeMap(map: TimelineMap, keyTimes: number[], forwardMap: ForwardMap) {
@@ -756,7 +749,6 @@ function removeAnimations(animations: SvgAnimation[], values: SvgAnimation[]) {
 }
 
 const getItemTime = (delay: number, duration: number, keyTimes: number[], iteration: number, index: number) => Math.round(delay + (keyTimes[index] + iteration) * duration);
-const getEllipsePoints = (values: number[]): SvgPoint[] => [{ x: values[0], y: values[1], rx: values[2], ry: values[values.length - 1] }];
 const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? objectMap(value, pt => pt.x + ',' + pt.y).join(' ') : value?.toString() || '';
 const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE);
 const isFromToFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE);

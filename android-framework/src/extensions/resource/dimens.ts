@@ -35,8 +35,6 @@ function createNamespaceData(namespace: string, node: View, group: ObjectMap<Vie
     }
 }
 
-const getDisplayName = (value: string) => fromLastIndexOf(value, '.');
-
 export default class ResourceDimens<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
@@ -55,7 +53,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             const group = groups[containerName] as ObjectMap<T[]>;
             for (const name in group) {
                 const [namespace, attr, value] = name.split(XML.SEPARATOR);
-                const key = getResourceName(dimens, getDisplayName(containerName) + '_' + convertUnderscore(attr), value);
+                const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + convertUnderscore(attr), value);
                 group[name].forEach(node => node[namespace](attr, `@dimen/${key}`));
                 dimens.set(key, value);
             }

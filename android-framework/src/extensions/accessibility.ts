@@ -1,8 +1,8 @@
 import Resource from '../resource';
 
-const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
-
 type View = android.base.View;
+
+const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 export default class <T extends View> extends squared.base.extensions.Accessibility<T> {
     public readonly eventOnly = true;

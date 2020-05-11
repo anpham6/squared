@@ -175,7 +175,6 @@ function isFlexibleDimension(this: T, value: string) {
     return false;
 }
 
-
 function getLineSpacingExtra(this: T, lineHeight: number) {
     let height = NaN;
     if (this.styleText) {
@@ -446,64 +445,6 @@ function transferLayoutAlignment(this: T, replaceWith: T) {
             if (attr.startsWith('layout_')) {
                 replaceWith.attr(name, attr, data[attr], true);
             }
-        }
-    }
-}
-
-function setLineHeight(this: T, renderParent: T) {
-    const lineHeight = this.lineHeight;
-    if (lineHeight > 0) {
-        const hasOwnStyle = this.has('lineHeight', { map: 'initial' });
-        if (this.multiline) {
-            setMultiline.call(this, lineHeight, hasOwnStyle);
-        }
-        else if (this.renderChildren.length) {
-            if (!hasOwnStyle && this.layoutHorizontal && this.alignSibling('baseline')) {
-                return;
-            }
-            else if (this.layoutVertical || this.layoutFrame) {
-                this.renderEach((item: T) => {
-                    if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
-                        setMarginOffset.call(item, lineHeight, true, true, true);
-                    }
-                });
-            }
-            else {
-                const horizontalRows = this.horizontalRows || [this.renderChildren];
-                let previousMultiline = false;
-                const length = horizontalRows.length;
-                for (let i = 0; i < length; ++i) {
-                    const row = horizontalRows[i];
-                    const nextRow = horizontalRows[i + 1];
-                    const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < length - 1 && !!nextRow.find(item => item.baselineActive)?.has('lineHeight'));
-                    const first = row[0];
-                    const onlyChild = row.length === 1;
-                    const singleLine = onlyChild && !first.multiline;
-                    const baseline = !onlyChild && row.find(item => item.baselineActive && item.renderChildren.length === 0);
-                    const top = singleLine || !previousMultiline && (i > 0 || length === 1) || first.lineBreakLeading;
-                    const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
-                    if (baseline) {
-                        if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
-                            setMarginOffset.call(baseline as T, lineHeight, false, top, bottom);
-                        }
-                        else {
-                            previousMultiline = true;
-                            continue;
-                        }
-                    }
-                    else {
-                        row.forEach((item: T) => {
-                            if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
-                                setMarginOffset.call(item, lineHeight, onlyChild, top, bottom);
-                            }
-                        });
-                    }
-                    previousMultiline = onlyChild && first.multiline;
-                }
-            }
-        }
-        else if (hasOwnStyle || renderParent.lineHeight === 0) {
-            setMarginOffset.call(this, lineHeight, hasOwnStyle, true, true);
         }
     }
 }
@@ -2244,7 +2185,61 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = this.renderParent;
             if (renderParent) {
                 this.alignLayout(renderParent);
-                setLineHeight.call(this, renderParent);
+                const lineHeight = this.lineHeight;
+                if (lineHeight > 0) {
+                    const hasOwnStyle = this.has('lineHeight', { map: 'initial' });
+                    if (this.multiline) {
+                        setMultiline.call(this, lineHeight, hasOwnStyle);
+                    }
+                    else if (this.renderChildren.length) {
+                        if (!hasOwnStyle && this.layoutHorizontal && this.alignSibling('baseline')) {
+                            return;
+                        }
+                        else if (this.layoutVertical || this.layoutFrame) {
+                            this.renderEach((item: T) => {
+                                if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
+                                    setMarginOffset.call(item, lineHeight, true, true, true);
+                                }
+                            });
+                        }
+                        else {
+                            const horizontalRows = this.horizontalRows || [this.renderChildren];
+                            let previousMultiline = false;
+                            const length = horizontalRows.length;
+                            for (let i = 0; i < length; ++i) {
+                                const row = horizontalRows[i];
+                                const nextRow = horizontalRows[i + 1];
+                                const nextMultiline = !!nextRow && (nextRow.length === 1 && nextRow[0].multiline || nextRow[0].lineBreakLeading || i < length - 1 && !!nextRow.find(item => item.baselineActive)?.has('lineHeight'));
+                                const first = row[0];
+                                const onlyChild = row.length === 1;
+                                const singleLine = onlyChild && !first.multiline;
+                                const baseline = !onlyChild && row.find(item => item.baselineActive && item.renderChildren.length === 0);
+                                const top = singleLine || !previousMultiline && (i > 0 || length === 1) || first.lineBreakLeading;
+                                const bottom = singleLine || !nextMultiline && (i < length - 1 || length === 1);
+                                if (baseline) {
+                                    if (!isNaN(baseline.lineHeight) && !baseline.has('lineHeight')) {
+                                        setMarginOffset.call(baseline, lineHeight, false, top, bottom);
+                                    }
+                                    else {
+                                        previousMultiline = true;
+                                        continue;
+                                    }
+                                }
+                                else {
+                                    row.forEach((item: T) => {
+                                        if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
+                                            setMarginOffset.call(item, lineHeight, onlyChild, top, bottom);
+                                        }
+                                    });
+                                }
+                                previousMultiline = onlyChild && first.multiline;
+                            }
+                        }
+                    }
+                    else if (hasOwnStyle || renderParent.lineHeight === 0) {
+                        setMarginOffset.call(this, lineHeight, hasOwnStyle, true, true);
+                    }
+                }
                 finalizeGravity.call(this, 'layout_gravity');
                 finalizeGravity.call(this, 'gravity');
                 if (this.imageElement) {

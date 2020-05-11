@@ -95,12 +95,8 @@ function canCascadeChildren(this: T) {
     return this.naturalElements.length > 0 && !this.layoutElement && !this.tableElement;
 }
 
-function isBlockWrap(this: T) {
-    return this.blockVertical || this.percentWidth > 0;
-}
-
 function checkBlockDimension(this: T, previous: T) {
-    return this.blockDimension && Math.ceil(this.bounds.top) >= previous.bounds.bottom && (isBlockWrap.call(this) || isBlockWrap.call(previous));
+    return this.blockDimension && Math.ceil(this.bounds.top) >= previous.bounds.bottom && (this.blockVertical || previous.blockVertical || this.percentWidth > 0 || previous.percentWidth > 0);
 }
 
 function getPercentWidth(this: T) {
@@ -109,11 +105,6 @@ function getPercentWidth(this: T) {
 
 function getLayoutWidth(this: T) {
     return this.actualWidth + Math.max(this.marginLeft, 0) + this.marginRight;
-}
-
-function getDatasetName(this: T, attr: string) {
-    const dataset = this.dataset;
-    return dataset[attr + capitalize(this.localSettings.systemName)] || dataset[attr];
 }
 
 function applyBoxReset(this: T, boxReset: BoxModel, attrs: string[], region: number, start: number, node?: NodeUI) {
@@ -1659,7 +1650,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get use() {
-        return getDatasetName.call(this, 'use');
+        const dataset = this.dataset;
+        return dataset['use' + capitalize(this.localSettings.systemName)] || dataset['use'];
     }
 
     get extensions() {
