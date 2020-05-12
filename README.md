@@ -454,7 +454,7 @@ Image conversion can be achieved using the mimeType property in a RequestAsset o
 node-express offers only read support for GIF and TIFF.
 
 ```xml
-format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?|opacity|?:image/{format}
+format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?{...rotate(n)}?|opacity|?:image/{format}
 ```
 
 @ - replace  
@@ -518,7 +518,7 @@ You can also add most of the "file" commands programatically (except "exclude") 
 
 ```javascript
 document.querySelectorAll('img').forEach(element => {
-    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600)|0.5|';
+    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600){90,180,270}|0.5|';
 });
 
 chrome.saveAsWebPage();
@@ -696,7 +696,7 @@ There are a few ways to save the entire page or portions using the system method
     chrome.saveAsWebPage({ // default is false
         removeUnusedStyles: true, // Use only when you are not switching classnames with JavaScript
         productionRelease: true, // Ignore local url rewriting and load assets using absolute paths
-        preserveCrossOrigin: true // Ignore downloading assets hosted on other hostnames (http://)
+        preserveCrossOrigin: true // Ignore downloading a local copy of assets hosted on other domains
     }); 
 </script>
 ```

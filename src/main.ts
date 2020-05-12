@@ -56,6 +56,9 @@ export function setFramework(value: Framework, options?: ObjectMap<any>, cached 
     const reloading = framework !== undefined;
     if (framework !== value) {
         const appBase = cached ? value.cached() : value.create();
+        if (framework === undefined) {
+            Object.assign(appBase.userSettings, settings);
+        }
         if (util.isPlainObject(options)) {
             Object.assign(appBase.userSettings, options);
         }

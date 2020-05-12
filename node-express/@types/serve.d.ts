@@ -46,8 +46,10 @@ interface IImage {
     isJpeg(file: ExpressAsset, filepath?: string): boolean;
     parseResizeMode(value: string): ResizeMode;
     parseOpacity(value: string): Undef<number>;
-    resize(image: jimp, width: Undef<number>, height: Undef<number>, mode?: string): jimp;
-    opacity(image: jimp, value: Undef<number>): jimp;
+    parseRotation(value: string): number[];
+    resize(self: jimp, width: Undef<number>, height: Undef<number>, mode?: string): jimp;
+    rotate(self: jimp, filepath: string, values: number[]): jimp;
+    opacity(self: jimp, value: Undef<number>): jimp;
 }
 
 interface IChrome {

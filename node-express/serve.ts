@@ -834,7 +834,7 @@ let Image: serve.IImage;
         parseResizeMode(value: string) {
             let width = 0, height = 0;
             let mode = '';
-            const match = /\((\d+)x(\d+)#?(contain|cover|scale)?\)/.exec(value);
+            const match = /\(\s*(\d+)\s*x\s*(\d+)(?:\s*#\s*(contain|cover|scale))?\s*\)/.exec(value);
             if (match) {
                 width = parseInt(match[1]);
                 height = parseInt(match[2]);
@@ -844,7 +844,7 @@ let Image: serve.IImage;
         }
         parseOpacity(value: string) {
             let result: Undef<number>;
-            const match = /|([\d.]+)|/.exec(value);
+            const match = /|\s*([\d.]+)\s*|/.exec(value);
             if (match) {
                 const opacity = parseFloat(match[1]);
                 if (!isNaN(opacity)) {
@@ -853,30 +853,57 @@ let Image: serve.IImage;
             }
             return result;
         }
-        resize(image: jimp, width: Undef<number>, height: Undef<number>, mode?: string) {
+        parseRotation(value: string) {
+            const result = new Set<number>();
+            const match = /\{\s*([\d\s,]+)\s*\}/.exec(value);
+            if (match) {
+                match[1].split(',').forEach(segment => {
+                    const angle = parseInt(segment);
+                    if (!isNaN(angle)) {
+                        result.add(angle);
+                    }
+                });
+            }
+            return Array.from(result);
+        }
+        resize(self: jimp, width: Undef<number>, height: Undef<number>, mode?: string) {
             if (width && height) {
                 switch (mode) {
                     case 'contain':
-                        image.contain(width, height);
-                        break;
+                        return self.contain(width, height);
                     case 'cover':
-                        image.cover(width, height);
-                        break;
+                        return self.cover(width, height);
                     case 'scale':
-                        image.scaleToFit(width, height);
-                        break;
+                        return self.scaleToFit(width, height);
                     default:
-                        image.resize(width, height);
-                        break;
+                        return self.resize(width, height);
                 }
             }
-            return image;
+            return self;
         }
-        opacity(image: jimp, value: Undef<number>) {
-            if (value !== undefined && value >= 0 && value <= 1) {
-                image.opacity(value);
+        rotate(self: jimp, filepath: string, values: number[]) {
+            const length = values.length;
+            if (length > 1) {
+                const first = values.shift() as number;
+                values.push(first);
             }
-            return image;
+            for (let i = 0; i < length; ++i) {
+                const value = values[i];
+                if (i > 0) {
+                    self.rotate(value - values[i - 1]);
+                }
+                else {
+                    self.rotate(value);
+                }
+                if (i < length - 1) {
+                    const index = filepath.lastIndexOf('.');
+                    self.write(filepath.substring(0, index) + '_' + value + filepath.substring(index));
+                }
+            }
+            return self;
+        }
+        opacity(self: jimp, value: Undef<number>) {
+            return value !== undefined && value >= 0 && value <= 1 ? self.opacity(value) : self;
         }
     }
     (TINIFY_API_KEY);
@@ -1435,113 +1462,82 @@ class FileManager implements serve.IFileManager {
                     const convert = mimeType.split(':');
                     convert.pop();
                     convert.forEach(value => {
-                        const removeValue = () => mimeType = mimeType.replace(value + ':', '');
                         if (!Compress.withinSizeRange(filepath, value)) {
-                            removeValue();
                             return;
                         }
                         const { width, height, mode } = Image.parseResizeMode(value);
                         const opacity = Image.parseOpacity(value);
+                        const rotation = Image.parseRotation(value);
                         if (value.startsWith('png')) {
-                            if (!mimeType.endsWith('/png')) {
-                                removeValue();
-                                ++this.delayed;
-                                jimp.read(filepath)
-                                    .then(image => {
-                                        const png = replaceExtension(filepath, 'png');
-                                        Image.opacity(Image.resize(image, width, height, mode), opacity).write(png, err => {
-                                            if (err) {
-                                                Node.writeFail(png, err);
-                                            }
-                                            else {
-                                                afterConvert(png, value);
-                                                if (Image.findCompress(file.compress)) {
-                                                    compressImage(png);
-                                                    return;
-                                                }
-                                            }
-                                            finalize(png);
-                                        });
-                                    })
-                                    .catch(err => {
-                                        finalize('');
-                                        Node.writeFail(filepath, err);
-                                    });
-                                return;
-                            }
-                        }
-                        else if (value.startsWith('jpeg')) {
-                            if (!mimeType.endsWith('/jpeg')) {
-                                removeValue();
-                                ++this.delayed;
-                                jimp.read(filepath)
-                                    .then(image => {
-                                        const jpg = replaceExtension(filepath, 'jpg');
-                                        Image.opacity(Image.resize(image, width, height, mode), opacity).quality(Compress.jpeg_quality).write(jpg, err => {
-                                            if (err) {
-                                                Node.writeFail(jpg, err);
-                                            }
-                                            else {
-                                                afterConvert(jpg, value);
-                                                if (Image.findCompress(file.compress)) {
-                                                    compressImage(jpg);
-                                                    return;
-                                                }
-                                            }
-                                            finalize(jpg);
-                                        });
-                                    })
-                                    .catch(err => {
-                                        finalize('');
-                                        Node.writeFail(filepath, err);
-                                    });
-                                return;
-                            }
-                        }
-                        else if (value.startsWith('bmp')) {
-                            if (!mimeType.endsWith('/bmp')) {
-                                removeValue();
-                                ++this.delayed;
-                                jimp.read(filepath)
-                                    .then(image => {
-                                        const bmp = replaceExtension(filepath, 'bmp');
-                                        Image.opacity(Image.resize(image, width, height, mode), opacity).write(bmp, err => {
-                                            if (err) {
-                                                Node.writeFail(bmp, err);
-                                            }
-                                            else {
-                                                afterConvert(bmp, value);
-                                            }
-                                            finalize(bmp);
-                                        });
-                                    })
-                                    .catch(err => {
-                                        finalize('');
-                                        Node.writeFail(filepath, err);
-                                    });
-                                return;
-                            }
-                        }
-                    });
-                    if (/\/(png|jpeg|bmp)$/.test(mimeType)) {
-                        const { width, height, mode } = Image.parseResizeMode(mimeType);
-                        if (width && height) {
                             ++this.delayed;
                             jimp.read(filepath)
-                                .then(image => {
-                                    const resizepath = filepath + path.extname(filepath);
-                                    Image.resize(image, width, height, mode).write(resizepath, err => {
+                                .then(img => {
+                                    const png = replaceExtension(filepath, 'png');
+                                    Image.rotate(Image.opacity(Image.resize(img, width, height, mode), opacity), png, rotation).write(png, err => {
                                         if (err) {
-                                            Node.writeFail(resizepath, err);
+                                            Node.writeFail(png, err);
                                         }
                                         else {
-                                            fs.renameSync(resizepath, filepath);
+                                            afterConvert(png, value);
+                                            if (Image.findCompress(file.compress)) {
+                                                compressImage(png);
+                                                return;
+                                            }
                                         }
-                                        finalize('');
+                                        finalize(png);
                                     });
+                                })
+                                .catch(err => {
+                                    finalize('');
+                                    Node.writeFail(filepath, err);
                                 });
                         }
-                    }
+                        else if (value.startsWith('jpeg')) {
+                            ++this.delayed;
+                            jimp.read(filepath)
+                                .then(img => {
+                                    const jpg = replaceExtension(filepath, 'jpg');
+                                    img.quality(Compress.jpeg_quality);
+                                    Image.rotate(Image.opacity(Image.resize(img, width, height, mode), opacity), jpg, rotation).write(jpg, err => {
+                                        if (err) {
+                                            Node.writeFail(jpg, err);
+                                        }
+                                        else {
+                                            afterConvert(jpg, value);
+                                            if (Image.findCompress(file.compress)) {
+                                                compressImage(jpg);
+                                                return;
+                                            }
+                                        }
+                                        finalize(jpg);
+                                    });
+                                })
+                                .catch(err => {
+                                    finalize('');
+                                    Node.writeFail(filepath, err);
+                                });
+                        }
+                        else if (value.startsWith('bmp')) {
+                            ++this.delayed;
+                            jimp.read(filepath)
+                                .then(img => {
+                                    const bmp = replaceExtension(filepath, 'bmp');
+                                    Image.rotate(Image.opacity(Image.resize(img, width, height, mode), opacity), bmp, rotation).write(bmp, err => {
+                                        if (err) {
+                                            Node.writeFail(bmp, err);
+                                        }
+                                        else {
+                                            afterConvert(bmp, value);
+                                        }
+                                        finalize(bmp);
+                                    });
+                                })
+                                .catch(err => {
+                                    finalize('');
+                                    Node.writeFail(filepath, err);
+                                });
+                        }
+                    });
                 }
                 break;
         }
