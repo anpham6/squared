@@ -45,7 +45,9 @@ interface IImage {
     findCompress(compress: Undef<CompressFormat[]>): Undef<CompressFormat>;
     isJpeg(file: ExpressAsset, filepath?: string): boolean;
     parseResizeMode(value: string): ResizeMode;
+    parseOpacity(value: string): Undef<number>;
     resize(image: jimp, width: Undef<number>, height: Undef<number>, mode?: string): jimp;
+    opacity(image: jimp, value: Undef<number>): jimp;
 }
 
 interface IChrome {

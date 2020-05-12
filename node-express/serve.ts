@@ -842,6 +842,17 @@ let Image: serve.IImage;
             }
             return { width, height, mode };
         }
+        parseOpacity(value: string) {
+            let result: Undef<number>;
+            const match = /|([\d.]+)|/.exec(value);
+            if (match) {
+                const opacity = parseFloat(match[1]);
+                if (!isNaN(opacity)) {
+                    result = Math.min(Math.max(opacity, 0), 1);
+                }
+            }
+            return result;
+        }
         resize(image: jimp, width: Undef<number>, height: Undef<number>, mode?: string) {
             if (width && height) {
                 switch (mode) {
@@ -858,6 +869,12 @@ let Image: serve.IImage;
                         image.resize(width, height);
                         break;
                 }
+            }
+            return image;
+        }
+        opacity(image: jimp, value: Undef<number>) {
+            if (value !== undefined && value >= 0 && value <= 1) {
+                image.opacity(value);
             }
             return image;
         }
@@ -1424,6 +1441,7 @@ class FileManager implements serve.IFileManager {
                             return;
                         }
                         const { width, height, mode } = Image.parseResizeMode(value);
+                        const opacity = Image.parseOpacity(value);
                         if (value.startsWith('png')) {
                             if (!mimeType.endsWith('/png')) {
                                 removeValue();
@@ -1431,7 +1449,7 @@ class FileManager implements serve.IFileManager {
                                 jimp.read(filepath)
                                     .then(image => {
                                         const png = replaceExtension(filepath, 'png');
-                                        Image.resize(image, width, height, mode).write(png, err => {
+                                        Image.opacity(Image.resize(image, width, height, mode), opacity).write(png, err => {
                                             if (err) {
                                                 Node.writeFail(png, err);
                                             }
@@ -1459,7 +1477,7 @@ class FileManager implements serve.IFileManager {
                                 jimp.read(filepath)
                                     .then(image => {
                                         const jpg = replaceExtension(filepath, 'jpg');
-                                        Image.resize(image, width, height, mode).quality(Compress.jpeg_quality).write(jpg, err => {
+                                        Image.opacity(Image.resize(image, width, height, mode), opacity).quality(Compress.jpeg_quality).write(jpg, err => {
                                             if (err) {
                                                 Node.writeFail(jpg, err);
                                             }
@@ -1487,7 +1505,7 @@ class FileManager implements serve.IFileManager {
                                 jimp.read(filepath)
                                     .then(image => {
                                         const bmp = replaceExtension(filepath, 'bmp');
-                                        Image.resize(image, width, height, mode).write(bmp, err => {
+                                        Image.opacity(Image.resize(image, width, height, mode), opacity).write(bmp, err => {
                                             if (err) {
                                                 Node.writeFail(bmp, err);
                                             }

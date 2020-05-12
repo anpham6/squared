@@ -454,7 +454,7 @@ Image conversion can be achieved using the mimeType property in a RequestAsset o
 node-express offers only read support for GIF and TIFF.
 
 ```xml
-format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?:image/{format}
+format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?|opacity|?:image/{format}
 ```
 
 @ - replace  
@@ -463,7 +463,7 @@ format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?:im
 Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
 
 ```javascript
-// NOTE: squared-apache uses TinyPNG for refitting (contain|cover|scale) and supports only PNG and JPEG. Resizing uses ImageJ (free) and supports all formats.
+// NOTE: squared-apache uses TinyPNG for resizing and refitting (contain|cover|scale) and supports only PNG and JPEG. <https://tinypng.com/developers>
 
 const options = {
     assets: [
@@ -518,7 +518,7 @@ You can also add most of the "file" commands programatically (except "exclude") 
 
 ```javascript
 document.querySelectorAll('img').forEach(element => {
-    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600)';
+    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600)|0.5|';
 });
 
 chrome.saveAsWebPage();

@@ -8,7 +8,8 @@ export default class Tiff<T extends View> extends Extension<T> {
         largerThan: 0,
         smallerThan: Infinity,
         whenSmaller: false,
-        replaceWith: true
+        replaceWith: true,
+        opacity: 1
     };
 
     public processFile(data: ChromeAsset, override = false) {

@@ -9,4 +9,5 @@ interface CompressOptions {
 interface ConvertOptions extends CompressOptions {
     mimeTypes: string[];
     replaceWith: boolean;
+    opacity: number;
 }

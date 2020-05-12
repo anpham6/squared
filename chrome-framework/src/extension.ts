@@ -15,7 +15,7 @@ export default abstract class Extension<T extends chrome.base.View> extends squa
             result += '%';
         }
         result += getSizeRange(options);
-        return name + (result !== '(0,*)' ? result : '') + ':';
+        return name + (result !== '(0,*)' ? result : '') + (options.opacity < 1 ? `|${options.opacity}|` : '') + ':';
     }
 
     public application!: chrome.base.Application<T>;
