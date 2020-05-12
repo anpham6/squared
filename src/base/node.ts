@@ -4,7 +4,7 @@ type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { BOX_BORDER, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = squared.lib.css;
-const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
+const { CSS_LAYOUT, CSS_LAYOUT_SELF, ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CHAR, CSS, FILE, XML } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, iterateArray, spliceString, splitEnclosing } = squared.lib.util;
@@ -706,6 +706,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public abstract queryMap?: T[][];
 
+    protected _preferInitial = false;
     protected _styleMap!: StringMap;
     protected _cssStyle!: StringMap;
     protected _textBounds!: Null<BoxRectDimension>;
@@ -720,7 +721,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected abstract _cached: CachedValue<T>;
     protected abstract _naturalChildren?: T[];
     protected abstract _naturalElements?: T[];
-    protected abstract _preferInitial: boolean;
 
     private _data = {};
     private _documentBody = false;
@@ -833,10 +833,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public unsetCache(...attrs: string[]) {
-        let length = attrs.length;
+        const length = attrs.length;
         if (length) {
             const cached = this._cached;
-            attrs.forEach(attr => {
+            for (const attr of attrs) {
                 switch (attr) {
                     case 'position':
                         if (!this._preferInitial) {
@@ -908,33 +908,52 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                         else if (attr.startsWith('background')) {
                             cached.visibleStyle = undefined;
-                            --length;
                         }
                         else if (TEXT_STYLE.includes(attr)) {
                             cached.lineHeight = undefined;
                             this._textStyle = undefined;
-                        }
-                        else if (!/^(grid|flex|row|column|offset|scroll)/.test(attr)) {
-                            --length;
                         }
                         break;
                 }
                 if (attr in cached) {
                     cached[attr] = undefined;
                 }
-            });
+            }
         }
         else {
             this._cached = {};
             this._textStyle = undefined;
-            length = 1;
         }
-        if (length !== 0 && !this._preferInitial) {
-            this.resetBounds();
-            this.cascade(item => {
-                item.resetBounds();
-                return false;
-            });
+        if (!this._preferInitial) {
+            let parent: Undef<T>;
+            if (attrs.some(value => CSS_LAYOUT.has(value))) {
+                parent = this.pageFlow && this.ascend({ condition: item => item.documentRoot })[0] || this;
+            }
+            else if (attrs.some(value => CSS_LAYOUT_SELF.has(value))) {
+                parent = this;
+            }
+            if (parent) {
+                parent.resetBounds();
+                const queryMap = parent.queryMap;
+                if (queryMap) {
+                    const q = queryMap.length;
+                    let i = 0, j: number;
+                    while (i < q) {
+                        const row = queryMap[i++];
+                        const r = row.length;
+                        j = 0;
+                        while (j < r) {
+                            row[j++].resetBounds();
+                        }
+                    }
+                }
+                else {
+                    this.cascade(item => {
+                        item.resetBounds();
+                        return false;
+                    });
+                }
+            }
         }
     }
 

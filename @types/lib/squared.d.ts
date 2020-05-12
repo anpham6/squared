@@ -138,6 +138,8 @@ declare module "lib" {
     }
 
     namespace dom {
+        const CSS_LAYOUT: Set<string>;
+        const CSS_LAYOUT_SELF: Set<string>;
         const ELEMENT_BLOCK: string[];
         function newBoxRect(): BoxRect;
         function newBoxRectDimension(): BoxRectDimension;

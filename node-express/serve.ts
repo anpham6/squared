@@ -1189,7 +1189,7 @@ class FileManager implements serve.IFileManager {
         }
     }
     transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void) {
-        let mimeType = file.mimeType as string;
+        const mimeType = file.mimeType as string;
         if (!mimeType || mimeType.charAt(0) === '&') {
             return;
         }

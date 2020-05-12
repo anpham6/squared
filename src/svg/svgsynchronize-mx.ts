@@ -151,12 +151,12 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Undef<SvgC
     }
     const transformOrigin = TRANSFORM.origin(path.element);
     const length = entries.length;
-    let i = 0;
+    let i = 0, j: number;
     while (i < length) {
         const [key, data] = entries[i++];
         const values: AnimateValue[] = [];
         const q = baseVal.length;
-        let j = 0;
+        j = 0;
         while (j < q) {
             const attr = baseVal[j++];
             let value = data.get(attr);

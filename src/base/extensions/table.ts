@@ -125,6 +125,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         const mapWidth: string[] = [];
         const rowCount = table.length;
         let columnCount = 0;
+        let j: number;
         for (let i = 0; i < rowCount; ++i) {
             const tr = table[i];
             rowWidth[i] = horizontal;
@@ -134,7 +135,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 const element = td.element as HTMLTableCellElement;
                 const rowSpan = element.rowSpan;
                 let colSpan = element.colSpan;
-                let j = 0;
+                j = 0;
                 while (row[j]) {
                     ++j;
                 }
@@ -381,7 +382,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         while (i < rowCount) {
             const tr = tableFilled[i++];
             const length = tr.length;
-            let j = 0;
+            j = 0;
             while (j < length) {
                 const td = tr[j];
                 const data: TableCellData = td.data(TABLE, 'cellData');
@@ -482,7 +483,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             let hideTop = false, hideRight = false, hideBottom = false, hideLeft = false;
             for (i = 0; i < rowCount; ++i) {
                 const tr = tableFilled[i];
-                for (let j = 0; j < columnCount; ++j) {
+                for (j = 0; j < columnCount; ++j) {
                     const td = tr[j];
                     if (td?.css('visibility') === 'visible') {
                         if (i === 0) {

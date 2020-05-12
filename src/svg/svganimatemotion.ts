@@ -419,9 +419,10 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                 else {
                     const keyTimesStatic = keyTimesBase.slice(0);
                     const keyPointsStatic = keyPointsBase.slice(0);
+                    let j: number;
                     for (let i = 0; i < iterationCount; ++i) {
                         if (i === 0) {
-                            let j = 0;
+                            j = 0;
                             while (j < length) {
                                 keyTimesBase[j++] /= iterationCount;
                             }
@@ -429,7 +430,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                         else {
                             const baseTime = i * (1 / iterationCount);
                             const keyTimesAppend = i % 2 === 0 ? keyTimesStatic.slice(0) : keyTimes.slice(0);
-                            let j = 0;
+                            j = 0;
                             while (j < length) {
                                 keyTimesAppend[j] = truncateFraction(baseTime + keyTimesAppend[j++] / iterationCount);
                             }

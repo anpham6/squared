@@ -951,10 +951,11 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             else {
                 rowMain = mainData.rowData;
                 const length = rowData.length;
+                let j: number;
                 for (let i = 0; i < length; ++i) {
                     const data = rowData[i];
                     const q = data.length;
-                    let j = 0;
+                    j = 0;
                     while (j < q) {
                         safeNestedArray(rowMain, j)[i] = data[j++];
                     }

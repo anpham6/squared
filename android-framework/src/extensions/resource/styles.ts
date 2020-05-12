@@ -24,13 +24,13 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                     const attrMap = new Map<string, number>();
                     let valid = true;
                     let style = '';
-                    let i = 0;
+                    let i = 0, j: number;
                     while (i < length) {
                         const item = renderChildren[i++] as T;
                         let found = false;
                         const combined = item.combine('_', 'android');
                         const q = combined.length;
-                        let j = 0;
+                        j = 0;
                         while (j < q) {
                             const value = combined[j++];
                             if (!found && value.startsWith('style=')) {

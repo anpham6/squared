@@ -29,10 +29,10 @@ function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
         const length = mainData.column.length;
         const q = mainData.row.length;
         const result: Undef<View[]>[][] = new Array(length);
-        let i = 0;
+        let i = 0, j: number;
         while (i < length) {
             const data = new Array(q);
-            let j = 0;
+            j = 0;
             while (j < q) {
                 data[j] = rowData[j++][i];
             }

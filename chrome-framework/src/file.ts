@@ -21,7 +21,7 @@ function parseFileAs(attr: string, value: Undef<string>): [string, Undef<string>
     return undefined;
 }
 
-function getFilePath(value: string): string[] {
+function getFilePath(value: string, saveTo = false): [Undef<string>, string, string] {
     value = value.replace(/\\/g, '/');
     let moveTo: Undef<string>;
     if (value.charAt(0) === '/') {
@@ -45,11 +45,14 @@ function getFilePath(value: string): string[] {
         value = value.substring(2);
     }
     const result = partitionLastIndexOf(value, '/');
-    result.unshift(moveTo as string);
-    return result;
+    if (saveTo) {
+        const extension = getFileExt(result[1]);
+        result[1] = randomUUID() + (extension ? '.' + extension : '');
+    }
+    return [moveTo, result[0], result[1]];
 }
 
-function resolveAssetSource(data: Map<HTMLElement, string>, element: HTMLVideoElement | HTMLAudioElement | HTMLSourceElement) {
+function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLSourceElement, data: Map<HTMLElement, string>) {
     const value = resolvePath(element.src);
     if (value !== '') {
         data.set(element, value);
@@ -128,6 +131,8 @@ function createBundleAsset(bundles: ChromeAsset[], element: HTMLElement, saveTo:
     return undefined;
 }
 
+const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(value, '.').toLowerCase() : '';
+
 export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
     public static parseUri(uri: string, options: UriOptions = {}): Undef<ChromeAsset> {
         const { preserveCrossOrigin, saveTo } = options;
@@ -154,7 +159,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         const match = COMPONENT.PROTOCOL.exec(value);
         if (match) {
             const host = match[2], port = match[3], path = match[4];
-            const extension = uri.includes('.') ? fromLastIndexOf(uri, '.').toLowerCase() : undefined;
+            const extension = getFileExt(uri);
             let pathname = '', filename = '';
             let rootDir: Undef<string>;
             let moveTo: Undef<string>;
@@ -170,21 +175,21 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             else {
                 prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
-                let j = 0;
+                let index = 0;
                 const length = Math.min(path.length, prefix.length);
                 for (let i = 0; i < length; ++i) {
                     if (path.charAt(i) === prefix.charAt(i)) {
-                        j = i;
+                        index = i;
                     }
                     else {
                         break;
                     }
                 }
-                rootDir = path.substring(0, j + 1);
+                rootDir = path.substring(0, index + 1);
             }
             if (filename === '') {
                 if (local && relocate) {
-                    [moveTo, pathname, filename] = getFilePath(relocate);
+                    [moveTo, pathname, filename] = getFilePath(relocate, saveTo);
                 }
                 else if (path && path !== '/') {
                     filename = fromLastIndexOf(path, '/', '\\');
@@ -578,10 +583,11 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         const result: ChromeAsset[] = [];
         document.querySelectorAll(tagName).forEach((element: HTMLVideoElement | HTMLAudioElement) => {
             const items = new Map<HTMLElement, string>();
-            resolveAssetSource(items, element);
-            element.querySelectorAll('source').forEach((source: HTMLSourceElement) => resolveAssetSource(items, source));
+            resolveAssetSource(element, items);
+            element.querySelectorAll('source').forEach((source: HTMLSourceElement) => resolveAssetSource(source, items));
             for (const [item, uri] of items.entries()) {
-                const data = File.parseUri(uri, { preserveCrossOrigin });
+                const saveAs = parseFileAs('saveTo', item.dataset.chromeFile)?.[0];
+                const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo: true });
                 if (this.validFile(data)) {
                     processExtensions.call(this, data, getExtensions(item));
                     result.push(data);

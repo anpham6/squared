@@ -91,9 +91,10 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     const animation = interval.animation;
                     if (interval.value === '' || animation && interval.start && SvgBuild.isAnimate(animation) && animation.from === '') {
                         let value: Undef<string>;
+                        let j: number;
                         for (const group of map[keyName].values()) {
                             const length = group.length;
-                            let j = 0;
+                            j = 0;
                             while (j < length) {
                                 const previous = group[j++];
                                 if (interval.animation !== previous.animation && previous.value !== '' && (previous.time === -1 || previous.fillMode === FILL_MODE.FORWARDS || previous.fillMode === FILL_MODE.FREEZE)) {

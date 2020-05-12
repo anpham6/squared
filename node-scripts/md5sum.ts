@@ -7,8 +7,13 @@ import md5 = require('md5');
 import diff = require('diff');
 import chalk = require('chalk');
 
-type PageRequest = { name: string; filepath: string; files?: string[] };
 type String = string | undefined;
+
+interface PageRequest {
+    name: string;
+    filepath: string;
+    files?: string[];
+}
 
 let host: String;
 let data: String;
