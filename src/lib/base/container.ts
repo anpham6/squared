@@ -209,7 +209,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this.find(predicate, options) !== undefined;
     }
 
-    public cascade(predicate?: (item: T) => boolean, options?: ContainerCascadeOptions<T>) {
+    public cascade(predicate?: (item: T) => void | boolean, options?: ContainerCascadeOptions<T>) {
         let error: Undef<IteratorPredicate<T, boolean>>, also: Undef<BindGeneric<T, void>>;
         if (options) {
             ({ also, error } = options);
@@ -225,7 +225,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                     invalid = true;
                     break;
                 }
-                if (!predicate || predicate(item)) {
+                if (!predicate || predicate(item) === true) {
                     also?.call(item, item);
                     result.push(item);
                 }

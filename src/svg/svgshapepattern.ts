@@ -94,7 +94,6 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                                 patternPath.clipPath = SvgBuild.drawRect(tileWidth, tileHeight, x, y, precision) + (patternPath.clipPath !== '' ? ';' + patternPath.clipPath : '');
                             }
                         }
-                        return false;
                     });
                     this.append(pattern);
                     remainingWidth -= tileWidth;

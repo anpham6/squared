@@ -21,7 +21,7 @@ declare module "lib" {
             extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[];
             find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): Undef<T>;
             some(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>): boolean;
-            cascade(predicate?: (item: T) => boolean, options?: ContainerCascadeOptions<T>): T[];
+            cascade(predicate?: (item: T) => void | boolean, options?: ContainerCascadeOptions<T>): T[];
             sort(predicate: (a: T, b: T) => number): this;
             concat(list: T[]): this;
             iter(): ListIterator<T>;

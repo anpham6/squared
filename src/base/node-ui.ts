@@ -1342,6 +1342,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._renderAs;
     }
 
+    get positionRelative() {
+        return this._cached.positionRelative ?? super.positionRelative;
+    }
+
     get blockStatic() {
         return super.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK) && this.pageFlow && !this.floating;
     }
@@ -1372,9 +1376,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._cached.textContent = value;
     }
     get textContent() {
-        return super.textContent;
+        let result = this._cached.textContent;
+        if (result === undefined) {
+            result = super.textContent;
+            this._cached.textContent = result;
+        }
+        return result;
     }
-
     get positiveAxis() {
         let result = this._cached.positiveAxis;
         if (result === undefined) {
@@ -1586,18 +1594,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get textEmpty() {
-        let result = this._cached.textEmpty;
-        if (result === undefined) {
-            if (this.styleElement && !this.imageElement && !this.svgElement) {
-                const value = this.textContent;
-                result = value === '' || !this.preserveWhiteSpace && value.trim() === '';
-            }
-            else {
-                result = false;
-            }
-            this._cached.textEmpty = result;
+        if (this.styleElement && !this.imageElement && !this.svgElement) {
+            const value = this.textContent;
+            return value === '' || !this.preserveWhiteSpace && value.trim() === '';
         }
-        return result;
+        return false;
     }
 
     get innerMostWrapped() {

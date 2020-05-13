@@ -28,7 +28,6 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
                 if (SvgBuild.asImage(item)) {
                     item.translationOffset = pt;
                 }
-                return false;
             });
         }
         this.setPaint(this.getPathAll(), options?.precision);

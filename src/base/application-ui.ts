@@ -786,7 +786,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             mapY.get(depth)?.delete(item.id);
                             setMapDepth(mapY, getMapIndex(depth), item);
                         }
-                        return false;
                     });
                 }
             };

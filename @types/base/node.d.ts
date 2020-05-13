@@ -8,15 +8,9 @@ interface InitialData<T> {
 interface CachedValue<T> {
     htmlElement?: boolean;
     svgElement?: boolean;
-    inputElement?: boolean;
     naturalElement?: boolean;
-    textElement?: boolean;
-    tableElement?: boolean;
-    flexElement?: boolean;
-    gridElement?: boolean;
     naturalChild?: boolean;
     pageFlow?: boolean;
-    inlineFlow?: boolean;
     positionStatic?: boolean;
     positionRelative?: boolean;
     top?: number;
@@ -39,13 +33,8 @@ interface CachedValue<T> {
     contentBoxHeight?: number;
     inline?: boolean;
     inlineStatic?: boolean;
-    inlineVertical?: boolean;
-    inlineDimension?: boolean;
     block?: boolean;
     blockStatic?: boolean;
-    blockDimension?: boolean;
-    blockVertical?: boolean;
-    floating?: boolean;
     baseline?: boolean;
     baselineElement?: boolean;
     verticalAlign?: string;
@@ -62,9 +51,6 @@ interface CachedValue<T> {
     lineHeight?: number;
     dir?: string;
     tagName?: string;
-    textContent?: string;
-    textEmpty?: boolean;
-    float?: string;
     actualParent?: Null<T>;
     absoluteParent?: Null<T>;
     actualWidth?: number;
@@ -89,6 +75,8 @@ interface CachedValueUI<T> extends CachedValue<T> {
     renderExclude?: boolean;
     containerName?: string;
     baselineHeight?: number;
+    textContent?: string;
+    textEmpty?: boolean;
     support?: SupportUI;
 }
 

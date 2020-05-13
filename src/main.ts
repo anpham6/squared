@@ -1,7 +1,3 @@
-import Container from './lib/base/container';
-import ArrayIterator from './lib/base/arrayiterator';
-import ListIterator from './lib/base/listiterator';
-
 import * as client from './lib/client';
 import * as color from './lib/color';
 import * as css from './lib/css';
@@ -11,6 +7,10 @@ import * as regex from './lib/regex';
 import * as session from './lib/session';
 import * as util from './lib/util';
 import * as xml from './lib/xml';
+
+import Container from './lib/base/container';
+import ArrayIterator from './lib/base/arrayiterator';
+import ListIterator from './lib/base/listiterator';
 
 type Node = squared.base.Node;
 type Main = squared.base.Application<Node>;

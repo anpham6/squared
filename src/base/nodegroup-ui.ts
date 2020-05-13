@@ -33,6 +33,42 @@ export default abstract class NodeGroupUI extends NodeUI {
         return node?.nextSiblings(options) || [];
     }
 
+    get inline() {
+        if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
+            return false;
+        }
+        let result = this._cached.inline;
+        if (result === undefined) {
+            result = this.every(node => node.inline);
+            this._cached.inline = result;
+        }
+        return result;
+    }
+
+    get inlineStatic() {
+        if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
+            return false;
+        }
+        let result = this._cached.inlineStatic;
+        if (result === undefined) {
+            result = this.every(node => node.inlineStatic);
+            this._cached.inlineStatic = result;
+        }
+        return result;
+    }
+
+    get inlineVertical() {
+        return !this.hasAlign(NODE_ALIGNMENT.BLOCK) && this.every(node => node.inlineVertical);
+    }
+
+    get inlineDimension() {
+        return !this.hasAlign(NODE_ALIGNMENT.BLOCK) && this.every(node => node.inlineDimension);
+    }
+
+    get inlineFlow() {
+        return !this.hasAlign(NODE_ALIGNMENT.BLOCK) && this.every(node => node.inlineFlow);
+    }
+
     get block() {
         let result = this._cached.block;
         if (result === undefined) {
@@ -43,6 +79,9 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get blockStatic() {
+        if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
+            return true;
+        }
         let result = this._cached.blockStatic;
         if (result === undefined) {
             const documentParent = this.actualParent || this.documentParent;
@@ -56,70 +95,15 @@ export default abstract class NodeGroupUI extends NodeUI {
                 this._cached.blockStatic = result;
             }
         }
-        return result || this.hasAlign(NODE_ALIGNMENT.BLOCK);
+        return result;
     }
 
     get blockDimension() {
-        let result = this._cached.blockDimension;
-        if (result === undefined) {
-            result = this.every(node => node.blockDimension);
-            this._cached.blockDimension = result;
-        }
-        return result;
+        return this.every(node => node.blockDimension);
     }
 
     get blockVertical() {
-        let result = this._cached.blockVertical;
-        if (result === undefined) {
-            result = this.every(node => node.blockVertical);
-            this._cached.blockVertical = result;
-        }
-        return result;
-    }
-
-    get inline() {
-        let result = this._cached.inline;
-        if (result === undefined) {
-            result = this.every(node => node.inline);
-            this._cached.inline = result;
-        }
-        return result && !this.hasAlign(NODE_ALIGNMENT.BLOCK);
-    }
-
-    get inlineStatic() {
-        let result = this._cached.inlineStatic;
-        if (result === undefined) {
-            result = this.every(node => node.inlineStatic);
-            this._cached.inlineStatic = result;
-        }
-        return result && !this.hasAlign(NODE_ALIGNMENT.BLOCK);
-    }
-
-    get inlineVertical() {
-        let result = this._cached.inlineVertical;
-        if (result === undefined) {
-            result = this.every(node => node.inlineVertical);
-            this._cached.inlineVertical = result;
-        }
-        return result && !this.hasAlign(NODE_ALIGNMENT.BLOCK);
-    }
-
-    get inlineFlow() {
-        let result = this._cached.inlineFlow;
-        if (result === undefined) {
-            result = this.every(node => node.inlineFlow);
-            this._cached.inlineFlow = result;
-        }
-        return result && !this.hasAlign(NODE_ALIGNMENT.BLOCK);
-    }
-
-    get inlineDimension() {
-        let result = this._cached.inlineDimension;
-        if (result === undefined) {
-            result = this.every(node => node.inlineDimension);
-            this._cached.inlineDimension = result;
-        }
-        return result && !this.hasAlign(NODE_ALIGNMENT.BLOCK);
+        return this.every(node => node.blockVertical);
     }
 
     get pageFlow() {
@@ -151,35 +135,21 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get float() {
-        let result = this._cached.float;
-        if (result === undefined) {
-            if (this.floating) {
-                if (this.hasAlign(NODE_ALIGNMENT.RIGHT)) {
-                    result = 'right';
-                }
-                else if (this.every(node => node.float === 'right')) {
-                    this.addAlign(NODE_ALIGNMENT.RIGHT);
-                    result = 'right';
-                }
-                else {
-                    result = 'left';
-                }
-            }
-            else {
-                result = 'none';
-            }
-            this._cached.float = result;
+        if (!this.floating) {
+            return 'none';
         }
-        return result;
+        else if (this.hasAlign(NODE_ALIGNMENT.RIGHT)) {
+            return 'right';
+        }
+        else if (this.every(node => node.float === 'right')) {
+            this.addAlign(NODE_ALIGNMENT.RIGHT);
+            return 'right';
+        }
+        return 'left';
     }
 
     get floating() {
-        let result = this._cached.floating;
-        if (result === undefined) {
-            result = this.every((node: NodeUI) => node.floating || node.hasAlign(NODE_ALIGNMENT.FLOAT));
-            this._cached.floating = result;
-        }
-        return result;
+        return this.every((node: NodeUI) => node.floating || node.hasAlign(NODE_ALIGNMENT.FLOAT));
     }
 
     get display() {
@@ -229,12 +199,15 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get rightAligned() {
+        if (this.hasAlign(NODE_ALIGNMENT.RIGHT)) {
+            return true;
+        }
         let result = this._cached.rightAligned;
         if (result === undefined) {
             result = this.every(node => node.rightAligned);
             this._cached.rightAligned = result;
         }
-        return result || this.hasAlign(NODE_ALIGNMENT.RIGHT);
+        return result;
     }
 
     get tagName() {

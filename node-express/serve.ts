@@ -890,11 +890,9 @@ let Image: serve.IImage;
             for (let i = 0; i < length; ++i) {
                 const value = values[i];
                 if (i > 0) {
-                    self.rotate(value - values[i - 1]);
+                    self.rotate(-values[i - 1]);
                 }
-                else {
-                    self.rotate(value);
-                }
+                self.rotate(value);
                 if (i < length - 1) {
                     const index = filepath.lastIndexOf('.');
                     self.write(filepath.substring(0, index) + '_' + value + filepath.substring(index));
@@ -1448,7 +1446,7 @@ class FileManager implements serve.IFileManager {
                     const compressImage = (location: string) => {
                         try {
                             tinify.fromBuffer(fs.readFileSync(location)).toBuffer((err, resultData) => {
-                                if (!err) {
+                                if (!err && resultData) {
                                     fs.writeFileSync(location, resultData);
                                 }
                                 finalize(location);
@@ -1634,7 +1632,7 @@ class FileManager implements serve.IFileManager {
         if (png && Compress.withinSizeRange(filepath, png.condition)) {
             try {
                 tinify.fromBuffer(fs.readFileSync(filepath)).toBuffer((err, resultData) => {
-                    if (!err) {
+                    if (!err && resultData) {
                         fs.writeFileSync(filepath, resultData);
                     }
                     if (Image.isJpeg(file)) {

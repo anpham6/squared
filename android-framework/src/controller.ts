@@ -12,6 +12,7 @@ interface RelativeLayoutData {
     clearMap: Map<View, string>;
     textIndent: number;
     rowLength: number;
+    boxWidth: number;
     items?: View[];
 }
 
@@ -378,7 +379,7 @@ function segmentLeftAligned<T extends View>(children: T[]) {
     return partitionArray<T>(children, item => item.float === 'left' || item.autoMargin.right === true);
 }
 
-function relativeWrapWidth(node: View, bounds: BoxRectDimension, multiline: boolean, previousRowLeft: Undef<View>, rowWidth: number, boxWidth: number, data: RelativeLayoutData) {
+function relativeWrapWidth(node: View, bounds: BoxRectDimension, multiline: boolean, previousRowLeft: Undef<View>, rowWidth: number, data: RelativeLayoutData) {
     let maxWidth = 0;
     let baseWidth = rowWidth + node.marginLeft;
     if (previousRowLeft && !data.items!.includes(previousRowLeft)) {
@@ -390,7 +391,7 @@ function relativeWrapWidth(node: View, bounds: BoxRectDimension, multiline: bool
     if (node.marginRight < 0) {
         baseWidth += node.marginRight;
     }
-    maxWidth = boxWidth;
+    maxWidth = data.boxWidth;
     if (data.textIndent !== 0) {
         if (data.textIndent < 0) {
             if (data.rowLength <= 1) {
@@ -415,7 +416,7 @@ function constraintAlignTop(parent: View, node: View) {
     return false;
 }
 
-const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, boxWidth: number, data: RelativeLayoutData) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + node.actualWidth) < boxWidth);
+const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, data: RelativeLayoutData) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + node.actualWidth) < data.boxWidth);
 const isBaselineImage = (node: View) => node.imageOrSvgElement && node.baseline;
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
@@ -2271,7 +2272,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const parent = node.actualParent as T;
                 if (parent?.blockDimension && parent.has('textIndent')) {
                     const target = children[0];
-                    if (!target.rightAligned) {
+                    if (!target.has('textIndent') && !target.centerAligned && !target.rightAligned) {
                         const value = parent.css('textIndent');
                         textIndent = parent.parseUnit(value);
                         if (textIndent !== 0) {
@@ -2288,6 +2289,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const relativeData: RelativeLayoutData = {
                 clearMap,
                 textIndent,
+                boxWidth,
                 rowLength: 0
             };
             segmentRightAligned(children).forEach((seg: T[], index) => {
@@ -2391,8 +2393,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     checkWidth = false;
                                 }
                             }
-                            if (checkWidth && lineWrap && !relativeFloatWrap(item, previous, multiline, rowWidth, boxWidth, relativeData)) {
-                                if (relativeWrapWidth(item, bounds, multiline, previousRowLeft, rowWidth, boxWidth, relativeData)) {
+                            if (checkWidth && lineWrap && !relativeFloatWrap(item, previous, multiline, rowWidth, relativeData)) {
+                                if (relativeWrapWidth(item, bounds, multiline, previousRowLeft, rowWidth, relativeData)) {
                                     textNewRow = true;
                                 }
                                 else if (item.actualParent!.tagName !== 'CODE') {
@@ -2406,7 +2408,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (textNewRow ||
                             item.nodeGroup && !item.hasAlign(NODE_ALIGNMENT.SEGMENTED) ||
                             Math.ceil(item.bounds.top) >= previous.bounds.bottom && (item.blockStatic || item.floating && previous.float === item.float) ||
-                            !item.textElement && relativeWrapWidth(item, bounds, multiline, previousRowLeft, rowWidth, boxWidth, relativeData) && !relativeFloatWrap(item, previous, multiline, rowWidth, boxWidth, relativeData) ||
+                            !item.textElement && relativeWrapWidth(item, bounds, multiline, previousRowLeft, rowWidth, relativeData) && !relativeFloatWrap(item, previous, multiline, rowWidth, relativeData) ||
                             !item.floating && (previous.blockStatic || item.previousSiblings().some(sibling => sibling.excluded && sibling.blockStatic) || siblings?.some(element => causesLineBreak(element))) ||
                             previous.autoMargin.horizontal ||
                             clearMap.has(item) ||

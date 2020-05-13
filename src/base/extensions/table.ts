@@ -76,7 +76,6 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                             item.unsetCache('visibleStyle');
                             break;
                     }
-                    return false;
                 });
                 table = table.concat(parent.children as T[]);
                 hideCell(parent);
