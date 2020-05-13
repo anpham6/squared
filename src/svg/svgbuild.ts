@@ -807,7 +807,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static setName(element?: SVGElement) {
         if (element) {
-            let value = '';
+            let value: Undef<string>;
             let tagName: Undef<string>;
             if (isString(element.id)) {
                 const id = convertWord(element.id, true);
@@ -820,7 +820,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 tagName = element.tagName;
             }
             let index = NAME_GRAPHICS.get(tagName) || 0;
-            if (value !== '') {
+            if (value) {
                 NAME_GRAPHICS.set(value, index);
                 return value;
             }

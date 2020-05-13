@@ -21,6 +21,7 @@ declare namespace base {
     }
 
     class Controller<T extends View> extends squared.base.ControllerUI<T> {
+        public static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
         public static setConstraintDimension<T extends View>(node: T, percentWidth?: number): number;
         public static setFlexDimension<T extends View>(node: T, horizontal: boolean): void;
         readonly application: Application<T>;

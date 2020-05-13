@@ -55,7 +55,9 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             const fixedPosition = fixed && item.autoPosition;
             if (item.hasPX('left') || fixedPosition) {
                 if (documentBody && (item.css('width') === '100%' || item.css('minWidth') === '100%')) {
-                    children.add(item);
+                    if (paddingLeft > 0 || paddingRight > 0) {
+                        children.add(item);
+                    }
                     right = true;
                 }
                 else {
@@ -94,7 +96,9 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             }
             if (item.hasPX('top') || fixedPosition) {
                 if (documentBody && (item.css('height') === '100%' || item.css('minHeight') === '100%')) {
-                    children.add(item);
+                    if (paddingTop > 0 || paddingBottom > 0) {
+                        children.add(item);
+                    }
                     bottom = true;
                 }
                 else {
@@ -132,7 +136,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                 children.add(item);
             }
         });
-        if (children.size) {
+        if (children.size || right || bottom) {
             node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData', { children: Array.from(children), right, bottom });
             return true;
         }
@@ -142,18 +146,22 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     public processNode(node: T, parent: T) {
         const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
         if (mainData) {
-            const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, {
-                children: mainData.children as T[],
-                resetMargin: !node.originalRoot && !node.pageFlow || parent.layoutGrid,
-                cascade: true,
-                inheritDataset: true
-            });
+            const children = mainData.children as T[];
+            let container: Undef<T>;
+            if (children.length) {
+                container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, {
+                    children,
+                    resetMargin: !node.originalRoot && !node.pageFlow || parent.layoutGrid,
+                    cascade: true,
+                    inheritDataset: true
+                });
+            }
             if (node.documentBody) {
                 if (mainData.right) {
-                    container.setLayoutWidth('match_parent');
+                    (container || node).setLayoutWidth('match_parent');
                 }
                 if (mainData.bottom) {
-                    container.setLayoutHeight('match_parent');
+                    (container || node).setLayoutHeight('match_parent');
                 }
             }
             else if (!node.pageFlow) {
@@ -164,20 +172,22 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
                     node.setLayoutHeight('match_parent');
                 }
             }
-            return {
-                parent: container,
-                renderAs: container,
-                outputAs: this.application.renderNode(
-                    new LayoutUI(
-                        parent,
-                        container,
-                        CONTAINER_NODE.CONSTRAINT,
-                        NODE_ALIGNMENT.ABSOLUTE,
-                        container.children as T[]
-                    )
-                ),
-                subscribe: true
-            };
+            if (container) {
+                return {
+                    parent: container,
+                    renderAs: container,
+                    outputAs: this.application.renderNode(
+                        new LayoutUI(
+                            parent,
+                            container,
+                            CONTAINER_NODE.CONSTRAINT,
+                            NODE_ALIGNMENT.ABSOLUTE,
+                            container.children as T[]
+                        )
+                    ),
+                    subscribe: true
+                };
+            }
         }
         return undefined;
     }

@@ -4,7 +4,7 @@ import { BUILD_ANDROID } from './enumeration';
 type View = android.base.View;
 
 const { truncate } = squared.lib.math;
-const { capitalize, isPlainObject } = squared.lib.util;
+const { capitalize, convertFloat, isPlainObject } = squared.lib.util;
 
 const { BOX_STANDARD } = squared.base.lib.enumeration;
 
@@ -22,7 +22,7 @@ function calculateBias(start: number, end: number, accuracy = 3) {
 
 export function convertLength(value: string | number, font = false, precision = 3) {
     if (typeof value === 'string') {
-        value = parseFloat(value) || 0;
+        value = convertFloat(value);
     }
     return !font ? Math.round(value) + 'dp' : truncate(value, precision) + 'sp';
 }

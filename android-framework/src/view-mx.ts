@@ -252,12 +252,12 @@ function setConstraintPercent(this: T, value: number, horizontal: boolean, perce
         if (horizontal) {
             const width = parent.box.width;
             boxPercent = !parent.gridElement ? this.contentBoxWidth / width : 0;
-            marginPercent = (Math.max(this.marginLeft, 0) + this.marginRight) / width;
+            marginPercent = (Math.max(this.getBox(BOX_STANDARD.MARGIN_LEFT)[0] === 0 ? this.marginLeft : 0, 0) + (this.getBox(BOX_STANDARD.MARGIN_RIGHT)[0] === 0 ? this.marginRight : 0)) / width;
         }
         else {
             const height = parent.box.height;
             boxPercent = !parent.gridElement ? this.contentBoxHeight / height : 0;
-            marginPercent = (Math.max(this.marginTop, 0) + this.marginBottom) / height;
+            marginPercent = (Math.max(this.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? this.marginTop : 0, 0) + (this.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0 ? this.marginBottom : 0)) / height;
         }
         if (percent === 1 && value + marginPercent >= percent) {
             value = percent - marginPercent;

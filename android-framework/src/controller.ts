@@ -220,71 +220,6 @@ function setReadOnly(node: View) {
     }
 }
 
-function setLeftTopAxis(node: View, parent: View, horizontal: boolean) {
-    const [orientation, dimension, posA, posB, marginA, marginB, paddingA, paddingB] = horizontal ? ['horizontal', 'width', 'left', 'right', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.PADDING_LEFT, BOX_STANDARD.PADDING_RIGHT]
-                                                                                                  : ['vertical', 'height', 'top', 'bottom', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_BOTTOM];
-    const autoMargin = node.autoMargin;
-    const hasDimension = node.hasPX(dimension);
-    if (hasDimension && autoMargin[orientation]) {
-        if (node.hasPX(posA) && autoMargin[posB]) {
-            node.anchor(posA, 'parent');
-            node.modifyBox(marginA, node[posA]);
-        }
-        else if (node.hasPX(posB) && autoMargin[posA]) {
-            node.anchor(posB, 'parent');
-            node.modifyBox(marginB, node[posB]);
-        }
-        else {
-            node.anchorParent(orientation, 0.5);
-            node.modifyBox(marginA, node[posA]);
-            node.modifyBox(marginB, node[posB]);
-        }
-    }
-    else {
-        const blockStatic = node.css(dimension) === '100%' || node.css(horizontal ? 'minWidth' : 'minHeight') === '100%';
-        let expand = 0;
-        if (node.hasPX(posA)) {
-            node.anchor(posA, 'parent');
-            if (!node.hasPX(posB) && blockStatic) {
-                node.anchor(posB, 'parent');
-                ++expand;
-            }
-            node.modifyBox(marginA, adjustAbsolutePaddingOffset(parent, paddingA, node[posA]));
-            ++expand;
-        }
-        if (node.hasPX(posB)) {
-            if (blockStatic || !hasDimension || !node.hasPX(posA)) {
-                node.anchor(posB, 'parent');
-                node.modifyBox(marginB, adjustAbsolutePaddingOffset(parent, paddingB, node[posB]));
-            }
-            ++expand;
-        }
-        if (expand === 0) {
-            if (horizontal) {
-                if (node.centerAligned) {
-                    node.anchorParent('horizontal', 0.5);
-                }
-                else if (node.rightAligned) {
-                    if (node.blockStatic) {
-                        node.anchorParent('horizontal', 1);
-                    }
-                    else {
-                        node.anchor('right', 'parent');
-                    }
-                }
-            }
-        }
-        else if (expand === 2 && !hasDimension && !(autoMargin[orientation] && !autoMargin[posA] && !autoMargin[posB])) {
-            if (horizontal) {
-                node.setLayoutWidth('0px');
-            }
-            else {
-                node.setLayoutHeight('0px');
-            }
-        }
-    }
-}
-
 function setImageDimension(node: View, width: number, height: number, image: Undef<ImageAsset>) {
     node.css('width', formatPX(width), true);
     if (image && image.width > 0 && image.height > 0) {
@@ -791,6 +726,101 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly = fa
 }
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
+    public static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor = true) {
+        const [orientation, dimension, posA, posB, marginA, marginB, paddingA, paddingB] = horizontal ? ['horizontal', 'width', 'left', 'right', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.PADDING_LEFT, BOX_STANDARD.PADDING_RIGHT]
+                                                                                                      : ['vertical', 'height', 'top', 'bottom', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_BOTTOM];
+        const autoMargin = node.autoMargin;
+        const hasDimension = node.hasPX(dimension);
+        const result: Partial<BoxRect> = {};
+        if (hasDimension && autoMargin[orientation]) {
+            if (node.hasPX(posA) && autoMargin[posB]) {
+                if (modifyAnchor) {
+                    node.anchor(posA, 'parent');
+                    node.modifyBox(marginA, node[posA]);
+                }
+                else {
+                    result[posA] = node[posA];
+                }
+            }
+            else if (node.hasPX(posB) && autoMargin[posA]) {
+                if (modifyAnchor) {
+                    node.anchor(posB, 'parent');
+                    node.modifyBox(marginB, node[posB]);
+                }
+                else {
+                    result[posB] = node[posB];
+                }
+            }
+            else {
+                if (modifyAnchor) {
+                    node.anchorParent(orientation, 0.5);
+                    node.modifyBox(marginA, node[posA]);
+                    node.modifyBox(marginB, node[posB]);
+                }
+                else {
+                    result[posA] = node[posA];
+                    result[posB] = node[posB];
+                }
+            }
+        }
+        else {
+            const blockStatic = node.css(dimension) === '100%' || node.css(horizontal ? 'minWidth' : 'minHeight') === '100%';
+            let expand = 0;
+            if (node.hasPX(posA)) {
+                const value = adjustAbsolutePaddingOffset(parent, paddingA, node[posA]);
+                if (modifyAnchor) {
+                    node.anchor(posA, 'parent');
+                    if (blockStatic && !node.hasPX(posB)) {
+                        node.anchor(posB, 'parent');
+                        ++expand;
+                    }
+                    node.modifyBox(marginA, value);
+                    ++expand;
+                }
+                else {
+                    result[posA] = value;
+                }
+            }
+            if (node.hasPX(posB)) {
+                if (blockStatic || !hasDimension || !node.hasPX(posA)) {
+                    const value = adjustAbsolutePaddingOffset(parent, paddingB, node[posB]);
+                    if (modifyAnchor) {
+                        node.anchor(posB, 'parent');
+                        node.modifyBox(marginB, value);
+                    }
+                    else {
+                        result[posB] = value;
+                    }
+                }
+                ++expand;
+            }
+            if (expand === 0) {
+                if (horizontal) {
+                    if (node.centerAligned) {
+                        node.anchorParent('horizontal', 0.5);
+                    }
+                    else if (node.rightAligned) {
+                        if (node.blockStatic) {
+                            node.anchorParent('horizontal', 1);
+                        }
+                        else {
+                            node.anchor('right', 'parent');
+                        }
+                    }
+                }
+            }
+            else if (expand === 2 && !hasDimension && !(autoMargin[orientation] && !autoMargin[posA] && !autoMargin[posB])) {
+                if (horizontal) {
+                    node.setLayoutWidth('0px');
+                }
+                else {
+                    node.setLayoutHeight('0px');
+                }
+            }
+        }
+        return result;
+    }
+
     public readonly localSettings: AndroidControllerSettingsUI = {
         layout: {
             pathName: 'res/layout',
@@ -1421,10 +1451,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 else {
                                     if (item.leftTopAxis) {
                                         if (!constraint.horizontal) {
-                                            setLeftTopAxis(item, node, true);
+                                            Controller.anchorPosition(item, node, true);
                                         }
                                         if (!constraint.vertical) {
-                                            setLeftTopAxis(item, node, false);
+                                            Controller.anchorPosition(item, node, false);
                                         }
                                     }
                                     if (!constraint.horizontal) {
@@ -3016,7 +3046,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     rowEnd.anchor(anchorEnd, 'parent');
                 }
-                else {
+                else if (!rowStart.constraint.horizontal) {
                     setHorizontalAlignment(rowStart);
                 }
                 let percentWidth = View.availablePercent(partition, 'width', node.box.width);
@@ -3059,7 +3089,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 if (found) {
                                     chain.anchor(chainStart, found.documentId);
                                 }
-                                else {
+                                else if (!chain.constraint.horizontal) {
                                     chain.anchor(anchorStart, 'parent');
                                 }
                             }

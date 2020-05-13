@@ -29,7 +29,7 @@ interface RepeatItem {
 
 const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
 const { CHAR, CSS } = squared.lib.regex;
-const { isNumber, safeNestedArray, trimString, withinRange } = squared.lib.util;
+const { convertFloat, isNumber, safeNestedArray, trimString, withinRange } = squared.lib.util;
 
 const CSS_GRID = EXT_NAME.CSS_GRID;
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
@@ -1056,7 +1056,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     else {
-                        rowMax[i] = parseFloat(unitHeight) || 0;
+                        rowMax[i] = convertFloat(unitHeight);
                         if (horizontal) {
                             mainData.emptyRows[i] = [Infinity];
                         }

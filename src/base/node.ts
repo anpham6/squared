@@ -2294,7 +2294,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get blockStatic() {
         let result = this._cached.blockStatic;
         if (result === undefined) {
-            result = this.pageFlow && (this.block && !this.floating || this.lineBreak || (getInitialValue.call(this, 'width') === '100%' || getInitialValue.call(this, 'minWidth') === '100%') && this.display !== 'inline' && !this.display.startsWith('table-') && !this.hasPX('maxWidth'));
+            result = false;
+            if (this.pageFlow) {
+                if (this.block && !this.floating || this.lineBreak) {
+                    result = true;
+                }
+                else if (this.display !== 'inline' && !this.display.startsWith('table-') && !this.hasPX('maxWidth')) {
+                    const value = getInitialValue.call(this, 'width') || getInitialValue.call(this, 'minWidth');
+                    if (isPercent(value)) {
+                        const marginLeft = getInitialValue.call(this, 'marginLeft');
+                        const marginRight = getInitialValue.call(this, 'marginRight');
+                        result = parseFloat(value) + (isPercent(marginLeft) ? parseFloat(marginLeft) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
+                    }
+                }
+            }
             this._cached.blockStatic = result;
         }
         return result;
