@@ -135,7 +135,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public readonly fileHandler!: FileUI<T>;
     public abstract userSettings: UserSettingsUI;
 
-    private readonly _layouts: FileAsset[] = [];
+    private readonly _layouts: LayoutAsset[] = [];
     private readonly _controllerSettings!: ControllerSettingsUI;
     private readonly _excluded!: Set<string>;
 
@@ -305,7 +305,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
         if (isString(content)) {
-            const layout: FileAsset = {
+            const layout: LayoutAsset = {
                 pathname: pathname ? trimString(pathname.replace(/\\/g, '/'), '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
                 filename,
                 content,

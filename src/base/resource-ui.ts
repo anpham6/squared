@@ -666,8 +666,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         return undefined;
     }
 
-    public fileHandler?: squared.base.FileUI<T>;
-
     public abstract get userSettings(): UserSettingsUI;
 
     public finalize(layouts: FileAsset[]) {}

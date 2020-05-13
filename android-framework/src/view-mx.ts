@@ -2404,12 +2404,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     positionTranslation: this.layoutConstraint,
                     positionRelative: this.layoutRelative,
                     maxDimension: this.textElement || this.imageOrSvgElement
-                } as AndroidSupport;
+                } as AndroidSupportUI;
                 if (this.containerType !== 0) {
                     this._cached.support = result;
                 }
             }
-            return result as AndroidSupport;
+            return result as AndroidSupportUI;
         }
 
         set renderExclude(value) {

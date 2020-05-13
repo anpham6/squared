@@ -127,23 +127,23 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract get viewModel(): Undef<AppVieModel>;
 
     public copyToDisk(directory: string, options?: FileActionOptions) {
-        return this.fileHandler?.copyToDisk(directory, options) || frameworkNotInstalled();
+        return this.resourceHandler.fileHandler?.copyToDisk(directory, options) || frameworkNotInstalled();
     }
 
     public appendToArchive(pathname: string, options?: FileActionOptions) {
-        return this.fileHandler?.appendToArchive(pathname, options) || frameworkNotInstalled();
+        return this.resourceHandler.fileHandler?.appendToArchive(pathname, options) || frameworkNotInstalled();
     }
 
     public saveToArchive(filename?: string, options?: FileActionOptions) {
-        return this.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, options) || frameworkNotInstalled();
+        return this.resourceHandler.fileHandler?.saveToArchive(filename || this.userSettings.outputArchiveName, options) || frameworkNotInstalled();
     }
 
     public createFrom(format: string, options: FileActionOptions) {
-        return this.fileHandler?.createFrom(format, options) || frameworkNotInstalled();
+        return this.resourceHandler.fileHandler?.createFrom(format, options) || frameworkNotInstalled();
     }
 
     public appendFromArchive(filename: string, options: FileActionOptions) {
-        return this.fileHandler?.appendFromArchive(filename, options) || frameworkNotInstalled();
+        return this.resourceHandler.fileHandler?.appendFromArchive(filename, options) || frameworkNotInstalled();
     }
 
     public reset() {
@@ -155,7 +155,6 @@ export default abstract class Application<T extends Node> implements squared.bas
         this.session.active.length = 0;
         this.controllerHandler.reset();
         this.resourceHandler.reset();
-        this.fileHandler?.reset();
         this.extensions.forEach(ext => ext.subscribers.clear());
         this.closed = false;
     }
@@ -697,10 +696,6 @@ export default abstract class Application<T extends Node> implements squared.bas
 
     get extensionManager() {
         return this._extensionManager;
-    }
-
-    get fileHandler() {
-        return this._resourceHandler.fileHandler;
     }
 
     get extensionsCascade(): Extension<T>[] {

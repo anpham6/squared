@@ -44,10 +44,11 @@ function deleteProperties(data: {}) {
 const checkWritable = (app: Undef<Main>): app is Main => app?.initializing === false && app.length > 0;
 
 export function setHostname(value: string) {
-    if (main?.fileHandler) {
+    const fileHandler = main?.resourceHandler.fileHandler;
+    if (fileHandler) {
         const match = regex.COMPONENT.PROTOCOL.exec(value);
         if (match && match[1].startsWith('http')) {
-            main.fileHandler.hostname = match[1] + match[2] + (match[3] || '');
+            fileHandler.hostname = match[1] + match[2] + (match[3] || '');
         }
     }
 }

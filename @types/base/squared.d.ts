@@ -112,7 +112,6 @@ declare module "base" {
         get viewModel(): Undef<AppViewModel>;
         get controllerHandler(): Controller<T>;
         get resourceHandler(): Resource<T>;
-        get fileHandler(): Undef<File<T>>;
         get extensionManager(): ExtensionManager<T>;
         get extensionsCascade(): Extension<T>[];
         get nextId(): number;
@@ -141,7 +140,6 @@ declare module "base" {
         saveDocument(filename: string, content: string, pathname?: string, index?: number): void;
         get controllerHandler(): ControllerUI<T>;
         get resourceHandler(): ResourceUI<T>;
-        get fileHandler(): Undef<FileUI<T>>;
         get layouts(): FileAsset[];
         get clearMap(): Map<T, string>;
         get extensionsTraverse(): ExtensionUI<T>[];
@@ -208,7 +206,6 @@ declare module "base" {
         public static KEY_NAME: string;
         public static ASSETS: ResourceAssetMap;
         public static canCompressImage(filename: string): boolean;
-        fileHandler?: File<T>;
         readonly application: Application<T>;
         readonly cache: NodeList<T>;
         reset(): void;
@@ -222,7 +219,8 @@ declare module "base" {
         getAudio(uri: string): Undef<Asset>;
         addRawData(uri: string, mimeType: string, encoding: string, content: string): string;
         getRawData(uri: string): Undef<RawAsset>;
-        setFileHandler(instance: File<T>): void;
+        set fileHandler(value: Undef<File<T>>);
+        get fileHandler(): Undef<File<T>>;
         get controllerSettings(): ControllerSettings;
         get userSettings(): UserSettings;
         get mimeTypeMap(): ObjectMap<MIMEOrAll>;

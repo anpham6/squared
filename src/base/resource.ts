@@ -17,7 +17,8 @@ export default abstract class Resource<T extends squared.base.Node> implements s
 
     public static canCompressImage = (filename: string) => /\.(png|jpg|jpeg)$/i.test(filename);
 
-    public fileHandler?: squared.base.File<T>;
+    private _fileHandler: Undef<squared.base.File<T>>;
+
     public readonly abstract application: squared.base.Application<T>;
     public readonly abstract cache: squared.base.NodeList<T>;
     public readonly abstract fileSeparator: string;
@@ -29,6 +30,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         for (const name in ASSETS) {
             ASSETS[name].clear();
         }
+        this._fileHandler?.reset();
     }
 
     public addImage(element: Undef<HTMLImageElement>) {
@@ -130,9 +132,14 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         return Resource.ASSETS.rawData.get(uri);
     }
 
-    public setFileHandler(instance: squared.base.File<T>) {
-        instance.resource = this;
-        this.fileHandler = instance;
+    set fileHandler(value: Undef<squared.base.File<T>>) {
+        if (value) {
+            value.resource = this;
+        }
+        this._fileHandler = value;
+    }
+    get fileHandler() {
+        return this._fileHandler;
     }
 
     get controllerSettings() {

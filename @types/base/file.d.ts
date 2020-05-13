@@ -1,6 +1,5 @@
 interface Asset {
     uri?: string;
-    index?: number;
     mimeType?: string;
 }
 
@@ -12,12 +11,16 @@ interface FileAsset extends Asset {
     exclusions?: Exclusions;
 }
 
-interface ImageAsset extends Omit<Asset, "index"> {
+interface LayoutAsset extends FileAsset {
+    index?: number;
+}
+
+interface ImageAsset extends Asset {
     width: number;
     height: number;
 }
 
-interface RequestAsset extends Omit<FileAsset, "index"> {
+interface RequestAsset extends FileAsset {
     base64?: string;
     dataMap?: StandardMap;
 }

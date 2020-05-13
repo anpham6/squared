@@ -5,7 +5,7 @@ interface AndroidLocalSettingsUI extends LocalSettingsUI {
 
 interface AndroidCachedValueUI<T> extends CachedValueUI<T> {}
 
-interface AndroidSupport extends SupportUI {
+interface AndroidSupportUI extends SupportUI {
     maxDimension: boolean;
 }
 

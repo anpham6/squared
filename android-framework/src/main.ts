@@ -312,7 +312,7 @@ const appBase: squared.base.AppFramework<View> = {
         const EA = constant.EXT_ANDROID;
         application = new Application<View>(framework, View, Controller, Resource);
         file = new File();
-        application.resourceHandler.setFileHandler(file);
+        application.resourceHandler.fileHandler = file;
         Object.assign(application.builtInExtensions, {
             [EN.TABLE]: new Table(EN.TABLE, framework, undefined, ['TABLE']),
             [EN.LIST]: new List(EN.LIST, framework, undefined, ['DIV', 'UL', 'OL', 'DL']),

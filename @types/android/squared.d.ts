@@ -117,7 +117,7 @@ declare namespace base {
         get flexibleWidth(): boolean;
         get flexibleHeight(): boolean;
         get target(): Null<HTMLElement>;
-        get support(): AndroidSupport;
+        get support(): AndroidSupportUI;
     }
 
     class ViewGroup extends View {}
