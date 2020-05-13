@@ -58,15 +58,39 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get inlineVertical() {
-        return !this.hasAlign(NODE_ALIGNMENT.BLOCK) && this.every(node => node.inlineVertical);
-    }
-
-    get inlineDimension() {
-        return !this.hasAlign(NODE_ALIGNMENT.BLOCK) && this.every(node => node.inlineDimension);
+        if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
+            return false;
+        }
+        let result = this._cached.inlineVertical;
+        if (result === undefined) {
+            result = this.every((node: NodeUI) => node.inlineVertical);
+            this._cached.inlineVertical = result;
+        }
+        return result;
     }
 
     get inlineFlow() {
-        return !this.hasAlign(NODE_ALIGNMENT.BLOCK) && this.every(node => node.inlineFlow);
+        if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
+            return false;
+        }
+        let result = this._cached.inlineFlow;
+        if (result === undefined) {
+            result = this.every((node: NodeUI) => node.inlineFlow);
+            this._cached.inlineFlow = result;
+        }
+        return result;
+    }
+
+    get inlineDimension() {
+        if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
+            return false;
+        }
+        let result = this._cached.inlineDimension;
+        if (result === undefined) {
+            result = this.every((node: NodeUI) => node.inlineDimension);
+            this._cached.inlineDimension = result;
+        }
+        return result;
     }
 
     get block() {
@@ -99,11 +123,21 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get blockDimension() {
-        return this.every(node => node.blockDimension);
+        let result = this._cached.blockDimension;
+        if (result === undefined) {
+            result = this.every((node: NodeUI) => node.blockDimension);
+            this._cached.blockDimension = result;
+        }
+        return result;
     }
 
     get blockVertical() {
-        return this.every(node => node.blockVertical);
+        let result = this._cached.blockVertical;
+        if (result === undefined) {
+            result = this.every((node: NodeUI) => node.blockVertical);
+            this._cached.blockVertical = result;
+        }
+        return result;
     }
 
     get pageFlow() {

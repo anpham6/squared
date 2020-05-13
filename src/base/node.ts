@@ -12,6 +12,7 @@ const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasB
 const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
 const REGEX_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
+const REGEX_INLINEVERTICAL = /^(inline|table-cell)/;
 const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
@@ -208,7 +209,7 @@ function convertBox(this: T, attr: string, margin: boolean) {
 }
 
 function canTextAlign(this: T) {
-    return this.naturalChild && (this.inlineVertical || this.length === 0) && !this.floating && this.autoMargin.horizontal !== true;
+    return this.naturalChild && (REGEX_INLINEVERTICAL.test(this.display) || this.length === 0) && !this.floating && this.autoMargin.horizontal !== true;
 }
 
 function getInitialValue(this: T, attr: string, modified?: boolean, computed?: boolean) {
@@ -859,7 +860,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'minHeight':
                         cached.height = undefined;
                         if (!this._preferInitial) {
-                            this.each(item => item.unsetCache('height', 'actualHeight', 'overflow', 'bottomAligned'));
+                            this.unsetCache('blockVertical');
+                            this.each(item => item.unsetCache('height', 'actualHeight', 'blockVertical', 'overflow', 'bottomAligned'));
                         }
                     case 'maxHeight':
                         cached.overflow = undefined;
@@ -2236,18 +2238,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    get inlineVertical() {
-        if (this.naturalElement && !this.floating) {
-            const value = this.display;
-            return value.startsWith('inline') || value === 'table-cell';
-        }
-        return false;
-    }
-
-    get inlineDimension() {
-        return this.naturalElement && (this.display.startsWith('inline-') || this.floating);
-    }
-
     set inlineText(value) {
         switch (this.tagName) {
             case 'IMG':
@@ -2304,24 +2294,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get blockStatic() {
         let result = this._cached.blockStatic;
         if (result === undefined) {
-            result = this.pageFlow && (this.block && !this.floating || this.lineBreak || this.blockDimension && (getInitialValue.call(this, 'width') === '100%' || getInitialValue.call(this, 'minWidth') === '100%') && !this.hasPX('maxWidth'));
+            result = this.pageFlow && (this.block && !this.floating || this.lineBreak || (getInitialValue.call(this, 'width') === '100%' || getInitialValue.call(this, 'minWidth') === '100%') && this.display !== 'inline' && !this.display.startsWith('table-') && !this.hasPX('maxWidth'));
             this._cached.blockStatic = result;
         }
         return result;
-    }
-
-    get blockDimension() {
-        if (this.block || this.floating || this.imageElement || this.svgElement) {
-            return true;
-        }
-        else {
-            const value = this.display;
-            return value.startsWith('inline-') || value === 'table';
-        }
-    }
-
-    get blockVertical() {
-        return this.blockDimension && this.hasHeight;
     }
 
     get pageFlow() {
@@ -2331,10 +2307,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.pageFlow = result;
         }
         return result;
-    }
-
-    get inlineFlow() {
-        return this.inline || this.inlineDimension || this.inlineVertical || this.imageElement;
     }
 
     get centerAligned() {
@@ -2526,7 +2498,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.plainText) {
                 result = Math.floor(getRangeClientRect(this._element as Element).width) > (this.actualParent as T).box.width;
             }
-            else if (this.styleText && (this.inlineFlow || this.naturalElements.length === 0)) {
+            else if (this.styleText && (this.inline || REGEX_INLINEVERTICAL.test(this.display) || this.floating || this.naturalElements.length === 0)) {
                 result = this.textBounds?.numberOfLines as number > 1;
             }
             else {

@@ -2268,24 +2268,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
             }
-            else {
-                const parent = node.actualParent as T;
-                if (parent?.blockDimension && parent.has('textIndent')) {
-                    const target = children[0];
-                    if (!target.has('textIndent') && !target.centerAligned && !target.rightAligned) {
-                        const value = parent.css('textIndent');
-                        textIndent = parent.parseUnit(value);
-                        if (textIndent !== 0) {
-                            if (textIndent < 0) {
-                                parent.setCacheValue('paddingLeft', Math.max(0, parent.paddingLeft + textIndent));
-                            }
-                            target.setCacheValue('blockDimension', true);
-                            target.css('textIndent', value);
-                            parent.css('textIndent', '0px');
-                        }
-                    }
-                }
-            }
             const relativeData: RelativeLayoutData = {
                 clearMap,
                 textIndent,

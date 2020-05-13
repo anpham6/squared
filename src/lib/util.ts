@@ -46,6 +46,8 @@ export function parseMimeType(value: string) {
         case 'bin':
             return 'application/octet-stream';
         case 'bmp':
+        case 'bmpf':
+        case 'bmpp':
             return 'image/bmp';
         case 'bz':
             return 'application/x-bzip';
@@ -214,6 +216,7 @@ export function fromMimeType(value: string) {
         case 'application/octet-stream':
             return 'bin';
         case 'image/bmp':
+        case 'image/x-ms-bmp':
             return 'bmp';
         case 'application/x-bzip':
             return 'bz';

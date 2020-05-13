@@ -73,6 +73,11 @@ interface CachedValueUI<T> extends CachedValue<T> {
     autoPosition?: boolean;
     positiveAxis?: boolean;
     renderExclude?: boolean;
+    inlineFlow?: boolean;
+    inlineVertical?: boolean;
+    inlineDimension?: boolean;
+    blockDimension?: boolean;
+    blockVertical?: boolean;
     containerName?: string;
     baselineHeight?: number;
     textContent?: string;

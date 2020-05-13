@@ -1346,8 +1346,65 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return this._cached.positionRelative ?? super.positionRelative;
     }
 
+    get inlineVertical() {
+        let result = this._cached.inlineVertical;
+        if (result === undefined) {
+            if (this.naturalElement && !this.floating) {
+                const value = this.display;
+                result = value.startsWith('inline') || value === 'table-cell';
+            }
+            else {
+                result = false;
+            }
+            this._cached.inlineVertical = result;
+        }
+        return result;
+    }
+
+    get inlineDimension() {
+        let result = this._cached.inlineDimension;
+        if (result === undefined) {
+            result = this.naturalElement && (this.display.startsWith('inline-') || this.floating);
+            this._cached.inlineDimension = result;
+        }
+        return result;
+    }
+
+    get inlineFlow() {
+        let result = this._cached.inlineFlow;
+        if (result === undefined) {
+            result = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement;
+            this._cached.inlineFlow = result;
+        }
+        return result;
+    }
+
     get blockStatic() {
         return super.blockStatic || this.hasAlign(NODE_ALIGNMENT.BLOCK) && this.pageFlow && !this.floating;
+    }
+
+    get blockDimension() {
+        let result = this._cached.blockDimension;
+        if (result === undefined) {
+            if (this.block || this.floating || this.imageElement || this.svgElement) {
+                result = true;
+            }
+            else {
+                const value = this.display;
+                result = value.startsWith('inline-') || value === 'table';
+            }
+            this._cached.blockDimension = result;
+        }
+        return result;
+    }
+
+    get blockVertical() {
+        let result = this._cached.blockVertical;
+        if (result === undefined) {
+            result = this.blockDimension && this.hasHeight;
+            this._cached.blockVertical = result;
+        }
+        return result;
     }
 
     get rightAligned() {
