@@ -50,7 +50,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     public remove(...items: T[]) {
         const result: T[] = [];
         const children = this._children;
-        items.forEach(item => {
+        for (const item of items) {
             const length = children.length;
             for (let i = 0; i < length; ++i) {
                 if (children[i] === item) {
@@ -59,7 +59,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
                     break;
                 }
             }
-        });
+        }
         return result;
     }
 
@@ -101,7 +101,9 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public join(...other: Container<T>[]) {
         let children = this._children;
-        other.forEach(item => children = children.concat(item.children));
+        for (const item of other) {
+            children = children.concat(item.children);
+        }
         this._children = children;
         return this;
     }

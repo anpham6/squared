@@ -293,7 +293,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
         if (STORED.styles.size) {
             const item: ObjectMap<any[]> = { style: [] };
             const itemArray = item.style;
-            Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1).forEach(style => {
+            for (const style of Array.from(STORED.styles.values()).sort((a, b) => a.name.toString().toLowerCase() >= b.name.toString().toLowerCase() ? 1 : -1)) {
                 const styleArray = style.items;
                 if (Array.isArray(styleArray)) {
                     itemArray.push({
@@ -302,7 +302,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                         item: objectMap(styleArray.sort((a, b) => a.key >= b.key ? 1 : -1), obj => ({ name: obj.key, innerText: obj.value }))
                     });
                 }
-            });
+            }
             result.push(
                 replaceTab(
                     applyTemplate('resources', STYLE_TMPL, [item]),

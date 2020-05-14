@@ -185,7 +185,7 @@ function getLineSpacingExtra(this: T, lineHeight: number) {
             'white-space': 'nowrap'
         });
         if (values) {
-            height = actualTextRangeRect(this.element as Element).height;
+            height = actualTextRangeRect(this.element!).height;
             this.cssFinally(values);
         }
     }
@@ -308,7 +308,7 @@ function constraintPercentValue(this: T, horizontal: boolean, percent: number) {
 function constraintPercentWidth(this: T, percent = 1) {
     const value = this.percentWidth;
     if (value > 0) {
-        if ((this.renderParent as T).hasPX('width', false) && !((this.actualParent || this.documentParent) as T).layoutElement) {
+        if (this.renderParent!.hasPX('width', false) && !(this.actualParent || this.documentParent).layoutElement) {
             if (value < 1) {
                 this.setLayoutWidth(formatPX(this.actualWidth));
             }
@@ -326,7 +326,7 @@ function constraintPercentWidth(this: T, percent = 1) {
 function constraintPercentHeight(this: T, percent = 1) {
     const value = this.percentHeight;
     if (value > 0) {
-        if ((this.renderParent as T).hasPX('height', false) && !((this.actualParent || this.documentParent) as T).layoutElement) {
+        if (this.renderParent!.hasPX('height', false) && !(this.actualParent || this.documentParent).layoutElement) {
             if (value < 1) {
                 this.setLayoutHeight(formatPX(this.actualHeight));
             }
@@ -556,11 +556,11 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                     }
                     else if (this.floatContainer) {
                         let maxBottom = -Infinity;
-                        this.naturalChildren.forEach(item => {
+                        for (const item of this.naturalChildren) {
                             if (item.floating) {
                                 maxBottom = Math.max(item.bounds.bottom, maxBottom);
                             }
-                        });
+                        }
                         value = clamp(this.bounds.bottom - maxBottom, 0, value);
                     }
                     else {
@@ -589,7 +589,7 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
     }
     if (margin) {
         if (this.floating) {
-            let node = (this.renderParent as T).renderChildren.find(item => !item.floating) as Undef<T>;
+            let node = this.renderParent!.renderChildren.find(item => !item.floating) as Undef<T>;
             if (node) {
                 const boundsTop = Math.floor(this.bounds.top);
                 let actualNode: Undef<T>;
@@ -649,7 +649,9 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                 }
             }
             else if (this.blockDimension && !this.inputElement && this.translateY(top)) {
-                this.anchorChain('bottom').forEach(item => item.translateY(top));
+                for (const item of this.anchorChain('bottom')) {
+                    item.translateY(top);
+                }
                 top = 0;
             }
         }
@@ -660,7 +662,9 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                 }
             }
             else if (this.blockDimension && !this.inputElement && (this.renderParent as T).layoutConstraint) {
-                this.anchorChain('bottom').forEach(item => item.translateY(-bottom));
+                for (const item of this.anchorChain('bottom')) {
+                    item.translateY(-bottom);
+                }
                 bottom = 0;
             }
         }
@@ -671,13 +675,16 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                 }
             }
             else if (this.float === 'right') {
-                const siblings = this.anchorChain('left');
                 left = Math.min(-left, -this.bounds.width);
-                siblings.forEach(item => item.translateX(-left));
+                for (const item of this.anchorChain('left')) {
+                    item.translateX(-left);
+                }
                 left = 0;
             }
             else if (this.blockDimension && this.translateX(left)) {
-                this.anchorChain('right').forEach(item => item.translateX(left));
+                for (const item of this.anchorChain('right')) {
+                    item.translateX(left);
+                }
                 left = 0;
             }
         }
@@ -693,7 +700,9 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                 }
             }
             else if (this.blockDimension && (this.renderParent as T).layoutConstraint) {
-                this.anchorChain('right').forEach(item => item.translateX(right));
+                for (const item of this.anchorChain('right')) {
+                    item.translateX(right);
+                }
                 right = 0;
             }
         }
@@ -812,16 +821,16 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public static availablePercent(nodes: T[], dimension: DimensionAttr, boxSize: number) {
             const horizontal = dimension === 'width';
             let percent = 1;
-            let i = 0;
-            nodes.forEach(sibling => {
+            let valid = false;
+            for (let sibling of nodes) {
                 sibling = sibling.innerMostWrapped as T;
                 if (sibling.pageFlow) {
-                    ++i;
+                    valid = true;
                     if (sibling.hasPX(dimension, true, true)) {
                         const value = sibling.cssInitial(dimension);
                         if (isPercent(value)) {
                             percent -= parseFloat(value) / 100;
-                            return;
+                            continue;
                         }
                         else if (isLength(value)) {
                             if (horizontal) {
@@ -830,13 +839,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             else {
                                 percent -= (Math.max(sibling.actualHeight + sibling.marginTop + sibling.marginBottom, 0)) / boxSize;
                             }
-                            return;
+                            continue;
                         }
                     }
                     percent -= sibling.linear[dimension] / boxSize;
                 }
-            });
-            return i > 0 ? Math.max(0, percent) : 1;
+            }
+            return valid ? Math.max(0, percent) : 1;
         }
 
         public static getControlName(containerType: number, api = BUILD_ANDROID.LATEST): string {
@@ -1022,11 +1031,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             });
                             if (maxWidth > 0 && nodes.length) {
                                 const width = formatPX(maxWidth);
-                                nodes.forEach(node => {
+                                for (const node of nodes) {
                                     if (!node.hasPX('maxWidth')) {
                                         node.css('maxWidth', width);
                                     }
-                                });
+                                }
                             }
                             layoutWidth = 'wrap_content';
                             break;
@@ -1062,7 +1071,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     return;
                                 }
                                 else if (this.cssTry('display', 'inline-block')) {
-                                    const width = Math.ceil(actualTextRangeRect(this.element as Element).width);
+                                    const width = Math.ceil(actualTextRangeRect(this.element!).width);
                                     layoutWidth = width >= actualParent.box.width ? 'wrap_content' : 'match_parent';
                                     this.cssFinally('display');
                                     return;
@@ -1454,12 +1463,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (attributes) {
                 Object.assign(node.unsafe('boxReset'), this._boxReset);
                 Object.assign(node.unsafe('boxAdjustment'), this._boxAdjustment);
-                this._namespaces.forEach(name => {
+                for (const name of this._namespaces) {
                     const obj: StringMap = this['__' + name];
                     for (const attr in obj) {
                         node.attr(name, attr, attr === 'id' && name === 'android' ? node.documentId : obj[attr]);
                     }
-                });
+                }
             }
             if (position) {
                 node.anchorClear();
@@ -1471,7 +1480,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     node.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: 0 });
                 }
             }
-            node.saveAsInitial(true);
+            node.saveAsInitial();
             return node;
         }
 
@@ -1490,12 +1499,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     for (const namespace in dataset) {
                         const name = namespace === 'attr' ? 'android' : (REGEX_DATASETATTR.test(namespace) ? capitalize(namespace.substring(4), false) : '');
                         if (name !== '') {
-                            dataset[namespace].split(';').forEach(values => {
+                            for (const values of dataset[namespace].split(';')) {
                                 const [key, value] = values.split('::');
                                 if (value) {
                                     this.attr(name, key, value);
                                 }
-                            });
+                            }
                         }
                     }
                 }
@@ -1508,7 +1517,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             const indent = '\n' + '\t'.repeat(depth);
             let output = '';
-            this.combine().forEach(value => output += indent + value);
+            for (const value of this.combine()) {
+                output += indent + value;
+            }
             return output;
         }
 
@@ -1968,7 +1979,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else if (renderParent.layoutRelative) {
                     const layout: string[] = [];
-                    position.forEach(value => {
+                    for (const value of position) {
                         let attr: Undef<string> = LAYOUT_RELATIVE[value];
                         if (attr) {
                             layout.push(this.localizeString(attr));
@@ -1977,7 +1988,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (attr) {
                             layout.push(this.localizeString(attr));
                         }
-                    });
+                    }
                     node.delete('android', ...layout);
                 }
             }
@@ -2035,7 +2046,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const result: string[] = [];
             let requireId = false;
             let id = '';
-            this._namespaces.forEach(name => {
+            for (const name of this._namespaces) {
                 if (all || objs.includes(name)) {
                     const obj: StringMap = this['__' + name];
                     if (obj) {
@@ -2087,7 +2098,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-            });
+            }
             result.sort((a, b) => a > b ? 1 : -1);
             if (requireId) {
                 result.unshift(`android:id="${id || '@+id/' + this.controlId}"`);
@@ -2246,11 +2257,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                 }
                                 else {
-                                    row.forEach((item: T) => {
+                                    for (const item of row) {
                                         if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
                                             setMarginOffset.call(item, lineHeight, onlyChild, top, bottom);
                                         }
-                                    });
+                                    }
                                 }
                                 previousMultiline = onlyChild && first.multiline;
                             }

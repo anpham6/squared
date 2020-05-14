@@ -57,7 +57,7 @@ function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?
                 return;
         }
     }
-    path.forEach(seg => {
+    for (const seg of path) {
         const { coordinates, value } = seg;
         const length = coordinates.length;
         for (let i = 0, j = 0; i < length; i += 2, ++j) {
@@ -74,7 +74,7 @@ function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?
                 value[j].y += y;
             }
         }
-    });
+    }
 }
 
 function updatePathRadius(path: SvgPathCommand[], rx?: number, ry?: number) {
@@ -158,7 +158,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                             updatePathRadius(path, undefined, value);
                             break;
                         case 'width':
-                            [1, 2].forEach(index => {
+                            for (const index of [1, 2]) {
                                 const seg = path[index];
                                 switch (seg.key) {
                                     case 'm':
@@ -172,10 +172,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         seg.coordinates[0] = path[0].end.x + value;
                                         break;
                                 }
-                            });
+                            }
                             break;
                         case 'height':
-                            [2, 3].forEach(index => {
+                            for (const index of [2, 3]) {
                                 const seg = path[index];
                                 switch (seg.key) {
                                     case 'm':
@@ -189,7 +189,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         seg.coordinates[1] = path[0].end.y + value;
                                         break;
                                 }
-                            });
+                            }
                             break;
                         default:
                             result[i] = '';
@@ -400,7 +400,7 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             const drawPolygon = () => SVG.polygon(element) ? SvgBuild.drawPolygon(points, precision) : SvgBuild.drawPolyline(points, precision);
             this.baseValue = drawPolygon();
             if (requireRefit) {
-                if (this.transformed === null) {
+                if (!this.transformed) {
                     points = SvgBuild.clonePoints(points);
                 }
                 parent.refitPoints(points);
@@ -545,11 +545,10 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             dashArray = valueArray.slice(0);
             const dashLength = multipleOf([2, arrayLength]);
             dashArrayTotal = 0;
-            let i = 0;
-            while (i < dashLength) {
+            for (let i = 0; i < dashLength; ++i) {
                 const value = valueArray[i % arrayLength];
                 dashArrayTotal += value;
-                if (i++ >= arrayLength) {
+                if (i >= arrayLength) {
                     dashArray.push(value);
                 }
             }
@@ -743,13 +742,13 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         values[j++] = [];
                                         group.push(animate);
                                     }
-                                    item.values.forEach(value => {
+                                    for (const value of item.values) {
                                         const dashValue = this.flattenStrokeDash(SvgBuild.parseCoordinates(value), delayOffset, totalLength, pathLength).items;
                                         let k = 0;
                                         while (k < dashTotal) {
                                             values[k].push(getFromToValue(dashValue[k++]));
                                         }
-                                    });
+                                    }
                                     const { keyTimes, keySplines } = item;
                                     const timingFunction = item.timingFunction;
                                     j = 0;

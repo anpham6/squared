@@ -51,12 +51,12 @@ function parseExclusions(attr: string, enumeration: {}, dataset: DOMStringMap, p
         exclude += (exclude !== '' ? '|' : '') + value;
     }
     if (exclude !== '') {
-        exclude.split('|').forEach(name => {
+        for (const name of exclude.split('|')) {
             const i: number = enumeration[name.trim().toUpperCase()] || 0;
             if (i > 0 && !hasBit(offset, i)) {
                 offset |= i;
             }
-        });
+        }
     }
     return offset;
 }
@@ -550,7 +550,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public delete(name: string, ...attrs: string[]) {
         const obj = this['__' + name];
         if (obj) {
-            attrs.forEach(attr => {
+            for (const attr of attrs) {
                 if (attr.includes('*')) {
                     for (const [key] of searchObject(obj, attr)) {
                         delete obj[key];
@@ -559,7 +559,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else {
                     delete obj[attr];
                 }
-            });
+            }
         }
     }
 
@@ -614,7 +614,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public inherit(node: T, ...modules: string[]) {
-        modules.forEach(name => {
+        for (const name of modules) {
             switch (name) {
                 case 'base': {
                     this._documentParent = node.documentParent;
@@ -636,13 +636,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 case 'alignment': {
                     const styleMap = this._styleMap;
-                    INHERIT_ALIGNMENT.forEach(attr => styleMap[attr] = node.css(attr));
+                    for (const attr of INHERIT_ALIGNMENT) {
+                        styleMap[attr] = node.css(attr);
+                    }
                     if (!this.positionStatic) {
-                        BOX_POSITION.forEach(attr => {
+                        for (const attr of BOX_POSITION) {
                             if (node.hasPX(attr)) {
                                 styleMap[attr] = node.css(attr);
                             }
-                        });
+                        }
                     }
                     Object.assign(this.autoMargin, node.autoMargin);
                     this.autoPosition = node.autoPosition;
@@ -708,7 +710,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
             }
-        });
+        }
     }
 
     public addAlign(value: number) {
@@ -872,7 +874,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         const length = actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length;
                                         if (length === siblings.length + 1) {
                                             let width = actualParent.box.width - getLayoutWidth.call(this);
-                                            siblings.forEach(item => width -= getLayoutWidth.call(item));
+                                            for (const item of siblings) {
+                                                width -= getLayoutWidth.call(item);
+                                            }
                                             if (width >= 0) {
                                                 return NODE_TRAVERSE.HORIZONTAL;
                                             }
@@ -882,7 +886,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 return NODE_TRAVERSE.FLOAT_WRAP;
                             }
                         }
-                        else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : -Infinity), 0) / (this.actualParent as T).box.width >= 0.8) {
+                        else if (this.blockStatic && siblings.reduce((a, b) => a + (b.floating ? b.linear.width : -Infinity), 0) / this.actualParent!.box.width >= 0.8) {
                             return NODE_TRAVERSE.FLOAT_INTERSECT;
                         }
                         else if (siblings.every(item => item.inlineDimension && Math.ceil(this.bounds.top) >= item.bounds.bottom)) {
@@ -902,15 +906,15 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         const float = siblings[0].float;
                                         let maxBottom = -Infinity;
                                         let contentWidth = 0;
-                                        siblings.forEach(item => {
+                                        for (const item of siblings) {
                                             if (item.floating) {
                                                 if (item.float === float) {
                                                     maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
                                                 }
                                                 contentWidth += item.linear.width;
                                             }
-                                        });
-                                        if (Math.ceil(contentWidth) >= (this.actualParent as T).box.width) {
+                                        }
+                                        if (Math.ceil(contentWidth) >= this.actualParent!.box.width) {
                                             return NODE_TRAVERSE.FLOAT_BLOCK;
                                         }
                                         else if (this.multiline) {
@@ -1114,7 +1118,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public actualPadding(attr: "paddingTop" | "paddingBottom", value: number) {
         if (value > 0) {
             if (!this.layoutElement) {
-                const node = (this as T).innerMostWrapped;
+                const node = this.innerMostWrapped;
                 if (node !== this) {
                     if (node.naturalChild) {
                         if (node.getBox(attr === 'paddingTop' ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM)[0] === 0) {
@@ -1199,7 +1203,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public unsetCache(...attrs: string[]) {
         if (attrs.length) {
             const cached = this._cached;
-            attrs.forEach(attr => {
+            for (const attr of attrs) {
                 switch (attr) {
                     case 'top':
                     case 'right':
@@ -1217,7 +1221,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         cached.textEmpty = undefined;
                         break;
                 }
-            });
+            }
         }
         super.unsetCache(...attrs);
     }
@@ -1518,10 +1522,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get actualParent(): Null<T> {
         let result = this._cached.actualParent;
         if (result === undefined) {
-            result = super.actualParent as Null<T>;
-            if (result === null) {
-                result = this.innerMostWrapped.actualParent;
-            }
+            result = super.actualParent as Null<T> || this.innerMostWrapped.actualParent;
             this._cached.actualParent = result;
         }
         return result;
@@ -1585,6 +1586,27 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get lastChild(): Null<NodeUI> {
         const children = this.naturalChildren;
         return children[children.length - 1] as NodeUI || null;
+    }
+
+    get firstStaticChild() {
+        for (const node of this.naturalChildren) {
+            if (node.pageFlow) {
+                return node as NodeUI;
+            }
+        }
+        return null;
+    }
+
+    get lastStaticChild() {
+        const children = this.naturalChildren;
+        let i = children.length - 1;
+        while (i >= 0) {
+            const node = children[i--];
+            if (node.pageFlow) {
+                return node as NodeUI;
+            }
+        }
+        return null;
     }
 
     get onlyChild() {

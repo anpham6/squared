@@ -82,7 +82,7 @@ const FONT_STYLEKEYS = Object.keys(FONT_STYLE);
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
     const length = sorted.length;
-    attrs.split(';').forEach(value => {
+    for (const value of attrs.split(';')) {
         for (let i = 0; i < length; ++i) {
             let data = sorted[i];
             let index = -1;
@@ -104,7 +104,7 @@ function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number
                 break;
             }
         }
-    });
+    }
 }
 
 export default class ResourceFonts<T extends View> extends squared.base.ExtensionUI<T> {
@@ -131,7 +131,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const sorted: StyleList[] = [];
             const data = nameMap[tag];
             cache = cache.concat(data);
-            data.forEach(node => {
+            const length = data.length;
+            let i = 0;
+            while (i < length) {
+                let node = data[i++];
                 const { id, companion, api } = node;
                 const stored: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
                 let { fontFamily, fontStyle, fontWeight } = stored;
@@ -200,17 +203,17 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     color: Resource.addColor(stored.color),
                     backgroundColor: Resource.addColor(stored.backgroundColor)
                 };
-                for (let i = 0; i < 6; ++i) {
-                    const key = FONT_STYLEKEYS[i];
+                for (let j = 0; j < 6; ++j) {
+                    const key = FONT_STYLEKEYS[j];
                     let value: Undef<string> = fontData[key];
                     if (value) {
-                        if (i === 3 && convertPixels) {
+                        if (j === 3 && convertPixels) {
                             value = convertLength(value, true);
                         }
-                        safeNestedArray(safeNestedMap(sorted, i), FONT_STYLE[key] + value + '"').push(id);
+                        safeNestedArray(safeNestedMap(sorted, j), FONT_STYLE[key] + value + '"').push(id);
                     }
                 }
-            });
+            }
             groupMap[tag] = sorted;
         }
         const style: SharedAttributes = {};
@@ -275,11 +278,11 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                     for (const attr in dataB) {
                                         const compare = dataB[attr];
                                         if (compare.length) {
-                                            ids.forEach(id => {
+                                            for (const id of ids) {
                                                 if (compare.includes(id)) {
                                                     safeNestedArray(found, attr).push(id);
                                                 }
-                                            });
+                                            }
                                         }
                                     }
                                 }
@@ -311,7 +314,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                             data = new Set(attrA.split(';'));
                                             combined[index] = data;
                                         }
-                                        attrB.split(';').forEach(value => data.add(value));
+                                        for (const value of attrB.split(';')) {
+                                            data.add(value);
+                                        }
                                         deleteKeys.add(attrA).add(attrB);
                                     }
                                 }
@@ -355,12 +360,12 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const styleData: StyleAttribute[] = [];
             for (const attrs in styleTag) {
                 const items: StringValue[] = [];
-                attrs.split(';').forEach(value => {
+                for (const value of attrs.split(';')) {
                     const match = XML.ATTRIBUTE.exec(value);
                     if (match) {
                         items.push({ key: match[1], value: match[2] });
                     }
-                });
+                }
                 styleData.push({
                     name: '',
                     parent: '',
@@ -369,8 +374,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 });
             }
             styleData.sort((a, b) => {
-                let c: number | string = (a.ids as []).length;
-                let d: number | string = (b.ids as []).length;
+                let c: number | string = a.ids!.length;
+                let d: number | string = b.ids!.length;
                 if (c === d) {
                     c = (a.items as StringValue[]).length;
                     d = (b.items as StringValue[]).length;
@@ -388,9 +393,16 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             resourceMap[tag] = styleData;
         }
         for (const tag in resourceMap) {
-            resourceMap[tag].forEach(group => group.ids?.forEach(id => safeNestedArray(nodeMap, id).push(group.name)));
+            for (const group of resourceMap[tag]) {
+                const ids = group.ids;
+                if (ids) {
+                    for (const id of ids) {
+                        safeNestedArray(nodeMap, id).push(group.name);
+                    }
+                }
+            }
         }
-        cache.forEach(node => {
+        for (const node of cache) {
             const styleData = nodeMap[node.id];
             if (styleData) {
                 if (styleData.length > 1) {
@@ -402,19 +414,22 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
                 node.attr('_', 'style', `@style/${styleData.join('.')}`);
             }
-        });
-        parentStyle.forEach(value => {
+        }
+        for (const value of parentStyle) {
             const styleName: string[] = [];
             let parent = '';
             let items: Undef<StringValue[]>;
-            value.split('.').forEach((name, index, array) => {
+            const values = value.split('.');
+            const length = values.length;
+            for (let i = 0; i < length; ++i) {
+                const name = values[i];
                 const match = REGEX_TAGNAME.exec(name);
                 if (match) {
                     const styleData = resourceMap[match[1].toUpperCase()][convertInt(match[2])];
                     if (styleData) {
-                        if (index === 0) {
+                        if (i === 0) {
                             parent = name;
-                            if (array.length === 1) {
+                            if (length === 1) {
                                 items = styleData.items as StringValue[];
                             }
                             else if (!styles.has(name)) {
@@ -423,16 +438,16 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                         else {
                             if (items) {
-                                (styleData.items as StringValue[]).forEach(item => {
+                                for (const item of styleData.items as StringValue[]) {
                                     const key = item.key;
-                                    const previousIndex = (items as StringValue[]).findIndex(previous => previous.key === key);
-                                    if (previousIndex !== -1) {
-                                        (items as StringValue[])[previousIndex] = item;
+                                    const index = items.findIndex(previous => previous.key === key);
+                                    if (index !== -1) {
+                                        items[index] = item;
                                     }
                                     else {
-                                        (items as StringValue[]).push(item);
+                                        items.push(item);
                                     }
-                                });
+                                }
                             }
                             else {
                                 items = (styleData.items as StringValue[]).slice(0);
@@ -441,7 +456,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                     }
                 }
-            });
+            }
             if (items) {
                 if (styleName.length === 0) {
                     styles.set(parent, { name: parent, parent: '', items });
@@ -451,6 +466,6 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     styles.set(name, { name, parent, items });
                 }
             }
-        });
+        }
     }
 }

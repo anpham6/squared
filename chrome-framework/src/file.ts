@@ -79,11 +79,11 @@ function getExtensions(element: Null<HTMLElement>) {
 
 function processExtensions(this: chrome.base.File<View>, data: ChromeAsset, extensions: string[]) {
     const processed: Extension[] = [];
-    this.application.extensions.forEach(ext => {
+    for (const ext of this.application.extensions) {
         if (ext.processFile(data)) {
             processed.push(ext);
         }
-    });
+    }
     for (const name of extensions) {
         const ext = this.application.extensionManager.retrieve(name, true) as Extension;
         if (ext && !processed.includes(ext)) {
@@ -541,7 +541,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         const preserveCrossOrigin = options?.preserveCrossOrigin;
         const result: ChromeAsset[] = [];
         for (const fonts of ASSETS.fonts.values()) {
-            fonts.forEach(font => {
+            for (const font of fonts) {
                 const url = font.srcUrl;
                 if (url) {
                     const data = File.parseUri(url, { preserveCrossOrigin });
@@ -550,7 +550,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                         result.push(data);
                     }
                 }
-            });
+            }
         }
         return result;
     }
@@ -600,7 +600,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     protected getAssetsAll(options: ChromeFileArchivingOptions = {}) {
         const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options.saveAsWebPage) {
-            result.forEach(item => {
+            for (const item of result) {
                 const mimeType = item.mimeType;
                 switch (mimeType) {
                     case 'text/html':
@@ -609,7 +609,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                         item.mimeType = '@' + mimeType;
                         break;
                 }
-            });
+            }
         }
         return result.concat(this.getScriptAssets(options))
             .concat(this.getImageAssets(options))

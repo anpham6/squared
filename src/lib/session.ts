@@ -47,7 +47,11 @@ export function actualTextRangeRect(element: Element, sessionId?: string) {
         });
     }
     const bounds = getRangeClientRect(element);
-    hidden?.forEach(item => item[0].style.display = item[1]);
+    if (hidden) {
+        for (const item of hidden) {
+            item[0].style.display = item[1];
+        }
+    }
     if (sessionId) {
         setElementCache(element, 'textRangeRect', sessionId, bounds);
     }

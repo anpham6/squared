@@ -116,12 +116,14 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
         const descend: Undef<StringMap> = tag['>'];
         let valid = false;
         output += indent + '<' + tagName;
-        attrs?.forEach(attr => {
-            const value = item[attr];
-            if (value) {
-                output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${value}"`;
+        if (attrs) {
+            for (const attr of attrs) {
+                const value = item[attr];
+                if (value) {
+                    output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${value}"`;
+                }
             }
-        });
+        }
         if (descend) {
             let innerText = '';
             const childDepth = depth + (nested ? i : 0) + 1;
@@ -220,22 +222,25 @@ export function formatTemplate(value: string, closeEmpty = false, startIndent = 
                 }
                 ++previous;
             }
-            line.tag.trim().split('\n').forEach((partial, index, array) => {
+            const tags = line.tag.trim().split('\n');
+            const q = tags.length;
+            for (let j = 0; j < q; ++j) {
+                const partial = tags[j];
                 if (ignoreIndent) {
                     output += partial;
                     ignoreIndent = false;
                 }
                 else {
-                    const depth = previous + Math.min(index, 1);
+                    const depth = previous + Math.min(j, 1);
                     output += (depth > 0 ? char.repeat(depth) : '') + partial.trim();
                 }
-                if (single && array.length === 1) {
+                if (single && q === 1) {
                     ignoreIndent = true;
                 }
                 else {
                     output += '\n';
                 }
-            });
+            }
         }
         else {
             output += (startIndent > 0 ? char.repeat(startIndent) : '') + line.tag + '\n';

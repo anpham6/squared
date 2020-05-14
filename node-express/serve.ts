@@ -367,7 +367,7 @@ let Image: serve.IImage;
                 }
                 else if (value.startsWith('../')) {
                     const trailing: string[] = [];
-                    value.split('/').forEach(dir => {
+                    for (const dir of value.split('/')) {
                         if (dir === '..') {
                             if (trailing.length === 0) {
                                 pathname.pop();
@@ -379,7 +379,7 @@ let Image: serve.IImage;
                         else {
                             trailing.push(dir);
                         }
-                    });
+                    }
                     value = trailing.join('/');
                 }
                 return origin + pathname.join('/') + '/' + value;
@@ -857,12 +857,12 @@ let Image: serve.IImage;
             const result = new Set<number>();
             const match = /\{\s*([\d\s,]+)\s*\}/.exec(value);
             if (match) {
-                match[1].split(',').forEach(segment => {
+                for (const segment of match[1].split(',')) {
                     const angle = parseInt(segment);
                     if (!isNaN(angle)) {
                         result.add(angle);
                     }
-                });
+                }
             }
             return Array.from(result);
         }
@@ -1459,9 +1459,9 @@ class FileManager implements serve.IFileManager {
                     };
                     const convert = mimeType.split(':');
                     convert.pop();
-                    convert.forEach(value => {
+                    for (const value of convert) {
                         if (!Compress.withinSizeRange(filepath, value)) {
-                            return;
+                            continue;
                         }
                         const { width, height, mode } = Image.parseResizeMode(value);
                         const opacity = Image.parseOpacity(value);
@@ -1535,7 +1535,7 @@ class FileManager implements serve.IFileManager {
                                     Node.writeFail(filepath, err);
                                 });
                         }
-                    });
+                    }
                 }
                 break;
         }

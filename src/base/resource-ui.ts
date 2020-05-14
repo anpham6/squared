@@ -519,15 +519,15 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     }
                                 }
                             }
-                            [[0, 0], [width, 0], [width, height], [0, height]].forEach(corner => {
+                            for (const corner of [[0, 0], [width, 0], [width, height], [0, height]]) {
                                 const length = Math.round(hypotenuse(Math.abs(corner[0] - left), Math.abs(corner[1] - top)));
                                 closestCorner = Math.min(length, closestCorner);
                                 farthestCorner = Math.max(length, farthestCorner);
-                            });
-                            [width - left, height - top, left].forEach(side => {
+                            }
+                            for (const side of [width - left, height - top, left]) {
                                 closestSide = Math.min(side, closestSide);
                                 farthestSide = Math.max(side, farthestSide);
-                            });
+                            }
                             const radial = {
                                 type,
                                 repeating,
@@ -645,7 +645,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]> {
         if (node.plainText) {
             const parent = node.actualParent as NodeUI;
-            if (parent?.preserveWhiteSpace && parent.ascend({ condition: item => item.tagName === 'PRE', startSelf: true }).length) {
+            if (parent.preserveWhiteSpace && parent.ascend({ condition: item => item.tagName === 'PRE', startSelf: true }).length) {
                 let nextSibling = node.nextSibling as Undef<NodeUI>;
                 if (nextSibling?.naturalElement) {
                     const textContent = node.textContent;
@@ -1010,7 +1010,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 else if (item instanceof HTMLElement) {
                     const position = getComputedStyle(item).getPropertyValue('position');
-                    value = value.replace(item.outerHTML, position !== 'absolute' && position !== 'fixed' && (item.textContent as string).trim() !== '' ? STRING_SPACE : '');
+                    value = value.replace(item.outerHTML, position !== 'absolute' && position !== 'fixed' && item.textContent!.trim() !== '' ? STRING_SPACE : '');
                 }
                 if (index === 0) {
                     value = trimStart(value, ' ');

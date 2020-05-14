@@ -34,7 +34,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                         floated.add(item.float);
                         blockAlternate = false;
                     }
-                    else if (i === 0 || i === length - 1 || item.blockStatic || (children[i - 1] as T).blockStatic && (children[i + 1] as T).blockStatic) {
+                    else if (i === 0 || i === length - 1 || item.blockStatic || children[i - 1]!.blockStatic && children[i + 1]!.blockStatic) {
                         floating = false;
                     }
                     else {

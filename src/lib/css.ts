@@ -35,14 +35,14 @@ function compareRange(operation: string, unit: number, range: number) {
 
 function calculatePosition(element: CSSElement, value: string, boundingBox?: Dimension) {
     const alignment: string[] = [];
-    replaceMap(splitEnclosing(value.trim(), 'calc'), (seg: string) => seg.trim()).forEach(seg => {
+    for (const seg of replaceMap(splitEnclosing(value.trim(), 'calc'), (item: string) => item.trim())) {
         if (seg.includes(' ') && !isCalc(seg)) {
             alignment.push(...seg.split(CHAR.SPACE));
         }
         else {
             alignment.push(seg);
         }
-    });
+    }
     const length = alignment.length;
     switch (length) {
         case 1:
@@ -1329,7 +1329,7 @@ export function parseKeyframes(rules: CSSRuleList) {
         const item = rules[i++];
         const match = REGEX_KEYFRAME.exec(item.cssText);
         if (match) {
-            (item['keyText'] as string || match[1]).trim().split(XML.SEPARATOR).forEach(percent => {
+            for (let percent of (item['keyText'] as string || match[1]).trim().split(XML.SEPARATOR)) {
                 switch (percent) {
                     case 'from':
                         percent = '0%';
@@ -1339,7 +1339,7 @@ export function parseKeyframes(rules: CSSRuleList) {
                         break;
                 }
                 const keyframe: StringMap = {};
-                match[2].split(XML.DELIMITER).forEach(property => {
+                for (const property of match[2].split(XML.DELIMITER)) {
                     const index = property.indexOf(':');
                     if (index !== -1) {
                         const value = property.substring(index + 1).trim();
@@ -1348,9 +1348,9 @@ export function parseKeyframes(rules: CSSRuleList) {
                             keyframe[attr] = value;
                         }
                     }
-                });
+                }
                 result[percent] = keyframe;
-            });
+            }
         }
     }
     return result;
@@ -2014,7 +2014,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         });
     }
     if (srcset !== '') {
-        srcset.trim().split(XML.SEPARATOR).forEach(value => {
+        for (const value of srcset.trim().split(XML.SEPARATOR)) {
             const match = REGEX_SRCSET.exec(value);
             if (match) {
                 let width = 0;
@@ -2032,7 +2032,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                 }
                 result.push({ src: resolvePath(match[1].split(CHAR.SPACE)[0]), pixelRatio, width });
             }
-        });
+        }
     }
     const length = result.length;
     if (length === 0) {

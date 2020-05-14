@@ -14,7 +14,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
             const applied = new Set<T>();
             this.cache.each(node => {
                 if (node.styleElement && node.visible) {
-                    node.unsafe('namespaces').forEach((name: string) => {
+                    for (const name of node.unsafe('namespaces')) {
                         const dataset = getDataSet(node.dataset, `viewmodel${capitalize(name)}`);
                         if (dataset) {
                             for (const attr in dataset) {
@@ -22,11 +22,11 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                             }
                             applied.add(node);
                         }
-                    });
+                    }
                 }
             });
             if (applied.size) {
-                documentRoot.forEach(root => {
+                for (const root of documentRoot) {
                     const node = root.node;
                     for (const child of applied) {
                         if (child.ascend({ condition: item => item === node, attr: 'renderParent'}).length) {
@@ -36,10 +36,14 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                             let output = indentA + '<layout {#0}>\n' +
                                          indentB + '<data>\n';
                             if (importing) {
-                                importing.forEach(name => output += indentC + `<import type="${name}" />\n`);
+                                for (const name of importing) {
+                                    output += indentC + `<import type="${name}" />\n`;
+                                }
                             }
                             if (variable) {
-                                variable.forEach(data => output += indentC + `<variable name="${data.name}" type="${data.type}" />\n`);
+                                for (const data of variable) {
+                                    output += indentC + `<variable name="${data.name}" type="${data.type}" />\n`;
+                                }
                             }
                             output += indentB + '</data>\n';
                             controller.addBeforeOutsideTemplate(id, output);
@@ -49,7 +53,7 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                             break;
                         }
                     }
-                });
+                }
             }
         }
     }

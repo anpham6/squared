@@ -177,8 +177,8 @@ export function multipleOf(values: number[], min = 0, offset?: number[]) {
 export function sin(value: number, accuracy = 11) {
     value = convertRadian(value);
     let result = value;
-    for (let i = 3, j = 0; i <= accuracy; i += 2) {
-        result += Math.pow(value, i) / factorial(i) * (j++ % 2 === 0 ? -1 : 1);
+    for (let i = 3, j = 0; i <= accuracy; i += 2, ++j) {
+        result += Math.pow(value, i) / factorial(i) * (j % 2 === 0 ? -1 : 1);
     }
     return result;
 }
@@ -186,8 +186,8 @@ export function sin(value: number, accuracy = 11) {
 export function cos(value: number, accuracy = 10) {
     value = convertRadian(value);
     let result = 1;
-    for (let i = 2, j = 0; i <= accuracy; i += 2) {
-        result += Math.pow(value, i) / factorial(i) * (j++ % 2 === 0 ? -1 : 1);
+    for (let i = 2, j = 0; i <= accuracy; i += 2, ++j) {
+        result += Math.pow(value, i) / factorial(i) * (j % 2 === 0 ? -1 : 1);
     }
     return result;
 }

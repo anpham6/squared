@@ -103,6 +103,7 @@ module.exports = {
         "@typescript-eslint/consistent-type-assertions": "error",
         "@typescript-eslint/prefer-function-type": "error",
         "@typescript-eslint/unified-signatures": "error",
+        "@typescript-eslint/prefer-for-of": "error",
         "@typescript-eslint/member-ordering": ["error", {
             "default": [
                 "static-field",
@@ -116,7 +117,6 @@ module.exports = {
         "@typescript-eslint/triple-slash-reference": "off",
         "@typescript-eslint/no-non-null-assertion": "off",
         "@typescript-eslint/array-type": "off",
-        "@typescript-eslint/prefer-for-of": "off",
         "@typescript-eslint/consistent-type-definitions": "off",
         "@typescript-eslint/interface-name-prefix": "off",
         "@typescript-eslint/no-empty-function": "off",

@@ -22,7 +22,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
         else {
             const framework = ext.framework;
             if (framework > 0) {
-                ext.dependencies.forEach(item => {
+                for (const item of ext.dependencies) {
                     if (item.preload) {
                         name = item.name;
                         if (this.retrieve(name) === null) {
@@ -32,7 +32,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
                             }
                         }
                     }
-                });
+                }
             }
             if ((framework === 0 || hasBit(framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
                 ext.application = application;

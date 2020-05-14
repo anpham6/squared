@@ -123,11 +123,11 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     } as NodeXmlTemplate<T>
                 );
             }
-            children.forEach(child => {
+            for (const child of children) {
                 if (child.textElement) {
                     child.css('maxWidth', formatPX(boxWidth));
                 }
-            });
+            }
             let first = true;
             let item: T;
             do {

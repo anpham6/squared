@@ -469,12 +469,12 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                                                 if (l === 0 || resultTime === 0) {
                                                     keyTimes.unshift(resultTime);
                                                     values.unshift(splitValue);
-                                                    (keySplines as string[]).unshift(keySpline);
+                                                    keySplines!.unshift(keySpline);
                                                 }
                                                 else {
                                                     keyTimes.splice(l, 0, resultTime);
                                                     values.splice(l, 0, splitValue);
-                                                    (keySplines as string[]).splice(l, 0, keySpline);
+                                                    keySplines!.splice(l, 0, keySpline);
                                                 }
                                                 break;
                                             }
@@ -486,7 +486,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                                         }
                                         keyTimes.push(resultTime);
                                         values.push(splitValue);
-                                        (keySplines as string[]).push(keySpline);
+                                        keySplines!.push(keySpline);
                                     }
                                 }
                             }
@@ -758,7 +758,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
     return class extends Base implements squared.svg.SvgSynchronize {
         public getAnimateShape(element: SVGGraphicsElement) {
             const result: SvgAnimate[] = [];
-            this.animations.forEach((item: SvgAnimate) => {
+            for (const item of this.animations as SvgAnimate[]) {
                 if (playableAnimation(item)) {
                     switch (item.attributeName) {
                         case 'r':
@@ -797,20 +797,20 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             break;
                     }
                 }
-            });
+            }
             return result;
         }
 
         public getAnimateTransform(options?: SvgSynchronizeOptions) {
             const result: SvgAnimateTransform[] = [];
-            this.animations.forEach((item: SvgAnimateTransform) => {
+            for (const item of this.animations as SvgAnimateTransform[]) {
                 if (SvgBuild.isAnimateTransform(item) && item.duration > 0) {
                     result.push(item);
                     if (SvgBuild.asAnimateMotion(item)) {
                         item.framesPerSecond = options?.framesPerSecond;
                     }
                 }
-            });
+            }
             return result;
         }
 
@@ -819,7 +819,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                 animations = this.animations as SvgAnimation[];
             }
             const result: SvgAnimate[] = [];
-            animations.forEach((item: SvgAnimate) => {
+            for (const item of this.animations as SvgAnimate[]) {
                 if (playableAnimation(item)) {
                     switch (item.attributeName) {
                         case 'x':
@@ -828,7 +828,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             break;
                     }
                 }
-            });
+            }
             return result;
         }
 
@@ -841,10 +841,10 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                 precision = options.precision;
             }
             const animationsBase = this.animations as SvgAnimation[];
-            [animations, transforms].forEach(mergeable => {
+            for (const mergeable of [animations, transforms]) {
                 const transforming = mergeable === transforms;
                 if (!mergeable || mergeable.length === 0 || !transforming && hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_ANIMATE) || transforming && hasBit(keyTimeMode, SYNCHRONIZE_MODE.IGNORE_TRANSFORM)) {
-                    return;
+                    continue;
                 }
                 const staggered: SvgAnimate[] = [];
                 const setterAttributeMap: ObjectMap<SvgAnimation[]> = {};
@@ -910,7 +910,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                     const groupName: ObjectMap<Map<number, SvgAnimate[]>> = {};
                     const groupAttributeMap: ObjectMap<SvgAnimate[]> = {};
                     let repeatingDuration = 0;
-                    staggered.forEach(item => {
+                    for (const item of staggered) {
                         const ordering = item.group.ordering;
                         if (ordering) {
                             spliceArray(ordering, sibling => !groupActive.has(sibling.name));
@@ -927,13 +927,15 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         group.push(item);
                         groupAttributeMap[attr].push(item);
                         groupData.set(delay, group);
-                    });
+                    }
                     for (const attr in groupName) {
                         const groupDelay = new Map<number, SvgAnimate[]>();
                         const groupData = groupName[attr];
                         for (const delay of sortNumber(Array.from(groupData.keys()))) {
                             const group = groupData.get(delay) as SvgAnimate[];
-                            group.forEach(item => repeatingDuration = Math.max(repeatingDuration, item.getTotalDuration(true)));
+                            for (const item of group) {
+                                repeatingDuration = Math.max(repeatingDuration, item.getTotalDuration(true));
+                            }
                             groupDelay.set(delay, group.reverse());
                         }
                         groupName[attr] = groupDelay;
@@ -1098,13 +1100,13 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                 if (item.fillForwards) {
                                     spliceArray(setterData, set => set.group.id < item.group.id || set.delay < time);
                                     incomplete.length = 0;
-                                    groupData.forEach(group => {
-                                        group.forEach(next => {
+                                    for (const group of groupData) {
+                                        for (const next of group) {
                                             if (next.group.id < item.group.id) {
                                                 next.addState(SYNCHRONIZE_STATE.COMPLETE);
                                             }
-                                        });
-                                    });
+                                        }
+                                    }
                                 }
                                 else if (item.fillFreeze) {
                                     removeIncomplete(incomplete);
@@ -1388,11 +1390,11 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                         if (pending.length) {
                                                             sortEvaluateStart(pending, actualMaxTime);
                                                             [keyTimes, values, keySplines] = appendPartialKeyTimes(intervalMap, forwardMap, baseValueMap, k, item, keyTimes, values, keySplines, baseValue, pending, true);
-                                                            pending.forEach(previous => {
+                                                            for (const previous of pending) {
                                                                 if (previous.hasState(SYNCHRONIZE_STATE.INTERRUPTED) && data.includes(previous)) {
                                                                     queueIncomplete(incomplete, previous);
                                                                 }
-                                                            });
+                                                            }
                                                         }
                                                     }
                                                     if (evaluateEnd) {
@@ -1567,7 +1569,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         for (let k = i; k < length; ++k) {
                                             if (groupDelay[k] < actualMaxTime) {
                                                 const dataA = groupData[k];
-                                                dataA.forEach(next => {
+                                                for (const next of dataA) {
                                                     const nextDuration = next.getTotalDuration();
                                                     if (nextDuration > actualMaxTime && !next.hasState(SYNCHRONIZE_STATE.INTERRUPTED, SYNCHRONIZE_STATE.COMPLETE, SYNCHRONIZE_STATE.INVALID)) {
                                                         queueIncomplete(incomplete, next);
@@ -1575,7 +1577,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                     else if (!next.fillReplace) {
                                                         setFreezeValue(nextDuration, next.valueTo, next.type, next);
                                                     }
-                                                });
+                                                }
                                                 groupDelay[k] = Infinity;
                                                 dataA.length = 0;
                                             }
@@ -1861,7 +1863,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                             infiniteAnimations.push(map);
                         }
                         const maxDuration = multipleOf(duration);
-                        infiniteAnimations.forEach(item => {
+                        for (const item of infiniteAnimations) {
                             const attr = item.attributeName;
                             timelineMap[attr] = new Map<number, AnimateValue>();
                             let baseValue: AnimateValue = repeatingMap[attr].get(repeatingMaxTime[attr]) ?? baseValueMap[attr];
@@ -1885,7 +1887,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                 }
                             }
                             while (maxTime < maxDuration && ++i);
-                        });
+                        }
                         if (infiniteAnimations.every(item => item.alternate)) {
                             let maxTime = -1;
                             for (const attr in infiniteMap) {
@@ -1912,11 +1914,11 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         sortNumber(keyTimes);
                         for (const attr in timelineMap) {
                             const map = timelineMap[attr];
-                            keyTimes.forEach(time => {
+                            for (const time of keyTimes) {
                                 if (!map.has(time)) {
                                     insertAdjacentSplitValue(map, attr, time, intervalMap, transforming);
                                 }
-                            });
+                            }
                         }
                         infiniteResult = createKeyTimeMap(timelineMap, keyTimes, forwardMap);
                     }
@@ -1925,7 +1927,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                         const timeRange = Array.from(animateTimeRangeMap.entries());
                         const synchronizedName = joinArray(staggered, item => SvgBuild.isAnimateTransform(item) ? TRANSFORM.typeAsName(item.type) : item.attributeName, '-', false);
                         const parent = this.parent;
-                        [repeatingResult, infiniteResult].forEach(result => {
+                        for (const result of [repeatingResult, infiniteResult]) {
                             if (result) {
                                 const repeating = result === repeatingResult;
                                 const interpolatorMap = repeating ? repeatingInterpolatorMap : infiniteInterpolatorMap;
@@ -1967,7 +1969,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                             transformMap.push(map);
                                         }
                                         else {
-                                            return;
+                                            continue;
                                         }
                                         let previousEndTime = 0;
                                         const length = transformMap.length;
@@ -2022,10 +2024,10 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         const entries = Array.from(result.entries());
                                         const delay = repeatingAsInfinite !== -1 ? repeatingAsInfinite : 0;
                                         let object: Undef<SvgAnimate>;
-                                        entries.forEach(item => {
+                                        for (const item of entries) {
                                             keySplines.push(interpolatorMap.get(item[0]) || '');
                                             item[0] -= delay;
-                                        });
+                                        }
                                         if (path) {
                                             const pathData = getPathData(convertToFraction(entries), path, parent, forwardMap, precision);
                                             if (pathData) {
@@ -2040,7 +2042,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                 }
                                             }
                                             else {
-                                                return;
+                                                continue;
                                             }
                                         }
                                         else {
@@ -2130,10 +2132,10 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     }
                                 }
                             }
-                        });
+                        }
                     }
                 }
-            });
+            }
         }
     };
 };

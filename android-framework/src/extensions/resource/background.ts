@@ -373,10 +373,10 @@ function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [],
     if (solid && !images.find(image => !!image.gradient)) {
         item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
     }
-    images.forEach(image => {
+    for (const image of images) {
         const gradient = image.gradient;
         item.push(gradient ? { shape: { 'android:shape': 'rectangle', gradient, corners } } : image);
-    });
+    }
     if (stroke) {
         item.push({
             top: indentOffset,
@@ -851,7 +851,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     backgroundRepeat.length = 0;
                     backgroundSize.length = 0;
                 }
-                embedded.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE')).forEach(image => {
+                for (const image of embedded.filter(item => item.visible && (item.imageElement || item.containerName === 'INPUT_IMAGE'))) {
                     const element = image.element as HTMLImageElement;
                     const src = resource.addImageSrc(element);
                     if (src !== '') {
@@ -879,7 +879,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         backgroundPosition[length] = position;
                         ++length;
                     }
-                });
+                }
             }
             const { backgroundClip, backgroundOrigin } = data;
             const documentBody = node.innerMostWrapped.documentBody;
@@ -1053,7 +1053,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         break;
                     default:
                         if (size !== '') {
-                            size.split(' ').forEach((dimen, index) => {
+                            size.split(CHAR.SPACE).forEach((dimen, index) => {
                                 if (dimen === '100%') {
                                     gravityAlign = index === 0 ? 'fill_horizontal' : delimitString({ value: gravityAlign }, 'fill_vertical');
                                 }

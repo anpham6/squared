@@ -45,20 +45,20 @@ let output: String;
                 for (const value of command.split(',')) {
                     const include: string[] = [];
                     if (value.includes('*')) {
-                        glob.sync(path.resolve(`dist/extensions/${value}`)).forEach(filepath => {
+                        for (const filepath of glob.sync(path.resolve(`dist/extensions/${value}`))) {
                             if (filepath.endsWith('.min.js')) {
                                 include.push(filepath);
                             }
-                        });
+                        }
                     }
                     else {
                         include.push(path.resolve(`dist/extensions/${value}.min.js`));
                     }
-                    include.forEach(filepath => {
+                    for (const filepath of include) {
                         if (isFile(filepath)) {
                             extensions.push(filepath);
                         }
-                    });
+                    }
                 }
                 break;
             case '-o':

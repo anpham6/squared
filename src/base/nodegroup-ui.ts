@@ -217,7 +217,7 @@ export default abstract class NodeGroupUI extends NodeUI {
     get containerIndex() {
         let result = super.containerIndex;
         if (result === Infinity) {
-            this.each(node => result = Math.min((node as NodeUI).containerIndex, result));
+            this.each((node: NodeUI) => result = Math.min(node.containerIndex, result));
             super.containerIndex = result;
         }
         return result;

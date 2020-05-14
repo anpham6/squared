@@ -215,7 +215,7 @@ function createPathInterpolator(value: string) {
 
 function createTransformData(transform: SvgTransform[]) {
     const result: TransformData = {};
-    transform.forEach(item => {
+    for (const item of transform) {
         const { matrix, origin, type } = item;
         switch (type) {
             case SVGTransform.SVG_TRANSFORM_SCALE:
@@ -242,7 +242,7 @@ function createTransformData(transform: SvgTransform[]) {
                 result.translateY = matrix.f.toString();
                 break;
         }
-    });
+    }
     return result;
 }
 
@@ -261,12 +261,12 @@ function getViewport(element: SVGGraphicsElement) {
 
 function getParentOffset(element: SVGGraphicsElement, rootElement: SVGGraphicsElement) {
     let x = 0, y = 0;
-    getViewport(element).forEach(parent => {
+    for (const parent of getViewport(element)) {
         if ((SVG.svg(parent) || SVG.use(parent)) && parent !== rootElement) {
             x += parent.x.baseVal.value;
             y += parent.y.baseVal.value;
         }
-    });
+    }
     return { x, y };
 }
 
@@ -327,7 +327,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
                 }
             }
         }
-        items.forEach(item => {
+        for (const item of items) {
             switch (item.type) {
                 case SVGTransform.SVG_TRANSFORM_MATRIX:
                 case SVGTransform.SVG_TRANSFORM_SKEWX:
@@ -355,7 +355,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
                     }
                     if (!item.origin && current.length === 1 && current[0].type === SVGTransform.SVG_TRANSFORM_SCALE) {
                         current.push(item);
-                        return;
+                        continue;
                     }
                 case SVGTransform.SVG_TRANSFORM_SCALE:
                     if (current.length) {
@@ -364,7 +364,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
                     current.push(item);
                     break;
             }
-        });
+        }
         if (current.length) {
             host.push(current);
         }
@@ -520,7 +520,9 @@ function createFillGradient(gradient: Gradient, path: SvgPath, precision?: numbe
             let cyDiameter!: number;
             switch (element.tagName) {
                 case 'path':
-                    SvgBuild.getPathCommands(path.value).forEach(command => points = points.concat(command.value));
+                    for (const command of SvgBuild.getPathCommands(path.value)) {
+                        points = points.concat(command.value);
+                    }
                 case 'polygon':
                     if (SVG.polygon(element)) {
                         points = points.concat(SvgBuild.clonePoints(element.points));
@@ -599,10 +601,10 @@ function insertTargetAnimation(data: AnimatedVectorTemplate[], name: string, tar
                 set: [],
                 objectAnimator: []
             };
-            templateSet.forEach(item => {
+            for (const item of templateSet) {
                 setData.set = setData.set.concat(item.set as SetData[]);
                 setData.objectAnimator = setData.objectAnimator.concat(item.objectAnimator);
-            });
+            }
             targetSetTemplate = setData;
         }
         while (targetSetTemplate.set.length === 1) {
@@ -803,9 +805,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const [companions, animations] = partitionArray(group.animate, child => 'companion' in child);
                 const targetSetTemplate: SetTemplate = { set: [], objectAnimator: [] };
                 const length = animations.length;
-                let i = 0;
-                while (i < length) {
-                    const item = animations[i++];
+                for (let i = 0; i < length; ++i) {
+                    const item = animations[i];
                     if (item.setterType) {
                         if (ATTRIBUTE_ANDROID[item.attributeName] && isString(item.to)) {
                             if (item.fillReplace && item.duration > 0) {
@@ -896,7 +897,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 for (const item of transformMap.values()) {
                     transformTargets.push(item.sort(sortSynchronized));
                 }
-                isolatedData.forEach(item => isolatedTargets.push([[item]]));
+                for (const item of isolatedData) {
+                    isolatedTargets.push([[item]]);
+                }
                 [togetherTargets, transformTargets, ...isolatedTargets].forEach((targets, index) => {
                     if (targets.length === 0) {
                         return;
@@ -906,7 +909,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         set: [],
                         objectAnimator: []
                     };
-                    targets.forEach(items => {
+                    for (const items of targets) {
                         let ordering = '';
                         let synchronized = false;
                         let checkBefore = false;
@@ -943,15 +946,17 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         let beforeAnimator = fillBefore.objectAnimator;
                         let afterAnimator = fillAfter.objectAnimator;
                         let together: PropertyValue[] = [];
-                        (synchronized ? partitionArray(items, (animate: SvgAnimate) => animate.iterationCount !== -1) : [items]).forEach((partition, section) => {
-                            if (section === 1 && partition.length > 1) {
+                        const targeted = synchronized ? partitionArray(items, (animate: SvgAnimate) => animate.iterationCount !== -1) : [items];
+                        for (let i = 0; i < targeted.length; ++i) {
+                            const partition = targeted[i];
+                            if (i === 1 && partition.length > 1) {
                                 fillCustom.ordering = 'sequentially';
                             }
                             const animatorMap = new Map<string, PropertyValueHolder[]>();
-                            partition.forEach(item => {
+                            for (const item of partition) {
                                 const valueType = getValueType(item.attributeName);
                                 if (valueType === undefined) {
-                                    return;
+                                    continue;
                                 }
                                 const requireBefore = item.delay > 0;
                                 let transforming = false;
@@ -1068,7 +1073,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 else if (SvgBuild.isAnimate(item)) {
                                     let resetBefore = checkBefore;
                                     let repeatCount: string;
-                                    if (section === 1) {
+                                    if (i === 1) {
                                         repeatCount = partition.length > 1 ? '0' : '-1';
                                     }
                                     else {
@@ -1203,7 +1208,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                         if (keyName !== '') {
                                                             animatorMap.set(keyName, propertyValuesHolder);
                                                         }
-                                                        (section === 0 ? objectAnimator : customAnimator).push({ ...options, propertyValuesHolder });
+                                                        (i === 0 ? objectAnimator : customAnimator).push({ ...options, propertyValuesHolder });
                                                     }
                                                     transformOrigin = undefined;
                                                 }
@@ -1311,10 +1316,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                     if (valueType === 'floatType') {
                                                         propertyOptions.valueTo = truncate(valueA, precision);
                                                     }
-                                                    (section === 0 ? objectAnimator : customAnimator).push(propertyOptions);
+                                                    (i === 0 ? objectAnimator : customAnimator).push(propertyOptions);
                                                 }
                                             }
-                                            if (section === 0 && !synchronized && item.iterationCount !== -1) {
+                                            if (i === 0 && !synchronized && item.iterationCount !== -1) {
                                                 insertFillAfter(propertyName, objectAnimator);
                                             }
                                         }
@@ -1324,8 +1329,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         }
                                     }
                                 }
-                            });
-                        });
+                            }
+                        }
                         const valid = objectAnimator.length > 0 || customAnimator.length > 0;
                         if (ordering === 'sequentially') {
                             if (valid && beforeAnimator.length === 1) {
@@ -1371,7 +1376,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         if (together.length) {
                             setData.objectAnimator = setData.objectAnimator.concat(together);
                         }
-                    });
+                    }
                     if (setData.set.length || setData.objectAnimator.length) {
                         targetSetTemplate.set.push(setData);
                     }
@@ -1386,7 +1391,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                     objectAnimator.push(this.createPropertyValue(propertyName, valueTo, '0', valueType, valueFrom, startOffset));
                 };
-                target.animate.forEach(item => {
+                for (const item of target.animate) {
                     if (SvgBuild.asAnimateMotion(item)) {
                         const parent = item.parent;
                         if (parent && SvgBuild.isShape(parent)) {
@@ -1402,7 +1407,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             }
                         }
                     }
-                });
+                }
                 if (objectAnimator) {
                     insertTargetAnimation(
                         data,
@@ -1427,7 +1432,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             if (vectorName !== '') {
                 item.push({ drawable: getDrawableSrc(vectorName) });
             }
-            imageData.forEach(image => {
+            for (const image of imageData) {
                 const box = svg.viewBox;
                 const scaleX = svg.width / box.width;
                 const scaleY = svg.height / box.height;
@@ -1456,7 +1461,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     data.drawable = src;
                 }
                 item.push(data);
-            });
+            }
             drawable = Resource.insertStoredAsset('drawables', templateName, applyTemplate('layer-list', LAYERLIST_TMPL, layerData));
         }
         else {
@@ -1601,10 +1606,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             }
             if (transforms.length) {
                 let transformed: SvgTransform[] = [];
-                transforms.forEach(data => {
+                for (const data of transforms) {
                     result.push(createTransformData(data));
                     transformed = transformed.concat(data);
-                });
+                }
                 target.transformed = transformed.reverse();
             }
         }
@@ -1646,7 +1651,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             renderData.push(baseData);
         }
         path.transformResidual?.forEach(item => renderData.push(createTransformData(item)));
-        PATH_ATTRIBUTES.forEach(attr => {
+        for (let attr of PATH_ATTRIBUTES) {
             let value = useTarget && target[attr] || path[attr];
             if (value) {
                 switch (attr) {
@@ -1664,7 +1669,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             }
                         }
                         else {
-                            return;
+                            continue;
                         }
                         break;
                     case 'stroke':
@@ -1676,7 +1681,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             }
                         }
                         else {
-                            return;
+                            continue;
                         }
                         break;
                     case 'fillPattern': {
@@ -1711,7 +1716,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             this._namespaceAapt = true;
                         }
                         else {
-                            return;
+                            continue;
                         }
                         break;
                     }
@@ -1721,46 +1726,46 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             value = 'evenOdd';
                         }
                         else {
-                            return;
+                            continue;
                         }
                         break;
                     case 'strokeWidth':
                         if (value === '0') {
-                            return;
+                            continue;
                         }
                         break;
                     case 'fillOpacity':
                     case 'strokeOpacity':
                         value = ((isNumber(value) ? parseFloat(value) : 1) * opacity).toString();
                         if (value === '1') {
-                            return;
+                            continue;
                         }
                         attr = attr === 'fillOpacity' ? 'fillAlpha' : 'strokeAlpha';
                         break;
                     case 'strokeLinecap':
                         if (value === 'butt') {
-                            return;
+                            continue;
                         }
                         attr = 'strokeLineCap';
                         break;
                     case 'strokeLinejoin':
                         if (value === 'miter') {
-                            return;
+                            continue;
                         }
                         attr = 'strokeLineJoin';
                         break;
                     case 'strokeMiterlimit':
                         if (value === '4') {
-                            return;
+                            continue;
                         }
                         attr = 'strokeMiterLimit';
                         break;
                     default:
-                        return;
+                        continue;
                 }
                 result[attr] = value;
             }
-        });
+        }
         if (!result.strokeWidth) {
             result.strokeColor = '';
         }
@@ -1773,7 +1778,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const pathData = path.value;
         let previousPathData = pathData;
         let index = 0;
-        target.animations.forEach(item => {
+        for (const item of target.animations) {
             if (SvgBuild.asAnimateTransform(item) && !item.additiveSum && item.transformFrom) {
                 let time = Math.max(0, item.delay - 1);
                 fillReplaceMap.set(time, {
@@ -1796,7 +1801,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
                 ++index;
             }
-        });
+        }
         const replaceData = Array.from(fillReplaceMap.values()).sort((a, b) => a.time < b.time ? -1 : 1);
         const length = replaceData.length;
         for (let i = 0; i < length; ++i) {
@@ -1839,7 +1844,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                             }
                         }
                     }
-                    previousType.forEach(type => {
+                    for (const type of previousType) {
                         const propertyName = getTransformPropertyName(type);
                         if (propertyName) {
                             const initialValue = TRANSFORM.typeAsValue(type).split(' ');
@@ -1849,7 +1854,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 transformResult.push(createAnimateFromTo(propertyName[j], item.time, initialValue[j++], ''));
                             }
                         }
-                    });
+                    }
                 }
                 if (valid) {
                     replaceResult.push(createAnimateFromTo('d', item.time, item.to));

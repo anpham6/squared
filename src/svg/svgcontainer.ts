@@ -279,7 +279,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 }
             }
             else {
-                const { x, y } = (this.parent as SvgContainer).aspectRatio;
+                const { x, y } = this.parent!.aspectRatio;
                 this.clipViewBox(x, y, this.width + x, this.height + y, precision, true);
             }
         }
@@ -447,14 +447,14 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
 
     public getPathAll(cascade = true) {
         const result: string[] = [];
-        (cascade ? this.cascade() : this.children).forEach(item => {
+        for (const item of (cascade ? this.cascade() : this.children)) {
             if (SvgBuild.isShape(item)) {
                 const value = item.path?.value;
                 if (value) {
                     result.push(value);
                 }
             }
-        });
+        }
         return result;
     }
 

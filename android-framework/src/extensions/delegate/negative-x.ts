@@ -38,7 +38,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
         let left = NaN, right = NaN;
         let firstChild: Undef<T>;
-        children.forEach(item => {
+        for (const item of children) {
             const linear = item.linear;
             if (item.pageFlow) {
                 if (isNaN(left) || linear.left < left) {
@@ -54,7 +54,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
             else if (item.right < 0 && (isNaN(right) || linear.right > right)) {
                 right = linear.right;
             }
-        });
+        }
         if (!node.pageFlow) {
             if (!isNaN(left) && !node.has('left')) {
                 const offset = node.linear.left - left;
@@ -107,9 +107,9 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 View.setConstraintDimension(firstChild);
                 firstChild.positioned = true;
             }
-            mainData.children.forEach(item => {
+            for (const item of mainData.children) {
                 if (item === firstChild) {
-                    return;
+                    continue;
                 }
                 if (item.hasPX('left')) {
                     item.translateX(item.left);
@@ -121,7 +121,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                     item.alignSibling('right', node.documentId);
                     item.constraint.horizontal = true;
                 }
-            });
+            }
             node.anchorParent('horizontal', 0);
             node.anchorParent('vertical', 0);
             View.setConstraintDimension(node);
@@ -137,14 +137,14 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 if (translateX !== '' || translateY !== '') {
                     const x = parseInt(translateX);
                     const y = parseInt(translateY);
-                    mainData.children.forEach(child => {
+                    for (const item of mainData.children) {
                         if (!isNaN(x)) {
-                            child.translateX(x);
+                            item.translateX(x);
                         }
                         if (!isNaN(y)) {
-                            child.translateY(y);
+                            item.translateY(y);
                         }
-                    });
+                    }
                 }
             }
         }

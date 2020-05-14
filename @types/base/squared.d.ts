@@ -369,7 +369,7 @@ declare module "base" {
         queryMap?: Node[][];
         readonly sessionId: string;
         init(): void;
-        saveAsInitial(overwrite?: boolean): void;
+        saveAsInitial(): void;
         data(name: string, attr: string, value?: any, overwrite?: boolean): any;
         unsetCache(...attrs: string[]): void;
         ascend(options: AscendOptions<Node>): Node[];
@@ -473,12 +473,12 @@ declare module "base" {
         get paddingLeft(): number;
         get inline(): boolean;
         get inlineStatic(): boolean;
+        get block(): boolean;
+        get blockStatic(): boolean;
         get plainText(): boolean;
         get styleText(): boolean;
         get textContent(): string;
         get lineBreak(): boolean;
-        get block(): boolean;
-        get blockStatic(): boolean;
         get pageFlow(): boolean;
         get autoMargin(): AutoMargin;
         get floating(): boolean;
@@ -506,8 +506,6 @@ declare module "base" {
         get percentHeight(): number;
         get firstChild(): Null<Node>;
         get lastChild(): Null<Node>;
-        get firstStaticChild(): Null<Node>;
-        get lastStaticChild(): Null<Node>;
         get previousSibling(): Null<Node>;
         get nextSibling(): Null<Node>;
         get previousElementSibling(): Null<Node>;
@@ -660,8 +658,8 @@ declare module "base" {
         get baselineElement(): boolean;
         get previousSibling(): Null<NodeUI>;
         get nextSibling(): Null<NodeUI>;
-        get firstChild(): Null<Node>;
-        get lastChild(): Null<Node>;
+        get firstStaticChild(): Null<NodeUI>;
+        get lastStaticChild(): Null<NodeUI>;
         get onlyChild(): boolean;
         get textEmpty(): boolean;
         get innerMostWrapped(): NodeUI;

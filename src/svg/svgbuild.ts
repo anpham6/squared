@@ -95,17 +95,21 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static drawPolyline(values: Point[] | DOMPoint[], precision?: number) {
         let result = 'M';
         if (precision) {
-            values.forEach(value => result += ` ${truncate(value.x, precision)},${truncate(value.y, precision)}`);
+            for (const value of values) {
+                result += ` ${truncate(value.x, precision)},${truncate(value.y, precision)}`;
+            }
         }
         else {
-            values.forEach(value => result += ` ${value.x},${value.y}`);
+            for (const value of values) {
+                result += ` ${value.x},${value.y}`;
+            }
         }
         return result;
     }
 
     public static drawPath(values: SvgPathCommand[], precision?: number) {
         let result = '';
-        values.forEach(value => {
+        for (const value of values) {
             result += (result !== '' ? ' ' : '') + value.key;
             switch (value.key.toUpperCase()) {
                 case 'M':
@@ -126,7 +130,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     result += `${value.radiusX},${value.radiusY},${value.xAxisRotation},${value.largeArcFlag},${value.sweepFlag},${value.coordinates.join(',')}`;
                     break;
             }
-        });
+        }
         return precision ? truncateString(result, precision) : result;
     }
 
@@ -228,17 +232,17 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 rotateFixed = parseAngle(rotation);
             }
             else {
-                SvgBuild.getPathCommands(value).forEach(item => {
+                for (const item of SvgBuild.getPathCommands(value)) {
                     switch (item.key.toUpperCase()) {
                         case 'M':
                         case 'L':
                         case 'H':
                         case 'V':
                         case 'Z':
-                            item.value.forEach(pt => {
+                            for (const pt of item.value) {
                                 keyPoints.push(pt);
                                 rotatingPoints.push(false);
-                            });
+                            }
                             break;
                         case 'C':
                         case 'S':
@@ -249,7 +253,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                             rotatingPoints.push(true);
                             break;
                     }
-                });
+                }
                 if (rotation !== 'auto 0deg') {
                     rotateInitial = parseAngle(rotation.split(' ').pop() as string);
                 }
@@ -456,12 +460,12 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static getPathPoints(values: SvgPathCommand[]) {
         const result: SvgPoint[] = [];
         let x = 0, y = 0;
-        values.forEach(item => {
-            const coordinates = item.coordinates;
+        for (const value of values) {
+            const { key, relative, coordinates } = value;
             const length = coordinates.length;
             let i = 0;
             while (i < length) {
-                if (item.relative) {
+                if (relative) {
                     x += coordinates[i++];
                     y += coordinates[i++];
                 }
@@ -470,16 +474,16 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     y = coordinates[i++];
                 }
                 const pt: SvgPoint = { x, y };
-                if (item.key.toUpperCase() === 'A') {
-                    pt.rx = item.radiusX;
-                    pt.ry = item.radiusY;
+                if (key.toUpperCase() === 'A') {
+                    pt.rx = value.radiusX;
+                    pt.ry = value.radiusY;
                 }
                 result.push(pt);
             }
-            if (item.relative) {
-                item.key = item.key.toUpperCase();
+            if (relative) {
+                value.key = key.toUpperCase();
             }
-        });
+        }
         return result;
     }
 
@@ -588,7 +592,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static filterTransforms(transforms: SvgTransform[], exclude?: number[]) {
         const result: SvgTransform[] = [];
-        transforms.forEach(item => {
+        for (const item of transforms) {
             const type = item.type;
             if (!exclude || !exclude.includes(type)) {
                 switch (type) {
@@ -596,33 +600,33 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     case SVGTransform.SVG_TRANSFORM_SKEWX:
                     case SVGTransform.SVG_TRANSFORM_SKEWY:
                         if (item.angle === 0) {
-                            return;
+                            continue;
                         }
                         break;
                     case SVGTransform.SVG_TRANSFORM_SCALE: {
                         const m = item.matrix;
                         if (m.a === 1 && m.d === 1) {
-                            return;
+                            continue;
                         }
                         break;
                     }
                     case SVGTransform.SVG_TRANSFORM_TRANSLATE: {
                         const m = item.matrix;
                         if (m.e === 0 && m.f === 0) {
-                            return;
+                            continue;
                         }
                         break;
                     }
                 }
                 result.push(item);
             }
-        });
+        }
         return result;
     }
 
     public static applyTransforms(transforms: SvgTransform[], values: SvgPoint[], origin?: SvgPoint) {
         const result = SvgBuild.clonePoints(values);
-        transforms.slice(0).reverse().forEach(item => {
+        for (const item of transforms.slice(0).reverse()) {
             const m = item.matrix;
             let x1 = 0, y1 = 0;
             let x2 = 0, y2 = 0;
@@ -660,7 +664,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         break;
                 }
             }
-            result.forEach(pt => {
+            for (const pt of result) {
                 const { x, y } = pt;
                 pt.x = MATRIX.applyX(m, x, y + y1) + x2;
                 pt.y = MATRIX.applyY(m, x + x1, y) + y2;
@@ -671,8 +675,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                         pt.ry = MATRIX.applyY(m, rx + x1, ry);
                     }
                 }
-            });
-        });
+            }
+        }
         return result;
     }
 
@@ -800,7 +804,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static getBoxRect(values: string[]): BoxRect {
         let points: SvgPoint[] = [];
-        values.forEach(value => points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(value))));
+        for (const value of values) {
+            points = points.concat(SvgBuild.getPathPoints(SvgBuild.getPathCommands(value)));
+        }
         const [left, top, right, bottom] = this.minMaxPoints(points, true);
         return { top, right, bottom, left };
     }

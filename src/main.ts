@@ -69,7 +69,7 @@ export function setFramework(value: Framework, options?: ObjectMap<any>, cached 
         main.userSettings = settings;
         const { builtInExtensions, extensions } = main;
         extensions.length = 0;
-        settings.builtInExtensions.forEach(namespace => {
+        for (let namespace of settings.builtInExtensions) {
             const ext = builtInExtensions[namespace];
             if (ext) {
                 includeExtension(extensions, ext);
@@ -82,7 +82,7 @@ export function setFramework(value: Framework, options?: ObjectMap<any>, cached 
                     }
                 }
             }
-        });
+        }
         if (reloading) {
             deleteProperties(system);
         }

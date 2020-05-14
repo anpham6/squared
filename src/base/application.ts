@@ -37,11 +37,11 @@ function addImageSrc(uri: string, width = 0, height = 0) {
 
 function parseSrcSet(value: string) {
     if (value !== '') {
-        value.split(XML.SEPARATOR).forEach(uri => {
+        for (const uri of value.split(XML.SEPARATOR)) {
             if (uri !== '') {
                 addImageSrc(resolvePath(uri.split(CHAR.SPACE)[0]));
             }
-        });
+        }
     }
 }
 
@@ -173,13 +173,40 @@ export default abstract class Application<T extends Node> implements squared.bas
         const preloadImages = this.userSettings.preloadImages;
         const imageElements: PreloadImage[] = [];
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
+        let documentRoot!: HTMLElement;
+        if (elements.length === 0) {
+            elements.push(document.body);
+        }
+        for (const value of elements) {
+            let element: Null<HTMLElement>;
+            if (typeof value === 'string') {
+                element = document.getElementById(value);
+            }
+            else if (hasComputedStyle(value)) {
+                element = value;
+            }
+            else {
+                continue;
+            }
+            if (element) {
+                if (!documentRoot) {
+                    documentRoot = element;
+                }
+                this.rootElements.add(element);
+            }
+        }
+        for (const element of this.rootElements) {
+            element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
+            element.querySelectorAll('video').forEach((source: HTMLVideoElement) => addImageSrc(source.poster));
+            element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
+        }
         const resumeThread = () => {
             this.initializing = false;
-            preloaded.forEach(image => {
+            for (const image of preloaded) {
                 if (image.parentElement) {
                     documentRoot.removeChild(image);
                 }
-            });
+            }
             preloaded.length = 0;
             this.extensions.forEach(ext => ext.beforeParseDocument());
             const success: T[] = [];
@@ -198,30 +225,6 @@ export default abstract class Application<T extends Node> implements squared.bas
             }
             return success;
         };
-        if (elements.length === 0) {
-            elements.push(document.body);
-        }
-        elements.forEach(value => {
-            let element: Null<HTMLElement>;
-            if (typeof value === 'string') {
-                element = document.getElementById(value);
-            }
-            else if (hasComputedStyle(value)) {
-                element = value;
-            }
-            else {
-                return;
-            }
-            if (element) {
-                this.rootElements.add(element);
-            }
-        });
-        const documentRoot = this.rootElements.values().next().value;
-        for (const element of this.rootElements) {
-            element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
-            element.querySelectorAll('video').forEach((source: HTMLVideoElement) => addImageSrc(source.poster));
-            element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
-        }
         if (preloadImages) {
             for (const image of ASSET_IMAGE.values()) {
                 const uri = image.uri as string;
@@ -316,7 +319,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     target = error.target as HTMLImageElement;
                 }
                 const message = target instanceof HTMLImageElement ? target.src : '';
-                return !isString(message) || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? resumeThread() : [];
+                return !isString(message) || !this.userSettings.showErrorMessages || confirm(`FAIL: ${message}`) ? resumeThread() : Promise.reject(message);
             });
         }
         else {
@@ -472,7 +475,12 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const cssStyle = item.style;
                 const important: ObjectMap<boolean> = {};
                 const baseMap: StringMap = {};
-                Array.from(cssStyle).forEach(attr => baseMap[convertCamelCase(attr)] = cssStyle[attr]);
+                const items = Array.from(cssStyle);
+                const length = items.length;
+                for (let i = 0; i < length; ++i) {
+                    const attr = items[i];
+                    baseMap[convertCamelCase(attr)] = cssStyle[attr];
+                }
                 parseImageUrl(resourceHandler, baseMap, 'backgroundImage', styleSheetHref);
                 parseImageUrl(resourceHandler, baseMap, 'listStyleImage', styleSheetHref);
                 parseImageUrl(resourceHandler, baseMap, 'content', styleSheetHref);
@@ -547,18 +555,18 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                     important[attr] = true;
                 }
-                parseSelectorText(item.selectorText, true).forEach(selectorText => {
+                for (const selectorText of parseSelectorText(item.selectorText, true)) {
                     const specificity = getSpecificity(selectorText);
                     const [selector, target] = selectorText.split('::');
                     const targetElt = target ? '::' + target : '';
                     const elements = document.querySelectorAll(selector || '*');
-                    const length = elements.length;
-                    if (length === 0) {
+                    const q = elements.length;
+                    if (q === 0) {
                         this.processing.unusedStyles.add(selectorText);
-                        return;
+                        continue;
                     }
                     let i = 0;
-                    while (i < length) {
+                    while (i < q) {
                         const element = elements[i++];
                         const attrStyle = `styleMap${targetElt}`;
                         const attrSpecificity = `styleSpecificity${targetElt}`;
@@ -594,7 +602,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                             setElementCache(element, attrSpecificity, sessionId, specificityData);
                         }
                     }
-                });
+                }
                 break;
             }
             case CSSRule.FONT_FACE_RULE: {
@@ -605,7 +613,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (fontFamily !== '' && match.length) {
                         const fontStyle = REGEX_FONTSTYLE.exec(attr)?.[1].toLowerCase() || 'normal';
                         const fontWeight = parseInt(REGEX_FONTWEIGHT.exec(attr)?.[1] || '400');
-                        match.forEach(value => {
+                        for (const value of match) {
                             const urlMatch = REGEX_URL.exec(value);
                             if (urlMatch) {
                                 let srcUrl: Undef<string>;
@@ -626,7 +634,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                     srcFormat: urlMatch[4]?.toLowerCase().trim() || 'truetype'
                                 });
                             }
-                        });
+                        }
                     }
                 }
                 break;

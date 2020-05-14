@@ -41,16 +41,16 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
             return a.delay < b.delay ? -1 : 1;
         });
         attrs.length = 0;
-        animations.forEach((item: SvgAnimate) => {
+        for (const item of animations as SvgAnimate[]) {
             const value = SvgAnimationIntervalMap.getKeyName(item);
             if (!attrs.includes(value)) {
                 attrs.push(value);
             }
-        });
+        }
         const map: SvgAnimationIntervalAttributeMap<SvgAnimation> = {};
         const intervalMap: IntervalMap = {};
         const intervalTimes: IntervalTime = {};
-        attrs.forEach(keyName => {
+        for (const keyName of attrs) {
             map[keyName] = new Map<number, SvgAnimationIntervalValue<SvgAnimation>[]>();
             intervalMap[keyName] = {};
             intervalTimes[keyName] = new Set<number>();
@@ -60,8 +60,8 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 const delay = backwards.delay;
                 insertIntervalValue(intervalMap, intervalTimes, keyName, 0, backwards.values[0], delay, backwards, delay === 0, false, FILL_MODE.BACKWARDS);
             }
-        });
-        animations.forEach(item => {
+        }
+        for (const item of animations) {
             const keyName = SvgAnimationIntervalMap.getKeyName(item);
             if (item.baseValue && intervalMap[keyName][-1] === undefined) {
                 insertIntervalValue(intervalMap, intervalTimes, keyName, -1, item.baseValue);
@@ -82,9 +82,9 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     insertIntervalValue(intervalMap, intervalTimes, keyName, timeEnd, item.valueTo, 0, item, false, true, item.fillForwards ? FILL_MODE.FORWARDS : FILL_MODE.FREEZE);
                 }
             }
-        });
+        }
         for (const keyName in intervalMap) {
-            sortNumber(Array.from(intervalTimes[keyName])).forEach(time => {
+            for (const time of sortNumber(Array.from(intervalTimes[keyName]))) {
                 const values = intervalMap[keyName][time];
                 for (let i = 0; i < values.length; ++i) {
                     const interval = values[i];
@@ -123,25 +123,25 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                     });
                     map[keyName].set(time, values);
                 }
-            });
+            }
         }
         for (const keyName in map) {
             for (const [timeA, dataA] of map[keyName].entries()) {
-                dataA.forEach(itemA => {
+                for (const itemA of dataA) {
                     const animationA = itemA.animation;
                     if (animationA) {
                         if (itemA.fillMode === FILL_MODE.FREEZE) {
                             const previous: SvgAnimation[] = [];
                             for (const [timeB, dataB] of map[keyName].entries()) {
                                 if (timeB < timeA) {
-                                    dataB.forEach(itemB => {
+                                    for (const itemB of dataB) {
                                         if (itemB.start) {
                                             const animation = itemB.animation;
                                             if (animation?.animationElement) {
                                                 previous.push(animation);
                                             }
                                         }
-                                    });
+                                    }
                                 }
                                 else {
                                     for (let i = 0; i < dataB.length; ++i) {
@@ -183,14 +183,14 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                             const previous: SvgAnimation[] = [];
                             for (const [timeB, dataB] of map[keyName].entries()) {
                                 if (!forwarded && timeB < timeA) {
-                                    dataB.forEach(itemB => {
+                                    for (const itemB of dataB) {
                                         if (itemB.start) {
                                             const animationB = itemB.animation;
                                             if (animationB) {
                                                 previous.push(animationB);
                                             }
                                         }
-                                    });
+                                    }
                                 }
                                 else {
                                     for (let i = 0; i < dataB.length; ++i) {
@@ -212,7 +212,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                             }
                         }
                     }
-                });
+                }
             }
         }
         for (const keyName in map) {
@@ -233,7 +233,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                 if (!animation) {
                     return true;
                 }
-                return (map.get(time) as SvgAnimationIntervalValue<SvgAnimation>[]).findIndex(item => item.animation === animation) !== -1;
+                return map.get(time)!.findIndex(item => item.animation === animation) !== -1;
             }
             return false;
         }

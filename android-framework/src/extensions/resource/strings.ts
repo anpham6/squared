@@ -51,7 +51,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             if (valueString) {
                                 let value = valueString.value;
                                 const name = valueString.key || value;
-                                if (node.naturalChild && node.alignParent('left') && node.pageFlow && !(node.preserveWhiteSpace && !node.plainText || node.plainText && (node.actualParent as T).preserveWhiteSpace)) {
+                                if (node.naturalChild && node.alignParent('left') && node.pageFlow && !(node.preserveWhiteSpace && !node.plainText || node.plainText && node.actualParent!.preserveWhiteSpace)) {
                                     let leadingSpace = 0;
                                     const textContent = node.textContent;
                                     const length = textContent.length;
@@ -97,7 +97,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 value = replaceCharacterData(value, node.preserveWhiteSpace || tagName === 'CODE');
                                 const textDecorationLine = node.css('textDecorationLine');
                                 if (textDecorationLine !== 'none') {
-                                    textDecorationLine.split(' ').forEach(style => {
+                                    for (const style of textDecorationLine.split(' ')) {
                                         switch (style) {
                                             case 'underline':
                                                 value = `<u>${value}</u>`;
@@ -106,7 +106,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                                 value = `<strike>${value}</strike>`;
                                                 break;
                                         }
-                                    });
+                                    }
                                 }
                                 if (tagName === 'INS' && !textDecorationLine.includes('line-through')) {
                                     value = `<strike>${value}</strike>`;
@@ -173,12 +173,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
             const resourceArray = stringArray || numberArray;
             if (resourceArray) {
                 result = [];
-                resourceArray.forEach(value => {
+                for (let value of resourceArray) {
                     value = Resource.addString(replaceCharacterData(value), '', numberResourceValue);
                     if (value !== '') {
-                        (result as string[]).push(`@string/${value}`);
+                        result.push(`@string/${value}`);
                     }
-                });
+                }
             }
         }
         return result?.length ? Resource.insertStoredAsset('arrays', `${controlId}_array`, result) : '';

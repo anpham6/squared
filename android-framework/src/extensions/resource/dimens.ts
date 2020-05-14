@@ -52,7 +52,9 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             for (const name in group) {
                 const [namespace, attr, value] = name.split(XML.SEPARATOR);
                 const key = getResourceName(dimens, fromLastIndexOf(containerName, '.') + '_' + convertUnderscore(attr), value);
-                group[name].forEach(node => node[namespace](attr, `@dimen/${key}`));
+                for (const node of group[name]) {
+                    node[namespace](attr, `@dimen/${key}`);
+                }
                 dimens.set(key, value);
             }
         }
@@ -61,7 +63,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public afterFinalize() {
         if (this.controller.hasAppendProcessing()) {
             const dimens = STORED.dimens;
-            this.application.layouts.forEach(layout => {
+            for (const layout of this.application.layouts) {
                 REGEX_UNIT_ATTR.lastIndex = 0;
                 let content = layout.content!;
                 let match: Null<RegExpExecArray>;
@@ -74,7 +76,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                     }
                 }
                 layout.content = content;
-            });
+            }
         }
     }
 }

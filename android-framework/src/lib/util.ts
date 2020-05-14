@@ -57,7 +57,7 @@ export function getDataSet(dataset: StringMap | DOMStringMap, prefix: string) {
     let result: Undef<StringMap>;
     for (const attr in dataset) {
         if (attr.startsWith(prefix)) {
-            if (result === undefined) {
+            if (!result) {
                 result = {};
             }
             result[capitalize(attr.substring(prefix.length), false)] = dataset[attr] as string;

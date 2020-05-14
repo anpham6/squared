@@ -1091,10 +1091,10 @@ export function reduceRGBA(value: RGBA, percent: number, cacheName?: string) {
 
 export function getHexCode(...values: number[]) {
     let output = '';
-    values.forEach(value => {
+    for (const value of values) {
         const rgb = Math.max(0, Math.min(value, 255));
         output += isNaN(rgb) ? '00' : STRING_HEX.charAt((rgb - (rgb % 16)) / 16) + STRING_HEX.charAt(rgb % 16);
-    });
+    }
     return output;
 }
 

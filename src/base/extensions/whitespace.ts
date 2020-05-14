@@ -135,11 +135,11 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                         resetBox(target, region);
                         if (!direction && target.floating) {
                             const bounds = target.bounds;
-                            (target.actualParent as NodeUI).naturalChildren.forEach(item => {
+                            for (const item of target.actualParent!.naturalChildren) {
                                 if (item.floating && item !== target && item.intersectY(bounds, 'bounds')) {
                                     resetBox(item as NodeUI, region);
                                 }
-                            });
+                            }
                         }
                         if (height === 0 && !target.every(item => item.floating || !item.pageFlow)) {
                             resetBox(target, direction ? BOX_STANDARD.MARGIN_BOTTOM : BOX_STANDARD.MARGIN_TOP);
@@ -188,7 +188,7 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
 }
 
 function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
-    if (node === null || !node.styleElement || node.lineBreak) {
+    if (!node || !node.styleElement || node.lineBreak) {
         return false;
     }
     else if (node.blockStatic) {
@@ -323,7 +323,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     return;
                 }
                 const pageFlow = node.pageFlow;
-                const collapseMargin = pageFlow && isBlockElement(node, true) && !(node.actualParent as T).layoutElement;
+                const collapseMargin = pageFlow && isBlockElement(node, true) && !node.actualParent!.layoutElement;
                 let firstChild: Undef<T>;
                 let lastChild: Undef<T>;
                 for (let i = 0; i < length; ++i) {
@@ -716,8 +716,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         valid = true;
                     }
                     if (valid) {
-                        previousSiblings.forEach(item => processed.add(item.id));
-                        nextSiblings.forEach(item => processed.add(item.id));
+                        for (const item of previousSiblings) {
+                            processed.add(item.id);
+                        }
+                        for (const item of nextSiblings) {
+                            processed.add(item.id);
+                        }
                     }
                 }
             }
@@ -726,7 +730,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
 
     public afterConstraints() {
         this.cacheProcessing.each(node => {
-            if (node.naturalChild && node.styleElement && node.inlineVertical && node.pageFlow && !node.positioned && !(node.actualParent as T).layoutElement) {
+            if (node.naturalChild && node.styleElement && node.inlineVertical && node.pageFlow && !node.positioned && !node.actualParent!.layoutElement) {
                 const outerWrapper = node.outerMostWrapper;
                 const renderParent = outerWrapper.renderParent;
                 if (renderParent?.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) === false) {
@@ -772,12 +776,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 break found;
                                             }
                                         }
-                                        row.forEach((item: T) => {
-                                            const innerWrapped = item.innerMostWrapped as T;
+                                        for (const item of row) {
+                                            const innerWrapped = item.innerMostWrapped;
                                             if (validSibling(innerWrapped)) {
                                                 maxBottom = Math.max(innerWrapped.actualRect('bottom'), maxBottom);
                                             }
-                                        });
+                                        }
                                         if (maxBottom === -Infinity) {
                                             break;
                                         }
@@ -789,7 +793,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                             if (horizontal) {
                                 let actualChildren: T[] = [];
-                                horizontal.forEach(item => {
+                                for (const item of horizontal) {
                                     if (item.nodeGroup) {
                                         actualChildren = actualChildren.concat(item.cascade(child => child.naturalChild) as T[]);
                                     }
@@ -799,7 +803,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     else {
                                         actualChildren.push(item);
                                     }
-                                });
+                                }
                                 let maxBottom = -Infinity;
                                 const parent = node.actualParent as T;
                                 const top = node.actualRect('top');
@@ -854,9 +858,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
             }
             if (node.floatContainer && node.layoutVertical) {
                 const floating: T[] = [];
-                node.naturalChildren.forEach((item: T) => {
+                for (const item of node.naturalChildren as T[]) {
                     if (!item.pageFlow) {
-                        return;
+                        continue;
                     }
                     if (!item.floating) {
                         if (floating.length) {
@@ -891,7 +895,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     else {
                         floating.push(item);
                     }
-                });
+                }
             }
         });
     }

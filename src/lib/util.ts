@@ -574,12 +574,12 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
     const combined = prefixed ? prefix + opening : opening;
     const result: string[] = [];
     const appendValues = (segment: string) => {
-        segment.split(separator).forEach(seg => {
+        for (let seg of segment.split(separator)) {
             seg = seg.trim();
             if (seg !== '') {
                 result.push(seg);
             }
-        });
+        }
     };
     let position = 0;
     let index = -1;
@@ -729,7 +729,7 @@ export function cloneInstance<T>(value: T): T {
 }
 
 export function cloneArray(data: any[], result: any[] = [], object = false) {
-    data.forEach(value => {
+    for (const value of data) {
         if (Array.isArray(value)) {
             result.push(cloneArray(value, [], object));
         }
@@ -739,7 +739,7 @@ export function cloneArray(data: any[], result: any[] = [], object = false) {
         else {
             result.push(value);
         }
-    });
+    }
     return result;
 }
 
@@ -771,7 +771,7 @@ export function resolvePath(value: string, href?: string) {
         }
         else if (value.startsWith('../')) {
             const trailing: string[] = [];
-            value.split('/').forEach(dir => {
+            for (const dir of value.split('/')) {
                 if (dir === '..') {
                     if (trailing.length === 0) {
                         pathname.pop();
@@ -783,7 +783,7 @@ export function resolvePath(value: string, href?: string) {
                 else {
                     trailing.push(dir);
                 }
-            });
+            }
             value = trailing.join('/');
         }
         return origin + pathname.join('/') + '/' + value;
@@ -1050,10 +1050,9 @@ export function sameArray<T>(list: ArrayLike<T>, predicate: IteratorPredicate<T,
     const length = list.length;
     if (length) {
         let baseValue!: any;
-        let i = 0;
-        while (i < length) {
+        for (let i = 0; i < length; ++i) {
             const value = predicate(list[i], i, list);
-            if (i++ === 0) {
+            if (i === 0) {
                 baseValue = value;
             }
             else if (value !== baseValue) {

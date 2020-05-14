@@ -67,7 +67,10 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                             for (const attr of keys) {
                                 const match = REGEX_ATTRIBUTE.exec(attr);
                                 if (match) {
-                                    renderChildren.forEach(item => item.delete(match[1], match[2]));
+                                    i = 0;
+                                    while (i < length) {
+                                        renderChildren[i++].delete(match[1], match[2]);
+                                    }
                                     common.push(match[0]);
                                 }
                             }
@@ -85,7 +88,10 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 styles[name] = common;
                                 styleCache[name] = commonString;
                             }
-                            renderChildren.forEach(item => item.attr('_', 'style', `@style/${name}`));
+                            i = 0;
+                            while (i < length) {
+                                renderChildren[i++].attr('_', 'style', `@style/${name}`);
+                            }
                         }
                     }
                 }
@@ -93,12 +99,12 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
         });
         for (const name in styles) {
             const items: StringValue[] = [];
-            styles[name].forEach(style => {
+            for (const style of styles[name]) {
                 const match = XML.ATTRIBUTE.exec(style);
                 if (match) {
                     items.push({ key: match[1], value: match[2] });
                 }
-            });
+            }
             STORED.styles.set(name, Object.assign(createStyleAttribute(), { name, items }));
         }
     }

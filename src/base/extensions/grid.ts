@@ -124,11 +124,11 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             const columnLast = columns[columns.length - 1];
                             if (columnLast) {
                                 let minLeft = Infinity, maxRight = -Infinity;
-                                columnLast.forEach(item => {
+                                for (const item of columnLast) {
                                     const linear = item.linear;
                                     minLeft = Math.min(linear.left, minLeft);
                                     maxRight = Math.max(linear.right, maxRight);
-                                });
+                                }
                                 if (Math.floor(left) > Math.ceil(minLeft) && Math.floor(right) > Math.ceil(maxRight)) {
                                     const index = getRowIndex(columns, nextX);
                                     if (index !== -1) {
@@ -226,14 +226,14 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (columnEnd.length) {
                             const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
-                            (item.actualParent as T).naturalChildren.forEach((sibling: T) => {
+                            for (const sibling of item.actualParent!.naturalChildren as T[]) {
                                 if (!assigned.has(sibling) && sibling.visible && !sibling.rendered) {
                                     const { left, right } = sibling.linear;
                                     if (aboveRange(left, item.linear.right) && belowRange(right, columnEnd[l])) {
                                         safeNestedArray(data, 'siblings').push(sibling);
                                     }
                                 }
-                            });
+                            }
                         }
                         data.rowSpan = rowSpan;
                         data.columnSpan = columnSpan;
@@ -254,7 +254,11 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             }
             node.each((item: T) => item.hide());
             node.clear();
-            children.forEach(group => group.forEach(item => item.parent = node));
+            for (const group of children) {
+                for (const item of group) {
+                    item.parent = node;
+                }
+            }
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {
                 node.resetBox(BOX_STANDARD.PADDING);
             }

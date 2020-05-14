@@ -105,17 +105,17 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             }
         });
         inheritStyles(thead);
-        tbody.forEach(section => {
+        for (const section of tbody) {
             table = table.concat(section.children as T[]);
             hideCell(section);
-        });
+        }
         inheritStyles(tfoot);
         const hasWidth = node.hasWidth;
         const borderCollapse = mainData.borderCollapse;
         const [horizontal, vertical] = borderCollapse ? [0, 0] : replaceMap(node.css('borderSpacing').split(' '), (value: string, index) => index === 0 ? node.parseWidth(value) : node.parseHeight(value));
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
-        const colgroup = (node.element as Element).querySelector('COLGROUP');
+        const colgroup = node.element!.querySelector('COLGROUP');
         const caption = node.find(item => item.tagName === 'CAPTION');
         const captionBottom = node.css('captionSide') === 'bottom';
         const rowWidth: number[] = [];

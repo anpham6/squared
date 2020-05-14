@@ -138,19 +138,19 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     public addState(...values: number[]) {
-        values.forEach(value => {
+        for (const value of values) {
             if (!hasBit(this.synchronizeState, value)) {
                 this.synchronizeState |= value;
             }
-        });
+        }
     }
 
     public removeState(...values: number[]) {
-        values.forEach(value => {
+        for (const value of values) {
             if (hasBit(this.synchronizeState, value)) {
                 this.synchronizeState ^= value;
             }
-        });
+        }
     }
 
     public hasState(...values: number[]) {

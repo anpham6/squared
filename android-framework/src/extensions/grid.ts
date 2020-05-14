@@ -57,7 +57,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                     )
                 );
                 node = layout.node;
-                siblings.forEach(item => {
+                for (const item of siblings) {
                     const source: GridCellData<View> = item.data(GRID, 'cellData');
                     if (source) {
                         if (source.cellStart) {
@@ -74,7 +74,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                         }
                         item.data(GRID, 'cellData', null);
                     }
-                });
+                }
                 node.data(GRID, 'cellData', data);
             }
             if (cellData.rowSpan > 1) {

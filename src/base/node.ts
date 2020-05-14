@@ -359,7 +359,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                             if (form) {
                                 let valid = false;
                                 const element = child.element as HTMLElement;
-                                iterateArray((form.element as Element).querySelectorAll('*'), (item: HTMLInputElement) => {
+                                iterateArray(form.element!.querySelectorAll('*'), (item: HTMLInputElement) => {
                                     switch (item.tagName) {
                                         case 'BUTTON':
                                             valid = element === item;
@@ -802,18 +802,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
     }
 
-    public saveAsInitial(overwrite = false) {
-        if (this._initial === undefined || overwrite) {
-            this._initial = {
-                children: this.duplicate(),
-                styleMap: { ...this._styleMap }
-            };
-        }
+    public saveAsInitial() {
+        this._initial = {
+            children: this.duplicate(),
+            styleMap: { ...this._styleMap }
+        };
     }
 
     public data(name: string, attr: string, value?: any, overwrite = true) {
         const data = this._data;
-        if (hasValue(value)) {
+        if (value === null) {
+            delete data[name];
+            return undefined;
+        }
+        else if (value !== undefined) {
             let obj: {} = data[name];
             if (!isObject(obj)) {
                 obj = {};
@@ -822,10 +824,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (overwrite || obj[attr] === undefined) {
                 obj[attr] = value;
             }
-        }
-        else if (value === null) {
-            delete data[name];
-            return undefined;
         }
         const stored: {} = data[name];
         return isObject(stored) ? stored[attr] : undefined;
@@ -1195,12 +1193,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssParent(attr: string, value?: string, cache = false) {
-        return this.naturalChild ? (this.actualParent as T).css(attr, value, cache) : '';
+        return this.naturalChild ? this.actualParent!.css(attr, value, cache) : '';
     }
 
     public cssCopy(node: T, ...attrs: string[]) {
         const styleMap = this._styleMap;
-        attrs.forEach(attr => styleMap[attr] = node.css(attr));
+        for (const attr of attrs) {
+            styleMap[attr] = node.css(attr);
+        }
     }
 
     public cssCopyIfEmpty(node: T, ...attrs: string[]) {
@@ -1325,13 +1325,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let bounds: Undef<BoxRectDimension>;
         if (this.styleElement) {
             if (!cache) {
-                deleteElementCache(this._element as Element, 'clientRect', this.sessionId);
+                deleteElementCache(this._element!, 'clientRect', this.sessionId);
             }
-            bounds = assignRect(actualClientRect(this._element as Element, this.sessionId));
+            bounds = assignRect(actualClientRect(this._element!, this.sessionId));
             this._bounds = bounds;
         }
         else if (this.plainText) {
-            const rect = getRangeClientRect(this._element as Element);
+            const rect = getRangeClientRect(this._element!);
             bounds = assignRect(rect);
             const lines = rect.numberOfLines as number;
             bounds.numberOfLines = lines;
@@ -2405,7 +2405,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get textContent() {
-        return this.naturalChild && !this.svgElement ? (this._element as Element).textContent as string : '';
+        return this.naturalChild && !this.svgElement ? this._element!.textContent as string : '';
     }
 
     get overflowX() {
@@ -2509,7 +2509,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.multiline;
         if (result === undefined) {
             if (this.plainText) {
-                result = Math.floor(getRangeClientRect(this._element as Element).width) > (this.actualParent as T).box.width;
+                result = Math.floor(getRangeClientRect(this._element!).width) > this.actualParent!.box.width;
             }
             else if (this.styleText && (this.inline || REGEX_INLINEVERTICAL.test(this.display) || this.floating || this.naturalElements.length === 0)) {
                 result = this.textBounds?.numberOfLines as number > 1;
@@ -2611,7 +2611,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const backgroundImage = this.backgroundImage !== '';
                 let backgroundRepeatX = false, backgroundRepeatY = false;
                 if (backgroundImage) {
-                    this.css('backgroundRepeat').split(XML.SEPARATOR).forEach(repeat => {
+                    for (const repeat of this.css('backgroundRepeat').split(XML.SEPARATOR)) {
                         const [repeatX, repeatY] = repeat.split(CHAR.SPACE);
                         if (!backgroundRepeatX) {
                             backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x';
@@ -2619,7 +2619,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         if (!backgroundRepeatY) {
                             backgroundRepeatY = repeatX === 'repeat' || repeatX === 'repeat-y' || repeatY === 'repeat';
                         }
-                    });
+                    }
                 }
                 result = {
                     background: borderWidth || backgroundImage || backgroundColor,
@@ -2683,10 +2683,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         result = bounds.width;
                         break;
                     case 2:
-                        result = Math.min(bounds.width, (this.actualParent as T).box.width);
+                        result = Math.min(bounds.width, this.actualParent!.box.width);
                         break;
                     default:
-                        result = Math.min(bounds.right - bounds.left, (this.actualParent as T).box.width);
+                        result = Math.min(bounds.right - bounds.left, this.actualParent!.box.width);
                         break;
                 }
             }
@@ -2759,27 +2759,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return length ? children[length - 1] : null;
     }
 
-    get firstStaticChild() {
-        for (const node of this.naturalChildren) {
-            if (node.pageFlow) {
-                return node;
-            }
-        }
-        return null;
-    }
-
-    get lastStaticChild() {
-        const children = this.naturalChildren;
-        let i = children.length - 1;
-        while (i >= 0) {
-            const node = children[i--];
-            if (node.pageFlow) {
-                return node;
-            }
-        }
-        return null;
-    }
-
     get previousSibling() {
         return this.actualParent?.naturalChildren[this.childIndex - 1] || null;
     }
@@ -2815,7 +2794,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             result = {};
             if (this.styleElement) {
-                const attributes = (this._element as Element).attributes;
+                const attributes = this._element!.attributes;
                 const length = attributes.length;
                 let i = 0;
                 while (i < length) {

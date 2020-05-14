@@ -209,7 +209,9 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
     let rowWeight: Undef<string>;
     if (section.every(value => CssGrid.isPx(value))) {
         let px = insideGap;
-        section.forEach(value => px += parseFloat(value));
+        for (const value of section) {
+            px += parseFloat(value);
+        }
         const dimension = formatPX(px);
         if (horizontal) {
             width = dimension;
@@ -220,7 +222,9 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
     }
     else if (section.every(value => CssGrid.isFr(value))) {
         let fr = 0;
-        section.forEach(value => fr += parseFloat(value));
+        for (const value of section) {
+            fr += parseFloat(value);
+        }
         const weight = truncate(fr, node.localSettings.floatPrecision);
         if (horizontal) {
             width = '0px';
@@ -390,12 +394,12 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 const constraintData: T[][] = new Array(rowCount);
                 let valid = true;
                 invalid: {
-                    let i = 0;
+                    let i = 0, j: number;
                     while (i < rowCount) {
                         const nodes: T[] = [];
                         const data = rowData[i];
                         const length = data.length;
-                        let j = 0;
+                        j = 0;
                         while (j < length) {
                             const cell = data[j++];
                             if (cell?.length === 1) {
@@ -1054,7 +1058,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
     public postOptimize(node: T) {
         const mainData: CssGridData<T> = node.data(CSS_GRID, 'mainData');
         if (mainData) {
-            if (node.blockStatic && !node.hasPX('minWidth', false) && (node.actualParent as T)?.layoutElement === false) {
+            if (node.blockStatic && !node.hasPX('minWidth', false) && node.actualParent?.layoutElement === false) {
                 const { gap, length, unit } = mainData.column;
                 let minWidth = gap * (length - 1);
                 for (const value of unit) {

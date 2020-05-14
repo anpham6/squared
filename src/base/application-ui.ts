@@ -47,7 +47,7 @@ function prioritizeExtensions<T extends NodeUI>(value: Undef<string>, extensions
         const included = value.split(XML.SEPARATOR);
         const result: ExtensionUI<T>[] = [];
         const untagged: ExtensionUI<T>[] = [];
-        extensions.forEach(ext => {
+        for (const ext of extensions) {
             const index = included.indexOf(ext.name);
             if (index !== -1) {
                 result[index] = ext;
@@ -55,7 +55,7 @@ function prioritizeExtensions<T extends NodeUI>(value: Undef<string>, extensions
             else {
                 untagged.push(ext);
             }
-        });
+        }
         if (result.length) {
             return flatArray<ExtensionUI<T>>(result).concat(untagged);
         }
@@ -178,11 +178,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         rendered.length = j;
         controllerHandler.optimize(rendered);
-        extensions.forEach(ext => {
+        for (const ext of extensions) {
             for (const node of ext.subscribers) {
                 ext.postOptimize(node);
             }
-        });
+        }
         const documentRoot: squared.base.LayoutRoot<T>[] = [];
         i = 0;
         while (i < j) {
@@ -203,12 +203,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        extensions.forEach(ext => ext.beforeCascade(documentRoot));
+        for (const ext of extensions) {
+            ext.beforeCascade(documentRoot);
+        }
         const baseTemplate = this._controllerSettings.layout.baseTemplate;
         const systemName = capitalize(this.systemName);
-        documentRoot.forEach(layout => {
+        for (const layout of documentRoot) {
             const node = layout.node;
-            const renderTemplates = (node.renderParent as T).renderTemplates;
+            const renderTemplates = node.renderParent!.renderTemplates;
             if (renderTemplates) {
                 this.saveDocument(
                     layout.layoutName,
@@ -217,7 +219,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     node.renderExtension?.some(item => item.documentBase) ? 0 : undefined
                 );
             }
-        });
+        }
         this.resourceHandler.finalize(layouts);
         controllerHandler.finalize(layouts);
         extensions.forEach(ext => ext.afterFinalize());
@@ -280,7 +282,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public insertNode(element: Element, parent?: T, pseudoElt?: string) {
         if (element.nodeName === '#text') {
-            if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || (parent.element as Element).childElementCount === 0)) {
+            if (isPlainText(element.textContent as string) || parent?.preserveWhiteSpace && (parent.tagName !== 'PRE' || parent.element!.childElementCount === 0)) {
                 this.controllerHandler.applyDefaultStyles(element);
                 const node = this.createNode({ parent, element, append: false });
                 if (parent) {
@@ -382,7 +384,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 node.innerWrapped = child;
             }
         }
-        children?.forEach(item => item.parent = node);
+        if (children) {
+            for (const item of children) {
+                item.parent = node;
+            }
+        }
         if (options.append !== false) {
             this.processing.cache.append(node, options.delegate === true, options.cascade === true);
         }
@@ -425,13 +431,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (item.positionRelative) {
-                        BOX_POSITION.forEach(attr => {
+                        for (const attr of BOX_POSITION) {
                             if (item.hasPX(attr) && item[attr] !== 0) {
                                 safeNestedMap(preAlignment, item.id)[attr] = item.css(attr);
                                 element.style.setProperty(attr, 'auto');
                                 resetBounds = true;
                             }
-                        });
+                        }
                     }
                     if (item.dir === 'rtl') {
                         element.dir = 'ltr';
@@ -455,8 +461,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             });
             if (pseudoElements.length) {
                 const pseudoMap: { item: T; id: string; parentElement: Element; styleElement?: HTMLStyleElement }[] = [];
-                pseudoElements.forEach((item: T) => {
-                    const parentElement = (item.actualParent as T).element as HTMLElement;
+                for (const item of pseudoElements) {
+                    const parentElement = item.actualParent!.element as HTMLElement;
                     let id = parentElement.id;
                     let styleElement: Undef<HTMLStyleElement>;
                     if (item.pageFlow) {
@@ -469,9 +475,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (item.cssTry('display', item.display)) {
                         pseudoMap.push({ item, id, parentElement, styleElement });
                     }
-                });
+                }
                 pseudoMap.forEach(data => data.item.setBounds(false));
-                pseudoMap.forEach(data => {
+                for (const data of pseudoMap) {
                     const styleElement = data.styleElement;
                     if (data.id.startsWith(STRING_PSEUDOPREFIX)) {
                         data.parentElement.id = '';
@@ -484,7 +490,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     data.item.cssFinally('display');
-                });
+                }
             }
             excluded.each(item => {
                 if (!item.lineBreak) {
@@ -723,7 +729,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (node.floatContainer) {
                         const floated = new Set<string>();
                         const clearable: ObjectMap<Undef<T>> = {};
-                        node.naturalChildren.forEach((item: T) => {
+                        for (const item of node.naturalChildren as T[]) {
                             if (item.pageFlow) {
                                 const floating = item.floating;
                                 if (floated.size) {
@@ -742,7 +748,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                     previousFloat = [clearable.left, clearable.right];
                                                     break;
                                             }
-                                            previousFloat.forEach(previous => {
+                                            for (const previous of previousFloat) {
                                                 if (previous) {
                                                     const float = previous.float;
                                                     if (floated.has(float) && Math.ceil(item.bounds.top) >= previous.bounds.bottom) {
@@ -750,7 +756,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                         clearable[float] = undefined;
                                                     }
                                                 }
-                                            });
+                                            }
                                         }
                                         if (floated.has(clear) || clear === 'both') {
                                             clearMap.set(item, floated.size === 2 ? 'both' : clear);
@@ -769,7 +775,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     clearable[float] = item;
                                 }
                             }
-                        });
+                        }
                     }
                 }
             });
@@ -859,11 +865,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                          if (!item.floating || previous.floating && item.bounds.top < Math.floor(previous.bounds.bottom)) {
                                                             let floatBottom = -Infinity;
                                                             if (!item.floating) {
-                                                                horizontal.forEach(node => {
+                                                                for (const node of horizontal) {
                                                                     if (node.floating) {
                                                                         floatBottom = Math.max(floatBottom, node.bounds.bottom);
                                                                     }
-                                                                });
+                                                                }
                                                             }
                                                             if (!item.floating && item.bounds.top < Math.floor(floatBottom) || floatActive) {
                                                                 horizontal.push(item);
@@ -1093,14 +1099,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             }
             return a.depth < b.depth ? -1 : 1;
         });
-        this.extensions.forEach(ext => {
+        for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
                 if (cache.contains(node)) {
                     ext.postBaseLayout(node);
                 }
             }
             ext.afterBaseLayout();
-        });
+        }
         session.cache.join(cache);
         session.excluded.join(processing.excluded);
     }
@@ -1108,14 +1114,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     protected setConstraints() {
         const cache = this._cache;
         this.controllerHandler.setConstraints();
-        this.extensions.forEach(ext => {
+        for (const ext of this.extensions) {
             for (const node of ext.subscribers) {
                 if (cache.contains(node)) {
                     ext.postConstraints(node);
                 }
             }
             ext.afterConstraints();
-        });
+        }
     }
 
     protected setResources() {
@@ -1238,7 +1244,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         layout.type = controllerHandler.containerTypeVerticalMargin;
         layout.itemCount = layerIndex.length;
         layout.add(NODE_ALIGNMENT.BLOCK);
-        layerIndex.forEach(item => {
+        for (const item of layerIndex) {
             let segments: T[][];
             let floatgroup: Undef<T>;
             if (Array.isArray(item[0])) {
@@ -1268,7 +1274,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             else {
                 segments = [item as T[]];
             }
-            segments.forEach(seg => {
+            for (const seg of segments) {
                 const first = seg[0];
                 const node = floatgroup || layout.node;
                 const target = controllerHandler.createNodeGroup(first, seg, { parent: node, delegate: true });
@@ -1298,8 +1304,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (seg === inlineAbove) {
                     this.setFloatPadding(node, target, inlineAbove, leftAbove, rightAbove);
                 }
-            });
-        });
+            }
+        }
         return layout;
     }
 
@@ -1408,7 +1414,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         group.itemCount = children.length;
                         this.addLayout(group);
-                        children.forEach(item => {
+                        for (let item of children) {
                             if (!item.nodeGroup) {
                                 item = controllerHandler.createNodeGroup(item, [item], { parent: basegroup, delegate: true });
                             }
@@ -1419,7 +1425,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
                                 item.children as T[]
                             ));
-                        });
+                        }
                         if (pageFlow.length && floating.length) {
                             const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
                             this.setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
@@ -1476,7 +1482,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         while (i < length) {
                             const child = childNodes[i++] as Element;
                             if (child.nodeName === '#text') {
-                                if ((child.textContent as string).trim() !== '') {
+                                if (child.textContent!.trim() !== '') {
                                     break;
                                 }
                             }
@@ -1518,11 +1524,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     while (current);
                 }
                 const style = getStyle(element);
-                TEXT_STYLE.forEach(attr => {
+                for (const attr of TEXT_STYLE) {
                     if (!isString(styleMap[attr])) {
                         styleMap[attr] = style[attr];
                     }
-                });
+                }
                 let tagName = '';
                 let content = '';
                 switch (value) {
@@ -1650,7 +1656,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         if (!counterType && subcounter.length > 1) {
                                             subcounter.reverse().splice(1, 1);
                                             const textValue = match[7];
-                                            subcounter.forEach(leading => content += convertListStyle(styleName, leading, true) + textValue);
+                                            for (const leading of subcounter) {
+                                                content += convertListStyle(styleName, leading, true) + textValue;
+                                            }
                                         }
                                     }
                                     else {
@@ -1738,20 +1746,20 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected setFloatPadding(parent: T, target: T, inlineAbove: T[], leftAbove: T[], rightAbove: T[]) {
         let paddingNodes: T[] = [];
-        inlineAbove.forEach(child => {
+        for (const child of inlineAbove) {
             if (requirePadding(child) || child.centerAligned) {
                 paddingNodes.push(child);
             }
             if (child.blockStatic) {
                 paddingNodes = paddingNodes.concat(child.cascade((item: T) => requirePadding(item)) as T[]);
             }
-        });
+        }
         const bottom = target.bounds.bottom;
         const boxWidth = parent.actualBoxWidth();
         if (leftAbove.length) {
             let floatPosition = -Infinity;
             let spacing = false;
-            leftAbove.forEach(child => {
+            for (const child of leftAbove) {
                 if (child.bounds.top < bottom) {
                     const right = child.linear.right + getRelativeOffset(child, false);
                     if (right > floatPosition) {
@@ -1762,14 +1770,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         spacing = false;
                     }
                 }
-            });
+            }
             if (floatPosition !== -Infinity) {
                 let marginLeft = -Infinity;
-                paddingNodes.forEach(child => {
+                for (const child of paddingNodes) {
                     if (Math.floor(child.linear.left) <= floatPosition || child.centerAligned) {
                         marginLeft = Math.max(marginLeft, child.marginLeft);
                     }
-                });
+                }
                 if (marginLeft !== -Infinity) {
                     const offset = floatPosition - parent.box.left - marginLeft - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0));
                     if (offset > 0 && offset < boxWidth) {
@@ -1781,7 +1789,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (rightAbove.length) {
             let floatPosition = Infinity;
             let spacing = false;
-            rightAbove.forEach(child => {
+            for (const child of rightAbove) {
                 if (child.bounds.top < bottom) {
                     const left = child.linear.left + getRelativeOffset(child, true);
                     if (left < floatPosition) {
@@ -1792,14 +1800,14 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         spacing = false;
                     }
                 }
-            });
+            }
             if (floatPosition !== Infinity) {
                 let marginRight = -Infinity;
-                paddingNodes.forEach(child => {
+                for (const child of paddingNodes) {
                     if (child.multiline || Math.ceil(child.linear.right) >= floatPosition) {
                         marginRight = Math.max(marginRight, child.marginRight);
                     }
-                });
+                }
                 if (marginRight !== -Infinity) {
                     const offset = parent.box.right - floatPosition - marginRight - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0));
                     if (offset > 0 && offset < boxWidth) {
