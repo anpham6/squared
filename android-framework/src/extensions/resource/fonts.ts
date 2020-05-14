@@ -141,8 +141,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (companion?.tagName === 'LABEL' && !companion.visible) {
                     node = companion as T;
                 }
-                fontFamily.replace(REGEX_DOUBLEQUOTE, '').split(XML.SEPARATOR).some((value, index, array) => {
-                    value = trimBoth(value, "'").toLowerCase();
+                fontFamily.replace(REGEX_DOUBLEQUOTE, '').split(',').some((value, index, array) => {
+                    value = trimBoth(value.trim(), "'").toLowerCase();
                     let fontName = value;
                     let actualFontWeight = '';
                     if (!disableFontAlias && FONTREPLACE_ANDROID[fontName]) {
@@ -321,16 +321,16 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                                     }
                                 }
                             }
-                            for (const attr of deleteKeys) {
-                                delete filtered[attr];
-                            }
                             for (const attr in filtered) {
+                                if (deleteKeys.has(attr)) {
+                                    continue;
+                                }
                                 deleteStyleAttribute(sorted, attr, filtered[attr]);
                                 styleTag[attr] = filtered[attr];
                             }
                             for (const attr in combined) {
                                 const attrs = Array.from(combined[attr]).sort().join(';');
-                                const ids = objectMap(attr.split(XML.SEPARATOR), value => parseInt(value));
+                                const ids = objectMap(attr.split(','), value => parseInt(value));
                                 deleteStyleAttribute(sorted, attrs, ids);
                                 styleTag[attrs] = ids;
                             }

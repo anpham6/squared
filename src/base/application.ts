@@ -11,7 +11,7 @@ type PreloadImage = HTMLImageElement | string;
 
 const { checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
 const { capitalize, convertCamelCase, isString, objectMap, promisify, resolvePath } = squared.lib.util;
-const { CHAR, FILE, STRING, XML } = squared.lib.regex;
+const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
 
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
@@ -36,10 +36,11 @@ function addImageSrc(uri: string, width = 0, height = 0) {
 }
 
 function parseSrcSet(value: string) {
+    value = value.trim();
     if (value !== '') {
-        for (const uri of value.split(XML.SEPARATOR)) {
+        for (const uri of value.split(/\s*,\s*/)) {
             if (uri !== '') {
-                addImageSrc(resolvePath(uri.split(CHAR.SPACE)[0]));
+                addImageSrc(resolvePath(uri.split(/\s+/)[0]));
             }
         }
     }
@@ -53,7 +54,7 @@ function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr
         let match: Null<RegExpExecArray>;
         while ((match = REGEX_DATAURI.exec(value)) !== null) {
             if (match[2]) {
-                const mimeType = match[2].split(XML.DELIMITER);
+                const mimeType = match[2].split(';');
                 resourceHandler.addRawData(match[1], mimeType[0].trim(), mimeType[1]?.trim() || 'utf8', match[3]);
             }
             else {
@@ -609,7 +610,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const attr = REGEX_FONTFACE.exec(cssText)?.[1];
                 if (attr) {
                     const fontFamily = (REGEX_FONTFAMILY.exec(attr)?.[1] || '').trim();
-                    const match = (REGEX_FONTSRC.exec(attr)?.[1] || '').split(XML.SEPARATOR);
+                    const match = (REGEX_FONTSRC.exec(attr)?.[1] || '').split(',');
                     if (fontFamily !== '' && match.length) {
                         const fontStyle = REGEX_FONTSTYLE.exec(attr)?.[1].toLowerCase() || 'normal';
                         const fontWeight = parseInt(REGEX_FONTWEIGHT.exec(attr)?.[1] || '400');

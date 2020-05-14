@@ -9,7 +9,6 @@ const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = squared.lib.css;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
-const { XML } = squared.lib.regex;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
 const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
@@ -1735,7 +1734,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         let result = this._cached.extensions;
         if (result === undefined) {
             const use = this.use?.trim();
-            result = use ? use.split(XML.SEPARATOR) : [];
+            result = use ? use.split(/\s*,\s*/) : [];
             this._cached.extensions = result;
         }
         return result;

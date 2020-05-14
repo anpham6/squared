@@ -26,7 +26,6 @@ interface ForwardValue extends NumberValue<AnimateValue> {
 }
 
 const { clamp, equal, multipleOf } = squared.lib.math;
-const { CHAR } = squared.lib.regex;
 const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, objectMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = squared.lib.util;
 
 const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
@@ -264,8 +263,8 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
     switch (item.attributeName) {
         case 'transform':
             if (item.additiveSum && typeof baseValue === 'string') {
-                const baseArray = replaceMap(baseValue.split(CHAR.SPACE), (value: string) => parseFloat(value));
-                const valuesArray = objectMap(values, (value: string) => replaceMap(value.trim().split(CHAR.SPACE), (pt: string) => parseFloat(pt)));
+                const baseArray = replaceMap(baseValue.split(/\s+/), (value: string) => parseFloat(value));
+                const valuesArray = objectMap(values, (value: string) => replaceMap(value.trim().split(/\s+/), (pt: string) => parseFloat(pt)));
                 const length = baseArray.length;
                 if (valuesArray.every(value => value.length === length)) {
                     const result = valuesArray[index];

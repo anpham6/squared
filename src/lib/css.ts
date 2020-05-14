@@ -1,7 +1,7 @@
 import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
-import { CHAR, CSS, STRING, UNIT, XML } from './regex';
+import { CSS, STRING, UNIT } from './regex';
 import { convertAlpha, convertFloat, convertRoman, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
 
 const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
@@ -11,12 +11,14 @@ const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+a
 const REGEX_SRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
 const REGEX_OPERATOR = /\s+([+-]\s+|\s*[*/])\s*/;
 const REGEX_INTEGER = /^\s*-?\d+\s*$/;
-const REGEX_DIVIDER = /\s*\/\s*/;
 const REGEX_SELECTORALL = /^\*(\s+\*){0,2}$/;
 const REGEX_SELECTORTRIM = /^(\*\s+){1,2}/;
 const REGEX_CALC = new RegExp(STRING.CSS_CALC);
 const REGEX_LENGTH = new RegExp(`(${STRING.UNIT_LENGTH}|%)`);
 const REGEX_SOURCESIZES = new RegExp(`\\s*(?:(\\(\\s*)?${STRING_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${STRING_SIZES}(\\s*\\))?)?\\s*(.+)`);
+const CHAR_SPACE = /\s+/;
+const CHAR_SEPARATOR = /\s*,\s*/;
+const CHAR_DIVIDER = /\s*\/\s*/;
 
 function compareRange(operation: string, unit: number, range: number) {
     switch (operation) {
@@ -37,7 +39,7 @@ function calculatePosition(element: CSSElement, value: string, boundingBox?: Dim
     const alignment: string[] = [];
     for (const seg of replaceMap(splitEnclosing(value.trim(), 'calc'), (item: string) => item.trim())) {
         if (seg.includes(' ') && !isCalc(seg)) {
-            alignment.push(...seg.split(CHAR.SPACE));
+            alignment.push(...seg.split(CHAR_SPACE));
         }
         else {
             alignment.push(seg);
@@ -114,7 +116,7 @@ function calculateColor(element: CSSElement, value: string) {
             if (hasCalc(seg)) {
                 const name = color[i - 1].trim();
                 if (isColor(name)) {
-                    const component = trimEnclosing(seg).split(XML.SEPARATOR);
+                    const component = trimEnclosing(seg).split(CHAR_SEPARATOR);
                     const q = component.length;
                     if (q >= 3) {
                         const hsl = name.startsWith('hsl');
@@ -370,7 +372,7 @@ export function parseSelectorText(value: string, document?: boolean) {
             }
             return result;
         }
-        return replaceMap(value.split(XML.SEPARATOR), (selector: string) => trimSelector(selector));
+        return replaceMap(value.split(CHAR_SEPARATOR), (selector: string) => trimSelector(selector));
     }
     return [value];
 }
@@ -831,7 +833,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                                 break;
                             }
                             case 'rotate3d': {
-                                const component = seg.split(XML.SEPARATOR);
+                                const component = seg.split(CHAR_SEPARATOR);
                                 const q = component.length;
                                 if (q === 3 || q === 4) {
                                     calc = '';
@@ -880,7 +882,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             if (hasCalc(component[j])) {
                                 const previous = component[j - 1];
                                 if (isColor(previous)) {
-                                    const prefix = previous.split(CHAR.SPACE).pop() as string;
+                                    const prefix = previous.split(CHAR_SPACE).pop() as string;
                                     const result = calculateColor(element, prefix + component[j]);
                                     if (result !== '') {
                                         component[j] = result.replace(prefix, '');
@@ -906,7 +908,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                 for (let i = 1; i < length; ++i) {
                     const previous = color[i - 1];
                     if (isColor(previous) && hasCalc(color[i])) {
-                        const prefix = previous.split(CHAR.SPACE).pop() as string;
+                        const prefix = previous.split(CHAR_SPACE).pop() as string;
                         const result = calculateColor(element, prefix + color[i]);
                         if (result !== '') {
                             color[i] = result;
@@ -943,7 +945,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             return calculateGeneric(element, value, CSS_UNIT.DECIMAL, 0, boundingBox);
         case 'backgroundPosition': {
             const result: string[] = [];
-            for (const position of value.split(XML.SEPARATOR)) {
+            for (const position of value.split(CHAR_SEPARATOR)) {
                 const segment = calculatePosition(element, position, boundingBox);
                 if (segment !== '') {
                     result.push(segment);
@@ -966,7 +968,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             if (length > 1) {
                 for (let i = 1; i < length; ++i) {
                     const previous = border[i - 1];
-                    const prefix = previous.split(CHAR.SPACE).pop() as string;
+                    const prefix = previous.split(CHAR_SPACE).pop() as string;
                     let result: string;
                     if (prefix === 'calc') {
                         result = formatVar(calculateVar(element, prefix + border[i], { min: 0, supportPercent: false }));
@@ -1002,7 +1004,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                         seg = trimEnclosing(seg);
                         let calc: Undef<string>;
                         if (prefix.endsWith('cubic-bezier')) {
-                            const cubic = seg.split(XML.SEPARATOR);
+                            const cubic = seg.split(CHAR_SEPARATOR);
                             const q = cubic.length;
                             if (q === 4) {
                                 calc = '';
@@ -1120,7 +1122,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                         break;
                     case 'polygon': {
                         const result: string[] = [];
-                        for (let points of shape.split(XML.SEPARATOR)) {
+                        for (let points of shape.split(CHAR_SEPARATOR)) {
                             if (hasCalc(points)) {
                                 points = calculateVarAsString(element, points, { dimension: ['width', 'height'], boundingBox, parent: true });
                                 if (points !== '') {
@@ -1145,7 +1147,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             return value;
         }
         case 'grid': {
-            let [row, column] = value.trim().split(REGEX_DIVIDER);
+            let [row, column] = value.trim().split(CHAR_DIVIDER);
             if (hasCalc(row)) {
                 const result = calculateStyle(element, 'gridTemplateRows', row, boundingBox);
                 if (result !== '') {
@@ -1167,7 +1169,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             return row + (column ? ` / ${column}` : '');
         }
         case 'offset': {
-            let [offset, anchor] = value.trim().split(REGEX_DIVIDER);
+            let [offset, anchor] = value.trim().split(CHAR_DIVIDER);
             if (hasCalc(offset)) {
                 const url = splitEnclosing(offset.trim());
                 const length = url.length;
@@ -1216,7 +1218,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                     let width: Undef<string>;
                     let outset: Undef<string>;
                     if (match[3]) {
-                        [width, outset] = match[3].trim().split(REGEX_DIVIDER);
+                        [width, outset] = match[3].trim().split(CHAR_DIVIDER);
                         if (hasCalc(width)) {
                             const result = calculateStyle(element, 'borderImageWidth', width, boundingBox);
                             if (result !== '') {
@@ -1329,7 +1331,7 @@ export function parseKeyframes(rules: CSSRuleList) {
         const item = rules[i++];
         const match = REGEX_KEYFRAME.exec(item.cssText);
         if (match) {
-            for (let percent of (item['keyText'] as string || match[1]).trim().split(XML.SEPARATOR)) {
+            for (let percent of (item['keyText'] as string || match[1]).trim().split(CHAR_SEPARATOR)) {
                 switch (percent) {
                     case 'from':
                         percent = '0%';
@@ -1339,7 +1341,7 @@ export function parseKeyframes(rules: CSSRuleList) {
                         break;
                 }
                 const keyframe: StringMap = {};
-                for (const property of match[2].split(XML.DELIMITER)) {
+                for (const property of match[2].split(/\s*;\s*/)) {
                     const index = property.indexOf(':');
                     if (index !== -1) {
                         const value = property.substring(index + 1).trim();
@@ -1712,7 +1714,7 @@ export function getParentBoxDimension(element: CSSElement) {
 export function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions) {
     value = value.trim();
     if (value !== '') {
-        const orientation = value.split(CHAR.SPACE);
+        const orientation = value.split(CHAR_SPACE);
         if (orientation.length === 1) {
             orientation.push('center');
         }
@@ -1728,7 +1730,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
                 if (imageDimension && !isLength(position)) {
                     let offset = result[directionAsPercent];
                     if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
-                        const [sizeW, sizeH] = imageSize.split(CHAR.SPACE);
+                        const [sizeW, sizeH] = imageSize.split(CHAR_SPACE);
                         if (horizontal) {
                             let imageWidth = width;
                             if (isLength(sizeW, true)) {
@@ -2014,7 +2016,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         });
     }
     if (srcset !== '') {
-        for (const value of srcset.trim().split(XML.SEPARATOR)) {
+        for (const value of srcset.trim().split(CHAR_SEPARATOR)) {
             const match = REGEX_SRCSET.exec(value);
             if (match) {
                 let width = 0;
@@ -2030,7 +2032,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                         pixelRatio = 1;
                         break;
                 }
-                result.push({ src: resolvePath(match[1].split(CHAR.SPACE)[0]), pixelRatio, width });
+                result.push({ src: resolvePath(match[1].split(CHAR_SPACE)[0]), pixelRatio, width });
             }
         }
     }
@@ -2056,7 +2058,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         });
         if (isString(sizes)) {
             let width = NaN;
-            for (const value of sizes.trim().split(XML.SEPARATOR)) {
+            for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
                 let match = REGEX_SOURCESIZES.exec(value);
                 if (match) {
                     const ruleA = match[2] ? checkMediaRule(match[2]) : undefined;

@@ -16,7 +16,6 @@ const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertSt
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { maxArray } = squared.lib.math;
 const { appendSeparator, capitalize, convertFloat, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
-const { XML } = squared.lib.regex;
 const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { isPlainText } = squared.lib.xml;
 
@@ -44,7 +43,7 @@ function getCounterIncrementValue(parent: Element, counterName: string, pseudoEl
 
 function prioritizeExtensions<T extends NodeUI>(value: Undef<string>, extensions: ExtensionUI<T>[]) {
     if (value) {
-        const included = value.split(XML.SEPARATOR);
+        const included = value.trim().split(/\s*,\s*/);
         const result: ExtensionUI<T>[] = [];
         const untagged: ExtensionUI<T>[] = [];
         for (const ext of extensions) {
@@ -540,7 +539,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     public useElement(element: HTMLElement) {
         const use = this.getDatasetName('use', element);
-        return isString(use) && use.split(XML.SEPARATOR).some(value => !!this.extensionManager.retrieve(value));
+        return isString(use) && use.trim().split(/\s*,\s*/).some(value => !!this.extensionManager.retrieve(value));
     }
 
     public toString() {

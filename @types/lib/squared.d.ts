@@ -206,7 +206,6 @@ declare module "lib" {
             SVG: RegExp;
         };
         const CSS: {
-            PX: RegExp;
             ANGLE: RegExp;
             CALC: RegExp;
             VAR: RegExp;
@@ -224,22 +223,17 @@ declare module "lib" {
         const XML: {
             ATTRIBUTE: RegExp;
             ENTITY: RegExp;
-            SEPARATOR: RegExp;
-            DELIMITER: RegExp;
             BREAKWORD_G: RegExp;
             NONWORD_G: RegExp;
             TAGNAME_G: RegExp;
         };
         const CHAR: {
-            SPACE: RegExp;
             LEADINGSPACE: RegExp;
             TRAILINGSPACE: RegExp;
             TRAILINGZERO: RegExp;
             LEADINGNEWLINE: RegExp;
             LEADINGNUMBER: RegExp;
             LOWERCASE: RegExp;
-            WORD: RegExp;
-            UNITZERO: RegExp;
             WORDDASH: RegExp;
         };
         const COMPONENT: {

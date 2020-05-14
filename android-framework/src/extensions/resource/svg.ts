@@ -31,7 +31,7 @@ type SvgView = squared.svg.SvgView;
 
 const { extractURL, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { CHAR, FILE } = squared.lib.regex;
+const { FILE } = squared.lib.regex;
 const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = squared.lib.util;
 const { applyTemplate } = squared.lib.xml;
 
@@ -207,7 +207,7 @@ function createPathInterpolator(value: string) {
     else {
         const name = `path_interpolator_${convertWord(value)}`;
         if (!STORED.animators.has(name)) {
-            STORED.animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(CHAR.SPACE)));
+            STORED.animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(/\s+/)));
         }
         return `@anim/${name}`;
     }

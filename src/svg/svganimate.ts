@@ -6,7 +6,6 @@ import { INSTANCE_TYPE, KEYSPLINE_NAME, STRING_CUBICBEZIER } from './lib/constan
 const { getHexCode, parseColor } = squared.lib.color;
 const { getFontSize, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { CHAR, XML } = squared.lib.regex;
 const { hasValue, isNumber, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
 const REGEX_BEZIER = /^\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$/;
@@ -68,8 +67,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             case 'rotate':
             case 'scale':
             case 'translate':
-                currentValue = replaceMap(valueA.trim().split(CHAR.SPACE), (value: string) => parseFloat(value));
-                nextValue = replaceMap(valueB.trim().split(CHAR.SPACE), (value: string) => parseFloat(value));
+                currentValue = replaceMap(valueA.trim().split(/\s+/), (value: string) => parseFloat(value));
+                nextValue = replaceMap(valueB.trim().split(/\s+/), (value: string) => parseFloat(value));
                 break;
             default:
                 if (isNumber(valueA)) {
@@ -192,7 +191,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             const values = getNamedItem(animationElement, 'values');
             const keyTimes = this.duration !== -1 ? SvgAnimate.toFractionList(getNamedItem(animationElement, 'keyTimes')) : [];
             if (values !== '') {
-                const valuesData = trimEnd(values, ';').split(XML.DELIMITER);
+                const valuesData = trimEnd(values, ';').split(/\s*;\s*/);
                 this.values = valuesData;
                 const length = valuesData.length;
                 if (length > 1 && length === keyTimes.length) {
@@ -476,7 +475,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 const keySplines: string[] = [];
                 let i = 0;
                 while (i < minSegment) {
-                    const points = replaceMap(value[i++].split(CHAR.SPACE), (pt: string) => parseFloat(pt));
+                    const points = replaceMap(value[i++].split(/\s+/), (pt: string) => parseFloat(pt));
                     if (points.length === 4 && !points.some(pt => isNaN(pt)) && points[0] >= 0 && points[0] <= 1 && points[2] >= 0 && points[2] <= 1) {
                         keySplines.push(points.join(' '));
                     }

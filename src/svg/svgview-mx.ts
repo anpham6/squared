@@ -17,7 +17,6 @@ interface AttributeData extends NumberValue {
 const { getFontSize, getKeyframesRules, isAngle, isCustomProperty, hasCalc, parseAngle, parseVar } = squared.lib.css;
 const { isWinEdge } = squared.lib.client;
 const { getNamedItem } = squared.lib.dom;
-const { XML } = squared.lib.regex;
 const { isString, iterateArray, replaceMap, safeNestedArray, sortNumber } = squared.lib.util;
 
 const ANIMATION_DEFAULT = {
@@ -43,7 +42,7 @@ function parseAttribute(element: SVGElement, attr: string) {
         }
         return result;
     }
-    return value.split(XML.SEPARATOR);
+    return value.trim().split(/\s*,\s*/);
 }
 
 function sortAttribute(value: NumberValue[]) {
@@ -109,7 +108,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         if (/^[a-zA-Z]+$/.test(begin)) {
                             return;
                         }
-                        const times = begin ? sortNumber(replaceMap(begin.split(';'), (value: string) => SvgAnimation.convertClockTime(value))) : [0];
+                        const times = begin !== '' ? sortNumber(replaceMap(begin.split(';'), (value: string) => SvgAnimation.convertClockTime(value))) : [0];
                         if (times.length) {
                             switch (item.tagName) {
                                 case 'set':

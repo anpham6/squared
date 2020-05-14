@@ -30,7 +30,6 @@ export const UNIT = {
 };
 
 export const CSS = {
-    PX: /\dpx$/,
     ANGLE: new RegExp(`^\\s*${STRING.CSS_ANGLE}\\s*$`),
     TIME: new RegExp(`^\\s*${STRING.CSS_TIME}\\s*$`),
     CALC: new RegExp(`^\\s*${STRING.CSS_CALC}\\s*$`),
@@ -50,23 +49,18 @@ export const CSS = {
 export const XML = {
     ATTRIBUTE: /([^\s]+)="((?:[^"]|\\")+)"/,
     ENTITY: /&#?[A-Za-z\d]+;/,
-    SEPARATOR: /\s*,\s*/,
-    DELIMITER: /\s*;\s*/,
     BREAKWORD_G: /([A-Za-z\d]+|&#?[A-Za-z\d]+;)/g,
     NONWORD_G: /[^A-Za-z\d]+/g,
     TAGNAME_G: /(<([^>]+)>)/g
 };
 
 export const CHAR = {
-    SPACE: /\s+/,
     LEADINGSPACE: /^\s+/,
     TRAILINGSPACE: /\s+$/,
     TRAILINGZERO: /\.(\d*?)(0+)$/,
     LEADINGNEWLINE: /^\s*\n+/,
     LEADINGNUMBER: /^\d/,
     LOWERCASE: /^[a-z]+$/,
-    WORD: /\w/,
-    UNITZERO: /^\s*0[a-z]*\s*$/,
     WORDDASH: /[a-zA-Z\d]/
 };
 

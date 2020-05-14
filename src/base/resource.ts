@@ -1,4 +1,4 @@
-const { STRING, XML } = squared.lib.regex;
+const { STRING } = squared.lib.regex;
 const { extractURL } = squared.lib.css;
 const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = squared.lib.util;
 
@@ -39,7 +39,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
             if (uri.startsWith('data:image/')) {
                 const match = REGEX_DATAURI.exec(uri);
                 if (match) {
-                    const mimeType = match[1].split(XML.DELIMITER);
+                    const mimeType = match[1].split(';');
                     this.addRawData(uri, mimeType[0].trim(), mimeType[1]?.trim() || 'base64', match[2], element.naturalWidth, element.naturalHeight);
                 }
             }

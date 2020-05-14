@@ -9,7 +9,6 @@ type View = android.base.View;
 
 const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
 const { maxArray, truncate } = squared.lib.math;
-const { CHAR } = squared.lib.regex;
 const { conditionArray, flatArray, hasValue, isArray } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -22,6 +21,7 @@ const REGEX_JUSTIFYLEFT = /(start|left|baseline)$/;
 const REGEX_JUSTIFYRIGHT = /(right|end)$/;
 const REGEX_ALIGNSELF = /start|end|center|baseline/;
 const REGEX_ALIGNTOP = /(start|baseline)$/;
+const REGEX_UNITZERO = /^\s*0[a-z]*\s*$/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
@@ -535,7 +535,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             minSize += cellSize;
                         }
                     }
-                    if (node.textElement && CHAR.UNITZERO.test(min)) {
+                    if (node.textElement && REGEX_UNITZERO.test(min)) {
                         fitContent = true;
                     }
                 }

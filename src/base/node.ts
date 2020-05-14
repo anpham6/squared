@@ -5,17 +5,18 @@ type T = Node;
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { BOX_BORDER, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = squared.lib.css;
 const { CSS_LAYOUT, CSS_LAYOUT_SELF, ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
-const { CHAR, CSS, FILE, XML } = squared.lib.regex;
+const { CHAR, CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, iterateArray, spliceString, splitEnclosing } = squared.lib.util;
 
-const { PX, SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
+const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
 
 const REGEX_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
 const REGEX_INLINEVERTICAL = /^(inline|table-cell)/;
 const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
 const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
+const REGEX_PX = /\dpx$/;
 const REGEX_EM = /\dem$/;
 
 function setStyleCache(element: HTMLElement, attr: string, sessionId: string, value: string, current: string) {
@@ -38,7 +39,7 @@ function deleteStyleCache(element: HTMLElement, attr: string, sessionId: string)
     }
 }
 
-const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && PX.test(actualValue);
+const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && REGEX_PX.test(actualValue);
 const soryById = (a: T, b: T) => a.id < b.id ? -1 : 1;
 const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
 
@@ -650,7 +651,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                     if (attr.symbol) {
                         switch (attr.symbol) {
                             case '~':
-                                if (!value.split(CHAR.SPACE).includes(valueA)) {
+                                if (!value.split(/\s+/).includes(valueA)) {
                                     return false;
                                 }
                                 break;
@@ -1981,7 +1982,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     else {
                         value = parseUnit(lineHeight, this.fontSize);
-                        if (PX.test(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
+                        if (REGEX_PX.test(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
                             const fontSize = getInitialValue.call(this, 'fontSize');
                             if (REGEX_EM.test(fontSize)) {
                                 value *= parseFloat(fontSize);
@@ -2511,7 +2512,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.plainText) {
                 result = Math.floor(getRangeClientRect(this._element!).width) > this.actualParent!.box.width;
             }
-            else if (this.styleText && (this.inline || REGEX_INLINEVERTICAL.test(this.display) || this.floating || this.naturalElements.length === 0)) {
+            else if (this.styleText && (this.inline || this.naturalElements.length === 0 || REGEX_INLINEVERTICAL.test(this.display) || this.floating)) {
                 result = this.textBounds?.numberOfLines as number > 1;
             }
             else {
@@ -2611,8 +2612,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const backgroundImage = this.backgroundImage !== '';
                 let backgroundRepeatX = false, backgroundRepeatY = false;
                 if (backgroundImage) {
-                    for (const repeat of this.css('backgroundRepeat').split(XML.SEPARATOR)) {
-                        const [repeatX, repeatY] = repeat.split(CHAR.SPACE);
+                    for (const repeat of this.css('backgroundRepeat').split(',')) {
+                        const [repeatX, repeatY] = repeat.trim().split(/\s+/);
                         if (!backgroundRepeatX) {
                             backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x';
                         }
@@ -2712,7 +2713,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get actualHeight() {
         let result = this._cached.actualHeight;
         if (result === undefined) {
-            if (!this.inlineStatic && this.display !== 'table-cell' && !(this.actualParent?.flexdata.column === true)) {
+            if (this.inlineStatic || this.display === 'table-cell' || this.actualParent?.flexdata.column === true) {
+                result = this.bounds.height;
+            }
+            else {
                 result = this.height;
                 if (result > 0) {
                     if (this.contentBox && !this.tableElement) {
@@ -2722,9 +2726,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 else {
                     result = this.bounds.height;
                 }
-            }
-            else {
-                result = this.bounds.height;
             }
             this._cached.actualHeight = result;
         }
@@ -2816,7 +2817,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             if (this.naturalChild && this.styleElement) {
                 const value = this.css('fontSize');
-                if (PX.test(value)) {
+                if (REGEX_PX.test(value)) {
                     result = parseFloat(value);
                 }
                 else if (isPercent(value) && !this.documentBody) {

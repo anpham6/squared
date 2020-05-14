@@ -4,7 +4,7 @@ type View = chrome.base.View;
 type Extension = chrome.base.Extension<View>;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
-const { CHAR, COMPONENT, FILE, XML } = squared.lib.regex;
+const { COMPONENT, FILE } = squared.lib.regex;
 const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, objectMap, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, safeNestedArray, trimEnd } = squared.lib.util;
 
 const ASSETS = Resource.ASSETS;
@@ -71,7 +71,7 @@ function getExtensions(element: Null<HTMLElement>) {
         const dataset = element.dataset;
         const use = dataset.useChrome?.trim() || dataset.use?.trim();
         if (use) {
-            return use.split(XML.SEPARATOR);
+            return use.split(/\s*,\s*/);
         }
     }
     return [];
@@ -440,6 +440,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         }
         const result: ChromeAsset[] = [];
         const processUri = (element: Null<HTMLElement>, uri: string, mimeType?: string) => {
+            uri = uri.trim();
             if (uri !== '') {
                 let file: Undef<string>;
                 if (element) {
@@ -461,7 +462,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             return undefined;
         };
         document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(null, resolvePath(source.poster)));
-        document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => source.srcset.split(XML.SEPARATOR).forEach(uri => processUri(source, resolvePath(uri.split(CHAR.SPACE)[0]))));
+        document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => source.srcset.split(',').forEach(uri => processUri(source, resolvePath(uri.split(/\s+/)[0]))));
         document.querySelectorAll('img, input[type=image]').forEach((image: HTMLImageElement) => {
             const src = image.src.trim();
             if (!src.startsWith('data:image/')) {

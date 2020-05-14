@@ -448,7 +448,7 @@ export function convertCamelCase(value: string, char = '-') {
 
 export function convertWord(value: string, dash?: boolean) {
     let result = '';
-    const pattern = dash ? CHAR.WORDDASH : CHAR.WORD;
+    const pattern = dash ? CHAR.WORDDASH : /\w/;
     const length = value.length;
     let i = 0;
     while (i < length) {
@@ -713,10 +713,10 @@ export function isEqual(source: any, other: any) {
     return false;
 }
 
-export function includes(source: Undef<string>, value: string, delimiter = XML.SEPARATOR) {
+export function includes(source: Undef<string>, value: string, delimiter = ',') {
     if (source) {
         for (const name of source.split(delimiter)) {
-            if (name === value) {
+            if (name.trim() === value) {
                 return true;
             }
         }

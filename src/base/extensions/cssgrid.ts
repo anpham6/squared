@@ -28,7 +28,6 @@ interface RepeatItem {
 }
 
 const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
-const { CHAR, CSS } = squared.lib.regex;
 const { convertFloat, isNumber, safeNestedArray, trimString, withinRange } = squared.lib.util;
 
 const CSS_GRID = EXT_NAME.CSS_GRID;
@@ -110,7 +109,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
     let i = 0;
     while (i < length) {
         const value = unit[i++];
-        if (CSS.PX.test(value)) {
+        if (CssGrid.isPx(value)) {
             filled += parseFloat(value);
         }
         else if (CssGrid.isFr(value)) {
@@ -178,7 +177,7 @@ const convertLength = (node: NodeUI, value: string, index: number) => isLength(v
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static isFr = (value: string) => /\dfr$/.test(value);
-    public static isPx = (value: string) => CSS.PX.test(value);
+    public static isPx = (value: string) => /\dpx$/.test(value);
     public static isAligned = (node: NodeUI) => node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
     public static isJustified = (node: NodeUI) => (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
 
@@ -271,7 +270,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         case 0:
                         case 1:
                             if (command.startsWith('[')) {
-                                for (const attr of match[4].split(CHAR.SPACE)) {
+                                for (const attr of match[4].split(/\s+/)) {
                                     safeNestedArray(name, attr).push(i);
                                 }
                             }
@@ -482,7 +481,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             autoHeight = setAutoFill(row, node.actualHeight);
             node.css('gridTemplateAreas').split(/"[\s\n]+"/).forEach((template, i) => {
                 if (template !== 'none') {
-                    trimString(template.trim(), '"').split(CHAR.SPACE).forEach((area, j) => {
+                    trimString(template.trim(), '"').split(/\s+/).forEach((area, j) => {
                         if (area.charAt(0) !== '.') {
                             const templateArea = templateAreas[area];
                             if (templateArea) {

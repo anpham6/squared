@@ -10,7 +10,7 @@ type SvgUseSymbol = squared.svg.SvgUseSymbol;
 const { parseColor } = squared.lib.color;
 const { extractURL, getFontSize, hasCalc, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { STRING, XML } = squared.lib.regex;
+const { STRING } = squared.lib.regex;
 const { convertCamelCase, convertFloat, isNumber, isString, joinArray, objectMap } = squared.lib.util;
 
 const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
@@ -109,7 +109,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     break;
                                 }
                                 case 'polygon': {
-                                    const points = objectMap(match[1].split(XML.SEPARATOR), values => {
+                                    const points = objectMap(match[1].split(','), values => {
                                         let x = left, y = top;
                                         values.trim().split(' ').forEach((value, index) => {
                                             if (index === 0) {

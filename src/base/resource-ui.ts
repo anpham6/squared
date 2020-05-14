@@ -9,7 +9,7 @@ const { parseColor } = squared.lib.color;
 const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
-const { CHAR, ESCAPE, STRING, XML } = squared.lib.regex;
+const { CHAR, ESCAPE, STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
 const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, trimEnd, trimStart } = squared.lib.util;
 const { STRING_SPACE, STRING_TABSPACE } = squared.lib.xml;
@@ -213,9 +213,9 @@ function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boole
     return [value, inlined, true];
 }
 
-function getBackgroundSize(node: NodeUI, index: number, value?: string, screenDimension?: Dimension) {
-    if (value) {
-        const sizes = value.split(XML.SEPARATOR);
+function getBackgroundSize(node: NodeUI, index: number, value: string, screenDimension?: Dimension) {
+    if (value !== '') {
+        const sizes = value.split(/\s*,\s*/);
         return ResourceUI.getBackgroundSize(node, sizes[index % sizes.length], screenDimension);
     }
     return undefined;
@@ -603,7 +603,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             case 'initial':
                 return undefined;
             default: {
-                const dimensions = value.split(CHAR.SPACE);
+                const dimensions = value.split(/\s+/);
                 const length = dimensions.length;
                 if (length === 1) {
                     dimensions[1] = dimensions[0];

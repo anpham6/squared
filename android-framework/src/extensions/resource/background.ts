@@ -47,13 +47,15 @@ interface ShapeStrokeData {
 const { reduceRGBA } = squared.lib.color;
 const { extractURL, formatPercent, formatPX, getBackgroundPosition } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { CHAR, XML } = squared.lib.regex;
+const { CHAR } = squared.lib.regex;
 const { delimitString, flatArray, isEqual, objectMap, resolvePath } = squared.lib.util;
 const { applyTemplate } = squared.lib.xml;
 
 const { BOX_STANDARD, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const NodeUI = squared.base.NodeUI;
+
+const CHAR_SEPARATOR = /\s*,\s*/;
 
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeStrokeData {
     const { style, color } = border;
@@ -734,9 +736,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const svg: boolean[] = [];
             const imageDimensions: Undef<Dimension>[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
-            const backgroundPositionX = data.backgroundPositionX.split(XML.SEPARATOR), backgroundPositionY = data.backgroundPositionY.split(XML.SEPARATOR);
-            let backgroundRepeat = data.backgroundRepeat.split(XML.SEPARATOR);
-            let backgroundSize = data.backgroundSize.split(XML.SEPARATOR);
+            const backgroundPositionX = data.backgroundPositionX.split(CHAR_SEPARATOR), backgroundPositionY = data.backgroundPositionY.split(CHAR_SEPARATOR);
+            let backgroundRepeat = data.backgroundRepeat.split(CHAR_SEPARATOR);
+            let backgroundSize = data.backgroundSize.split(CHAR_SEPARATOR);
             let length = 0;
             if (backgroundImage) {
                 const svgInstance = this._resourceSvgInstance;
@@ -827,12 +829,16 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (valid) {
                         const x = backgroundPositionX[i] || backgroundPositionX[i - 1];
                         const y = backgroundPositionY[i] || backgroundPositionY[i - 1];
-                        backgroundPosition[length] = getBackgroundPosition(checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'), node.actualDimension, {
-                            fontSize,
-                            imageDimension: imageDimensions[length],
-                            imageSize: backgroundSize[i],
-                            screenDimension
-                        });
+                        backgroundPosition[length] = getBackgroundPosition(
+                            checkBackgroundPosition(x, y, 'left') + ' ' + checkBackgroundPosition(y, x, 'top'),
+                            node.actualDimension,
+                            {
+                                fontSize,
+                                imageDimension: imageDimensions[length],
+                                imageSize: backgroundSize[i],
+                                screenDimension
+                            }
+                        );
                         ++length;
                     }
                     else {
@@ -894,8 +900,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     continue;
                 }
                 const position = backgroundPosition[i];
-                const size = backgroundSize[i];
                 const padded = position.orientation.length === 4;
+                const size = backgroundSize[i];
+                let repeat = backgroundRepeat[i];
                 let dimension = imageDimensions[i];
                 let dimenWidth = NaN, dimenHeight = NaN;
                 if (dimension) {
@@ -915,7 +922,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 let gravityX = '', gravityY = '';
                 let gravityAlign = '';
                 let negativeOffset = 0;
-                let repeat = backgroundRepeat[i];
                 if (repeat.includes(' ')) {
                     const [x, y] = repeat.split(' ');
                     if (x === 'no-repeat') {
@@ -1053,7 +1059,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         break;
                     default:
                         if (size !== '') {
-                            size.split(CHAR.SPACE).forEach((dimen, index) => {
+                            size.split(/\s+/).forEach((dimen, index) => {
                                 if (dimen === '100%') {
                                     gravityAlign = index === 0 ? 'fill_horizontal' : delimitString({ value: gravityAlign }, 'fill_vertical');
                                 }
