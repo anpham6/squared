@@ -75,36 +75,31 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public copying(options: FileCopyingOptions) {
         if (this.hasHttpProtocol()) {
             const { assets, directory } = options;
-            if (isString(directory)) {
-                const body = (assets ? assets.concat(this.assets) : this.assets) as RequestAsset[];
-                const asset = body[0];
-                if (asset) {
-                    asset.exclusions = options.exclusions;
-                    asset.dataMap = this.getDataMap(options);
-                    return fetch(
-                        this.hostname +
-                        '/api/assets/copy' +
-                        '?to=' + encodeURIComponent(directory.trim()) +
-                        '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
-                        this.getCopyQueryParameters(options), {
-                            method: 'POST',
-                            headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
-                            body: JSON.stringify(body)
+            const body = this.createRequestBody(assets, options);
+            if (body && isString(directory)) {
+                return fetch(
+                    this.hostname +
+                    '/api/assets/copy' +
+                    '?to=' + encodeURIComponent(directory.trim()) +
+                    '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
+                    this.getCopyQueryParameters(options), {
+                        method: 'POST',
+                        headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
+                        body: JSON.stringify(body)
+                    }
+                )
+                .then((response: Response) => response.json())
+                .then((result: ResultOfFileAction) => {
+                    if (result) {
+                        if (typeof options.callback === 'function') {
+                            options.callback(result);
                         }
-                    )
-                    .then((response: Response) => response.json())
-                    .then((result: ResultOfFileAction) => {
-                        if (result) {
-                            if (typeof options.callback === 'function') {
-                                options.callback(result);
-                            }
-                            else if (result.system) {
-                                (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
-                            }
+                        else if (result.system) {
+                            (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
                         }
-                        return result;
-                    });
-                }
+                    }
+                    return result;
+                });
             }
         }
         else {
@@ -116,49 +111,60 @@ export default abstract class File<T extends squared.base.Node> implements squar
     public archiving(options: FileArchivingOptions) {
         if (this.hasHttpProtocol()) {
             const { assets, filename } = options;
-            if (isString(filename)) {
-                const body = (assets ? assets.concat(this.assets) : this.assets) as RequestAsset[];
-                const asset = body[0];
-                if (asset) {
-                    asset.exclusions = options.exclusions;
-                    asset.dataMap = this.getDataMap(options);
-                    return fetch(
-                        this.hostname +
-                        '/api/assets/archive' +
-                        '?filename=' + encodeURIComponent(filename.trim()) +
-                        '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
-                        '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
-                        '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
-                        this.getArchiveQueryParameters(options), {
-                            method: 'POST',
-                            headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
-                            body: JSON.stringify(body)
+            const body = this.createRequestBody(assets, options);
+            if (body && isString(filename)) {
+                return fetch(
+                    this.hostname +
+                    '/api/assets/archive' +
+                    '?filename=' + encodeURIComponent(filename.trim()) +
+                    '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
+                    '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
+                    '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +
+                    this.getArchiveQueryParameters(options), {
+                        method: 'POST',
+                        headers: new Headers({ 'Accept': 'application/json, text/plain', 'Content-Type': 'application/json' }),
+                        body: JSON.stringify(body)
+                    }
+                )
+                .then((response: Response) => response.json())
+                .then((result: ResultOfFileAction) => {
+                    if (result) {
+                        if (typeof options.callback === 'function') {
+                            options.callback(result);
                         }
-                    )
-                    .then((response: Response) => response.json())
-                    .then((result: ResultOfFileAction) => {
-                        if (result) {
-                            if (typeof options.callback === 'function') {
-                                options.callback(result);
-                            }
-                            const zipname = result.zipname;
-                            if (isString(zipname)) {
-                                fetch('/api/browser/download?filepath=' + encodeURIComponent(zipname))
-                                    .then(async (download: Response) => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
-                            }
-                            else if (result.system) {
-                                (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
-                            }
+                        const zipname = result.zipname;
+                        if (isString(zipname)) {
+                            fetch('/api/browser/download?filepath=' + encodeURIComponent(zipname))
+                                .then(async (download: Response) => File.downloadFile(await download.blob(), fromLastIndexOf(zipname, '/', '\\')));
                         }
-                        return result;
-                    });
-                }
+                        else if (result.system) {
+                            (this.userSettings.showErrorMessages ? alert : console.log)(result.application + '\n\n' + result.system);
+                        }
+                    }
+                    return result;
+                });
             }
         }
         else {
             (this.userSettings.showErrorMessages ? alert : console.log)('SERVER (required): See README for instructions');
         }
         return frameworkNotInstalled();
+    }
+
+    protected createRequestBody(assets: Undef<FileAsset[]>, options: FileCopyingOptions | FileArchivingOptions) {
+        const body = (assets ? assets.concat(this.assets) : this.assets) as RequestAsset[];
+        const asset = body[0];
+        if (asset) {
+            if (options.exclusions) {
+                asset.exclusions = options.exclusions;
+            }
+            const dataMap = this.getDataMap(options);
+            if (dataMap) {
+                asset.dataMap = dataMap;
+            }
+            return body;
+        }
+        return undefined;
     }
 
     private hasHttpProtocol() {

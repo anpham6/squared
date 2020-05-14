@@ -403,7 +403,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     ++rowIndex;
                     columnIndex = 1;
                 }
-                const { gridRowEnd, gridColumnEnd } = item.cssAsObject('gridRowEnd', 'gridColumnEnd');
+                const [gridRowEnd, gridColumnEnd] = item.cssAsTuple('gridRowEnd', 'gridColumnEnd');
                 let rowSpan = 1;
                 let columnSpan = 1;
                 if (gridRowEnd.startsWith('span')) {

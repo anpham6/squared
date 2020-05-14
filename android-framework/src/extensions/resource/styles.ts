@@ -21,7 +21,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                 const renderChildren = node.renderChildren;
                 const length = renderChildren.length;
                 if (length > 1) {
-                    const attrMap = new Map<string, number>();
+                    const attrMap: ObjectMap<number> = {};
                     let valid = true;
                     let style = '';
                     let i = 0, j: number;
@@ -44,7 +44,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 found = true;
                             }
                             else {
-                                attrMap.set(value, (attrMap.get(value) || 0) + 1);
+                                attrMap[value] = (attrMap[value] || 0) + 1;
                             }
                         }
                         if (!valid || !found && style !== '') {
@@ -53,17 +53,18 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         }
                     }
                     if (valid) {
-                        for (const [attr, value] of attrMap.entries()) {
-                            if (value !== length) {
-                                attrMap.delete(attr);
+                        const keys = [];
+                        for (const attr in attrMap) {
+                            if (attrMap[attr] === length) {
+                                keys.push(attr);
                             }
                         }
-                        if (attrMap.size > 1) {
+                        if (keys.length > 1) {
                             if (style !== '') {
                                 style = trimString(style.substring(style.indexOf('/') + 1), '"');
                             }
                             const common: string[] = [];
-                            for (const attr of attrMap.keys()) {
+                            for (const attr of keys) {
                                 const match = REGEX_ATTRIBUTE.exec(attr);
                                 if (match) {
                                     renderChildren.forEach(item => item.delete(match[1], match[2]));

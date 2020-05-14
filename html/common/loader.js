@@ -67,20 +67,19 @@ document.addEventListener('DOMContentLoaded', () => {
     squared.setFramework(android);
     const time = Date.now();
     squared.parseDocument()
-        .then(response => {
-            console.log('SQ: ' + (Date.now() - time));
-            console.log(response);
+        .then(() => {
             const copyTo = new URLSearchParams(location.search).get('copyTo');
             if (copyTo) {
-                squared.copyToDisk(copyTo).then((result) => {
+                squared.copyToDisk(copyTo).then(response => {
                     const element = squared.lib.dom.createElement(document.body, 'div', { whiteSpace: 'pre', display: 'none' });
-                    if (result.success) {
-                        element.innerHTML = result.files.join('\n');
+                    if (response.success) {
+                        element.innerHTML = response.files.join('\n');
                     }
                     element.id = 'md5_complete';
                 });
             }
             else {
+                console.log('SQ: ' + (Date.now() - time));
                 squared.settings.outputEmptyCopyDirectory = true;
                 squared.copyToDisk('C:/Users/An/git/flexbox', {
                     assets: [
@@ -100,8 +99,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.log('CP: ' + (Date.now() - time))
                     console.log(response);
                 });
+                console.log('NE: ' + (Date.now() - time));
             }
-            console.log('NE: ' + (Date.now() - time));
         })
         .catch(err => console.log(err));
 });

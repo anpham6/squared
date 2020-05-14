@@ -139,7 +139,7 @@ function setOverflow(this: T) {
     let result = 0;
     if (this.htmlElement && !this.inputElement && !this.imageElement && this.tagName !== 'HR' && !this.documentBody) {
         const element = this.element as HTMLElement;
-        const { overflowX, overflowY } = this.cssAsObject('overflowX', 'overflowY');
+        const [overflowX, overflowY] = this.cssAsTuple('overflowX', 'overflowY');
         if (this.hasHeight && (this.hasPX('height') || this.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
             result |= NODE_ALIGNMENT.VERTICAL;
         }

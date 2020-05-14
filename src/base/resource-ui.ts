@@ -695,7 +695,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
             }
             if (node.css('borderRadius') !== '0px') {
-                const { borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius } = node.cssAsObject('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
+                const [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius] = node.cssAsTuple('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
                 const [A, B] = borderTopLeftRadius.split(' ');
                 const [C, D] = borderTopRightRadius.split(' ');
                 const [E, F] = borderBottomRightRadius.split(' ');

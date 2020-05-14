@@ -102,7 +102,7 @@
     "@types/puppeteer": "^2.1.0",
     "@types/request": "^2.48.4",
     "@types/uuid": "^7.0.3",
-    "@types/yargs": "^15.0.4",
+    "@types/yargs": "^15.0.5",
     "@typescript-eslint/eslint-plugin": "^2.33.0",
     "@typescript-eslint/parser": "^2.33.0",
     "clean-css": "^4.2.3",

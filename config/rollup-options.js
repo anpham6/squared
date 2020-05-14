@@ -1,6 +1,9 @@
 export const prettier_options = {
     parser: 'babel',
-    tabWidth: 4
+    tabWidth: 4,
+    singleQuote: true,
+    quoteProps: 'preserve',
+    arrowParens: 'avoid'
 };
 
 export const terser_options = {
