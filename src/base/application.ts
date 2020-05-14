@@ -27,7 +27,7 @@ const REGEX_URL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\(
 const REGEX_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
-    if (uri !== '') {
+    if (uri) {
         const image = ASSET_IMAGE.get(uri);
         if (width > 0 && height > 0 || !image || image.width === 0 || image.height === 0) {
             ASSET_IMAGE.set(uri, { width, height, uri });
@@ -36,9 +36,8 @@ function addImageSrc(uri: string, width = 0, height = 0) {
 }
 
 function parseSrcSet(value: string) {
-    value = value.trim();
-    if (value !== '') {
-        for (const uri of value.split(/\s*,\s*/)) {
+    if (value) {
+        for (const uri of value.trim().split(/\s*,\s*/)) {
             if (uri !== '') {
                 addImageSrc(resolvePath(uri.split(' ')[0]));
             }

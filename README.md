@@ -509,12 +509,12 @@ squared.saveToArchive('archive1', {
 You can also use these commands individually on any elements where the image is the primary output display. Image resizing only works with individual elements or assets and not globally with extensions.
 
 ```xml
-<!-- NOTE: Chrome framework -->
+<!-- NOTE: img | video | audio | source | track | object | embed -->
 
 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)" />
 ```
 
-You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets. The only difference is the HTML parser might not replace the elements with their bundle equivalent in the final output.
+You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets.
 
 ```javascript
 document.querySelectorAll('img').forEach(element => {

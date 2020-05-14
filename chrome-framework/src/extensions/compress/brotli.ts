@@ -6,7 +6,7 @@ const { safeNestedArray } = squared.lib.util;
 
 export default class Brotli<T extends View> extends Extension<T> {
     public readonly options: CompressOptions = {
-        mimeTypes: ['text/css', 'text/javascript', 'text/plain', 'text/csv', 'application/json', 'application/javascript', 'application/ld+json', 'application/xml'],
+        mimeTypes: ['text/css', 'text/javascript', 'text/plain', 'text/csv', 'text/vtt', 'application/json', 'application/javascript', 'application/ld+json', 'application/xml'],
         largerThan: 0,
         smallerThan: Infinity,
         whenSmaller: true,

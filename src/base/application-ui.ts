@@ -22,11 +22,11 @@ const { isPlainText } = squared.lib.xml;
 const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
 const STRING_PSEUDOPREFIX = '__squared_';
 
-function getCounterValue(name: string, counterName: string, fallback = 1) {
-    if (name !== 'none') {
-        const pattern = /\s*([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\s*/g;
+function getCounterValue(value: string, counterName: string, fallback = 1) {
+    if (value !== 'none') {
+        const pattern = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
         let match: Null<RegExpExecArray>;
-        while ((match = pattern.exec(name)) !== null) {
+        while ((match = pattern.exec(value)) !== null) {
             if (match[1] === counterName) {
                 return parseInt(match[2]);
             }
@@ -37,8 +37,8 @@ function getCounterValue(name: string, counterName: string, fallback = 1) {
 }
 
 function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) {
-    const counterIncrement: string | undefined = getElementCache(parent, `styleMap${pseudoElt}`, sessionId)?.counterIncrement;
-    return counterIncrement && getCounterValue(counterIncrement, counterName, fallback);
+    const value = (getElementCache(parent, `styleMap${pseudoElt}`, sessionId) as Undef<CSSStyleDeclaration>)?.counterIncrement;
+    return value && getCounterValue(value, counterName, fallback);
 }
 
 function prioritizeExtensions<T extends NodeUI>(value: Undef<string>, extensions: ExtensionUI<T>[]) {
@@ -91,10 +91,7 @@ function getFloatAlignmentType(nodes: NodeUI[]) {
 
 function checkPseudoAfter(element: Element) {
     const previousSibling = element.childNodes[element.childNodes.length - 1] as Element;
-    if (previousSibling.nodeName === '#text') {
-        return !/\s+$/.test(previousSibling.textContent as string);
-    }
-    return false;
+    return previousSibling.nodeName === '#text' && !/\s+$/.test(previousSibling.textContent as string);
 }
 
 function checkPseudoDimension(styleMap: StringMap, after: boolean, absolute: boolean) {
@@ -112,7 +109,7 @@ function checkPseudoDimension(styleMap: StringMap, after: boolean, absolute: boo
     return true;
 }
 
-function getQuoteValue(element: HTMLElement, pseudoElt: string, outside: string, inside: string, sessionId: string) {
+function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: string, inside: string, sessionId: string) {
     let i = 0, j = -1;
     let found = 0;
     let current: Null<HTMLElement> = element;
@@ -162,7 +159,7 @@ function getQuoteValue(element: HTMLElement, pseudoElt: string, outside: string,
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI): boolean => node.textElement && (node.blockStatic || node.multiline);
 const getRelativeOffset = (node: NodeUI, fromRight: boolean) => node.positionRelative ? (node.hasPX('left') ? node.left * (fromRight ? 1 : -1) : node.right * (fromRight ? -1 : 1)) : 0;
-const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => !!item.use }).length > 0;
+const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => isString(item.use) }).length > 0;
 const setMapDepth = (map: LayoutMap, depth: number, node: NodeUI) => map.get(depth)?.set(node.id, node) || map.set(depth, new Map<number, NodeUI>([[node.id, node]]));
 const getMapIndex = (value: number) => (value * -1) - 2;
 
@@ -1581,12 +1578,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     case 'open-quote':
                         if (pseudoElt === '::before') {
-                            content = getQuoteValue(element, pseudoElt, '“', "‘", sessionId);
+                            content = getPseudoQuoteValue(element, pseudoElt, '“', "‘", sessionId);
                         }
                         break;
                     case 'close-quote':
                         if (pseudoElt === '::after') {
-                            content = getQuoteValue(element, pseudoElt, '”', "’", sessionId);
+                            content = getPseudoQuoteValue(element, pseudoElt, '”', "’", sessionId);
                         }
                         break;
                     default: {

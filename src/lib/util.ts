@@ -165,6 +165,8 @@ export function parseMimeType(value: string) {
             return 'text/plain';
         case 'vsd':
             return 'application/vnd.visio';
+        case 'vtt':
+            return 'text/vtt';
         case 'wav':
             return 'audio/wav';
         case 'weba':
@@ -316,6 +318,8 @@ export function fromMimeType(value: string) {
             return 'txt';
         case 'application/vnd.visio':
             return 'vsd';
+        case 'text/vtt':
+            return 'vtt';
         case 'audio/wav':
             return 'wav';
         case 'audio/webm':

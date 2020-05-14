@@ -52,8 +52,8 @@ function getFilePath(value: string, saveTo = false): [Undef<string>, string, str
     return [moveTo, result[0], result[1]];
 }
 
-function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLSourceElement, data: Map<HTMLElement, string>) {
-    const value = resolvePath(element.src);
+function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLObjectElement | HTMLEmbedElement | HTMLSourceElement | HTMLTrackElement, data: Map<HTMLElement, string>) {
+    const value = resolvePath(element instanceof HTMLObjectElement ? element.data : element.src);
     if (value !== '') {
         data.set(element, value);
     }
@@ -138,11 +138,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         const { preserveCrossOrigin, saveTo } = options;
         let { saveAs, format, preserve } = options;
         let value = trimEnd(uri, '/');
-        const local = value.startsWith(trimEnd(location.origin, '/'));
-        if (!local && preserveCrossOrigin) {
-            return undefined;
-        }
         let relocate: Undef<string>;
+        const local = value.startsWith(trimEnd(location.origin, '/'));
         if (saveAs) {
             saveAs = trimEnd(saveAs.replace(/\\/g, '/'), '/');
             const data = parseFileAs('saveAs', saveAs);
@@ -155,6 +152,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             if (local && relocate) {
                 value = resolvePath(relocate, location.href);
             }
+        }
+        if (preserveCrossOrigin && !local && !relocate) {
+            return undefined;
         }
         const match = COMPONENT.PROTOCOL.exec(value);
         if (match) {
@@ -583,13 +583,18 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         return false;
     }
 
-    protected getRawAssets(tagName: string, options?: FileActionAttribute) {
+    protected getRawAssets(tagName: "video" | "audio" | "object" | "embed", options?: FileActionAttribute) {
         const preserveCrossOrigin = options?.preserveCrossOrigin;
         const result: ChromeAsset[] = [];
-        document.querySelectorAll(tagName).forEach((element: HTMLVideoElement | HTMLAudioElement) => {
+        document.querySelectorAll(tagName).forEach(element => {
             const items = new Map<HTMLElement, string>();
             resolveAssetSource(element, items);
-            element.querySelectorAll('source').forEach((source: HTMLSourceElement) => resolveAssetSource(source, items));
+            switch (element.tagName) {
+                case 'VIDEO':
+                case 'AUDIO':
+                    element.querySelectorAll('source, track').forEach((source: HTMLSourceElement | HTMLTrackElement) => resolveAssetSource(source, items));
+                    break;
+            }
             for (const [item, uri] of items.entries()) {
                 const saveAs = parseFileAs('saveTo', item.dataset.chromeFile)?.[0];
                 const data = File.parseUri(uri, { preserveCrossOrigin, saveAs, saveTo: true });
@@ -620,6 +625,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             .concat(this.getImageAssets(options))
             .concat(this.getVideoAssets(options))
             .concat(this.getAudioAssets(options))
+            .concat(this.getRawAssets('object', options))
+            .concat(this.getRawAssets('embed', options))
             .concat(this.getFontAssets(options));
     }
 

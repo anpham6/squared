@@ -243,10 +243,12 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     if (!isString(styleMap.display)) {
                         styleMap.display = 'block';
                     }
-                case 'VIDEO':
+                case 'IMG':
                 case 'CANVAS':
                 case 'svg':
-                case 'IMG': {
+                case 'VIDEO':
+                case 'OBJECT':
+                case 'EMBED': {
                     this.setElementDimension(element, tagName, styleMap, 'width', 'height');
                     this.setElementDimension(element, tagName, styleMap, 'height', 'width');
                     break;
