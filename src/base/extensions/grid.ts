@@ -4,7 +4,7 @@ import NodeUI from '../node-ui';
 import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
-const { aboveRange, belowRange, objectMap, safeNestedArray, withinRange } = squared.lib.util;
+const { aboveRange, belowRange, plainMap, safeNestedArray, withinRange } = squared.lib.util;
 
 const GRID = EXT_NAME.GRID;
 
@@ -91,7 +91,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (columnLength !== -1) {
-                columns = objectMap(nextCoordsX, value => nextMapX[value]);
+                columns = plainMap(nextCoordsX, value => nextMapX[value]);
             }
             else {
                 const columnRight: number[] = [];

@@ -1127,7 +1127,7 @@ export function replaceMap<T, U>(list: any[], predicate: IteratorPredicate<T, U>
     return list;
 }
 
-export function objectMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
+export function plainMap<T, U>(list: ArrayLike<T>, predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = new Array(length);
     let i = 0;

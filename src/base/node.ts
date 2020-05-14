@@ -2612,8 +2612,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const backgroundImage = this.backgroundImage !== '';
                 let backgroundRepeatX = false, backgroundRepeatY = false;
                 if (backgroundImage) {
-                    for (const repeat of this.css('backgroundRepeat').split(',')) {
-                        const [repeatX, repeatY] = repeat.trim().split(/\s+/);
+                    for (const repeat of this.css('backgroundRepeat').split(/\s*,\s*/)) {
+                        const [repeatX, repeatY] = repeat.split(/\s+/);
                         if (!backgroundRepeatX) {
                             backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x';
                         }

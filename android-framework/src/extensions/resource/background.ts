@@ -48,7 +48,7 @@ const { reduceRGBA } = squared.lib.color;
 const { extractURL, formatPercent, formatPX, getBackgroundPosition } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { CHAR } = squared.lib.regex;
-const { delimitString, flatArray, isEqual, objectMap, resolvePath } = squared.lib.util;
+const { delimitString, flatArray, isEqual, plainMap, resolvePath } = squared.lib.util;
 const { applyTemplate } = squared.lib.xml;
 
 const { BOX_STANDARD, NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -492,7 +492,7 @@ const isInsetBorder = (border: BorderAttribute) => border.style === 'groove' || 
 const getPixelUnit = (width: number, height: number) => `${width}px ${height}px`;
 
 export function convertColorStops(list: ColorStop[], precision?: number) {
-    return objectMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
+    return plainMap(list, item => ({ color: getColorValue(item.color), offset: truncate(item.offset, precision) }));
 }
 
 export function drawRect(width: number, height: number, x = 0, y = 0, precision?: number) {

@@ -32,7 +32,7 @@ type SvgView = squared.svg.SvgView;
 const { extractURL, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { FILE } = squared.lib.regex;
-const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, isString, objectMap, partitionArray, replaceMap } = squared.lib.util;
+const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArray, isNumber, isString, partitionArray, plainMap, replaceMap } = squared.lib.util;
 const { applyTemplate } = squared.lib.xml;
 
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
@@ -1104,7 +1104,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 resetBefore = false;
                                             }
                                             if (resetBefore || requireBefore) {
-                                                beforeValues = objectMap(propertyNames, value => getTransformInitialValue(value) || '0');
+                                                beforeValues = plainMap(propertyNames, value => getTransformInitialValue(value) || '0');
                                             }
                                             transformOrigin = item.transformOrigin;
                                         }
@@ -1130,7 +1130,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         propertyNames = getAttributePropertyName(item.attributeName);
                                         switch (valueType) {
                                             case 'intType':
-                                                values = objectMap(item.values, value => convertInt(value).toString());
+                                                values = plainMap(item.values, value => convertInt(value).toString());
                                                 if (requireBefore) {
                                                     const baseValue = item.baseValue;
                                                     if (baseValue) {
@@ -1140,7 +1140,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                                 break;
                                             case 'floatType':
                                                 if (item.attributeName === 'stroke-dasharray') {
-                                                    values = objectMap(item.values, value => replaceMap(value.split(' '), (fraction: string) => parseFloat(fraction)));
+                                                    values = plainMap(item.values, value => replaceMap(value.split(' '), (fraction: string) => parseFloat(fraction)));
                                                 }
                                                 else {
                                                     values = item.values;

@@ -5,7 +5,7 @@ type Extension = chrome.base.Extension<View>;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
 const { COMPONENT, FILE } = squared.lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, objectMap, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, safeNestedArray, trimEnd } = squared.lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, plainMap, randomUUID, resolvePath, safeNestedArray, trimEnd } = squared.lib.util;
 
 const ASSETS = Resource.ASSETS;
 const REGEX_SRCSET = /[\s\n]*(.+?\.[^\s,]+).*?,?/g;
@@ -462,7 +462,11 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             return undefined;
         };
         document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(null, resolvePath(source.poster)));
-        document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => source.srcset.split(',').forEach(uri => processUri(source, resolvePath(uri.split(/\s+/)[0]))));
+        document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => {
+            for (const uri of source.srcset.trim().split(',')) {
+                processUri(source, resolvePath(uri.split(' ')[0]));
+            }
+        });
         document.querySelectorAll('img, input[type=image]').forEach((image: HTMLImageElement) => {
             const src = image.src.trim();
             if (!src.startsWith('data:image/')) {
@@ -622,7 +626,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     get outputFileExclusions() {
         let result = this._outputFileExclusions;
         if (result === undefined) {
-            result = objectMap(this.userSettings.outputFileExclusions, value => convertFileMatch(value));
+            result = plainMap(this.userSettings.outputFileExclusions, value => convertFileMatch(value));
             this._outputFileExclusions = result;
         }
         return result;

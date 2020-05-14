@@ -10,7 +10,7 @@ type FileActionOptions = squared.base.FileActionOptions;
 type PreloadImage = HTMLImageElement | string;
 
 const { checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
-const { capitalize, convertCamelCase, isString, objectMap, promisify, resolvePath } = squared.lib.util;
+const { capitalize, convertCamelCase, isString, plainMap, promisify, resolvePath } = squared.lib.util;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
 
@@ -40,7 +40,7 @@ function parseSrcSet(value: string) {
     if (value !== '') {
         for (const uri of value.split(/\s*,\s*/)) {
             if (uri !== '') {
-                addImageSrc(resolvePath(uri.split(/\s+/)[0]));
+                addImageSrc(resolvePath(uri.split(' ')[0]));
             }
         }
     }
@@ -284,7 +284,7 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         if (imageElements.length) {
             this.initializing = true;
-            return Promise.all(objectMap(imageElements, image => {
+            return Promise.all(plainMap(imageElements, image => {
                 return new Promise((resolve, reject) => {
                     if (typeof image === 'string') {
                         (async () => {

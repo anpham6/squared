@@ -26,7 +26,7 @@ interface ForwardValue extends NumberValue<AnimateValue> {
 }
 
 const { clamp, equal, multipleOf } = squared.lib.math;
-const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, objectMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = squared.lib.util;
+const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, plainMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = squared.lib.util;
 
 const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
 const RECT_ARGS = ['width', 'height', 'x', 'y'];
@@ -263,8 +263,8 @@ function getItemValue(item: SvgAnimate, values: string[], iteration: number, ind
     switch (item.attributeName) {
         case 'transform':
             if (item.additiveSum && typeof baseValue === 'string') {
-                const baseArray = replaceMap(baseValue.split(/\s+/), (value: string) => parseFloat(value));
-                const valuesArray = objectMap(values, (value: string) => replaceMap(value.trim().split(/\s+/), (pt: string) => parseFloat(pt)));
+                const baseArray = replaceMap(baseValue.split(' '), (value: string) => parseFloat(value));
+                const valuesArray = plainMap(values, (value: string) => replaceMap(value.trim().split(' '), (pt: string) => parseFloat(pt)));
                 const length = baseArray.length;
                 if (valuesArray.every(value => value.length === length)) {
                     const result = valuesArray[index];
@@ -746,7 +746,7 @@ function removeAnimations(animations: SvgAnimation[], values: SvgAnimation[]) {
 }
 
 const getItemTime = (delay: number, duration: number, keyTimes: number[], iteration: number, index: number) => Math.round(delay + (keyTimes[index] + iteration) * duration);
-const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? objectMap(value, pt => pt.x + ',' + pt.y).join(' ') : value?.toString() || '';
+const convertToString = (value: Undef<AnimateValue>) => Array.isArray(value) ? plainMap(value, pt => pt.x + ',' + pt.y).join(' ') : value?.toString() || '';
 const isKeyTimeFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.KEYTIME_ANIMATE);
 const isFromToFormat = (transforming: boolean, keyTimeMode: number) => hasBit(keyTimeMode, transforming ? SYNCHRONIZE_MODE.FROMTO_TRANSFORM : SYNCHRONIZE_MODE.FROMTO_ANIMATE);
 const playableAnimation = (item: SvgAnimate) => item.playable || item.animationElement && item.duration !== -1;

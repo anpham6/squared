@@ -23,7 +23,7 @@ const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { CHAR } = squared.lib.regex;
 const { getElementAsNode, getPseudoElt } = squared.lib.session;
-const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, objectMap, parseMimeType, partitionArray, safeNestedArray, withinRange } = squared.lib.util;
+const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, safeNestedArray, withinRange } = squared.lib.util;
 const { STRING_XMLENCODING, replaceTab } = squared.lib.xml;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -2076,7 +2076,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 android: {},
                 app: {
                     barrierDirection,
-                    constraint_referenced_ids: objectMap(unbound, item => getDocumentId(item.anchorTarget.documentId)).join(',')
+                    constraint_referenced_ids: plainMap(unbound, item => getDocumentId(item.anchorTarget.documentId)).join(',')
                 }
             });
             const { api, anchorTarget } = unbound[unbound.length - 1];

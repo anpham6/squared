@@ -21,7 +21,7 @@ interface ItemValue {
     innerText: string;
 }
 
-const { fromLastIndexOf, objectMap, parseMimeType } = squared.lib.util;
+const { fromLastIndexOf, parseMimeType, plainMap } = squared.lib.util;
 const { applyTemplate, replaceTab } = squared.lib.xml;
 
 const ASSETS = Resource.ASSETS;
@@ -208,7 +208,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             for (const [name, values] of Array.from(STORED.arrays.entries()).sort()) {
                 itemArray.push({
                     name,
-                    item: objectMap(values, innerText => ({ innerText }))
+                    item: plainMap(values, innerText => ({ innerText }))
                 });
             }
             return this.checkFileAssets([
@@ -299,7 +299,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     itemArray.push({
                         name: style.name,
                         parent: style.parent,
-                        item: objectMap(styleArray.sort((a, b) => a.key >= b.key ? 1 : -1), obj => ({ name: obj.key, innerText: obj.value }))
+                        item: plainMap(styleArray.sort((a, b) => a.key >= b.key ? 1 : -1), obj => ({ name: obj.key, innerText: obj.value }))
                     });
                 }
             }
