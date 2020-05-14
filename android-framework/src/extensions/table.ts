@@ -141,7 +141,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                 );
             }
             node.mergeGravity('layout_gravity', 'fill');
-            if (parent.css('empty-cells') === 'hide' && node.naturalChildren.length === 0 && node.textContent === '') {
+            if (parent.css('emptyCells') === 'hide' && node.textEmpty) {
                 node.hide({ hidden: true });
             }
         }

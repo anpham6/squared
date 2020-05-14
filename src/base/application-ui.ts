@@ -112,6 +112,53 @@ function checkPseudoDimension(styleMap: StringMap, after: boolean, absolute: boo
     return true;
 }
 
+function getQuoteValue(element: HTMLElement, pseudoElt: string, outside: string, inside: string, sessionId: string) {
+    let i = 0, j = -1;
+    let found = 0;
+    let current: Null<HTMLElement> = element;
+    while (current?.tagName === 'Q') {
+        const quotes = (getElementCache(current, `styleMap`, sessionId) as Undef<CSSStyleDeclaration>)?.quotes || getComputedStyle(current).quotes;
+        if (quotes) {
+            const match = /"([^"]|\\")+"\s+"([^"]|\\")+"(?:\s+"([^"]|\\")+"\s+"([^"]|\\")+")?/.exec(quotes);
+            if (match) {
+                if (pseudoElt === '::before') {
+                    if (found === 0) {
+                        outside = match[1];
+                        ++found;
+                    }
+                    if (match[3] && found < 2) {
+                        inside = match[3];
+                        ++found;
+                    }
+                }
+                else {
+                    if (found === 0) {
+                        outside = match[2];
+                        ++found;
+                    }
+                    if (match[4] && found < 2) {
+                        inside = match[4];
+                        ++found;
+                    }
+                }
+                j = i;
+            }
+        }
+        current = current.parentElement;
+        ++i;
+    }
+    if (found === 0) {
+        --i;
+    }
+    else if (j === 0) {
+        return outside;
+    }
+    else if (j > 0) {
+        return inside;
+    }
+    return i % 2 === 0 ? outside : inside;
+}
+
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI): boolean => node.textElement && (node.blockStatic || node.multiline);
 const getRelativeOffset = (node: NodeUI, fromRight: boolean) => node.positionRelative ? (node.hasPX('left') ? node.left * (fromRight ? 1 : -1) : node.right * (fromRight ? -1 : 1)) : 0;
@@ -1438,7 +1485,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     protected createPseduoElement(element: HTMLElement, pseudoElt: string, sessionId: string) {
         let styleMap: StringMap = getElementCache(element, `styleMap${pseudoElt}`, sessionId);
-        let nested = 0;
         if (element.tagName === 'Q') {
             if (!styleMap) {
                 styleMap = {};
@@ -1448,13 +1494,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             if (!content) {
                 content = getStyle(element, pseudoElt).getPropertyValue('content') || (pseudoElt === '::before' ? 'open-quote' : 'close-quote');
                 styleMap.content = content;
-            }
-            if (content.endsWith('-quote')) {
-                let parent = element.parentElement;
-                while (parent?.tagName === 'Q') {
-                    ++nested;
-                    parent = parent.parentElement;
-                }
             }
         }
         if (styleMap) {
@@ -1542,12 +1581,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         break;
                     case 'open-quote':
                         if (pseudoElt === '::before') {
-                            content = nested % 2 === 0 ? '“' : "‘";
+                            content = getQuoteValue(element, pseudoElt, '“', "‘", sessionId);
                         }
                         break;
                     case 'close-quote':
                         if (pseudoElt === '::after') {
-                            content = nested % 2 === 0 ? '”' : "’";
+                            content = getQuoteValue(element, pseudoElt, '”', "’", sessionId);
                         }
                         break;
                     default: {

@@ -12,7 +12,7 @@ const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, 
 const { CHAR, ESCAPE, STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
 const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, trimEnd, trimStart } = squared.lib.util;
-const { STRING_SPACE, STRING_TABSPACE } = squared.lib.xml;
+const { STRING_SPACE } = squared.lib.xml;
 
 const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
 const REGEX_NOBREAKSPACE = /\u00A0/g;
@@ -187,7 +187,7 @@ function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boole
             }
             value = value
                 .replace(/\n/g, '\\n')
-                .replace(/\t/g, STRING_TABSPACE)
+                .replace(/\t/g, STRING_SPACE.repeat(node.toInt('tabSize', 8)))
                 .replace(/\s/g, STRING_SPACE);
             return [value, true, false];
         }

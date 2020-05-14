@@ -19,7 +19,6 @@ const REGEX_FORMAT = {
 
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
 export const STRING_SPACE = '&#160;';
-export const STRING_TABSPACE = STRING_SPACE.repeat(8);
 
 export function isPlainText(value: string) {
     const length = value.length;
@@ -250,7 +249,7 @@ export function formatTemplate(value: string, closeEmpty = false, startIndent = 
     return output;
 }
 
-export function replaceCharacterData(value: string, tab = false) {
+export function replaceCharacterData(value: string, tab?: number) {
     value = value
         .replace(REGEX_FORMAT.NBSP, '&#160;')
         .replace(ESCAPE.NONENTITY, '&amp;');
@@ -272,7 +271,7 @@ export function replaceCharacterData(value: string, tab = false) {
                 break;
             case '\t':
                 if (tab) {
-                    char.push({ i, text: STRING_TABSPACE });
+                    char.push({ i, text: STRING_SPACE.repeat(tab) });
                 }
                 break;
             case '\u0003':

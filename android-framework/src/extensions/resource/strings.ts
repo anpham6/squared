@@ -94,7 +94,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         break;
                                 }
                                 const tagName = node.tagName;
-                                value = replaceCharacterData(value, node.preserveWhiteSpace || tagName === 'CODE');
+                                value = replaceCharacterData(value, node.preserveWhiteSpace || tagName === 'CODE' ? node.toInt('tabSize', 8) : 0);
                                 const textDecorationLine = node.css('textDecorationLine');
                                 if (textDecorationLine !== 'none') {
                                     for (const style of textDecorationLine.split(' ')) {

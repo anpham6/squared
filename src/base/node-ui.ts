@@ -1672,7 +1672,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get textEmpty() {
-        if (this.styleElement && !this.imageElement && !this.svgElement) {
+        if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
             const value = this.textContent;
             return value === '' || !this.preserveWhiteSpace && value.trim() === '';
         }

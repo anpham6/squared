@@ -326,7 +326,6 @@ declare module "lib" {
     namespace xml {
         const STRING_XMLENCODING: string;
         const STRING_SPACE: string;
-        const STRING_TABSPACE: string;
         function isPlainText(value: string): string;
         function pushIndent(value: string, depth: number, char?: string, indent?: string): string;
         function pushIndentArray(values: string[], depth: number, char?: string, separator?: string): string;
@@ -334,6 +333,6 @@ declare module "lib" {
         function replaceTab(value: string, spaces?: number, preserve?: boolean): string;
         function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number): string;
         function formatTemplate(value: string, closeEmpty?: boolean): string;
-        function replaceCharacterData(value: string, tab?: boolean): string;
+        function replaceCharacterData(value: string, tab?: number): string;
     }
 }

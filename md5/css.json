@@ -1,0 +1,670 @@
+{
+    "alignContent": {
+        "supported": true,
+        "value": "stretch"
+    },
+    "alignItems": {
+        "supported": true,
+        "value": "stretch"
+    },
+    "alignSelf": {
+        "supported": true,
+        "value": "auto"
+    },
+    "animation": {
+        "supported": true,
+        "value": "none 0 ease 0 1 normal none running"
+    },
+    "animationDelay": {
+        "supported": true,
+        "value": "0s"
+    },
+    "animationDirection": {
+        "supported": true,
+        "value": "normal"
+    },
+    "animationDuration": {
+        "supported": true,
+        "value": "0s"
+    },
+    "animationFillMode": {
+        "supported": true,
+        "value": "none"
+    },
+    "animationIterationCount": {
+        "supported": true,
+        "value": "1"
+    },
+    "animationName": {
+        "supported": true,
+        "value": "none"
+    },
+    "animationPlayState": {
+        "supported": true,
+        "value": "running"
+    },
+    "animationTimingFunction": {
+        "supported": true,
+        "value": "ease"
+    },
+    "backfaceVisibility": {
+        "supported": false,
+        "value": "visible"
+    },
+    "background": {
+        "supported": true,
+        "value": ""
+    },
+    "backgroundAttachment": {
+        "supported": true,
+        "value": "scroll"
+    },
+    "backgroundClip": {
+        "supported": true,
+        "value": "borderBox"
+    },
+    "backgroundColor": {
+        "supported": true,
+        "value": "transparent"
+    },
+    "backgroundImage": {
+        "supported": true,
+        "value": "none"
+    },
+    "backgroundOrigin": {
+        "supported": true,
+        "value": "paddingBox"
+    },
+    "backgroundPosition": {
+        "supported": true,
+        "value": "0% 0%"
+    },
+    "backgroundRepeat": {
+        "supported": true,
+        "value": "repeat"
+    },
+    "backgroundSize": {
+        "supported": true,
+        "value": "auto auto"
+    },
+    "border": {
+        "supported": true,
+        "value": ""
+    },
+    "borderBottom": {
+        "supported": true,
+        "value": ""
+    },
+    "borderBottomColor": {
+        "supported": true,
+        "value": "*"
+    },
+    "borderBottomLeftRadius": {
+        "supported": true,
+        "value": "0"
+    },
+    "borderBottomRightRadius": {
+        "supported": true,
+        "value": "0"
+    },
+    "borderBottomStyle": {
+        "supported": true,
+        "value": "none"
+    },
+    "borderBottomWidth": {
+        "supported": true,
+        "value": "medium"
+    },
+    "borderCollapse": {
+        "supported": true,
+        "value": "separate"
+    },
+    "borderColor": {
+        "supported": true,
+        "value": ""
+    },
+    "borderImage": {
+        "supported": false,
+        "value": "none 100% 1 0 stretch"
+    },
+    "borderImageOutset": {
+        "supported": false,
+        "value": "0"
+    },
+    "borderImageRepeat": {
+        "supported": false,
+        "value": "stretch"
+    },
+    "borderImageSlice": {
+        "supported": false,
+        "value": "100%"
+    },
+    "borderImageSource": {
+        "supported": false,
+        "value": "none"
+    },
+    "borderImageWidth": {
+        "supported": false,
+        "value": "1"
+    },
+    "borderLeft": {
+        "supported": true,
+        "value": ""
+    },
+    "borderLeftColor": {
+        "supported": true,
+        "value": "*"
+    },
+    "borderLeftStyle": {
+        "supported": true,
+        "value": "none"
+    },
+    "borderLeftWidth": {
+        "supported": true,
+        "value": "medium"
+    },
+    "borderRadius": {
+        "supported": true,
+        "value": "0"
+    },
+    "borderRight": {
+        "supported": true,
+        "value": ""
+    },
+    "borderRightColor": {
+        "supported": true,
+        "value": "*"
+    },
+    "borderRightStyle": {
+        "supported": true,
+        "value": "none"
+    },
+    "borderRightWidth": {
+        "supported": true,
+        "value": "medium"
+    },
+    "borderSpacing": {
+        "supported": true,
+        "value": "0"
+    },
+    "borderStyle": {
+        "supported": true,
+        "value": "none"
+    },
+    "borderTop": {
+        "supported": true,
+        "value": ""
+    },
+    "borderTopColor": {
+        "supported": true,
+        "value": "*"
+    },
+    "borderTopLeftRadius": {
+        "supported": true,
+        "value": "0"
+    },
+    "borderTopRightRadius": {
+        "supported": true,
+        "value": "0"
+    },
+    "borderTopStyle": {
+        "supported": true,
+        "value": "none"
+    },
+    "borderTopWidth": {
+        "supported": true,
+        "value": "medium"
+    },
+    "borderWidth": {
+        "supported": true,
+        "value": "medium"
+    },
+    "bottom": {
+        "supported": true,
+        "value": "auto"
+    },
+    "boxShadow": {
+        "supported": false,
+        "value": "none"
+    },
+    "boxSizing": {
+        "supported": true,
+        "value": "contentBox"
+    },
+    "captionSide": {
+        "supported": true,
+        "value": "top"
+    },
+    "clear": {
+        "supported": true,
+        "value": "none"
+    },
+    "color": {
+        "supported": true,
+        "value": "*"
+    },
+    "columnCount": {
+        "supported": true,
+        "value": "auto"
+    },
+    "columnFill": {
+        "supported": false,
+        "value": "balance"
+    },
+    "columnGap": {
+        "supported": true,
+        "value": "normal"
+    },
+    "columnRule": {
+        "supported": true,
+        "value": ""
+    },
+    "columnRuleColor": {
+        "supported": true,
+        "value": "*"
+    },
+    "columnRuleStyle": {
+        "supported": true,
+        "value": "none"
+    },
+    "columnRuleWidth": {
+        "supported": true,
+        "value": "medium"
+    },
+    "columnSpan": {
+        "supported": true,
+        "value": "none"
+    },
+    "columnWidth": {
+        "supported": true,
+        "value": "auto"
+    },
+    "columns": {
+        "supported": true,
+        "value": "auto auto"
+    },
+    "content": {
+        "supported": true,
+        "value": "normal"
+    },
+    "counterIncrement": {
+        "supported": true,
+        "value": "none"
+    },
+    "counterReset": {
+        "supported": true,
+        "value": "none"
+    },
+    "cursor": {
+        "supported": false,
+        "value": "auto"
+    },
+    "direction": {
+        "supported": true,
+        "value": "ltr"
+    },
+    "display": {
+        "supported": true,
+        "value": "inline"
+    },
+    "emptyCells": {
+        "supported": true,
+        "value": "show"
+    },
+    "flex": {
+        "supported": true,
+        "value": "0 1 auto"
+    },
+    "flexBasis": {
+        "supported": true,
+        "value": "auto"
+    },
+    "flexDirection": {
+        "supported": true,
+        "value": "row"
+    },
+    "flexFlow": {
+        "supported": true,
+        "value": "row nowrap"
+    },
+    "flexGrow": {
+        "supported": true,
+        "value": "0"
+    },
+    "flexShrink": {
+        "supported": true,
+        "value": "1"
+    },
+    "flexWrap": {
+        "supported": true,
+        "value": "nowrap"
+    },
+    "float": {
+        "supported": true,
+        "value": "none"
+    },
+    "font": {
+        "supported": true,
+        "value": ""
+    },
+    "fontFamily": {
+        "supported": true,
+        "value": "*"
+    },
+    "fontSize": {
+        "supported": true,
+        "value": "medium"
+    },
+    "fontSizeAdjust": {
+        "supported": false,
+        "value": "none"
+    },
+    "fontStretch": {
+        "supported": false,
+        "value": "normal"
+    },
+    "fontStyle": {
+        "supported": true,
+        "value": "normal"
+    },
+    "fontVariant": {
+        "supported": true,
+        "value": "normal"
+    },
+    "fontWeight": {
+        "supported": true,
+        "value": "normal"
+    },
+    "height": {
+        "supported": true,
+        "value": "auto"
+    },
+    "justifyContent": {
+        "supported": true,
+        "value": "flexStart"
+    },
+    "left": {
+        "supported": true,
+        "value": "auto"
+    },
+    "letterSpacing": {
+        "supported": true,
+        "value": "normal"
+    },
+    "lineHeight": {
+        "supported": true,
+        "value": "normal"
+    },
+    "listStyle": {
+        "supported": true,
+        "value": ""
+    },
+    "listStyleImage": {
+        "supported": true,
+        "value": "normal"
+    },
+    "listStylePosition": {
+        "supported": true,
+        "value": "outside"
+    },
+    "listStyleType": {
+        "supported": true,
+        "value": "disc"
+    },
+    "margin": {
+        "supported": true,
+        "value": "0"
+    },
+    "marginBottom": {
+        "supported": true,
+        "value": "0"
+    },
+    "marginLeft": {
+        "supported": true,
+        "value": "0"
+    },
+    "marginRight": {
+        "supported": true,
+        "value": "0"
+    },
+    "marginTop": {
+        "supported": true,
+        "value": "0"
+    },
+    "maxHeight": {
+        "supported": true,
+        "value": "none"
+    },
+    "maxWidth": {
+        "supported": true,
+        "value": "none"
+    },
+    "minHeight": {
+        "supported": true,
+        "value": "0"
+    },
+    "minWidth": {
+        "supported": true,
+        "value": "0"
+    },
+    "opacity": {
+        "supported": true,
+        "value": "1"
+    },
+    "order": {
+        "supported": true,
+        "value": "0"
+    },
+    "outline": {
+        "supported": true,
+        "value": ""
+    },
+    "outlineColor": {
+        "supported": true,
+        "value": "invert"
+    },
+    "outlineOffset": {
+        "supported": false,
+        "value": "0"
+    },
+    "outlineStyle": {
+        "supported": true,
+        "value": "none"
+    },
+    "outlineWidth": {
+        "supported": true,
+        "value": "medium"
+    },
+    "overflow": {
+        "supported": true,
+        "value": "visible"
+    },
+    "overflowX": {
+        "supported": true,
+        "value": "visible"
+    },
+    "overflowY": {
+        "supported": true,
+        "value": "visible"
+    },
+    "padding": {
+        "supported": true,
+        "value": "0"
+    },
+    "paddingBottom": {
+        "supported": true,
+        "value": "0"
+    },
+    "paddingLeft": {
+        "supported": true,
+        "value": "0"
+    },
+    "paddingRight": {
+        "supported": true,
+        "value": "0"
+    },
+    "paddingTop": {
+        "supported": true,
+        "value": "0"
+    },
+    "pageBreakAfter": {
+        "supported": false,
+        "value": ""
+    },
+    "pageBreakBefore": {
+        "supported": false,
+        "value": "auto"
+    },
+    "pageBreakInside": {
+        "supported": false,
+        "value": "auto"
+    },
+    "perspective": {
+        "supported": false,
+        "value": "none"
+    },
+    "perspectiveOrigin": {
+        "supported": false,
+        "value": "50% 50%"
+    },
+    "position": {
+        "supported": true,
+        "value": "static"
+    },
+    "quotes": {
+        "supported": true,
+        "value": "none"
+    },
+    "resize": {
+        "supported": true,
+        "value": "none"
+    },
+    "right": {
+        "supported": true,
+        "value": "0"
+    },
+    "tabSize": {
+        "supported": true,
+        "value": "8"
+    },
+    "tableLayout": {
+        "supported": true,
+        "value": "auto"
+    },
+    "textAlign": {
+        "supported": true,
+        "value": "left"
+    },
+    "textAlignLast": {
+        "supported": false,
+        "value": "auto"
+    },
+    "textDecoration": {
+        "supported": false,
+        "value": "none"
+    },
+    "textDecorationColor": {
+        "supported": false,
+        "value": "*"
+    },
+    "textDecorationLine": {
+        "supported": true,
+        "value": "none"
+    },
+    "textDecorationStyle": {
+        "supported": false,
+        "value": "solid"
+    },
+    "textIndent": {
+        "supported": true,
+        "value": "0"
+    },
+    "textJustify": {
+        "supported": true,
+        "value": "auto"
+    },
+    "textOverflow": {
+        "supported": true,
+        "value": "clip"
+    },
+    "textShadow": {
+        "supported": true,
+        "value": "none"
+    },
+    "textTransform": {
+        "supported": true,
+        "value": "none"
+    },
+    "top": {
+        "supported": true,
+        "value": "0"
+    },
+    "transform": {
+        "supported": false,
+        "value": "none"
+    },
+    "transformOrigin": {
+        "supported": false,
+        "value": "50% 50% 0"
+    },
+    "transformStyle": {
+        "supported": false,
+        "value": "flat"
+    },
+    "transition": {
+        "supported": false,
+        "value": "all 0 ease 0"
+    },
+    "transitionDelay": {
+        "supported": false,
+        "value": "0s"
+    },
+    "transitionDuration": {
+        "supported": false,
+        "value": "0s"
+    },
+    "transitionProperty": {
+        "supported": false,
+        "value": "all"
+    },
+    "transitionTimingFunction": {
+        "supported": false,
+        "value": "ease"
+    },
+    "unicodeBidi": {
+        "supported": false,
+        "value": "normal"
+    },
+    "verticalAlign": {
+        "supported": true,
+        "value": "baseline"
+    },
+    "visibility": {
+        "supported": true,
+        "value": "visible"
+    },
+    "whiteSpace": {
+        "supported": true,
+        "value": "normal"
+    },
+    "width": {
+        "supported": true,
+        "value": "auto"
+    },
+    "wordBreak": {
+        "supported": false,
+        "value": "normal"
+    },
+    "wordSpacing": {
+        "supported": false,
+        "value": "normal"
+    },
+    "wordWrap": {
+        "supported": false,
+        "value": "normal"
+    },
+    "zIndex": {
+        "supported": true,
+        "value": "auto"
+    }
+}
