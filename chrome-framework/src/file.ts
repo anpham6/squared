@@ -158,7 +158,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         }
         const match = COMPONENT.PROTOCOL.exec(value);
         if (match) {
-            const host = match[2], port = match[3], path = match[4];
+            const host = match[2], port = match[3], path = match[4] || '';
             const extension = getFileExt(uri);
             let pathname = '', filename = '';
             let rootDir: Undef<string>;
@@ -175,17 +175,20 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             else {
                 prefix = location.pathname.substring(0, location.pathname.lastIndexOf('/') + 1);
-                let index = 0;
-                const length = Math.min(path.length, prefix.length);
-                for (let i = 0; i < length; ++i) {
-                    if (path.charAt(i) === prefix.charAt(i)) {
-                        index = i;
+                let length = path.length;
+                if (length) {
+                    let index = 0;
+                    length = Math.min(length, prefix.length);
+                    for (let i = 0; i < length; ++i) {
+                        if (path.charAt(i) === prefix.charAt(i)) {
+                            index = i;
+                        }
+                        else {
+                            break;
+                        }
                     }
-                    else {
-                        break;
-                    }
+                    rootDir = path.substring(0, index + 1);
                 }
-                rootDir = path.substring(0, index + 1);
             }
             if (filename === '') {
                 if (local && relocate) {

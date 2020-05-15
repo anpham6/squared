@@ -4,11 +4,10 @@ type View = android.base.View;
 
 const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;
-const { CHAR, COMPONENT, FILE, XML } = squared.lib.regex;
+const { COMPONENT, FILE, XML } = squared.lib.regex;
 const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = squared.lib.util;
 
 const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
-const REGEX_NONWORD = /[^\w]+/g;
 let CACHE_IMAGE: StringMap = {};
 
 function formatObject(obj: {}, numberAlias = false) {
@@ -66,10 +65,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
     }
 
     public static formatName(value: string) {
-        if (CHAR.LEADINGNUMBER.test(value)) {
+        if (/^\d/.test(value)) {
             value = '__' + value;
         }
-        return value.replace(REGEX_NONWORD, '_');
+        return value.replace(/[^\w]+/g, '_');
     }
 
     public static addTheme(theme: StyleAttribute) {
@@ -147,7 +146,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     name = partial[0];
                 }
                 name = name.toLowerCase();
-                if (numeric || CHAR.LEADINGNUMBER.test(name) || RESERVED_JAVA.includes(name)) {
+                if (numeric || /^\d/.test(name) || RESERVED_JAVA.includes(name)) {
                     name = `__${name}`;
                 }
                 else if (!name) {

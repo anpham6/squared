@@ -47,7 +47,6 @@ interface ShapeStrokeData {
 const { reduceRGBA } = squared.lib.color;
 const { extractURL, formatPercent, formatPX, getBackgroundPosition } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { CHAR } = squared.lib.regex;
 const { delimitString, flatArray, isEqual, plainMap, resolvePath } = squared.lib.util;
 const { applyTemplate } = squared.lib.xml;
 
@@ -278,7 +277,7 @@ function insertDoubleBorder(items: StandardMap[], border: BorderAttribute, top: 
 
 function checkBackgroundPosition(value: string, adjacent: string, fallback: string) {
     if (!value.includes(' ') && adjacent.includes(' ')) {
-        return CHAR.LOWERCASE.test(value) ? (value === 'initial' ? fallback : value) + ' 0px' : fallback + ' ' + value;
+        return /^[a-z]+$/.test(value) ? (value === 'initial' ? fallback : value) + ' 0px' : fallback + ' ' + value;
     }
     else if (value === 'initial') {
         return '0px';

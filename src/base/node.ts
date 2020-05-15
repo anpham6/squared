@@ -5,7 +5,7 @@ type T = Node;
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { BOX_BORDER, CSS_PROPERTIES, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = squared.lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
-const { CHAR, CSS, FILE } = squared.lib.regex;
+const { CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, iterateArray, spliceString, splitEnclosing } = squared.lib.util;
 
@@ -602,7 +602,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                     break;
                 }
                 default:
-                    if (CHAR.WORDDASH.test(not)) {
+                    if (/[a-zA-Z\d]/.test(not)) {
                         notData.tagName = not;
                     }
                     else {

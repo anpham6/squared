@@ -9,7 +9,7 @@ const { parseColor } = squared.lib.color;
 const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
-const { CHAR, ESCAPE, STRING } = squared.lib.regex;
+const { ESCAPE, STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
 const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, trimEnd, trimStart } = squared.lib.util;
 const { STRING_SPACE } = squared.lib.xml;
@@ -19,6 +19,8 @@ const REGEX_NOBREAKSPACE = /\u00A0/g;
 const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
 const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
 const REGEX_TRAILINGINDENT = /\n([^\S\n]*)?$/;
+const REGEX_LEADINGSPACE = /^\s+/;
+const REGEX_TRAILINGSPACE = /\s+$/;
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     const { width, height } = gradient.dimension as Dimension;
@@ -199,15 +201,15 @@ function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boole
     }
     if (node.onlyChild && node.htmlElement) {
         value = value
-            .replace(CHAR.LEADINGSPACE, '')
-            .replace(CHAR.TRAILINGSPACE, '');
+            .replace(REGEX_LEADINGSPACE, '')
+            .replace(REGEX_TRAILINGSPACE, '');
     }
     else {
         if (node.previousSibling?.blockStatic) {
-            value = value.replace(CHAR.LEADINGSPACE, '');
+            value = value.replace(REGEX_LEADINGSPACE, '');
         }
         if (node.nextSibling?.blockStatic) {
-            value = value.replace(CHAR.TRAILINGSPACE, '');
+            value = value.replace(REGEX_TRAILINGSPACE, '');
         }
     }
     return [value, inlined, true];
@@ -917,8 +919,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const previousSibling = node.siblingsLeading[0];
                     let previousSpaceEnd = false;
                     if (value.length > 1) {
-                        if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && CHAR.TRAILINGSPACE.test(previousSibling.textContent)) {
-                            value = value.replace(CHAR.LEADINGSPACE, '');
+                        if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && REGEX_TRAILINGSPACE.test(previousSibling.textContent)) {
+                            value = value.replace(REGEX_LEADINGSPACE, '');
                         }
                         else if (previousSibling.naturalElement) {
                             const textContent = previousSibling.textContent;
@@ -929,8 +931,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                     }
                     if (inlined) {
-                        const trailingSpace = !node.lineBreakTrailing && CHAR.TRAILINGSPACE.test(value);
-                        if (CHAR.LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
+                        const trailingSpace = !node.lineBreakTrailing && REGEX_TRAILINGSPACE.test(value);
+                        if (REGEX_LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
                             value = STRING_SPACE + value.trim();
                         }
                         else {
@@ -944,13 +946,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         }
                     }
                     else if (value.trim() !== '') {
-                        value = value.replace(CHAR.LEADINGSPACE, previousSibling && (
+                        value = value.replace(REGEX_LEADINGSPACE, previousSibling && (
                             previousSibling.block ||
                             previousSibling.lineBreak ||
                             previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
                             node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
                         );
-                        value = value.replace(CHAR.TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
+                        value = value.replace(REGEX_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
                     }
                     else if (!node.inlineText) {
                         return;

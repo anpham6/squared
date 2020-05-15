@@ -54,18 +54,8 @@ export const XML = {
     TAGNAME_G: /(<([^>]+)>)/g
 };
 
-export const CHAR = {
-    LEADINGSPACE: /^\s+/,
-    TRAILINGSPACE: /\s+$/,
-    TRAILINGZERO: /\.(\d*?)(0+)$/,
-    LEADINGNEWLINE: /^\s*\n+/,
-    LEADINGNUMBER: /^\d/,
-    LOWERCASE: /^[a-z]+$/,
-    WORDDASH: /[a-zA-Z\d]/
-};
-
 export const COMPONENT = {
-    PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/[^?]*)?(.*)?$/
+    PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/[^?]*)?[?]?(.*)?$/
 };
 
 export const ESCAPE = {

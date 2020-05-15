@@ -226,15 +226,6 @@ declare module "lib" {
             NONWORD_G: RegExp;
             TAGNAME_G: RegExp;
         };
-        const CHAR: {
-            LEADINGSPACE: RegExp;
-            TRAILINGSPACE: RegExp;
-            TRAILINGZERO: RegExp;
-            LEADINGNEWLINE: RegExp;
-            LEADINGNUMBER: RegExp;
-            LOWERCASE: RegExp;
-            WORDDASH: RegExp;
-        };
         const COMPONENT: {
             PROTOCOL: RegExp;
         };

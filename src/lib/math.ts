@@ -1,6 +1,5 @@
-import { CHAR } from './regex';
-
 const REGEX_DECIMALNOTATION = /^(-?\d+\.\d+)e(-?\d+)$/;
+const REGEX_TRAILINGZERO = /\.(\d*?)(0+)$/;
 const REGEX_TRUNCATE = /^(-?\d+)\.(\d*?)(0{5,}|9{5,})\d*$/;
 const REGEX_TRUNCATECACHE: ObjectMap<RegExp> = {};
 
@@ -65,7 +64,7 @@ export function truncateFraction(value: number) {
 }
 
 export function truncateTrailingZero(value: string) {
-    const match = CHAR.TRAILINGZERO.exec(value);
+    const match = REGEX_TRAILINGZERO.exec(value);
     return match ? value.substring(0, value.length - match[match[1] ? 2 : 0].length) : value;
 }
 

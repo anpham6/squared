@@ -21,7 +21,6 @@ const { parseColor } = squared.lib.color;
 const { formatPX, getSrcSet, hasComputedStyle, isLength, isPercent } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
-const { CHAR } = squared.lib.regex;
 const { getElementAsNode, getPseudoElt } = squared.lib.session;
 const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, safeNestedArray, withinRange } = squared.lib.util;
 const { STRING_XMLENCODING, replaceTab } = squared.lib.xml;
@@ -360,7 +359,7 @@ const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width'
 const sortTemplateInvalid = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderInvalid(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
 const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>) => getSortOrderStandard(a.node.innerMostWrapped as View, b.node.innerMostWrapped as View);
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
-const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && CHAR.LEADINGNEWLINE.test(node.textContent);
+const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && /^\s*\n+/.test(node.textContent);
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
 const getVerticalLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
 const getVerticalAlignedLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
@@ -2406,7 +2405,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         if (item.textElement) {
                             let checkWidth = true;
                             if (previous.textElement) {
-                                if (i === 1 && item.plainText && item.previousSibling === previous && !CHAR.LEADINGSPACE.test(item.textContent) && !CHAR.TRAILINGSPACE.test(previous.textContent)) {
+                                if (i === 1 && item.plainText && item.previousSibling === previous && !/^\s+/.test(item.textContent) && !/\s+$/.test(previous.textContent)) {
                                     retainMultiline = true;
                                     checkWidth = false;
                                 }

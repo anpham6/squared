@@ -1,4 +1,4 @@
-import { CHAR, COMPONENT, UNIT, XML } from './regex';
+import { COMPONENT, UNIT, XML } from './regex';
 
 const UUID_ALPHA = '0123456789abcdef';
 const UUID_SEGMENT = [8, 4, 4, 4, 12];
@@ -452,7 +452,7 @@ export function convertCamelCase(value: string, char = '-') {
 
 export function convertWord(value: string, dash?: boolean) {
     let result = '';
-    const pattern = dash ? CHAR.WORDDASH : /\w/;
+    const pattern = dash ? /[a-zA-Z\d]/ : /\w/;
     const length = value.length;
     let i = 0;
     while (i < length) {
