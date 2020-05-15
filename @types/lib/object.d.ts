@@ -1,3 +1,11 @@
+interface CssProperties {
+    [key: string]: {
+        layout?: boolean;
+        contain?: boolean;
+        value: string | string[];
+    };
+}
+
 interface KeyframesData extends ObjectMap<StringMap> {}
 
 interface FontFaceData {

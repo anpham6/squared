@@ -84,6 +84,7 @@ declare module "lib" {
     }
 
     namespace css {
+        const CSS_PROPERTIES: CssProperties;
         const enum CSS_UNIT {
             NONE = 0,
             LENGTH = 2,
@@ -138,8 +139,6 @@ declare module "lib" {
     }
 
     namespace dom {
-        const CSS_LAYOUT: Set<string>;
-        const CSS_LAYOUT_SELF: Set<string>;
         const ELEMENT_BLOCK: string[];
         function newBoxRect(): BoxRect;
         function newBoxRectDimension(): BoxRectDimension;

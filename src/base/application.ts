@@ -9,7 +9,7 @@ type AppVieModel = squared.base.AppViewModel;
 type FileActionOptions = squared.base.FileActionOptions;
 type PreloadImage = HTMLImageElement | string;
 
-const { checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
+const { CSS_PROPERTIES, checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
 const { capitalize, convertCamelCase, isString, plainMap, promisify, resolvePath } = squared.lib.util;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
@@ -488,72 +488,15 @@ export default abstract class Application<T extends Node> implements squared.bas
                 let match: Null<RegExpExecArray>;
                 while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
                     const attr = convertCamelCase(match[1]);
-                    switch (attr) {
-                        case 'margin':
-                            important.marginTop = true;
-                            important.marginRight = true;
-                            important.marginBottom = true;
-                            important.marginLeft = true;
-                            break;
-                        case 'padding':
-                            important.paddingTop = true;
-                            important.paddingRight = true;
-                            important.paddingBottom = true;
-                            important.paddingLeft = true;
-                            break;
-                        case 'background':
-                            important.backgroundColor = true;
-                            important.backgroundImage = true;
-                            important.backgroundSize = true;
-                            important.backgroundRepeat = true;
-                            important.backgroundPositionX = true;
-                            important.backgroundPositionY = true;
-                            break;
-                        case 'backgroundPosition':
-                            important.backgroundPositionX = true;
-                            important.backgroundPositionY = true;
-                            break;
-                        case 'border':
-                            important.borderTopStyle = true;
-                            important.borderRightStyle = true;
-                            important.borderBottomStyle = true;
-                            important.borderLeftStyle = true;
-                            important.borderTopWidth = true;
-                            important.borderRightWidth = true;
-                            important.borderBottomWidth = true;
-                            important.borderLeftWidth = true;
-                            important.borderTopColor = true;
-                            important.borderRightColor = true;
-                            important.borderBottomColor = true;
-                            important.borderLeftColor = true;
-                            break;
-                        case 'borderStyle':
-                            important.borderTopStyle = true;
-                            important.borderRightStyle = true;
-                            important.borderBottomStyle = true;
-                            important.borderLeftStyle = true;
-                            break;
-                        case 'borderWidth':
-                            important.borderTopWidth = true;
-                            important.borderRightWidth = true;
-                            important.borderBottomWidth = true;
-                            important.borderLeftWidth = true;
-                            break;
-                        case 'borderColor':
-                            important.borderTopColor = true;
-                            important.borderRightColor = true;
-                            important.borderBottomColor = true;
-                            important.borderLeftColor = true;
-                            break;
-                        case 'font':
-                            important.fontFamily = true;
-                            important.fontStyle = true;
-                            important.fontSize = true;
-                            important.fontWeight = true;
-                            important.lineHeight = true;
-                            break;
+                    const value = CSS_PROPERTIES[attr]?.value;
+                    if (Array.isArray(value)) {
+                        for (const name of value) {
+                            important[name] = true;
+                        }
                     }
-                    important[attr] = true;
+                    else {
+                        important[attr] = true;
+                    }
                 }
                 for (const selectorText of parseSelectorText(item.selectorText, true)) {
                     const specificity = getSpecificity(selectorText);

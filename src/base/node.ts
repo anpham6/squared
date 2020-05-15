@@ -3,8 +3,8 @@ import { NODE_ALIGNMENT } from './lib/enumeration';
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { BOX_BORDER, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = squared.lib.css;
-const { CSS_LAYOUT, CSS_LAYOUT_SELF, ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
+const { BOX_BORDER, CSS_PROPERTIES, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = squared.lib.css;
+const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CHAR, CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, iterateArray, spliceString, splitEnclosing } = squared.lib.util;
@@ -917,10 +917,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         if (!this._preferInitial) {
             let parent: Undef<T>;
-            if (attrs.some(value => CSS_LAYOUT.has(value))) {
+            if (attrs.some(value => CSS_PROPERTIES[value].layout === true)) {
                 parent = this.pageFlow && this.ascend({ condition: item => item.documentRoot })[0] || this;
             }
-            else if (attrs.some(value => CSS_LAYOUT_SELF.has(value))) {
+            else if (attrs.some(value => CSS_PROPERTIES[value].contain === true)) {
                 parent = this;
             }
             if (parent) {
