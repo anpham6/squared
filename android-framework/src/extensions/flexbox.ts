@@ -14,7 +14,7 @@ interface FlexBasis {
 
 const { isLength } = squared.lib.css;
 const { truncate } = squared.lib.math;
-const { capitalize, sameArray, withinRange } = squared.lib.util;
+const { capitalize, iterateReverseArray, sameArray, withinRange } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
@@ -511,10 +511,31 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 }
                             }
                             switch (chain.flexbox.alignSelf) {
+                                case 'first baseline:':
+                                    if (TL === 'top' && chain.baselineElement) {
+                                        const first = seg.find(item => item !== chain && item.baselineElement);
+                                        if (first) {
+                                            chain.anchor('baseline', first.documentId);
+                                            break;
+                                        }
+                                    }
                                 case 'start':
                                 case 'flex-start':
                                     chain.anchor(TL, 'parent');
                                     break;
+                                case 'last baseline:':
+                                    if (BR === 'bottom' && chain.baselineElement) {
+                                        const index = iterateReverseArray(seg, item => {
+                                            if (item !== chain && item.baselineElement) {
+                                                chain.anchor('baseline', item.documentId);
+                                                return true;
+                                            }
+                                            return;
+                                        });
+                                        if (index === Infinity) {
+                                            break;
+                                        }
+                                    }
                                 case 'end':
                                 case 'flex-end':
                                     chain.anchor(BR, 'parent');

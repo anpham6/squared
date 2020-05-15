@@ -16,11 +16,8 @@ const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.
 const CssGrid = squared.base.extensions.CssGrid;
 
 const CSS_GRID = squared.base.lib.constant.EXT_NAME.CSS_GRID;
-const REGEX_JUSTIFYSELF = /start|left|center|right|end/;
-const REGEX_JUSTIFYLEFT = /(start|left|baseline)$/;
-const REGEX_JUSTIFYRIGHT = /(right|end)$/;
+const REGEX_JUSTIFYSELF = /start|center|end|baseline|right|left/;
 const REGEX_ALIGNSELF = /start|end|center|baseline/;
-const REGEX_ALIGNTOP = /(start|baseline)$/;
 const REGEX_UNITZERO = /^\s*0[a-z]*\s*$/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
@@ -679,32 +676,54 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                 renderAs.render(parent);
                 node.transferBox(BOX_STANDARD.MARGIN, renderAs);
                 let inlineWidth = true;
-                if (REGEX_JUSTIFYLEFT.test(justifySelf)) {
-                    node.mergeGravity('layout_gravity', 'left');
-                }
-                else if (REGEX_JUSTIFYRIGHT.test(justifySelf)) {
-                    node.mergeGravity('layout_gravity', 'right');
-                }
-                else if (justifySelf === 'center') {
-                    node.mergeGravity('layout_gravity', 'center_horizontal');
-                }
-                else {
-                    inlineWidth = false;
+                switch (justifySelf) {
+                    case 'first baseline':
+                    case 'baseline':
+                    case 'left':
+                    case 'start':
+                    case 'flex-start':
+                    case 'self-start':
+                        node.mergeGravity('layout_gravity', 'left');
+                        break;
+                    case 'last baseline':
+                    case 'right':
+                    case 'end':
+                    case 'flex-end':
+                    case 'self-end':
+                        node.mergeGravity('layout_gravity', 'right');
+                        break;
+                    case 'center':
+                        node.mergeGravity('layout_gravity', 'center_horizontal');
+                        break;
+                    default:
+                        inlineWidth = false;
+                        break;
                 }
                 if (!node.hasWidth) {
                     node.setLayoutWidth(inlineWidth ? 'wrap_content' : 'match_parent', false);
                 }
-                if (REGEX_ALIGNTOP.test(alignSelf)) {
-                    node.mergeGravity('layout_gravity', 'top');
-                }
-                else if (alignSelf.endsWith('end')) {
-                    node.mergeGravity('layout_gravity', 'bottom');
-                }
-                else if (alignSelf === 'center') {
-                    node.mergeGravity('layout_gravity', 'center_vertical');
-                }
-                else if (!node.hasHeight) {
-                    node.setLayoutHeight('match_parent', false);
+                switch (alignSelf) {
+                    case 'first baseline':
+                    case 'baseline':
+                    case 'start':
+                    case 'flex-start':
+                    case 'self-start':
+                        node.mergeGravity('layout_gravity', 'top');
+                        break;
+                    case 'last baseline':
+                    case 'end':
+                    case 'flex-end':
+                    case 'self-end':
+                        node.mergeGravity('layout_gravity', 'bottom');
+                        break;
+                    case 'center':
+                        node.mergeGravity('layout_gravity', 'center_vertical');
+                        break;
+                    default:
+                        if (!node.hasHeight) {
+                            node.setLayoutHeight('match_parent', false);
+                        }
+                        break;
                 }
                 outputAs = this.application.renderNode(
                     new LayoutUI(
@@ -758,6 +777,7 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                             node.anchorParent('horizontal', 0.5, '', true);
                         }
                         break;
+                    case 'right':
                     case 'end':
                     case 'flex-end':
                         if (wrapped) {
