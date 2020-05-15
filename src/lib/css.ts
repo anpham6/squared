@@ -687,6 +687,10 @@ export const CSS_PROPERTIES = {
         "layout": true,
         "value": "*"
     },
+    "fontFeatureSettings": {
+        "layout": true,
+        "value": "normal"
+    },
     "fontKerning": {
         "layout": true,
         "value": "auto"
@@ -734,6 +738,10 @@ export const CSS_PROPERTIES = {
         "value": "normal"
     },
     "fontVariantNumeric": {
+        "layout": true,
+        "value": "normal"
+    },
+    "fontVariationSettings": {
         "layout": true,
         "value": "normal"
     },

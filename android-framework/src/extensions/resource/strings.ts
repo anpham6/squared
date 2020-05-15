@@ -131,6 +131,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
                                         value = STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + value;
                                     }
+                                    if (node.has('fontFeatureSettings')) {
+                                        node.android('fontFeatureSettings', node.css('fontFeatureSettings').replace(/"/g, "'"));
+                                    }
+                                    if (node.has('fontVariationSettings')) {
+                                        node.android('fontVariationSettings', node.css('fontVariationSettings').replace(/"/g, "'"));
+                                    }
                                     setTextValue(node, 'text', name, value, numberResourceValue);
                                 }
                             }

@@ -15,3 +15,18 @@ interface GradientTemplate {
     gradientRadius?: string;
     tileMode?: string;
 }
+
+interface Customizations<T> {
+    [index: number]: CustomizationsData<T>;
+}
+
+interface CustomizationsData<T> {
+    android: ObjectMap<boolean | CustomizationResult<T>>;
+    assign: {
+        [namespace: string]: ObjectMap<StringMap>;
+    };
+}
+
+interface Deprecations<T> {
+    android: ObjectMap<CustomizationResult<T>>;
+}

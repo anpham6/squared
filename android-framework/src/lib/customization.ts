@@ -13,7 +13,7 @@ function substitute(result: {}, value: string, api?: number, minApi = 0) {
     return false;
 }
 
-export const API_ANDROID: android.lib.customizations.Customizations = {
+export const API_ANDROID: Customizations<View> = {
     [BUILD_ANDROID.Q]: {
         android: {},
         assign: {}
@@ -533,7 +533,7 @@ export const API_ANDROID: android.lib.customizations.Customizations = {
     }
 };
 
-export const DEPRECATED_ANDROID: android.lib.customizations.Deprecations = {
+export const DEPRECATED_ANDROID: Deprecations<View> = {
     android: {
         'amPmBackgroundColor': (result: {}, api: number) => substitute(result, 'headerBackground', api, BUILD_ANDROID.MARSHMALLOW),
         'amPmTextColor': (result: {}, api: number) => substitute(result, 'headerTextColor', api, BUILD_ANDROID.MARSHMALLOW),

@@ -407,20 +407,7 @@ declare namespace lib {
     }
 
     namespace customizations {
-        interface Customizations {
-            [index: number]: CustomizationsData;
-        }
-        interface CustomizationsData {
-            android: ObjectMap<boolean | CustomizationResult<View>>;
-            assign: {
-                [namespace: string]: ObjectMap<StringMap>;
-            };
-        }
-        interface Deprecations {
-            android: ObjectMap<CustomizationResult<View>>;
-        }
-
-        const API_ANDROID: Customizations;
+        const API_ANDROID: Customizations<View>;
 
         function getValue(api: number, tagName: string, obj: string, attr: string): string;
     }
