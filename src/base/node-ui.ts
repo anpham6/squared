@@ -1383,7 +1383,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get inlineFlow() {
         let result = this._cached.inlineFlow;
         if (result === undefined) {
-            result = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement;
+            result = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement || this.svgElement && this.hasPX('width', false) || this.tableElement && this.previousSibling?.floating === true;
             this._cached.inlineFlow = result;
         }
         return result;

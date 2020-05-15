@@ -9,12 +9,17 @@ interface FontFaceData {
     srcLocal?: string;
 }
 
+interface ContainerRangeOptions {
+    start?: number;
+    end?: number;
+}
+
 interface ContainerCascadeOptions<T> {
     also?: BindGeneric<T, void>;
     error?: IteratorPredicate<T, boolean>;
 }
 
-interface ContainerFindOptions<T> extends ContainerCascadeOptions<T> {
+interface ContainerFindOptions<T> extends ContainerCascadeOptions<T>, ContainerRangeOptions {
     cascade?: boolean;
 }
 

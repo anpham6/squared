@@ -1324,7 +1324,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public checkFrameHorizontal(layout: LayoutUI<T>) {
         switch (layout.floated.size) {
             case 1:
-                if (layout.node.cssAscend('textAlign', true) === 'center' && layout.some(node => node.pageFlow)) {
+                if (layout.node.cssAscend('textAlign') === 'center' && layout.some(item => !item.block && !item.floating)) {
                     return true;
                 }
                 else if (layout.floated.has('right')) {
@@ -1344,11 +1344,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     return pageFlow > 0 && !layout.singleRowAligned;
                 }
-                return layout.item(0)!.floating && (
-                    layout.linearY ||
-                    layout.length > 2 && !layout.singleRowAligned && !layout.every(item => item.inlineFlow) ||
-                    layout.every(item => item.floating || item.block && (!item.isEmpty || !(item.textElement || item.inputElement || item.imageElement || item.svgElement || item.controlElement)))
-                );
+                else if (layout.item(0)!.floating) {
+                    return layout.linearY || layout.some(item => item.block && !item.floating || !item.inlineFlow, { start: 1 });
+                }
+                break;
             case 2:
                 return true;
         }

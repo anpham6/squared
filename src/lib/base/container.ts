@@ -95,24 +95,27 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this;
     }
 
-    public iterate(predicate: IteratorPredicate<T, void | boolean>, start?: number, end?: number) {
+    public iterate(predicate: IteratorPredicate<T, void | boolean>, options?: ContainerRangeOptions) {
+        let start: Undef<number>, end: Undef<number>;
+        if (options) {
+            ({ start, end } = options);
+        }
         return iterateArray(this._children, predicate, start, end);
     }
 
-    public join(...other: Container<T>[]) {
-        let children = this._children;
-        for (const item of other) {
-            children = children.concat(item.children);
-        }
-        this._children = children;
-        return this;
-    }
-
-    public every(predicate: IteratorPredicate<T, boolean>) {
+    public every(predicate: IteratorPredicate<T, boolean>, options?: ContainerRangeOptions) {
         const children = this._children;
-        const length = children.length;
+        let length = children.length;
         if (length) {
             let i = 0;
+            if (options) {
+                if (options.start) {
+                    i = Math.max(options.start, 0);
+                }
+                if (options.end) {
+                    length = Math.min(length, options.end);
+                }
+            }
             while (i < length) {
                 if (!predicate(children[i], i++, children)) {
                     return false;
@@ -121,14 +124,6 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
             return true;
         }
         return false;
-    }
-
-    public same(predicate: IteratorPredicate<T, any>) {
-        return sameArray(this._children, predicate);
-    }
-
-    public partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
-        return partitionArray(this._children, predicate);
     }
 
     public extract(predicate: IteratorPredicate<T, boolean>, options?: ContainerCascadeOptions<T>): T[] {
@@ -173,15 +168,24 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     }
 
     public find(predicate: IteratorPredicate<T, boolean>, options?: ContainerFindOptions<T>) {
-        let error: Undef<IteratorPredicate<T, boolean>>, also: Undef<BindGeneric<T, void>>, cascade: Undef<boolean>;
+        let error: Undef<IteratorPredicate<T, boolean>>, also: Undef<BindGeneric<T, void>>, cascade: Undef<boolean>, start: Undef<number>, end: Undef<number>;
         if (options) {
             ({ also, error, cascade } = options);
+            if (!cascade) {
+                ({ start, end } = options);
+                if (start) {
+                    start = Math.max(start, 0);
+                }
+                if (end) {
+                    end = Math.min(this.length, end);
+                }
+            }
         }
         let invalid = false;
         const recurse = (container: Container<T>): Undef<T> => {
             const children = container.children;
-            const length = children.length;
-            for (let i = 0; i < length; ++i) {
+            const length = end || children.length;
+            for (let i = start || 0; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
                     invalid = true;
@@ -247,6 +251,14 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return plainMap(this._children, predicate);
     }
 
+    public same(predicate: IteratorPredicate<T, any>) {
+        return sameArray(this._children, predicate);
+    }
+
+    public partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]] {
+        return partitionArray(this._children, predicate);
+    }
+
     public sort(predicate: (a: T, b: T) => number) {
         this._children.sort(predicate);
         return this;
@@ -254,6 +266,15 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public concat(list: T[]) {
         this._children = this._children.concat(list);
+        return this;
+    }
+
+    public join(...other: Container<T>[]) {
+        let children = this._children;
+        for (const item of other) {
+            children = children.concat(item.children);
+        }
+        this._children = children;
         return this;
     }
 
