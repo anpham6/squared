@@ -908,7 +908,8 @@ function hue2rgb(t: number, p: number, q: number) {
     return p;
 }
 
-const parseOpacity = (value: number) => clamp(value) * 255;
+const convertOpacity  = (value: string) => parseFloat(value) / (value.includes('%') ? 100 : 1);
+const clampOpacity = (value: number) => clamp(value) * 255;
 
 export function findColorName(value: string) {
     value = value.toLowerCase();
@@ -989,7 +990,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
                     r: parseInt(match[1]),
                     g: parseInt(match[2]),
                     b: parseInt(match[3]),
-                    a: match[4] ? parseFloat(match[4]) * 255 : parseOpacity(opacity)
+                    a: match[4] ? convertOpacity(match[4]) * 255 : clampOpacity(opacity)
                 };
             }
             else {
@@ -999,7 +1000,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
                         h: parseInt(match[1]),
                         s: parseInt(match[2]),
                         l: parseInt(match[3]),
-                        a: clamp(match[4] ? parseFloat(match[4]) : opacity)
+                        a: clamp(match[4] ? convertOpacity(match[4]) : opacity)
                     });
                 }
                 else {
@@ -1015,7 +1016,7 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
                         default: {
                             const color = findColorName(value);
                             if (color) {
-                                rgba = { ...color.rgb, a: parseOpacity(opacity) } as RGBA;
+                                rgba = { ...color.rgb, a: clampOpacity(opacity) } as RGBA;
                                 key = value;
                             }
                             break;
