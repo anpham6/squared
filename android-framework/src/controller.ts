@@ -353,7 +353,7 @@ function constraintAlignTop(parent: View, node: View) {
     return false;
 }
 
-const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, data: RelativeLayoutData) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + node.actualWidth) < data.boxWidth);
+const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, data: RelativeLayoutData) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + (node.hasWidth ? node.actualWidth : 0)) < data.boxWidth);
 const isBaselineImage = (node: View) => node.imageOrSvgElement && node.baseline;
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
 const hasWidth = (style: CSSStyleDeclaration) => (style.getPropertyValue('width') === '100%' || style.getPropertyValue('minWidth') === '100%') && style.getPropertyValue('max-width') === 'none';
@@ -3035,6 +3035,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         let previousSiblings: T[] = [];
         let previousRow: Undef<T[]>;
+        let previousAlignParent = false;
         const length = horizontal.length;
         for (let i = 0; i < length; ++i) {
             const partition = horizontal[i];
@@ -3065,7 +3066,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     setHorizontalAlignment(rowStart);
                 }
                 let percentWidth = View.availablePercent(partition, 'width', node.box.width);
-                alignParent = i === 1 && !rowStart.floating && previousRow?.every(item => item.floating) === true && (clearMap.size === 0 || !partition.some((item: T) => checkClearMap(item, clearMap))) || !rowStart.pageFlow && (!rowStart.autoPosition || q === 1);
+                if (i === 1 || previousAlignParent) {
+                    alignParent = (
+                        !rowStart.floating && previousRow?.every(item => item.floating || !item.pageFlow) === true && (clearMap.size === 0 || !partition.some((item: T) => checkClearMap(item, clearMap))) ||
+                        !rowStart.pageFlow && (!rowStart.autoPosition || q === 1) ||
+                        previousRow?.every(item => !item.pageFlow) === true
+                    );
+                    previousAlignParent = alignParent;
+                }
                 tallest = undefined;
                 for (let j = 0; j < q; ++j) {
                     const chain = seg[j];

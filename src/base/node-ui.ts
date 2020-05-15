@@ -954,14 +954,21 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
             }
-            for (const previous of this.siblingsLeading) {
+            const blockStatic = this.blockStatic || this.display === 'table';
+            const length = this.siblingsLeading.length;
+            if (blockStatic && (this.containerIndex === 0 || length === 0)) {
+                return NODE_TRAVERSE.VERTICAL;
+            }
+            let i = 0;
+            while (i < length) {
+                const previous = this.siblingsLeading[i++];
                 if (previous.lineBreak) {
                     return NODE_TRAVERSE.LINEBREAK;
                 }
                 else if (previous.blockStatic || previous.autoMargin.leftRight || (floating && previous.childIndex === 0 || horizontal === false) && previous.plainText && previous.multiline) {
                     return NODE_TRAVERSE.VERTICAL;
                 }
-                else if ((this.blockStatic || this.display === 'table') && (!previous.floating || cleared?.has(previous))) {
+                else if (blockStatic && (!previous.floating || cleared?.has(previous) || i === length - 1 && !previous.pageFlow)) {
                     return NODE_TRAVERSE.VERTICAL;
                 }
                 else if (previous.floating) {

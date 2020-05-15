@@ -1,7 +1,7 @@
 import Controller from '../../controller';
 import View from '../../view';
 
-import { LAYOUT_ANDROID, STRING_ANDROID } from '../../lib/constant';
+import { EXT_ANDROID, LAYOUT_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -10,6 +10,13 @@ const { CSS_UNIT, formatPX, isPercent } = squared.lib.css;
 const { truncate } = squared.lib.math;
 
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
+
+interface PercentData {
+    percentWidth: boolean;
+    percentHeight: boolean;
+    marginHorizontal: boolean;
+    marginVertical: boolean;
+}
 
 function hasPercentWidth(node: View) {
     const value = node.percentWidth;
@@ -21,89 +28,96 @@ function hasPercentHeight(node: View) {
     return value > 0 && value < 1;
 }
 
-function hasMarginVertical(node: View) {
-    if (!node.inlineStatic && (validPercent(node.css('marginTop')) || validPercent(node.css('marginBottom')))) {
-        const parent = node.documentParent;
-        return (parent.length === 1 || !node.pageFlow) && parent.percentHeight > 0 || parent.documentBody && parent.hasPX('height', false);
-    }
-    return false;
+function hasMarginHorizontal(node: View, parent: View, clearMap: Map<View, string>) {
+    return (validPercent(node.css('marginLeft')) || validPercent(node.css('marginRight'))) && (
+        parent.layoutVertical && !parent.hasAlign(NODE_ALIGNMENT.UNKNOWN) ||
+        (parent as View).layoutFrame ||
+        node.blockStatic && node.alignedVertically(undefined, clearMap) ||
+        node.documentParent.length === 1 ||
+        !node.pageFlow
+    );
 }
 
-function hasMarginHorizontal(node: View) {
-    if (validPercent(node.css('marginLeft')) || validPercent(node.css('marginRight'))) {
-        const parent = node.documentParent;
-        return (node.blockStatic || parent.length === 1 || !node.pageFlow) && !parent.hasPX('width', false);
-    }
-    return false;
-}
-
+const hasMarginVertical = (node: View) => (validPercent(node.css('marginTop')) || validPercent(node.css('marginBottom'))) && node.documentParent.percentHeight > 0 && !node.inlineStatic && (node.documentParent.length === 1 || !node.pageFlow);
 const validPercent = (value: string) => isPercent(value) && parseFloat(value) > 0;
 
 export default class Percent<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.documentParent.layoutElement && !node.display.startsWith('table');
+        return !node.actualParent!.layoutElement && !node.display.startsWith('table');
     }
 
     public condition(node: T, parent: T) {
-        return (
-            hasPercentWidth(node) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || node.hasPX('height') || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.hasPX('width'))) ||
-            hasPercentHeight(node) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || parent.hasHeight) ||
-            hasMarginHorizontal(node) || hasMarginVertical(node)
-        );
+        const absoluteParent = node.absoluteParent || parent;
+        const requireWidth = !absoluteParent.hasPX('width', false);
+        const requireHeight = !absoluteParent.hasPX('height', false);
+        const percentWidth = requireWidth && hasPercentWidth(node) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
+        const marginHorizontal = requireWidth && hasMarginHorizontal(node, parent, this.application.clearMap);
+        const percentHeight = requireHeight && hasPercentHeight(node) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || parent.percentHeight > 0);
+        const marginVertical = requireHeight && hasMarginVertical(node);
+        if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
+            node.data(EXT_ANDROID.DELEGATE_PERCENT, 'mainData', { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);
+            return true;
+        }
+        return false;
     }
 
     public processNode(node: T, parent: T) {
-        let container: Undef<T>;
-        if (!parent.layoutConstraint || hasPercentHeight(node)) {
-            container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { resetMargin: true });
-        }
-        const target = container || parent;
-        if (hasPercentWidth(node)) {
-            if (!target.hasWidth) {
-                target.setCacheValue('hasWidth', true);
-                target.css('display', 'block');
-                target.setLayoutWidth('match_parent');
+        const mainData: PercentData = node.data(EXT_ANDROID.DELEGATE_PERCENT, 'mainData');
+        if (mainData) {
+            let container: Undef<T>;
+            if (!parent.layoutConstraint || mainData.percentHeight) {
+                container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { resetMargin: true });
             }
-            node.setLayoutWidth(node.cssInitial('width') === '100%' && !node.hasPX('maxWidth') ? 'match_parent' : '0px');
-        }
-        else if (container && !hasMarginHorizontal(node)) {
-            container.setLayoutWidth('wrap_content');
-        }
-        if (hasPercentHeight(node)) {
-            if (!target.hasHeight) {
-                target.setCacheValue('hasHeight', true);
-                target.setLayoutHeight('match_parent');
+            const target = container || parent;
+            if (mainData.percentWidth) {
+                if (!target.hasWidth) {
+                    target.setCacheValue('hasWidth', true);
+                    target.css('display', 'block');
+                    target.setLayoutWidth('match_parent');
+                }
+                node.setLayoutWidth(node.cssInitial('width') === '100%' && !node.hasPX('maxWidth') ? 'match_parent' : '0px');
             }
-            node.setLayoutHeight(node.cssInitial('height') === '100%' && !node.hasPX('maxHeight') ? 'match_parent' : '0px');
+            else if (container && !mainData.marginHorizontal) {
+                container.setLayoutWidth('wrap_content');
+            }
+            if (mainData.percentHeight) {
+                if (!target.hasHeight) {
+                    target.setCacheValue('hasHeight', true);
+                    target.setLayoutHeight('match_parent');
+                }
+                node.setLayoutHeight(node.cssInitial('height') === '100%' && !node.hasPX('maxHeight') ? 'match_parent' : '0px');
+            }
+            else if (container && !mainData.marginVertical) {
+                container.setLayoutHeight('wrap_content');
+            }
+            if (container) {
+                return {
+                    parent: container,
+                    renderAs: container,
+                    outputAs: this.application.renderNode(
+                        new LayoutUI(
+                            parent,
+                            container,
+                            CONTAINER_NODE.CONSTRAINT,
+                            NODE_ALIGNMENT.SINGLE,
+                            container.children as T[]
+                        )
+                    ),
+                    include: true
+                };
+            }
+            return { include: true };
         }
-        else if (container && !hasMarginVertical(node)) {
-            container.setLayoutHeight('wrap_content');
-        }
-        if (container) {
-            return {
-                parent: container,
-                renderAs: container,
-                outputAs: this.application.renderNode(
-                    new LayoutUI(
-                        parent,
-                        container,
-                        CONTAINER_NODE.CONSTRAINT,
-                        NODE_ALIGNMENT.SINGLE,
-                        container.children as T[]
-                    )
-                ),
-                include: true
-            };
-        }
-        return { include: true };
+        return undefined;
     }
 
     public postBaseLayout(node: T) {
         const controller = this.controller as android.base.Controller<T>;
+        const mainData: PercentData = node.data(EXT_ANDROID.DELEGATE_PERCENT, 'mainData');
         const constraint = LAYOUT_ANDROID.constraint;
         const renderParent = node.renderParent as T;
         const templateId = node.anchorTarget.renderParent!.id;
-        if (hasMarginHorizontal(node)) {
+        if (mainData.marginHorizontal) {
             const [marginLeft, marginRight] = node.cssAsTuple('marginLeft', 'marginRight');
             const boxRect = Controller.anchorPosition(node, renderParent, true, false);
             const rightAligned = node.rightAligned;
@@ -217,7 +231,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 node.setCacheValue('contentBoxWidth', 0);
             }
         }
-        if (hasMarginVertical(node)) {
+        if (mainData.marginVertical) {
             const [marginTop, marginBottom] = node.cssAsTuple('marginTop', 'marginBottom');
             const boxRect = Controller.anchorPosition(node, renderParent, true, false);
             const bottomAligned = node.bottomAligned;
