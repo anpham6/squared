@@ -1043,7 +1043,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 if (layoutWidth === '') {
-                    if (this.textElement && this.textEmpty && !this.visibleStyle.backgroundImage) {
+                    if (this.textElement && this.textEmpty && this.inlineFlow && !this.visibleStyle.backgroundImage) {
                         layoutWidth = formatPX(this.actualWidth);
                     }
                     else if (this.imageElement && this.hasHeight) {

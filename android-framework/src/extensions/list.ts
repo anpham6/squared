@@ -6,7 +6,7 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { formatPX, getBackgroundPosition } = squared.lib.css;
+const { formatPX, getBackgroundPosition, isPercent } = squared.lib.css;
 const { convertInt } = squared.lib.util;
 const { STRING_SPACE } = squared.lib.xml;
 
@@ -71,12 +71,16 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 }
             }
             let container: T;
-            if (node.length === 0) {
-                container = controller.createNodeWrapper(node, parent, { ...controller.containerTypeVertical });
-                node.resetBox(BOX_STANDARD.MARGIN_VERTICAL, container);
+            let wrapped = false;
+            if (node.length === 0 && !node.outerWrapper) {
+                container = controller.createNodeWrapper(node, parent);
+                wrapped = true;
             }
             else {
-                container = node;
+                container = node.outerMostWrapper as T;
+            }
+            if (container !== node) {
+                node.resetBox(BOX_STANDARD.MARGIN_VERTICAL, container);
             }
             let ordinal: Undef<T>;
             if (value === '') {
@@ -237,14 +241,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 container.setLayoutWidth('0px');
                 container.android('layout_columnWeight', '1');
             }
-            if (node !== container) {
+            if (wrapped) {
                 return {
                     parent: container,
                     renderAs: container,
                     outputAs: application.renderNode(new LayoutUI(
                         parent,
                         container,
-                        CONTAINER_NODE.LINEAR,
+                        node.baselineElement && node.percentWidth === 0 && !isPercent(node.css('maxWidth')) ? CONTAINER_NODE.LINEAR : CONTAINER_NODE.CONSTRAINT,
                         NODE_ALIGNMENT.VERTICAL | NODE_ALIGNMENT.UNKNOWN,
                         container.children as T[]
                     )),

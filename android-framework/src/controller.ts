@@ -1087,16 +1087,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         else {
             switch (node.tagName)  {
+                case 'LI':
                 case 'OUTPUT':
                     layout.setContainerType(CONTAINER_NODE.TEXT);
                     break;
                 default: {
-                    if (node.textContent !== '' && (background || node.pseudoElement && getPseudoElt(node.element as Element, node.sessionId) === '::after')) {
+                    if (node.textContent !== '' && (background || !node.pageFlow || node.pseudoElement && getPseudoElt(node.element as Element, node.sessionId) === '::after')) {
                         layout.setContainerType(CONTAINER_NODE.TEXT);
                         node.inlineText = true;
                     }
                     else {
                         layout.setContainerType(CONTAINER_NODE.FRAME);
+                        node.exclude({ resource: NODE_RESOURCE.VALUE_STRING });
                     }
                 }
             }

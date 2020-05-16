@@ -20,12 +20,12 @@ interface PercentData {
 
 function hasPercentWidth(node: View) {
     const value = node.percentWidth;
-    return value > 0 && value < 1;
+    return value > 0 && value < 1 || isPercent(node.css('maxWidth'));
 }
 
-function hasPercentHeight(node: View) {
+function hasPercentHeight(node: View, parent: View) {
     const value = node.percentHeight;
-    return value > 0 && value < 1;
+    return value > 0 && value < 1 || isPercent(node.css('maxHeight')) && parent.hasHeight;
 }
 
 function hasMarginHorizontal(node: View, parent: View, clearMap: Map<View, string>) {
@@ -52,7 +52,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         const requireHeight = !absoluteParent.hasPX('height', false);
         const percentWidth = requireWidth && hasPercentWidth(node) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
         const marginHorizontal = requireWidth && hasMarginHorizontal(node, parent, this.application.clearMap);
-        const percentHeight = requireHeight && hasPercentHeight(node) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || parent.percentHeight > 0);
+        const percentHeight = requireHeight && hasPercentHeight(node, parent) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || parent.percentHeight > 0);
         const marginVertical = requireHeight && hasMarginVertical(node);
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
             node.data(EXT_ANDROID.DELEGATE_PERCENT, 'mainData', { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);

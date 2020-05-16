@@ -1171,7 +1171,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const resourceHandler = this.resourceHandler;
         this._cache.each(node => {
             resourceHandler.setBoxStyle(node);
-            if (!node.imageElement && !node.svgElement && node.visible) {
+            if (node.hasResource(NODE_RESOURCE.VALUE_STRING) && node.visible && !node.imageElement && !node.svgElement) {
                 resourceHandler.setFontStyle(node);
                 resourceHandler.setValueString(node);
             }

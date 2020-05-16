@@ -26,6 +26,7 @@ let height = 960;
 let flags = 1;
 let timeout = 60 * 1000;
 let screenshot = false;
+let rebase = false;
 let extension = 'md5';
 {
     const ARGV = process.argv;
@@ -79,6 +80,10 @@ let extension = 'md5';
             case '--compare':
                 master = ARGV[i++];
                 snapshot = ARGV[i++];
+                break;
+            case '-z':
+            case '--rebase':
+                rebase = true;
                 break;
             case '-x':
             case '--extension':
@@ -149,19 +154,25 @@ if (master) {
                             fs.readFileSync(filepath).toString('utf-8')
                         );
                         if (output.length > 1) {
-                            const pngpath = filepath.replace('.md5', '.png');
-                            stderr.write('\n\n' + chalk.bgWhite.black('-'.repeat(100)) + '\n\n');
-                            stderr.write(chalk.yellow(masterpath) + '\n' + chalk.grey(filepath) + '\n' + (fs.existsSync(pngpath) ? chalk.blue(pngpath) + '\n' : '') + '\n');
-                            for (const part of output) {
-                                if (part.removed) {
-                                    stderr.write(chalk.yellow(part.value));
-                                }
-                                else if (!part.added) {
-                                    stderr.write(chalk.grey(part.value));
-                                }
+                            if (rebase) {
+                                stderr.write(chalk.bgWhite.blue('<'));
+                                fs.copyFileSync(filepath, masterpath);
                             }
-                            stderr.write('\n');
-                            errors.push(filename);
+                            else {
+                                const pngpath = filepath.replace('.md5', '.png');
+                                stderr.write('\n\n' + chalk.bgWhite.black('-'.repeat(100)) + '\n\n');
+                                stderr.write(chalk.yellow(masterpath) + '\n' + chalk.grey(filepath) + '\n' + (fs.existsSync(pngpath) ? chalk.blue(pngpath) + '\n' : '') + '\n');
+                                for (const part of output) {
+                                    if (part.removed) {
+                                        stderr.write(chalk.yellow(part.value));
+                                    }
+                                    else if (!part.added) {
+                                        stderr.write(chalk.grey(part.value));
+                                    }
+                                }
+                                stderr.write('\n');
+                                errors.push(filename);
+                            }
                         }
                         else {
                             stderr.write(chalk.bgBlue.white('>'));
