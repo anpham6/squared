@@ -117,7 +117,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         const font = Resource.ASSETS.fonts.get(fontFamily.trim().toLowerCase());
         if (font) {
             const mimeType = this.mimeTypeMap.font;
-            return font.find(item => item.fontStyle === fontStyle && (!fontWeight || item.fontWeight === parseInt(fontWeight)) && (hasMimeType(mimeType, item.srcFormat) || item.srcUrl && hasMimeType(mimeType, item.srcUrl)));
+            return font.find(item => fontStyle.startsWith(item.fontStyle) && (!fontWeight || item.fontWeight === parseInt(fontWeight)) && (hasMimeType(mimeType, item.srcFormat) || item.srcUrl && hasMimeType(mimeType, item.srcUrl)));
         }
         return undefined;
     }

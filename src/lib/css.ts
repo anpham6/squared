@@ -3445,9 +3445,9 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
     return 0;
 }
 
-export function parseAngle(value: string) {
+export function parseAngle(value: string, fallback = 0) {
     const match = CSS.ANGLE.exec(value);
-    return match ? convertAngle(match[1], match[2]) : 0;
+    return match ? convertAngle(match[1], match[2]) : fallback;
 }
 
 export function parseTime(value: string) {

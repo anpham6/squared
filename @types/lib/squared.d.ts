@@ -126,7 +126,7 @@ declare module "lib" {
         function convertAngle(value: string, unit?: string): number;
         function convertPX(value: string, fontSize?: number): string;
         function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension): number;
-        function parseAngle(value: string): number;
+        function parseAngle(value: string, fallback?: number): number;
         function parseTime(value: string): number;
         function formatPX(value: number): string;
         function formatPercent(value: string | number, round?: boolean): string;

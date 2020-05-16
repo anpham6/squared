@@ -287,7 +287,7 @@ function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: 'background
 function getAngle(value: string, fallback = 0) {
     value = value.trim();
     if (value !== '') {
-        let degree = parseAngle(value);
+        let degree = parseAngle(value, fallback);
         if (degree < 0) {
             degree += 360;
         }

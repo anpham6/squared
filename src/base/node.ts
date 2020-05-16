@@ -82,9 +82,13 @@ function getFlexValue(this: T, attr: string, fallback: number, parent?: Null<Nod
     return fallback;
 }
 
-function hasTextAlign(this: T, value: string, localizedValue?: string) {
-    const textAlign = this.cssAscend('textAlign', this.textElement && this.blockStatic && !this.hasPX('width'));
-    return (textAlign === value || textAlign === localizedValue) && (this.blockStatic ? this.textElement && !this.hasPX('width', true, true) && !this.hasPX('maxWidth', true, true) : this.display.startsWith('inline'));
+function hasTextAlign(this: T, ...values: string[]) {
+    const value = this.cssAscend('textAlign', this.textElement && this.blockStatic && !this.hasPX('width', true, true));
+    return value !== '' && values.includes(value) && (
+        this.blockStatic
+            ? this.textElement && !this.hasPX('width', true, true) && !this.hasPX('maxWidth', true, true)
+            : this.display.startsWith('inline')
+    );
 }
 
 function setDimension(this: T, styleMap: StringMap, attr: DimensionAttr, attrMin: string, attrMax: string) {
@@ -1073,29 +1077,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public cssAny(attr: string, ...values: string[]) {
-        const result = this.css(attr);
-        for (const value of values) {
-            if (result === value) {
-                return true;
-            }
-        }
-        return false;
+        const value = this.css(attr);
+        return value !== '' && values.includes(value);
     }
 
     public cssInitialAny(attr: string, ...values: string[]) {
-        for (const value of values) {
-            if (this.cssInitial(attr) === value) {
-                return true;
-            }
-        }
-        return false;
+        const value = this.cssInitial(attr);
+        return value !== '' && values.includes(value);
     }
 
-    public cssAscend(attr: string, startSelf = false) {
+    public cssAscend(attr: string, startSelf = false, initial = false) {
         let parent = startSelf ? this : this.actualParent;
         let value: string;
         while (parent) {
-            value = parent.cssInitial(attr);
+            value = initial ? parent.cssInitial(attr) : parent.css(attr);
             if (value !== '') {
                 return value;
             }

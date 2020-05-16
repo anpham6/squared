@@ -384,7 +384,7 @@ declare module "base" {
         cssInitial(attr: string, modified?: boolean, computed?: boolean): string;
         cssAny(attr: string, ...values: string[]): boolean;
         cssInitialAny(attr: string, ...values: string[]): boolean;
-        cssAscend(attr: string, startSelf?: boolean): string;
+        cssAscend(attr: string, startSelf?: boolean, initial?: boolean): string;
         cssSort(attr: string, ascending?: boolean, duplicate?: boolean): Node[];
         cssPX(attr: string, value: number, negative?: boolean, cache?: boolean): string;
         cssSpecificity(attr: string): number;

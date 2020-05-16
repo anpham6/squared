@@ -4,18 +4,36 @@ import { CONTAINER_ANDROID } from '../../lib/constant';
 
 type View = android.base.View;
 
-const { formatPX, isPercent } = squared.lib.css;
+const { formatPX, isPercent, parseAngle } = squared.lib.css;
 const { measureTextWidth } = squared.lib.dom;
+const { clamp } = squared.lib.math;
 const { capitalizeString, delimitString, lowerCaseString, isNumber, isString } = squared.lib.util;
 const { STRING_SPACE, replaceCharacterData } = squared.lib.xml;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
+
+const REGEX_FONTOBLIQUE = /oblique(?:\s+(-?[\d.]+[a-z]+))?/;
 
 function setTextValue(node: View, attr: string, name: string, value: string, useNumber: boolean) {
     name = Resource.addString(value, name, useNumber);
     if (name !== '') {
         node.android(attr, useNumber || !isNumber(name) ? `@string/${name}` : name, false);
     }
+}
+
+function getFontVariationStyle(value: string) {
+    if (value === 'italic') {
+        return "'ital'";
+    }
+    const match = REGEX_FONTOBLIQUE.exec(value);
+    if (match) {
+        let angle: Undef<number>;
+        if (match[1]) {
+            angle = parseAngle(match[1], NaN);
+        }
+        return`'slnt' ${angle !== undefined && !isNaN(angle) ? clamp(angle, -90, 90) : '14'}`;
+    }
+    return '';
 }
 
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {
@@ -139,7 +157,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
                                     value = STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + value;
                                 }
-                                let fontVariation = '';
+                                let fontVariation = getFontVariationStyle(node.css('fontStyle'));
                                 let fontFeature = '';
                                 if (node.has('fontStretch')) {
                                     let percent = node.css('fontStretch');
@@ -152,28 +170,28 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                             break;
                                         case 'extra-condensed':
                                             percent = '62.5%';
-                                            break;	
+                                            break;
                                         case 'condensed':
                                             percent = '75%';
-                                            break;	
+                                            break;
                                         case 'semi-condensed':
                                             percent = '87.5%';
-                                            break;	
+                                            break;
                                         case 'semi-expanded':
                                             percent = '112.5%';
                                             break;
                                         case 'expanded':
                                             percent = '125%';
-                                            break;	
+                                            break;
                                         case 'extra-expanded':
                                             percent = '150%';
-                                            break;	
+                                            break;
                                         case 'ultra-expanded':
                                             percent = '200%';
                                             break;
                                     }
                                     if (isPercent(percent)) {
-                                        fontVariation = `'wdth' ${parseFloat(percent)}`;
+                                        fontVariation = delimitString({ value: fontVariation }, `'wdth' ${parseFloat(percent)}`);
                                     }
                                 }
                                 if (node.has('fontVariantCaps')) {
