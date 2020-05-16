@@ -3417,6 +3417,8 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
         switch (match[2]) {
             case 'px':
                 return result;
+            case 'ex':
+                result /= 2;
             case 'em':
             case 'ch':
                 return result * (fontSize ?? (getFontSize(document.body) || 16));
@@ -3426,6 +3428,8 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
                 result *= 12;
             case 'pt':
                 return result * 4 / 3;
+            case 'Q':
+                result /= 4;
             case 'mm':
                 result /= 10;
             case 'cm':
