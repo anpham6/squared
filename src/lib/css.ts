@@ -716,14 +716,9 @@ export const CSS_PROPERTIES = {
         "value": [
             "fontVariantCaps",
             "fontVariantLigatures",
-            "fontVariantAlternates",
             "fontVariantNumeric",
             "fontVariantEastAsian"
         ]
-    },
-    "fontVariantAlternates": {
-        "layout": true,
-        "value": "normal"
     },
     "fontVariantCaps": {
         "layout": true,

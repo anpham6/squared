@@ -397,6 +397,10 @@
         "layout": true,
         "value": "auto"
     },
+    "fontOpticalSizing": {
+        "layout": true,
+        "value": "auto"
+    },
     "fontSize": {
         "layout": true,
         "value": "medium"
@@ -417,15 +421,10 @@
         "layout": true,
         "value": [
             "fontVariantCaps",
-            "fontVariantLigatures",
-            "fontVariantAlternates",
             "fontVariantNumeric",
+            "fontVariantLigatures",
             "fontVariantEastAsian"
         ]
-    },
-    "fontVariantAlternates": {
-        "layout": true,
-        "value": "normal"
     },
     "fontVariantCaps": {
         "layout": true,

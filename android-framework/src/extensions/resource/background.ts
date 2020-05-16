@@ -1065,7 +1065,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         if (size !== '') {
                             size.split(/\s+/).forEach((dimen, index) => {
                                 if (dimen === '100%') {
-                                    gravityAlign = index === 0 ? 'fill_horizontal' : delimitString({ value: gravityAlign }, 'fill_vertical');
+                                    gravityAlign = index === 0 ? 'fill_horizontal' : delimitString({ value: gravityAlign, delimiter: '|' }, 'fill_vertical');
                                 }
                                 else if (dimen !== 'auto') {
                                     if (index === 0) {
@@ -1334,7 +1334,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 gravityY = '';
                             }
                             if (fill) {
-                                gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_horizontal');
+                                gravityAlign = delimitString({ value: gravityAlign, delimiter: '|', not: ['fill'] }, 'fill_horizontal');
                             }
                             if (tileModeX !== 'disabled') {
                                 tileModeX = '';
@@ -1390,7 +1390,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 offsetY = false;
                             }
                             if (fill) {
-                                gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_vertical');
+                                gravityAlign = delimitString({ value: gravityAlign, delimiter: '|', not: ['fill'] }, 'fill_vertical');
                             }
                             if (tileModeY !== 'disabled') {
                                 tileModeY = '';
@@ -1431,7 +1431,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                                 else if (unsizedHeight) {
                                     width = dimenWidth;
-                                    gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_horizontal');
+                                    gravityAlign = delimitString({ value: gravityAlign, delimiter: '|', not: ['fill'] }, 'fill_horizontal');
                                     if (dimenHeight >= dimenWidth) {
                                         tileModeX = '';
                                     }
@@ -1461,7 +1461,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 }
                                 else if (unsizedWidth) {
                                     height = dimenHeight;
-                                    gravityAlign = delimitString({ value: gravityAlign, not: ['fill'] }, 'fill_vertical');
+                                    gravityAlign = delimitString({ value: gravityAlign, delimiter: '|', not: ['fill'] }, 'fill_vertical');
                                     if (dimenWidth >= dimenHeight) {
                                         tileModeY = '';
                                     }
@@ -1471,11 +1471,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         gravityY = '';
                     }
                     if (gravityX !== '' && !resizedWidth) {
-                        gravityAlign = delimitString({ value: gravityAlign }, gravityX);
+                        gravityAlign = delimitString({ value: gravityAlign, delimiter: '|' }, gravityX);
                         gravityX = '';
                     }
                     if (gravityY !== '' && !resizedHeight) {
-                        gravityAlign = delimitString({ value: gravityAlign }, gravityY);
+                        gravityAlign = delimitString({ value: gravityAlign, delimiter: '|' }, gravityY);
                         gravityY = '';
                     }
                 }
@@ -1545,7 +1545,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                     }
                 }
-                const gravity = gravityX === 'center_horizontal' && gravityY === 'center_vertical' ? 'center' : delimitString({ value: gravityX }, gravityY);
+                const gravity = gravityX === 'center_horizontal' && gravityY === 'center_vertical' ? 'center' : delimitString({ value: gravityX, delimiter: '|' }, gravityY);
                 if (src) {
                     if (bitmap && (!autoFit && (gravityAlign !== '' && gravity !== '' || tileModeX === 'repeat' || tileModeY === 'repeat' || documentBody) || unsizedWidth || unsizedHeight)) {
                         let tileMode = '';
@@ -1569,7 +1569,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }];
                     }
                     else {
-                        imageData.gravity = delimitString({ value: gravity }, gravityAlign);
+                        imageData.gravity = delimitString({ value: gravity, delimiter: '|' }, gravityAlign);
                         imageData.drawable = src;
                     }
                     if (imageData.drawable || imageData.bitmap || imageData.gradient) {

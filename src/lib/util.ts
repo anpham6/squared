@@ -542,7 +542,7 @@ export function delimitString(options: DelimitStringOptions, ...appending: strin
     if (!value && appending.length === 1) {
         return appending[0];
     }
-    const delimiter = options.delimiter || '|';
+    const delimiter = options.delimiter || ', ';
     const not = options.not || [];
     const remove = options.remove || false;
     const values = value !== '' ? value.split(delimiter) : [];

@@ -24,9 +24,10 @@ function setStyleCache(element: HTMLElement, attr: string, sessionId: string, va
         element.style.setProperty(attr, value);
         if (validateCssSet(value, element.style.getPropertyValue(attr))) {
             setElementCache(element, attr, sessionId, value !== 'auto' ? current : '');
-            return true;
         }
-        return false;
+        else {
+            return false;
+        }
     }
     return true;
 }
@@ -1139,12 +1140,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public cssSpecificity(attr: string) {
         let result: Undef<number>;
         if (this.styleElement) {
+            const element = this._element as Element;
             if (this.pseudoElement) {
-                const element = this._element as Element;
                 result = getElementCache(element.parentElement as Element, `styleSpecificity${getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr] as number;
             }
             else {
-                result = getElementCache(this._element as Element, 'styleSpecificity', this.sessionId)?.[attr] as number;
+                result = getElementCache(element, 'styleSpecificity', this.sessionId)?.[attr] as number;
             }
         }
         return result || 0;
@@ -1160,11 +1161,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssFinally(attrs: string | StringMap) {
         if (this.styleElement) {
+            const element = this._element as HTMLElement;
             if (typeof attrs === 'string') {
-                deleteStyleCache(this._element as HTMLElement, attrs, this.sessionId);
+                deleteStyleCache(element, attrs, this.sessionId);
             }
             else {
-                const element = this._element as HTMLElement;
                 for (const attr in attrs) {
                     deleteStyleCache(element, attr, this.sessionId);
                 }
@@ -1174,15 +1175,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssTryAll(values: StringMap) {
         if (this.styleElement) {
+            const success: string[] = [];
             const element = this._element as HTMLElement;
             const style = getStyle(element);
-            const valid: string[] = [];
             for (const attr in values) {
                 if (setStyleCache(element, attr, this.sessionId, values[attr], style.getPropertyValue(attr))) {
-                    valid.push(attr);
+                    success.push(attr);
                 }
                 else {
-                    for (const value of valid) {
+                    for (const value of success) {
                         this.cssFinally(value);
                     }
                     return undefined;
@@ -1687,7 +1688,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get tagName() {
         let result = this._cached.tagName;
         if (result === undefined) {
-            const element = this._element as HTMLElement;
+            const element = this._element;
             if (element) {
                 const nodeName = element.nodeName;
                 result = nodeName.charAt(0) === '#' ? nodeName : element.tagName;

@@ -1,13 +1,12 @@
 import Resource from '../../resource';
 
 import { CONTAINER_ANDROID } from '../../lib/constant';
-import { BUILD_ANDROID } from '../../lib/enumeration';
 
 type View = android.base.View;
 
-const { formatPX } = squared.lib.css;
+const { formatPX, isPercent } = squared.lib.css;
 const { measureTextWidth } = squared.lib.dom;
-const { capitalizeString, lowerCaseString, isNumber, isString } = squared.lib.util;
+const { capitalizeString, delimitString, lowerCaseString, isNumber, isString } = squared.lib.util;
 const { STRING_SPACE, replaceCharacterData } = squared.lib.xml;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -30,6 +29,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
         const numberResourceValue = this.options.numberResourceValue;
         this.cacheProcessing.each(node => {
             if (node.hasResource(NODE_RESOURCE.VALUE_STRING)) {
+                if (node.styleElement) {
+                    const title: string =  node.data(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
+                    if (title !== '') {
+                        setTextValue(node, 'tooltipText', `${node.controlId.toLowerCase()}_title`, title, numberResourceValue);
+                    }
+                }
                 switch (node.tagName) {
                     case 'SELECT': {
                         const name = this.createOptionArray(node.element as HTMLSelectElement, node.controlId);
@@ -47,8 +52,32 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     }
                     default: {
                         if (!node.layoutFrame) {
+                            if (node.inputElement) {
+                                if (node.controlName === CONTAINER_ANDROID.EDIT_LIST) {
+                                    const list = (node.element as HTMLInputElement).list;
+                                    if (list) {
+                                        this.createOptionArray(list as HTMLSelectElement, node.controlId);
+                                        if (!node.hasPX('width')) {
+                                            node.css('width', formatPX(node.actualWidth));
+                                        }
+                                    }
+                                }
+                                const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
+                                if (isString(hintString)) {
+                                    setTextValue(node, 'hint', '', hintString, numberResourceValue);
+                                }
+                            }
                             const valueString: StringValue = node.data(Resource.KEY_NAME, 'valueString');
                             if (valueString) {
+                                let indent = 0;
+                                if (node.blockDimension || node.display === 'table-cell') {
+                                    const textIndent = node.css('textIndent');
+                                    indent = node.parseUnit(textIndent);
+                                    if (textIndent === '100%' || indent + node.bounds.width < 0) {
+                                        node.delete('android', 'ellipsize', 'maxLines');
+                                        return;
+                                    }
+                                }
                                 let value = valueString.value;
                                 const name = valueString.key || value;
                                 if (node.naturalChild && node.alignParent('left') && node.pageFlow && !(node.preserveWhiteSpace && !node.plainText || node.plainText && node.actualParent!.preserveWhiteSpace)) {
@@ -100,71 +129,189 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 if (tagName === 'INS' && !textDecorationLine.includes('line-through')) {
                                     value = `<strike>${value}</strike>`;
                                 }
-                                let indent = 0;
-                                if (node.blockDimension || node.display === 'table-cell') {
-                                    const textIndent = node.css('textIndent');
-                                    indent = node.parseUnit(textIndent);
-                                    if (textIndent === '100%' || indent + node.bounds.width < 0) {
-                                        value = '';
-                                        node.delete('android', 'ellipsize', 'maxLines');
+                                if (indent === 0) {
+                                    const parent = node.actualParent;
+                                    if (parent?.firstChild === node && (parent.blockDimension || parent.display === 'table-cell')) {
+                                        indent = parent.parseUnit(parent.css('textIndent'));
                                     }
                                 }
-                                if (value !== '') {
-                                    if (indent === 0) {
-                                        const parent = node.actualParent;
-                                        if (parent?.firstChild === node && (parent.blockDimension || parent.display === 'table-cell')) {
-                                            indent = parent.parseUnit(parent.css('textIndent'));
-                                        }
-                                    }
-                                    if (indent > 0) {
-                                        const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
-                                        value = STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + value;
-                                    }
-                                    if (node.css('fontVariant') === 'small-caps') {
-                                        if (node.api >= BUILD_ANDROID.LOLLIPOP) {
-                                            node.android('fontFeatureSettings', 'smcp');
-                                        }
-                                        else {
-                                            node.android('textAllCaps', 'true');
-                                            node.lockAttr('android', 'textAllCaps');
-                                            const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
-                                            if (fontStyle) {
-                                                fontStyle.fontSize *= this.options.fontVariantSmallCapsReduction;
-                                            }
-                                        }
-                                    }
-                                    if (node.has('fontVariationSettings')) {
-                                        node.android('fontVariationSettings', node.css('fontVariationSettings').replace(/"/g, "'"));
-                                    }
-                                    if (node.has('fontFeatureSettings')) {
-                                        const featureSettings = node.android('fontFeatureSettings');
-                                        node.android('fontFeatureSettings', (featureSettings !== '' ? featureSettings + ', ' : '') + node.css('fontFeatureSettings').replace(/"/g, "'"));
-                                    }
-                                    setTextValue(node, 'text', name, value, numberResourceValue);
+                                if (indent > 0) {
+                                    const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
+                                    value = STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + value;
                                 }
-                            }
-                            if (node.inputElement) {
-                                if (node.controlName === CONTAINER_ANDROID.EDIT_LIST) {
-                                    const list = (node.element as HTMLInputElement).list;
-                                    if (list) {
-                                        this.createOptionArray(list as HTMLSelectElement, node.controlId);
-                                        if (!node.hasPX('width')) {
-                                            node.css('width', formatPX(node.actualWidth));
-                                        }
+                                let fontVariation = '';
+                                let fontFeature = '';
+                                if (node.has('fontStretch')) {
+                                    let percent = node.css('fontStretch');
+                                    switch (percent) {
+                                        case '100%':
+                                            percent = '';
+                                            break;
+                                        case 'ultra-condensed':
+                                            percent = '50%';
+                                            break;
+                                        case 'extra-condensed':
+                                            percent = '62.5%';
+                                            break;	
+                                        case 'condensed':
+                                            percent = '75%';
+                                            break;	
+                                        case 'semi-condensed':
+                                            percent = '87.5%';
+                                            break;	
+                                        case 'semi-expanded':
+                                            percent = '112.5%';
+                                            break;
+                                        case 'expanded':
+                                            percent = '125%';
+                                            break;	
+                                        case 'extra-expanded':
+                                            percent = '150%';
+                                            break;	
+                                        case 'ultra-expanded':
+                                            percent = '200%';
+                                            break;
+                                    }
+                                    if (isPercent(percent)) {
+                                        fontVariation = `'wdth' ${parseFloat(percent)}`;
                                     }
                                 }
-                                const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
-                                if (isString(hintString)) {
-                                    setTextValue(node, 'hint', '', hintString, numberResourceValue);
+                                if (node.has('fontVariantCaps')) {
+                                    for (const variant of node.css('fontVariantCaps').split(/\s+/)) {
+                                        switch (variant) {
+                                            case 'small-caps':
+                                                fontFeature = delimitString({ value: fontFeature }, "'smcp'");
+                                                break;
+                                            case 'all-small-caps':
+                                                fontFeature = delimitString({ value: fontFeature }, "'c2sc'", "'smcp'");
+                                                break;
+                                            case 'petite-caps':
+                                                fontFeature = delimitString({ value: fontFeature }, "'pcap'");
+                                                break;
+                                            case 'all-petite-caps':
+                                                fontFeature = delimitString({ value: fontFeature }, "'c2pc'", "'pcap'");
+                                                break;
+                                            case 'unicase':
+                                                fontFeature = delimitString({ value: fontFeature }, "'unic'");
+                                                break;
+                                            case 'titling-caps':
+                                                fontFeature = delimitString({ value: fontFeature }, "'titl'");
+                                                break;
+                                        }
+                                    }
                                 }
+                                if (node.has('fontVariantNumeric')) {
+                                    for (const variant of node.css('fontVariantNumeric').split(/\s+/)) {
+                                        switch (variant) {
+                                            case 'ordinal':
+                                                fontFeature = delimitString({ value: fontFeature }, "'ordn'");
+                                                break;
+                                            case 'slashed-zero':
+                                                fontFeature = delimitString({ value: fontFeature }, "'zero'");
+                                                break;
+                                            case 'lining-nums':
+                                                fontFeature = delimitString({ value: fontFeature }, "'lnum'");
+                                                break;
+                                            case 'oldstyle-nums':
+                                                fontFeature = delimitString({ value: fontFeature }, "'onum'");
+                                                break;
+                                            case 'proportional-nums':
+                                                fontFeature = delimitString({ value: fontFeature }, "'pnum'");
+                                                break;
+                                            case 'tabular-nums':
+                                                fontFeature = delimitString({ value: fontFeature }, "'tnum'");
+                                                break;
+                                            case 'diagonal-fractions':
+                                                fontFeature = delimitString({ value: fontFeature }, "'frac'");
+                                                break;
+                                            case 'stacked-fractions':
+                                                fontFeature = delimitString({ value: fontFeature }, "'afrc'");
+                                                break;
+                                        }
+                                    }
+                                }
+                                if (node.has('fontVariantLigatures')) {
+                                    for (const variant of node.css('fontVariantLigatures').split(/\s+/)) {
+                                        switch (variant) {
+                                            case 'common-ligatures':
+                                                fontFeature = delimitString({ value: fontFeature }, "'liga'");
+                                                break;
+                                            case 'no-common-ligatures':
+                                                fontFeature = delimitString({ value: fontFeature }, "'liga' 0");
+                                                break;
+                                            case 'discretionary-ligatures':
+                                                fontFeature = delimitString({ value: fontFeature }, "'dlig'");
+                                                break;
+                                            case 'no-discretionary-ligatures':
+                                                fontFeature = delimitString({ value: fontFeature }, "'dlig' 0");
+                                                break;
+                                            case 'historical-ligatures':
+                                                fontFeature = delimitString({ value: fontFeature }, "'hlig'");
+                                                break;
+                                            case 'no-historical-ligatures':
+                                                fontFeature = delimitString({ value: fontFeature }, "'hlig' 0");
+                                                break;
+                                            case 'contextual':
+                                                fontFeature = delimitString({ value: fontFeature }, "'calt'");
+                                                break;
+                                            case 'no-contextual':
+                                                fontFeature = delimitString({ value: fontFeature }, "'calt' 0");
+                                                break;
+                                        }
+                                    }
+                                }
+                                if (node.has('fontVariantEastAsian')) {
+                                    for (const variant of node.css('fontVariantEastAsian').split(/\s+/)) {
+                                        switch (variant) {
+                                            case 'ruby':
+                                                fontFeature = delimitString({ value: fontFeature }, "'ruby'");
+                                                break;
+                                            case 'jis78':
+                                                fontFeature = delimitString({ value: fontFeature }, "'jp78'");
+                                                break;
+                                            case 'jis83':
+                                                fontFeature = delimitString({ value: fontFeature }, "'jp83'");
+                                                break;
+                                            case 'jis90':
+                                                fontFeature = delimitString({ value: fontFeature }, "'jp90'");
+                                                break;
+                                            case 'jis04':
+                                                fontFeature = delimitString({ value: fontFeature }, "'jp04'");
+                                                break;
+                                            case 'simplified':
+                                                fontFeature = delimitString({ value: fontFeature }, "'smpl'");
+                                                break;
+                                            case 'traditional':
+                                                fontFeature = delimitString({ value: fontFeature }, "'trad'");
+                                                break;
+                                            case 'proportional-width':
+                                                fontFeature = delimitString({ value: fontFeature }, "'pwid'");
+                                                break;
+                                            case 'full-width':
+                                                fontFeature = delimitString({ value: fontFeature }, "'fwid'");
+                                                break;
+                                        }
+                                    }
+                                }
+                                if (node.has('fontVariationSettings')) {
+                                    for (const variant of node.css('fontVariationSettings').replace(/"/g, "'").split(',')) {
+                                        fontVariation = delimitString({ value: fontVariation }, variant.trim());
+                                    }
+                                }
+                                if (node.has('fontFeatureSettings')) {
+                                    for (const feature of node.css('fontFeatureSettings').replace(/"/g, "'").split(',')) {
+                                        fontFeature = delimitString({ value: fontFeature }, feature.trim());
+                                    }
+                                }
+                                if (fontVariation !== '') {
+                                    node.android('fontVariationSettings', fontVariation);
+                                }
+                                if (fontFeature !== '') {
+                                    node.android('fontFeatureSettings', fontFeature);
+                                }
+                                setTextValue(node, 'text', name, value, numberResourceValue);
                             }
                         }
-                    }
-                }
-                if (node.styleElement) {
-                    const title: string =  node.data(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
-                    if (title !== '') {
-                        setTextValue(node, 'tooltipText', `${node.controlId.toLowerCase()}_title`, title, numberResourceValue);
                     }
                 }
             }
