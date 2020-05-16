@@ -1,7 +1,7 @@
 import Resource from '../../resource';
 import ResourceSvg from './svg';
 
-import { EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
+import { CONTAINER_ANDROID, EXT_ANDROID, SUPPORT_ANDROID, SUPPORT_ANDROID_X, XMLNS_ANDROID } from '../../lib/constant';
 import { BUILD_ANDROID, CONTAINER_NODE } from '../../lib/enumeration';
 
 import LAYERLIST_TMPL from '../../template/layer-list';
@@ -23,6 +23,7 @@ interface BackgroundImageData extends PositionAttribute {
     bitmap?: BitmapData[];
     rotate?: StringMap[];
     gradient?: GradientTemplate;
+    vectorGradient?: boolean;
     drawable?: string;
     width?: string;
     height?: string;
@@ -569,6 +570,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
                 const images = this.getDrawableImages(node, stored);
+                if (node.controlName === CONTAINER_ANDROID.BUTTON && stored.borderRadius?.length === 1 && images?.some(item => item.vectorGradient === true) && node.api >= BUILD_ANDROID.PIE) {
+                    node.android('buttonCornerRadius', stored.borderRadius[0]);
+                    stored.borderRadius = undefined;
+                }
                 const outline = stored.outline;
                 let [shapeData, layerListData] = this.getDrawableBorder(stored, undefined, images, drawOutline && outline ? getIndentOffset(outline) : 0);
                 const emptyBackground = shapeData === undefined && layerListData === undefined;
@@ -1510,6 +1515,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     if (gradient !== '') {
                         src = `@drawable/${gradient}`;
                         imageData.order = j++;
+                        imageData.vectorGradient = true;
                     }
                     if (gravityX === 'left' || gravityX === 'start') {
                         gravityX = '';

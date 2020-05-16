@@ -249,9 +249,11 @@ function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: 
                     style,
                     color
                 } as BorderAttribute;
+                return true;
             }
         }
     }
+    return false;
 }
 
 function setBackgroundOffset(node: NodeUI, boxStyle: BoxStyle, attr: 'backgroundClip' | 'backgroundOrigin') {
@@ -692,33 +694,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public setBoxStyle(node: T) {
         if ((node.styleElement || node.visibleStyle.background) && node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
-            const boxStyle = (node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY') as unknown) as BoxStyle;
-            if (setBackgroundOffset(node, boxStyle, 'backgroundClip')) {
-                setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
-            }
-            if (node.css('borderRadius') !== '0px') {
-                const [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius] = node.cssAsTuple('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
-                const [A, B] = borderTopLeftRadius.split(' ');
-                const [C, D] = borderTopRightRadius.split(' ');
-                const [E, F] = borderBottomRightRadius.split(' ');
-                const [G, H] = borderBottomLeftRadius.split(' ');
-                const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
-                const horizontal = node.actualWidth >= node.actualHeight;
-                const radius = borderRadius[0];
-                if (borderRadius.every(value => value === radius)) {
-                    borderRadius.length = radius === '0px' || radius === '' ? 0 : 1;
-                }
-                const length = borderRadius.length;
-                if (length) {
-                    const dimension = horizontal ? 'width' : 'height';
-                    let i = 0;
-                    while (i < length) {
-                        borderRadius[i] = formatPX(node.parseUnit(borderRadius[i++], dimension, false));
-                    }
-                    boxStyle.borderRadius = borderRadius;
-                }
-            }
-            if (node.visibleStyle.borderWidth) {
+            const boxStyle = {} as BoxStyle;
+            let borderWidth = node.visibleStyle.borderWidth;
+            if (borderWidth) {
                 if (node.borderTopWidth > 0) {
                     setBorderStyle(node, boxStyle, 'borderTop', BOX_BORDER[0]);
                 }
@@ -732,18 +710,48 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     setBorderStyle(node, boxStyle, 'borderLeft', BOX_BORDER[3]);
                 }
             }
-            setBorderStyle(node, boxStyle, 'outline', BOX_BORDER[4]);
-            if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
-                boxStyle.backgroundImage = ResourceUI.parseBackgroundImage(node, node.backgroundImage, node.localSettings.screenDimension);
+            if (setBorderStyle(node, boxStyle, 'outline', BOX_BORDER[4])) {
+                borderWidth = true;
             }
             let backgroundColor = node.backgroundColor;
+            let backgroundImage: Undef<(string | Gradient)[]>;
             if (backgroundColor === '' && node.has('backgroundColor') && !node.documentParent.visible) {
                 backgroundColor = node.css('backgroundColor');
             }
-            if (backgroundColor !== '') {
-                boxStyle.backgroundColor = parseColor(backgroundColor)?.valueAsRGBA || '';
+            if (node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
+                backgroundImage = ResourceUI.parseBackgroundImage(node, node.backgroundImage, node.localSettings.screenDimension);
             }
-            node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
+            if (backgroundColor || backgroundImage || borderWidth || node.data(Resource.KEY_NAME, 'embedded')) {
+                boxStyle.backgroundColor = parseColor(backgroundColor)?.valueAsRGBA || '';
+                boxStyle.backgroundImage = backgroundImage;
+                Object.assign(boxStyle, node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY'));
+                if (setBackgroundOffset(node, boxStyle, 'backgroundClip')) {
+                    setBackgroundOffset(node, boxStyle, 'backgroundOrigin');
+                }
+                if (node.css('borderRadius') !== '0px') {
+                    const [borderTopLeftRadius, borderTopRightRadius, borderBottomRightRadius, borderBottomLeftRadius] = node.cssAsTuple('borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomRightRadius', 'borderBottomLeftRadius');
+                    const [A, B] = borderTopLeftRadius.split(' ');
+                    const [C, D] = borderTopRightRadius.split(' ');
+                    const [E, F] = borderBottomRightRadius.split(' ');
+                    const [G, H] = borderBottomLeftRadius.split(' ');
+                    const borderRadius = !B && !D && !F && !H ? [A, C, E, G] : [A, B || A, C, D || C, E, F || E, G, H || G];
+                    const horizontal = node.actualWidth >= node.actualHeight;
+                    const radius = borderRadius[0];
+                    if (borderRadius.every(value => value === radius)) {
+                        borderRadius.length = radius === '0px' || radius === '' ? 0 : 1;
+                    }
+                    const length = borderRadius.length;
+                    if (length) {
+                        const dimension = horizontal ? 'width' : 'height';
+                        let i = 0;
+                        while (i < length) {
+                            borderRadius[i] = formatPX(node.parseUnit(borderRadius[i++], dimension, false));
+                        }
+                        boxStyle.borderRadius = borderRadius;
+                    }
+                }
+                node.data(ResourceUI.KEY_NAME, 'boxStyle', boxStyle);
+            }
         }
     }
 

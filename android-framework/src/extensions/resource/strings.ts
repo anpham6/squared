@@ -70,21 +70,10 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         value = value.replace(/^(\s|&#160;)+/, '');
                                     }
                                 }
-                                if (node.css('fontVariant') === 'small-caps') {
-                                    if (node.api >= BUILD_ANDROID.LOLLIPOP) {
-                                        node.android('fontFeatureSettings', 'smcp');
-                                    }
-                                    else {
-                                        node.android('textAllCaps', 'true');
-                                        const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
-                                        if (fontStyle) {
-                                            fontStyle.fontSize *= this.options.fontVariantSmallCapsReduction;
-                                        }
-                                    }
-                                }
                                 switch (node.css('textTransform')) {
                                     case 'uppercase':
                                         node.android('textAllCaps', 'true');
+                                        node.lockAttr('android', 'textAllCaps');
                                         break;
                                     case 'lowercase':
                                         value = lowerCaseString(value);
@@ -131,11 +120,25 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                         const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
                                         value = STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + value;
                                     }
-                                    if (node.has('fontFeatureSettings')) {
-                                        node.android('fontFeatureSettings', node.css('fontFeatureSettings').replace(/"/g, "'"));
+                                    if (node.css('fontVariant') === 'small-caps') {
+                                        if (node.api >= BUILD_ANDROID.LOLLIPOP) {
+                                            node.android('fontFeatureSettings', 'smcp');
+                                        }
+                                        else {
+                                            node.android('textAllCaps', 'true');
+                                            node.lockAttr('android', 'textAllCaps');
+                                            const fontStyle: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
+                                            if (fontStyle) {
+                                                fontStyle.fontSize *= this.options.fontVariantSmallCapsReduction;
+                                            }
+                                        }
                                     }
                                     if (node.has('fontVariationSettings')) {
                                         node.android('fontVariationSettings', node.css('fontVariationSettings').replace(/"/g, "'"));
+                                    }
+                                    if (node.has('fontFeatureSettings')) {
+                                        const featureSettings = node.android('fontFeatureSettings');
+                                        node.android('fontFeatureSettings', (featureSettings !== '' ? featureSettings + ', ' : '') + node.css('fontFeatureSettings').replace(/"/g, "'"));
                                     }
                                     setTextValue(node, 'text', name, value, numberResourceValue);
                                 }
