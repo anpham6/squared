@@ -183,6 +183,7 @@
     "scrollPaddingLeft": false,
     "scrollPaddingRight": false,
     "scrollPaddingTop": false,
+    "shapeOutside": false,
     "tabSize": true,
     "tableLayout": true,
     "textAlign": true,

@@ -1,9 +1,6 @@
 interface CssProperties {
     [key: string]: {
-        calc?: 0 | 1;
-        multiple?: number;
-        layout?: 0 | 1;
-        contain?: 0 | 1;
+        trait: number,
         value: string | string[];
     };
 }

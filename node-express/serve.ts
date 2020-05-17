@@ -795,7 +795,7 @@ let Image: serve.IImage;
             }
             let result: Undef<string>;
             let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=(["'])\\s*${(base64 ? '.+?' : '') + segment}\\s*\\2`, 'g');
-            let match: RegExpExecArray | null;
+            let match: Null<RegExpExecArray>;
             while ((match = pattern.exec(source)) !== null) {
                 if (result === undefined) {
                     result = source;

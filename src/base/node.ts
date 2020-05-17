@@ -3,7 +3,7 @@ import { NODE_ALIGNMENT } from './lib/enumeration';
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { BOX_BORDER, CSS_PROPERTIES, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = squared.lib.css;
+const { BOX_BORDER, CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = squared.lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
@@ -924,10 +924,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         if (!this._preferInitial) {
             let parent: Undef<T>;
-            if (attrs.some(value => CSS_PROPERTIES[value].layout === 1)) {
+            if (attrs.some(value => hasBit(CSS_PROPERTIES[value].trait, CSS_TRAITS.LAYOUT))) {
                 parent = this.pageFlow && this.ascend({ condition: item => item.documentRoot })[0] || this;
             }
-            else if (attrs.some(value => CSS_PROPERTIES[value].contain === 1)) {
+            else if (attrs.some(value => hasBit(CSS_PROPERTIES[value].trait, CSS_TRAITS.CONTAIN))) {
                 parent = this;
             }
             if (parent) {

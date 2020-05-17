@@ -292,1099 +292,6 @@ const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
 const trimEnclosing = (value: string) => value.substring(1, value.length - 1);
 const trimSelector = (value: string) => REGEX_SELECTORALL.test(value) ? '*' : value.replace(REGEX_SELECTORTRIM, '');
 
-export const CSS_PROPERTIES = {
-    "alignContent": {
-        "contain": 1,
-        "value": "normal"
-    },
-    "alignItems": {
-        "contain": 1,
-        "value": "normal"
-    },
-    "alignSelf": {
-        "contain": 1,
-        "value": "auto"
-    },
-    "animation": {
-        "calc": 1,
-        "multiple": 1,
-        "value": [
-            "animationDuration",
-            "animationTimingFunction",
-            "animationDelay",
-            "animationIterationCount",
-            "animationDirection",
-            "animationFillMode",
-            "animationPlayState",
-            "animationName"
-        ]
-    },
-    "animationDelay": {
-        "calc": 1,
-        "value": "0s"
-    },
-    "animationDirection": {
-        "value": "normal"
-    },
-    "animationDuration": {
-        "calc": 1,
-        "value": "0s"
-    },
-    "animationFillMode": {
-        "value": "none"
-    },
-    "animationIterationCount": {
-        "calc": 1,
-        "value": "1"
-    },
-    "animationName": {
-        "value": "none"
-    },
-    "animationPlayState": {
-        "value": "running"
-    },
-    "animationTimingFunction": {
-        "value": "ease"
-    },
-    "backfaceVisibility": {
-        "value": "visible"
-    },
-    "background": {
-        "calc": 1,
-        "multiple": 1,
-        "value": [
-            "backgroundImage",
-            "backgroundPositionX",
-            "backgroundPositionY",
-            "backgroundSize",
-            "backgroundRepeat",
-            "backgroundAttachment",
-            "backgroundOrigin",
-            "backgroundClip",
-            "backgroundColor"
-        ]
-    },
-    "backgroundAttachment": {
-        "value": "scroll"
-    },
-    "backgroundClip": {
-        "value": "border-box"
-    },
-    "backgroundColor": {
-        "calc": 1,
-        "value": "transparent"
-    },
-    "backgroundImage": {
-        "calc": 1,
-        "value": "none"
-    },
-    "backgroundOrigin": {
-        "value": "padding-box"
-    },
-    "backgroundPosition": {
-        "calc": 1,
-        "value": [
-            "backgroundPositionX",
-            "backgroundPositionY"
-        ]
-    },
-    "backgroundPositionX": {
-        "calc": 1,
-        "value": "0%"
-    },
-    "backgroundPositionY": {
-        "calc": 1,
-        "value": "0%"
-    },
-    "backgroundRepeat": {
-        "value": "repeat"
-    },
-    "backgroundSize": {
-        "calc": 1,
-        "value": "auto auto"
-    },
-    "border": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "borderTopStyle",
-            "borderTopWidth",
-            "borderTopColor",
-            "borderRightStyle",
-            "borderRightWidth",
-            "borderRightColor",
-            "borderBottomStyle",
-            "borderBottomWidth",
-            "borderBottomColor",
-            "borderLeftStyle",
-            "borderLeftWidth",
-            "borderLeftColor"
-        ]
-    },
-    "borderBottom": {
-        "calc": 1,
-        "value": [
-            "borderBottomStyle",
-            "borderBottomWidth",
-            "borderBottomColor"
-        ]
-    },
-    "borderBottomColor": {
-        "calc": 1,
-        "value": "__rgb__"
-    },
-    "borderBottomLeftRadius": {
-        "calc": 1,
-        "value": "0"
-    },
-    "borderBottomRightRadius": {
-        "calc": 1,
-        "value": "0"
-    },
-    "borderBottomStyle": {
-        "value": "none"
-    },
-    "borderBottomWidth": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "borderCollapse": {
-        "layout": 1,
-        "value": "separate"
-    },
-    "borderColor": {
-        "calc": 1,
-        "value": [
-            "borderTopColor",
-            "borderRightColor",
-            "borderBottomColor",
-            "borderLeftColor"
-        ]
-    },
-    "borderImage": {
-        "calc": 1,
-        "value": [
-            "borderImageSource",
-            "borderImageSlice",
-            "borderImageWidth",
-            "borderImageOutset",
-            "borderImageRepeat"
-        ]
-    },
-    "borderImageOutset": {
-        "calc": 1,
-        "value": "0"
-    },
-    "borderImageRepeat": {
-        "value": "stretch"
-    },
-    "borderImageSlice": {
-        "calc": 1,
-        "value": "100%"
-    },
-    "borderImageSource": {
-        "calc": 1,
-        "value": "none"
-    },
-    "borderImageWidth": {
-        "calc": 1,
-        "value": "1"
-    },
-    "borderLeft": {
-        "calc": 1,
-        "value": [
-            "borderLeftStyle",
-            "borderLeftWidth",
-            "borderLeftColor"
-        ]
-    },
-    "borderLeftColor": {
-        "calc": 1,
-        "value": "__rgb__"
-    },
-    "borderLeftStyle": {
-        "value": "none"
-    },
-    "borderLeftWidth": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "borderRadius": {
-        "calc": 1,
-        "value": [
-            "borderTopLeftRadius",
-            "borderTopRightRadius",
-            "borderBottomRightRadius",
-            "borderBottomLeftRadius"
-        ]
-    },
-    "borderRight": {
-        "calc": 1,
-        "value": [
-            "borderRightStyle",
-            "borderRightWidth",
-            "borderRightColor"
-        ]
-    },
-    "borderRightColor": {
-        "calc": 1,
-        "value": "__rgb__"
-    },
-    "borderRightStyle": {
-        "value": "none"
-    },
-    "borderRightWidth": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "borderSpacing": {
-        "calc": 1,
-        "value": "0"
-    },
-    "borderStyle": {
-        "value": [
-            "borderTopStyle",
-            "borderRightStyle",
-            "borderBottomStyle",
-            "borderLeftStyle"
-        ]
-    },
-    "borderTop": {
-        "calc": 1,
-        "value": [
-            "borderTopStyle",
-            "borderTopWidth",
-            "borderTopColor"
-        ]
-    },
-    "borderTopColor": {
-        "value": "__rgb__"
-    },
-    "borderTopLeftRadius": {
-        "calc": 1,
-        "value": "0"
-    },
-    "borderTopRightRadius": {
-        "calc": 1,
-        "value": "0"
-    },
-    "borderTopStyle": {
-        "value": "none"
-    },
-    "borderTopWidth": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "borderWidth": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "borderTopWidth",
-            "borderRightWidth",
-            "borderBottomWidth",
-            "borderLeftWidth"
-        ]
-    },
-    "bottom": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "boxShadow": {
-        "calc": 1,
-        "layout": 1,
-        "value": "none"
-    },
-    "boxSizing": {
-        "layout": 1,
-        "value": "content-box"
-    },
-    "captionSide": {
-        "value": "top"
-    },
-    "clear": {
-        "layout": 1,
-        "value": "none"
-    },
-    "color": {
-        "calc": 1,
-        "value": "__rgb__"
-    },
-    "columnCount": {
-        "calc": 1,
-        "value": "auto"
-    },
-    "columnFill": {
-        "value": "balance"
-    },
-    "columnGap": {
-        "calc": 1,
-        "value": "normal"
-    },
-    "columnRule": {
-        "calc": 1,
-        "value": [
-            "columRuleWidth",
-            "columnRuleStyle",
-            "columnRuleColor"
-        ]
-    },
-    "columnRuleColor": {
-        "calc": 1,
-        "value": "__rgb__"
-    },
-    "columnRuleStyle": {
-        "value": "none"
-    },
-    "columnRuleWidth": {
-        "calc": 1,
-        "value": "0"
-    },
-    "columnSpan": {
-        "value": "none"
-    },
-    "columnWidth": {
-        "calc": 1,
-        "value": "auto"
-    },
-    "columns": {
-        "calc": 1,
-        "value": [
-            "columnCount",
-            "columnWidth"
-        ]
-    },
-    "content": {
-        "value": "normal"
-    },
-    "counterIncrement": {
-        "calc": 1,
-        "value": "none"
-    },
-    "counterReset": {
-        "calc": 1,
-        "value": "none"
-    },
-    "cursor": {
-        "value": "auto"
-    },
-    "direction": {
-        "layout": 1,
-        "value": "ltr"
-    },
-    "display": {
-        "layout": 1,
-        "value": "inline"
-    },
-    "emptyCells": {
-        "value": "show"
-    },
-    "flex": {
-        "calc": 1,
-        "value": [
-            "flexGrow",
-            "flexShrink",
-            "flexBasis"
-        ]
-    },
-    "flexBasis": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "flexDirection": {
-        "layout": 1,
-        "value": "row"
-    },
-    "flexFlow": {
-        "layout": 1,
-        "value": [
-            "flexDirection",
-            "flexWrap"
-        ]
-    },
-    "flexGrow": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "flexShrink": {
-        "calc": 1,
-        "layout": 1,
-        "value": "1"
-    },
-    "flexWrap": {
-        "layout": 1,
-        "value": "nowrap"
-    },
-    "float": {
-        "layout": 1,
-        "value": "none"
-    },
-    "font": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "fontStyle",
-            "fontVariant",
-            "fontWeight",
-            "fontStretch",
-            "fontSize",
-            "lineHeight",
-            "fontFamily"
-        ]
-    },
-    "fontFamily": {
-        "layout": 1,
-        "value": "__custom__"
-    },
-    "fontFeatureSettings": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "fontKerning": {
-        "layout": 1,
-        "value": "auto"
-    },
-    "fontSize": {
-        "calc": 1,
-        "layout": 1,
-        "value": "medium"
-    },
-    "fontSizeAdjust": {
-        "calc": 1,
-        "layout": 1,
-        "value": "none"
-    },
-    "fontStretch": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "fontStyle": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "fontVariant": {
-        "calc": 1,
-        "multiple": 1,
-        "layout": 1,
-        "value": [
-            "fontVariantCaps",
-            "fontVariantLigatures",
-            "fontVariantNumeric",
-            "fontVariantEastAsian"
-        ]
-    },
-    "fontVariantCaps": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "fontVariantEastAsian": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "fontVariantLigatures": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "fontVariantNumeric": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "fontVariationSettings": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "fontWeight": {
-        "layout": 1,
-        "value": "normal"
-    },
-    "gap": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "rowGap",
-            "columnGap"
-        ]
-    },
-    "grid": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "gridTemplateRows",
-            "gridAutoColumns",
-            "gridTemplateColumns",
-            "gridAutoRows",
-            "gridTemplateAreas",
-            "gridAutoFlow",
-            "gridRowGap",
-            "gridColumnGap"
-        ]
-    },
-    "gridArea": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "gridRowStart",
-            "gridColumnStart",
-            "gridRowEnd",
-            "gridColumnEnd"
-        ]
-    },
-    "gridAutoColumns": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "gridAutoFlow": {
-        "layout": 1,
-        "value": "row"
-    },
-    "gridAutoRows": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "gridColumn": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "gridColumnStart",
-            "gridColumnEnd"
-        ]
-    },
-    "gridColumnEnd": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "gridColumnGap": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "gridColumnStart": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "gridGap": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "gridRowGap",
-            "gridColumnGap"
-        ]
-    },
-    "gridRow": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "gridRowStart",
-            "gridRowEnd"
-        ]
-    },
-    "gridRowEnd": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "gridRowGap": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "gridRowStart": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "gridTemplate": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "gridTemplateRows",
-            "gridTemplateColumns",
-            "gridTemplateAreas"
-        ]
-    },
-    "gridTemplateAreas": {
-        "layout": 1,
-        "value": "none"
-    },
-    "gridTemplateColumns": {
-        "calc": 1,
-        "layout": 1,
-        "value": "none"
-    },
-    "gridTemplateRows": {
-        "calc": 1,
-        "layout": 1,
-        "value": "none"
-    },
-    "height": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "justifyContent": {
-        "contain": 1,
-        "value": "normal"
-    },
-    "justifyIems": {
-        "contain": 1,
-        "value": "normal"
-    },
-    "justifySelf": {
-        "contain": 1,
-        "value": "auto"
-    },
-    "left": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "letterSpacing": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "lineHeight": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "listStyle": {
-        "layout": 1,
-        "value": [
-            "listStyleType",
-            "listStylePosition",
-            "listStyleImage"
-        ]
-    },
-    "listStyleImage": {
-        "layout": 1,
-        "value": "normal"
-    },
-    "listStylePosition": {
-        "layout": 1,
-        "value": "outside"
-    },
-    "listStyleType": {
-        "layout": 1,
-        "value": "disc"
-    },
-    "margin": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "marginTop",
-            "marginRight",
-            "marginBottom",
-            "marginLeft"
-        ]
-    },
-    "marginBottom": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "marginLeft": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "marginRight": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "marginTop": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "maxHeight": {
-        "calc": 1,
-        "layout": 1,
-        "value": "none"
-    },
-    "maxWidth": {
-        "calc": 1,
-        "layout": 1,
-        "value": "none"
-    },
-    "minHeight": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "minWidth": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "offset": {
-        "calc": 1,
-        "value": [
-            "offsetPath",
-            "offsetDistance",
-            "offsetRotate",
-            "offsetAnchor"
-        ]
-    },
-    "offsetPath": {
-        "value": "none"
-    },
-    "offsetDistance": {
-        "calc": 1,
-        "value": "0"
-    },
-    "offsetRotate": {
-        "calc": 1,
-        "value": "auto 0deg"
-    },
-    "offsetAnchor": {
-        "calc": 1,
-        "value": "auto"
-    },
-    "opacity": {
-        "calc": 1,
-        "value": "1"
-    },
-    "order": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "outline": {
-        "calc": 1,
-        "value": [
-            "outlineWidth",
-            "outlineStyle",
-            "outlineColor"
-        ]
-    },
-    "outlineColor": {
-        "calc": 1,
-        "value": "__rgb__"
-    },
-    "outlineOffset": {
-        "calc": 1,
-        "value": "0"
-    },
-    "outlineStyle": {
-        "value": "none"
-    },
-    "outlineWidth": {
-        "calc": 1,
-        "value": "0"
-    },
-    "overflow": {
-        "layout": 1,
-        "value": [
-            "overflowX",
-            "overflowY"
-        ]
-    },
-    "overflowX": {
-        "layout": 1,
-        "value": "visible"
-    },
-    "overflowY": {
-        "layout": 1,
-        "value": "visible"
-    },
-    "padding": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "paddingTop",
-            "paddingRight",
-            "paddingBottom",
-            "paddingLeft"
-        ]
-    },
-    "paddingBottom": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "paddingLeft": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "paddingRight": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "paddingTop": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "pageBreakAfter": {
-        "value": "auto"
-    },
-    "pageBreakBefore": {
-        "value": "auto"
-    },
-    "pageBreakInside": {
-        "value": "auto"
-    },
-    "perspective": {
-        "calc": 1,
-        "value": "none"
-    },
-    "perspectiveOrigin": {
-        "calc": 1,
-        "value": "50% 50%"
-    },
-    "placeContent": {
-        "contain": 1,
-        "value": [
-           "alignContent",
-           "justifyContent"
-        ]
-    },
-    "placeItems": {
-        "contain": 1,
-        "value": [
-           "alignItems",
-           "justifyItems"
-        ]
-    },
-    "placeSelf": {
-        "contain": 1,
-        "value": [
-           "alignSelf",
-           "justifySelf"
-        ]
-    },
-    "position": {
-        "layout": 1,
-        "value": "static"
-    },
-    "quotes": {
-        "layout": 1,
-        "value": "none"
-    },
-    "resize": {
-        "layout": 1,
-        "value": "none"
-    },
-    "right": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "rowGap": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "scrollMargin": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "scrollMarginTop",
-            "scrollMarginRight",
-            "scrollMarginBottom",
-            "scrollMarginLeft"
-        ]
-    },
-    "scrollMarginBottom": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "scrollMarginLeft": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "scrollMarginRight": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "scrollMarginTop": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "scrollPadding": {
-        "calc": 1,
-        "layout": 1,
-        "value": [
-            "scrollPaddingTop",
-            "scrollPaddingRight",
-            "scrollPaddingBottom",
-            "scrollPaddingLeft"
-        ]
-    },
-    "scrollPaddingBottom": {
-        "layout": 1,
-        "value": "0"
-    },
-    "scrollPaddingLeft": {
-        "layout": 1,
-        "value": "0"
-    },
-    "scrollPaddingRight": {
-        "layout": 1,
-        "value": "0"
-    },
-    "scrollPaddingTop": {
-        "layout": 1,
-        "value": "0"
-    },
-    "tabSize": {
-        "layout": 1,
-        "value": "8"
-    },
-    "tableLayout": {
-        "layout": 1,
-        "value": "auto"
-    },
-    "textAlign": {
-        "value": "left"
-    },
-    "textAlignLast": {
-        "value": "auto"
-    },
-    "textDecoration": {
-        "value": [
-            "textDecorationLine",
-            "textDecorationStyle",
-            "textDecorationColor"
-        ]
-    },
-    "textDecorationColor": {
-        "calc": 1,
-        "value": "__rgb__"
-    },
-    "textDecorationLine": {
-        "value": "none"
-    },
-    "textDecorationStyle": {
-        "value": "solid"
-    },
-    "textIndent": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "textJustify": {
-        "value": "auto"
-    },
-    "textOverflow": {
-        "value": "clip"
-    },
-    "textShadow": {
-        "calc": 1,
-        "value": "none"
-    },
-    "textTransform": {
-        "layout": 1,
-        "value": "none"
-    },
-    "top": {
-        "calc": 1,
-        "layout": 1,
-        "value": "0"
-    },
-    "transform": {
-        "calc": 1,
-        "value": "none"
-    },
-    "transformOrigin": {
-        "calc": 1,
-        "value": "50% 50% 0"
-    },
-    "transformStyle": {
-        "value": "flat"
-    },
-    "transition": {
-        "calc": 1,
-        "multiple": 1,
-        "value": [
-            "transitionProperty",
-            "transitionDuration",
-            "transitionTimingFunction",
-            "transitionDelay"
-        ]
-    },
-    "transitionDelay": {
-        "calc": 1,
-        "value": "0s"
-    },
-    "transitionDuration": {
-        "calc": 1,
-        "value": "0s"
-    },
-    "transitionProperty": {
-        "value": "all"
-    },
-    "transitionTimingFunction": {
-        "calc": 1,
-        "value": "ease"
-    },
-    "unicodeBidi": {
-        "layout": 1,
-        "value": "normal"
-    },
-    "verticalAlign": {
-        "calc": 1,
-        "layout": 1,
-        "value": "baseline"
-    },
-    "visibility": {
-        "layout": 1,
-        "value": "visible"
-    },
-    "whiteSpace": {
-        "layout": 1,
-        "value": "normal"
-    },
-    "width": {
-        "calc": 1,
-        "layout": 1,
-        "value": "auto"
-    },
-    "wordBreak": {
-        "layout": 1,
-        "value": "normal"
-    },
-    "wordSpacing": {
-        "calc": 1,
-        "layout": 1,
-        "value": "normal"
-    },
-    "wordWrap": {
-        "layout": 1,
-        "value": "normal"
-    },
-    "zIndex": {
-        "calc": 1,
-        "value": "auto"
-    }
-};
-
 export const enum CSS_UNIT {
     NONE = 0,
     LENGTH = 2,
@@ -1394,6 +301,1074 @@ export const enum CSS_UNIT {
     INTEGER = 32,
     DECIMAL = 64
 }
+
+export const enum CSS_TRAITS {
+    NONE = 0,
+    CALC = 2,
+    SHORTHAND = 4,
+    LAYOUT = 8,
+    CONTAIN = 16,
+    COLOR = 32
+}
+
+export const CSS_PROPERTIES: CssProperties = {
+    alignContent: {
+        trait: CSS_TRAITS.CONTAIN,
+        value: 'normal'
+    },
+    alignItems: {
+        trait: CSS_TRAITS.CONTAIN,
+        value: 'normal'
+    },
+    alignSelf: {
+        trait: CSS_TRAITS.CONTAIN,
+        value: 'auto'
+    },
+    animation: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'animationDuration',
+            'animationTimingFunction',
+            'animationDelay',
+            'animationIterationCount',
+            'animationDirection',
+            'animationFillMode',
+            'animationPlayState',
+            'animationName'
+        ]
+    },
+    animationDelay: {
+        trait: CSS_TRAITS.CALC,
+        value: '0s'
+    },
+    animationDirection: {
+        trait: 0,
+        value: 'normal'
+    },
+    animationDuration: {
+        trait: CSS_TRAITS.CALC,
+        value: '0s'
+    },
+    animationFillMode: {
+        trait: 0,
+        value: 'none'
+    },
+    animationIterationCount: {
+        trait: CSS_TRAITS.CALC,
+        value: '1'
+    },
+    animationName: {
+        trait: 0,
+        value: 'none'
+    },
+    animationPlayState: {
+        trait: 0,
+        value: 'running'
+    },
+    animationTimingFunction: {
+        trait: 0,
+        value: 'ease'
+    },
+    backfaceVisibility: {
+        trait: 0,
+        value: 'visible'
+    },
+    background: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'backgroundImage',
+            'backgroundPositionX',
+            'backgroundPositionY',
+            'backgroundSize',
+            'backgroundRepeat',
+            'backgroundAttachment',
+            'backgroundOrigin',
+            'backgroundClip',
+            'backgroundColor'
+        ]
+    },
+    backgroundAttachment: {
+        trait: 0,
+        value: 'scroll'
+    },
+    backgroundClip: {
+        trait: 0,
+        value: 'border-box'
+    },
+    backgroundColor: {
+        trait: CSS_TRAITS.CALC,
+        value: 'transparent'
+    },
+    backgroundImage: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    backgroundOrigin: {
+        trait: 0,
+        value: 'padding-box'
+    },
+    backgroundPosition: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'backgroundPositionX',
+            'backgroundPositionY'
+        ]
+    },
+    backgroundPositionX: {
+        trait: CSS_TRAITS.CALC,
+        value: '0%'
+    },
+    backgroundPositionY: {
+        trait: CSS_TRAITS.CALC,
+        value: '0%'
+    },
+    backgroundRepeat: {
+        trait: 0,
+        value: 'repeat'
+    },
+    backgroundSize: {
+        trait: CSS_TRAITS.CALC,
+        value: 'auto auto'
+    },
+    border: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'borderTopStyle',
+            'borderTopWidth',
+            'borderTopColor',
+            'borderRightStyle',
+            'borderRightWidth',
+            'borderRightColor',
+            'borderBottomStyle',
+            'borderBottomWidth',
+            'borderBottomColor',
+            'borderLeftStyle',
+            'borderLeftWidth',
+            'borderLeftColor'
+        ]
+    },
+    borderBottom: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'borderBottomStyle',
+            'borderBottomWidth',
+            'borderBottomColor'
+        ]
+    },
+    borderBottomColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: ''
+    },
+    borderBottomLeftRadius: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    borderBottomRightRadius: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    borderBottomStyle: {
+        trait: 0,
+        value: 'none'
+    },
+    borderBottomWidth: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    borderCollapse: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'separate'
+    },
+    borderColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'borderTopColor',
+            'borderRightColor',
+            'borderBottomColor',
+            'borderLeftColor'
+        ]
+    },
+    borderImage: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'borderImageSource',
+            'borderImageSlice',
+            'borderImageWidth',
+            'borderImageOutset',
+            'borderImageRepeat'
+        ]
+    },
+    borderImageOutset: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    borderImageRepeat: {
+        trait: 0,
+        value: 'stretch'
+    },
+    borderImageSlice: {
+        trait: CSS_TRAITS.CALC,
+        value: '100%'
+    },
+    borderImageSource: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    borderImageWidth: {
+        trait: CSS_TRAITS.CALC,
+        value: '1'
+    },
+    borderLeft: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'borderLeftStyle',
+            'borderLeftWidth',
+            'borderLeftColor'
+        ]
+    },
+    borderLeftColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: ''
+    },
+    borderLeftStyle: {
+        trait: 0,
+        value: 'none'
+    },
+    borderLeftWidth: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    borderRadius: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'borderTopLeftRadius',
+            'borderTopRightRadius',
+            'borderBottomRightRadius',
+            'borderBottomLeftRadius'
+        ]
+    },
+    borderRight: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'borderRightStyle',
+            'borderRightWidth',
+            'borderRightColor'
+        ]
+    },
+    borderRightColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: ''
+    },
+    borderRightStyle: {
+        trait: 0,
+        value: 'none'
+    },
+    borderRightWidth: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    borderSpacing: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    borderStyle: {
+        trait: CSS_TRAITS.SHORTHAND,
+        value: [
+            'borderTopStyle',
+            'borderRightStyle',
+            'borderBottomStyle',
+            'borderLeftStyle'
+        ]
+    },
+    borderTop: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'borderTopStyle',
+            'borderTopWidth',
+            'borderTopColor'
+        ]
+    },
+    borderTopColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: ''
+    },
+    borderTopLeftRadius: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    borderTopRightRadius: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    borderTopStyle: {
+        trait: 0,
+        value: 'none'
+    },
+    borderTopWidth: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    borderWidth: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'borderTopWidth',
+            'borderRightWidth',
+            'borderBottomWidth',
+            'borderLeftWidth'
+        ]
+    },
+    bottom: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    boxShadow: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    boxSizing: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'content-box'
+    },
+    captionSide: {
+        trait: 0,
+        value: 'top'
+    },
+    clear: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    color: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: ''
+    },
+    columnCount: {
+        trait: CSS_TRAITS.CALC,
+        value: 'auto'
+    },
+    columnFill: {
+        trait: 0,
+        value: 'balance'
+    },
+    columnGap: {
+        trait: CSS_TRAITS.CALC,
+        value: 'normal'
+    },
+    columnRule: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'columRuleWidth',
+            'columnRuleStyle',
+            'columnRuleColor'
+        ]
+    },
+    columnRuleColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: ''
+    },
+    columnRuleStyle: {
+        trait: 0,
+        value: 'none'
+    },
+    columnRuleWidth: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    columnSpan: {
+        trait: 0,
+        value: 'none'
+    },
+    columnWidth: {
+        trait: CSS_TRAITS.CALC,
+        value: 'auto'
+    },
+    columns: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'columnCount',
+            'columnWidth'
+        ]
+    },
+    content: {
+        trait: 0,
+        value: 'normal'
+    },
+    counterIncrement: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    counterReset: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    cursor: {
+        trait: 0,
+        value: 'auto'
+    },
+    direction: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'ltr'
+    },
+    display: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'inline'
+    },
+    emptyCells: {
+        trait: 0,
+        value: 'show'
+    },
+    flex: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'flexGrow',
+            'flexShrink',
+            'flexBasis'
+        ]
+    },
+    flexBasis: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    flexDirection: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'row'
+    },
+    flexFlow: {
+        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'flexDirection',
+            'flexWrap'
+        ]
+    },
+    flexGrow: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    flexShrink: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '1'
+    },
+    flexWrap: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'nowrap'
+    },
+    float: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    font: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'fontStyle',
+            'fontVariant',
+            'fontWeight',
+            'fontStretch',
+            'fontSize',
+            'lineHeight',
+            'fontFamily'
+        ]
+    },
+    fontFamily: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: ''
+    },
+    fontFeatureSettings: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    fontKerning: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    fontSize: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'medium'
+    },
+    fontSizeAdjust: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    fontStretch: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    fontStyle: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    fontVariant: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'fontVariantCaps',
+            'fontVariantLigatures',
+            'fontVariantNumeric',
+            'fontVariantEastAsian'
+        ]
+    },
+    fontVariantCaps: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    fontVariantEastAsian: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    fontVariantLigatures: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    fontVariantNumeric: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    fontVariationSettings: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    fontWeight: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    gap: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'rowGap',
+            'columnGap'
+        ]
+    },
+    grid: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'gridTemplateRows',
+            'gridAutoColumns',
+            'gridTemplateColumns',
+            'gridAutoRows',
+            'gridTemplateAreas',
+            'gridAutoFlow',
+            'gridRowGap',
+            'gridColumnGap'
+        ]
+    },
+    gridArea: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'gridRowStart',
+            'gridColumnStart',
+            'gridRowEnd',
+            'gridColumnEnd'
+        ]
+    },
+    gridAutoColumns: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    gridAutoFlow: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'row'
+    },
+    gridAutoRows: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    gridColumn: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'gridColumnStart',
+            'gridColumnEnd'
+        ]
+    },
+    gridColumnEnd: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    gridColumnGap: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    gridColumnStart: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    gridGap: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'gridRowGap',
+            'gridColumnGap'
+        ]
+    },
+    gridRow: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'gridRowStart',
+            'gridRowEnd'
+        ]
+    },
+    gridRowEnd: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    gridRowGap: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    gridRowStart: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    gridTemplate: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'gridTemplateRows',
+            'gridTemplateColumns',
+            'gridTemplateAreas'
+        ]
+    },
+    gridTemplateAreas: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    gridTemplateColumns: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    gridTemplateRows: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    height: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    justifyContent: {
+        trait: CSS_TRAITS.CONTAIN,
+        value: 'normal'
+    },
+    justifyIems: {
+        trait: CSS_TRAITS.CONTAIN,
+        value: 'normal'
+    },
+    justifySelf: {
+        trait: CSS_TRAITS.CONTAIN,
+        value: 'auto'
+    },
+    left: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    letterSpacing: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    lineHeight: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    listStyle: {
+        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'listStyleType',
+            'listStylePosition',
+            'listStyleImage'
+        ]
+    },
+    listStyleImage: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    listStylePosition: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'outside'
+    },
+    listStyleType: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'disc'
+    },
+    margin: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'marginTop',
+            'marginRight',
+            'marginBottom',
+            'marginLeft'
+        ]
+    },
+    marginBottom: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    marginLeft: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    marginRight: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    marginTop: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    maxHeight: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    maxWidth: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    minHeight: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    minWidth: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    offset: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'offsetPath',
+            'offsetDistance',
+            'offsetRotate',
+            'offsetAnchor'
+        ]
+    },
+    offsetPath: {
+        trait: 0,
+        value: 'none'
+    },
+    offsetDistance: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    offsetRotate: {
+        trait: CSS_TRAITS.CALC,
+        value: 'auto 0deg'
+    },
+    offsetAnchor: {
+        trait: CSS_TRAITS.CALC,
+        value: 'auto'
+    },
+    opacity: {
+        trait: CSS_TRAITS.CALC,
+        value: '1'
+    },
+    order: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    outline: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'outlineWidth',
+            'outlineStyle',
+            'outlineColor'
+        ]
+    },
+    outlineColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: ''
+    },
+    outlineOffset: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    outlineStyle: {
+        trait: 0,
+        value: 'none'
+    },
+    outlineWidth: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    overflow: {
+        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'overflowX',
+            'overflowY'
+        ]
+    },
+    overflowX: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'visible'
+    },
+    overflowY: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'visible'
+    },
+    padding: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'paddingTop',
+            'paddingRight',
+            'paddingBottom',
+            'paddingLeft'
+        ]
+    },
+    paddingBottom: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    paddingLeft: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    paddingRight: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    paddingTop: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    pageBreakAfter: {
+        trait: 0,
+        value: 'auto'
+    },
+    pageBreakBefore: {
+        trait: 0,
+        value: 'auto'
+    },
+    pageBreakInside: {
+        trait: 0,
+        value: 'auto'
+    },
+    perspective: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    perspectiveOrigin: {
+        trait: CSS_TRAITS.CALC,
+        value: '50% 50%'
+    },
+    placeContent: {
+        trait: CSS_TRAITS.CONTAIN,
+        value: [
+           'alignContent',
+           'justifyContent'
+        ]
+    },
+    placeItems: {
+        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.CONTAIN,
+        value: [
+           'alignItems',
+           'justifyItems'
+        ]
+    },
+    placeSelf: {
+        trait: CSS_TRAITS.SHORTHAND | CSS_TRAITS.CONTAIN,
+        value: [
+           'alignSelf',
+           'justifySelf'
+        ]
+    },
+    position: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'static'
+    },
+    quotes: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    resize: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    right: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    rowGap: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    scrollMargin: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'scrollMarginTop',
+            'scrollMarginRight',
+            'scrollMarginBottom',
+            'scrollMarginLeft'
+        ]
+    },
+    scrollMarginBottom: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    scrollMarginLeft: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    scrollMarginRight: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    scrollMarginTop: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    scrollPadding: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
+        value: [
+            'scrollPaddingTop',
+            'scrollPaddingRight',
+            'scrollPaddingBottom',
+            'scrollPaddingLeft'
+        ]
+    },
+    scrollPaddingBottom: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    scrollPaddingLeft: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    scrollPaddingRight: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    scrollPaddingTop: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    shapeOutside: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    tabSize: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: '8'
+    },
+    tableLayout: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    textAlign: {
+        trait: 0,
+        value: 'left'
+    },
+    textAlignLast: {
+        trait: 0,
+        value: 'auto'
+    },
+    textDecoration: {
+        trait: CSS_TRAITS.SHORTHAND,
+        value: [
+            'textDecorationLine',
+            'textDecorationStyle',
+            'textDecorationColor'
+        ]
+    },
+    textDecorationColor: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: ''
+    },
+    textDecorationLine: {
+        trait: 0,
+        value: 'none'
+    },
+    textDecorationStyle: {
+        trait: 0,
+        value: 'solid'
+    },
+    textIndent: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    textJustify: {
+        trait: 0,
+        value: 'auto'
+    },
+    textOverflow: {
+        trait: 0,
+        value: 'clip'
+    },
+    textShadow: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    textTransform: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'none'
+    },
+    top: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: '0'
+    },
+    transform: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    transformOrigin: {
+        trait: CSS_TRAITS.CALC,
+        value: '50% 50% 0'
+    },
+    transformStyle: {
+        trait: 0,
+        value: 'flat'
+    },
+    transition: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
+        value: [
+            'transitionProperty',
+            'transitionDuration',
+            'transitionTimingFunction',
+            'transitionDelay'
+        ]
+    },
+    transitionDelay: {
+        trait: CSS_TRAITS.CALC,
+        value: '0s'
+    },
+    transitionDuration: {
+        trait: CSS_TRAITS.CALC,
+        value: '0s'
+    },
+    transitionProperty: {
+        trait: 0,
+        value: 'all'
+    },
+    transitionTimingFunction: {
+        trait: CSS_TRAITS.CALC,
+        value: 'ease'
+    },
+    unicodeBidi: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    verticalAlign: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'baseline'
+    },
+    visibility: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'visible'
+    },
+    whiteSpace: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    width: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'auto'
+    },
+    wordBreak: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    wordSpacing: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    wordWrap: {
+        trait: CSS_TRAITS.LAYOUT,
+        value: 'normal'
+    },
+    zIndex: {
+        trait: CSS_TRAITS.CALC,
+        value: 'auto'
+    }
+};
 
 export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
 export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
@@ -1959,8 +1934,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             return value;
         }
         case 'backgroundImage':
-        case 'borderImageSource':
-        case 'maskImage': {
+        case 'borderImageSource': {
             value = value.trim();
             const image = splitEnclosing(value);
             const length = image.length;
@@ -2019,9 +1993,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'textShadow':
             return calculateVarAsString(element, calculateStyle(element, 'borderColor', value), { supportPercent: false, errorString: /-?[\d.]+[a-z]*\s+-?[\d.]+[a-z]*(\s+-[\d.]+[a-z]*)/ });
         case 'backgroundSize':
-        case 'maskPosition':
-        case 'maskSize':
-            return calculateVarAsString(element, value, { dimension: ['width', 'height'], boundingBox, min: attr !== 'maskPosition' ? 0 : undefined, parent: false, separator: ',' });
         case 'animation':
         case 'animationDelay':
         case 'animationDuration':
@@ -2693,7 +2664,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
     }
     value = result.length === 1 ? result[0] : result.join(separator === ' ' ? ' ' : (separator ? separator + ' ' : ''));
     if (errorString) {
-        let match: RegExpExecArray | null;
+        let match: Null<RegExpExecArray>;
         while ((match = errorString.exec(value)) !== null) {
             if (match[1] === undefined) {
                 return '';
@@ -3582,20 +3553,58 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
 
 export function parseTransform(value: string, accumulate?: boolean, fontSize?: number) {
     const result: TransformData[] = [];
-    const transforms = splitEnclosing(value);
-    const length = transforms.length;
-    for (let i = 0; i < length; i += 2) {
-        const method = transforms[i].trim();
-        const segment = method + transforms[i + 1];
-        if (method.startsWith('rotate')) {
-            const match = TRANSFORM.ROTATE.exec(segment);
-            if (match) {
-                const angle = convertAngle(match[2], match[3]);
+    const pattern = /(\w+)\([^)]+\)/g;
+    let match: Null<RegExpExecArray>;
+    while ((match = pattern.exec(value)) !== null) {
+        const method = match[1];
+        if (method.startsWith('translate')) {
+            const translate = TRANSFORM.TRANSLATE.exec(match[0]);
+            if (translate) {
+                if (accumulate) {
+                    let x = 0, y = 0, z = 0;
+                    switch (method) {
+                        case 'translate':
+                            x = parseUnit(translate[2], fontSize);
+                            if (translate[3]) {
+                                y = parseUnit(translate[3], fontSize);
+                            }
+                            break;
+                        case 'translateX':
+                            x = parseUnit(translate[2], fontSize);
+                            break;
+                        case 'translateY':
+                            y = parseUnit(translate[2], fontSize);
+                            break;
+                        case 'translateZ':
+                            z = parseUnit(translate[2], fontSize);
+                            break;
+                    }
+                    const values = result.find(item => item.method === 'translate')?.values;
+                    if (values) {
+                        values[0] += x;
+                        values[1] += y;
+                        values[2] += z;
+                    }
+                    else {
+                        result.push({ method: 'translate', values: [x, y, z] });
+                    }
+                }
+                else {
+                    const values: number[] = [parseUnit(translate[2], fontSize)];
+                    if (method === 'translate' && translate[3]) {
+                        values.push(parseUnit(translate[3], fontSize));
+                    }
+                    result.push({ method, values });
+                }
+            }
+        }
+        else if (method.startsWith('rotate')) {
+            const rotate = TRANSFORM.ROTATE.exec(match[0]);
+            if (rotate) {
+                const angle = convertAngle(rotate[2], rotate[3]);
                 if (!isNaN(angle)) {
                     if (accumulate) {
-                        let x = 0;
-                        let y = 0;
-                        let z = 0;
+                        let x = 0, y = 0, z = 0;
                         switch (method) {
                             case 'rotate':
                                 x = angle;
@@ -3627,19 +3636,59 @@ export function parseTransform(value: string, accumulate?: boolean, fontSize?: n
                 }
             }
         }
+        else if (method.startsWith('scale')) {
+            const scale = TRANSFORM.SCALE.exec(match[0]);
+            if (scale) {
+                if (accumulate) {
+                    let x = 1, y = 1, z = 1;
+                    switch (method) {
+                        case 'scale':
+                            x = parseFloat(scale[2]);
+                            if (scale[3]) {
+                                y = parseFloat(scale[3]);
+                            }
+                            break;
+                        case 'scaleX':
+                            x = parseFloat(scale[2]);
+                            break;
+                        case 'scaleY':
+                            y = parseFloat(scale[2]);
+                            break;
+                        case 'scaleZ':
+                            z = parseFloat(scale[2]);
+                            break;
+                    }
+                    const values = result.find(item => item.method === 'scale')?.values;
+                    if (values) {
+                        values[0] *= x;
+                        values[1] *= y;
+                        values[2] *= z;
+                    }
+                    else {
+                        result.push({ method: 'scale', values: [x, y, z] });
+                    }
+                }
+                else {
+                    const values: number[] = [parseFloat(scale[2])];
+                    if (method === 'scale' && scale[3]) {
+                        values.push(parseFloat(scale[3]));
+                    }
+                    result.push({ method, values });
+                }
+            }
+        }
         else if (method.startsWith('skew')) {
-            const match = TRANSFORM.SKEW.exec(segment);
-            if (match) {
-                let angle = convertAngle(match[2], match[3]);
+            const skew = TRANSFORM.SKEW.exec(match[0]);
+            if (skew) {
+                let angle = convertAngle(skew[2], skew[3]);
                 if (!isNaN(angle)) {
                     if (accumulate) {
-                        let x = 0;
-                        let y = 0;
+                        let x = 0, y = 0;
                         switch (method) {
                             case 'skew':
                                 x = angle;
-                                if (match[4] && match[5]) {
-                                    y = convertAngle(match[4], match[5], 0);
+                                if (skew[4] && skew[5]) {
+                                    y = convertAngle(skew[4], skew[5], 0);
                                 }
                                 break;
                             case 'skewX':
@@ -3660,8 +3709,8 @@ export function parseTransform(value: string, accumulate?: boolean, fontSize?: n
                     }
                     else {
                         const values: number[] = [angle];
-                        if (method === 'skew' && match[4] && match[5]) {
-                            angle = convertAngle(match[4], match[5]);
+                        if (method === 'skew' && skew[4] && skew[5]) {
+                            angle = convertAngle(skew[4], skew[5]);
                             if (!isNaN(angle)) {
                                 values.push(angle);
                             }
@@ -3671,98 +3720,12 @@ export function parseTransform(value: string, accumulate?: boolean, fontSize?: n
                 }
             }
         }
-        else if (method.startsWith('scale')) {
-            const match = TRANSFORM.SCALE.exec(segment);
-            if (match) {
-                if (accumulate) {
-                    let x = 1;
-                    let y = 1;
-                    let z = 1;
-                    switch (method) {
-                        case 'scale':
-                            x = parseFloat(match[2]);
-                            if (match[3]) {
-                                y = parseFloat(match[3]);
-                            }
-                            break;
-                        case 'scaleX':
-                            x = parseFloat(match[2]);
-                            break;
-                        case 'scaleY':
-                            y = parseFloat(match[2]);
-                            break;
-                        case 'scaleZ':
-                            z = parseFloat(match[2]);
-                            break;
-                    }
-                    const values = result.find(item => item.method === 'scale')?.values;
-                    if (values) {
-                        values[0] *= x;
-                        values[1] *= y;
-                        values[2] *= z;
-                    }
-                    else {
-                        result.push({ method: 'scale', values: [x, y, z] });
-                    }
-                }
-                else {
-                    const values: number[] = [parseFloat(match[2])];
-                    if (method === 'scale' && match[3]) {
-                        values.push(parseFloat(match[3]));
-                    }
-                    result.push({ method, values });
-                }
-            }
-        }
-        else if (method.startsWith('translate')) {
-            const match = TRANSFORM.TRANSLATE.exec(segment);
-            if (match) {
-                if (accumulate) {
-                    let x = 0;
-                    let y = 0;
-                    let z = 0;
-                    switch (method) {
-                        case 'translate':
-                            x = parseUnit(match[2], fontSize);
-                            if (match[3]) {
-                                y = parseUnit(match[3], fontSize);
-                            }
-                            break;
-                        case 'translateX':
-                            x = parseUnit(match[2], fontSize);
-                            break;
-                        case 'translateY':
-                            y = parseUnit(match[2], fontSize);
-                            break;
-                        case 'translateZ':
-                            z = parseUnit(match[2], fontSize);
-                            break;
-                    }
-                    const values = result.find(item => item.method === 'translate')?.values;
-                    if (values) {
-                        values[0] += x;
-                        values[1] += y;
-                        values[2] += z;
-                    }
-                    else {
-                        result.push({ method: 'translate', values: [x, y, z] });
-                    }
-                }
-                else {
-                    const values: number[] = [parseUnit(match[2], fontSize)];
-                    if (method === 'translate' && match[3]) {
-                        values.push(parseUnit(match[3], fontSize));
-                    }
-                    result.push({ method, values });
-                }
-            }
-        }
         else if (method.startsWith('matrix') && !accumulate) {
-            const match = TRANSFORM.MATRIX.exec(segment);
-            if (match) {
+            const matrix = TRANSFORM.MATRIX.exec(match[0]);
+            if (matrix) {
                 result.push({
                     method,
-                    values: [parseFloat(match[2]), parseFloat(match[3]), parseFloat(match[4]), parseFloat(match[5]), parseFloat(match[6]), parseFloat(match[7])]
+                    values: [parseFloat(matrix[2]), parseFloat(matrix[3]), parseFloat(matrix[4]), parseFloat(matrix[5]), parseFloat(matrix[6]), parseFloat(matrix[7])]
                 });
             }
         }

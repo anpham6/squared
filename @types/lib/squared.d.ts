@@ -84,7 +84,6 @@ declare module "lib" {
     }
 
     namespace css {
-        const CSS_PROPERTIES: CssProperties;
         const enum CSS_UNIT {
             NONE = 0,
             LENGTH = 2,
@@ -94,6 +93,14 @@ declare module "lib" {
             INTEGER = 32,
             DECIMAL = 64
         }
+        const enum CSS_TRAITS {
+            NONE = 0,
+            CALC = 2,
+            MULTIPLE = 4,
+            LAYOUT = 8,
+            CONTAIN = 16
+        }
+        const CSS_PROPERTIES: CssProperties;
         const BOX_POSITION: string[];
         const BOX_MARGIN: string[];
         const BOX_BORDER: string[][];
