@@ -60,7 +60,7 @@ function convertRotate(value: string) {
     }
     else if (/^reverse\s+/.test(value)) {
         const angle = value.split(' ')[1];
-        return 'auto ' + (isAngle(angle) ? 180 + parseAngle(angle) : '0') + 'deg';
+        return 'auto ' + (isAngle(angle) ? 180 + parseAngle(angle, 0) : '0') + 'deg';
     }
     return value;
 }
@@ -314,7 +314,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                         while (j < q) {
                                             const item = offsetRotate[j++];
                                             const value = item.value;
-                                            let angle = parseAngle(value.split(' ').pop() as string);
+                                            let angle = parseAngle(value.split(' ').pop() as string, 0);
                                             if (value.startsWith('auto')) {
                                                 angle += 90;
                                             }

@@ -97,6 +97,9 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
                     offset *= extent;
                 }
             }
+            if (isNaN(offset)) {
+                continue;
+            }
             if (result.length === 0) {
                 if (offset === -1) {
                     offset = 0;
@@ -288,10 +291,12 @@ function getAngle(value: string, fallback = 0) {
     value = value.trim();
     if (value !== '') {
         let degree = parseAngle(value, fallback);
-        if (degree < 0) {
-            degree += 360;
+        if (!isNaN(degree)) {
+            if (degree < 0) {
+                degree += 360;
+            }
+            return degree;
         }
-        return degree;
     }
     return fallback;
 }

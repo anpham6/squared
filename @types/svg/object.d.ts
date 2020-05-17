@@ -62,7 +62,7 @@ interface SvgTransform {
         y: boolean;
     };
     origin?: Point;
-    fromCSS?: boolean;
+    fromStyle?: boolean;
 }
 
 interface SvgMatrix {

@@ -123,10 +123,11 @@ declare module "lib" {
         function extractURL(value: string): string;
         function resolveURL(value: string): string;
         function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
-        function convertAngle(value: string, unit?: string): number;
         function convertPX(value: string, fontSize?: number): string;
         function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension): number;
+        function parseTransform(value: string, accumulate?: boolean, fontSize?: number): TransformData[];
         function parseAngle(value: string, fallback?: number): number;
+        function convertAngle(value: string, unit?: string, fallback?: number): number;
         function parseTime(value: string): number;
         function formatPX(value: number): string;
         function formatPercent(value: string | number, round?: boolean): string;
@@ -225,6 +226,13 @@ declare module "lib" {
             BREAKWORD_G: RegExp;
             NONWORD_G: RegExp;
             TAGNAME_G: RegExp;
+        };
+        const TRANSFORM: {
+            MATRIX: RegExp;
+            ROTATE: RegExp;
+            SKEW: RegExp;
+            SCALE: RegExp;
+            TRANSLATE: RegExp;
         };
         const COMPONENT: {
             PROTOCOL: RegExp;

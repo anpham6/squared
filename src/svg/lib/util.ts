@@ -1,11 +1,10 @@
 const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, convertAngle, getFontSize, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse } = squared.lib.math;
-const { STRING } = squared.lib.regex;
+const { TRANSFORM: REGEX_TRANSFORM } = squared.lib.regex;
 const { getStyleValue } = squared.lib.session;
-const { convertCamelCase, convertFloat, isString } = squared.lib.util;
+const { convertCamelCase, convertFloat, isString, splitEnclosing } = squared.lib.util;
 
-const STRING_DECIMAL = `(${STRING.DECIMAL})`;
 const SHAPES = {
     path: 1,
     line: 2,
@@ -15,13 +14,7 @@ const SHAPES = {
     polyline: 6,
     polygon: 7
 };
-const REGEX_TRANSFORM = {
-    MATRIX: new RegExp(`(matrix(?:3d)?)\\(${STRING_DECIMAL},\\s+${STRING_DECIMAL},\\s+${STRING_DECIMAL},\\s+${STRING_DECIMAL},\\s+${STRING_DECIMAL},\\s+${STRING_DECIMAL}(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?(?:,\\s+${STRING_DECIMAL})?\\)`, 'g'),
-    ROTATE: new RegExp(`(rotate[XY]?)\\(${STRING.CSS_ANGLE}\\)`, 'g'),
-    SKEW: new RegExp(`(skew[XY]?)\\(${STRING.CSS_ANGLE}(?:,\\s+${STRING.CSS_ANGLE})?\\)`, 'g'),
-    SCALE: new RegExp(`(scale[XY]?)\\(${STRING_DECIMAL}(?:,\\s+${STRING_DECIMAL})?\\)`, 'g'),
-    TRANSLATE: new RegExp(`(translate[XY]?)\\(${STRING.LENGTH_PERCENTAGE}(?:,\\s+${STRING.LENGTH_PERCENTAGE})?\\)`, 'g')
-};
+
 const REGEX_ROTATEORIGIN = /rotate\((-?[\d.]+)(?:,?\s+(-?[\d.]+))?(?:,?\s+(-?[\d.]+))?\)/g;
 
 function setOriginPosition(element: Element, point: Point, attr: string, position: string, dimension: number) {
@@ -179,82 +172,90 @@ export const TRANSFORM = {
         };
     },
     parse(element: SVGElement, value?: string): Undef<SvgTransform[]> {
-        const transform = value || element.style.getPropertyValue('transform');
-        if (transform !== '') {
-            const ordered: SvgTransform[] = [];
-            for (const name in REGEX_TRANSFORM) {
-                const pattern = REGEX_TRANSFORM[name];
-                let match: Null<RegExpExecArray>;
-                while ((match = pattern.exec(transform)) !== null) {
-                    const index = match.index;
-                    const attr = match[1];
-                    const isX = attr.endsWith('X'), isY = attr.endsWith('Y');
-                    if (attr.startsWith('rotate')) {
+        if (!value) {
+            value = element.style.getPropertyValue('transform');
+        }
+        if (value) {
+            const result: SvgTransform[] = [];
+            const transforms = splitEnclosing(value);
+            const length = transforms.length;
+            for (let i = 0; i < length; i += 2) {
+                const method = transforms[i].trim();
+                const segment = method + transforms[i + 1];
+                const isX = method.endsWith('X'), isY = method.endsWith('Y');
+                if (method.startsWith('rotate')) {
+                    const match = REGEX_TRANSFORM.ROTATE.exec(segment);
+                    if (match) {
                         const angle = convertAngle(match[2], match[3]);
-                        const matrix = MATRIX.rotate(angle);
-                        if (isX) {
-                            matrix.a = 1;
-                            matrix.b = 0;
-                            matrix.c = 0;
+                        if (!isNaN(angle)) {
+                            const matrix = MATRIX.rotate(angle);
+                            if (isX) {
+                                matrix.a = 1;
+                                matrix.b = 0;
+                                matrix.c = 0;
+                            }
+                            else if (isY) {
+                                matrix.b = 0;
+                                matrix.c = 0;
+                                matrix.d = 1;
+                            }
+                            result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY));
                         }
-                        else if (isY) {
-                            matrix.b = 0;
-                            matrix.c = 0;
-                            matrix.d = 1;
-                        }
-                        ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_ROTATE, matrix, angle, !isX, !isY);
                     }
-                    else if (attr.startsWith('skew')) {
-                        const angle = convertAngle(match[2], match[3]);
+                }
+                else if (method.startsWith('skew')) {
+                    const match = REGEX_TRANSFORM.SKEW.exec(segment);
+                    if (match) {
+                        const angle = convertAngle(match[2], match[3], 0);
                         const x = isY ? 0 : angle;
-                        const y = isY ? angle : (match[4] && match[5] ? convertAngle(match[4], match[5]) : 0);
+                        const y = isY ? angle : (match[4] && match[5] ? convertAngle(match[4], match[5], 0) : 0);
                         const matrix = MATRIX.skew(x, y);
                         if (isX) {
-                            ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false);
+                            result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, matrix, x, true, false));
                         }
                         else if (isY) {
-                            ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, matrix, y, false, true);
+                            result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, matrix, y, false, true));
                         }
                         else {
-                            ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, { ...matrix, b: 0 }, x, true, false);
+                            result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWX, { ...matrix, b: 0 }, x, true, false));
                             if (y !== 0) {
-                                ordered[index + 1] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, { ...matrix, c: 0 }, y, false, true);
+                                result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SKEWY, { ...matrix, c: 0 }, y, false, true));
                             }
                         }
                     }
-                    else if (attr.startsWith('scale')) {
+                }
+                else if (method.startsWith('scale')) {
+                    const match = REGEX_TRANSFORM.SCALE.exec(segment);
+                    if (match) {
                         const x = isY ? undefined : parseFloat(match[2]);
                         const y = isY ? parseFloat(match[2]) : (!isX && match[3] ? parseFloat(match[3]) : x);
-                        ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, isX ? undefined : y), 0, !isY, !isX);
+                        result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_SCALE, MATRIX.scale(x, isX ? undefined : y), 0, !isY, !isX));
                     }
-                    else if (attr.startsWith('translate')) {
+                }
+                else if (method.startsWith('translate')) {
+                    const match = REGEX_TRANSFORM.TRANSLATE.exec(segment);
+                    if (match) {
                         const fontSize = getFontSize(element);
                         const arg1 = parseUnit(match[2], fontSize);
                         const arg2 = !isX && match[3] ? parseUnit(match[3], fontSize) : 0;
                         const x = isY ? 0 : arg1;
                         const y = isY ? arg1 : arg2;
-                        ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, MATRIX.translate(x, y), 0);
-                    }
-                    else if (attr.startsWith('matrix')) {
-                        const matrix = TRANSFORM.matrix(element, value);
-                        if (matrix) {
-                            ordered[index] = TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix);
-                        }
+                        result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_TRANSLATE, MATRIX.translate(x, y), 0));
                     }
                 }
-                pattern.lastIndex = 0;
+                else if (method.startsWith('matrix')) {
+                    const matrix = TRANSFORM.matrix(element, segment);
+                    if (matrix) {
+                        result.push(TRANSFORM.create(SVGTransform.SVG_TRANSFORM_MATRIX, matrix));
+                    }
+                }
             }
-            const result: SvgTransform[] = [];
-            ordered.forEach(item => {
-                item.fromCSS = true;
-                result.push(item);
-            });
+            result.forEach(item => item.fromStyle = true);
             return result;
         }
         return undefined;
     },
     matrix(element: SVGElement, value?: string): Undef<SvgMatrix> {
-        REGEX_TRANSFORM.MATRIX.lastIndex = 0;
         const match = REGEX_TRANSFORM.MATRIX.exec(value || getComputedStyle(element).transform);
         if (match) {
             switch (match[1]) {
@@ -281,7 +282,7 @@ export const TRANSFORM = {
         return undefined;
     },
     origin(element: SVGElement, value?: string) {
-        if (!isString(value)) {
+        if (!value) {
             value = getAttribute(element, 'transform-origin');
         }
         const result: Point = { x: 0, y: 0 };

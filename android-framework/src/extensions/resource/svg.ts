@@ -297,7 +297,7 @@ function groupTransforms(element: SVGGraphicsElement, transforms: SvgTransform[]
     if (transforms.length) {
         const host: SvgTransform[][] = [];
         const client: SvgTransform[] = [];
-        const rotateOrigin = transforms[0].fromCSS ? [] : TRANSFORM.rotateOrigin(element).reverse();
+        const rotateOrigin = transforms[0].fromStyle ? [] : TRANSFORM.rotateOrigin(element).reverse();
         const items = transforms.slice(0).reverse();
         const current: SvgTransform[] = [];
         const restart = () => {

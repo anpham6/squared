@@ -54,6 +54,15 @@ export const XML = {
     TAGNAME_G: /(<([^>]+)>)/g
 };
 
+export const TRANSFORM = {
+    MATRIX: new RegExp(`(matrix(?:3d)?)\\((${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL})(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?\\)`),
+    ROTATE: new RegExp(`(rotate[XYZ]?)\\(${STRING.CSS_ANGLE}\\)`),
+    SKEW: new RegExp(`(skew[XY]?)\\(${STRING.CSS_ANGLE}(?:,\\s+${STRING.CSS_ANGLE})?\\)`),
+    SCALE: new RegExp(`(scale[XYZ]?)\\((${STRING.DECIMAL})(?:,\\s+(${STRING.DECIMAL}))?\\)`),
+    TRANSLATE: new RegExp(`(translate[XYZ]?)\\(${STRING.LENGTH_PERCENTAGE}(?:,\\s+${STRING.LENGTH_PERCENTAGE})?\\)`),
+    PERSPECTIVE: new RegExp(`(perspective)\\(${STRING.LENGTH_PERCENTAGE}\\)`)
+};
+
 export const COMPONENT = {
     PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/[^?]*)?[?]?(.*)?$/
 };

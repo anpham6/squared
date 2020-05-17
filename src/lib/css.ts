@@ -1,7 +1,7 @@
 import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
-import { CSS, STRING, UNIT } from './regex';
+import { CSS, STRING, TRANSFORM, UNIT } from './regex';
 import { convertAlpha, convertFloat, convertRoman, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
 
 const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
@@ -2679,282 +2679,280 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
         if (orientation.length === 1) {
             orientation.push('center');
         }
-        const length = orientation.length;
-        if (length <= 4) {
-            let fontSize: Undef<number>, imageDimension: Undef<Dimension>, imageSize: Undef<string>, screenDimension: Undef<Dimension>;
-            if (options) {
-                ({ fontSize, imageDimension, imageSize, screenDimension } = options);
+        const length = Math.min(orientation.length, 4);
+        let fontSize: Undef<number>, imageDimension: Undef<Dimension>, imageSize: Undef<string>, screenDimension: Undef<Dimension>;
+        if (options) {
+            ({ fontSize, imageDimension, imageSize, screenDimension } = options);
+        }
+        const { width, height } = dimension;
+        const result = newBoxRectPosition(orientation);
+        const setImageOffset = (position: string, horizontal: boolean, direction: string, directionAsPercent: string) => {
+            if (imageDimension && !isLength(position)) {
+                let offset = result[directionAsPercent];
+                if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
+                    const [sizeW, sizeH] = imageSize.split(CHAR_SPACE);
+                    if (horizontal) {
+                        let imageWidth = width;
+                        if (isLength(sizeW, true)) {
+                            if (isPercent(sizeW)) {
+                                imageWidth *= parseFloat(sizeW) / 100;
+                            }
+                            else {
+                                const unit = parseUnit(sizeW, fontSize, screenDimension);
+                                if (unit) {
+                                    imageWidth = unit;
+                                }
+                            }
+                        }
+                        else if (sizeH) {
+                            let percent = 1;
+                            if (isPercent(sizeH)) {
+                                percent = (parseFloat(sizeH) / 100 * height) / imageDimension.height;
+                            }
+                            else if (isLength(sizeH)) {
+                                const unit = parseUnit(sizeH, fontSize, screenDimension);
+                                if (unit) {
+                                    percent = unit / imageDimension.height;
+                                }
+                            }
+                            imageWidth = percent * imageDimension.width;
+                        }
+                        offset *= imageWidth;
+                    }
+                    else {
+                        let imageHeight = height;
+                        if (isLength(sizeH, true)) {
+                            if (isPercent(sizeH)) {
+                                imageHeight *= parseFloat(sizeH) / 100;
+                            }
+                            else {
+                                const unit = parseUnit(sizeH, fontSize, screenDimension);
+                                if (unit) {
+                                    imageHeight = unit;
+                                }
+                            }
+                        }
+                        else if (sizeW) {
+                            let percent = 1;
+                            if (isPercent(sizeW)) {
+                                percent = (parseFloat(sizeW) / 100 * width) / imageDimension.width;
+                            }
+                            else if (isLength(sizeW)) {
+                                const unit = parseUnit(sizeW, fontSize, screenDimension);
+                                if (unit) {
+                                    percent = unit / imageDimension.width;
+                                }
+                            }
+                            imageHeight = percent * imageDimension.height;
+                        }
+                        offset *= imageHeight;
+                    }
+                }
+                else {
+                    offset *= horizontal ? imageDimension.width : imageDimension.height;
+                }
+                result[direction] -= offset;
             }
-            const { width, height } = dimension;
-            const result = newBoxRectPosition(orientation);
-            const setImageOffset = (position: string, horizontal: boolean, direction: string, directionAsPercent: string) => {
-                if (imageDimension && !isLength(position)) {
-                    let offset = result[directionAsPercent];
-                    if (imageSize && imageSize !== 'auto' && imageSize !== 'initial') {
-                        const [sizeW, sizeH] = imageSize.split(CHAR_SPACE);
+        };
+        if (length === 2) {
+            orientation.sort((a, b) => {
+                switch (a) {
+                    case 'left':
+                    case 'right':
+                        return -1;
+                    case 'top':
+                    case 'bottom':
+                        return 1;
+                }
+                switch (b) {
+                    case 'left':
+                    case 'right':
+                        return 1;
+                    case 'top':
+                    case 'bottom':
+                        return -1;
+                }
+                return 0;
+            });
+            for (let i = 0; i < 2; ++i) {
+                let position = orientation[i];
+                const horizontal = i === 0;
+                const [direction, offsetParent] = horizontal ? ['left', width] : ['top', height];
+                const directionAsPercent = direction + 'AsPercent';
+                switch (position) {
+                    case '0%':
                         if (horizontal) {
-                            let imageWidth = width;
-                            if (isLength(sizeW, true)) {
-                                if (isPercent(sizeW)) {
-                                    imageWidth *= parseFloat(sizeW) / 100;
-                                }
-                                else {
-                                    const unit = parseUnit(sizeW, fontSize, screenDimension);
-                                    if (unit) {
-                                        imageWidth = unit;
-                                    }
-                                }
-                            }
-                            else if (sizeH) {
-                                let percent = 1;
-                                if (isPercent(sizeH)) {
-                                    percent = (parseFloat(sizeH) / 100 * height) / imageDimension.height;
-                                }
-                                else if (isLength(sizeH)) {
-                                    const unit = parseUnit(sizeH, fontSize, screenDimension);
-                                    if (unit) {
-                                        percent = unit / imageDimension.height;
-                                    }
-                                }
-                                imageWidth = percent * imageDimension.width;
-                            }
-                            offset *= imageWidth;
+                            position = 'left';
+                        }
+                    case 'left':
+                    case 'top':
+                        break;
+                    case '100%':
+                        if (horizontal) {
+                            position = 'right';
+                        }
+                    case 'right':
+                    case 'bottom':
+                        result[direction] = offsetParent;
+                        result[directionAsPercent] = 1;
+                        break;
+                    case '50%':
+                    case 'center':
+                        position = 'center';
+                        result[direction] = offsetParent / 2;
+                        result[directionAsPercent] = 0.5;
+                        break;
+                    default: {
+                        const percent = convertPercent(position, offsetParent, fontSize, screenDimension);
+                        if (percent > 1) {
+                            orientation[i] = '100%';
+                            position = horizontal ? 'right' : 'bottom';
+                            result[position] = convertLength(formatPercent(percent - 1), offsetParent, fontSize, screenDimension) * -1;
                         }
                         else {
-                            let imageHeight = height;
-                            if (isLength(sizeH, true)) {
-                                if (isPercent(sizeH)) {
-                                    imageHeight *= parseFloat(sizeH) / 100;
+                            result[direction] = convertLength(position, offsetParent, fontSize, screenDimension);
+                        }
+                        result[directionAsPercent] = percent;
+                        break;
+                    }
+                }
+                if (horizontal) {
+                    result.horizontal = position;
+                }
+                else {
+                    result.vertical = position;
+                }
+                setImageOffset(position, horizontal, direction, directionAsPercent);
+            }
+        }
+        else {
+            let horizontal = 0;
+            let vertical = 0;
+            const checkPosition = (position: string, nextPosition?: string) => {
+                switch (position) {
+                    case 'left':
+                    case 'right':
+                        result.horizontal = position;
+                        ++horizontal;
+                        break;
+                    case 'center':
+                        if (length === 4) {
+                            return false;
+                        }
+                        else {
+                            let centerHorizontal = true;
+                            if (nextPosition === undefined) {
+                                if (horizontal > 0) {
+                                    result.vertical = position;
+                                    centerHorizontal = false;
                                 }
                                 else {
-                                    const unit = parseUnit(sizeH, fontSize, screenDimension);
-                                    if (unit) {
-                                        imageHeight = unit;
-                                    }
+                                    result.horizontal = position;
                                 }
-                            }
-                            else if (sizeW) {
-                                let percent = 1;
-                                if (isPercent(sizeW)) {
-                                    percent = (parseFloat(sizeW) / 100 * width) / imageDimension.width;
-                                }
-                                else if (isLength(sizeW)) {
-                                    const unit = parseUnit(sizeW, fontSize, screenDimension);
-                                    if (unit) {
-                                        percent = unit / imageDimension.width;
-                                    }
-                                }
-                                imageHeight = percent * imageDimension.height;
-                            }
-                            offset *= imageHeight;
-                        }
-                    }
-                    else {
-                        offset *= horizontal ? imageDimension.width : imageDimension.height;
-                    }
-                    result[direction] -= offset;
-                }
-            };
-            if (length === 2) {
-                orientation.sort((a, b) => {
-                    switch (a) {
-                        case 'left':
-                        case 'right':
-                            return -1;
-                        case 'top':
-                        case 'bottom':
-                            return 1;
-                    }
-                    switch (b) {
-                        case 'left':
-                        case 'right':
-                            return 1;
-                        case 'top':
-                        case 'bottom':
-                            return -1;
-                    }
-                    return 0;
-                });
-                for (let i = 0; i < 2; ++i) {
-                    let position = orientation[i];
-                    const horizontal = i === 0;
-                    const [direction, offsetParent] = horizontal ? ['left', width] : ['top', height];
-                    const directionAsPercent = direction + 'AsPercent';
-                    switch (position) {
-                        case '0%':
-                            if (horizontal) {
-                                position = 'left';
-                            }
-                        case 'left':
-                        case 'top':
-                            break;
-                        case '100%':
-                            if (horizontal) {
-                                position = 'right';
-                            }
-                        case 'right':
-                        case 'bottom':
-                            result[direction] = offsetParent;
-                            result[directionAsPercent] = 1;
-                            break;
-                        case '50%':
-                        case 'center':
-                            position = 'center';
-                            result[direction] = offsetParent / 2;
-                            result[directionAsPercent] = 0.5;
-                            break;
-                        default: {
-                            const percent = convertPercent(position, offsetParent, fontSize, screenDimension);
-                            if (percent > 1) {
-                                orientation[i] = '100%';
-                                position = horizontal ? 'right' : 'bottom';
-                                result[position] = convertLength(formatPercent(percent - 1), offsetParent, fontSize, screenDimension) * -1;
                             }
                             else {
-                                result[direction] = convertLength(position, offsetParent, fontSize, screenDimension);
-                            }
-                            result[directionAsPercent] = percent;
-                            break;
-                        }
-                    }
-                    if (horizontal) {
-                        result.horizontal = position;
-                    }
-                    else {
-                        result.vertical = position;
-                    }
-                    setImageOffset(position, horizontal, direction, directionAsPercent);
-                }
-            }
-            else {
-                let horizontal = 0;
-                let vertical = 0;
-                const checkPosition = (position: string, nextPosition?: string) => {
-                    switch (position) {
-                        case 'left':
-                        case 'right':
-                            result.horizontal = position;
-                            ++horizontal;
-                            break;
-                        case 'center':
-                            if (length === 4) {
-                                return false;
-                            }
-                            else {
-                                let centerHorizontal = true;
-                                if (nextPosition === undefined) {
-                                    if (horizontal > 0) {
+                                switch (nextPosition) {
+                                    case 'left':
+                                    case 'right':
                                         result.vertical = position;
                                         centerHorizontal = false;
-                                    }
-                                    else {
+                                        break;
+                                    case 'top':
+                                    case 'bottom':
                                         result.horizontal = position;
-                                    }
-                                }
-                                else {
-                                    switch (nextPosition) {
-                                        case 'left':
-                                        case 'right':
-                                            result.vertical = position;
-                                            centerHorizontal = false;
-                                            break;
-                                        case 'top':
-                                        case 'bottom':
-                                            result.horizontal = position;
-                                            break;
-                                        default:
-                                            return false;
-                                    }
-                                }
-                                if (centerHorizontal) {
-                                    result.left = width / 2;
-                                    result.leftAsPercent = 0.5;
-                                    setImageOffset(position, true, 'left', 'leftAsPercent');
-                                }
-                                else {
-                                    result.top = height / 2;
-                                    result.topAsPercent = 0.5;
-                                    setImageOffset(position, false, 'top', 'topAsPercent');
+                                        break;
+                                    default:
+                                        return false;
                                 }
                             }
-                            break;
-                        case 'top':
-                        case 'bottom':
-                            result.vertical = position;
-                            ++vertical;
-                            break;
-                        default:
-                            return false;
-                    }
-                    return horizontal < 2 && vertical < 2;
-                };
-                for (let i = 0; i < length; ++i) {
-                    const position = orientation[i];
-                    if (isLength(position, true)) {
-                        const alignment = orientation[i - 1];
-                        switch (alignment) {
-                            case 'left':
-                            case 'right': {
-                                const location = convertLength(position, width, fontSize, screenDimension);
-                                const locationAsPercent = convertPercent(position, width, fontSize, screenDimension);
-                                if (alignment === 'right') {
-                                    result.right = location;
-                                    result.rightAsPercent = locationAsPercent;
-                                    setImageOffset(position, true, 'right', 'rightAsPercent');
-                                    result.left = width - location;
-                                    result.leftAsPercent = 1 - locationAsPercent;
-                                }
-                                else {
-                                    if (locationAsPercent > 1) {
-                                        const percent = 1 - locationAsPercent;
-                                        result.horizontal = 'right';
-                                        result.right = convertLength(formatPercent(percent), width, fontSize, screenDimension);
-                                        result.rightAsPercent = percent;
-                                        setImageOffset(position, true, 'right', 'rightAsPercent');
-                                    }
-                                    result.left = location;
-                                    result.leftAsPercent = locationAsPercent;
-                                }
+                            if (centerHorizontal) {
+                                result.left = width / 2;
+                                result.leftAsPercent = 0.5;
                                 setImageOffset(position, true, 'left', 'leftAsPercent');
-                                break;
                             }
-                            case 'top':
-                            case 'bottom': {
-                                const location = convertLength(position, height, fontSize, screenDimension);
-                                const locationAsPercent = convertPercent(position, height, fontSize, screenDimension);
-                                if (alignment === 'bottom') {
-                                    result.bottom = location;
-                                    result.bottomAsPercent = locationAsPercent;
-                                    setImageOffset(position, false, 'bottom', 'bottomAsPercent');
-                                    result.top = height - location;
-                                    result.topAsPercent = 1 - locationAsPercent;
-                                }
-                                else {
-                                    if (locationAsPercent > 1) {
-                                        const percent = 1 - locationAsPercent;
-                                        result.horizontal = 'bottom';
-                                        result.bottom = convertLength(formatPercent(percent), height, fontSize, screenDimension);
-                                        result.bottomAsPercent = percent;
-                                        setImageOffset(position, false, 'bottom', 'bottomAsPercent');
-                                    }
-                                    result.top = location;
-                                    result.topAsPercent = locationAsPercent;
-                                }
+                            else {
+                                result.top = height / 2;
+                                result.topAsPercent = 0.5;
                                 setImageOffset(position, false, 'top', 'topAsPercent');
-                                break;
                             }
-                            default:
-                                return newBoxRectPosition();
                         }
-                    }
-                    else if (!checkPosition(position, orientation[i + 1])) {
-                        return newBoxRectPosition();
+                        break;
+                    case 'top':
+                    case 'bottom':
+                        result.vertical = position;
+                        ++vertical;
+                        break;
+                    default:
+                        return false;
+                }
+                return horizontal < 2 && vertical < 2;
+            };
+            for (let i = 0; i < length; ++i) {
+                const position = orientation[i];
+                if (isLength(position, true)) {
+                    const alignment = orientation[i - 1];
+                    switch (alignment) {
+                        case 'left':
+                        case 'right': {
+                            const location = convertLength(position, width, fontSize, screenDimension);
+                            const locationAsPercent = convertPercent(position, width, fontSize, screenDimension);
+                            if (alignment === 'right') {
+                                result.right = location;
+                                result.rightAsPercent = locationAsPercent;
+                                setImageOffset(position, true, 'right', 'rightAsPercent');
+                                result.left = width - location;
+                                result.leftAsPercent = 1 - locationAsPercent;
+                            }
+                            else {
+                                if (locationAsPercent > 1) {
+                                    const percent = 1 - locationAsPercent;
+                                    result.horizontal = 'right';
+                                    result.right = convertLength(formatPercent(percent), width, fontSize, screenDimension);
+                                    result.rightAsPercent = percent;
+                                    setImageOffset(position, true, 'right', 'rightAsPercent');
+                                }
+                                result.left = location;
+                                result.leftAsPercent = locationAsPercent;
+                            }
+                            setImageOffset(position, true, 'left', 'leftAsPercent');
+                            break;
+                        }
+                        case 'top':
+                        case 'bottom': {
+                            const location = convertLength(position, height, fontSize, screenDimension);
+                            const locationAsPercent = convertPercent(position, height, fontSize, screenDimension);
+                            if (alignment === 'bottom') {
+                                result.bottom = location;
+                                result.bottomAsPercent = locationAsPercent;
+                                setImageOffset(position, false, 'bottom', 'bottomAsPercent');
+                                result.top = height - location;
+                                result.topAsPercent = 1 - locationAsPercent;
+                            }
+                            else {
+                                if (locationAsPercent > 1) {
+                                    const percent = 1 - locationAsPercent;
+                                    result.horizontal = 'bottom';
+                                    result.bottom = convertLength(formatPercent(percent), height, fontSize, screenDimension);
+                                    result.bottomAsPercent = percent;
+                                    setImageOffset(position, false, 'bottom', 'bottomAsPercent');
+                                }
+                                result.top = location;
+                                result.topAsPercent = locationAsPercent;
+                            }
+                            setImageOffset(position, false, 'top', 'topAsPercent');
+                            break;
+                        }
+                        default:
+                            return newBoxRectPosition();
                     }
                 }
+                else if (!checkPosition(position, orientation[i + 1])) {
+                    return newBoxRectPosition();
+                }
             }
-            result.static = result.top === 0 && result.right === 0 && result.bottom === 0 && result.left === 0;
-            return result;
         }
+        result.static = result.top === 0 && result.right === 0 && result.bottom === 0 && result.left === 0;
+        return result;
     }
     return newBoxRectPosition();
 }
@@ -3151,21 +3149,6 @@ export function insertStyleSheetRule(value: string, index = 0) {
     return style;
 }
 
-export function convertAngle(value: string, unit = 'deg') {
-    let result = convertFloat(value);
-    switch (unit) {
-        case 'rad':
-            result *= 180 / Math.PI;
-            break;
-        case 'grad':
-            result /= 400;
-        case 'turn':
-            result *= 360;
-            break;
-    }
-    return result;
-}
-
 export function convertPX(value: string, fontSize?: number) {
     return value ? parseUnit(value, fontSize) + 'px' : '0px';
 }
@@ -3300,8 +3283,14 @@ export function calculate(value: string, options?: CalculateOptions) {
                                                 if (!checkCalculateNumber(operand, operator)) {
                                                     return NaN;
                                                 }
-                                                seg.push(parseAngle(partial));
-                                                found = true;
+                                                const angle = parseAngle(partial);
+                                                if (!isNaN(angle)) {
+                                                    seg.push();
+                                                    found = true;
+                                                }
+                                                else {
+                                                    return NaN;
+                                                }
                                             }
                                             else {
                                                 return NaN;
@@ -3449,9 +3438,217 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
     return 0;
 }
 
-export function parseAngle(value: string, fallback = 0) {
+export function parseTransform(value: string, accumulate?: boolean, fontSize?: number) {
+    const result: TransformData[] = [];
+    const transforms = splitEnclosing(value);
+    const length = transforms.length;
+    for (let i = 0; i < length; i += 2) {
+        const method = transforms[i].trim();
+        const segment = method + transforms[i + 1];
+        if (method.startsWith('rotate')) {
+            const match = TRANSFORM.ROTATE.exec(segment);
+            if (match) {
+                const angle = convertAngle(match[2], match[3]);
+                if (!isNaN(angle)) {
+                    if (accumulate) {
+                        let x = 0;
+                        let y = 0;
+                        let z = 0;
+                        switch (method) {
+                            case 'rotate':
+                                x = angle;
+                                y = angle;
+                                break;
+                            case 'rotateX':
+                                x = angle;
+                                break;
+                            case 'rotateY':
+                                y = angle;
+                                break;
+                            case 'rotateZ':
+                                z = angle;
+                                break;
+                        }
+                        const values = result.find(item => item.method === 'rotate')?.values;
+                        if (values) {
+                            values[0] += x;
+                            values[1] += y;
+                            values[2] += z;
+                        }
+                        else {
+                            result.push({ method: 'rotate', values: [x, y, z] });
+                        }
+                    }
+                    else {
+                        result.push({ method, values: [angle] });
+                    }
+                }
+            }
+        }
+        else if (method.startsWith('skew')) {
+            const match = TRANSFORM.SKEW.exec(segment);
+            if (match) {
+                let angle = convertAngle(match[2], match[3]);
+                if (!isNaN(angle)) {
+                    if (accumulate) {
+                        let x = 0;
+                        let y = 0;
+                        switch (method) {
+                            case 'skew':
+                                x = angle;
+                                if (match[4] && match[5]) {
+                                    y = convertAngle(match[4], match[5], 0);
+                                }
+                                break;
+                            case 'skewX':
+                                x = angle;
+                                break;
+                            case 'skewY':
+                                y = angle;
+                                break;
+                        }
+                        const values = result.find(item => item.method === 'skew')?.values;
+                        if (values) {
+                            values[0] += x;
+                            values[1] += y;
+                        }
+                        else {
+                            result.push({ method: 'skew', values: [x, y] });
+                        }
+                    }
+                    else {
+                        const values: number[] = [angle];
+                        if (method === 'skew' && match[4] && match[5]) {
+                            angle = convertAngle(match[4], match[5]);
+                            if (!isNaN(angle)) {
+                                values.push(angle);
+                            }
+                        }
+                        result.push({ method, values});
+                    }
+                }
+            }
+        }
+        else if (method.startsWith('scale')) {
+            const match = TRANSFORM.SCALE.exec(segment);
+            if (match) {
+                if (accumulate) {
+                    let x = 1;
+                    let y = 1;
+                    let z = 1;
+                    switch (method) {
+                        case 'scale':
+                            x = parseFloat(match[2]);
+                            if (match[3]) {
+                                y = parseFloat(match[3]);
+                            }
+                            break;
+                        case 'scaleX':
+                            x = parseFloat(match[2]);
+                            break;
+                        case 'scaleY':
+                            y = parseFloat(match[2]);
+                            break;
+                        case 'scaleZ':
+                            z = parseFloat(match[2]);
+                            break;
+                    }
+                    const values = result.find(item => item.method === 'scale')?.values;
+                    if (values) {
+                        values[0] *= x;
+                        values[1] *= y;
+                        values[2] *= z;
+                    }
+                    else {
+                        result.push({ method: 'scale', values: [x, y, z] });
+                    }
+                }
+                else {
+                    const values: number[] = [parseFloat(match[2])];
+                    if (method === 'scale' && match[3]) {
+                        values.push(parseFloat(match[3]));
+                    }
+                    result.push({ method, values });
+                }
+            }
+        }
+        else if (method.startsWith('translate')) {
+            const match = TRANSFORM.TRANSLATE.exec(segment);
+            if (match) {
+                if (accumulate) {
+                    let x = 0;
+                    let y = 0;
+                    let z = 0;
+                    switch (method) {
+                        case 'translate':
+                            x = parseUnit(match[2], fontSize);
+                            if (match[3]) {
+                                y = parseUnit(match[3], fontSize);
+                            }
+                            break;
+                        case 'translateX':
+                            x = parseUnit(match[2], fontSize);
+                            break;
+                        case 'translateY':
+                            y = parseUnit(match[2], fontSize);
+                            break;
+                        case 'translateZ':
+                            z = parseUnit(match[2], fontSize);
+                            break;
+                    }
+                    const values = result.find(item => item.method === 'translate')?.values;
+                    if (values) {
+                        values[0] += x;
+                        values[1] += y;
+                        values[2] += z;
+                    }
+                    else {
+                        result.push({ method: 'translate', values: [x, y, z] });
+                    }
+                }
+                else {
+                    const values: number[] = [parseUnit(match[2], fontSize)];
+                    if (method === 'translate' && match[3]) {
+                        values.push(parseUnit(match[3], fontSize));
+                    }
+                    result.push({ method, values });
+                }
+            }
+        }
+        else if (method.startsWith('matrix') && !accumulate) {
+            const match = TRANSFORM.MATRIX.exec(segment);
+            if (match) {
+                result.push({
+                    method,
+                    values: [parseFloat(match[2]), parseFloat(match[3]), parseFloat(match[4]), parseFloat(match[5]), parseFloat(match[6]), parseFloat(match[7])]
+                });
+            }
+        }
+    }
+    return result;
+}
+
+export function parseAngle(value: string, fallback = NaN) {
     const match = CSS.ANGLE.exec(value);
     return match ? convertAngle(match[1], match[2]) : fallback;
+}
+
+export function convertAngle(value: string, unit = 'deg', fallback = NaN) {
+    let result = convertFloat(value);
+    if (isNaN(result)) {
+        return fallback;
+    }
+    switch (unit) {
+        case 'rad':
+            result *= 180 / Math.PI;
+            break;
+        case 'grad':
+            result /= 400;
+        case 'turn':
+            result *= 360;
+            break;
+    }
+    return result;
 }
 
 export function parseTime(value: string) {

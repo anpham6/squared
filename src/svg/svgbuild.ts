@@ -229,7 +229,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let rotateFixed = 0;
             let rotateInitial = 0;
             if (isAngle(rotation)) {
-                rotateFixed = parseAngle(rotation);
+                rotateFixed = parseAngle(rotation, 0);
             }
             else {
                 for (const item of SvgBuild.getPathCommands(value)) {
@@ -255,7 +255,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     }
                 }
                 if (rotation !== 'auto 0deg') {
-                    rotateInitial = parseAngle(rotation.split(' ').pop() as string);
+                    rotateInitial = parseAngle(rotation.split(' ').pop() as string, 0);
                 }
             }
             let rotating = false;

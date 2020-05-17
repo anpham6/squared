@@ -17,6 +17,11 @@ interface FontFaceData {
     srcLocal?: string;
 }
 
+interface TransformData {
+    method: string;
+    values: number[];
+}
+
 interface ContainerRangeOptions {
     start?: number;
     end?: number;

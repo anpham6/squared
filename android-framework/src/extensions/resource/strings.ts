@@ -29,7 +29,7 @@ function getFontVariationStyle(value: string) {
     if (match) {
         let angle: Undef<number>;
         if (match[1]) {
-            angle = parseAngle(match[1], NaN);
+            angle = parseAngle(match[1]);
         }
         return`'slnt' ${angle !== undefined && !isNaN(angle) ? clamp(angle, -90, 90) : '14'}`;
     }

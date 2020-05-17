@@ -5,7 +5,7 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 
 type T = android.base.View;
 
-const { BOX_MARGIN, BOX_PADDING, CSS_UNIT, formatPX, isLength, isPercent } = squared.lib.css;
+const { BOX_MARGIN, BOX_PADDING, CSS_UNIT, formatPX, getBackgroundPosition, isLength, isPercent, parseTransform } = squared.lib.css;
 const { createElement, getNamedItem, newBoxModel } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { actualTextRangeRect } = squared.lib.session;
@@ -2283,6 +2283,58 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         this.android('maxWidth') !== '' || this.android('maxHeight') !== '')
                     {
                         this.android('adjustViewBounds', 'true');
+                    }
+                }
+                if (this.has('transform')) {
+                    let pivoted = false;
+                    for (const transform of parseTransform(this.css('transform'), true, this.fontSize)) {
+                        const { method, values } = transform;
+                        const [x, y, z] = values;
+                        switch (method) {
+                            case 'rotate':
+                                if (x === y) {
+                                    this.android('rotation', x.toString());
+                                }
+                                else {
+                                    if (x !== 0) {
+                                        this.android('rotationX', x.toString());
+                                    }
+                                    if (y !== 0) {
+                                        this.android('rotationY', y.toString());
+                                    }
+                                }
+                                pivoted = true;
+                                break;
+                            case 'scale':
+                                if (x !== 1) {
+                                    this.android('scaleX', x.toString());
+                                }
+                                if (y !== 1) {
+                                    this.android('scaleY', y.toString());
+                                }
+                                pivoted = true;
+                                break;
+                            case 'translate':
+                                if (x !== 0 && !this.translateX(x)) {
+                                    this.android('translationX', formatPX(x));
+                                }
+                                if (y !== 0 && !this.translateY(y)) {
+                                    this.android('translationY', formatPX(y));
+                                }
+                                if (z !== 0) {
+                                    this.android('translationZ', formatPX(z));
+                                }
+                                break;
+                        }
+                    }
+                    if (pivoted && this.has('transformOrigin')) {
+                        const { left, top } = getBackgroundPosition(this.css('transformOrigin'), this.bounds, { fontSize: this.fontSize });
+                        if (left !== 0) {
+                            this.android('transformPivotX', formatPX(left));
+                        }
+                        if (top !== 0) {
+                            this.android('transformPivotY', formatPX(top));
+                        }
                     }
                 }
             }
