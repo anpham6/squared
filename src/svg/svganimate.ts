@@ -518,7 +518,11 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                 i = keySplinesBase.length - 1;
                 while (i >= 0) {
                     const points = replaceMap(keySplinesBase[i--].split(' '), (pt: string) => parseFloat(pt));
-                    keySplines.push(points.length === 4 ? invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1]) : KEYSPLINE_NAME.linear);
+                    keySplines.push(
+                        points.length === 4
+                            ? invertControlPoint(points[2]) + ' ' + invertControlPoint(points[3]) + ' ' + invertControlPoint(points[0]) + ' ' + invertControlPoint(points[1])
+                            : KEYSPLINE_NAME.linear
+                    );
                 }
                 this._keySplines = keySplines;
             }

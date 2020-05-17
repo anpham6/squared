@@ -1179,7 +1179,11 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                         const { keyTimes, synchronized: syncData } = item;
                                         const q = propertyNames.length;
                                         const r = keyTimes.length;
-                                        const keyName = syncData ? syncData.key + syncData.value : (index !== 0 || q > 1 ? JSON.stringify(options) : '');
+                                        const keyName = syncData
+                                            ? syncData.key + syncData.value
+                                            : index !== 0 || q > 1
+                                                ? JSON.stringify(options)
+                                                : '';
                                         for (let j = 0; j < q; ++j) {
                                             const propertyName = propertyNames[j];
                                             if (resetBefore && beforeValues) {

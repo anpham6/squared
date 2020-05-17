@@ -52,9 +52,12 @@ function checkMergableGravity(value: string, direction: Set<string>) {
 
 function setAutoMargin(this: T, autoMargin: AutoMargin) {
     if (autoMargin.horizontal && (!this.blockWidth || this.hasWidth || this.hasPX('maxWidth') || this.innerMostWrapped.has('width', { type: CSS_UNIT.PERCENT, not: '100%' }))) {
-        this.mergeGravity(
-            (this.blockWidth || !this.pageFlow) && !this.outerWrapper ? 'gravity' : 'layout_gravity',
-            autoMargin.leftRight ? 'center_horizontal' : (autoMargin.left ? 'right' : 'left')
+        const attr = (this.blockWidth || !this.pageFlow) && !this.outerWrapper ? 'gravity' : 'layout_gravity';
+        this.mergeGravity(attr, autoMargin.leftRight
+            ? 'center_horizontal'
+            : autoMargin.left
+                ? 'right'
+                : 'left'
         );
         return true;
     }

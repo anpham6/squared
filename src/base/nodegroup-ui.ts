@@ -187,7 +187,13 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get display() {
-        return super.display || (this.some(node => node.blockStatic) ? 'block' : (this.blockDimension ? 'inline-block' : 'inline'));
+        return super.display || (
+            this.some(node => node.blockStatic)
+                ? 'block'
+                : this.blockDimension
+                    ? 'inline-block'
+                    : 'inline'
+        );
     }
 
     get firstChild() {

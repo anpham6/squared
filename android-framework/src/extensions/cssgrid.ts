@@ -447,7 +447,10 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
             const justifySelf = node.has('justifySelf') ? node.css('justifySelf') : mainData.justifyItems;
             const layoutConstraint = parent.layoutConstraint;
             const applyLayout = (item: T, horizontal: boolean, dimension: string) => {
-                const [data, cellStart, cellSpan, minDimension] = horizontal ? [column, cellData.columnStart, cellData.columnSpan, 'minWidth'] : [row, cellData.rowStart, cellData.rowSpan, 'minHeight'];
+                const [data, cellStart, cellSpan, minDimension] =
+                    horizontal
+                        ? [column, cellData.columnStart, cellData.columnSpan, 'minWidth']
+                        : [row, cellData.rowStart, cellData.rowSpan, 'minHeight'];
                 const { unit, unitMin } = data;
                 let size = 0;
                 let minSize = 0;
@@ -1020,8 +1023,14 @@ export default class <T extends View> extends squared.base.extensions.CssGrid<T>
                                 rowSpan,
                                 columnSpan,
                                 android: {
-                                    [horizontal ? node.localizeString(STRING_ANDROID.MARGIN_RIGHT) : 'bottom']: gapSize > 0 && (k + l) < unitData.length ? '@dimen/' + Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize)) : '',
-                                    [horizontal ? 'bottom' : node.localizeString(STRING_ANDROID.MARGIN_RIGHT)]: opposingMargin > 0 ? '@dimen/' + Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin)) : '',
+                                    [horizontal ? node.localizeString(STRING_ANDROID.MARGIN_RIGHT) : 'bottom']:
+                                        gapSize > 0 && (k + l) < unitData.length
+                                            ? '@dimen/' + Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'column' : 'row'}_gap`, formatPX(gapSize))
+                                            : '',
+                                    [horizontal ? 'bottom' : node.localizeString(STRING_ANDROID.MARGIN_RIGHT)]:
+                                        opposingMargin > 0
+                                            ? '@dimen/' + Resource.insertStoredAsset('dimens', `${node.controlId}_cssgrid_${horizontal ? 'row' : 'column'}_gap`, formatPX(opposingMargin))
+                                            : '',
                                     layout_row,
                                     layout_column,
                                     layout_rowWeight,

@@ -967,7 +967,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                 }
                             }
                             else {
-                                const baseValue = length > 2 ? this.flattenStrokeDash(getDashArray(intervalMap, valueArray, delay - 1), getDashOffset(intervalMap, valueOffset, delay - 1), totalLength, pathLength).items : result;
+                                const baseValue = length > 2
+                                    ? this.flattenStrokeDash(getDashArray(intervalMap, valueArray, delay - 1), getDashOffset(intervalMap, valueOffset, delay - 1), totalLength, pathLength).items
+                                    : result;
                                 let j = 0;
                                 while (j < dashTotal) {
                                     const animate = new SvgAnimation(this.element);

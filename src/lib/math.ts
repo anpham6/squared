@@ -5,7 +5,11 @@ const REGEX_TRUNCATECACHE: ObjectMap<RegExp> = {};
 
 function convertDecimalNotation(value: number) {
     const match = REGEX_DECIMALNOTATION.exec(value.toString());
-    return match ? (parseInt(match[2]) > 0 ? Number.MAX_SAFE_INTEGER.toString() : '0') : value.toString();
+    return match ?
+        parseInt(match[2]) > 0
+            ? Number.MAX_SAFE_INTEGER.toString()
+            : '0'
+        : value.toString();
 }
 
 export function minArray(list: number[]): number {

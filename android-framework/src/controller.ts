@@ -352,6 +352,28 @@ function constraintAlignTop(parent: View, node: View) {
     return false;
 }
 
+function getVerticalLayout(layout: LayoutUI<View>) {
+    return isConstraintLayout(layout, true)
+        ? CONTAINER_NODE.CONSTRAINT
+        : layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition)
+            ? CONTAINER_NODE.RELATIVE
+            : CONTAINER_NODE.LINEAR;
+}
+
+function getVerticalAlignedLayout(layout: LayoutUI<View>) {
+    return isConstraintLayout(layout, true)
+        ? CONTAINER_NODE.CONSTRAINT
+        : layout.some(item => item.positionRelative)
+            ? CONTAINER_NODE.RELATIVE
+            : CONTAINER_NODE.LINEAR;
+}
+
+function getAnchorDirection(reverse = false) {
+    return reverse
+        ? { anchorStart: 'right', anchorEnd: 'left', chainStart: 'rightLeft', chainEnd: 'leftRight' }
+        : { anchorStart: 'left', anchorEnd: 'right', chainStart: 'leftRight', chainEnd: 'rightLeft' };
+}
+
 const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, data: RelativeLayoutData) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + (node.hasWidth ? node.actualWidth : 0)) < data.boxWidth);
 const isBaselineImage = (node: View) => node.imageOrSvgElement && node.baseline;
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
@@ -361,9 +383,6 @@ const sortTemplateStandard = (a: NodeXmlTemplate<View>, b: NodeXmlTemplate<View>
 const hasCleared = (layout: LayoutUI<View>, clearMap: Map<View, string>, ignoreFirst = true) => clearMap.size && layout.some((node, index) => (index > 0 || !ignoreFirst) && clearMap.has(node));
 const isMultiline = (node: View) => node.plainText && Resource.hasLineBreak(node, false, true) || node.preserveWhiteSpace && /^\s*\n+/.test(node.textContent);
 const getMaxHeight = (node: View) => Math.max(node.actualHeight, node.lineHeight);
-const getVerticalLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative || !item.pageFlow && item.autoPosition) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
-const getVerticalAlignedLayout = (layout: LayoutUI<View>) => isConstraintLayout(layout, true) ? CONTAINER_NODE.CONSTRAINT : (layout.some(item => item.positionRelative) ? CONTAINER_NODE.RELATIVE : CONTAINER_NODE.LINEAR);
-const getAnchorDirection = (reverse = false) => reverse ? { anchorStart: 'right', anchorEnd: 'left', chainStart: 'rightLeft', chainEnd: 'leftRight' } : { anchorStart: 'left', anchorEnd: 'right', chainStart: 'leftRight', chainEnd: 'rightLeft' };
 const isUnknownParent = (parent: View, value: number, length: number) => parent.containerType === value && parent.length === length && (parent.alignmentType === 0 || parent.hasAlign(NODE_ALIGNMENT.UNKNOWN));
 
 function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
@@ -584,7 +603,14 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
     }
     if (!node.pageFlow) {
         if (documentParent.outerWrapper && node.parent === documentParent.outerMostWrapper) {
-            location += documentParent[!opposing ? (horizontal ? 'paddingLeft' : 'paddingTop') : (horizontal ? 'paddingRight' : 'paddingBottom')];
+            location += documentParent[!opposing
+                ? horizontal
+                    ? 'paddingLeft'
+                    : 'paddingTop'
+                : horizontal
+                    ? 'paddingRight'
+                    : 'paddingBottom'
+            ];
         }
         else if (absoluteParent === node.documentParent) {
             let direction: number;
@@ -654,7 +680,12 @@ export function setHorizontalAlignment(node: View) {
     else {
         const autoMargin = node.autoMargin;
         if (autoMargin.horizontal) {
-            node.anchorParent('horizontal', autoMargin.left ? 1 : (autoMargin.leftRight ? 0.5 : 0));
+            node.anchorParent('horizontal', autoMargin.left
+                ? 1
+                : autoMargin.leftRight
+                    ? 0.5
+                    : 0
+            );
         }
         else {
             const rightAligned = node.rightAligned;
@@ -680,7 +711,11 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly = fa
         bias = 0;
     }
     else if (autoMargin.vertical) {
-        bias = autoMargin.top ? 1 : (autoMargin.topBottom ? 0.5 : 0);
+        bias = autoMargin.top
+            ? 1
+            : autoMargin.topBottom
+                ? 0.5
+                : 0;
     }
     else if (node.imageOrSvgElement || node.inlineVertical) {
         switch (node.verticalAlign) {
@@ -727,8 +762,10 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly = fa
 
 export default class Controller<T extends View> extends squared.base.ControllerUI<T> implements android.base.Controller<T> {
     public static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor = true) {
-        const [orientation, dimension, posA, posB, marginA, marginB, paddingA, paddingB] = horizontal ? ['horizontal', 'width', 'left', 'right', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.PADDING_LEFT, BOX_STANDARD.PADDING_RIGHT]
-                                                                                                      : ['vertical', 'height', 'top', 'bottom', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_BOTTOM];
+        const [orientation, dimension, posA, posB, marginA, marginB, paddingA, paddingB] =
+            horizontal
+                ? ['horizontal', 'width', 'left', 'right', BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, BOX_STANDARD.PADDING_LEFT, BOX_STANDARD.PADDING_RIGHT]
+                : ['vertical', 'height', 'top', 'bottom', BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, BOX_STANDARD.PADDING_TOP, BOX_STANDARD.PADDING_BOTTOM];
         const autoMargin = node.autoMargin;
         const hasDimension = node.hasPX(dimension);
         const result: Partial<BoxRect> = {};
@@ -2886,7 +2923,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
             else if (length === 1) {
-                bias = item.centerAligned ? 0.5 : (item.rightAligned ? 1 :0);
+                bias = item.centerAligned
+                    ? 0.5
+                    : item.rightAligned
+                        ? 1
+                        : 0;
                 if (item.blockStatic || bias === 0.5) {
                     item.anchorParent('horizontal', bias);
                 }

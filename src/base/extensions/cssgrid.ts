@@ -226,7 +226,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T) {
         const mainData = CssGrid.createDataAttribute(node.cssAsObject('alignItems', 'alignContent', 'justifyItems', 'justifyContent', 'gridAutoFlow') as GridAlignment);
         const { column, dense, row, rowDirection: horizontal } = mainData;
-        const [rowA, colA, rowB, colB] = horizontal ? [0, 1, 2, 3] : [1, 0, 3, 2];
+        const [rowA, colA, rowB, colB] =
+            horizontal
+                ? [0, 1, 2, 3]
+                : [1, 0, 3, 2];
         const rowData: Undef<T[]>[][] = [];
         const openCells: number[][] = [];
         const layout: GridLayout[] = [];
@@ -350,7 +353,11 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             break;
                         case 2:
                         case 3:
-                            (index === 2 ? row : column).auto.push(isLength(command) ? formatPX(node.parseUnit(command, index !== 2 ? 'width' : 'height')) : command);
+                            (index === 2 ? row : column).auto.push(
+                                isLength(command)
+                                    ? formatPX(node.parseUnit(command, index !== 2 ? 'width' : 'height'))
+                                    : command
+                            );
                             break;
                     }
                 }
@@ -385,7 +392,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         let autoWidth = false;
         let autoHeight = false;
         if (!node.has('gridTemplateAreas') && node.every(item => item.css('gridRowStart') === 'auto' && item.css('gridColumnStart') === 'auto')) {
-            const [directionA, directionB, indexA, indexB, indexC] = horizontal ? ['top', 'bottom', 2, 1, 3] : ['left', 'right', 3, 0, 2];
+            const [directionA, directionB, indexA, indexB, indexC] =
+                horizontal
+                    ? ['top', 'bottom', 2, 1, 3]
+                    : ['left', 'right', 3, 0, 2];
             let rowIndex = 0;
             let columnIndex = 0;
             let columnMax = 0;
@@ -708,13 +718,19 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         let ITERATION: number;
         {
-            const [data, outerCoord] = horizontal ? [column, node.box.top] : [row, node.box.left];
+            const [data, outerCoord] =
+                horizontal
+                    ? [column, node.box.top]
+                    : [row, node.box.left];
             let unit = data.unit;
             let length = 1;
             let outerCount = 0;
             for (const item of layout) {
                 if (item) {
-                    const [totalSpan, start, end] = horizontal ? [item.columnSpan, 1, 3] : [item.rowSpan, 0, 2];
+                    const [totalSpan, start, end] =
+                        horizontal
+                            ? [item.columnSpan, 1, 3]
+                            : [item.rowSpan, 0, 2];
                     const placement = item.placement;
                     if (placement.some(value => value > 0)) {
                         length = Math.max(length, totalSpan, placement[start], placement[end] - 1);
@@ -790,7 +806,10 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         node.each((item: T, index) => {
             const { placement, rowSpan, columnSpan } = layout[index];
-            const [ROW_SPAN, COLUMN_SPAN] = horizontal ? [rowSpan, columnSpan] : [columnSpan, rowSpan];
+            const [ROW_SPAN, COLUMN_SPAN] =
+                horizontal
+                    ? [rowSpan, columnSpan]
+                    : [columnSpan, rowSpan];
             while (placement[0] === 0 || placement[1] === 0) {
                 const PLACEMENT = placement.slice(0);
                 if (PLACEMENT[rowA] === 0) {

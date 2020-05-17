@@ -93,7 +93,12 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     else {
                         previousRow = row[0];
                     }
-                    item.anchorParent('horizontal', item.rightAligned ? 1 : (item.centerAligned ? 0.5 : 0));
+                    item.anchorParent('horizontal', item.rightAligned
+                        ? 1
+                        : item.centerAligned
+                            ? 0.5
+                            : 0
+                    );
                     item.anchored = true;
                     item.positioned = true;
                 }

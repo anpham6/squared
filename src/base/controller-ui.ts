@@ -331,7 +331,9 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     }
 
     public hasAppendProcessing(id?: number) {
-        return id === undefined ? this._requireFormat : (id in this._beforeOutside || id in this._beforeInside || id in this._afterInside || id in this._afterOutside);
+        return id === undefined
+            ? this._requireFormat
+            : id in this._beforeOutside || id in this._beforeInside || id in this._afterInside || id in this._afterOutside;
     }
 
     public includeElement(element: Element) {
@@ -596,7 +598,15 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     const previous = node.depth < 0 ? depth + node.depth : depth;
                     const beforeInside = this.getBeforeInsideTemplate(id, next);
                     const afterInside = this.getAfterInsideTemplate(id, next);
-                    let template = indent + `<${controlName + (depth === 0 ? '{#0}' : '') + (showAttributes ? (attributes ? pushIndent(attributes, next) : node.extractAttributes(next)) : '')}`;
+                    let template = indent + '<' +
+                        controlName +
+                        (depth === 0 ? '{#0}' : '') +
+                        (showAttributes
+                            ? attributes
+                                ? pushIndent(attributes, next)
+                                : node.extractAttributes(next)
+                            : ''
+                        );
                     if (renderTemplates || beforeInside !== '' || afterInside !== '') {
                         template += '>\n' +
                                     beforeInside +

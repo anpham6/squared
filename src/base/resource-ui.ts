@@ -301,7 +301,13 @@ function getAngle(value: string, fallback = 0) {
     return fallback;
 }
 
-const getGradientPosition = (value: string) => isString(value) ? (value.includes('at ') ? /(.+?)?\s*at (.+?)\s*$/.exec(value) : [value, value] as RegExpExecArray) : null;
+function getGradientPosition(value: string) {
+    return isString(value)
+        ? value.includes('at ')
+            ? /(.+?)?\s*at (.+?)\s*$/.exec(value)
+            : [value, value] as RegExpExecArray
+        : null;
+}
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
     public static STORED: ResourceStoredMap = {

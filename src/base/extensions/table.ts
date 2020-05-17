@@ -112,7 +112,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         inheritStyles(tfoot);
         const hasWidth = node.hasWidth;
         const borderCollapse = mainData.borderCollapse;
-        const [horizontal, vertical] = borderCollapse ? [0, 0] : replaceMap(node.css('borderSpacing').split(' '), (value: string, index) => index === 0 ? node.parseWidth(value) : node.parseHeight(value));
+        const [horizontal, vertical] =
+            borderCollapse
+                ? [0, 0]
+                : replaceMap(node.css('borderSpacing').split(' '), (value: string, index) => index === 0 ? node.parseWidth(value) : node.parseHeight(value));
         const spacingWidth = horizontal > 1 ? Math.round(horizontal / 2) : horizontal;
         const spacingHeight = vertical > 1 ? Math.round(vertical / 2) : vertical;
         const colgroup = node.element!.querySelector('COLGROUP');

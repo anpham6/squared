@@ -277,7 +277,9 @@ function insertDoubleBorder(items: StandardMap[], border: BorderAttribute, top: 
 
 function checkBackgroundPosition(value: string, adjacent: string, fallback: string) {
     if (!value.includes(' ') && adjacent.includes(' ')) {
-        return /^[a-z]+$/.test(value) ? (value === 'initial' ? fallback : value) + ' 0px' : fallback + ' ' + value;
+        return /^[a-z]+$/.test(value)
+            ? (value === 'initial' ? fallback : value) + ' 0px'
+            : fallback + ' ' + value;
     }
     else if (value === 'initial') {
         return '0px';

@@ -156,9 +156,16 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: s
     return i % 2 === 0 ? outside : inside;
 }
 
+function getRelativeOffset(node: NodeUI, fromRight: boolean) {
+    return node.positionRelative
+        ? node.hasPX('left')
+            ? node.left * (fromRight ? 1 : -1)
+            : node.right * (fromRight ? -1 : 1)
+        : 0;
+}
+
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI): boolean => node.textElement && (node.blockStatic || node.multiline);
-const getRelativeOffset = (node: NodeUI, fromRight: boolean) => node.positionRelative ? (node.hasPX('left') ? node.left * (fromRight ? 1 : -1) : node.right * (fromRight ? -1 : 1)) : 0;
 const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => isString(item.use) }).length > 0;
 const setMapDepth = (map: LayoutMap, depth: number, node: NodeUI) => map.get(depth)?.set(node.id, node) || map.set(depth, new Map<number, NodeUI>([[node.id, node]]));
 const getMapIndex = (value: number) => (value * -1) - 2;
@@ -351,7 +358,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public saveDocument(filename: string, content: string, pathname?: string, index?: number) {
         if (isString(content)) {
             const layout: LayoutAsset = {
-                pathname: pathname ? trimString(pathname.replace(/\\/g, '/'), '/') : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
+                pathname: pathname
+                    ? trimString(pathname.replace(/\\/g, '/'), '/')
+                    : appendSeparator(this.userSettings.outputDirectory, this._controllerSettings.layout.pathName),
                 filename,
                 content,
                 index
@@ -1022,8 +1031,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (!nodeY.rendered && nodeY.hasSection(APP_SECTION.EXTENSION)) {
-                        const descendant = extensionMap.get(nodeY.id) as ExtensionUI<T>[];
-                        let combined = descendant ? (renderExtension ? renderExtension.concat(descendant) : descendant) : renderExtension;
+                        const descendant = extensionMap.get(nodeY.id);
+                        let combined = descendant
+                            ? renderExtension?.concat(descendant as ExtensionUI<T>[]) || descendant
+                            : renderExtension;
                         let next = false;
                         if (combined) {
                             const q = combined.length;
@@ -1079,7 +1090,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                 ext.subscribers.add(nodeY);
                                             }
                                             if (result.remove) {
-                                                const index = extensions.indexOf(ext);
+                                                const index = extensions.indexOf(ext as ExtensionUI<T>);
                                                 if (index !== -1) {
                                                     extensions = extensions.slice(0);
                                                     extensions.splice(index, 1);
@@ -1608,7 +1619,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                                 else if (match[2] || match[5]) {
                                     const counterType = match[2] === 'counter';
-                                    const [counterName, styleName] = counterType ? [match[3], match[4] || 'decimal'] : [match[6], match[8] || 'decimal'];
+                                    const [counterName, styleName] =
+                                        counterType
+                                            ? [match[3], match[4] || 'decimal']
+                                            : [match[6], match[8] || 'decimal'];
                                     const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
                                     const subcounter: number[] = [];
                                     let current: Null<HTMLElement> = element;
@@ -1816,7 +1830,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (marginLeft !== -Infinity) {
                     const offset = floatPosition - parent.box.left - marginLeft - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginLeft : 0));
                     if (offset > 0 && offset < boxWidth) {
-                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
+                        target.modifyBox(BOX_STANDARD.PADDING_LEFT, offset + (
+                            !spacing && target.find(child => child.multiline, { cascade: true })
+                                ? Math.max(marginLeft, this._controllerSettings.deviations.textMarginBoundarySize)
+                                : 0
+                            )
+                        );
                     }
                 }
             }
@@ -1846,7 +1865,12 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 if (marginRight !== -Infinity) {
                     const offset = parent.box.right - floatPosition - marginRight - maxArray(target.map((child: T) => !paddingNodes.includes(child) ? child.marginRight : 0));
                     if (offset > 0 && offset < boxWidth) {
-                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (!spacing && target.find(child => child.multiline, { cascade: true }) ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize) : 0));
+                        target.modifyBox(BOX_STANDARD.PADDING_RIGHT, offset + (
+                            !spacing && target.find(child => child.multiline, { cascade: true })
+                                ? Math.max(marginRight, this._controllerSettings.deviations.textMarginBoundarySize)
+                                : 0
+                            )
+                        );
                     }
                 }
             }

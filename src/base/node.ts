@@ -491,7 +491,9 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                         if (match[1]) {
                             children = children.slice(0).reverse();
                         }
-                        const i = (match[2] === 'child' ? children.indexOf(child) : children.filter(item => item.tagName === tagName).indexOf(child)) + 1;
+                        const i = match[2] === 'child'
+                            ? children.indexOf(child) + 1
+                            : children.filter(item => item.tagName === tagName).indexOf(child) + 1;
                         if (i > 0) {
                             if (isNumber(placement)) {
                                 if (parseInt(placement) !== i) {
@@ -2201,7 +2203,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get contentBoxWidth() {
         let result = this._cached.contentBoxWidth;
         if (result === undefined) {
-            result = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth;
+            result = this.tableElement && this.css('borderCollapse') === 'collapse'
+                ? 0
+                : this.borderLeftWidth + this.paddingLeft + this.paddingRight + this.borderRightWidth;
             this._cached.contentBoxWidth = result;
         }
         return result;
@@ -2210,7 +2214,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get contentBoxHeight() {
         let result = this._cached.contentBoxHeight;
         if (result === undefined) {
-            result = this.tableElement && this.css('borderCollapse') === 'collapse' ? 0 : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth;
+            result = this.tableElement && this.css('borderCollapse') === 'collapse'
+                ? 0
+                : this.borderTopWidth + this.paddingTop + this.paddingBottom + this.borderBottomWidth;
             this._cached.contentBoxHeight = result;
         }
         return result;

@@ -48,7 +48,10 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             node.cssFinally('align-items');
         }
         if (mainData.wrap) {
-            const [align, sort, size, method] = mainData.row ? ['top', 'left', 'right', 'intersectY'] : ['left', 'top', 'bottom', 'intersectX'];
+            const [align, sort, size, method] =
+                mainData.row
+                    ? ['top', 'left', 'right', 'intersectY']
+                    : ['left', 'top', 'bottom', 'intersectX'];
             children.sort((a, b) => {
                 const linearA = a.linear,  linearB = b.linear;
                 if (!a[method](b.bounds, 'bounds')) {
@@ -122,7 +125,10 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         }
         else {
             if (children.some(item => item.flexbox.order !== 0)) {
-                const [c, d] = mainData.reverse ? [-1, 1] : [1, -1];
+                const [c, d] =
+                    mainData.reverse
+                        ? [-1, 1]
+                        : [1, -1];
                 children.sort((a, b) => {
                     const orderA = a.flexbox.order, orderB = b.flexbox.order;
                     if (orderA === orderB) {

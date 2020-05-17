@@ -383,7 +383,10 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     return;
                 }
                 const { orientation, orientationInverse, WHL, HWL, LT, TL, RB, BR, LRTB, RLBT } = horizontal ? MAP_HORIZONAL : MAP_VERTICAL;
-                const [dimension, dimensionInverse] = horizontal ? [node.hasHeight, node.hasWidth] : [node.hasWidth, node.hasHeight];
+                const [dimension, dimensionInverse] =
+                    horizontal
+                        ? [node.hasHeight, node.hasWidth]
+                        : [node.hasWidth, node.hasHeight];
                 const orientationWeight = `layout_constraint${capitalize(orientation)}_weight`;
                 for (let i = 0; i < length; ++i) {
                     const seg = partition[i];
@@ -473,7 +476,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             if (horizontal) {
                                 if (autoMargin.horizontal) {
                                     if (innerWrapped) {
-                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.leftRight ? 'center_horizontal' : chain.localizeString(autoMargin.left ? 'right' : 'left'));
+                                        innerWrapped.mergeGravity('layout_gravity', autoMargin.leftRight
+                                            ? 'center_horizontal'
+                                            : autoMargin.left
+                                                ? chain.localizeString('right')
+                                                : chain.localizeString('left')
+                                        );
                                         if (growAvailable > 0) {
                                             chain.flexbox.basis = '0%';
                                             layoutWeight.push(chain);
@@ -493,7 +501,12 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             }
                             else if (autoMargin.vertical) {
                                 if (innerWrapped) {
-                                    innerWrapped.mergeGravity('layout_gravity', autoMargin.topBottom ? 'center_vertical' : (chain.localizeString(autoMargin.top ? 'bottom' : 'top')));
+                                    innerWrapped.mergeGravity('layout_gravity', autoMargin.topBottom
+                                        ? 'center_vertical'
+                                        : autoMargin.top
+                                            ? 'bottom'
+                                            : 'top'
+                                    );
                                     if (growAvailable > 0) {
                                         chain.flexbox.basis = '0%';
                                         layoutWeight.push(chain);
@@ -637,7 +650,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                                     }
                                                 }
                                                 else if ((chain.naturalElement ? (chain.data(FLEXBOX, 'boundsData') as BoxRectDimension || chain.bounds)[HWL] : Infinity) < maxSize) {
-                                                    setLayoutWeightOpposing(chain, chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column') ? 'match_parent' : '0px', horizontal);
+                                                    setLayoutWeightOpposing(chain,
+                                                        chain.flexElement && chain.css('flexDirection').startsWith(horizontal ? 'row' : 'column')
+                                                            ? 'match_parent'
+                                                            : '0px'
+                                                    , horizontal);
                                                     if (innerWrapped && !innerWrapped.autoMargin[orientation]) {
                                                         setLayoutWeightOpposing(innerWrapped as T, 'match_parent', horizontal);
                                                     }
