@@ -922,10 +922,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         }
         if (!this._preferInitial) {
             let parent: Undef<T>;
-            if (attrs.some(value => CSS_PROPERTIES[value].layout === true)) {
+            if (attrs.some(value => CSS_PROPERTIES[value].layout === 1)) {
                 parent = this.pageFlow && this.ascend({ condition: item => item.documentRoot })[0] || this;
             }
-            else if (attrs.some(value => CSS_PROPERTIES[value].contain === true)) {
+            else if (attrs.some(value => CSS_PROPERTIES[value].contain === 1)) {
                 parent = this;
             }
             if (parent) {

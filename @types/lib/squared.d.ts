@@ -238,8 +238,8 @@ declare module "lib" {
             PROTOCOL: RegExp;
         };
         const ESCAPE: {
-            ENTITY: RegExp;
-            NONENTITY: RegExp;
+            ENTITY_G: RegExp;
+            NONENTITY_G: RegExp;
         };
     }
 

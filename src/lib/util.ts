@@ -365,33 +365,35 @@ export function capitalize(value: string, upper?: boolean) {
 }
 
 export function capitalizeString(value: string) {
-    XML.BREAKWORD_G.lastIndex = 0;
-    const result = value.split('');
+    let result: Undef<string[]>;
+    const pattern = /\b([a-z].*?)\b/g;
     let match: Null<RegExpMatchArray>;
-    while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
-        const index = match.index;
-        if (index !== undefined) {
-            result[index] = match[1].charAt(0).toUpperCase();
+    while ((match = pattern.exec(value)) !== null) {
+        if (result === undefined) {
+            result = value.split('');
         }
+        result[match.index!] = match[1].charAt(0).toUpperCase();
     }
-    return result.join('');
+    return result?.join('') || value;
 }
 
 export function lowerCaseString(value: string) {
-    XML.BREAKWORD_G.lastIndex = 0;
-    let result = value;
+    XML.ENTITY_G.lastIndex = 0;
+    const entities: string[] = [];
     let match: Null<RegExpMatchArray>;
-    while ((match = XML.BREAKWORD_G.exec(value)) !== null) {
-        const index = match.index;
-        if (index !== undefined) {
-            const word = match[1];
-            if (!XML.ENTITY.test(word)) {
-                const start = index + word.length;
-                result = (index > 0 ? result.substring(0, match.index) : '') + value.substring(index, start).toLowerCase() + result.substring(start);
-            }
-        }
+    while ((match = XML.ENTITY_G.exec(value)) !== null) {
+        entities.push(match[0]);
     }
-    return result;
+    if (entities.length) {
+        let result = '';
+        const segments = value.split(XML.ENTITY_G);
+        const length = segments.length;
+        for (let i = 0; i < length; ++i) {
+            result += segments[i].toLowerCase() + (entities[i] || '');
+        }
+        return result;
+    }
+    return value.toLowerCase();
 }
 
 export function spliceString(value: string, index: number, length: number) {

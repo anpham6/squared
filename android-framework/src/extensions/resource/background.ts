@@ -179,20 +179,19 @@ function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = fal
 
 function getBorderRadius(radius?: string[]): Undef<StringMap> {
     if (radius) {
-        const length = radius.length;
-        if (length === 1) {
-            return { radius: radius[0] };
-        }
-        else if (length === 8) {
-            const corners = new Array(4);
-            let i = 0, j = 0;
-            while (i < 8) {
-                corners[j++] = formatPX((parseFloat(radius[i++]) + parseFloat(radius[i++])) / 2);
+        switch (radius.length) {
+            case 1:
+                return { radius: radius[0] };
+            case 8: {
+                const corners = new Array(4);
+                let i = 0, j = 0;
+                while (i < 8) {
+                    corners[j++] = formatPX((parseFloat(radius[i++]) + parseFloat(radius[i++])) / 2);
+                }
+                return getCornerRadius(corners);
             }
-            return getCornerRadius(corners);
-        }
-        else {
-            return getCornerRadius(radius);
+            default:
+                return getCornerRadius(radius);
         }
     }
     return undefined;

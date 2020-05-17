@@ -294,18 +294,20 @@ const trimSelector = (value: string) => REGEX_SELECTORALL.test(value) ? '*' : va
 
 export const CSS_PROPERTIES = {
     "alignContent": {
-        "contain": true,
+        "contain": 1,
         "value": "normal"
     },
     "alignItems": {
-        "contain": true,
+        "contain": 1,
         "value": "normal"
     },
     "alignSelf": {
-        "contain": true,
+        "contain": 1,
         "value": "auto"
     },
     "animation": {
+        "calc": 1,
+        "multiple": 1,
         "value": [
             "animationDuration",
             "animationTimingFunction",
@@ -318,18 +320,21 @@ export const CSS_PROPERTIES = {
         ]
     },
     "animationDelay": {
+        "calc": 1,
         "value": "0s"
     },
     "animationDirection": {
         "value": "normal"
     },
     "animationDuration": {
+        "calc": 1,
         "value": "0s"
     },
     "animationFillMode": {
         "value": "none"
     },
     "animationIterationCount": {
+        "calc": 1,
         "value": "1"
     },
     "animationName": {
@@ -345,6 +350,8 @@ export const CSS_PROPERTIES = {
         "value": "visible"
     },
     "background": {
+        "calc": 1,
+        "multiple": 1,
         "value": [
             "backgroundImage",
             "backgroundPositionX",
@@ -364,34 +371,41 @@ export const CSS_PROPERTIES = {
         "value": "border-box"
     },
     "backgroundColor": {
+        "calc": 1,
         "value": "transparent"
     },
     "backgroundImage": {
+        "calc": 1,
         "value": "none"
     },
     "backgroundOrigin": {
         "value": "padding-box"
     },
     "backgroundPosition": {
+        "calc": 1,
         "value": [
             "backgroundPositionX",
             "backgroundPositionY"
         ]
     },
     "backgroundPositionX": {
+        "calc": 1,
         "value": "0%"
     },
     "backgroundPositionY": {
+        "calc": 1,
         "value": "0%"
     },
     "backgroundRepeat": {
         "value": "repeat"
     },
     "backgroundSize": {
+        "calc": 1,
         "value": "auto auto"
     },
     "border": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "borderTopStyle",
             "borderTopWidth",
@@ -408,6 +422,7 @@ export const CSS_PROPERTIES = {
         ]
     },
     "borderBottom": {
+        "calc": 1,
         "value": [
             "borderBottomStyle",
             "borderBottomWidth",
@@ -415,26 +430,31 @@ export const CSS_PROPERTIES = {
         ]
     },
     "borderBottomColor": {
-        "value": "*"
+        "calc": 1,
+        "value": "__rgb__"
     },
     "borderBottomLeftRadius": {
+        "calc": 1,
         "value": "0"
     },
     "borderBottomRightRadius": {
+        "calc": 1,
         "value": "0"
     },
     "borderBottomStyle": {
         "value": "none"
     },
     "borderBottomWidth": {
-        "layout": true,
-        "value": "medium"
+        "calc": 1,
+        "layout": 1,
+        "value": "0"
     },
     "borderCollapse": {
-        "layout": true,
+        "layout": 1,
         "value": "separate"
     },
     "borderColor": {
+        "calc": 1,
         "value": [
             "borderTopColor",
             "borderRightColor",
@@ -443,6 +463,7 @@ export const CSS_PROPERTIES = {
         ]
     },
     "borderImage": {
+        "calc": 1,
         "value": [
             "borderImageSource",
             "borderImageSlice",
@@ -452,21 +473,26 @@ export const CSS_PROPERTIES = {
         ]
     },
     "borderImageOutset": {
+        "calc": 1,
         "value": "0"
     },
     "borderImageRepeat": {
         "value": "stretch"
     },
     "borderImageSlice": {
+        "calc": 1,
         "value": "100%"
     },
     "borderImageSource": {
+        "calc": 1,
         "value": "none"
     },
     "borderImageWidth": {
+        "calc": 1,
         "value": "1"
     },
     "borderLeft": {
+        "calc": 1,
         "value": [
             "borderLeftStyle",
             "borderLeftWidth",
@@ -474,16 +500,19 @@ export const CSS_PROPERTIES = {
         ]
     },
     "borderLeftColor": {
-        "value": "*"
+        "calc": 1,
+        "value": "__rgb__"
     },
     "borderLeftStyle": {
         "value": "none"
     },
     "borderLeftWidth": {
-        "layout": true,
-        "value": "medium"
+        "calc": 1,
+        "layout": 1,
+        "value": "0"
     },
     "borderRadius": {
+        "calc": 1,
         "value": [
             "borderTopLeftRadius",
             "borderTopRightRadius",
@@ -492,6 +521,7 @@ export const CSS_PROPERTIES = {
         ]
     },
     "borderRight": {
+        "calc": 1,
         "value": [
             "borderRightStyle",
             "borderRightWidth",
@@ -499,16 +529,19 @@ export const CSS_PROPERTIES = {
         ]
     },
     "borderRightColor": {
-        "value": "*"
+        "calc": 1,
+        "value": "__rgb__"
     },
     "borderRightStyle": {
         "value": "none"
     },
     "borderRightWidth": {
-        "layout": true,
-        "value": "medium"
+        "calc": 1,
+        "layout": 1,
+        "value": "0"
     },
     "borderSpacing": {
+        "calc": 1,
         "value": "0"
     },
     "borderStyle": {
@@ -520,6 +553,7 @@ export const CSS_PROPERTIES = {
         ]
     },
     "borderTop": {
+        "calc": 1,
         "value": [
             "borderTopStyle",
             "borderTopWidth",
@@ -527,23 +561,27 @@ export const CSS_PROPERTIES = {
         ]
     },
     "borderTopColor": {
-        "value": "*"
+        "value": "__rgb__"
     },
     "borderTopLeftRadius": {
+        "calc": 1,
         "value": "0"
     },
     "borderTopRightRadius": {
+        "calc": 1,
         "value": "0"
     },
     "borderTopStyle": {
         "value": "none"
     },
     "borderTopWidth": {
-        "layout": true,
-        "value": "medium"
+        "calc": 1,
+        "layout": 1,
+        "value": "0"
     },
     "borderWidth": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "borderTopWidth",
             "borderRightWidth",
@@ -552,37 +590,43 @@ export const CSS_PROPERTIES = {
         ]
     },
     "bottom": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "boxShadow": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "none"
     },
     "boxSizing": {
-        "layout": true,
+        "layout": 1,
         "value": "content-box"
     },
     "captionSide": {
         "value": "top"
     },
     "clear": {
-        "layout": true,
+        "layout": 1,
         "value": "none"
     },
     "color": {
-        "value": "*"
+        "calc": 1,
+        "value": "__rgb__"
     },
     "columnCount": {
+        "calc": 1,
         "value": "auto"
     },
     "columnFill": {
         "value": "balance"
     },
     "columnGap": {
+        "calc": 1,
         "value": "normal"
     },
     "columnRule": {
+        "calc": 1,
         "value": [
             "columRuleWidth",
             "columnRuleStyle",
@@ -590,21 +634,25 @@ export const CSS_PROPERTIES = {
         ]
     },
     "columnRuleColor": {
-        "value": "*"
+        "calc": 1,
+        "value": "__rgb__"
     },
     "columnRuleStyle": {
         "value": "none"
     },
     "columnRuleWidth": {
-        "value": "medium"
+        "calc": 1,
+        "value": "0"
     },
     "columnSpan": {
         "value": "none"
     },
     "columnWidth": {
+        "calc": 1,
         "value": "auto"
     },
     "columns": {
+        "calc": 1,
         "value": [
             "columnCount",
             "columnWidth"
@@ -614,26 +662,29 @@ export const CSS_PROPERTIES = {
         "value": "normal"
     },
     "counterIncrement": {
+        "calc": 1,
         "value": "none"
     },
     "counterReset": {
+        "calc": 1,
         "value": "none"
     },
     "cursor": {
         "value": "auto"
     },
     "direction": {
-        "layout": true,
+        "layout": 1,
         "value": "ltr"
     },
     "display": {
-        "layout": true,
+        "layout": 1,
         "value": "inline"
     },
     "emptyCells": {
         "value": "show"
     },
     "flex": {
+        "calc": 1,
         "value": [
             "flexGrow",
             "flexShrink",
@@ -641,38 +692,42 @@ export const CSS_PROPERTIES = {
         ]
     },
     "flexBasis": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "flexDirection": {
-        "layout": true,
+        "layout": 1,
         "value": "row"
     },
     "flexFlow": {
-        "layout": true,
+        "layout": 1,
         "value": [
             "flexDirection",
             "flexWrap"
         ]
     },
     "flexGrow": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "flexShrink": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "1"
     },
     "flexWrap": {
-        "layout": true,
+        "layout": 1,
         "value": "nowrap"
     },
     "float": {
-        "layout": true,
+        "layout": 1,
         "value": "none"
     },
     "font": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "fontStyle",
             "fontVariant",
@@ -684,35 +739,42 @@ export const CSS_PROPERTIES = {
         ]
     },
     "fontFamily": {
-        "layout": true,
-        "value": "*"
+        "layout": 1,
+        "value": "__custom__"
     },
     "fontFeatureSettings": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "fontKerning": {
-        "layout": true,
+        "layout": 1,
         "value": "auto"
     },
     "fontSize": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "medium"
     },
     "fontSizeAdjust": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "none"
     },
     "fontStretch": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "fontStyle": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "fontVariant": {
-        "layout": true,
+        "calc": 1,
+        "multiple": 1,
+        "layout": 1,
         "value": [
             "fontVariantCaps",
             "fontVariantLigatures",
@@ -721,38 +783,45 @@ export const CSS_PROPERTIES = {
         ]
     },
     "fontVariantCaps": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "fontVariantEastAsian": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "fontVariantLigatures": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "fontVariantNumeric": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "fontVariationSettings": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "fontWeight": {
-        "layout": true,
+        "layout": 1,
         "value": "normal"
     },
     "gap": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "rowGap",
             "columnGap"
         ]
     },
     "grid": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "gridTemplateRows",
             "gridAutoColumns",
@@ -765,7 +834,8 @@ export const CSS_PROPERTIES = {
         ]
     },
     "gridArea": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "gridRowStart",
             "gridColumnStart",
@@ -774,64 +844,76 @@ export const CSS_PROPERTIES = {
         ]
     },
     "gridAutoColumns": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "gridAutoFlow": {
-        "layout": true,
+        "layout": 1,
         "value": "row"
     },
     "gridAutoRows": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "gridColumn": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "gridColumnStart",
             "gridColumnEnd"
         ]
     },
     "gridColumnEnd": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "gridColumnGap": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "gridColumnStart": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "gridGap": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "gridRowGap",
             "gridColumnGap"
         ]
     },
     "gridRow": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "gridRowStart",
             "gridRowEnd"
         ]
     },
     "gridRowEnd": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "gridRowGap": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "gridRowStart": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "gridTemplate": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "gridTemplateRows",
             "gridTemplateColumns",
@@ -839,47 +921,53 @@ export const CSS_PROPERTIES = {
         ]
     },
     "gridTemplateAreas": {
-        "layout": true,
+        "layout": 1,
         "value": "none"
     },
     "gridTemplateColumns": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "none"
     },
     "gridTemplateRows": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "none"
     },
     "height": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "justifyContent": {
-        "contain": true,
+        "contain": 1,
         "value": "normal"
     },
     "justifyIems": {
-        "contain": true,
+        "contain": 1,
         "value": "normal"
     },
     "justifySelf": {
-        "contain": true,
+        "contain": 1,
         "value": "auto"
     },
     "left": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "letterSpacing": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "lineHeight": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "listStyle": {
-        "layout": true,
+        "layout": 1,
         "value": [
             "listStyleType",
             "listStylePosition",
@@ -887,19 +975,20 @@ export const CSS_PROPERTIES = {
         ]
     },
     "listStyleImage": {
-        "layout": true,
+        "layout": 1,
         "value": "normal"
     },
     "listStylePosition": {
-        "layout": true,
+        "layout": 1,
         "value": "outside"
     },
     "listStyleType": {
-        "layout": true,
+        "layout": 1,
         "value": "disc"
     },
     "margin": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "marginTop",
             "marginRight",
@@ -908,38 +997,47 @@ export const CSS_PROPERTIES = {
         ]
     },
     "marginBottom": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "marginLeft": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "marginRight": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "marginTop": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "maxHeight": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "none"
     },
     "maxWidth": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "none"
     },
     "minHeight": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "minWidth": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "offset": {
+        "calc": 1,
         "value": [
             "offsetPath",
             "offsetDistance",
@@ -948,25 +1046,31 @@ export const CSS_PROPERTIES = {
         ]
     },
     "offsetPath": {
-        "value": ""
+        "value": "none"
     },
     "offsetDistance": {
-        "value": ""
+        "calc": 1,
+        "value": "0"
     },
     "offsetRotate": {
-        "value": ""
+        "calc": 1,
+        "value": "auto 0deg"
     },
     "offsetAnchor": {
-        "value": ""
+        "calc": 1,
+        "value": "auto"
     },
     "opacity": {
+        "calc": 1,
         "value": "1"
     },
     "order": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "outline": {
+        "calc": 1,
         "value": [
             "outlineWidth",
             "outlineStyle",
@@ -974,34 +1078,38 @@ export const CSS_PROPERTIES = {
         ]
     },
     "outlineColor": {
-        "value": "invert"
+        "calc": 1,
+        "value": "__rgb__"
     },
     "outlineOffset": {
+        "calc": 1,
         "value": "0"
     },
     "outlineStyle": {
         "value": "none"
     },
     "outlineWidth": {
-        "value": "medium"
+        "calc": 1,
+        "value": "0"
     },
     "overflow": {
-        "layout": true,
+        "layout": 1,
         "value": [
             "overflowX",
             "overflowY"
         ]
     },
     "overflowX": {
-        "layout": true,
+        "layout": 1,
         "value": "visible"
     },
     "overflowY": {
-        "layout": true,
+        "layout": 1,
         "value": "visible"
     },
     "padding": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "paddingTop",
             "paddingRight",
@@ -1010,23 +1118,27 @@ export const CSS_PROPERTIES = {
         ]
     },
     "paddingBottom": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "paddingLeft": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "paddingRight": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "paddingTop": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "pageBreakAfter": {
-        "value": ""
+        "value": "auto"
     },
     "pageBreakBefore": {
         "value": "auto"
@@ -1035,54 +1147,59 @@ export const CSS_PROPERTIES = {
         "value": "auto"
     },
     "perspective": {
+        "calc": 1,
         "value": "none"
     },
     "perspectiveOrigin": {
+        "calc": 1,
         "value": "50% 50%"
     },
     "placeContent": {
-        "contain": true,
+        "contain": 1,
         "value": [
            "alignContent",
            "justifyContent"
         ]
     },
     "placeItems": {
-        "contain": true,
+        "contain": 1,
         "value": [
            "alignItems",
            "justifyItems"
         ]
     },
     "placeSelf": {
-        "contain": true,
+        "contain": 1,
         "value": [
            "alignSelf",
            "justifySelf"
         ]
     },
     "position": {
-        "layout": true,
+        "layout": 1,
         "value": "static"
     },
     "quotes": {
-        "layout": true,
+        "layout": 1,
         "value": "none"
     },
     "resize": {
-        "layout": true,
+        "layout": 1,
         "value": "none"
     },
     "right": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "rowGap": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "scrollMargin": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "scrollMarginTop",
             "scrollMarginRight",
@@ -1091,23 +1208,28 @@ export const CSS_PROPERTIES = {
         ]
     },
     "scrollMarginBottom": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "scrollMarginLeft": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "scrollMarginRight": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "scrollMarginTop": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "scrollPadding": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": [
             "scrollPaddingTop",
             "scrollPaddingRight",
@@ -1116,27 +1238,27 @@ export const CSS_PROPERTIES = {
         ]
     },
     "scrollPaddingBottom": {
-        "layout": true,
+        "layout": 1,
         "value": "0"
     },
     "scrollPaddingLeft": {
-        "layout": true,
+        "layout": 1,
         "value": "0"
     },
     "scrollPaddingRight": {
-        "layout": true,
+        "layout": 1,
         "value": "0"
     },
     "scrollPaddingTop": {
-        "layout": true,
+        "layout": 1,
         "value": "0"
     },
     "tabSize": {
-        "layout": true,
+        "layout": 1,
         "value": "8"
     },
     "tableLayout": {
-        "layout": true,
+        "layout": 1,
         "value": "auto"
     },
     "textAlign": {
@@ -1149,12 +1271,12 @@ export const CSS_PROPERTIES = {
         "value": [
             "textDecorationLine",
             "textDecorationStyle",
-            "textDecorationColor",
-            "textDecorationThickness"
+            "textDecorationColor"
         ]
     },
     "textDecorationColor": {
-        "value": "*"
+        "calc": 1,
+        "value": "__rgb__"
     },
     "textDecorationLine": {
         "value": "none"
@@ -1162,11 +1284,9 @@ export const CSS_PROPERTIES = {
     "textDecorationStyle": {
         "value": "solid"
     },
-    "textDecorationThickness": {
-        "value": "auto"
-    },
     "textIndent": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "textJustify": {
@@ -1176,26 +1296,32 @@ export const CSS_PROPERTIES = {
         "value": "clip"
     },
     "textShadow": {
+        "calc": 1,
         "value": "none"
     },
     "textTransform": {
-        "layout": true,
+        "layout": 1,
         "value": "none"
     },
     "top": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "0"
     },
     "transform": {
+        "calc": 1,
         "value": "none"
     },
     "transformOrigin": {
+        "calc": 1,
         "value": "50% 50% 0"
     },
     "transformStyle": {
         "value": "flat"
     },
     "transition": {
+        "calc": 1,
+        "multiple": 1,
         "value": [
             "transitionProperty",
             "transitionDuration",
@@ -1204,50 +1330,57 @@ export const CSS_PROPERTIES = {
         ]
     },
     "transitionDelay": {
+        "calc": 1,
         "value": "0s"
     },
     "transitionDuration": {
+        "calc": 1,
         "value": "0s"
     },
     "transitionProperty": {
         "value": "all"
     },
     "transitionTimingFunction": {
+        "calc": 1,
         "value": "ease"
     },
     "unicodeBidi": {
-        "layout": true,
+        "layout": 1,
         "value": "normal"
     },
     "verticalAlign": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "baseline"
     },
     "visibility": {
-        "layout": true,
+        "layout": 1,
         "value": "visible"
     },
     "whiteSpace": {
-        "layout": true,
+        "layout": 1,
         "value": "normal"
     },
     "width": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "auto"
     },
     "wordBreak": {
-        "layout": true,
+        "layout": 1,
         "value": "normal"
     },
     "wordSpacing": {
-        "layout": true,
+        "calc": 1,
+        "layout": 1,
         "value": "normal"
     },
     "wordWrap": {
-        "layout": true,
+        "layout": 1,
         "value": "normal"
     },
     "zIndex": {
+        "calc": 1,
         "value": "auto"
     }
 };
@@ -1639,6 +1772,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'borderLeftWidth':
         case 'borderRightWidth':
         case 'borderTopWidth':
+        case 'columnRuleWidth':
         case 'letterSpacing':
         case 'outlineOffset':
         case 'outlineWidth':
@@ -1687,7 +1821,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             return calculateVarAsString(element, value, { dimension: ['height', 'width', 'height', 'width'], boundingBox, min: 0, parent: false });
         case 'borderWidth':
         case 'borderSpacing':
-        case 'columnRule':
             return calculateVarAsString(element, value, { min: 0, supportPercent: false });
         case 'gridAutoColumns':
         case 'gridTemplateColumns':
@@ -1712,8 +1845,6 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'counterIncrement':
         case 'counterReset':
             return calculateVarAsString(element, value, { unitType: CSS_UNIT.INTEGER });
-        case 'fontVariationSettings':
-            return calculateVarAsString(element, value, { unitType: CSS_UNIT.INTEGER, min: 0 });
         case 'gridArea':
             return calculateVarAsString(element, value, { unitType: CSS_UNIT.INTEGER, min: 1 });
         case 'flexGrow':
@@ -1898,6 +2029,13 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'transitionDelay':
         case 'transitionDuration':
             return calculateVarAsString(element, value, { unitType: CSS_UNIT.TIME, min: 0, precision: 0, separator: ',' });
+        case 'fontFeatureSettings':
+        case 'fontVariantCaps':
+        case 'fontVariantEastAsian':
+        case 'fontVariantLigatures':
+        case 'fontVariantNumeric':
+        case 'fontVariationSettings':
+            return calculateVarAsString(element, value, { unitType: CSS_UNIT.INTEGER, min: 0, separator: ',' });
         case 'columns':
             return calculateGeneric(element, value, CSS_UNIT.INTEGER, 1, boundingBox);
         case 'borderImageSlice':
@@ -1922,6 +2060,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'borderLeft':
         case 'borderRight':
         case 'borderTop':
+        case 'columnRule':
         case 'outline': {
             value = value.trim();
             const border = splitEnclosing(value);

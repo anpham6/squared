@@ -1039,7 +1039,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             value = value
                         .replace(/^\\n\\n/, '\\n')
                         .replace(/\\n\\n$/, '\\n')
-                        .replace(ESCAPE.ENTITY, (match, capture) => String.fromCharCode(parseInt(capture)));
+                        .replace(ESCAPE.ENTITY_G, (match, capture) => String.fromCharCode(parseInt(capture)));
         }
         return value;
     }

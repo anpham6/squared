@@ -48,8 +48,7 @@ export const CSS = {
 
 export const XML = {
     ATTRIBUTE: /([^\s]+)="((?:[^"]|\\")+)"/,
-    ENTITY: /&#?[A-Za-z\d]+;/,
-    BREAKWORD_G: /([A-Za-z\d]+|&#?[A-Za-z\d]+;)/g,
+    ENTITY_G: /&#?[A-Za-z\d]+?;/g,
     NONWORD_G: /[^A-Za-z\d]+/g,
     TAGNAME_G: /(<([^>]+)>)/g
 };
@@ -68,6 +67,6 @@ export const COMPONENT = {
 };
 
 export const ESCAPE = {
-    ENTITY: /&#(\d+);/g,
-    NONENTITY: /&(?!#?[A-Za-z\d]{2,};)/g
+    ENTITY_G: /&#(\d+);/g,
+    NONENTITY_G: /&(?!#?[A-Za-z\d]{2,};)/g
 };

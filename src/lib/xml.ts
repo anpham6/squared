@@ -252,7 +252,7 @@ export function formatTemplate(value: string, closeEmpty = false, startIndent = 
 export function replaceCharacterData(value: string, tab?: number) {
     value = value
         .replace(REGEX_FORMAT.NBSP, '&#160;')
-        .replace(ESCAPE.NONENTITY, '&amp;');
+        .replace(ESCAPE.NONENTITY_G, '&amp;');
     const char: { i: number; text: string }[] = [];
     const length = value.length;
     for (let i = 0; i < length; ++i) {
