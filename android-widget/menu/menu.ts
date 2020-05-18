@@ -29,6 +29,7 @@ const REGEX_ITEM = {
     menuCategory: /^(container|system|secondary|alternative)$/,
     orderInCategory: /^\d+$/
 };
+
 const REGEX_GROUP = {
     id: /^@\+id\/\w+$/,
     checkableBehavior: /^(none|all|single)$/,
@@ -37,12 +38,19 @@ const REGEX_GROUP = {
     menuCategory: /^(container|system|secondary|alternative)$/,
     orderInCategory: /^\d+$/
 };
-const NAMESPACE_APP = ['showAsAction', 'actionViewClass', 'actionProviderClass'];
+
 const NAVIGATION = {
     MENU: 'menu',
     ITEM: 'item',
     GROUP: 'group'
 };
+
+const NAMESPACE_APP = [
+    'showAsAction',
+    'actionViewClass',
+    'actionProviderClass'
+];
+
 const PREFIX_MENU = 'ic_menu_';
 
 function parseDataSet(validator: ObjectMap<RegExp>, element: HTMLElement, options: ViewAttribute) {

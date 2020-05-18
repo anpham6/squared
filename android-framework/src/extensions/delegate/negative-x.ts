@@ -1,6 +1,5 @@
 import View from '../../view';
 
-import { EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -72,7 +71,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         else if (node.hasWidth) {
             container.setLayoutWidth('wrap_content');
         }
-        node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData', {
+        node.data(this.name, 'mainData', {
             container,
             children,
             offsetLeft: node.marginLeft + node.paddingLeft,
@@ -95,7 +94,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     }
 
     public postBaseLayout(node: T) {
-        const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData');
+        const mainData: NegativeXData = node.data(this.name, 'mainData');
         if (mainData) {
             let firstChild = mainData.firstChild;
             if (firstChild) {
@@ -131,7 +130,7 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
 
     public beforeCascade() {
         for (const node of this.subscribers) {
-            const mainData: NegativeXData = node.data(EXT_ANDROID.DELEGATE_NEGATIVEX, 'mainData');
+            const mainData: NegativeXData = node.data(this.name, 'mainData');
             if (mainData) {
                 const translateX = node.android('translationX'), translateY = node.android('translationY');
                 if (translateX !== '' || translateY !== '') {

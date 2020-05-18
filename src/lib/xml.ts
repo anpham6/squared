@@ -8,7 +8,6 @@ interface XMLTagData {
     closing: boolean;
 }
 
-const REGEX_INDENT = /^(\t+)(.*)$/;
 const REGEX_FORMAT = {
     ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
     OPENTAG: /\s*>$/,
@@ -16,6 +15,8 @@ const REGEX_FORMAT = {
     NBSP: /&nbsp;/g,
     AMP: /&/g
 };
+
+const REGEX_INDENT = /^(\t+)(.*)$/;
 
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
 export const STRING_SPACE = '&#160;';

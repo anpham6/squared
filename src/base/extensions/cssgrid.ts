@@ -1,6 +1,5 @@
 import ExtensionUI from '../extension-ui';
 
-import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
@@ -30,7 +29,6 @@ interface RepeatItem {
 const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
 const { convertFloat, isNumber, safeNestedArray, trimString, withinRange } = squared.lib.util;
 
-const CSS_GRID = EXT_NAME.CSS_GRID;
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
 const STRING_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
@@ -954,7 +952,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         rowSpanMultiple[i++] = true;
                     }
                 }
-                item.data(CSS_GRID, 'cellData', {
+                item.data(this.name, 'cellData', {
                     rowStart,
                     rowSpan: rowCount,
                     columnStart,
@@ -1022,7 +1020,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             if (columnItem) {
                                 for (const item of columnItem as T[]) {
                                     if (!modified.has(item)) {
-                                        const { columnSpan, rowSpan } = item.data(CSS_GRID, 'cellData') as CssGridCellData;
+                                        const { columnSpan, rowSpan } = item.data(this.name, 'cellData') as CssGridCellData;
                                         const x = j + columnSpan - 1;
                                         const y = i + rowSpan - 1;
                                         if (columnGap > 0 && x < columnCount - 1) {
@@ -1108,11 +1106,11 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 if (node.cssTry('display', 'block')) {
                     node.each((item: T) => {
                         const { width, height } = item.boundingClientRect;
-                        item.data(CSS_GRID, 'boundsData', { ...item.bounds, width, height });
+                        item.data(this.name, 'boundsData', { ...item.bounds, width, height });
                     });
                     node.cssFinally('display');
                 }
-                node.data(CSS_GRID, 'mainData', mainData);
+                node.data(this.name, 'mainData', mainData);
             }
         }
         return undefined;

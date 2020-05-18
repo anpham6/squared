@@ -1,13 +1,14 @@
 import { COMPONENT, UNIT, XML } from './regex';
 
-const UUID_ALPHA = '0123456789abcdef';
-const UUID_SEGMENT = [8, 4, 4, 4, 12];
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMERALS = [
     '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
     '', 'X', 'XX', 'XXX', 'XL', 'L', 'LX', 'LXX', 'LXXX', 'XC',
     '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
 ];
+
+const UUID_ALPHA = '0123456789abcdef';
+const UUID_SEGMENT = [8, 4, 4, 4, 12];
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
 

@@ -12,8 +12,16 @@ const { BUILD_ANDROID, CONTAINER_NODE } = android.lib.enumeration;
 
 const Resource = android.base.Resource;
 
+const SUPPORTED_INPUT = [
+    'button',
+    'file',
+    'image',
+    'reset',
+    'search',
+    'submit'
+];
+
 const PREFIX_DIALOG = 'ic_dialog_';
-const SUPPORTED_INPUT = ['button', 'file', 'image', 'reset', 'search', 'submit'];
 
 export default class FloatingActionButton<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {

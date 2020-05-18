@@ -1,13 +1,10 @@
 import ExtensionUI from '../extension-ui';
 
-import { EXT_NAME } from '../lib/constant';
 import { NODE_ALIGNMENT } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
 
 const { withinRange } = squared.lib.util;
-
-const FLEXBOX = EXT_NAME.FLEXBOX;
 
 export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public static createDataAttribute(node: NodeUI, children: NodeUI[]): FlexboxData<NodeUI> {
@@ -37,7 +34,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     if (item.cssTry('align-self', 'start')) {
                         if (item.cssTry('justify-self', 'start')) {
                             const { width, height } = item.boundingClientRect;
-                            item.data(FLEXBOX, 'boundsData', { ...item.bounds, width, height });
+                            item.data(this.name, 'boundsData', { ...item.bounds, width, height });
                             item.cssFinally('justify-self');
                         }
                         item.cssFinally('align-self');
@@ -146,7 +143,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 mainData.columnCount = 1;
             }
         }
-        node.data(FLEXBOX, 'mainData', mainData);
+        node.data(this.name, 'mainData', mainData);
         return undefined;
     }
 }

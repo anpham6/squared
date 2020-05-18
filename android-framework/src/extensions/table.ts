@@ -9,8 +9,6 @@ const { convertFloat, convertInt, trimEnd } = squared.lib.util;
 
 const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
-const TABLE = squared.base.lib.constant.EXT_NAME.TABLE;
-
 function setLayoutHeight(node: View) {
     if (node.hasPX('height') && node.height + node.contentBoxHeight < Math.floor(node.bounds.height) && node.css('verticalAlign') !== 'top') {
         node.setLayoutHeight('wrap_content');
@@ -20,12 +18,12 @@ function setLayoutHeight(node: View) {
 export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const mainData: TableData = node.data(TABLE, 'mainData');
+        const mainData: TableData = node.data(this.name, 'mainData');
         let requireWidth = false;
         if (mainData.columnCount > 1) {
             requireWidth = mainData.expand;
             node.each((item: T) => {
-                const data: TableCellData = item.data(TABLE, 'cellData');
+                const data: TableCellData = item.data(this.name, 'cellData');
                 if (data.flexible) {
                     item.android('layout_columnWeight', data.colSpan.toString());
                     item.setLayoutWidth('0px');
@@ -118,7 +116,7 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const cellData: TableCellData = node.data(TABLE, 'cellData');
+        const cellData: TableCellData = node.data(this.name, 'cellData');
         if (cellData) {
             const { rowSpan, colSpan, spaceSpan } = cellData;
             if (rowSpan > 1) {

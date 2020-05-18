@@ -1,6 +1,5 @@
 import ExtensionUI from '../extension-ui';
 
-import { EXT_NAME } from '../lib/constant';
 import { NODE_RESOURCE } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
@@ -112,7 +111,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     ++i;
                 }
             }
-            item.data(EXT_NAME.LIST, 'mainData', mainData);
+            item.data(this.name, 'mainData', mainData);
         });
         return undefined;
     }

@@ -1,4 +1,3 @@
-import { EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -137,14 +136,14 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
             }
         });
         if (children.size || right || bottom) {
-            node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData', { children: Array.from(children), right, bottom });
+            node.data(this.name, 'mainData', { children: Array.from(children), right, bottom });
             return true;
         }
         return false;
     }
 
     public processNode(node: T, parent: T) {
-        const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
+        const mainData: PositiveXData = node.data(this.name, 'mainData');
         if (mainData) {
             const children = mainData.children as T[];
             let container: Undef<T>;
@@ -193,7 +192,7 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
     }
 
     public postBaseLayout(node: T) {
-        const mainData: PositiveXData = node.data(EXT_ANDROID.DELEGATE_POSITIVEX, 'mainData');
+        const mainData: PositiveXData = node.data(this.name, 'mainData');
         if (mainData) {
             const documentId = node.documentId;
             for (const item of mainData.children) {

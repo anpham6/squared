@@ -15,9 +15,6 @@ const { capitalize, convertInt, convertWord, hasKeys, plainMap, safeNestedArray,
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
-const STORED = Resource.STORED as AndroidResourceStoredMap;
-const REGEX_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
-const REGEX_DOUBLEQUOTE = /"/g;
 const FONT_ANDROID = {
     'sans-serif': BUILD_ANDROID.ICE_CREAM_SANDWICH,
     'sans-serif-thin': BUILD_ANDROID.JELLYBEAN,
@@ -34,6 +31,7 @@ const FONT_ANDROID = {
     'monospace': BUILD_ANDROID.LOLLIPOP,
     'sans-serif-condensed-medium': BUILD_ANDROID.OREO
 };
+
 const FONTALIAS_ANDROID = {
     'arial': 'sans-serif',
     'helvetica': 'sans-serif',
@@ -52,6 +50,7 @@ const FONTALIAS_ANDROID = {
     'courier': 'serif-monospace',
     'courier new': 'serif-monospace'
 };
+
 const FONTREPLACE_ANDROID = {
     'arial black': 'sans-serif',
     'ms shell dlg \\32': 'sans-serif',
@@ -59,6 +58,7 @@ const FONTREPLACE_ANDROID = {
     '-apple-system': 'sans-serif',
     '-webkit-standard': 'sans-serif'
 };
+
 const FONTWEIGHT_ANDROID = {
     '100': 'thin',
     '200': 'extra_light',
@@ -70,6 +70,7 @@ const FONTWEIGHT_ANDROID = {
     '800': 'extra_bold',
     '900': 'black'
 };
+
 const FONT_STYLE = {
     'fontFamily': 'android:fontFamily="',
     'fontStyle': 'android:textStyle="',
@@ -78,6 +79,9 @@ const FONT_STYLE = {
     'color': 'android:textColor="@color/',
     'backgroundColor': 'android:background="@color/'
 };
+
+const STORED = Resource.STORED as AndroidResourceStoredMap;
+const REGEX_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
 const FONT_STYLEKEYS = Object.keys(FONT_STYLE);
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
@@ -141,7 +145,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 if (companion?.tagName === 'LABEL' && !companion.visible) {
                     node = companion as T;
                 }
-                fontFamily.replace(REGEX_DOUBLEQUOTE, '').split(',').some((value, index, array) => {
+                fontFamily.replace(/"/g, '').split(',').some((value, index, array) => {
                     value = trimBoth(value.trim(), "'").toLowerCase();
                     let fontName = value;
                     let actualFontWeight = '';

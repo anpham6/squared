@@ -28,12 +28,6 @@ interface ForwardValue extends NumberValue<AnimateValue> {
 const { clamp, equal, multipleOf } = squared.lib.math;
 const { hasBit, hasKeys, hasValue, isEqual, isNumber, joinArray, plainMap, replaceMap, safeNestedArray, spliceArray, sortNumber } = squared.lib.util;
 
-const LINE_ARGS = ['x1', 'y1', 'x2', 'y2'];
-const RECT_ARGS = ['width', 'height', 'x', 'y'];
-const POLYGON_ARGS = ['points'];
-const CIRCLE_ARGS = ['cx', 'cy', 'r'];
-const ELLIPSE_ARGS = ['cx', 'cy', 'rx', 'ry'];
-
 function insertAdjacentSplitValue(map: TimelineIndex, attr: string, time: number, intervalMap: SvgAnimationIntervalMap, transforming: boolean) {
     let previousTime = 0;
     let previousValue: Undef<AnimateValue>;
@@ -130,20 +124,20 @@ function getPathData(entries: TimelineEntries, path: SvgPath, parent: Undef<SvgC
     let baseVal: string[];
     switch (tagName) {
         case 'line':
-            baseVal = LINE_ARGS;
+            baseVal = ['x1', 'y1', 'x2', 'y2'];
             break;
         case 'rect':
-            baseVal = RECT_ARGS;
+            baseVal = ['width', 'height', 'x', 'y'];
             break;
         case 'polyline':
         case 'polygon':
-            baseVal = POLYGON_ARGS;
+            baseVal = ['points'];
             break;
         case 'circle':
-            baseVal = CIRCLE_ARGS;
+            baseVal = ['cx', 'cy', 'r'];
             break;
         case 'ellipse':
-            baseVal = ELLIPSE_ARGS;
+            baseVal = ['cx', 'cy', 'rx', 'ry'];
             break;
         default:
             return undefined;

@@ -483,7 +483,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                     }
                     if (item.positionRelative) {
-                        for (const attr of BOX_POSITION) {
+                        let i = 0;
+                        while (i < 4) {
+                            const attr = BOX_POSITION[i++];
                             if (item.hasPX(attr) && item[attr] !== 0) {
                                 safeNestedMap(preAlignment, item.id)[attr] = item.css(attr);
                                 element.style.setProperty(attr, 'auto');

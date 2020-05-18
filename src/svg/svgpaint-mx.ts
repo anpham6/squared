@@ -14,6 +14,7 @@ const { STRING } = squared.lib.regex;
 const { convertCamelCase, convertFloat, isNumber, isString, joinArray, plainMap } = squared.lib.util;
 
 const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
+
 const REGEX_CACHE: ObjectMap<RegExp> = {
     polygon: /polygon\(([^)]+)\)/,
     inset: new RegExp(`inset\\(${PERCENTAGE}\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\)`),

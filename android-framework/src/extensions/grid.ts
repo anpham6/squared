@@ -11,14 +11,10 @@ const { withinRange } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
-const Grid = squared.base.extensions.Grid;
-
-const GRID = squared.base.lib.constant.EXT_NAME.GRID;
-
-export default class <T extends View> extends squared.base.extensions.Grid<T> {
+export default class Grid <T extends View> extends squared.base.extensions.Grid<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
-        const columnCount: number = node.data(GRID, 'columnCount');
+        const columnCount: number = node.data(this.name, 'columnCount');
         if (columnCount) {
             return {
                 output: this.application.renderNode(
@@ -39,7 +35,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const cellData: GridCellData<T> = node.data(GRID, 'cellData');
+        const cellData: GridCellData<T> = node.data(this.name, 'cellData');
         if (cellData) {
             const siblings = cellData.siblings?.slice(0);
             let layout: Undef<LayoutUI<T>>;
@@ -58,7 +54,7 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                 );
                 node = layout.node;
                 for (const item of siblings) {
-                    const source: GridCellData<View> = item.data(GRID, 'cellData');
+                    const source: GridCellData<View> = item.data(this.name, 'cellData');
                     if (source) {
                         if (source.cellStart) {
                             data.cellStart = true;
@@ -72,10 +68,10 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
                         if (source.rowStart) {
                             data.rowStart = true;
                         }
-                        item.data(GRID, 'cellData', null);
+                        item.data(this.name, 'cellData', null);
                     }
                 }
-                node.data(GRID, 'cellData', data);
+                node.data(this.name, 'cellData', data);
             }
             if (cellData.rowSpan > 1) {
                 node.android('layout_rowSpan', cellData.rowSpan.toString());
@@ -99,11 +95,11 @@ export default class <T extends View> extends squared.base.extensions.Grid<T> {
 
     public postConstraints(node: T) {
         if (node.css('borderCollapse') !== 'collapse') {
-            const columnCount: number = node.data(GRID, 'columnCount');
+            const columnCount: number = node.data(this.name, 'columnCount');
             if (columnCount) {
                 let paddingTop = 0, paddingRight = 0, paddingBottom = 0, paddingLeft = 0;
                 node.renderEach(item => {
-                    const cellData: GridCellData<T> = item.data(GRID, 'cellData');
+                    const cellData: GridCellData<T> = item.data(this.name, 'cellData');
                     if (cellData) {
                         const parent = item.actualParent as Null<T>;
                         if (parent?.visible === false) {

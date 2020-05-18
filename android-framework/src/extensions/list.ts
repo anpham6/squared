@@ -12,8 +12,6 @@ const { STRING_SPACE } = squared.lib.xml;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const LIST = squared.base.lib.constant.EXT_NAME.LIST;
-
 export default class <T extends View> extends squared.base.extensions.List<T> {
     public processNode(node: T, parent: T) {
         const layout = new LayoutUI(parent, node, 0, 0, node.children as T[]);
@@ -42,7 +40,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
     }
 
     public processChild(node: T, parent: T) {
-        const mainData: ListData = node.data(LIST, 'mainData');
+        const mainData: ListData = node.data(this.name, 'mainData');
         if (mainData) {
             const application = this.application;
             const controller = this.controller as android.base.Controller<T>;

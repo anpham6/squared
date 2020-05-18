@@ -10,8 +10,6 @@ const { safeNestedArray } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
 
-const COLUMN = squared.base.lib.constant.EXT_NAME.COLUMN;
-
 export default class <T extends View> extends squared.base.extensions.Column<T> {
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
@@ -24,7 +22,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
     }
 
     public postBaseLayout(node: T) {
-        const mainData = node.data(COLUMN, 'mainData') as ColumnData<T>;
+        const mainData = node.data(this.name, 'mainData') as ColumnData<T>;
         if (mainData) {
             const application = this.application;
             const { columnCount, columnGap, columnWidth, columnRule, columnSized, boxWidth, rows, multiline } = mainData;

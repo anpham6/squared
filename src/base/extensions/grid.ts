@@ -1,12 +1,9 @@
 import ExtensionUI from '../extension-ui';
 import NodeUI from '../node-ui';
 
-import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const { aboveRange, belowRange, plainMap, safeNestedArray, withinRange } = squared.lib.util;
-
-const GRID = EXT_NAME.GRID;
 
 function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     const topA = target.bounds.top;
@@ -197,7 +194,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     const item = column[j];
                     const rowData = safeNestedArray(children, j);
                      if (!item['spacer']) {
-                        const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(GRID, 'cellData'));
+                        const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(this.name, 'cellData'));
                         let rowSpan = 1;
                         let columnSpan = 1 + spacer;
                         let k = i + 1;
@@ -243,7 +240,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         data.cellEnd = data.rowEnd && j === rowCount - 1;
                         data.index = i;
                         spacer = 0;
-                        item.data(GRID, 'cellData', data);
+                        item.data(this.name, 'cellData', data);
                         rowData.push(item);
                         assigned.add(item);
                     }
@@ -262,7 +259,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {
                 node.resetBox(BOX_STANDARD.PADDING);
             }
-            node.data(GRID, 'columnCount', columnCount);
+            node.data(this.name, 'columnCount', columnCount);
         }
         return undefined;
     }

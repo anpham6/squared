@@ -1,12 +1,8 @@
 import ExtensionUI from '../extension-ui';
 
-import { EXT_NAME } from '../lib/constant';
-
-type NodeUI = squared.base.NodeUI;
-
-export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
+export default abstract class Column<T extends squared.base.NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
-        return (node.blockDimension && node.display !== 'table') && !node.layoutElement && node.length > 1;
+        return node.length > 1 && (node.blockDimension && node.display !== 'table') && !node.layoutElement;
     }
 
     public condition(node: T) {
@@ -59,7 +55,7 @@ export default abstract class Column<T extends NodeUI> extends ExtensionUI<T> {
             columnGap = (columnWidth > 0 && !isNaN(maxSize) && maxSize !== Infinity ? Math.max(maxSize - columnWidth, 0) : 0) + 16;
             columnSized = Math.ceil(getColumnSizing());
         }
-        node.data(EXT_NAME.COLUMN, 'mainData', {
+        node.data(this.name, 'mainData', {
             rows,
             columnCount,
             columnWidth,

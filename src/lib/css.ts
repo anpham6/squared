@@ -1370,8 +1370,40 @@ export const CSS_PROPERTIES: CssProperties = {
     }
 };
 
-export const BOX_POSITION = ['top', 'right', 'bottom', 'left'];
-export const BOX_MARGIN = ['marginTop', 'marginRight', 'marginBottom', 'marginLeft'];
+export const BOX_POSITION = [
+    'top',
+    'right',
+    'bottom',
+    'left'
+];
+
+export const BOX_MARGIN = [
+    'marginTop',
+    'marginRight',
+    'marginBottom',
+    'marginLeft'
+];
+
+export const BOX_PADDING = [
+    'paddingTop',
+    'paddingRight',
+    'paddingBottom',
+    'paddingLeft'
+];
+
+export const TEXT_STYLE = [
+    'fontFamily',
+    'fontSize',
+    'fontWeight',
+    'fontStyle',
+    'color',
+    'whiteSpace',
+    'textDecoration',
+    'textTransform',
+    'letterSpacing',
+    'wordSpacing'
+];
+
 export const BOX_BORDER = [
     ['borderTopStyle', 'borderTopWidth', 'borderTopColor'],
     ['borderRightStyle', 'borderRightWidth', 'borderRightColor'],
@@ -1379,8 +1411,6 @@ export const BOX_BORDER = [
     ['borderLeftStyle', 'borderLeftWidth', 'borderLeftColor'],
     ['outlineStyle', 'outlineWidth', 'outlineColor']
 ];
-export const BOX_PADDING = ['paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft'];
-export const TEXT_STYLE = ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'color', 'whiteSpace', 'textDecoration', 'textTransform', 'letterSpacing', 'wordSpacing'];
 
 export function getStyle(element: Null<Element>, pseudoElt = ''): CSSStyleDeclaration {
     if (element) {

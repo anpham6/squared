@@ -1,4 +1,3 @@
-import { EXT_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -26,14 +25,14 @@ export default class MaxWidthHeight<T extends View> extends squared.base.Extensi
         );
         const maxHeight = node.hasPX('maxHeight') && (parent.hasHeight || parent.gridElement || parent.tableElement);
         if (maxWidth || maxHeight) {
-            node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData', { maxWidth, maxHeight } as MaxWidthHeightData);
+            node.data(this.name, 'mainData', { maxWidth, maxHeight } as MaxWidthHeightData);
             return true;
         }
         return false;
     }
 
     public processNode(node: T, parent: T) {
-        const mainData: MaxWidthHeightData = node.data(EXT_ANDROID.DELEGATE_MAXWIDTHHEIGHT, 'mainData');
+        const mainData: MaxWidthHeightData = node.data(this.name, 'mainData');
         if (mainData) {
             const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, alignmentType: NODE_ALIGNMENT.BLOCK, resetMargin: true });
             if (mainData.maxWidth) {

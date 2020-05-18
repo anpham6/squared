@@ -1,6 +1,5 @@
 import ExtensionUI from '../extension-ui';
 
-import { EXT_NAME } from '../lib/constant';
 import { BOX_STANDARD, NODE_RESOURCE } from '../lib/enumeration';
 
 type NodeUI = squared.base.NodeUI;
@@ -18,7 +17,6 @@ const enum LAYOUT_TABLE {
     COMPRESS = 4
 }
 
-const TABLE = EXT_NAME.TABLE;
 const REGEX_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
 
 function setAutoWidth(node: NodeUI, td: NodeUI, data: StandardMap) {
@@ -265,7 +263,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     td.modifyBox(BOX_STANDARD.MARGIN_TOP, i === 0 ? vertical : spacingHeight);
                     td.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, i + rowSpan < rowCount ? spacingHeight : vertical);
                 }
-                td.data(TABLE, 'cellData', { colSpan, rowSpan });
+                td.data(this.name, 'cellData', { colSpan, rowSpan });
             });
             hideCell(tr);
             columnCount = Math.max(columnCount, row.length);
@@ -375,7 +373,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             if (!caption.cssInitial('textAlign')) {
                 caption.css('textAlign', 'center');
             }
-            caption.data(TABLE, 'cellData', { colSpan: columnCount });
+            caption.data(this.name, 'cellData', { colSpan: columnCount });
             if (!captionBottom) {
                 caption.parent = node;
             }
@@ -387,7 +385,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             j = 0;
             while (j < length) {
                 const td = tr[j];
-                const data: TableCellData = td.data(TABLE, 'cellData');
+                const data: TableCellData = td.data(this.name, 'cellData');
                 const columnWidth = mapWidth[j];
                 j += data.colSpan;
                 if (data.placed) {
@@ -467,7 +465,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                 td.parent = node;
             }
             if (length < columnCount) {
-                const data: StandardMap = tr[length - 1].data(TABLE, 'cellData');
+                const data: StandardMap = tr[length - 1].data(this.name, 'cellData');
                 if (data) {
                     data.spaceSpan = columnCount - length;
                 }
@@ -560,7 +558,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
         }
         mainData.rowCount = rowCount + (caption ? 1 : 0);
         mainData.columnCount = columnCount;
-        node.data(TABLE, 'mainData', mainData);
+        node.data(this.name, 'mainData', mainData);
         return undefined;
     }
 }

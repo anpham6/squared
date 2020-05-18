@@ -28,6 +28,7 @@ const ANIMATION_DEFAULT = {
     'animation-fill-mode': 'none',
     'animation-timing-function': 'ease'
 };
+
 const KEYFRAME_MAP = getKeyframesRules();
 const REGEX_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
 

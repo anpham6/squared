@@ -38,8 +38,7 @@ function getFontVariationStyle(value: string) {
 
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceStringsOptions = {
-        numberResourceValue: false,
-        fontVariantSmallCapsReduction: 0.7
+        numberResourceValue: false
     };
     public readonly eventOnly = true;
 

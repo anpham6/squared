@@ -1,7 +1,7 @@
 import Controller from '../../controller';
 import View from '../../view';
 
-import { EXT_ANDROID, LAYOUT_ANDROID, STRING_ANDROID } from '../../lib/constant';
+import { LAYOUT_ANDROID, STRING_ANDROID } from '../../lib/constant';
 import { CONTAINER_NODE } from '../../lib/enumeration';
 
 import LayoutUI = squared.base.LayoutUI;
@@ -55,14 +55,14 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         const percentHeight = requireHeight && hasPercentHeight(node, parent) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || parent.percentHeight > 0);
         const marginVertical = requireHeight && hasMarginVertical(node);
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
-            node.data(EXT_ANDROID.DELEGATE_PERCENT, 'mainData', { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);
+            node.data(this.name, 'mainData', { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);
             return true;
         }
         return false;
     }
 
     public processNode(node: T, parent: T) {
-        const mainData: PercentData = node.data(EXT_ANDROID.DELEGATE_PERCENT, 'mainData');
+        const mainData: PercentData = node.data(this.name, 'mainData');
         if (mainData) {
             let container: Undef<T>;
             if (!parent.layoutConstraint || mainData.percentHeight) {
@@ -113,7 +113,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
 
     public postBaseLayout(node: T) {
         const controller = this.controller as android.base.Controller<T>;
-        const mainData: PercentData = node.data(EXT_ANDROID.DELEGATE_PERCENT, 'mainData');
+        const mainData: PercentData = node.data(this.name, 'mainData');
         const constraint = LAYOUT_ANDROID.constraint;
         const renderParent = node.renderParent as T;
         const templateId = node.anchorTarget.renderParent!.id;

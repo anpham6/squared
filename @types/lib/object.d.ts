@@ -1,6 +1,6 @@
 interface CssProperties {
     [key: string]: {
-        trait: number,
+        trait: number;
         value: string | string[];
     };
 }

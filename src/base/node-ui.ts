@@ -11,7 +11,6 @@ const { getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
-const INHERIT_ALIGNMENT = ['position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex'];
 
 function cascadeActualPadding(children: T[], attr: string, value: number) {
     let valid = false;
@@ -634,14 +633,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     cloneObject(node.unsafe('initial') as InitialData<T>, this.initial);
                     break;
                 case 'alignment': {
-                    const styleMap = this._styleMap;
-                    for (const attr of INHERIT_ALIGNMENT) {
-                        styleMap[attr] = node.css(attr);
-                    }
+                    this.cssCopy(node, 'position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex');
                     if (!this.positionStatic) {
-                        for (const attr of BOX_POSITION) {
+                        let i = 0;
+                        while (i < 4) {
+                            const attr = BOX_POSITION[i++];
                             if (node.hasPX(attr)) {
-                                styleMap[attr] = node.css(attr);
+                                this._styleMap[attr] = node.css(attr);
                             }
                         }
                     }

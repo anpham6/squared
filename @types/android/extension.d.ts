@@ -19,7 +19,6 @@ interface ResourceBackgroundOptions {
 
 interface ResourceStringsOptions {
     numberResourceValue: boolean;
-    fontVariantSmallCapsReduction: number;
 }
 
 interface ResourceFontsOptions {

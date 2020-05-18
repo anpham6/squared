@@ -143,6 +143,7 @@ interface AnimateGroup {
 }
 
 const STORED = Resource.STORED as AndroidResourceStoredMap;
+
 const INTERPOLATOR_ANDROID = {
     accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',
     accelerate:	'@android:anim/accelerate_interpolator',
@@ -154,7 +155,22 @@ const INTERPOLATOR_ANDROID = {
     linear: '@android:anim/linear_interpolator',
     overshoot: '@android:anim/overshoot_interpolator'
 };
-const PATH_ATTRIBUTES = ['name', 'value', 'fill', 'stroke', 'fillPattern', 'fillRule', 'strokeWidth', 'fillOpacity', 'strokeOpacity',  'strokeLinecap', 'strokeLinejoin', 'strokeLineJoin', 'strokeMiterlimit'];
+
+const PATH_ATTRIBUTES = [
+    'name',
+    'value',
+    'fill',
+    'stroke',
+    'fillPattern',
+    'fillRule',
+    'strokeWidth',
+    'fillOpacity',
+    'strokeOpacity',
+    'strokeLinecap',
+    'strokeLinejoin',
+    'strokeLineJoin',
+    'strokeMiterlimit'
+];
 
 if (KEYSPLINE_NAME) {
     Object.assign(INTERPOLATOR_ANDROID, {
