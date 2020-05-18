@@ -67,8 +67,8 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
                     boxWidth = parseFloat(w);
                     boxHeight = parseFloat(h);
                 }
-                const hasWidth = isLength(w);
-                const hasHeight = isLength(h);
+                const hasWidth = hasLength(w);
+                const hasHeight = hasLength(h);
                 const boxRatioWidth = boxWidth / width;
                 const boxRatioHeight = boxHeight / height;
                 let resizeUnit = hasWidth && hasHeight;
@@ -172,7 +172,7 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
 }
 
 const getViewport = (container: SvgContainer): Undef<Svg> => container.viewport || SvgBuild.asSvg(container) && container || undefined;
-const isLength = (value: string) => REGEX_LENGTHPERCENTAGE.test(value);
+const hasLength = (value: string) => REGEX_LENGTHPERCENTAGE.test(value);
 
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
     public aspectRatio: SvgAspectRatio = {

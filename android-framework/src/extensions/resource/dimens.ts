@@ -4,10 +4,6 @@ type View = android.base.View;
 
 const { convertUnderscore, fromLastIndexOf, safeNestedArray, safeNestedMap } = squared.lib.util;
 
-const STORED = Resource.STORED as AndroidResourceStoredMap;
-const REGEX_UNIT = /\dpx$/;
-const REGEX_UNIT_ATTR = /:(\w+)="(-?[\d.]+px)"/g;
-
 function getResourceName(map: Map<string, string>, name: string, value: string) {
     if (map.get(name) === value) {
         return name;
@@ -25,7 +21,7 @@ function createNamespaceData(namespace: string, node: View, group: ObjectMap<Vie
     for (const attr in obj) {
         if (attr !== 'text') {
             const value = obj[attr];
-            if (REGEX_UNIT.test(value)) {
+            if (/\dpx$/.test(value)) {
                 safeNestedArray(group, `${namespace},${attr},${value}`).push(node);
             }
         }
@@ -36,7 +32,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public readonly eventOnly = true;
 
     public beforeCascade() {
-        const dimens = STORED.dimens;
+        const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
         const groups: ObjectMapNested<T[]> = {};
         this.cache.each(node => {
             if (node.visible) {
@@ -61,12 +57,12 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
 
     public afterFinalize() {
         if (this.controller.hasAppendProcessing()) {
-            const dimens = STORED.dimens;
+            const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
             for (const layout of this.application.layouts) {
-                REGEX_UNIT_ATTR.lastIndex = 0;
+                const pattern = /:(\w+)="(-?[\d.]+px)"/g;
                 let content = layout.content!;
                 let match: Null<RegExpExecArray>;
-                while ((match = REGEX_UNIT_ATTR.exec(layout.content!)) !== null) {
+                while ((match = pattern.exec(layout.content!)) !== null) {
                     const [original, name, value] = match;
                     if (name !== 'text') {
                         const key = getResourceName(dimens, `custom_${convertUnderscore(name)}`, value);

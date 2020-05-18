@@ -17,8 +17,6 @@ const enum LAYOUT_TABLE {
     COMPRESS = 4
 }
 
-const REGEX_BACKGROUND = /rgba\(0, 0, 0, 0\)|transparent/;
-
 function setAutoWidth(node: NodeUI, td: NodeUI, data: StandardMap) {
     data.percent = Math.round((td.bounds.width / node.box.width) * 100) + '%';
     data.expand = true;
@@ -177,12 +175,13 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                     td.css('verticalAlign', 'middle', true);
                 }
                 if (!td.visibleStyle.backgroundImage && !td.visibleStyle.backgroundColor) {
+                    const pattern = /rgba\(0, 0, 0, 0\)|transparent/;
                     if (colgroup) {
                         const { backgroundImage, backgroundColor } = getStyle(colgroup.children[index + 1]);
                         if (backgroundImage && backgroundImage !== 'none') {
                             td.css('backgroundImage', backgroundImage, true);
                         }
-                        if (backgroundColor && !REGEX_BACKGROUND.test(backgroundColor)) {
+                        if (backgroundColor && !pattern.test(backgroundColor)) {
                             td.css('backgroundColor', backgroundColor);
                             td.setCacheValue('backgroundColor', backgroundColor);
                         }
@@ -192,7 +191,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                         if (value !== '') {
                             td.css('backgroundImage', value, true);
                         }
-                        value = getInheritedStyle(element, 'backgroundColor', REGEX_BACKGROUND, 'TABLE');
+                        value = getInheritedStyle(element, 'backgroundColor', pattern, 'TABLE');
                         if (value !== '') {
                             td.css('backgroundColor', value);
                             td.setCacheValue('backgroundColor', value);

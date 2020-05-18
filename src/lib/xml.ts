@@ -7,17 +7,6 @@ interface XMLTagData {
     closing: boolean;
 }
 
-const REGEX_FORMAT = {
-    ITEM: /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g,
-    OPENTAG: /\s*>$/,
-    CLOSETAG: /\/>\n*$/,
-    NBSP: /&nbsp;/g,
-    AMP: /&/g
-};
-
-const REGEX_INDENT = /^(\t+)(.*)$/;
-const REGEX_NONENTITY = /&(?!#[A-Za-z\d]{2,};)/g;
-
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
 export const STRING_SPACE = '&#160;';
 
@@ -81,11 +70,8 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
     if (spaces > 0) {
         if (preserve) {
             return joinArray(value.split('\n'), line => {
-                const match = REGEX_INDENT.exec(line);
-                if (match) {
-                    return ' '.repeat(spaces * match[1].length) + match[2];
-                }
-                return line;
+                const match = /^(\t+)(.*)$/.exec(line);
+                return match ? ' '.repeat(spaces * match[1].length) + match[2] : line;
             });
         }
         else {
@@ -182,8 +168,9 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
 
 export function formatTemplate(value: string, closeEmpty = false, startIndent = -1, char = '\t') {
     const lines: XMLTagData[] = [];
+    const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
     let match: Null<RegExpExecArray>;
-    while ((match = REGEX_FORMAT.ITEM.exec(value)) !== null) {
+    while ((match = pattern.exec(value)) !== null) {
         lines.push({
             tag: match[1],
             closing: !!match[2],
@@ -206,10 +193,10 @@ export function formatTemplate(value: string, closeEmpty = false, startIndent = 
             else {
                 const next = lines[i + 1];
                 single = next.closing && line.tagName === next.tagName;
-                if (!REGEX_FORMAT.CLOSETAG.exec(line.tag)) {
+                if (!/\/>\n*$/.exec(line.tag)) {
                     if (closeEmpty && line.value.trim() === '') {
                         if (next?.closing && next.tagName === line.tagName) {
-                            line.tag = line.tag.replace(REGEX_FORMAT.OPENTAG, ' />');
+                            line.tag = line.tag.replace(/\s*>$/, ' />');
                             ++i;
                         }
                         else {
@@ -252,8 +239,8 @@ export function formatTemplate(value: string, closeEmpty = false, startIndent = 
 
 export function replaceCharacterData(value: string, tab?: number) {
     value = value
-        .replace(REGEX_FORMAT.NBSP, '&#160;')
-        .replace(REGEX_NONENTITY, '&amp;');
+        .replace(/&nbsp;/g, '&#160;')
+        .replace(/&(?!#[A-Za-z\d]{2,};)/g, '&amp;');
     const char: { i: number; text: string }[] = [];
     const length = value.length;
     for (let i = 0; i < length; ++i) {

@@ -29,8 +29,6 @@ const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE
 
 const NodeUI = squared.base.NodeUI;
 
-const REGEX_TEXTSHADOW = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)\s+(-?[\d.]+[a-z]+)\s*([\d.]+[a-z]+)?/;
-
 function sortHorizontalFloat(list: View[]) {
     list.sort((a, b) => {
         const floatA = a.float, floatB = b.float;
@@ -1949,7 +1947,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.android('justificationMode', 'inter_word');
                 }
                 if (node.has('textShadow')) {
-                    const match = REGEX_TEXTSHADOW.exec(node.css('textShadow'));
+                    const match = /((?:rgb|hsl)a?\([^)]+\)|[a-z]{4,})?\s*(-?[\d.]+[a-z]+)\s+(-?[\d.]+[a-z]+)\s*([\d.]+[a-z]+)?/.exec(node.css('textShadow'));
                     if (match) {
                         const color = Resource.addColor(parseColor(match[1] || node.css('color')));
                         if (color !== '') {

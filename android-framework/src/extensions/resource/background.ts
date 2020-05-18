@@ -55,8 +55,6 @@ const { BOX_STANDARD, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const NodeUI = squared.base.NodeUI;
 
-const CHAR_SEPARATOR = /\s*,\s*/;
-
 function getBorderStyle(border: BorderAttribute, direction = -1, halfSize = false): ShapeStrokeData {
     const { style, color } = border;
     const width = roundFloat(border.width);
@@ -734,6 +732,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         if (backgroundImage || embedded) {
             const resource = this.resource as android.base.Resource<T>;
             const screenDimension = node.localSettings.screenDimension;
+            const charSeparator = /\s*,\s*/;
             const { bounds, fontSize } = node;
             const { width: boundsWidth, height: boundsHeight } = bounds;
             const result: BackgroundImageData[] = [];
@@ -741,9 +740,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const svg: boolean[] = [];
             const imageDimensions: Undef<Dimension>[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
-            const backgroundPositionX = data.backgroundPositionX.split(CHAR_SEPARATOR), backgroundPositionY = data.backgroundPositionY.split(CHAR_SEPARATOR);
-            let backgroundRepeat = data.backgroundRepeat.split(CHAR_SEPARATOR);
-            let backgroundSize = data.backgroundSize.split(CHAR_SEPARATOR);
+            const backgroundPositionX = data.backgroundPositionX.split(charSeparator), backgroundPositionY = data.backgroundPositionY.split(charSeparator);
+            let backgroundRepeat = data.backgroundRepeat.split(charSeparator);
+            let backgroundSize = data.backgroundSize.split(charSeparator);
             let length = 0;
             if (backgroundImage) {
                 const svgInstance = this._resourceSvgInstance;

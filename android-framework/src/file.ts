@@ -24,11 +24,7 @@ interface ItemValue {
 const { fromLastIndexOf, parseMimeType, plainMap } = squared.lib.util;
 const { applyTemplate, replaceTab } = squared.lib.xml;
 
-const ASSETS = Resource.ASSETS;
 const STORED = Resource.STORED as AndroidResourceStoredMap;
-const REGEX_FILENAME = /^(.+)\/(.+?\.\w+)$/;
-const REGEX_DRAWABLE_UNIT = /"(-?[\d.]+)px"/g;
-const REGEX_THEME_UNIT = />(-?[\d.]+)px</g;
 
 function getFileAssets(pathname: string, items: string[]) {
     const length = items.length;
@@ -316,7 +312,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             const { convertPixels, insertSpaces, manifestThemeName } = this.userSettings;
             const appTheme: ObjectMap<boolean> = {};
             for (const [filename, theme] of STORED.themes.entries()) {
-                const match = REGEX_FILENAME.exec(filename);
+                const match = /^(.+)\/(.+?\.\w+)$/.exec(filename);
                 if (match) {
                     const item: ObjectMap<any[]> = { style: [] };
                     const itemArray = item.style;
@@ -340,7 +336,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     const value = applyTemplate('resources', STYLE_TMPL, [item]);
                     result.push(
                         replaceTab(
-                            convertPixels === 'dp' ? value.replace(REGEX_THEME_UNIT, (found, ...capture) => '>' + convertLength(capture[0], false) + '<') : value,
+                            convertPixels === 'dp' ? value.replace(/>(-?[\d.]+)px</g, (found, ...capture) => '>' + convertLength(capture[0], false) + '<') : value,
                             insertSpaces
                         ),
                         match[1],
@@ -377,7 +373,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             for (const [name, value] of STORED.drawables.entries()) {
                 result.push(
                     replaceTab(
-                        convertPixels === 'dp' ? value.replace(REGEX_DRAWABLE_UNIT, (match, ...capture) => '"' + convertLength(capture[0], false) + '"') : value,
+                        convertPixels === 'dp' ? value.replace(/"(-?[\d.]+)px"/g, (match, ...capture) => '"' + convertLength(capture[0], false) + '"') : value,
                         insertSpaces
                     ),
                     directory,
@@ -448,11 +444,11 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceRawVideoToString(options: FileUniversalOptions = {}): string[] {
-        if (ASSETS.video.size) {
+        if (Resource.ASSETS.video.size) {
             const { directory, filename } = options;
             const videoDirectory = this.directory.video;
             const result: string[] = [];
-            for (const video of ASSETS.video.values()) {
+            for (const video of Resource.ASSETS.video.values()) {
                 const uri = video.uri as string;
                 result.push(uri, video.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
             }
@@ -471,11 +467,11 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceRawAudioToString(options: FileUniversalOptions = {}): string[] {
-        if (ASSETS.video.size) {
+        if (Resource.ASSETS.video.size) {
             const { directory, filename } = options;
             const audioDirectory = this.directory.audio;
             const result: string[] = [];
-            for (const video of ASSETS.audio.values()) {
+            for (const video of Resource.ASSETS.audio.values()) {
                 const uri = video.uri as string;
                 result.push(uri, video.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
             }

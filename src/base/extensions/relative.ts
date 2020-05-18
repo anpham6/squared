@@ -7,8 +7,6 @@ import { BOX_STANDARD } from '../lib/enumeration';
 const { assignRect } = squared.lib.dom;
 const { convertFloat, withinRange } = squared.lib.util;
 
-const TRANSLATE_OPTIONS = { relative: true };
-
 export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
         return node.positionRelative && !node.autoPosition || convertFloat(node.verticalAlign) !== 0;
@@ -56,10 +54,10 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 y -= verticalAlign;
             }
             if (x !== 0) {
-                node.translateX(x, TRANSLATE_OPTIONS);
+                node.translateX(x, { relative: true });
             }
             if (y !== 0) {
-                node.translateY(y, TRANSLATE_OPTIONS);
+                node.translateY(y, { relative: true });
             }
         }
         else {

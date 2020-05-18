@@ -142,8 +142,6 @@ interface AnimateGroup {
     pathData?: string;
 }
 
-const STORED = Resource.STORED as AndroidResourceStoredMap;
-
 const INTERPOLATOR_ANDROID = {
     accelerate_decelerate: '@android:anim/accelerate_decelerate_interpolator',
     accelerate:	'@android:anim/accelerate_interpolator',
@@ -222,6 +220,7 @@ function createPathInterpolator(value: string) {
         return interpolator;
     }
     else {
+        const STORED = Resource.STORED as AndroidResourceStoredMap;
         const name = `path_interpolator_${convertWord(value)}`;
         if (!STORED.animators.has(name)) {
             STORED.animators.set(name, formatString(INTERPOLATOR_XML, ...value.split(/\s+/)));

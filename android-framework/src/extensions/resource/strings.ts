@@ -12,13 +12,11 @@ const { STRING_SPACE, replaceCharacterData } = squared.lib.xml;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
-const REGEX_FONTOBLIQUE = /oblique(?:\s+(-?[\d.]+[a-z]+))?/;
-
 function getFontVariationStyle(value: string) {
     if (value === 'italic') {
         return "'ital' 1";
     }
-    const match = REGEX_FONTOBLIQUE.exec(value);
+    const match = /oblique(?:\s+(-?[\d.]+[a-z]+))?/.exec(value);
     if (match) {
         let angle: Undef<number>;
         if (match[1]) {

@@ -16,14 +16,6 @@ const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.
 
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 
-const REGEX_BACKGROUND = /^background/;
-const REGEX_IMPORTANT = /\s*([a-z-]+):[^!;]+!important;/g;
-const REGEX_FONTFACE = /\s*@font-face\s*{([^}]+)}\s*/;
-const REGEX_FONTFAMILY = /\s*font-family:[^\w]*([^'";]+)/;
-const REGEX_FONTSRC = /\s*src:\s*([^;]+);/;
-const REGEX_FONTSTYLE = /\s*font-style:\s*(\w+)\s*;/;
-const REGEX_FONTWEIGHT = /\s*font-weight:\s*(\d+)\s*;/;
-const REGEX_URL = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/;
 const REGEX_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
@@ -484,9 +476,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                 parseImageUrl(resourceHandler, baseMap, 'backgroundImage', styleSheetHref);
                 parseImageUrl(resourceHandler, baseMap, 'listStyleImage', styleSheetHref);
                 parseImageUrl(resourceHandler, baseMap, 'content', styleSheetHref);
-                REGEX_IMPORTANT.lastIndex = 0;
+                const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
                 let match: Null<RegExpExecArray>;
-                while ((match = REGEX_IMPORTANT.exec(cssText)) !== null) {
+                while ((match = pattern.exec(cssText)) !== null) {
                     const attr = convertCamelCase(match[1]);
                     const value = CSS_PROPERTIES[attr]?.value;
                     if (Array.isArray(value)) {
@@ -521,7 +513,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 const revised = specificity + (important[attr] ? 1000 : 0);
                                 if (previous === undefined || revised >= previous) {
                                     const value = baseMap[attr];
-                                    if (value === 'initial' && REGEX_BACKGROUND.test(attr)) {
+                                    if (value === 'initial' && /^background/.test(attr)) {
                                         if (cssStyle.background === 'none') {
                                             delete styleData[attr];
                                         }
@@ -549,15 +541,15 @@ export default abstract class Application<T extends Node> implements squared.bas
                 break;
             }
             case CSSRule.FONT_FACE_RULE: {
-                const attr = REGEX_FONTFACE.exec(cssText)?.[1];
+                const attr = /\s*@font-face\s*{([^}]+)}\s*/.exec(cssText)?.[1];
                 if (attr) {
-                    const fontFamily = (REGEX_FONTFAMILY.exec(attr)?.[1] || '').trim();
-                    const match = (REGEX_FONTSRC.exec(attr)?.[1] || '').split(',');
+                    const fontFamily = (/\s*font-family:[^\w]*([^'";]+)/.exec(attr)?.[1] || '').trim();
+                    const match = (/\s*src:\s*([^;]+);/.exec(attr)?.[1] || '').split(',');
                     if (fontFamily !== '' && match.length) {
-                        const fontStyle = REGEX_FONTSTYLE.exec(attr)?.[1].toLowerCase() || 'normal';
-                        const fontWeight = parseInt(REGEX_FONTWEIGHT.exec(attr)?.[1] || '400');
+                        const fontStyle = /\s*font-style:\s*(\w+)\s*;/.exec(attr)?.[1].toLowerCase() || 'normal';
+                        const fontWeight = parseInt(/\s*font-weight:\s*(\d+)\s*;/.exec(attr)?.[1] || '400');
                         for (const value of match) {
-                            const urlMatch = REGEX_URL.exec(value);
+                            const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(value);
                             if (urlMatch) {
                                 let srcUrl: Undef<string>;
                                 let srcLocal: Undef<string>;

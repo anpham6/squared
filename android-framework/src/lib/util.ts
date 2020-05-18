@@ -8,8 +8,6 @@ const { capitalize, convertFloat, isPlainObject } = squared.lib.util;
 
 const { BOX_STANDARD } = squared.base.lib.enumeration;
 
-const REGEX_ID = /^@\+?id\//;
-
 function calculateBias(start: number, end: number, accuracy = 3) {
     if (start === 0) {
         return 0;
@@ -28,7 +26,7 @@ export function convertLength(value: string | number, font = false, precision = 
 }
 
 export function getDocumentId(value: string) {
-    return value.replace(REGEX_ID, '');
+    return value.replace(/^@\+?id\//, '');
 }
 
 export function isHorizontalAlign(value: string) {

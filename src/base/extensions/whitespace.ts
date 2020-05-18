@@ -3,26 +3,10 @@ import NodeUI from '../node-ui';
 
 import { BOX_STANDARD, NODE_ALIGNMENT } from '../lib/enumeration';
 
-type CollaspeAttibutes = [string, string, string, number];
-
 const { formatPX } = squared.lib.css;
 const { maxArray } = squared.lib.math;
 const { getElementCache } = squared.lib.session;
 const { iterateReverseArray } = squared.lib.util;
-
-const COLLAPSE_TOP: CollaspeAttibutes = [
-    'marginTop',
-    'borderTopWidth',
-    'paddingTop',
-    BOX_STANDARD.MARGIN_TOP
-];
-
-const COLLAPSE_BOTTOM: CollaspeAttibutes = [
-    'marginBottom',
-    'borderBottomWidth',
-    'paddingBottom',
-    BOX_STANDARD.MARGIN_BOTTOM
-];
 
 const DOCTYPE_HTML = document.doctype?.name === 'html';
 
@@ -68,7 +52,10 @@ function adjustRegion(item: NodeUI, region: number, adjustment: number) {
 
 function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
     if (!direction || isBlockElement(child, true)) {
-        const [marginName, borderWidth, paddingName, region] = direction ? COLLAPSE_TOP : COLLAPSE_BOTTOM;
+        const [marginName, borderWidth, paddingName, region] =
+            direction
+                ? ['marginTop', 'borderTopWidth', 'paddingTop', BOX_STANDARD.MARGIN_TOP]
+                : ['marginBottom', 'borderBottomWidth', 'paddingBottom', BOX_STANDARD.MARGIN_BOTTOM];
         if (node[borderWidth] === 0) {
             if (node[paddingName] === 0) {
                 let target = child;

@@ -8,8 +8,6 @@ const { getFontSize, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { hasValue, isNumber, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
-const REGEX_BEZIER = /^\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$/;
-
 function flatString<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
     const result: U[] = [];
@@ -33,7 +31,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (keySpline) {
             return keySpline;
         }
-        else if (REGEX_BEZIER.test(value)) {
+        else if (/^\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$/.test(value)) {
             return value;
         }
         else if (value.startsWith('step')) {

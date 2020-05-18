@@ -13,13 +13,11 @@ const { truncate } = squared.lib.math;
 const { STRING } = squared.lib.regex;
 const { convertCamelCase, convertFloat, isNumber, isString, joinArray, plainMap } = squared.lib.util;
 
-const PERCENTAGE = STRING.LENGTH_PERCENTAGE;
-
 const REGEX_CACHE: ObjectMap<RegExp> = {
     polygon: /polygon\(([^)]+)\)/,
-    inset: new RegExp(`inset\\(${PERCENTAGE}\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\s?${PERCENTAGE}?\\)`),
-    circle: new RegExp(`circle\\(${PERCENTAGE}(?:\\s+at\\s+${PERCENTAGE}\\s+${PERCENTAGE})?\\)`),
-    ellipse: new RegExp(`ellipse\\(${PERCENTAGE}\\s+${PERCENTAGE}(?:\\s+at\\s+${PERCENTAGE}\\s+${PERCENTAGE})?\\)`)
+    inset: new RegExp(`inset\\(${STRING.LENGTH_PERCENTAGE}\\s?${STRING.LENGTH_PERCENTAGE}?\\s?${STRING.LENGTH_PERCENTAGE}?\\s?${STRING.LENGTH_PERCENTAGE}?\\)`),
+    circle: new RegExp(`circle\\(${STRING.LENGTH_PERCENTAGE}(?:\\s+at\\s+${STRING.LENGTH_PERCENTAGE}\\s+${STRING.LENGTH_PERCENTAGE})?\\)`),
+    ellipse: new RegExp(`ellipse\\(${STRING.LENGTH_PERCENTAGE}\\s+${STRING.LENGTH_PERCENTAGE}(?:\\s+at\\s+${STRING.LENGTH_PERCENTAGE}\\s+${STRING.LENGTH_PERCENTAGE})?\\)`)
 };
 
 export default <T extends Constructor<SvgElement>>(Base: T) => {

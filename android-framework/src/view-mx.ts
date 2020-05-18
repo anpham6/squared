@@ -5,8 +5,8 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 
 type T = android.base.View;
 
-const { BOX_MARGIN, BOX_PADDING, CSS_UNIT, formatPX, getBackgroundPosition, isLength, isPercent, parseTransform } = squared.lib.css;
-const { createElement, getNamedItem, newBoxModel } = squared.lib.dom;
+const { BOX_MARGIN, BOX_PADDING, CSS_UNIT, formatPX, getBackgroundPosition, isLength, isPercent, newBoxModel, parseTransform } = squared.lib.css;
+const { createElement, getNamedItem } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { actualTextRangeRect } = squared.lib.session;
 const { capitalize, convertFloat, convertInt, convertWord, fromLastIndexOf, hasKeys, isNumber, isPlainObject, isString, replaceMap } = squared.lib.util;
@@ -17,13 +17,6 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 const ResourceUI = squared.base.ResourceUI;
 
 const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_ANDROID;
-const DEPRECATED = DEPRECATED_ANDROID.android;
-const SPACING_SELECT = 2;
-const SPACING_CHECKBOX = 4;
-const REGEX_DATASETATTR = /^attr[A-Z]/;
-const REGEX_FORMATTED = /^(?:([a-z]+):)?(\w+)="((?:@\+?[a-z]+\/)?.+)"$/;
-const REGEX_STRINGVALID = /[^\w$\-_.]/g;
-const REGEX_CLIPNONE = /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/;
 
 function checkTextAlign(value: string, ignoreStart: boolean) {
     switch (value) {
@@ -637,12 +630,12 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
         switch (this.controlName) {
             case CONTAINER_ANDROID.RADIO:
             case CONTAINER_ANDROID.CHECKBOX:
-                top = Math.max(top - SPACING_CHECKBOX, 0);
-                bottom = Math.max(bottom - SPACING_CHECKBOX, 0);
+                top = Math.max(top - 4, 0);
+                bottom = Math.max(bottom - 4, 0);
                 break;
             case CONTAINER_ANDROID.SELECT:
-                top = Math.max(top - SPACING_SELECT, 0);
-                bottom = Math.max(bottom - SPACING_SELECT, 0);
+                top = Math.max(top - 2, 0);
+                bottom = Math.max(bottom - 2, 0);
                 break;
         }
         if (top < 0) {
@@ -920,7 +913,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     this.hide({ collapse: true });
                     break;
             }
-            if (!this.pageFlow && REGEX_CLIPNONE.test(this.css('clip'))) {
+            if (!this.pageFlow && /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/.test(this.css('clip'))) {
                 this.hide({ hidden: true });
             }
             const actualParent = this.actualParent as T || this.documentParent;
@@ -1500,7 +1493,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 const dataset = getDataSet(this.dataset, 'android');
                 if (dataset) {
                     for (const namespace in dataset) {
-                        const name = namespace === 'attr' ? 'android' : (REGEX_DATASETATTR.test(namespace) ? capitalize(namespace.substring(4), false) : '');
+                        const name = namespace === 'attr' ? 'android' : (/^attr[A-Z]/.test(namespace) ? capitalize(namespace.substring(4), false) : '');
                         if (name !== '') {
                             for (const values of dataset[namespace].split(';')) {
                                 const [key, value] = values.split('::');
@@ -1821,7 +1814,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public formatted(value: string, overwrite = true) {
-            const match = REGEX_FORMATTED.exec(value);
+            const match = /^(?:([a-z]+):)?(\w+)="((?:@\+?[a-z]+\/)?.+)"$/.exec(value);
             if (match) {
                 this.attr(match[1] || '_', match[2], match[3], overwrite);
             }
@@ -2025,8 +2018,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public supported(attr: string, result = {}): boolean {
-            if (typeof DEPRECATED[attr] === 'function') {
-                const valid = DEPRECATED[attr](result, this.api, this);
+            if (typeof DEPRECATED_ANDROID.android[attr] === 'function') {
+                const valid = DEPRECATED_ANDROID.android[attr](result, this.api, this);
                 if (!valid || hasKeys(result)) {
                     return valid;
                 }
@@ -2439,7 +2432,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (this.styleElement) {
                         const value = this.elementId?.trim() || getNamedItem(this.element as HTMLElement, 'name');
                         if (value !== '') {
-                            name = value.replace(REGEX_STRINGVALID, '_').toLowerCase();
+                            name = value.replace(/[^\w$\-_.]/g, '_').toLowerCase();
                             if (name === 'parent' || RESERVED_JAVA.includes(name)) {
                                 name = '_' + name;
                             }
@@ -2545,11 +2538,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         switch (this.controlName) {
                             case CONTAINER_ANDROID.RADIO:
                             case CONTAINER_ANDROID.CHECKBOX:
-                                result += SPACING_CHECKBOX * 2;
+                                result += 8;
                                 break;
                             case CONTAINER_ANDROID.SELECT:
                                 result /= this.toElementInt('size') || 1;
-                                result += SPACING_SELECT * 2;
+                                result += 4;
                                 break;
                             default:
                                 result += Math.max(convertFloat(this.verticalAlign) * -1, 0);

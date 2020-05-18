@@ -1,4 +1,4 @@
-import { FILE, UNIT } from './regex';
+import { FILE, STRING } from './regex';
 
 const NUMERALS = [
     '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
@@ -6,11 +6,9 @@ const NUMERALS = [
     '', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX'
 ];
 
-const UUID_ALPHA = '0123456789abcdef';
-const UUID_SEGMENT = [8, 4, 4, 4, 12];
-const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
+const REGEX_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
 
 export function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: any[]) => {
@@ -475,12 +473,13 @@ export function convertFloat(value: string) {
 
 export function convertAlpha(value: number) {
     if (value >= 0) {
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         let result = '';
-        const length = ALPHABET.length;
+        const length = alphabet.length;
         while (value >= length) {
             const base = Math.floor(value / length);
             if (base > 1 && base <= length) {
-                result += ALPHABET.charAt(base - 1);
+                result += alphabet.charAt(base - 1);
                 value -= base * length;
             }
             else if (base > 0) {
@@ -490,10 +489,10 @@ export function convertAlpha(value: number) {
                 return result;
             }
             const index = value % length;
-            result += ALPHABET.charAt(index);
+            result += alphabet.charAt(index);
             value -= index + length;
         }
-        return ALPHABET.charAt(value) + result;
+        return alphabet.charAt(value) + result;
     }
     return value.toString();
 }
@@ -518,14 +517,14 @@ export function convertEnum(value: number, source: {}, derived: {}): string {
 }
 
 export function randomUUID(separator = '-') {
+    const alpha = '0123456789abcdef';
     let result = '';
-    for (let i = 0; i < 5; ++i) {
-        if (i > 0) {
+    for (const length of [8, 4, 4, 4, 12]) {
+        if (result !== '') {
             result += separator;
         }
-        const length = UUID_SEGMENT[i];
-        for (let j = 0; j < length; ++j) {
-            result += UUID_ALPHA.charAt(Math.floor(Math.random() * 16));
+        for (let i = 0; i < length; ++i) {
+            result += alpha.charAt(Math.floor(Math.random() * 16));
         }
     }
     return result;
@@ -667,7 +666,7 @@ export function hasBit(value: number, offset: number) {
 }
 
 export function isNumber(value: string) {
-    return UNIT.DECIMAL.test(value);
+    return REGEX_DECIMAL.test(value);
 }
 
 export function isString(value: any): value is string {

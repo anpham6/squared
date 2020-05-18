@@ -6,13 +6,11 @@ type View = android.base.View;
 
 const { capitalize } = squared.lib.util;
 
-const STORED = Resource.STORED as AndroidResourceStoredMap;
-const REGEX_ATTRIBUTE = /(\w+:(\w+))="([^"]+)"/;
-
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
     public beforeCascade() {
+        const STORED = Resource.STORED as AndroidResourceStoredMap;
         this.cache.each(node => {
             if (node.controlId && node.visible) {
                 const renderChildren = node.renderChildren;
@@ -61,7 +59,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                         const attrs: string[] = [];
                         i = 0;
                         while (i < q) {
-                            const match = REGEX_ATTRIBUTE.exec(keys[i++]);
+                            const match = /(\w+:(\w+))="([^"]+)"/.exec(keys[i++]);
                             if (match) {
                                 items.push({ key: match[1], value: match[3] });
                                 attrs.push(match[2]);

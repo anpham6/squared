@@ -11,12 +11,6 @@ const { getFontSize, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { capitalize, hasBit, isNumber, isString } = squared.lib.util;
 
-const REGEX_MS = /-?\d+ms$/;
-const REGEX_S = /-?\d+s$/;
-const REGEX_MIN = /-?\d+min$/;
-const REGEX_H = /-?\d+(.\d+)?h$/;
-const REGEX_CLOCK = /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/;
-
 function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
     const valid = hasBit(this.fillMode, value);
     if (mode) {
@@ -36,20 +30,20 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
         if (isNumber(value)) {
             s = parseInt(value);
         }
-        else if (REGEX_MS.test(value)) {
+        else if (/-?\d+ms$/.test(value)) {
             ms = parseFloat(value);
         }
-        else if (REGEX_S.test(value)) {
+        else if (/-?\d+s$/.test(value)) {
             s = parseFloat(value);
         }
-        else if (REGEX_MIN.test(value)) {
+        else if (/-?\d+min$/.test(value)) {
             s = parseFloat(value) * 60;
         }
-        else if (REGEX_H.test(value)) {
+        else if (/-?\d+(.\d+)?h$/.test(value)) {
             s = parseFloat(value) * 60 * 60;
         }
         else {
-            const match = REGEX_CLOCK.exec(value);
+            const match = /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/.exec(value);
             if (match) {
                 const hr = match[2];
                 const mt = match[3];

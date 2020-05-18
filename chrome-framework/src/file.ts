@@ -7,9 +7,6 @@ type BundleIndex = ObjectMap<ChromeAsset[]>;
 const { FILE } = squared.lib.regex;
 const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, plainMap, randomUUID, resolvePath, safeNestedArray, trimEnd } = squared.lib.util;
 
-const ASSETS = Resource.ASSETS;
-const REGEX_SRCSET = /[\s\n]*(.+?\.[^\s,]+).*?,?/g;
-
 function parseFileAs(attr: string, value: Undef<string>): [string, Undef<string>, boolean] | undefined {
     if (value) {
         const match = new RegExp(`${attr}:\\s*((?:[^"]|\\\\")+)`).exec(value.replace(/\\/g, '/'));
@@ -419,7 +416,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 }
             }
         });
-        for (const [uri, rawData] of ASSETS.rawData.entries()) {
+        for (const [uri, rawData] of Resource.ASSETS.rawData.entries()) {
             const mimeType = rawData.mimeType;
             if (mimeType === 'text/css') {
                 const data = File.parseUri(resolvePath(uri), { preserveCrossOrigin, format: saveAs?.format });
@@ -477,16 +474,16 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
-            REGEX_SRCSET.lastIndex = 0;
+            const pattern = /[\s\n]*(.+?\.[^\s,]+).*?,?/g;
             let match: Null<RegExpExecArray>;
-            while ((match = REGEX_SRCSET.exec(element.srcset.trim())) !== null) {
+            while ((match = pattern.exec(element.srcset.trim())) !== null) {
                 processUri(element, resolvePath(match[1]));
             }
         });
-        for (const uri of ASSETS.image.keys()) {
+        for (const uri of Resource.ASSETS.image.keys()) {
             processUri(null, uri);
         }
-        for (const rawData of ASSETS.rawData.values()) {
+        for (const rawData of Resource.ASSETS.rawData.values()) {
             if (rawData.pathname) {
                 continue;
             }
@@ -548,7 +545,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     public getFontAssets(options?: FileActionAttribute) {
         const preserveCrossOrigin = options?.preserveCrossOrigin;
         const result: ChromeAsset[] = [];
-        for (const fonts of ASSETS.fonts.values()) {
+        for (const fonts of Resource.ASSETS.fonts.values()) {
             for (const font of fonts) {
                 const url = font.srcUrl;
                 if (url) {

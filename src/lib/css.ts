@@ -1,20 +1,17 @@
 import { parseColor } from './color';
 import { USER_AGENT, getDeviceDPI, isUserAgent } from './client';
 import { clamp, truncate, truncateFraction } from './math';
-import { CSS, STRING, TRANSFORM, UNIT } from './regex';
+import { CSS, STRING, TRANSFORM } from './regex';
 import { convertAlpha, convertFloat, convertRoman, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
 
 const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
-const REGEX_KEYFRAME = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/;
-const REGEX_MEDIARULE = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
-const REGEX_MEDIACONDITION = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
-const REGEX_SRCSET = /^(.*?)(?:\s+([\d.]+)([xw]))?$/;
-const REGEX_OPERATOR = /\s+([+-]\s+|\s*[*/])\s*/;
-const REGEX_INTEGER = /^\s*-?\d+\s*$/;
-const REGEX_SELECTORALL = /^\*(\s+\*){0,2}$/;
-const REGEX_SELECTORTRIM = /^(\*\s+){1,2}/;
-const REGEX_CALC = new RegExp(STRING.CSS_CALC);
-const REGEX_LENGTH = new RegExp(`(${STRING.UNIT_LENGTH}|%)`);
+const REGEX_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
+const REGEX_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
+const REGEX_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
+const REGEX_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
+const REGEX_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
+const REGEX_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
+const REGEX_CALCWITHIN = new RegExp(STRING.CSS_CALC);
 const REGEX_SOURCESIZES = new RegExp(`\\s*(?:(\\(\\s*)?${STRING_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${STRING_SIZES}(\\s*\\))?)?\\s*(.+)`);
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
@@ -290,7 +287,7 @@ const isColor = (value: string) => /(rgb|hsl)a?/.test(value);
 const formatVar = (value: number) => !isNaN(value) ? value + 'px' : '';
 const formatDecimal = (value: number) => !isNaN(value) ? value.toString() : '';
 const trimEnclosing = (value: string) => value.substring(1, value.length - 1);
-const trimSelector = (value: string) => REGEX_SELECTORALL.test(value) ? '*' : value.replace(REGEX_SELECTORTRIM, '');
+const trimSelector = (value: string) => /^\*(\s+\*){0,2}$/.test(value) ? '*' : value.replace(/^(\*\s+){1,2}/, '');
 
 export const enum CSS_UNIT {
     NONE = 0,
@@ -1412,6 +1409,19 @@ export const BOX_BORDER = [
     ['outlineStyle', 'outlineWidth', 'outlineColor']
 ];
 
+export function newBoxModel(): BoxModel {
+    return {
+        marginTop: 0,
+        marginRight: 0,
+        marginBottom: 0,
+        marginLeft: 0,
+        paddingTop: 0,
+        paddingRight: 0,
+        paddingBottom: 0,
+        paddingLeft: 0
+    };
+}
+
 export function getStyle(element: Null<Element>, pseudoElt = ''): CSSStyleDeclaration {
     if (element) {
         const cached = element['__style' + pseudoElt];
@@ -2180,7 +2190,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                             const options: CalculateVarAsStringOptions = { boundingBox, min: 0, parent: true };
                             if (prefix === 'circle') {
                                 if (radius.includes('%')) {
-                                    const { width, height } = boundingBox || getParentBoxDimension(element);
+                                    const { width, height } = boundingBox || getContentBoxDimension(element.parentElement);
                                     if (width > 0 && height > 0) {
                                         options.boundingSize = Math.min(width, height);
                                     }
@@ -2375,17 +2385,11 @@ export function checkStyleValue(element: HTMLElement, attr: string, value: strin
     }
     else if (hasCalc(value)) {
         value = calculateStyle(element, attr, value);
-        if (value === '' && style) {
-            value = style[attr];
-        }
     }
     else if (isCustomProperty(value)) {
         value = parseVar(element, value);
-        if (value === '' && style) {
-            value = style[attr];
-        }
     }
-    return value || '';
+    return value === '' && style?.[attr] || value;
 }
 
 export function getKeyframesRules(): ObjectMap<KeyframesData> {
@@ -2430,7 +2434,7 @@ export function parseKeyframes(rules: CSSRuleList) {
     let i = 0;
     while (i < length) {
         const item = rules[i++];
-        const match = REGEX_KEYFRAME.exec(item.cssText);
+        const match = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/.exec(item.cssText);
         if (match) {
             for (let percent of (item['keyText'] as string || match[1]).trim().split(CHAR_SEPARATOR)) {
                 switch (percent) {
@@ -2467,14 +2471,14 @@ export function checkMediaRule(value: string, fontSize?: number) {
         case 'only screen':
             return true;
         default: {
-            REGEX_MEDIARULE.lastIndex = 0;
+            const pattern = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
             let match: Null<RegExpExecArray>;
-            while ((match = REGEX_MEDIARULE.exec(value)) !== null) {
-                REGEX_MEDIACONDITION.lastIndex = 0;
+            while ((match = pattern.exec(value)) !== null) {
+                const patternCondition = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
                 const negate = match[1] === 'not';
                 let valid = false;
                 let condition: Null<RegExpExecArray>;
-                while ((condition = REGEX_MEDIACONDITION.exec(match[2])) !== null) {
+                while ((condition = patternCondition.exec(match[2])) !== null) {
                     const attr = condition[1];
                     let operation = condition[2];
                     const rule = condition[3];
@@ -2594,8 +2598,9 @@ export function getInheritedStyle(element: Element, attr: string, exclude?: RegE
 
 export function parseVar(element: CSSElement, value: string) {
     const style = getStyle(element);
+    const pattern = /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/;
     let match: Null<RegExpMatchArray>;
-    while ((match = CSS.VAR.exec(value)) !== null) {
+    while ((match = pattern.exec(value)) !== null) {
         let customValue = style.getPropertyValue(match[1]).trim();
         const fallback = match[2];
         if (fallback && (customValue === '' || isLength(fallback, true) && !isLength(customValue, true) || isNumber(fallback) && !isNumber(customValue) || parseColor(fallback) && !parseColor(customValue))) {
@@ -2799,13 +2804,11 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
     return NaN;
 }
 
-export function getParentBoxDimension(element: CSSElement) {
-    const parentElement = element.parentElement;
-    let width = 0;
-    let height = 0;
-    if (parentElement) {
-        const style = getStyle(parentElement);
-        ({ width, height } = parentElement.getBoundingClientRect());
+export function getContentBoxDimension(element: Null<CSSElement>) {
+    let width = 0, height = 0;
+    if (element) {
+        const style = getStyle(element);
+        ({ width, height } = element.getBoundingClientRect());
         width = Math.max(0, width - getContentBoxWidth(style));
         height = Math.max(0, height - getContentBoxHeight(style));
     }
@@ -3101,8 +3104,8 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
 }
 
 export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
-    const parentElement = element.parentElement as HTMLPictureElement;
     const result: ImageSrcSet[] = [];
+    const parentElement = element.parentElement as HTMLPictureElement;
     let { srcset, sizes } = element;
     if (parentElement?.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
@@ -3119,7 +3122,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     }
     if (srcset !== '') {
         for (const value of srcset.trim().split(CHAR_SEPARATOR)) {
-            const match = REGEX_SRCSET.exec(value);
+            const match = /^(.*?)(?:\s+([\d.]+)([xw]))?$/.exec(value);
             if (match) {
                 let width = 0;
                 let pixelRatio = 0;
@@ -3189,12 +3192,12 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                     }
                     const unit = match[9];
                     if (unit) {
-                        match = CSS.CALC.exec(unit);
+                        match = REGEX_CALC.exec(unit);
                         if (match) {
-                            width = calculate(match[1], match[1].includes('%') ? { boundingSize: getParentBoxDimension(element).width } : undefined);
+                            width = calculate(match[1], match[1].includes('%') ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
                         }
                         else if (isPercent(unit)) {
-                            width = parseFloat(unit) / 100 * getParentBoxDimension(element).width;
+                            width = parseFloat(unit) / 100 * getContentBoxDimension(element.parentElement).width;
                         }
                         else if (isLength(unit)) {
                             width = parseUnit(unit);
@@ -3292,10 +3295,6 @@ export function insertStyleSheetRule(value: string, index = 0) {
     return style;
 }
 
-export function convertPX(value: string, fontSize?: number) {
-    return value ? parseUnit(value, fontSize) + 'px' : '0px';
-}
-
 export function calculate(value: string, options?: CalculateOptions) {
     value = value.trim();
     if (value === '') {
@@ -3346,7 +3345,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                     let found = false;
                     const seg: number[] = [];
                     const evaluate: string[] = [];
-                    const operation = value.substring(j + 1, closing[i]).split(REGEX_OPERATOR);
+                    const operation = value.substring(j + 1, closing[i]).split(/\s+([+-]\s+|\s*[*/])\s*/);
                     const q = operation.length;
                     let k = 0;
                     while (k < q) {
@@ -3440,7 +3439,7 @@ export function calculate(value: string, options?: CalculateOptions) {
                                             }
                                             break;
                                         case CSS_UNIT.INTEGER:
-                                            if (REGEX_INTEGER.test(partial)) {
+                                            if (/^\s*-?\d+\s*$/.test(partial)) {
                                                 seg.push(parseInt(partial));
                                                 found = true;
                                             }
@@ -3543,7 +3542,7 @@ export function calculate(value: string, options?: CalculateOptions) {
 }
 
 export function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension) {
-    const match = UNIT.LENGTH.exec(value);
+    const match = REGEX_LENGTH.exec(value);
     if (match) {
         let result = parseFloat(match[1]);
         switch (match[2]) {
@@ -3764,7 +3763,7 @@ export function parseTransform(value: string, accumulate?: boolean, fontSize?: n
 }
 
 export function parseAngle(value: string, fallback = NaN) {
-    const match = CSS.ANGLE.exec(value);
+    const match = REGEX_ANGLE.exec(value);
     return match ? convertAngle(match[1], match[2]) : fallback;
 }
 
@@ -3787,7 +3786,7 @@ export function convertAngle(value: string, unit = 'deg', fallback = NaN) {
 }
 
 export function parseTime(value: string) {
-    const match = CSS.TIME.exec(value);
+    const match = REGEX_TIME.exec(value);
     if (match) {
         switch (match[2]) {
             case 'ms':
@@ -3815,29 +3814,33 @@ export function formatPercent(value: string | number, round = true) {
 }
 
 export function isLength(value: string, percent?: boolean) {
-    return !percent ? UNIT.LENGTH.test(value) : UNIT.LENGTH_PERCENTAGE.test(value);
+    return !percent ? REGEX_LENGTH.test(value) : REGEX_LENGTHPERCENTAGE.test(value);
+}
+
+export function isPx(value: string) {
+    return /\dpx$/.test(value);
 }
 
 export function isCalc(value: string) {
-    return CSS.CALC.test(value);
+    return REGEX_CALC.test(value);
 }
 
 export function isCustomProperty(value: string) {
-    return CSS.CUSTOM_PROPERTY.test(value);
+    return /^\s*var\(.+\)\s*$/.test(value);
 }
 
 export function isAngle(value: string) {
-    return CSS.ANGLE.test(value);
+    return REGEX_ANGLE.test(value);
 }
 
 export function isTime(value: string) {
-    return CSS.TIME.test(value);
+    return REGEX_TIME.test(value);
 }
 
 export function isPercent(value: string) {
-    return UNIT.PERCENT.test(value);
+    return REGEX_PERCENT.test(value);
 }
 
 export function hasCalc(value: string) {
-    return REGEX_CALC.test(value);
+    return REGEX_CALCWITHIN.test(value);
 }

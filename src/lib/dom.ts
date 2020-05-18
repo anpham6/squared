@@ -56,19 +56,6 @@ export function newBoxRectDimension(): BoxRectDimension {
     };
 }
 
-export function newBoxModel(): BoxModel {
-    return {
-        marginTop: 0,
-        marginRight: 0,
-        marginBottom: 0,
-        marginLeft: 0,
-        paddingTop: 0,
-        paddingRight: 0,
-        paddingBottom: 0,
-        paddingLeft: 0
-    };
-}
-
 export function withinViewport(rect: DOMRect | ClientRect) {
     return !(rect.top + window.scrollY + rect.height < 0 || rect.left + window.scrollX + rect.width < 0);
 }

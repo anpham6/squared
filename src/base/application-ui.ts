@@ -19,9 +19,6 @@ const { appendSeparator, capitalize, convertFloat, convertWord, flatArray, hasBi
 const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { isPlainText } = squared.lib.xml;
 
-const REGEX_COUNTER = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
-const STRING_PSEUDOPREFIX = '__squared_';
-
 function getCounterValue(value: string, counterName: string, fallback = 1) {
     if (value !== 'none') {
         const pattern = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
@@ -530,7 +527,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     let styleElement: Undef<HTMLStyleElement>;
                     if (item.pageFlow) {
                         if (id === '') {
-                            id = STRING_PSEUDOPREFIX + Math.round(Math.random() * new Date().getTime());
+                            id = '__squared_' + Math.round(Math.random() * new Date().getTime());
                             parentElement.id = id;
                         }
                         styleElement = insertStyleSheetRule(`#${id + getPseudoElt(item.element as Element, item.sessionId)} { display: none !important; }`);
@@ -542,7 +539,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 pseudoMap.forEach(data => data.item.setBounds(false));
                 for (const data of pseudoMap) {
                     const styleElement = data.styleElement;
-                    if (data.id.startsWith(STRING_PSEUDOPREFIX)) {
+                    if (data.id.startsWith('__squared_')) {
                         data.parentElement.id = '';
                     }
                     if (styleElement) {
@@ -1620,10 +1617,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             }
                         }
                         else {
-                            REGEX_COUNTER.lastIndex = 0;
+                            const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
                             let found = false;
                             let match: Null<RegExpExecArray>;
-                            while ((match = REGEX_COUNTER.exec(value)) !== null) {
+                            while ((match = pattern.exec(value)) !== null) {
                                 const attr = match[1];
                                 if (attr) {
                                     content += getNamedItem(element, attr.trim());

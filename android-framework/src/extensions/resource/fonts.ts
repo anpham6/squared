@@ -79,11 +79,6 @@ const FONT_STYLE = {
     'backgroundColor': 'android:background="@color/'
 };
 
-const STORED = Resource.STORED as AndroidResourceStoredMap;
-const REGEX_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
-const REGEX_ATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
-const FONT_STYLEKEYS = Object.keys(FONT_STYLE);
-
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
     const length = sorted.length;
     for (const value of attrs.split(';')) {
@@ -122,7 +117,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         const resource = this.resource as android.base.Resource<T>;
         const disableFontAlias = this.options.disableFontAlias;
         const convertPixels = resource.userSettings.convertPixels === 'dp';
-        const { fonts, styles } = STORED;
+        const { fonts, styles } = Resource.STORED as AndroidResourceStoredMap;
+        const styleKeys = Object.keys(FONT_STYLE);
         const nameMap: ObjectMap<T[]> = {};
         const groupMap: ObjectMap<StyleList[]> = {};
         let cache: T[] = [];
@@ -214,7 +210,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     backgroundColor: Resource.addColor(stored.backgroundColor)
                 };
                 for (let j = 0; j < 6; ++j) {
-                    const key = FONT_STYLEKEYS[j];
+                    const key = styleKeys[j];
                     let value: Undef<string> = fontData[key];
                     if (value) {
                         if (j === 3 && convertPixels) {
@@ -371,7 +367,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (const attrs in styleTag) {
                 const items: StringValue[] = [];
                 for (const value of attrs.split(';')) {
-                    const match = REGEX_ATTRIBUTE.exec(value);
+                    const match = /([^\s]+)="((?:[^"]|\\")+)"/.exec(value);
                     if (match) {
                         items.push({ key: match[1], value: match[2] });
                     }
@@ -433,7 +429,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             const length = values.length;
             for (let i = 0; i < length; ++i) {
                 const name = values[i];
-                const match = REGEX_TAGNAME.exec(name);
+                const match = /^(\w*?)(?:_(\d+))?$/.exec(name);
                 if (match) {
                     const styleData = resourceMap[match[1].toUpperCase()][convertInt(match[2])];
                     if (styleData) {

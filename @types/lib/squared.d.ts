@@ -106,6 +106,7 @@ declare module "lib" {
         const BOX_BORDER: string[][];
         const BOX_PADDING: string[];
         const TEXT_STYLE: string[];
+        function newBoxModel(): BoxModel;
         function getStyle(element: Null<Element>, pseudoElt?: string): CSSStyleDeclaration;
         function getFontSize(element: Element): number;
         function hasComputedStyle(element: Element): element is HTMLElement;
@@ -123,14 +124,13 @@ declare module "lib" {
         function calculateVarAsString(element: CSSElement, value: string, options?: CalculateVarAsStringOptions): string;
         function calculateStyle(element: CSSElement, attr: string, value: string, boundingBox?: Dimension): string;
         function parseVar(element: CSSElement, value: string): string;
-        function getParentBoxDimension(element: CSSElement): Dimension;
+        function getContentBoxDimension(element: Null<HTMLElement>): Dimension;
         function getBackgroundPosition(value: string, dimension: Dimension, options?: BackgroundPositionOptions): BoxRectPosition;
         function getSrcSet(element: HTMLImageElement, mimeType?: string[]): ImageSrcSet[];
         function convertListStyle(name: string, value: number, valueAsDefault?: boolean): string;
         function extractURL(value: string): string;
         function resolveURL(value: string): string;
         function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
-        function convertPX(value: string, fontSize?: number): string;
         function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension): number;
         function parseTransform(value: string, accumulate?: boolean, fontSize?: number): TransformData[];
         function parseAngle(value: string, fallback?: number): number;
@@ -139,6 +139,7 @@ declare module "lib" {
         function formatPX(value: number): string;
         function formatPercent(value: string | number, round?: boolean): string;
         function isLength(value: string, percent?: boolean): boolean;
+        function isPx(value: string): boolean;
         function isPercent(value: string): boolean;
         function isCalc(value: string): boolean;
         function isCustomProperty(value: string): boolean;
@@ -150,7 +151,6 @@ declare module "lib" {
         const ELEMENT_BLOCK: string[];
         function newBoxRect(): BoxRect;
         function newBoxRectDimension(): BoxRectDimension;
-        function newBoxModel(): BoxModel;
         function withinViewport(rect: DOMRect | ClientRect): boolean;
         function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scrollPosition?: boolean): BoxRectDimension;
         function getRangeClientRect(element: Element): BoxRectDimension;
@@ -202,23 +202,12 @@ declare module "lib" {
             CSS_TIME: string;
             CSS_CALC: string;
         };
-        const UNIT: {
-            DECIMAL: RegExp;
-            LENGTH: RegExp;
-            LENGTH_PERCENTAGE: RegExp;
-            PERCENT: RegExp;
-        };
         const FILE: {
             NAME: RegExp;
             SVG: RegExp;
             PROTOCOL: RegExp;
         };
         const CSS: {
-            ANGLE: RegExp;
-            CALC: RegExp;
-            VAR: RegExp;
-            URL: RegExp;
-            CUSTOM_PROPERTY: RegExp;
             HEX: RegExp;
             RGBA: RegExp;
             HSLA: RegExp;

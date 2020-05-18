@@ -7,15 +7,11 @@ import LayoutUI = squared.base.LayoutUI;
 
 type View = android.base.View;
 
-const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
+const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { maxArray, truncate } = squared.lib.math;
 const { conditionArray, flatArray, hasValue, isArray } = squared.lib.util;
 
 const { BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
-
-const REGEX_JUSTIFYSELF = /start|center|end|baseline|right|left/;
-const REGEX_ALIGNSELF = /start|end|center|baseline/;
-const REGEX_UNITZERO = /^\s*0[a-z]*\s*$/;
 
 function getRowData(mainData: CssGridData<View>, horizontal: boolean) {
     const rowData = mainData.rowData;
@@ -46,7 +42,7 @@ function getGridSize(node: View, mainData: CssGridData<View>, horizontal: boolea
         const dimension = horizontal ? 'width' : 'height';
         for (let i = 0; i < length; ++i) {
             const unitPX = unit[i];
-            if (CssGrid.isPx(unitPX)) {
+            if (isPx(unitPX)) {
                 value += parseFloat(unitPX);
             }
             else {
@@ -201,7 +197,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
     let height: Undef<string>;
     let columnWeight: Undef<string>;
     let rowWeight: Undef<string>;
-    if (section.every(value => CssGrid.isPx(value))) {
+    if (section.every(value => isPx(value))) {
         let px = insideGap;
         for (const value of section) {
             px += parseFloat(value);
@@ -304,7 +300,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     let size = 0;
     let percent = 0;
     for (const value of unit) {
-        if (CssGrid.isPx(value)) {
+        if (isPx(value)) {
             size += parseFloat(value);
         }
         else if (isPercent(value)) {
@@ -325,6 +321,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
 }
 
 const getLayoutDimension = (value: string) => value === 'space-between' ? 'match_parent' : 'wrap_content';
+const hasAlignment = (value: string) => /start|end|center|baseline/.test(value);
 
 export default class CssGrid<T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T) {
@@ -531,7 +528,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                             minSize += cellSize;
                         }
                     }
-                    if (node.textElement && REGEX_UNITZERO.test(min)) {
+                    if (node.textElement && /^\s*0[a-z]*\s*$/.test(min)) {
                         fitContent = true;
                     }
                 }
@@ -664,7 +661,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 }
                 return [cellStart, cellSpan];
             };
-            if (REGEX_ALIGNSELF.test(alignSelf) || REGEX_JUSTIFYSELF.test(justifySelf) || layoutConstraint) {
+            if (hasAlignment(alignSelf) || /start|center|end|baseline|right|left/.test(justifySelf) || layoutConstraint) {
                 renderAs = this.application.createNode({ parent, innerWrap: node });
                 renderAs.containerName = node.containerName;
                 renderAs.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -749,7 +746,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (node.data(this.name, 'boundsData') as BoxRectDimension)?.height && checkRowSpan(node, rowSpan, rowStart, mainData, this.name)) {
                 target.css('minHeight', formatPX(node.box.height));
             }
-            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && alignContent.startsWith('space') && !REGEX_ALIGNSELF.test(mainData.alignItems))) {
+            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && alignContent.startsWith('space') && !hasAlignment(mainData.alignItems))) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
         }
@@ -1034,7 +1031,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                     layout_gravity: 'fill'
                                 }
                             }),
-                            CssGrid.isPx(width) || CssGrid.isPx(height)
+                            isPx(width) || isPx(height)
                         );
                         k = -1;
                     }
@@ -1087,7 +1084,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 const { gap, length, unit } = mainData.column;
                 let minWidth = gap * (length - 1);
                 for (const value of unit) {
-                    if (CssGrid.isPx(value)) {
+                    if (isPx(value)) {
                         minWidth += parseFloat(value);
                     }
                     else {

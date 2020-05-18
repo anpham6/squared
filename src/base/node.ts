@@ -3,21 +3,13 @@ import { NODE_ALIGNMENT } from './lib/enumeration';
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { BOX_BORDER, CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, parseSelectorText, parseUnit } = squared.lib.css;
+const { BOX_BORDER, CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, isPx, parseSelectorText, parseUnit } = squared.lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, iterateArray, spliceString, splitEnclosing } = squared.lib.util;
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
-
-const REGEX_BACKGROUND = /\s*(url|[a-z-]+gradient)/;
-const REGEX_INLINEVERTICAL = /^(inline|table-cell)/;
-const REGEX_QUERY_LANG = /^:lang\(\s*(.+)\s*\)$/;
-const REGEX_QUERY_NTH_CHILD_OFTYPE = /^:nth(-last)?-(child|of-type)\((.+)\)$/;
-const REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE = /^(-)?(\d+)?n\s*([+-]\d+)?$/;
-const REGEX_PX = /\dpx$/;
-const REGEX_EM = /\dem$/;
 
 function setStyleCache(element: HTMLElement, attr: string, sessionId: string, value: string, current: string) {
     if (current !== value) {
@@ -40,9 +32,11 @@ function deleteStyleCache(element: HTMLElement, attr: string, sessionId: string)
     }
 }
 
-const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && REGEX_PX.test(actualValue);
+const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && isPx(actualValue);
 const soryById = (a: T, b: T) => a.id < b.id ? -1 : 1;
 const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
+const isEm = (value: string) => /\dem$/.test(value);
+const isInlineVertical = (value: string) => /^(inline|table-cell)/.test(value);
 
 function setNaturalChildren(this: T): T[] {
     let children: T[];
@@ -215,7 +209,7 @@ function convertBox(this: T, attr: string, margin: boolean) {
 }
 
 function canTextAlign(this: T) {
-    return this.naturalChild && (REGEX_INLINEVERTICAL.test(this.display) || this.length === 0) && !this.floating && this.autoMargin.horizontal !== true;
+    return this.naturalChild && (this.length === 0 || isInlineVertical(this.display)) && !this.floating && this.autoMargin.horizontal !== true;
 }
 
 function getInitialValue(this: T, attr: string, modified?: boolean, computed?: boolean) {
@@ -484,7 +478,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                     break;
                 }
                 default: {
-                    let match = REGEX_QUERY_NTH_CHILD_OFTYPE.exec(pseudo);
+                    let match = /^:nth(-last)?-(child|of-type)\((.+)\)$/.exec(pseudo);
                     if (match) {
                         const placement = match[3].trim();
                         let children = parent.naturalElements;
@@ -513,7 +507,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                                         }
                                         break;
                                     default: {
-                                        const subMatch = REGEX_QUERY_NTH_CHILD_OFTYPE_VALUE.exec(placement);
+                                        const subMatch = /^(-)?(\d+)?n\s*([+-]\d+)?$/.exec(placement);
                                         if (subMatch) {
                                             const modifier = convertInt(subMatch[3]);
                                             if (subMatch[2]) {
@@ -562,7 +556,7 @@ function validateQuerySelector(this: T, child: T, selector: QueryData, index: nu
                         }
                     }
                     else {
-                        match = REGEX_QUERY_LANG.exec(pseudo);
+                        match = /^:lang\(\s*(.+)\s*\)$/.exec(pseudo);
                         if (match) {
                             if (child.attributes['lang']?.trim().toLowerCase() === match[1].toLowerCase()) {
                                 continue;
@@ -1977,9 +1971,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     else {
                         value = parseUnit(lineHeight, this.fontSize);
-                        if (REGEX_PX.test(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
+                        if (isPx(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
                             const fontSize = getInitialValue.call(this, 'fontSize');
-                            if (REGEX_EM.test(fontSize)) {
+                            if (isEm(fontSize)) {
                                 value *= parseFloat(fontSize);
                             }
                         }
@@ -2002,7 +1996,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     if (this.styleElement) {
                         const fontSize = getInitialValue.call(this, 'fontSize');
-                        if (REGEX_EM.test(fontSize)) {
+                        if (isEm(fontSize)) {
                             const emSize = parseFloat(fontSize);
                             if (emSize !== 1) {
                                 value *= emSize;
@@ -2502,7 +2496,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.plainText) {
                 result = Math.floor(getRangeClientRect(this._element!).width) > this.actualParent!.box.width;
             }
-            else if (this.styleText && (this.inline || this.naturalElements.length === 0 || REGEX_INLINEVERTICAL.test(this.display) || this.floating)) {
+            else if (this.styleText && (this.inline || this.naturalElements.length === 0 || isInlineVertical(this.display) || this.floating)) {
                 result = this.textBounds?.numberOfLines as number > 1;
             }
             else {
@@ -2552,14 +2546,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 result = value;
             }
             else {
+                const pattern = /\s*(url|[a-z-]+gradient)/;
                 value = this.css('background');
-                if (REGEX_BACKGROUND.test(value)) {
+                if (pattern.test(value)) {
                     const segments: string[] = [];
                     const background = splitEnclosing(value);
                     const length = background.length;
                     for (let i = 1; i < length; ++i) {
                         const name = background[i - 1].trim();
-                        if (REGEX_BACKGROUND.test(name)) {
+                        if (pattern.test(name)) {
                             segments.push(name + background[i]);
                         }
                     }
@@ -2807,7 +2802,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             if (this.naturalChild && this.styleElement) {
                 const value = this.css('fontSize');
-                if (REGEX_PX.test(value)) {
+                if (isPx(value)) {
                     result = parseFloat(value);
                 }
                 else if (isPercent(value) && !this.documentBody) {

@@ -26,7 +26,7 @@ interface RepeatItem {
     unitMin?: string;
 }
 
-const { formatPercent, formatPX, isLength, isPercent } = squared.lib.css;
+const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { convertFloat, isNumber, safeNestedArray, trimString, withinRange } = squared.lib.util;
 
 const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
@@ -40,7 +40,6 @@ const REGEX_CELL_UNIT = new RegExp(STRING_UNIT);
 const REGEX_CELL_MINMAX = new RegExp(STRING_MINMAX);
 const REGEX_CELL_FIT_CONTENT = new RegExp(STRING_FIT_CONTENT);
 const REGEX_CELL_NAMED = new RegExp(STRING_NAMED);
-const REGEX_STARTEND = /^([\w-]+)-(start|end)$/;
 
 function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const repeat = data.repeat;
@@ -107,7 +106,7 @@ function setFlexibleDimension(dimension: number, gap: number, count: number, uni
     let i = 0;
     while (i < length) {
         const value = unit[i++];
-        if (CssGrid.isPx(value)) {
+        if (isPx(value)) {
             filled += parseFloat(value);
         }
         else if (CssGrid.isFr(value)) {
@@ -175,7 +174,6 @@ const convertLength = (node: NodeUI, value: string, index: number) => isLength(v
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static isFr = (value: string) => /\dfr$/.test(value);
-    public static isPx = (value: string) => /\dpx$/.test(value);
     public static isAligned = (node: NodeUI) => node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
     public static isJustified = (node: NodeUI) => (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
 
@@ -534,7 +532,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                             }
                         }
                         else {
-                            const match = REGEX_STARTEND.exec(name);
+                            const match = /^([\w-]+)-(start|end)$/.exec(name);
                             if (match) {
                                 template = templateAreas[match[1]];
                                 if (template) {

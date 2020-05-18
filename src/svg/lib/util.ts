@@ -5,18 +5,6 @@ const { TRANSFORM: REGEX_TRANSFORM } = squared.lib.regex;
 const { getStyleValue } = squared.lib.session;
 const { convertCamelCase, convertFloat, isString } = squared.lib.util;
 
-const SHAPES = {
-    path: 1,
-    line: 2,
-    rect: 3,
-    ellipse: 4,
-    circle: 5,
-    polyline: 6,
-    polygon: 7
-};
-
-const REGEX_ROTATEORIGIN = /rotate\((-?[\d.]+)(?:,?\s+(-?[\d.]+))?(?:,?\s+(-?[\d.]+))?\)/g;
-
 function setOriginPosition(element: Element, point: Point, attr: string, position: string, dimension: number) {
     if (isLength(position)) {
         point[attr] = parseUnit(position, getFontSize(element));
@@ -60,7 +48,18 @@ export const SVG = {
         return element.tagName === 'path';
     },
     shape: (element: Element): element is SVGGeometryElement => {
-        return element.tagName in SHAPES;
+        switch (element.tagName) {
+            case 'path':
+            case 'line':
+            case 'rect':
+            case 'ellipse':
+            case 'circle':
+            case 'polyline':
+            case 'polygon':
+                return true;
+            default:
+                return false;
+        }
     },
     image: (element: Element): element is SVGImageElement => {
         return element.tagName === 'image';
@@ -343,9 +342,9 @@ export const TRANSFORM = {
         const value = getNamedItem(element, attr);
         const result: SvgPoint[] = [];
         if (value !== '') {
-            REGEX_ROTATEORIGIN.lastIndex = 0;
+            const pattern = /rotate\((-?[\d.]+)(?:,?\s+(-?[\d.]+))?(?:,?\s+(-?[\d.]+))?\)/g;
             let match: Null<RegExpExecArray>;
-            while ((match = REGEX_ROTATEORIGIN.exec(value)) !== null) {
+            while ((match = pattern.exec(value)) !== null) {
                 const angle = parseFloat(match[1]);
                 if (angle !== 0) {
                     result.push({
