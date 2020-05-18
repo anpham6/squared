@@ -19,6 +19,7 @@ export const STRING = {
 
 export const FILE = {
     NAME: /[/\\]?(([^/\\]+?)\.([^/\\]+?))$/,
+    PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/[^?]*)?[?]?(.*)?$/,
     SVG: /\.svg$/i
 };
 
@@ -46,13 +47,6 @@ export const CSS = {
     SELECTOR_ATTR: new RegExp(STRING.CSS_SELECTOR_ATTR)
 };
 
-export const XML = {
-    ATTRIBUTE: /([^\s]+)="((?:[^"]|\\")+)"/,
-    ENTITY_G: /&#?[A-Za-z\d]+?;/g,
-    NONWORD_G: /[^A-Za-z\d]+/g,
-    TAGNAME_G: /(<([^>]+)>)/g
-};
-
 export const TRANSFORM = {
     MATRIX: new RegExp(`(matrix(?:3d)?)\\((${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL}),\\s+(${STRING.DECIMAL})(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?(?:,\\s+(${STRING.DECIMAL}))?\\)`),
     ROTATE: new RegExp(`(rotate[XYZ]?)\\(${STRING.CSS_ANGLE}\\)`),
@@ -60,13 +54,4 @@ export const TRANSFORM = {
     SCALE: new RegExp(`(scale[XYZ]?)\\((${STRING.DECIMAL})(?:,\\s+(${STRING.DECIMAL}))?\\)`),
     TRANSLATE: new RegExp(`(translate[XYZ]?)\\(${STRING.LENGTH_PERCENTAGE}(?:,\\s+${STRING.LENGTH_PERCENTAGE})?\\)`),
     PERSPECTIVE: new RegExp(`(perspective)\\(${STRING.LENGTH_PERCENTAGE}\\)`)
-};
-
-export const COMPONENT = {
-    PROTOCOL: /^([A-Za-z]{3,}:\/\/)([A-Za-z\d\-.]+)(:\d+)?(\/[^?]*)?[?]?(.*)?$/
-};
-
-export const ESCAPE = {
-    ENTITY_G: /&#(\d+);/g,
-    NONENTITY_G: /&(?!#[A-Za-z\d]{2,};)/g
 };

@@ -1,4 +1,3 @@
-import { ESCAPE } from './regex';
 import { isPlainObject, joinArray } from './util';
 
 interface XMLTagData {
@@ -17,6 +16,7 @@ const REGEX_FORMAT = {
 };
 
 const REGEX_INDENT = /^(\t+)(.*)$/;
+const REGEX_NONENTITY = /&(?!#[A-Za-z\d]{2,};)/g;
 
 export const STRING_XMLENCODING = '<?xml version="1.0" encoding="utf-8"?>\n';
 export const STRING_SPACE = '&#160;';
@@ -253,7 +253,7 @@ export function formatTemplate(value: string, closeEmpty = false, startIndent = 
 export function replaceCharacterData(value: string, tab?: number) {
     value = value
         .replace(REGEX_FORMAT.NBSP, '&#160;')
-        .replace(ESCAPE.NONENTITY_G, '&amp;');
+        .replace(REGEX_NONENTITY, '&amp;');
     const char: { i: number; text: string }[] = [];
     const length = value.length;
     for (let i = 0; i < length; ++i) {

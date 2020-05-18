@@ -4,10 +4,12 @@ type View = android.base.View;
 
 const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;
-const { COMPONENT, FILE, UNIT, XML } = squared.lib.regex;
+const { FILE, UNIT } = squared.lib.regex;
 const { fromLastIndexOf, hasMimeType, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = squared.lib.util;
 
 const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
+const REGEX_NONWORD = /[^A-Za-z\d]+/g;
+
 let CACHE_IMAGE: StringMap = {};
 
 function formatObject(obj: {}, numberAlias = false) {
@@ -30,7 +32,7 @@ function formatObject(obj: {}, numberAlias = false) {
                         break;
                     case 'src':
                     case 'srcCompat':
-                        if (COMPONENT.PROTOCOL.test(value)) {
+                        if (FILE.PROTOCOL.test(value)) {
                             value = Resource.addImage({ mdpi: value });
                             if (value !== '') {
                                 obj[attr] = `@drawable/${value}`;
@@ -135,7 +137,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                         return resourceName;
                     }
                 }
-                const partial = trimString(name.replace(XML.NONWORD_G, '_'), '_').split(/_+/);
+                const partial = trimString(name.replace(REGEX_NONWORD, '_'), '_').split(/_+/);
                 if (partial.length > 1) {
                     if (partial.length > 4) {
                         partial.length = 4;

@@ -4,25 +4,21 @@ import { createStyleAttribute } from '../../lib/util';
 
 type View = android.base.View;
 
-const { XML } = squared.lib.regex;
-const { capitalize, trimString } = squared.lib.util;
+const { capitalize } = squared.lib.util;
 
 const STORED = Resource.STORED as AndroidResourceStoredMap;
-const REGEX_ATTRIBUTE = /(\w+):(\w+)="([^"]+)"/;
+const REGEX_ATTRIBUTE = /(\w+:(\w+))="([^"]+)"/;
 
 export default class ResourceStyles<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly eventOnly = true;
 
     public beforeCascade() {
-        const styles: ObjectMap<string[]> = {};
-        const styleCache: StringMap = {};
         this.cache.each(node => {
             if (node.controlId && node.visible) {
                 const renderChildren = node.renderChildren;
                 const length = renderChildren.length;
                 if (length > 1) {
                     const attrMap: ObjectMap<number> = {};
-                    let valid = true;
                     let style = '';
                     let i = 0, j: number;
                     while (i < length) {
@@ -38,8 +34,7 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                     style = value;
                                 }
                                 else if (style === '' || value !== style) {
-                                    valid = false;
-                                    break;
+                                    return;
                                 }
                                 found = true;
                             }
@@ -47,65 +42,45 @@ export default class ResourceStyles<T extends View> extends squared.base.Extensi
                                 attrMap[value] = (attrMap[value] || 0) + 1;
                             }
                         }
-                        if (!valid || !found && style !== '') {
-                            valid = false;
-                            break;
+                        if (!found && style !== '') {
+                            return;
                         }
                     }
-                    if (valid) {
-                        const keys = [];
-                        for (const attr in attrMap) {
-                            if (attrMap[attr] === length) {
-                                keys.push(attr);
+                    const keys: string[] = [];
+                    for (const attr in attrMap) {
+                        if (attrMap[attr] === length) {
+                            keys.push(attr);
+                        }
+                    }
+                    const q = keys.length;
+                    if (q > 1) {
+                        if (style !== '') {
+                            style = style.substring(style.indexOf('/') + 1, style.length - 1);
+                        }
+                        const items: StringValue[] = [];
+                        const attrs: string[] = [];
+                        i = 0;
+                        while (i < q) {
+                            const match = REGEX_ATTRIBUTE.exec(keys[i++]);
+                            if (match) {
+                                items.push({ key: match[1], value: match[3] });
+                                attrs.push(match[2]);
                             }
                         }
-                        if (keys.length > 1) {
-                            if (style !== '') {
-                                style = trimString(style.substring(style.indexOf('/') + 1), '"');
-                            }
-                            const common: string[] = [];
-                            for (const attr of keys) {
-                                const match = REGEX_ATTRIBUTE.exec(attr);
-                                if (match) {
-                                    i = 0;
-                                    while (i < length) {
-                                        renderChildren[i++].delete(match[1], match[2]);
-                                    }
-                                    common.push(match[0]);
-                                }
-                            }
-                            common.sort();
-                            const commonString = common.join(';');
-                            let name = '';
-                            for (const index in styleCache) {
-                                if (styleCache[index] === commonString) {
-                                    name = index;
-                                    break;
-                                }
-                            }
-                            if (style === '' || !name.startsWith(style + '.')) {
-                                name = (style !== '' ? style + '.' : '') + capitalize(node.controlId);
-                                styles[name] = common;
-                                styleCache[name] = commonString;
-                            }
-                            i = 0;
-                            while (i < length) {
-                                renderChildren[i++].attr('_', 'style', `@style/${name}`);
-                            }
+                        const name = (style !== '' ? style + '.' : '') + capitalize(node.controlId);
+                        if (!STORED.styles.has(name)) {
+                            items.sort((a, b) => a.key < b.key ? -1 : 1);
+                            STORED.styles.set(name, Object.assign(createStyleAttribute(), { name, items }));
+                        }
+                        i = 0;
+                        while (i < length) {
+                            const item = renderChildren[i++];
+                            item.attr('_', 'style', `@style/${name}`);
+                            item.delete('android', ...attrs);
                         }
                     }
                 }
             }
         });
-        for (const name in styles) {
-            const items: StringValue[] = [];
-            for (const style of styles[name]) {
-                const match = XML.ATTRIBUTE.exec(style);
-                if (match) {
-                    items.push({ key: match[1], value: match[2] });
-                }
-            }
-            STORED.styles.set(name, Object.assign(createStyleAttribute(), { name, items }));
-        }
     }
 }

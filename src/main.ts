@@ -46,7 +46,7 @@ const checkWritable = (app: Undef<Main>): app is Main => app?.initializing === f
 export function setHostname(value: string) {
     const fileHandler = main?.resourceHandler.fileHandler;
     if (fileHandler) {
-        const match = regex.COMPONENT.PROTOCOL.exec(value);
+        const match = regex.FILE.PROTOCOL.exec(value);
         if (match && match[1].startsWith('http')) {
             fileHandler.hostname = match[1] + match[2] + (match[3] || '');
         }

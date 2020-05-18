@@ -4,7 +4,7 @@ type View = chrome.base.View;
 type Extension = chrome.base.Extension<View>;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
-const { COMPONENT, FILE } = squared.lib.regex;
+const { FILE } = squared.lib.regex;
 const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, plainMap, randomUUID, resolvePath, safeNestedArray, trimEnd } = squared.lib.util;
 
 const ASSETS = Resource.ASSETS;
@@ -156,7 +156,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         if (preserveCrossOrigin && !local && !relocate) {
             return undefined;
         }
-        const match = COMPONENT.PROTOCOL.exec(value);
+        const match = FILE.PROTOCOL.exec(value);
         if (match) {
             const host = match[2], port = match[3], path = match[4] || '';
             const extension = getFileExt(uri);

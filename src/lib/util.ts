@@ -1,4 +1,4 @@
-import { COMPONENT, UNIT, XML } from './regex';
+import { FILE, UNIT } from './regex';
 
 const NUMERALS = [
     '', 'C', 'CC', 'CCC', 'CD', 'D', 'DC', 'DCC', 'DCCC', 'CM',
@@ -379,15 +379,15 @@ export function capitalizeString(value: string) {
 }
 
 export function lowerCaseString(value: string) {
-    XML.ENTITY_G.lastIndex = 0;
     const entities: string[] = [];
+    const pattern = /&#?[A-Za-z\d]+?;/g;
     let match: Null<RegExpMatchArray>;
-    while ((match = XML.ENTITY_G.exec(value)) !== null) {
+    while ((match = pattern.exec(value)) !== null) {
         entities.push(match[0]);
     }
     if (entities.length) {
         let result = '';
-        const segments = value.split(XML.ENTITY_G);
+        const segments = value.split(pattern);
         const length = segments.length;
         for (let i = 0; i < length; ++i) {
             result += segments[i].toLowerCase() + (entities[i] || '');
@@ -768,7 +768,7 @@ export function cloneObject(data: {}, result = {}, array = false) {
 
 export function resolvePath(value: string, href?: string) {
     value = value.trim();
-    if (!COMPONENT.PROTOCOL.test(value)) {
+    if (!FILE.PROTOCOL.test(value)) {
         const origin = location.origin;
         const pathname = (href?.replace(origin, '') || location.pathname).replace(/\\/g, '/').split('/');
         pathname.pop();

@@ -211,6 +211,7 @@ declare module "lib" {
         const FILE: {
             NAME: RegExp;
             SVG: RegExp;
+            PROTOCOL: RegExp;
         };
         const CSS: {
             ANGLE: RegExp;
@@ -227,26 +228,12 @@ declare module "lib" {
             SELECTOR_PSEUDO_CLASS: RegExp;
             SELECTOR_ATTR: RegExp;
         };
-        const XML: {
-            ATTRIBUTE: RegExp;
-            ENTITY: RegExp;
-            BREAKWORD_G: RegExp;
-            NONWORD_G: RegExp;
-            TAGNAME_G: RegExp;
-        };
         const TRANSFORM: {
             MATRIX: RegExp;
             ROTATE: RegExp;
             SKEW: RegExp;
             SCALE: RegExp;
             TRANSLATE: RegExp;
-        };
-        const COMPONENT: {
-            PROTOCOL: RegExp;
-        };
-        const ESCAPE: {
-            ENTITY_G: RegExp;
-            NONENTITY_G: RegExp;
         };
     }
 

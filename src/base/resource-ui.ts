@@ -9,7 +9,7 @@ const { parseColor } = squared.lib.color;
 const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
-const { ESCAPE, STRING } = squared.lib.regex;
+const { STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
 const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray } = squared.lib.util;
 const { STRING_SPACE } = squared.lib.xml;
@@ -1040,13 +1040,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         if (!styled) {
             return value;
         }
-        if (!preserveWhitespace && /^[\s\n]+$/.test(value)) {
-            return STRING_SPACE;
+        else if (!preserveWhitespace && /^[\s\n]+$/.test(value)) {
+            return node.blockStatic ? STRING_SPACE : '';
         }
         return value
             .replace(/^\\n\\n/, '\\n')
             .replace(/\\n\\n$/, '\\n')
-            .replace(ESCAPE.ENTITY_G, (match, capture) => String.fromCharCode(parseInt(capture)));
+            .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)));
     }
 
     get controllerSettings() {

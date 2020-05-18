@@ -10,7 +10,6 @@ type AttributeMap = ObjectMap<number[]>;
 type TagNameMap = ObjectMap<StyleAttribute[]>;
 type NodeStyleMap = ObjectMap<string[]>;
 
-const { XML } = squared.lib.regex;
 const { capitalize, convertInt, convertWord, hasKeys, plainMap, safeNestedArray, safeNestedMap, spliceArray, trimBoth } = squared.lib.util;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -82,6 +81,7 @@ const FONT_STYLE = {
 
 const STORED = Resource.STORED as AndroidResourceStoredMap;
 const REGEX_TAGNAME = /^(\w*?)(?:_(\d+))?$/;
+const REGEX_ATTRIBUTE = /([^\s]+)="((?:[^"]|\\")+)"/;
 const FONT_STYLEKEYS = Object.keys(FONT_STYLE);
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
@@ -371,7 +371,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (const attrs in styleTag) {
                 const items: StringValue[] = [];
                 for (const value of attrs.split(';')) {
-                    const match = XML.ATTRIBUTE.exec(value);
+                    const match = REGEX_ATTRIBUTE.exec(value);
                     if (match) {
                         items.push({ key: match[1], value: match[2] });
                     }
