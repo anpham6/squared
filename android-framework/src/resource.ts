@@ -4,8 +4,8 @@ type View = android.base.View;
 
 const { findColorShade, parseColor } = squared.lib.color;
 const { extractURL, getSrcSet } = squared.lib.css;
-const { COMPONENT, FILE, XML } = squared.lib.regex;
-const { fromLastIndexOf, hasMimeType, isNumber, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = squared.lib.util;
+const { COMPONENT, FILE, UNIT, XML } = squared.lib.regex;
+const { fromLastIndexOf, hasMimeType, isPlainObject, isString, resolvePath, safeNestedArray, spliceArray, trimString } = squared.lib.util;
 
 const STORED = squared.base.ResourceUI.STORED as AndroidResourceStoredMap;
 let CACHE_IMAGE: StringMap = {};
@@ -124,10 +124,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
 
     public static addString(value: string, name?: string, numberAlias = false) {
         if (value !== '') {
-            if (!name) {
+            if (!isString(name)) {
                 name = value.trim();
             }
-            const numeric = isNumber(value);
+            const numeric = UNIT.DECIMAL.test(value);
             if (!numeric || numberAlias) {
                 const strings = STORED.strings;
                 for (const [resourceName, resourceValue] of strings.entries()) {

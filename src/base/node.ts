@@ -1948,12 +1948,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             const value = this.css('height');
             if (isPercent(value)) {
-                if (this.pageFlow) {
-                    result = this.actualParent?.hasHeight || this.documentBody;
-                }
-                else {
-                    result = this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom');
-                }
+                result = this.pageFlow
+                    ? this.actualParent?.hasHeight || this.documentBody
+                    : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom');
             }
             else {
                 result = this.height > 0 || this.hasPX('height', false);
@@ -2328,12 +2325,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get centerAligned() {
         let result = this._cached.centerAligned;
         if (result === undefined) {
-            if (!this.pageFlow) {
-                result = this.hasPX('left') && this.hasPX('right');
-            }
-            else {
-                result = this.autoMargin.leftRight || canTextAlign.call(this) && hasTextAlign.call(this, 'center');
-            }
+            result = !this.pageFlow
+                ? this.hasPX('left') && this.hasPX('right')
+                : this.autoMargin.leftRight || canTextAlign.call(this) && hasTextAlign.call(this, 'center');
             this._cached.centerAligned = result;
         }
         return result;
@@ -2342,12 +2336,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get rightAligned() {
         let result = this._cached.rightAligned;
         if (result === undefined) {
-            if (!this.pageFlow) {
-                result = this.hasPX('right') && !this.hasPX('left');
-            }
-            else {
-                result = this.float === 'right' || this.autoMargin.left || canTextAlign.call(this) && hasTextAlign.call(this, 'right', 'end');
-            }
+            result = !this.pageFlow
+                ? this.hasPX('right') && !this.hasPX('left')
+                : this.float === 'right' || this.autoMargin.left || canTextAlign.call(this) && hasTextAlign.call(this, 'right', 'end');
             this._cached.rightAligned = result;
         }
         return result;
@@ -2356,12 +2347,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get bottomAligned() {
         let result = this._cached.bottomAligned;
         if (result === undefined) {
-            if (!this.pageFlow) {
-                result = this.hasPX('bottom') && !this.hasPX('top');
-            }
-            else {
-                result = this.actualParent?.hasHeight === true && this.autoMargin.top === true;
-            }
+            result = !this.pageFlow
+                ? this.hasPX('bottom') && !this.hasPX('top')
+                : this.actualParent?.hasHeight === true && this.autoMargin.top === true;
             this._cached.bottomAligned = result;
         }
         return result;

@@ -188,6 +188,7 @@ const INTERPOLATOR_XML = `<?xml version="1.0" encoding="utf-8"?>
 	android:controlX2="{2}"
     android:controlY2="{3}" />
 `;
+
 const ATTRIBUTE_ANDROID = {
     'stroke': ['strokeColor'],
     'fill': ['fillColor'],

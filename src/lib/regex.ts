@@ -68,5 +68,5 @@ export const COMPONENT = {
 
 export const ESCAPE = {
     ENTITY_G: /&#(\d+);/g,
-    NONENTITY_G: /&(?!#?[A-Za-z\d]{2,};)/g
+    NONENTITY_G: /&(?!#[A-Za-z\d]{2,};)/g
 };

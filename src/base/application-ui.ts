@@ -10,7 +10,7 @@ import ResourceUI from './resource-ui';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 type FileActionOptions = squared.base.FileActionOptions;
-type LayoutMap = Map<number, Map<number, NodeUI>>;
+type LayoutMap = Map<number, Set<NodeUI>>;
 
 const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
@@ -164,10 +164,19 @@ function getRelativeOffset(node: NodeUI, fromRight: boolean) {
         : 0;
 }
 
+function setMapDepth(map: LayoutMap, depth: number, node: NodeUI) {
+    const data = map.get(depth);
+    if (data) {
+        data.add(node);
+    }
+    else {
+        map.set(depth, new Set([node]));
+    }
+}
+
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI): boolean => node.textElement && (node.blockStatic || node.multiline);
 const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => isString(item.use) }).length > 0;
-const setMapDepth = (map: LayoutMap, depth: number, node: NodeUI) => map.get(depth)?.set(node.id, node) || map.set(depth, new Map<number, NodeUI>([[node.id, node]]));
 const getMapIndex = (value: number) => (value * -1) - 2;
 
 export default abstract class ApplicationUI<T extends NodeUI> extends Application<T> implements squared.base.ApplicationUI<T> {
@@ -770,7 +779,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const { extensionMap, clearMap } = session;
         const cache = processing.cache;
         const documentRoot = processing.node as T;
-        const mapY = new Map<number, Map<number, T>>();
+        const mapY = new Map<number, Set<T>>();
         let extensions = this.extensionsTraverse;
         {
             let maxDepth = 0;
@@ -835,7 +844,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             });
             let i = 0;
             while (i < maxDepth) {
-                mapY.set(getMapIndex(i++), new Map<number, T>());
+                mapY.set(getMapIndex(i++), new Set<T>());
             }
             cache.afterAppend = (node: T, cascade = false) => {
                 setMapDepth(mapY, getMapIndex(node.depth), node);
@@ -843,7 +852,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     node.cascade((item: T) => {
                         if (item.length) {
                             const depth = item.depth;
-                            mapY.get(depth)?.delete(item.id);
+                            mapY.get(depth)?.delete(item);
                             setMapDepth(mapY, getMapIndex(depth), item);
                         }
                     });

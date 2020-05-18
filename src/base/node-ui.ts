@@ -1443,13 +1443,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this._cached.textContent = value;
     }
     get textContent() {
-        let result = this._cached.textContent;
-        if (result === undefined) {
-            result = super.textContent;
-            this._cached.textContent = result;
-        }
-        return result;
+        return this._cached.textContent ?? (() => {
+            this._cached.textContent = super.textContent;
+            return this._cached.textContent;
+        })();
     }
+
     get positiveAxis() {
         let result = this._cached.positiveAxis;
         if (result === undefined) {

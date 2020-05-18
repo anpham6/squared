@@ -14,13 +14,6 @@ const { NODE_RESOURCE } = squared.base.lib.enumeration;
 
 const REGEX_FONTOBLIQUE = /oblique(?:\s+(-?[\d.]+[a-z]+))?/;
 
-function setTextValue(node: View, attr: string, name: string, value: string, useNumber: boolean) {
-    name = Resource.addString(value, name, useNumber);
-    if (name !== '') {
-        node.android(attr, useNumber || !isNumber(name) ? `@string/${name}` : name, false);
-    }
-}
-
 function getFontVariationStyle(value: string) {
     if (value === 'italic') {
         return "'ital' 1";
@@ -36,6 +29,8 @@ function getFontVariationStyle(value: string) {
     return '';
 }
 
+const setTextValue = (node: View, attr: string, name: string, useNumber: boolean) => node.android(attr, useNumber || !isNumber(name) ? `@string/${name}` : name, false);
+
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceStringsOptions = {
         numberResourceValue: false
@@ -49,7 +44,10 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 if (node.styleElement) {
                     const title: string =  node.data(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
                     if (title !== '') {
-                        setTextValue(node, 'tooltipText', `${node.controlId.toLowerCase()}_title`, title, numberResourceValue);
+                        const name = Resource.addString(title, `${node.controlId.toLowerCase()}_title`, numberResourceValue);
+                        if (name !== '') {
+                            setTextValue(node, 'tooltipText', name, numberResourceValue);
+                        }
                     }
                 }
                 if (node.inputElement) {
@@ -61,7 +59,10 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     }
                     const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
                     if (isString(hintString)) {
-                        setTextValue(node, 'hint', '', hintString, numberResourceValue);
+                        const name = Resource.addString(hintString, hintString, numberResourceValue);
+                        if (name !== '') {
+                            setTextValue(node, 'hint', name, numberResourceValue);
+                        }
                     }
                 }
                 const tagName = node.tagName;
@@ -92,25 +93,22 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     return;
                                 }
                             }
-                            let value = valueString.value;
-                            const name = valueString.key || value;
+                            let value: Undef<string>;
                             if (node.naturalChild && node.alignParent('left') && node.pageFlow && !(node.preserveWhiteSpace && !node.plainText || node.plainText && node.actualParent!.preserveWhiteSpace)) {
-                                let leadingSpace = 0;
                                 const textContent = node.textContent;
                                 const length = textContent.length;
-                                let i = 0;
+                                let i = 0, j = 0;
                                 while (i < length) {
                                     switch (textContent.charCodeAt(i++)) {
-                                        case 160:
-                                            ++leadingSpace;
+                                        case 10:
                                         case 32:
+                                            ++j;
                                             continue;
-                                        default:
-                                            break;
                                     }
+                                    break;
                                 }
-                                if (leadingSpace === 0) {
-                                    value = value.replace(/^(\s|&#160;)+/, '');
+                                if (j > 0) {
+                                    value = (value || valueString.value).replace(new RegExp(`^(\\s|&#160;){1,${j}}`), '');
                                 }
                             }
                             switch (node.css('textTransform')) {
@@ -119,13 +117,13 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     node.lockAttr('android', 'textAllCaps');
                                     break;
                                 case 'lowercase':
-                                    value = lowerCaseString(value);
+                                    value = lowerCaseString(value || valueString.value);
                                     break;
                                 case 'capitalize':
-                                    value = capitalizeString(value);
+                                    value = capitalizeString(value || valueString.value);
                                     break;
                             }
-                            value = replaceCharacterData(value, node.preserveWhiteSpace || tagName === 'CODE' ? node.toInt('tabSize', 8) : 0);
+                            value = replaceCharacterData(value || valueString.value, node.preserveWhiteSpace || tagName === 'CODE' ? node.toInt('tabSize', 8) : undefined);
                             const textDecorationLine = node.css('textDecorationLine');
                             if (textDecorationLine !== 'none') {
                                 for (const style of textDecorationLine.split(' ')) {
@@ -322,7 +320,10 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             if (fontFeature !== '') {
                                 node.android('fontFeatureSettings', fontFeature);
                             }
-                            setTextValue(node, 'text', name, value, numberResourceValue);
+                            const name = Resource.addString(value, valueString.key || valueString.value, numberResourceValue);
+                            if (name !== '') {
+                                setTextValue(node, 'text', name, numberResourceValue);
+                            }
                         }
                     }
                 }

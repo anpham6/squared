@@ -11,7 +11,7 @@ const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { ESCAPE, STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
-const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray, trimEnd, trimStart } = squared.lib.util;
+const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray } = squared.lib.util;
 const { STRING_SPACE } = squared.lib.xml;
 
 const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
@@ -167,55 +167,6 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     }
     REGEX_COLORSTOP.lastIndex = 0;
     return result;
-}
-
-function replaceWhiteSpace(node: NodeUI, value: string): [string, boolean, boolean] {
-    let inlined = false;
-    value = value.replace(REGEX_NOBREAKSPACE, STRING_SPACE);
-    switch (node.css('whiteSpace')) {
-        case 'nowrap':
-            value = value.replace(/\n/g, ' ');
-            inlined = true;
-            break;
-        case 'pre':
-        case 'pre-wrap': {
-            if (node.renderParent?.layoutVertical === false) {
-                value = value.replace(/^\s*\n/, '');
-            }
-            const preIndent = ResourceUI.checkPreIndent(node);
-            if (preIndent) {
-                const [indent, adjacent] = preIndent;
-                if (indent !== '') {
-                    adjacent.textContent = indent + adjacent.textContent;
-                }
-                value = value.replace(REGEX_TRAILINGINDENT, '');
-            }
-            value = value
-                .replace(/\n/g, '\\n')
-                .replace(/\t/g, STRING_SPACE.repeat(node.toInt('tabSize', 8)))
-                .replace(/\s/g, STRING_SPACE);
-            return [value, true, false];
-        }
-        case 'pre-line':
-            value = value
-                .replace(/\n/g, '\\n')
-                .replace(/\s+/g, ' ');
-            return [value, true, false];
-    }
-    if (node.onlyChild && node.htmlElement) {
-        value = value
-            .replace(REGEX_LEADINGSPACE, '')
-            .replace(REGEX_TRAILINGSPACE, '');
-    }
-    else {
-        if (node.previousSibling?.blockStatic) {
-            value = value.replace(REGEX_LEADINGSPACE, '');
-        }
-        if (node.nextSibling?.blockStatic) {
-            value = value.replace(REGEX_TRAILINGSPACE, '');
-        }
-    }
-    return [value, inlined, true];
 }
 
 function getBackgroundSize(node: NodeUI, index: number, value: string, screenDimension?: Dimension) {
@@ -799,10 +750,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public setValueString(node: T) {
         const element = node.element as HTMLInputElement;
         if (element) {
-            let key = '';
-            let value = '';
+            let key = '', value = '';
             let hint = '';
-            let trimming = true;
+            let trimming = false;
             let inlined = false;
             switch (element.tagName) {
                 case 'INPUT':
@@ -917,64 +867,111 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     value = element.src;
                     break;
                 default: {
-                    const textContent = node.textContent;
-                    if (node.plainText || node.pseudoElement) {
-                        key = textContent.trim();
-                        [value, inlined, trimming] = replaceWhiteSpace(node, textContent.replace(/&/g, '&amp;'));
+                    trimming = true;
+                    if (node.plainText || node.pseudoElement || node.hasAlign(NODE_ALIGNMENT.INLINE) && node.textElement) {
+                        value = node.textContent.replace(/&/g, '&amp;');
                         inlined = true;
                     }
                     else if (node.inlineText) {
-                        key = textContent.trim();
-                        [value, inlined, trimming] = replaceWhiteSpace(node, node.hasAlign(NODE_ALIGNMENT.INLINE) ? textContent.replace(/&/g, '&amp;') : this.removeExcludedFromText(node, element));
+                        value = node.textEmpty ? STRING_SPACE : this.removeExcludedFromText(node, element);
                     }
-                    else if (node.naturalChildren.length === 0 && textContent?.trim() === '' && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle'))) {
-                        value = textContent;
+                    if (value !== '') {
+                        key = value.trim();
+                        value = value.replace(REGEX_NOBREAKSPACE, STRING_SPACE);
+                        switch (node.css('whiteSpace')) {
+                            case 'pre':
+                            case 'pre-wrap': {
+                                if (node.renderParent?.layoutVertical === false) {
+                                    value = value.replace(/^\s*\n/, '');
+                                }
+                                const preIndent = ResourceUI.checkPreIndent(node);
+                                if (preIndent) {
+                                    const [indent, adjacent] = preIndent;
+                                    if (indent !== '') {
+                                        adjacent.textContent = indent + adjacent.textContent;
+                                    }
+                                    value = value.replace(REGEX_TRAILINGINDENT, '');
+                                }
+                                value = value
+                                    .replace(/\n/g, '\\n')
+                                    .replace(/\t/g, STRING_SPACE.repeat(node.toInt('tabSize', 8)))
+                                    .replace(/\s/g, STRING_SPACE);
+                                inlined = true;
+                                trimming = false;
+                                break;
+                            }
+                            case 'pre-line':
+                                value
+                                    .replace(/\n/g, '\\n')
+                                    .replace(/\s+/g, ' ');
+                                inlined = true;
+                                trimming = false;
+                                break;
+                            case 'nowrap':
+                                value = value.replace(/\n+/g, ' ');
+                                inlined = true;
+                            default: {
+                                const trimBoth = node.onlyChild && node.htmlElement;
+                                if (trimBoth || node.previousSibling?.blockStatic) {
+                                    value = value.replace(REGEX_LEADINGSPACE, '');
+                                }
+                                if (trimBoth || node.nextSibling?.blockStatic) {
+                                    value = value.replace(REGEX_TRAILINGSPACE, '');
+                                }
+                            }
+                        }
+                    }
+                    else if (node.naturalChildren.length === 0 && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle')) && node.textContent.trim() === '') {
+                        value = node.textContent;
                     }
                     break;
                 }
             }
             if (value !== '') {
-                if (trimming && node.pageFlow) {
-                    const previousSibling = node.siblingsLeading[0];
-                    let previousSpaceEnd = false;
-                    if (value.length > 1) {
-                        if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.plainText && REGEX_TRAILINGSPACE.test(previousSibling.textContent)) {
-                            value = value.replace(REGEX_LEADINGSPACE, '');
-                        }
-                        else if (previousSibling.naturalElement) {
-                            const textContent = previousSibling.textContent;
-                            const length = textContent.length;
-                            if (length) {
-                                previousSpaceEnd = textContent.charCodeAt(length - 1) === 32;
+                if (trimming) {
+                    if (node.pageFlow) {
+                        const previousSibling = node.siblingsLeading[0];
+                        const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
+                        let previousSpaceEnd = false;
+                        if (value.length > 1) {
+                            if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.floating ||  previousSibling.plainText && REGEX_TRAILINGSPACE.test(previousSibling.textContent)) {
+                                value = value.replace(REGEX_LEADINGSPACE, '');
+                            }
+                            else if (previousSibling.naturalElement) {
+                                const textContent = previousSibling.textContent;
+                                const length = textContent.length;
+                                if (length) {
+                                    previousSpaceEnd = textContent.charCodeAt(length - 1) === 32;
+                                }
                             }
                         }
-                    }
-                    if (inlined) {
-                        const trailingSpace = !node.lineBreakTrailing && REGEX_TRAILINGSPACE.test(value);
-                        if (REGEX_LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
-                            value = STRING_SPACE + value.trim();
-                        }
-                        else {
-                            value = value.trim();
-                        }
-                        if (trailingSpace) {
-                            const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
-                            if (nextSibling?.blockStatic === false) {
+                        if (inlined) {
+                            const trailingSpace = !node.lineBreakTrailing && REGEX_TRAILINGSPACE.test(value);
+                            if (REGEX_LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
+                                value = STRING_SPACE + value.trim();
+                            }
+                            else {
+                                value = value.trim();
+                            }
+                            if (trailingSpace && nextSibling?.blockStatic === false && !nextSibling.floating) {
                                 value += STRING_SPACE;
                             }
                         }
+                        else if (value.trim() !== '') {
+                            value = value.replace(REGEX_LEADINGSPACE, previousSibling && (
+                                previousSibling.block ||
+                                previousSibling.lineBreak ||
+                                previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
+                                node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
+                            );
+                            value = value.replace(REGEX_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling?.floating ? '' : STRING_SPACE);
+                        }
+                        else if (!node.inlineText) {
+                            return;
+                        }
                     }
-                    else if (value.trim() !== '') {
-                        value = value.replace(REGEX_LEADINGSPACE, previousSibling && (
-                            previousSibling.block ||
-                            previousSibling.lineBreak ||
-                            previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
-                            node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
-                        );
-                        value = value.replace(REGEX_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic ? '' : STRING_SPACE);
-                    }
-                    else if (!node.inlineText) {
-                        return;
+                    else {
+                        value = value.trim();
                     }
                 }
                 if (value !== '') {
@@ -998,9 +995,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         const preserveWhitespace = node.preserveWhiteSpace;
         const attr = styled ? 'innerHTML' : 'textContent';
         let value: string = element[attr] || '';
-        if (value.trim() === '') {
-            return preserveWhitespace ? value : STRING_SPACE;
-        }
         const sessionId = node.sessionId;
         element.childNodes.forEach((item: Element, index: number) => {
             const child = getElementAsNode<NodeUI>(item, sessionId);
@@ -1033,21 +1027,26 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const position = getComputedStyle(item).getPropertyValue('position');
                     value = value.replace(item.outerHTML, position !== 'absolute' && position !== 'fixed' && item.textContent!.trim() !== '' ? STRING_SPACE : '');
                 }
-                if (index === 0) {
-                    value = trimStart(value, ' ');
-                }
-                else if (index === length - 1) {
-                    value = trimEnd(value, ' ');
+                if (!preserveWhitespace) {
+                    if (index === 0) {
+                        value = value.replace(REGEX_LEADINGSPACE, '');
+                    }
+                    else if (index === length - 1) {
+                        value = value.replace(REGEX_TRAILINGSPACE, '');
+                    }
                 }
             }
         });
-        if (styled) {
-            value = value
-                        .replace(/^\\n\\n/, '\\n')
-                        .replace(/\\n\\n$/, '\\n')
-                        .replace(ESCAPE.ENTITY_G, (match, capture) => String.fromCharCode(parseInt(capture)));
+        if (!styled) {
+            return value;
         }
-        return value;
+        if (!preserveWhitespace && /^[\s\n]+$/.test(value)) {
+            return STRING_SPACE;
+        }
+        return value
+            .replace(/^\\n\\n/, '\\n')
+            .replace(/\\n\\n$/, '\\n')
+            .replace(ESCAPE.ENTITY_G, (match, capture) => String.fromCharCode(parseInt(capture)));
     }
 
     get controllerSettings() {
