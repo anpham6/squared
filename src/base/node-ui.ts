@@ -5,12 +5,14 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 
 type T = NodeUI;
 
-const { BOX_MARGIN, BOX_PADDING, BOX_POSITION } = squared.lib.css;
+const { CSS_PROPERTIES } = squared.lib.css;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
 
-const CSS_SPACING_KEYS = Array.from(CSS_SPACING.keys());
+const CSS_SPACINGKEYS = Array.from(CSS_SPACING.keys());
+const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
+const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
 
 function cascadeActualPadding(children: T[], attr: string, value: number) {
     let valid = false;
@@ -104,7 +106,7 @@ function getLayoutWidth(this: T) {
 
 function applyBoxReset(this: T, boxReset: BoxModel, attrs: string[], region: number, start: number, node?: NodeUI) {
     for (let i = 0; i < 4; ++i) {
-        const key = CSS_SPACING_KEYS[i + start];
+        const key = CSS_SPACINGKEYS[i + start];
         if (hasBit(region, key)) {
             const name = attrs[i];
             boxReset[name] = 1;
@@ -129,7 +131,7 @@ function applyBoxReset(this: T, boxReset: BoxModel, attrs: string[], region: num
 
 function applyBoxAdjustment(this: T, boxAdjustment: BoxModel, attrs: string[], region: number, start: number, node: NodeUI) {
     for (let i = 0; i < 4; ++i) {
-        const key = CSS_SPACING_KEYS[i + start];
+        const key = CSS_SPACINGKEYS[i + start];
         if (hasBit(region, key)) {
             const previous = this.registerBox(key);
             if (previous) {
@@ -637,7 +639,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     if (!this.positionStatic) {
                         let i = 0;
                         while (i < 4) {
-                            const attr = BOX_POSITION[i++];
+                            const attr = NodeUI.BOX_POSITION[i++];
                             if (node.hasPX(attr)) {
                                 this._styleMap[attr] = node.css(attr);
                             }

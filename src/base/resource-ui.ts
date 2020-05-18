@@ -6,7 +6,7 @@ import { NODE_ALIGNMENT, NODE_RESOURCE } from './lib/enumeration';
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { BOX_BORDER, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
+const { CSS_PROPERTIES, calculate, convertAngle, formatPX, getBackgroundPosition, getInheritedStyle, isCalc, isLength, isParentStyle, isPercent, parseAngle } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { STRING } = squared.lib.regex;
@@ -20,6 +20,12 @@ const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
 const REGEX_TRAILINGINDENT = /\n([^\S\n]*)?$/;
 const REGEX_LEADINGSPACE = /^\s+/;
 const REGEX_TRAILINGSPACE = /\s+$/;
+
+const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
+const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
+const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
+const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
+const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     const { width, height } = gradient.dimension as Dimension;
@@ -177,9 +183,9 @@ function getBackgroundSize(node: NodeUI, index: number, value: string, screenDim
 }
 
 function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: string[]) {
-    const style = node.css(border[0]) || 'none';
+    const style = node.css(border[1]) || 'none';
     if (style !== 'none') {
-        let width = formatPX(attr !== 'outline' ? node[border[1]] : convertFloat(node.style[border[1]]));
+        let width = formatPX(attr !== 'outline' ? node[border[0]] : convertFloat(node.style[border[0]]));
         if (width !== '0px') {
             let color: Undef<string | ColorData> = node.css(border[2]) || 'initial';
             switch (color) {
@@ -659,19 +665,19 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             let borderWidth = node.visibleStyle.borderWidth;
             if (borderWidth) {
                 if (node.borderTopWidth > 0) {
-                    setBorderStyle(node, boxStyle, 'borderTop', BOX_BORDER[0]);
+                    setBorderStyle(node, boxStyle, 'borderTop', BORDER_TOP);
                 }
                 if (node.borderRightWidth > 0) {
-                    setBorderStyle(node, boxStyle, 'borderRight', BOX_BORDER[1]);
+                    setBorderStyle(node, boxStyle, 'borderRight', BORDER_RIGHT);
                 }
                 if (node.borderBottomWidth > 0) {
-                    setBorderStyle(node, boxStyle, 'borderBottom', BOX_BORDER[2]);
+                    setBorderStyle(node, boxStyle, 'borderBottom', BORDER_BOTTOM);
                 }
                 if (node.borderLeftWidth > 0) {
-                    setBorderStyle(node, boxStyle, 'borderLeft', BOX_BORDER[3]);
+                    setBorderStyle(node, boxStyle, 'borderLeft', BORDER_LEFT);
                 }
             }
-            if (setBorderStyle(node, boxStyle, 'outline', BOX_BORDER[4])) {
+            if (setBorderStyle(node, boxStyle, 'outline', BORDER_OUTLINE)) {
                 borderWidth = true;
             }
             let backgroundColor = node.backgroundColor;

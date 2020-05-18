@@ -80,7 +80,7 @@ declare module "base" {
     }
 
     class Application<T extends Node> implements FileActionAsync {
-        public static KEY_NAME: string;
+        static KEY_NAME: string;
         userSettings: UserSettings;
         initializing: boolean;
         closed: boolean;
@@ -203,9 +203,9 @@ declare module "base" {
     }
 
     class Resource<T extends Node> implements Resource<T> {
-        public static KEY_NAME: string;
-        public static ASSETS: ResourceAssetMap;
-        public static canCompressImage(filename: string): boolean;
+        static KEY_NAME: string;
+        static ASSETS: ResourceAssetMap;
+        static canCompressImage(filename: string): boolean;
         readonly application: Application<T>;
         readonly cache: NodeList<T>;
         reset(): void;
@@ -228,16 +228,16 @@ declare module "base" {
     }
 
     class ResourceUI<T extends NodeUI> extends Resource<T> {
-        public static STORED: ResourceStoredMap;
-        public static canCompressImage(filename: string): boolean;
-        public static generateId(section: string, name: string, start?: number): string;
-        public static insertStoredAsset(asset: string, name: string, value: any): string;
-        public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
-        public static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
-        public static parseBackgroundImage(node: NodeUI, value: string, screenDimension?: Dimension): Undef<string | Gradient>[];
-        public static getBackgroundSize<T extends NodeUI>(node: T, value: string, screenDimension?: Dimension): Undef<Dimension>;
-        public static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
-        public static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
+        static STORED: ResourceStoredMap;
+        static canCompressImage(filename: string): boolean;
+        static generateId(section: string, name: string, start?: number): string;
+        static insertStoredAsset(asset: string, name: string, value: any): string;
+        static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
+        static isBackgroundVisible(object: Undef<BoxStyle>): boolean;
+        static parseBackgroundImage(node: NodeUI, value: string, screenDimension?: Dimension): Undef<string | Gradient>[];
+        static getBackgroundSize<T extends NodeUI>(node: T, value: string, screenDimension?: Dimension): Undef<Dimension>;
+        static hasLineBreak<T extends NodeUI>(node: T, lineBreak?: boolean, trim?: boolean): boolean;
+        static checkPreIndent(node: NodeUI): Undef<[string, NodeUI]>;
         finalize(layouts: FileAsset[]): void;
         writeRawImage(filename: string, base64: string): Undef<Partial<RawAsset>>;
         setBoxStyle(node: T): void;
@@ -263,7 +263,7 @@ declare module "base" {
     }
 
     class ExtensionUI<T extends NodeUI> extends Extension<T> {
-        public static findNestedElement<T extends NodeUI>(node: T, name: string): Null<HTMLElement>;
+        static findNestedElement<T extends NodeUI>(node: T, name: string): Null<HTMLElement>;
         tagNames: string[];
         readonly documentBase: boolean;
         readonly eventOnly: boolean;
@@ -307,7 +307,7 @@ declare module "base" {
     }
 
     class File<T extends Node> implements FileActionAsync {
-        public static downloadFile(data: Blob, filename: string, mimeType?: string): void;
+        static downloadFile(data: Blob, filename: string, mimeType?: string): void;
         resource: Resource<T>;
         readonly assets: FileAsset[];
         addAsset(data: Partial<RawAsset>): void;
@@ -334,7 +334,7 @@ declare module "base" {
     }
 
     class LayoutUI<T extends NodeUI> extends squared.lib.base.Container<T> implements LayoutType {
-        public static create<T extends NodeUI>(options: LayoutOptions<T>): LayoutUI<T>;
+        static create<T extends NodeUI>(options: LayoutOptions<T>): LayoutUI<T>;
         parent: T;
         node: T;
         containerType: number;
@@ -361,6 +361,8 @@ declare module "base" {
     }
 
     class Node extends squared.lib.base.Container<Node> implements BoxModel {
+        static BOX_POSITION: string[];
+        static TEXT_STYLE: string[];
         id: number;
         depth: number;
         childIndex: number;
@@ -519,11 +521,11 @@ declare module "base" {
     }
 
     class NodeUI extends Node implements LayoutType {
-        public static refitScreen<T>(node: T, value: Dimension): Dimension;
-        public static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData<T>;
-        public static outerRegion<T>(node: T): BoxRectDimension;
-        public static baseline<T>(list: T[], text?: boolean): Null<T>;
-        public static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
+        static refitScreen<T>(node: T, value: Dimension): Dimension;
+        static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData<T>;
+        static outerRegion<T>(node: T): BoxRectDimension;
+        static baseline<T>(list: T[], text?: boolean): Null<T>;
+        static partitionRows<T>(list: T[], cleared?: Map<T, string>): T[][];
         alignmentType: number;
         baselineActive: boolean;
         baselineAltered: boolean;
@@ -682,16 +684,16 @@ declare module "base" {
         class Accessibility<T extends NodeUI> extends ExtensionUI<T> {}
         class Column<T extends NodeUI> extends ExtensionUI<T> {}
         class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
-            public static isFr(value: string): boolean;
-            public static isPx(value: string): boolean;
-            public static isAligned(node: NodeUI): boolean;
-            public static isJustified(node: NodeUI): boolean;
-            public static createDataAttribute(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string, autoFlow: string): CssGridData<NodeUI>;
-            public static createDataRowAttribute(): CssGridDirectionData;
+            static isFr(value: string): boolean;
+            static isPx(value: string): boolean;
+            static isAligned(node: NodeUI): boolean;
+            static isJustified(node: NodeUI): boolean;
+            static createDataAttribute(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string, autoFlow: string): CssGridData<NodeUI>;
+            static createDataRowAttribute(): CssGridDirectionData;
         }
         class Flexbox<T extends NodeUI> extends ExtensionUI<T> {}
         class Grid<T extends NodeUI> extends ExtensionUI<T> {
-            public static createDataCellAttribute(): GridCellData<NodeUI>;
+            static createDataCellAttribute(): GridCellData<NodeUI>;
         }
         class List<T extends NodeUI> extends ExtensionUI<T> {}
         class Relative<T extends NodeUI> extends ExtensionUI<T> {}

@@ -5,7 +5,7 @@ import { getDataSet, isHorizontalAlign, isVerticalAlign, localizeString } from '
 
 type T = android.base.View;
 
-const { BOX_MARGIN, BOX_PADDING, CSS_UNIT, formatPX, getBackgroundPosition, isLength, isPercent, newBoxModel, parseTransform } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_UNIT, formatPX, getBackgroundPosition, isLength, isPercent, newBoxModel, parseTransform } = squared.lib.css;
 const { createElement, getNamedItem } = squared.lib.dom;
 const { clamp, truncate } = squared.lib.math;
 const { actualTextRangeRect } = squared.lib.session;
@@ -16,7 +16,14 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const ResourceUI = squared.base.ResourceUI;
 
-const { constraint: LAYOUT_CONSTRAINT, relative: LAYOUT_RELATIVE, relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_ANDROID;
+const {
+    constraint: LAYOUT_CONSTRAINT,
+    relative: LAYOUT_RELATIVE,
+    relativeParent: LAYOUT_RELATIVE_PARENT
+} = LAYOUT_ANDROID;
+
+const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
+const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
 
 function checkTextAlign(value: string, ignoreStart: boolean) {
     switch (value) {
@@ -710,28 +717,26 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
         left += this.borderLeftWidth;
     }
     if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
-        let mergeAll = 0;
-        let mergeHorizontal = 0;
-        let mergeVertical = 0;
+        let horizontal = 0, vertical = 0, combine = 0;
         if ((!margin || !(this.renderParent as T).layoutGrid) && this.api >= BUILD_ANDROID.OREO) {
             if (top === right && right === bottom && bottom === left) {
-                mergeAll = top;
+                combine = top;
             }
             else {
                 if (left === right) {
-                    mergeHorizontal = left;
+                    horizontal = left;
                 }
                 if (top === bottom) {
-                    mergeVertical = top;
+                    vertical = top;
                 }
             }
         }
-        if (mergeAll !== 0) {
-            this.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, formatPX(mergeAll));
+        if (combine !== 0) {
+            this.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, formatPX(combine));
         }
         else {
-            if (mergeHorizontal !== 0) {
-                this.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, formatPX(mergeHorizontal));
+            if (horizontal !== 0) {
+                this.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, formatPX(horizontal));
             }
             else {
                 if (left !== 0) {
@@ -741,8 +746,8 @@ function setBoxModel(this: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                     this.android(this.localizeString(margin ? STRING_ANDROID.MARGIN_RIGHT : STRING_ANDROID.PADDING_RIGHT), formatPX(right));
                 }
             }
-            if (mergeVertical !== 0) {
-                this.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, formatPX(mergeVertical));
+            if (vertical !== 0) {
+                this.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, formatPX(vertical));
             }
             else {
                 if (top !== 0) {

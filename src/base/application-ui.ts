@@ -12,12 +12,14 @@ import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURC
 type FileActionOptions = squared.base.FileActionOptions;
 type LayoutMap = Map<number, Set<NodeUI>>;
 
-const { BOX_POSITION, TEXT_STYLE, convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = squared.lib.css;
+const { convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { maxArray } = squared.lib.math;
 const { appendSeparator, capitalize, convertFloat, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
 const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { isPlainText } = squared.lib.xml;
+
+const TEXT_STYLE = NodeUI.TEXT_STYLE.concat(['fontSize']);
 
 function getCounterValue(value: string, counterName: string, fallback = 1) {
     if (value !== 'none') {
@@ -194,6 +196,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     private readonly _layouts: LayoutAsset[] = [];
     private readonly _controllerSettings!: ControllerSettingsUI;
     private readonly _excluded!: Set<string>;
+    private readonly _layoutFileExtension: RegExp;
 
     protected constructor(
         framework: number,
@@ -205,6 +208,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         super(framework, nodeConstructor, ControllerConstructor, ResourceConstructor, ExtensionManagerConstructor);
         const localSettings = this.controllerHandler.localSettings;
         this._controllerSettings = localSettings;
+        this._layoutFileExtension = new RegExp(`\\.${localSettings.layout.fileExtension}$`);
         this._excluded = localSettings.unsupported.excluded;
     }
 
@@ -491,8 +495,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (item.positionRelative) {
                         let i = 0;
                         while (i < 4) {
-                            const attr = BOX_POSITION[i++];
-                            if (item.hasPX(attr) && item[attr] !== 0) {
+                            const attr = NodeUI.BOX_POSITION[i++];
+                            if (item.hasPX(attr)) {
                                 safeNestedMap(preAlignment, item.id)[attr] = item.css(attr);
                                 element.style.setProperty(attr, 'auto');
                                 resetBounds = true;
@@ -587,7 +591,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const dataset = node.dataset;
         const filename = dataset['filename' + systemName] || dataset.filename;
         const iteration = dataset['iteration' + systemName];
-        const prefix = isString(filename) && filename.replace(new RegExp(`\\.${this._controllerSettings.layout.fileExtension}$`), '') || node.elementId || `document_${this.length}`;
+        const prefix = isString(filename) && filename.replace(this._layoutFileExtension, '') || node.elementId || `document_${this.length}`;
         const suffix = (iteration ? parseInt(iteration) : -1) + 1;
         const layoutName = convertWord(suffix > 0 ? prefix + '_' + suffix : prefix, true);
         dataset['iteration' + systemName] = suffix.toString();

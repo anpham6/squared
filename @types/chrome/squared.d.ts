@@ -38,7 +38,7 @@ declare namespace base {
     }
 
     class File<T extends View> extends squared.base.File<T> {
-        public static parseUri(uri: string, options?: UriOptions): Undef<ChromeAsset>;
+        static parseUri(uri: string, options?: UriOptions): Undef<ChromeAsset>;
         resource: Resource<T>;
         get application(): Application<T>;
         get userSettings(): ChromeUserSettings;
@@ -53,8 +53,8 @@ declare namespace base {
     }
 
     class Extension<T extends View> extends squared.base.Extension<T> {
-        public static getConvertOptions(name: string, options: ConvertOptions): Undef<string>;
-        public static getCompressOptions(name: string, options: CompressOptions): string;
+        static getConvertOptions(name: string, options: ConvertOptions): Undef<string>;
+        static getCompressOptions(name: string, options: CompressOptions): string;
         application: Application<T>;
         processFile(data: ChromeAsset, override?: boolean): boolean;
     }

@@ -5,11 +5,16 @@ import { NODE_TEMPLATE } from './lib/enumeration';
 type NodeUI = squared.base.NodeUI;
 
 const { USER_AGENT, isUserAgent, isWinEdge } = squared.lib.client;
-const { BOX_BORDER, BOX_PADDING, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
+const { CSS_PROPERTIES, formatPX, getStyle, isLength, isPercent } = squared.lib.css;
 const { withinViewport } = squared.lib.dom;
 const { capitalize, convertFloat, flatArray, isString, iterateArray, safeNestedArray } = squared.lib.util;
 const { actualClientRect, getElementCache, setElementCache } = squared.lib.session;
 const { pushIndent, pushIndentArray } = squared.lib.xml;
+
+const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
+const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
+const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
+const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 
 function positionAbsolute(style: CSSStyleDeclaration) {
     switch (style.getPropertyValue('position')) {
@@ -21,12 +26,11 @@ function positionAbsolute(style: CSSStyleDeclaration) {
 }
 
 function setBorderStyle(styleMap: StringMap, defaultColor: string) {
-    if (!isString(styleMap.border) && !(BOX_BORDER[0][0] in styleMap || BOX_BORDER[1][0] in styleMap || BOX_BORDER[2][0] in styleMap || BOX_BORDER[3][0] in styleMap)) {
-        styleMap.border = `outset 1px ${defaultColor}`;
-        for (let i = 0; i < 4; ++i) {
-            const border = BOX_BORDER[i];
-            styleMap[border[0]] = 'outset';
-            styleMap[border[1]] = '1px';
+    if (!isString(styleMap.border) && !(BORDER_TOP[0] in styleMap || BORDER_RIGHT[0] in styleMap || BORDER_BOTTOM[0] in styleMap || BORDER_LEFT[0] in styleMap)) {
+        styleMap.border = `1px outset ${defaultColor}`;
+        for (const border of [BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT]) {
+            styleMap[border[0]] = '1px';
+            styleMap[border[1]] = 'outset';
             styleMap[border[2]] = defaultColor;
         }
         return true;
@@ -44,7 +48,7 @@ function setButtonStyle(styleMap: StringMap, applied: boolean, defaultColor: str
     if (!isString(styleMap.textAlign)) {
         styleMap.textAlign = 'center';
     }
-    if (!isString(styleMap.padding) && !BOX_PADDING.some(attr => !!styleMap[attr])) {
+    if (!isString(styleMap.padding) && !(CSS_PROPERTIES.padding.value as string[]).some(attr => !!styleMap[attr])) {
         styleMap.paddingTop = '2px';
         styleMap.paddingRight = '6px';
         styleMap.paddingBottom = '3px';

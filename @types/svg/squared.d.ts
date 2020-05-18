@@ -2,47 +2,47 @@ declare module "svg" {
     type SvgGroup = Svg | SvgG | SvgUseSymbol | SvgPattern | SvgShapePattern | SvgUsePattern;
 
     class SvgBuild {
-        public static isContainer(object: SvgElement): object is SvgGroup;
-        public static isElement(object: SvgElement): object is SvgElement;
-        public static isShape(object: SvgElement): object is SvgShape;
-        public static isAnimate(object: SvgAnimation): object is SvgAnimate;
-        public static isAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
-        public static asSvg(object: SvgElement): object is Svg;
-        public static asG(object: SvgElement): object is SvgG;
-        public static asPattern(object: SvgElement): object is SvgPattern;
-        public static asShapePattern(object: SvgElement): object is SvgShapePattern;
-        public static asUsePattern(object: SvgElement): object is SvgUsePattern;
-        public static asImage(object: SvgElement): object is SvgImage;
-        public static asUse(object: SvgElement): object is SvgUse;
-        public static asUseSymbol(object: SvgElement): object is SvgUseSymbol;
-        public static asSet(object: SvgAnimation): boolean;
-        public static asAnimate(object: SvgAnimation): object is SvgAnimate;
-        public static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
-        public static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion;
-        public static setName(element?: SVGElement): string;
-        public static drawLine(x1: number, y1: number, x2?: number, y2?: number, precision?: number): string;
-        public static drawRect(width: number, height: number, x?: number, y?: number, precision?: number): string;
-        public static drawCircle(cx: number, cy: number, r: number, precision?: number): string;
-        public static drawEllipse(cx: number, cy: number, rx: number, ry?: number, precision?: number): string;
-        public static drawPolygon(values: Point[] | DOMPoint[], precision?: number): string;
-        public static drawPolyline(values: Point[] | DOMPoint[], precision?: number): string;
-        public static drawPath(values: SvgPathCommand[], precision?: number): string;
-        public static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number): string;
-        public static transformRefit(value: string, transforms?: SvgTransform[], parent?: SvgView, container?: SvgContainer, precision?: number): string;
-        public static getOffsetPath(value: string, rotation?: string): SvgOffsetPath[];
-        public static getPathCommands(value: string): SvgPathCommand[];
-        public static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
-        public static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
-        public static convertTransforms(transforms: SVGTransformList): SvgTransform[];
-        public static getPathPoints(values: SvgPathCommand[]): SvgPoint[];
-        public static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
-        public static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
-        public static minMaxPoints(values: SvgPoint[]): [number, number, number, number];
-        public static centerPoints(...values: Point[]): Point[];
-        public static convertPoints(values: number[]): Point[];
-        public static parsePoints(value: string): Point[];
-        public static parseCoordinates(value: string): number[];
-        public static getBoxRect(value: string): BoxRect;
+        static isContainer(object: SvgElement): object is SvgGroup;
+        static isElement(object: SvgElement): object is SvgElement;
+        static isShape(object: SvgElement): object is SvgShape;
+        static isAnimate(object: SvgAnimation): object is SvgAnimate;
+        static isAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
+        static asSvg(object: SvgElement): object is Svg;
+        static asG(object: SvgElement): object is SvgG;
+        static asPattern(object: SvgElement): object is SvgPattern;
+        static asShapePattern(object: SvgElement): object is SvgShapePattern;
+        static asUsePattern(object: SvgElement): object is SvgUsePattern;
+        static asImage(object: SvgElement): object is SvgImage;
+        static asUse(object: SvgElement): object is SvgUse;
+        static asUseSymbol(object: SvgElement): object is SvgUseSymbol;
+        static asSet(object: SvgAnimation): boolean;
+        static asAnimate(object: SvgAnimation): object is SvgAnimate;
+        static asAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
+        static asAnimateMotion(object: SvgAnimation): object is SvgAnimateMotion;
+        static setName(element?: SVGElement): string;
+        static drawLine(x1: number, y1: number, x2?: number, y2?: number, precision?: number): string;
+        static drawRect(width: number, height: number, x?: number, y?: number, precision?: number): string;
+        static drawCircle(cx: number, cy: number, r: number, precision?: number): string;
+        static drawEllipse(cx: number, cy: number, rx: number, ry?: number, precision?: number): string;
+        static drawPolygon(values: Point[] | DOMPoint[], precision?: number): string;
+        static drawPolyline(values: Point[] | DOMPoint[], precision?: number): string;
+        static drawPath(values: SvgPathCommand[], precision?: number): string;
+        static drawRefit(element: SVGGraphicsElement, parent?: SvgContainer, precision?: number): string;
+        static transformRefit(value: string, transforms?: SvgTransform[], parent?: SvgView, container?: SvgContainer, precision?: number): string;
+        static getOffsetPath(value: string, rotation?: string): SvgOffsetPath[];
+        static getPathCommands(value: string): SvgPathCommand[];
+        static filterTransforms(transforms: SvgTransform[], exclude?: number[]): SvgTransform[];
+        static applyTransforms(transforms: SvgTransform[], values: Point[], aspectRatio?: SvgAspectRatio, origin?: Point): SvgPoint[];
+        static convertTransforms(transforms: SVGTransformList): SvgTransform[];
+        static getPathPoints(values: SvgPathCommand[]): SvgPoint[];
+        static syncPathPoints(values: SvgPathCommand[], points: SvgPoint[], transformed?: boolean): SvgPathCommand[];
+        static clonePoints(values: SvgPoint[] | SVGPointList): SvgPoint[];
+        static minMaxPoints(values: SvgPoint[]): [number, number, number, number];
+        static centerPoints(...values: Point[]): Point[];
+        static convertPoints(values: number[]): Point[];
+        static parsePoints(value: string): Point[];
+        static parseCoordinates(value: string): number[];
+        static getBoxRect(value: string): BoxRect;
     }
 
     interface SvgBaseVal extends SvgElement {
@@ -319,8 +319,8 @@ declare module "svg" {
     }
 
     class SvgPath implements SvgBaseVal, SvgPaint, SvgTransformable {
-        public static transform(value: string, transforms: SvgTransform[], element?: SVGGeometryElement, precision?: number): string;
-        public static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number): Undef<string[]>;
+        static transform(value: string, transforms: SvgTransform[], element?: SVGGeometryElement, precision?: number): string;
+        static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number): Undef<string[]>;
         name: string;
         value: string;
         baseValue: string;
@@ -504,7 +504,7 @@ declare module "svg" {
     }
 
     class SvgAnimation {
-        public static convertClockTime(value: string): number;
+        static convertClockTime(value: string): number;
         baseValue: string;
         fillMode: number;
         paused: boolean;
@@ -546,10 +546,10 @@ declare module "svg" {
     }
 
     class SvgAnimate extends SvgAnimation {
-        public static getSplitValue(value: number, next: number, percent: number): number;
-        public static convertTimingFunction(value: string): string;
-        public static convertStepTimingFunction(attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): Undef<[number[], string[]]>;
-        public static toFractionList(value: string, delimiter?: string, ordered?: boolean): number[];
+        static getSplitValue(value: number, next: number, percent: number): number;
+        static convertTimingFunction(value: string): string;
+        static convertStepTimingFunction(attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): Undef<[number[], string[]]>;
+        static toFractionList(value: string, delimiter?: string, ordered?: boolean): number[];
         type: number;
         from: string;
         additiveSum: boolean;
@@ -589,10 +589,10 @@ declare module "svg" {
     }
 
     class SvgAnimateTransform extends SvgAnimate {
-        public static toRotateList(values: string[]): Undef<number[][]>;
-        public static toScaleList(values: string[]): Undef<number[][]>;
-        public static toTranslateList(values: string[]): Undef<number[][]>;
-        public static toSkewList(values: string[]): Undef<number[][]>;
+        static toRotateList(values: string[]): Undef<number[][]>;
+        static toScaleList(values: string[]): Undef<number[][]>;
+        static toTranslateList(values: string[]): Undef<number[][]>;
+        static toSkewList(values: string[]): Undef<number[][]>;
         transformFrom?: string;
         transformOrigin?: Point[];
         readonly animationElement: Null<SVGAnimateTransformElement>;
@@ -617,8 +617,8 @@ declare module "svg" {
     }
 
     class SvgAnimationIntervalMap {
-        public static getGroupEndTime(item: SvgAnimationAttribute): number;
-        public static getKeyName(item: SvgAnimation): string;
+        static getGroupEndTime(item: SvgAnimationAttribute): number;
+        static getKeyName(item: SvgAnimation): string;
         map: SvgAnimationIntervalAttributeMap<SvgAnimation>;
         has(attr: string): boolean;
         get(attr: string, time: number, playing?: boolean): Undef<string>;

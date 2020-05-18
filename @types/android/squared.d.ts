@@ -21,9 +21,9 @@ declare namespace base {
     }
 
     class Controller<T extends View> extends squared.base.ControllerUI<T> {
-        public static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
-        public static setConstraintDimension<T extends View>(node: T, percentWidth?: number): number;
-        public static setFlexDimension<T extends View>(node: T, horizontal: boolean): void;
+        static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
+        static setConstraintDimension<T extends View>(node: T, percentWidth?: number): number;
+        static setFlexDimension<T extends View>(node: T, horizontal: boolean): void;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
         renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute): string;
@@ -41,13 +41,13 @@ declare namespace base {
     }
 
     class Resource<T extends View> extends squared.base.ResourceUI<T> {
-        public static STORED: AndroidResourceStoredMap;
-        public static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
-        public static formatName(value: string): string;
-        public static addTheme(theme: StyleAttribute): boolean;
-        public static addString(value: string, name?: string, numberAlias?: boolean): string;
-        public static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
-        public static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
+        static STORED: AndroidResourceStoredMap;
+        static formatOptions(options: ViewAttribute, numberAlias?: boolean): ViewAttribute;
+        static formatName(value: string): string;
+        static addTheme(theme: StyleAttribute): boolean;
+        static addString(value: string, name?: string, numberAlias?: boolean): string;
+        static addImage(images: StringMap, prefix?: string, imageFormat?: MIMEOrAll): string;
+        static addColor(value: Undef<ColorData | string>, transparency?: boolean): string;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
         get userSettings(): AndroidUserSettingsUI;
@@ -74,8 +74,8 @@ declare namespace base {
     }
 
     class View extends squared.base.NodeUI {
-        public static getControlName(containerType: number, api?: number): string;
-        public static availablePercent(nodes: View[], dimension: DimensionAttr, boxSize: number): number;
+        static getControlName(containerType: number, api?: number): string;
+        static availablePercent(nodes: View[], dimension: DimensionAttr, boxSize: number): number;
         tagName: string;
         api: number;
         readonly constraint: Constraint;

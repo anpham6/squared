@@ -101,11 +101,6 @@ declare module "lib" {
             CONTAIN = 16
         }
         const CSS_PROPERTIES: CssProperties;
-        const BOX_POSITION: string[];
-        const BOX_MARGIN: string[];
-        const BOX_BORDER: string[][];
-        const BOX_PADDING: string[];
-        const TEXT_STYLE: string[];
         function newBoxModel(): BoxModel;
         function getStyle(element: Null<Element>, pseudoElt?: string): CSSStyleDeclaration;
         function getFontSize(element: Element): number;

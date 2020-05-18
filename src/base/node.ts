@@ -3,13 +3,18 @@ import { NODE_ALIGNMENT } from './lib/enumeration';
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { BOX_BORDER, CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, TEXT_STYLE, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, isPx, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, isPx, parseSelectorText, parseUnit } = squared.lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { aboveRange, belowRange, convertCamelCase, convertFloat, convertInt, hasBit, hasValue, isNumber, isObject, isString, iterateArray, spliceString, splitEnclosing } = squared.lib.util;
 
 const { SELECTOR_ATTR, SELECTOR_G, SELECTOR_LABEL, SELECTOR_PSEUDO_CLASS } = CSS;
+
+const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
+const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
+const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
+const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 
 function setStyleCache(element: HTMLElement, attr: string, sessionId: string, value: string, current: string) {
     if (current !== value) {
@@ -152,14 +157,14 @@ function setOverflow(this: T) {
 
 function convertBorderWidth(this: T, dimension: DimensionAttr, border: string[]) {
     if (!this.plainText) {
-        switch (this.css(border[0])) {
+        switch (this.css(border[1])) {
             case 'none':
             case 'initial':
             case 'hidden':
                 return 0;
         }
-        const width = this.css(border[1]);
-        const result = isLength(width, true) ? this.parseUnit(width, dimension) : convertFloat(this.style[border[1]]);
+        const width = this.css(border[0]);
+        const result = isLength(width, true) ? this.parseUnit(width, dimension) : convertFloat(this.style[border[0]]);
         if (result > 0) {
             return Math.max(Math.round(result), 1);
         }
@@ -702,6 +707,26 @@ function convertPosition(this: T, attr: string) {
 }
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
+    public static BOX_POSITION = [
+        'top',
+        'right',
+        'bottom',
+        'left'
+    ];
+    public static TEXT_STYLE = [
+        'fontFamily',
+        'fontWeight',
+        'fontStyle',
+        'fontVariant',
+        'fontStretch',
+        'color',
+        'whiteSpace',
+        'textDecoration',
+        'textTransform',
+        'letterSpacing',
+        'wordSpacing'
+    ];
+
     public documentRoot = false;
     public depth = -1;
     public childIndex = Infinity;
@@ -901,7 +926,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         else if (attr.startsWith('background')) {
                             cached.visibleStyle = undefined;
                         }
-                        else if (TEXT_STYLE.includes(attr)) {
+                        else if (Node.TEXT_STYLE.includes(attr)) {
                             cached.lineHeight = undefined;
                             this._textStyle = undefined;
                         }
@@ -2124,7 +2149,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get borderTopWidth() {
         let result = this._cached.borderTopWidth;
         if (result === undefined) {
-            result = convertBorderWidth.call(this, 'height', BOX_BORDER[0]);
+            result = convertBorderWidth.call(this, 'height', BORDER_TOP);
             this._cached.borderTopWidth = result;
         }
         return result;
@@ -2132,7 +2157,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get borderRightWidth() {
         let result = this._cached.borderRightWidth;
         if (result === undefined) {
-            result = convertBorderWidth.call(this, 'height', BOX_BORDER[1]);
+            result = convertBorderWidth.call(this, 'height', BORDER_RIGHT);
             this._cached.borderRightWidth = result;
         }
         return result;
@@ -2140,7 +2165,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get borderBottomWidth() {
         let result = this._cached.borderBottomWidth;
         if (result === undefined) {
-            result = convertBorderWidth.call(this, 'width', BOX_BORDER[2]);
+            result = convertBorderWidth.call(this, 'width', BORDER_BOTTOM);
             this._cached.borderBottomWidth = result;
         }
         return result;
@@ -2148,7 +2173,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get borderLeftWidth() {
         let result = this._cached.borderLeftWidth;
         if (result === undefined) {
-            result = convertBorderWidth.call(this, 'width', BOX_BORDER[3]);
+            result = convertBorderWidth.call(this, 'width', BORDER_LEFT);
             this._cached.borderLeftWidth = result;
         }
         return result;
@@ -2836,7 +2861,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get textStyle() {
         let result = this._textStyle;
         if (result === undefined) {
-            result = this.cssAsObject(...TEXT_STYLE);
+            result = this.cssAsObject(...Node.TEXT_STYLE);
             result.fontSize = this.fontSize + 'px';
             this._textStyle = result;
         }

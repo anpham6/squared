@@ -49,8 +49,7 @@ function calculatePosition(element: CSSElement, value: string, boundingBox?: Dim
             return calculateVarAsString(element, alignment.join(' '), { dimension: ['width', 'height'], boundingBox, parent: false });
         case 3:
         case 4: {
-            let horizontal = 0;
-            let vertical = 0;
+            let horizontal = 0, vertical = 0;
             for (let i = 0; i < length; ++i) {
                 const position = alignment[i];
                 switch (position) {
@@ -190,8 +189,9 @@ function getWritingMode(value: string) {
             return 1;
         case 'vertical-rl':
             return 2;
+        default:
+            return 0;
     }
-    return 0;
 }
 
 function hasBorderStyle(value: string) {
@@ -200,8 +200,9 @@ function hasBorderStyle(value: string) {
         case 'initial':
         case 'hidden':
             return false;
+        default:
+            return true;
     }
-    return true;
 }
 
 function getContentBoxWidth(style: CSSStyleDeclaration) {
@@ -227,8 +228,9 @@ function isAbsolutePosition(value: string) {
         case 'absolute':
         case 'fixed':
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 
 function newBoxRectPosition(orientation: string[] = ['left', 'top']) {
@@ -430,25 +432,25 @@ export const CSS_PROPERTIES: CssProperties = {
     border: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
         value: [
-            'borderTopStyle',
             'borderTopWidth',
+            'borderTopStyle',
             'borderTopColor',
-            'borderRightStyle',
             'borderRightWidth',
+            'borderRightStyle',
             'borderRightColor',
-            'borderBottomStyle',
             'borderBottomWidth',
+            'borderBottomStyle',
             'borderBottomColor',
-            'borderLeftStyle',
             'borderLeftWidth',
+            'borderLeftStyle',
             'borderLeftColor'
         ]
     },
     borderBottom: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
         value: [
-            'borderBottomStyle',
             'borderBottomWidth',
+            'borderBottomStyle',
             'borderBottomColor'
         ]
     },
@@ -518,8 +520,8 @@ export const CSS_PROPERTIES: CssProperties = {
     borderLeft: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
         value: [
-            'borderLeftStyle',
             'borderLeftWidth',
+            'borderLeftStyle',
             'borderLeftColor'
         ]
     },
@@ -547,8 +549,8 @@ export const CSS_PROPERTIES: CssProperties = {
     borderRight: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
         value: [
-            'borderRightStyle',
             'borderRightWidth',
+            'borderRightStyle',
             'borderRightColor'
         ]
     },
@@ -580,8 +582,8 @@ export const CSS_PROPERTIES: CssProperties = {
     borderTop: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND,
         value: [
-            'borderTopStyle',
             'borderTopWidth',
+            'borderTopStyle',
             'borderTopColor'
         ]
     },
@@ -1366,48 +1368,6 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     }
 };
-
-export const BOX_POSITION = [
-    'top',
-    'right',
-    'bottom',
-    'left'
-];
-
-export const BOX_MARGIN = [
-    'marginTop',
-    'marginRight',
-    'marginBottom',
-    'marginLeft'
-];
-
-export const BOX_PADDING = [
-    'paddingTop',
-    'paddingRight',
-    'paddingBottom',
-    'paddingLeft'
-];
-
-export const TEXT_STYLE = [
-    'fontFamily',
-    'fontSize',
-    'fontWeight',
-    'fontStyle',
-    'color',
-    'whiteSpace',
-    'textDecoration',
-    'textTransform',
-    'letterSpacing',
-    'wordSpacing'
-];
-
-export const BOX_BORDER = [
-    ['borderTopStyle', 'borderTopWidth', 'borderTopColor'],
-    ['borderRightStyle', 'borderRightWidth', 'borderRightColor'],
-    ['borderBottomStyle', 'borderBottomWidth', 'borderBottomColor'],
-    ['borderLeftStyle', 'borderLeftWidth', 'borderLeftColor'],
-    ['outlineStyle', 'outlineWidth', 'outlineColor']
-];
 
 export function newBoxModel(): BoxModel {
     return {
@@ -2571,13 +2531,8 @@ export function isParentStyle(element: Element, attr: string, ...styles: string[
     if (element.nodeName.charAt(0) !== '#' && styles.includes(getStyle(element)[attr])) {
         return true;
     }
-    else {
-        const parentElement = element.parentElement;
-        if (parentElement) {
-            return styles.includes(getStyle(parentElement)[attr]);
-        }
-    }
-    return false;
+    const parentElement = element.parentElement;
+    return parentElement !== null && styles.includes(getStyle(parentElement)[attr]);
 }
 
 export function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]) {
@@ -2737,8 +2692,8 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
                         options.boundingSize = boundingBox[dimension];
                     }
                     else {
-                        let boundingElement: Null<Element>;
                         let offsetPadding = 0;
+                        let boundingElement: Null<Element>;
                         if (options.parent === false) {
                             boundingElement = element;
                         }
@@ -2972,8 +2927,7 @@ export function getBackgroundPosition(value: string, dimension: Dimension, optio
             }
         }
         else {
-            let horizontal = 0;
-            let vertical = 0;
+            let horizontal = 0, vertical = 0;
             const checkPosition = (position: string, nextPosition?: string) => {
                 switch (position) {
                     case 'left':
@@ -3802,7 +3756,7 @@ export function formatPX(value: number) {
     return Math.round(value) + 'px';
 }
 
-export function formatPercent(value: string | number, round = true) {
+export function formatPercent(value: string | number, round?: boolean) {
     if (typeof value === 'string') {
         value = parseFloat(value);
         if (isNaN(value)) {
