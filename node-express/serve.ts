@@ -766,6 +766,7 @@ let Image: serve.IImage;
                 }
                 if (found) {
                     source = result!;
+                    found = false;
                 }
                 pattern = new RegExp(`^[^,]*(,?[\\s\\n]*${value}[\\s\\n]*[,{](\\s*)).*?\\{?`, 'gm');
                 while ((match = pattern.exec(source)) !== null) {
@@ -1200,13 +1201,10 @@ class FileManager implements serve.IFileManager {
                 const baseUri = file.uri!;
                 const saved = new Set<string>();
                 let html = fs.readFileSync(filepath).toString('utf8');
-                let source: Undef<string>;
+                let source = html;
                 let pattern = /(\s*)<(script|link|style)[\s\S]*?([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[\s\S]*?\/?>(?:[\s\S]*?<\/\2>\n*)?/ig;
                 let match: Null<RegExpExecArray>;
                 while ((match = pattern.exec(html)) !== null) {
-                    if (source === undefined) {
-                        source = html;
-                    }
                     const segment = match[0];
                     const script = match[2].toLowerCase() === 'script';
                     const location = Express.getAbsoluteUrl(match[5].split('::')[0].trim(), baseUri);
@@ -1226,7 +1224,7 @@ class FileManager implements serve.IFileManager {
                         saved.add(location);
                     }
                 }
-                if (source) {
+                if (saved.size) {
                     html = source;
                 }
                 pattern = /(\s*)<(script|style)[\s\S]*?>([\s\S]*?)<\/\2>\n*/ig;
@@ -1238,9 +1236,6 @@ class FileManager implements serve.IFileManager {
                     if (bundleIndex !== undefined) {
                         const outerHTML = item.outerHTML;
                         if (outerHTML) {
-                            if (source === undefined) {
-                                source = html;
-                            }
                             const length = source.length;
                             let replaceWith = '';
                             if (bundleIndex === 0 || bundleIndex === Infinity) {
@@ -1270,18 +1265,12 @@ class FileManager implements serve.IFileManager {
                             content.push(minifySpace(trailing.value));
                         }
                         while ((match = pattern.exec(html)) !== null) {
-                            if (source === undefined) {
-                                source = html;
-                            }
                             const value = minifySpace(match[3]);
                             if (content.includes(value)) {
                                 source = source.replace(match[0], '');
                             }
                         }
                     }
-                }
-                if (source === undefined) {
-                    source = html;
                 }
                 for (const item of assets) {
                     if (item.excluded) {

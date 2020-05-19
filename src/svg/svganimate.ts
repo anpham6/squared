@@ -107,7 +107,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         const offset = i === 0 && match[2] === 'start' ? 1 : 0;
                         const time = keyTimes[index] + keyTimeTotal * (i / stepSize);
                         const percent = (interval * (i + offset)) / 100;
-                        const result: string[] = [];
+                        let result = '';
                         switch (attributeName) {
                             case 'fill':
                             case 'stroke': {
@@ -118,7 +118,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                                     SvgAnimate.getSplitValue(rgbaA.b, rgbaB.b, percent)
                                 );
                                 const a = getHexCode(SvgAnimate.getSplitValue(rgbaA.a, rgbaB.a, percent));
-                                result.push(`#${rgb + (a !== 'FF' ? a : '')}`);
+                                result += (result !== '' ? ' ' : '') + `#${rgb + (a !== 'FF' ? a : '')}`;
                                 break;
                             }
                             case 'points': {
@@ -126,21 +126,21 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                                 while (j < length) {
                                     const current = currentValue[j] as Point;
                                     const next = nextValue[j++] as Point;
-                                    result.push(SvgAnimate.getSplitValue(current.x, next.x, percent) + ',' + SvgAnimate.getSplitValue(current.y, next.y, percent));
+                                    result += (result !== '' ? ' ' : '') + SvgAnimate.getSplitValue(current.x, next.x, percent) + ',' + SvgAnimate.getSplitValue(current.y, next.y, percent);
                                 }
                                 break;
                             }
                             default: {
                                 let k = 0;
                                 while (k < length) {
-                                    result.push(SvgAnimate.getSplitValue(currentValue[k] as number, nextValue[k++] as number, percent).toString());
+                                    result += (result !== '' ? ' ' : '') + SvgAnimate.getSplitValue(currentValue[k] as number, nextValue[k++] as number, percent).toString();
                                 }
                                 break;
                             }
                         }
-                        if (result.length) {
+                        if (result !== '') {
                             splitTimes[i] = time;
-                            splitValues[i] = result.join(' ');
+                            splitValues[i] = result;
                         }
                         else {
                             return undefined;
@@ -238,12 +238,12 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                             const fromCoords = SvgBuild.parseCoordinates(value);
                             const length = fromCoords.length;
                             if (byCoords.length === length) {
-                                const to: number[] = new Array(length);
+                                let to = '';
                                 let i = 0;
                                 while (i < length) {
-                                    to[i] = fromCoords[i] + byCoords[i++];
+                                    to += (i > 0 ? ',' : '') + (fromCoords[i] + byCoords[i++]);
                                 }
-                                this.to = to.join(',');
+                                this.to = to;
                             }
                         }
                     }

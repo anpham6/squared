@@ -319,12 +319,12 @@ function getItemSplitValue(fraction: number, previousFraction: number, previousV
             const nextArray = replaceMap(nextValue.split(' '), (value: string) => parseFloat(value));
             const length = previousArray.length;
             if (length === nextArray.length) {
-                const result: number[] = new Array(length);
+                let result = '';
                 let i = 0;
                 while (i < length) {
-                    result[i] = getItemSplitValue(fraction, previousFraction, previousArray[i], nextFraction, nextArray[i++]) as number;
+                    result += (i > 0 ? ' ' : '') + getItemSplitValue(fraction, previousFraction, previousArray[i], nextFraction, nextArray[i++]);
                 }
-                return result.join(' ');
+                return result;
             }
         }
         else if (Array.isArray(previousValue) && Array.isArray(nextValue)) {

@@ -27,7 +27,11 @@ function getFontVariationStyle(value: string) {
     return '';
 }
 
-const setTextValue = (node: View, attr: string, name: string, useNumber: boolean) => node.android(attr, useNumber || !isNumber(name) ? `@string/${name}` : name, false);
+function setTextValue(node: View, attr: string, name: string, useNumber: boolean) {
+    if (name !== '') {
+        node.android(attr, useNumber || !isNumber(name) ? `@string/${name}` : name, false);
+    }
+}
 
 export default class ResourceStrings<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceStringsOptions = {
@@ -42,10 +46,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 if (node.styleElement) {
                     const title: string =  node.data(Resource.KEY_NAME, 'titleString') || node.toElementString('title');
                     if (title !== '') {
-                        const name = Resource.addString(title, `${node.controlId.toLowerCase()}_title`, numberResourceValue);
-                        if (name !== '') {
-                            setTextValue(node, 'tooltipText', name, numberResourceValue);
-                        }
+                        setTextValue(
+                            node,
+                            'tooltipText',
+                            Resource.addString(title, `${node.controlId.toLowerCase()}_title`, numberResourceValue),
+                            numberResourceValue
+                        );
                     }
                 }
                 if (node.inputElement) {
@@ -57,10 +63,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                     }
                     const hintString: string = node.data(Resource.KEY_NAME, 'hintString');
                     if (isString(hintString)) {
-                        const name = Resource.addString(hintString, hintString, numberResourceValue);
-                        if (name !== '') {
-                            setTextValue(node, 'hint', name, numberResourceValue);
-                        }
+                        setTextValue(
+                            node,
+                            'hint',
+                            name,
+                            numberResourceValue
+                        );
                     }
                 }
                 const tagName = node.tagName;
@@ -73,14 +81,14 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         break;
                     }
                     case 'IFRAME': {
-                        const stored: StringValue = node.data(Resource.KEY_NAME, 'valueString');
-                        if (stored) {
-                            Resource.addString(replaceCharacterData(stored.value), stored.key);
+                        const valueString: string = node.data(Resource.KEY_NAME, 'valueString');
+                        if (valueString) {
+                            Resource.addString(replaceCharacterData(valueString));
                         }
                         break;
                     }
                     default: {
-                        const valueString: StringValue = node.data(Resource.KEY_NAME, 'valueString');
+                        let valueString: string = node.data(Resource.KEY_NAME, 'valueString');
                         if (valueString) {
                             let indent = 0;
                             if (node.blockDimension || node.display === 'table-cell') {
@@ -91,7 +99,6 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     return;
                                 }
                             }
-                            let value: Undef<string>;
                             if (node.naturalChild && node.alignParent('left') && node.pageFlow && !(node.preserveWhiteSpace && !node.plainText || node.plainText && node.actualParent!.preserveWhiteSpace)) {
                                 const textContent = node.textContent;
                                 const length = textContent.length;
@@ -106,7 +113,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     break;
                                 }
                                 if (j > 0) {
-                                    value = (value || valueString.value).replace(new RegExp(`^(\\s|&#160;){1,${j}}`), '');
+                                    valueString = valueString.replace(new RegExp(`^(\\s|&#160;){1,${j}}`), '');
                                 }
                             }
                             switch (node.css('textTransform')) {
@@ -115,28 +122,28 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                     node.lockAttr('android', 'textAllCaps');
                                     break;
                                 case 'lowercase':
-                                    value = lowerCaseString(value || valueString.value);
+                                    valueString = lowerCaseString(valueString);
                                     break;
                                 case 'capitalize':
-                                    value = capitalizeString(value || valueString.value);
+                                    valueString = capitalizeString(valueString);
                                     break;
                             }
-                            value = replaceCharacterData(value || valueString.value, node.preserveWhiteSpace || tagName === 'CODE' ? node.toInt('tabSize', 8) : undefined);
+                            valueString = replaceCharacterData(valueString, node.preserveWhiteSpace || tagName === 'CODE' ? node.toInt('tabSize', 8) : undefined);
                             const textDecorationLine = node.css('textDecorationLine');
                             if (textDecorationLine !== 'none') {
                                 for (const style of textDecorationLine.split(' ')) {
                                     switch (style) {
                                         case 'underline':
-                                            value = `<u>${value}</u>`;
+                                            valueString = `<u>${valueString}</u>`;
                                             break;
                                         case 'line-through':
-                                            value = `<strike>${value}</strike>`;
+                                            valueString = `<strike>${valueString}</strike>`;
                                             break;
                                     }
                                 }
                             }
                             if (tagName === 'INS' && !textDecorationLine.includes('line-through')) {
-                                value = `<strike>${value}</strike>`;
+                                valueString = `<strike>${valueString}</strike>`;
                             }
                             if (indent === 0) {
                                 const parent = node.actualParent;
@@ -146,7 +153,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             }
                             if (indent > 0) {
                                 const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
-                                value = STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + value;
+                                valueString = STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + valueString;
                             }
                             let fontVariation = getFontVariationStyle(node.css('fontStyle'));
                             let fontFeature = '';
@@ -318,10 +325,12 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             if (fontFeature !== '') {
                                 node.android('fontFeatureSettings', fontFeature);
                             }
-                            const name = Resource.addString(value, valueString.key || valueString.value, numberResourceValue);
-                            if (name !== '') {
-                                setTextValue(node, 'text', name, numberResourceValue);
-                            }
+                            setTextValue(
+                                node,
+                                'text',
+                                Resource.addString(valueString, '', numberResourceValue),
+                                numberResourceValue
+                            );
                         }
                     }
                 }

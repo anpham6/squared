@@ -2571,22 +2571,18 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 result = value;
             }
             else {
+                result = '';
                 const pattern = /\s*(url|[a-z-]+gradient)/;
                 value = this.css('background');
                 if (pattern.test(value)) {
-                    const segments: string[] = [];
                     const background = splitEnclosing(value);
                     const length = background.length;
                     for (let i = 1; i < length; ++i) {
                         const name = background[i - 1].trim();
                         if (pattern.test(name)) {
-                            segments.push(name + background[i]);
+                            result += (result !== '' ? ', ' : '') + name + background[i];
                         }
                     }
-                    result = segments.join(', ');
-                }
-                else {
-                    result = '';
                 }
             }
             this._cached.backgroundImage = result;

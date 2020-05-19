@@ -755,7 +755,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public setValueString(node: T) {
         const element = node.element as HTMLInputElement;
         if (element) {
-            let key = '', value = '';
+            let value = '';
             let hint = '';
             let trimming = false;
             let inlined = false;
@@ -881,7 +881,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         value = node.textEmpty ? STRING_SPACE : this.removeExcludedFromText(node, element);
                     }
                     if (value !== '') {
-                        key = value.trim();
                         value = value.replace(/\u00A0/g, STRING_SPACE);
                         switch (node.css('whiteSpace')) {
                             case 'pre':
@@ -980,7 +979,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                 }
                 if (value !== '') {
-                    node.data(ResourceUI.KEY_NAME, 'valueString', { key, value });
+                    node.data(ResourceUI.KEY_NAME, 'valueString', value);
                 }
             }
             if (hint !== '') {
@@ -989,8 +988,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         }
         else if (node.inlineText) {
             const value = node.textContent;
-            if (value) {
-                node.data(ResourceUI.KEY_NAME, 'valueString', { key: value, value });
+            if (value !== '') {
+                node.data(ResourceUI.KEY_NAME, 'valueString', value);
             }
         }
     }

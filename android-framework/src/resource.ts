@@ -21,12 +21,11 @@ function formatObject(obj: {}, numberAlias = false) {
             if (value) {
                 switch (attr) {
                     case 'text':
-                        if (value.startsWith('@string/')) {
-                            continue;
-                        }
-                        value = Resource.addString(value, '', numberAlias);
-                        if (value !== '') {
-                            obj[attr] = `@string/${value}`;
+                        if (!value.startsWith('@string/')) {
+                            value = Resource.addString(value, '', numberAlias);
+                            if (value !== '') {
+                                obj[attr] = `@string/${value}`;
+                            }
                         }
                         break;
                     case 'src':
@@ -37,13 +36,15 @@ function formatObject(obj: {}, numberAlias = false) {
                                 obj[attr] = `@drawable/${value}`;
                             }
                         }
-                        continue;
-                }
-                const color = parseColor(value);
-                if (color) {
-                    const colorName = Resource.addColor(color);
-                    if (colorName !== '') {
-                        obj[attr] = `@color/${colorName}`;
+                        break;
+                    default: {
+                        const color = parseColor(value);
+                        if (color) {
+                            const colorName = Resource.addColor(color);
+                            if (colorName !== '') {
+                                obj[attr] = `@color/${colorName}`;
+                            }
+                        }
                     }
                 }
             }
@@ -125,9 +126,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
 
     public static addString(value: string, name?: string, numberAlias = false) {
         if (value !== '') {
-            if (!isString(name)) {
-                name = value.trim();
-            }
             const numeric = isNumber(value);
             if (!numeric || numberAlias) {
                 const strings = STORED.strings;
@@ -136,7 +134,14 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                         return resourceName;
                     }
                 }
-                const partial = trimString(name.replace(/[^A-Za-z\d]+/g, '_'), '_').split(/_+/);
+                const partial =
+                    trimString(
+                        (name || (value.length > 64 ? value.substring(0, 64) : value))
+                            .replace(/(<\/?[a-z]+>|&#?[A-Za-z\d]{2,};)/g, '_')
+                            .replace(/[^A-Za-z\d]+/g, '_'),
+                        '_'
+                    )
+                    .split(/_+/);
                 if (partial.length > 1) {
                     if (partial.length > 4) {
                         partial.length = 4;
@@ -147,18 +152,18 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     name = partial[0];
                 }
                 name = name.toLowerCase();
-                if (numeric || /^\d/.test(name) || RESERVED_JAVA.includes(name)) {
-                    name = `__${name}`;
-                }
-                else if (!name) {
+                if (!name) {
                     name = `__symbol${++Resource.SYMBOL_COUNTER}`;
+                }
+                else if (numeric || /^\d/.test(name) || RESERVED_JAVA.includes(name)) {
+                    name = `__${name}`;
                 }
                 if (strings.has(name)) {
                     name = Resource.generateId('string', name);
                 }
                 strings.set(name, value);
             }
-            return name;
+            return name || value;
         }
         return '';
     }
