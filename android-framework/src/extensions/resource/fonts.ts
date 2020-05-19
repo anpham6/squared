@@ -80,27 +80,25 @@ const FONT_STYLE = {
 };
 
 function deleteStyleAttribute(sorted: AttributeMap[], attrs: string, ids: number[]) {
-    const length = sorted.length;
-    for (const value of attrs.split(';')) {
-        for (let i = 0; i < length; ++i) {
-            let data = sorted[i];
-            let index = -1;
-            let key = '';
-            for (const j in data) {
-                if (j === value) {
-                    index = i;
-                    key = j;
-                    i = length;
-                    break;
+    const items = attrs.split(';');
+    const length = items.length;
+    const q = sorted.length;
+    let i = 0, j: number;
+    while (i < length) {
+        const value = items[i++];
+        found: {
+            j = 0;
+            while (j < q) {
+                const data = sorted[j++];
+                for (const attr in data) {
+                    if (attr === value) {
+                        data[attr] = data[attr].filter(id => !ids.includes(id));
+                        if (data[attr].length === 0) {
+                            delete data[attr];
+                        }
+                        break found;
+                    }
                 }
-            }
-            if (index !== -1) {
-                data = sorted[index];
-                data[key] = data[key].filter(id => !ids.includes(id));
-                if (data[key].length === 0) {
-                    delete data[key];
-                }
-                break;
             }
         }
     }
@@ -263,9 +261,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
                 else {
                     const styleKey: AttributeMap = {};
-                    for (let i = 0; i < sorted.length; ++i) {
-                        const filtered: AttributeMap = {};
+                    const length = sorted.length;
+                    for (let i = 0; i < length; ++i) {
                         const dataA = sorted[i];
+                        const filtered: AttributeMap = {};
                         for (const attrA in dataA) {
                             const ids = dataA[attrA];
                             if (ids.length === 0) {
@@ -278,13 +277,15 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             }
                             const found: AttributeMap = {};
                             let merged = false;
-                            for (let j = 0; j < sorted.length; ++j) {
+                            for (let j = 0; j < length; ++j) {
                                 if (i !== j) {
                                     const dataB = sorted[j];
                                     for (const attr in dataB) {
                                         const compare = dataB[attr];
                                         if (compare.length) {
-                                            for (const id of ids) {
+                                            let k = 0;
+                                            while (k < ids.length) {
+                                                const id = ids[k++];
                                                 if (compare.includes(id)) {
                                                     safeNestedArray(found, attr).push(id);
                                                 }
@@ -402,13 +403,18 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             for (const group of resourceMap[tag]) {
                 const ids = group.ids;
                 if (ids) {
-                    for (const id of ids) {
-                        safeNestedArray(nodeMap, id).push(group.name);
+                    const length = ids.length;
+                    let i = 0;
+                    while (i < length) {
+                        safeNestedArray(nodeMap, ids[i++]).push(group.name);
                     }
                 }
             }
         }
-        for (const node of cache) {
+        const length = cache.length;
+        let i = 0;
+        while (i < length) {
+            const node = cache[i++];
             const styleData = nodeMap[node.id];
             if (styleData) {
                 if (styleData.length > 1) {
@@ -426,8 +432,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             let parent = '';
             let items: Undef<StringValue[]>;
             const values = value.split('.');
-            const length = values.length;
-            for (let i = 0; i < length; ++i) {
+            const q = values.length;
+            for (i = 0; i < q; ++i) {
                 const name = values[i];
                 const match = /^(\w*?)(?:_(\d+))?$/.exec(name);
                 if (match) {
@@ -435,7 +441,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     if (styleData) {
                         if (i === 0) {
                             parent = name;
-                            if (length === 1) {
+                            if (q === 1) {
                                 items = styleData.items as StringValue[];
                             }
                             else if (!styles.has(name)) {
@@ -444,7 +450,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                         }
                         else {
                             if (items) {
-                                for (const item of styleData.items as StringValue[]) {
+                                const styleItems = styleData.items as StringValue[];
+                                let j = 0;
+                                while (j < styleItems.length) {
+                                    const item = styleItems[j++];
                                     const key = item.key;
                                     const index = items.findIndex(previous => previous.key === key);
                                     if (index !== -1) {

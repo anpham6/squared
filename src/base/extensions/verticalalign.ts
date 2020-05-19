@@ -60,7 +60,10 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                 const aboveBaseline: T[] = [];
                 let minTop = Infinity;
                 let baseline: Undef<T>;
-                for (const item of children) {
+                const length = children.length;
+                let i = 0;
+                while (i < length) {
+                    const item = children[i++];
                     const top = item.linear.top;
                     if (item.inlineVertical && top <= minTop) {
                         if (top < minTop) {
@@ -76,7 +79,9 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                 if (aboveBaseline.length) {
                     const above = aboveBaseline[0];
                     const top = above.linear.top;
-                    for (const item of children) {
+                    i = 0;
+                    while (i < length) {
+                        const item = children[i++];
                         if (item !== baseline) {
                             if (item.inlineVertical) {
                                 if (!aboveBaseline.includes(item)) {

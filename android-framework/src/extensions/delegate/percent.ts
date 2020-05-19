@@ -135,6 +135,7 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                 }
             }
             if (leftPercent > 0) {
+                const styleBias = !rightAligned && !node.centerAligned;
                 const options = {
                     width: '0px',
                     height: 'wrap_content',
@@ -142,8 +143,8 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
                         [node.localizeString(STRING_ANDROID.MARGIN_LEFT)]: boxRect.left ? formatPX(boxRect.left) : ''
                     },
                     app: {
-                        layout_constraintHorizontal_chainStyle: !rightAligned ? 'packed' : '',
-                        layout_constraintHorizontal_bias: !rightAligned ? '0' : '',
+                        layout_constraintHorizontal_chainStyle: styleBias ? 'packed' : '',
+                        layout_constraintHorizontal_bias: styleBias ? '0' : '',
                         layout_constraintWidth_percent: truncate(leftPercent, node.localSettings.floatPrecision),
                         [constraint.top]: 'parent',
                         [node.localizeString(constraint.left)]: 'parent',

@@ -58,7 +58,11 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
     public afterFinalize() {
         if (this.controller.hasAppendProcessing()) {
             const dimens = (Resource.STORED as AndroidResourceStoredMap).dimens;
-            for (const layout of this.application.layouts) {
+            const layouts = this.application.layouts;
+            const length = layouts.length;
+            let i = 0;
+            while (i < length) {
+                const layout = layouts[i++];
                 const pattern = /:(\w+)="(-?[\d.]+px)"/g;
                 let content = layout.content!;
                 let match: Null<RegExpExecArray>;

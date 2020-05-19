@@ -135,9 +135,11 @@ function applyMarginCollapse(node: NodeUI, child: NodeUI, direction: boolean) {
                     if (resetChild) {
                         resetBox(target, region);
                         if (!direction && target.floating) {
-                            const bounds = target.bounds;
-                            for (const item of target.actualParent!.naturalChildren) {
-                                if (item.floating && item !== target && item.intersectY(bounds, 'bounds')) {
+                            const children = target.actualParent!.naturalChildren;
+                            const length = children.length;
+                            for (let i = 0; i < length; ++i) {
+                                const item = children[i];
+                                if (item.floating && item !== target && item.intersectY(target.bounds, 'bounds')) {
                                     resetBox(item as NodeUI, region);
                                 }
                             }
@@ -717,11 +719,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                         valid = true;
                     }
                     if (valid) {
-                        for (const item of previousSiblings) {
-                            processed.add(item.id);
+                        for (let i = 0; i < previousSiblings.length; ++i) {
+                            processed.add(previousSiblings[i].id);
                         }
-                        for (const item of nextSiblings) {
-                            processed.add(item.id);
+                        for (let i = 0; i < nextSiblings.length; ++i) {
+                            processed.add(nextSiblings[i].id);
                         }
                     }
                 }
@@ -777,8 +779,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 break found;
                                             }
                                         }
-                                        for (const item of row) {
-                                            const innerWrapped = item.innerMostWrapped;
+                                        let k = 0;
+                                        while (k < row.length) {
+                                            const innerWrapped = row[k++].innerMostWrapped;
                                             if (validSibling(innerWrapped)) {
                                                 maxBottom = Math.max(innerWrapped.actualRect('bottom'), maxBottom);
                                             }
@@ -793,27 +796,28 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 horizontal = renderParent.renderChildren as T[];
                             }
                             if (horizontal) {
-                                let actualChildren: T[] = [];
-                                for (const item of horizontal) {
+                                let children: T[] = [];
+                                let length = horizontal.length;
+                                let i = 0;
+                                while (i < length) {
+                                    const item = horizontal[i++];
                                     if (item.nodeGroup) {
-                                        actualChildren = actualChildren.concat(item.cascade(child => child.naturalChild) as T[]);
+                                        children = children.concat(item.cascade(child => child.naturalChild) as T[]);
                                     }
                                     else if (item.innerWrapped) {
-                                        actualChildren.push(item.innerMostWrapped as T);
+                                        children.push(item.innerMostWrapped as T);
                                     }
                                     else {
-                                        actualChildren.push(item);
+                                        children.push(item);
                                     }
                                 }
                                 let maxBottom = -Infinity;
-                                const parent = node.actualParent as T;
-                                const top = node.actualRect('top');
-                                const naturalChildren = parent.naturalChildren;
-                                const length = naturalChildren.length;
-                                let i = 0;
+                                const naturalChildren = node.actualParent!.naturalChildren;
+                                length = naturalChildren.length;
+                                i = 0;
                                 while (i < length) {
                                     const item = naturalChildren[i++] as T;
-                                    if (actualChildren.includes(item)) {
+                                    if (children.includes(item)) {
                                         break;
                                     }
                                     else if (item.lineBreak || item.block) {
@@ -823,7 +827,7 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         maxBottom = Math.max(item.actualRect('bottom'), maxBottom);
                                     }
                                 }
-                                if (maxBottom !== -Infinity && top > maxBottom) {
+                                if (maxBottom !== -Infinity && node.actualRect('top') > maxBottom) {
                                     setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_TOP, maxBottom);
                                 }
                             }
@@ -859,12 +863,16 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
             }
             if (node.floatContainer && node.layoutVertical) {
                 const floating: T[] = [];
-                for (const item of node.naturalChildren as T[]) {
+                const children = node.naturalChildren as T[];
+                const length = children.length;
+                for (let i = 0; i < length; ++i) {
+                    const item = children[i];
                     if (!item.pageFlow) {
                         continue;
                     }
                     if (!item.floating) {
-                        if (floating.length) {
+                        const q = floating.length;
+                        if (q) {
                             const outerWrapper = item.outerMostWrapper;
                             let renderParent = outerWrapper.renderParent;
                             if (renderParent) {
@@ -872,10 +880,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 const marginTop = (reset === 0 ? item.marginTop : 0) + adjustment;
                                 if (marginTop > 0) {
                                     const top = Math.floor(node.bounds.top);
-                                    const length = floating.length;
-                                    let i = 0;
-                                    while (i < length) {
-                                        const previous = floating[i++];
+                                    let j = 0;
+                                    while (j < q) {
+                                        const previous = floating[j++];
                                         if (top <= Math.floor(previous.bounds.top)) {
                                             let floatingRenderParent = previous.outerMostWrapper.renderParent;
                                             if (floatingRenderParent) {

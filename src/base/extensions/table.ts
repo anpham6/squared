@@ -101,7 +101,8 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             }
         });
         inheritStyles(thead);
-        for (const section of tbody) {
+        for (let i = 0; i < tbody.length; ++i) {
+            const section = tbody[i];
             table = table.concat(section.children as T[]);
             hideCell(section);
         }

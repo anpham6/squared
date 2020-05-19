@@ -50,11 +50,12 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
     public remove(...items: T[]) {
         const result: T[] = [];
         const children = this._children;
-        for (const item of items) {
-            const length = children.length;
-            for (let i = 0; i < length; ++i) {
-                if (children[i] === item) {
-                    children.splice(i, 1);
+        let i = 0;
+        while (i < items.length) {
+            const item = items[i++];
+            for (let j = 0; j < children.length; ++j) {
+                if (children[j] === item) {
+                    children.splice(j, 1);
                     result.push(item);
                     break;
                 }
@@ -184,7 +185,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         let invalid = false;
         const recurse = (container: Container<T>): Undef<T> => {
             const children = container.children;
-            const length = end || children.length;
+            const length = end ?? children.length;
             for (let i = start || 0; i < length; ++i) {
                 const item = children[i];
                 if (error && error(item, i, children)) {
@@ -271,8 +272,8 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
 
     public join(...other: Container<T>[]) {
         let children = this._children;
-        for (const item of other) {
-            children = children.concat(item.children);
+        for (let i = 0; i < other.length; ++i) {
+            children = children.concat(other[i].children);
         }
         this._children = children;
         return this;

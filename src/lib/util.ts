@@ -540,15 +540,16 @@ export function formatString(value: string, ...params: string[]) {
 }
 
 export function delimitString(options: DelimitStringOptions, ...appending: string[]) {
+    const length = appending.length;
     const value = options.value;
-    if (!value && appending.length === 1) {
+    if (length === 1 && !isString(value)) {
         return appending[0];
     }
     const delimiter = options.delimiter || ', ';
     const not = options.not || [];
     const remove = options.remove || false;
     const values = value !== '' ? value.split(delimiter) : [];
-    for (let i = 0; i < appending.length; ++i) {
+    for (let i = 0; i < length; ++i) {
         const append = appending[i];
         if (append !== '') {
             if (values.includes(not[i])) {
@@ -735,7 +736,8 @@ export function cloneInstance<T>(value: T): T {
 }
 
 export function cloneArray(data: any[], result: any[] = [], object = false) {
-    for (const value of data) {
+    for (let i = 0; i < data.length; ++i) {
+        const value = data[i];
         if (Array.isArray(value)) {
             result.push(cloneArray(value, [], object));
         }
@@ -831,8 +833,8 @@ export function appendSeparator(preceding: string, value: string, separator = '/
 }
 
 export function fromLastIndexOf(value: string, ...char: string[]) {
-    for (const ch of char) {
-        const index = value.lastIndexOf(ch);
+    for (let i = 0; i < char.length; ++i) {
+        const index = value.lastIndexOf(char[i]);
         if (index !== -1) {
             return value.substring(index + 1);
         }
@@ -841,8 +843,8 @@ export function fromLastIndexOf(value: string, ...char: string[]) {
 }
 
 export function partitionLastIndexOf(value: string, ...char: string[]): [string, string] {
-    for (const ch of char) {
-        const index = value.lastIndexOf(ch);
+    for (let i = 0; i < char.length; ++i) {
+        const index = value.lastIndexOf(char[i]);
         if (index !== -1) {
             return [value.substring(0, index), value.substring(index + 1)];
         }
@@ -966,10 +968,10 @@ export function safeNestedMap<T>(map: ObjectMapNested<T>, index: number | string
 
 export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
     return list.sort((a, b) => {
-        for (const attr of attrs) {
+        for (let i = 0; i < attrs.length; ++i) {
             let valueA: any = a;
             let valueB: any = b;
-            for (const name of attr.split('.')) {
+            for (const name of attrs[i].split('.')) {
                 const vA = valueA[name], vB = valueB[name];
                 if (vA !== undefined && vB !== undefined) {
                     valueA = vA;

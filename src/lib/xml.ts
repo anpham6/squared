@@ -39,12 +39,14 @@ export function pushIndent(value: string, depth: number, char = '\t', indent?: s
 
 export function pushIndentArray(values: string[], depth: number, char = '\t', separator = '') {
     if (depth > 0) {
+        let result = '';
         const indent = char.repeat(depth);
         const length = values.length;
         let i = 0;
         while (i < length) {
-            values[i] = pushIndent(values[i++], depth, char, indent);
+            result += (i > 0 ? separator : '') + pushIndent(values[i++], depth, char, indent);
         }
+        return result;
     }
     return values.join(separator);
 }
@@ -103,7 +105,10 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
         let valid = false;
         output += indent + '<' + tagName;
         if (attrs) {
-            for (const attr of attrs) {
+            const q = attrs.length;
+            let j = 0;
+            while (j < q) {
+                const attr = attrs[j++];
                 const value = item[attr];
                 if (value) {
                     output += ` ${(tag['^'] ? tag['^'] + ':' : '') + attr}="${value}"`;

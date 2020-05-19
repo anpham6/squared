@@ -195,7 +195,11 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         const mainData: PositiveXData = node.data(this.name, 'mainData');
         if (mainData) {
             const documentId = node.documentId;
-            for (const item of mainData.children) {
+            const children = mainData.children;
+            const length = children.length;
+            let i = 0;
+            while (i < length) {
+                const item = children[i++];
                 const nested = !item.pageFlow && (item.absoluteParent !== item.documentParent || item.css('position') === 'fixed' || node.documentBody);
                 const wrapper = item.outerMostWrapper as T;
                 if (item.hasPX('left')) {

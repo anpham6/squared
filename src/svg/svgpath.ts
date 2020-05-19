@@ -57,21 +57,23 @@ function updatePathLocation(path: SvgPathCommand[], attr: string, x?: number, y?
                 return;
         }
     }
-    for (const seg of path) {
+    const length = path.length;
+    for (let i = 0; i < length; ++i) {
+        const seg = path[i];
         const { coordinates, value } = seg;
-        const length = coordinates.length;
-        for (let i = 0, j = 0; i < length; i += 2, ++j) {
+        const q = coordinates.length;
+        for (let j = 0, k = 0; j < q; j += 2, ++k) {
             if (x !== undefined) {
                 if (!seg.relative) {
-                    coordinates[i] += x;
+                    coordinates[j] += x;
                 }
-                value[j].x += x;
+                value[k].x += x;
             }
             if (y !== undefined) {
                 if (!seg.relative) {
                     coordinates[j + 1] += y;
                 }
-                value[j].y += y;
+                value[k].y += y;
             }
         }
     }
@@ -742,8 +744,9 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
                                         values[j++] = [];
                                         group.push(animate);
                                     }
-                                    for (const value of item.values) {
-                                        const dashValue = this.flattenStrokeDash(SvgBuild.parseCoordinates(value), delayOffset, totalLength, pathLength).items;
+                                    const items = item.values;
+                                    for (j = 0; j < items.length; ++j) {
+                                        const dashValue = this.flattenStrokeDash(SvgBuild.parseCoordinates(items[j]), delayOffset, totalLength, pathLength).items;
                                         let k = 0;
                                         while (k < dashTotal) {
                                             values[k].push(getFromToValue(dashValue[k++]));

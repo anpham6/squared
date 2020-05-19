@@ -2396,7 +2396,11 @@ export function parseKeyframes(rules: CSSRuleList) {
         const item = rules[i++];
         const match = /((?:\d+%\s*,?\s*)+|from|to)\s*{\s*(.+?)\s*}/.exec(item.cssText);
         if (match) {
-            for (let percent of (item['keyText'] as string || match[1]).trim().split(CHAR_SEPARATOR)) {
+            const keyframes = (item['keyText'] as string || match[1]).trim().split(CHAR_SEPARATOR);
+            const q = keyframes.length;
+            let j = 0;
+            while (j < q) {
+                let percent = keyframes[j++];
                 switch (percent) {
                     case 'from':
                         percent = '0%';

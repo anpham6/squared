@@ -26,8 +26,9 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                 }
             });
             if (applied.size) {
-                for (const root of documentRoot) {
-                    const node = root.node;
+                let i = 0;
+                while (i < documentRoot.length) {
+                    const node = documentRoot[i++].node;
                     for (const child of applied) {
                         if (child.ascend({ condition: item => item === node, attr: 'renderParent'}).length) {
                             const { import: importing, variable } = viewModel;
@@ -36,13 +37,16 @@ export default class ResourceData<T extends View> extends squared.base.Extension
                             let output = indentA + '<layout {#0}>\n' +
                                          indentB + '<data>\n';
                             if (importing) {
-                                for (const name of importing) {
-                                    output += indentC + `<import type="${name}" />\n`;
+                                let j = 0;
+                                while (j < importing.length) {
+                                    output += indentC + `<import type="${importing[j++]}" />\n`;
                                 }
                             }
                             if (variable) {
-                                for (const data of variable) {
-                                    output += indentC + `<variable name="${data.name}" type="${data.type}" />\n`;
+                                let j = 0;
+                                while (j < variable.length) {
+                                    const { name, type } = variable[j++];
+                                    output += indentC + `<variable name="${name}" type="${type}" />\n`;
                                 }
                             }
                             output += indentB + '</data>\n';

@@ -37,7 +37,10 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
         let left = NaN, right = NaN;
         let firstChild: Undef<T>;
-        for (const item of children) {
+        const length = children.length;
+        let i = 0;
+        while (i < length) {
+            const item = children[i++];
             const linear = item.linear;
             if (item.pageFlow) {
                 if (isNaN(left) || linear.left < left) {
@@ -106,7 +109,11 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 View.setConstraintDimension(firstChild);
                 firstChild.positioned = true;
             }
-            for (const item of mainData.children) {
+            const children = mainData.children;
+            const length = children.length;
+            let i = 0;
+            while (i < length) {
+                const item = children[i++];
                 if (item === firstChild) {
                     continue;
                 }
@@ -136,7 +143,11 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 if (translateX !== '' || translateY !== '') {
                     const x = parseInt(translateX);
                     const y = parseInt(translateY);
-                    for (const item of mainData.children) {
+                    const children = mainData.children;
+                    const length = children.length;
+                    let i = 0;
+                    while (i < length) {
+                        const item = children[i++];
                         if (!isNaN(x)) {
                             item.translateX(x);
                         }

@@ -238,15 +238,15 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     if (tagName && tagName !== child.tagName.toUpperCase()) {
         return false;
     }
-    const id = selector.id;
-    if (id && id !== child.elementId) {
+    if (selector.id && selector.id !== child.elementId) {
         return false;
     }
     const { attrList, classList, notList, pseudoList } = selector;
     if (pseudoList) {
         const parent = child.actualParent as T;
         tagName = child.tagName;
-        for (const pseudo of pseudoList) {
+        for (let i = 0; i < pseudoList.length; ++i) {
+            const pseudo = pseudoList[i];
             switch (pseudo) {
                 case ':first-child':
                 case ':nth-child(1)':
@@ -266,16 +266,20 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                     }
                     break;
                 case ':only-of-type': {
-                    let j = 0;
-                    for (const item of parent.naturalElements) {
-                        if (item.tagName === tagName && ++j > 1) {
+                    const children = parent.naturalElements;
+                    const length = children.length;
+                    for (let j = 0, k = 0; j < length; ++j) {
+                        if (children[j].tagName === tagName && ++k > 1) {
                             return false;
                         }
                     }
                     break;
                 }
-                case ':first-of-type':
-                    for (const item of parent.naturalElements) {
+                case ':first-of-type': {
+                    const children = parent.naturalElements;
+                    const length = children.length;
+                    for (let j = 0; j < length; ++j) {
+                        const item = children[j];
                         if (item.tagName === tagName) {
                             if (item !== child) {
                                 return false;
@@ -284,6 +288,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                         }
                     }
                     break;
+                }
                 case ':nth-child(n)':
                 case ':nth-last-child(n)':
                     break;
@@ -499,24 +504,24 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                         if (match[1]) {
                             children = children.slice(0).reverse();
                         }
-                        const i = match[2] === 'child'
+                        const j = match[2] === 'child'
                             ? children.indexOf(child) + 1
                             : children.filter((item: T) => item.tagName === tagName).indexOf(child) + 1;
-                        if (i > 0) {
+                        if (j > 0) {
                             if (isNumber(placement)) {
-                                if (parseInt(placement) !== i) {
+                                if (parseInt(placement) !== j) {
                                     return false;
                                 }
                             }
                             else {
                                 switch (placement) {
                                     case 'even':
-                                        if (i % 2 !== 0) {
+                                        if (j % 2 !== 0) {
                                             return false;
                                         }
                                         break;
                                     case 'odd':
-                                        if (i % 2 === 0) {
+                                        if (j % 2 === 0) {
                                             return false;
                                         }
                                         break;
@@ -530,30 +535,30 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                                                 }
                                                 const increment = parseInt(subMatch[2]);
                                                 if (increment !== 0) {
-                                                    if (i !== modifier) {
-                                                        for (let j = increment; ; j += increment) {
+                                                    if (j !== modifier) {
+                                                        for (let k = increment; ; k += increment) {
                                                             const total = increment + modifier;
-                                                            if (total === i) {
+                                                            if (total === j) {
                                                                 break;
                                                             }
-                                                            else if (total > i) {
+                                                            else if (total > j) {
                                                                 return false;
                                                             }
                                                         }
                                                     }
                                                 }
-                                                else if (i !== modifier) {
+                                                else if (j !== modifier) {
                                                     return false;
                                                 }
                                             }
                                             else if (subMatch[3]) {
                                                 if (modifier > 0) {
                                                     if (subMatch[1]) {
-                                                        if (i > modifier) {
+                                                        if (j > modifier) {
                                                             return false;
                                                         }
                                                     }
-                                                    else if (i < modifier) {
+                                                    else if (j < modifier) {
                                                         return false;
                                                     }
                                                 }
@@ -583,7 +588,8 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
         }
     }
     if (notList) {
-        for (const not of notList) {
+        for (let i = 0; i < notList.length; ++i) {
+            const not = notList[i];
             const notData: QueryData = {};
             switch (not.charAt(0)) {
                 case '.':
@@ -632,15 +638,16 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     }
     if (classList) {
         const elementList = (child.element as HTMLElement).classList;
-        for (const className of classList) {
-            if (!elementList.contains(className)) {
+        for (let i = 0; i < classList.length; ++i) {
+            if (!elementList.contains(classList[i])) {
                 return false;
             }
         }
     }
     if (attrList) {
         const attributes = child.attributes;
-        for (const attr of attrList) {
+        for (let i = 0; i < attrList.length; ++i) {
+            const attr = attrList[i];
             let value: Undef<string>;
             if (attr.endsWith) {
                 const pattern = new RegExp(`^(.+:)?${attr.key}$`);
@@ -860,7 +867,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const length = attrs.length;
         if (length) {
             const cached = this._cached;
-            for (const attr of attrs) {
+            for (let i = 0; i < attrs.length; ++i) {
+                const attr = attrs[i];
                 switch (attr) {
                     case 'position':
                         if (!this._preferInitial) {
@@ -956,11 +964,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     const q = queryMap.length;
                     let i = 0, j: number;
                     while (i < q) {
-                        const row = queryMap[i++];
-                        const r = row.length;
+                        const children = queryMap[i++];
+                        const r = children.length;
                         j = 0;
                         while (j < r) {
-                            row[j++].resetBounds();
+                            children[j++].resetBounds();
                         }
                     }
                 }
@@ -1199,8 +1207,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     success.push(attr);
                 }
                 else {
-                    for (const value of success) {
-                        this.cssFinally(value);
+                    for (let i = 0; i < success.length; ++i) {
+                        this.cssFinally(success[i]);
                     }
                     return undefined;
                 }
@@ -1216,14 +1224,16 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssCopy(node: T, ...attrs: string[]) {
         const styleMap = this._styleMap;
-        for (const attr of attrs) {
+        for (let i = 0; i < attrs.length; ++i) {
+            const attr = attrs[i];
             styleMap[attr] = node.css(attr);
         }
     }
 
     public cssCopyIfEmpty(node: T, ...attrs: string[]) {
         const styleMap = this._styleMap;
-        for (const attr of attrs) {
+        for (let i = 0; i < attrs.length; ++i) {
+            const attr = attrs[i];
             if (!hasValue(styleMap[attr])) {
                 styleMap[attr] = node.css(attr);
             }
@@ -1242,7 +1252,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public cssAsObject(...attrs: string[]) {
         const result: StringMap = {};
-        for (const attr of attrs) {
+        for (let i = 0; i < attrs.length; ++i) {
+            const attr = attrs[i];
             result[attr] = this.css(attr);
         }
         return result;
@@ -1316,8 +1327,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 default:
                     if (not) {
                         if (Array.isArray(not)) {
-                            for (const exclude of not) {
-                                if (value === exclude) {
+                            for (let i = 0; i < not.length; ++i) {
+                                if (value === not[i]) {
                                     return false;
                                 }
                             }
@@ -1543,15 +1554,15 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         pending = [];
                         let j = offset;
                         while (j < length) {
-                            const dataMap = queryMap[j++];
+                            const children = queryMap[j++];
                             if (dataEnd.all) {
-                                pending = pending.concat(dataMap);
+                                pending = pending.concat(children);
                             }
                             else {
-                                const q = dataMap.length;
+                                const q = children.length;
                                 let k = 0;
                                 while (k < q) {
-                                    const node = dataMap[k++];
+                                    const node = children[k++];
                                     if ((currentCount === 0 || !result.includes(node)) && validateQuerySelector(this, node, dataEnd, i, lastEnd)) {
                                         pending.push(node);
                                     }

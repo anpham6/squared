@@ -147,8 +147,9 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
                     }
                 }
             }
-            for (const child of percentage) {
-                setBoxPercentage(parent, child, attr);
+            let j = 0;
+            while (j < percentage.length) {
+                setBoxPercentage(parent, percentage[j++], attr);
             }
         }
     }
@@ -157,8 +158,9 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
         while (i < length) {
             const item = items[i++];
             if (item.find(child => child.multiline && child.ascend({ condition: above => above[hasDimension], including: parent }).length === 0, { cascade: true })) {
-                for (const child of items) {
-                    setBoxPercentage(parent, child, attr);
+                i = 0;
+                while (i < length) {
+                    setBoxPercentage(parent, items[i++], attr);
                 }
                 break;
             }
@@ -699,7 +701,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                     else if (growAvailable > 0) {
-                        for (const item of layoutWeight) {
+                        let j = 0;
+                        while (j < layoutWeight.length) {
+                            const item = layoutWeight[j++];
                             const autoMargin = item.innerMostWrapped.autoMargin;
                             let ratio = 1;
                             if (horizontal) {

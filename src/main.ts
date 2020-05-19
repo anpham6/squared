@@ -69,15 +69,15 @@ export function setFramework(value: Framework, options?: ObjectMap<any>, cached 
         main.userSettings = settings;
         const { builtInExtensions, extensions } = main;
         extensions.length = 0;
-        for (let namespace of settings.builtInExtensions) {
+        for (const namespace of settings.builtInExtensions) {
             const ext = builtInExtensions[namespace];
             if (ext) {
                 includeExtension(extensions, ext);
             }
             else {
-                namespace += '.';
+                const packaage = namespace + '.';
                 for (const name in builtInExtensions) {
-                    if (name.startsWith(namespace)) {
+                    if (name.startsWith(packaage)) {
                         includeExtension(extensions, builtInExtensions[name]);
                     }
                 }
@@ -102,15 +102,19 @@ export function setViewModel(data?: {}) {
 
 export function parseDocument(...elements: (HTMLElement | string)[]) {
     if (main) {
-        const extensionManager = main.extensionManager;
-        for (const item of extensionsQueue) {
-            extensionManager.include(item);
+        if (extensionsQueue.size) {
+            const extensionManager = main.extensionManager;
+            for (const item of extensionsQueue) {
+                extensionManager.include(item);
+            }
+            extensionsQueue.clear();
         }
-        for (const [name, options] of optionsQueue.entries()) {
-            configure(name, options);
+        if (optionsQueue.size) {
+            for (const [name, options] of optionsQueue.entries()) {
+                configure(name, options);
+            }
+            optionsQueue.clear();
         }
-        extensionsQueue.clear();
-        optionsQueue.clear();
         if (!main.closed) {
             return main.parseDocument(...elements);
         }

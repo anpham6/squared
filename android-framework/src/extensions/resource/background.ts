@@ -159,12 +159,9 @@ function getBorderStroke(border: BorderAttribute, direction = -1, hasInset = fal
         if (isAlternatingBorder(border.style)) {
             const width = parseFloat(border.width);
             result = getBorderStyle(border, direction, !isInset);
-            if (isInset) {
-                result.width = formatPX(Math.ceil(width / 2) * 2);
-            }
-            else {
-                result.width = formatPX(hasInset ? Math.ceil(width / 2) : roundFloat(border.width));
-            }
+            result.width = isInset
+                ? formatPX(Math.ceil(width / 2) * 2)
+                : formatPX(hasInset ? Math.ceil(width / 2) : roundFloat(border.width));
         }
         else {
             result = getBorderStyle(border);
@@ -374,9 +371,10 @@ function createLayerList(boxStyle: BoxStyle, images: BackgroundImageData[] = [],
     if (solid && !images.find(image => !!image.gradient)) {
         item.push({ shape: { 'android:shape': 'rectangle', solid, corners } });
     }
-    for (const image of images) {
-        const gradient = image.gradient;
-        item.push(gradient ? { shape: { 'android:shape': 'rectangle', gradient, corners } } : image);
+    let i = 0;
+    while (i < images.length) {
+        const image = images[i++];
+        item.push(image.gradient ? { shape: { 'android:shape': 'rectangle', gradient: image.gradient, corners } } : image);
     }
     if (stroke) {
         item.push({
@@ -632,10 +630,10 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
     }
 
     public getDrawableBorder(data: BoxStyle, outline?: BorderAttribute, images?: BackgroundImageData[], indentWidth = 0, borderOnly = false) {
-        const borders: Undef<BorderAttribute>[] = new Array(4);
         const borderVisible: boolean[] = new Array(4);
         const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
         const indentOffset = indentWidth > 0 ? formatPX(indentWidth) : '';
+        let borders: Undef<BorderAttribute>[];
         let borderStyle = true;
         let borderAll = true;
         let border: Undef<BorderAttribute>;
@@ -644,16 +642,19 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         let layerListData: Undef<StandardMap[]>;
         if (outline) {
             borderData = outline;
+            borders = new Array(4);
             for (let i = 0; i < 4; ++i) {
                 borders[i] = outline;
                 borderVisible[i] = true;
             }
         }
         else {
-            borders[0] = data.borderTop;
-            borders[1] = data.borderRight;
-            borders[2] = data.borderBottom;
-            borders[3] = data.borderLeft;
+            borders = [
+                data.borderTop,
+                data.borderRight,
+                data.borderBottom,
+                data.borderLeft
+            ];
             for (let i = 0; i < 4; ++i) {
                 const item = borders[i];
                 if (item) {

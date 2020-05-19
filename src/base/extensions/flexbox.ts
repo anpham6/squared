@@ -30,7 +30,10 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
         const mainData = Flexbox.createDataAttribute(node, children);
         if (node.cssTry('align-items', 'start')) {
             if (node.cssTry('justify-items', 'start')) {
-                for (const item of children) {
+                const length = children.length;
+                let i = 0;
+                while (i < length) {
+                    const item = children[i++];
                     if (item.cssTry('align-self', 'start')) {
                         if (item.cssTry('justify-self', 'start')) {
                             const { width, height } = item.boundingClientRect;
@@ -104,9 +107,8 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 offset = maxCount;
             }
-            const q = absolute.length;
             i = 0;
-            while (i < q) {
+            while (i < absolute.length) {
                 absolute[i].containerIndex = offset + i++;
             }
             node.concat(absolute);

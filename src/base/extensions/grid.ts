@@ -121,8 +121,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                             const columnLast = columns[columns.length - 1];
                             if (columnLast) {
                                 let minLeft = Infinity, maxRight = -Infinity;
-                                for (const item of columnLast) {
-                                    const linear = item.linear;
+                                for (let k = 0; k < columnLast.length; ++k) {
+                                    const linear = columnLast[k].linear;
                                     minLeft = Math.min(linear.left, minLeft);
                                     maxRight = Math.max(linear.right, maxRight);
                                 }
@@ -171,9 +171,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 const maxColumn = columns.reduce((a, b) => Math.max(a, b.length), 0);
                 for (let l = 0; l < maxColumn; ++l) {
-                    const s = columns.length;
                     let m = 0;
-                    while (m < s) {
+                    while (m < columns.length) {
                         const row = columns[m++];
                         if (!row[l]) {
                             row[l] = { spacer: 1 } as any;
@@ -185,14 +184,14 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
         }
         const columnCount = columns.length;
         if (columnCount > 1 && columns[0].length === node.length) {
-            const children: T[][] = [];
+            const rows: T[][] = [];
             const assigned = new Set<T>();
             for (let i = 0, count = 0; i < columnCount; ++i) {
                 const column = columns[i];
                 const rowCount = column.length;
                 for (let j = 0, start = 0, spacer = 0; j < rowCount; ++j) {
                     const item = column[j];
-                    const rowData = safeNestedArray(children, j);
+                    const rowData = safeNestedArray(rows, j);
                      if (!item['spacer']) {
                         const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(this.name, 'cellData'));
                         let rowSpan = 1;
@@ -223,7 +222,11 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         if (columnEnd.length) {
                             const l = Math.min(i + (columnSpan - 1), columnEnd.length - 1);
-                            for (const sibling of item.actualParent!.naturalChildren as T[]) {
+                            const naturalChildren = item.actualParent!.naturalChildren as T[];
+                            const q = naturalChildren.length;
+                            k = 0;
+                            while (k < q) {
+                                const sibling = naturalChildren[k++];
                                 if (!assigned.has(sibling) && sibling.visible && !sibling.rendered) {
                                     const { left, right } = sibling.linear;
                                     if (aboveRange(left, item.linear.right) && belowRange(right, columnEnd[l])) {
@@ -251,9 +254,14 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
             }
             node.each((item: T) => item.hide());
             node.clear();
-            for (const group of children) {
-                for (const item of group) {
-                    item.parent = node;
+            const q = rows.length;
+            let i = 0, j: number;
+            while (i < q) {
+                const children = rows[i++];
+                const r = children.length;
+                j = 0;
+                while (j < r) {
+                    children[j++].parent = node;
                 }
             }
             if (node.tableElement && node.css('borderCollapse') === 'collapse') {

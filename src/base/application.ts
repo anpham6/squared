@@ -169,7 +169,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         if (elements.length === 0) {
             elements.push(document.body);
         }
-        for (const value of elements) {
+        for (let i = 0; i < elements.length; ++i) {
+            const value = elements[i];
             let element: Null<HTMLElement>;
             if (typeof value === 'string') {
                 element = document.getElementById(value);
@@ -194,7 +195,8 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         const resumeThread = () => {
             this.initializing = false;
-            for (const image of preloaded) {
+            for (let i = 0; i < preloaded.length; ++i) {
+                const image = preloaded[i];
                 if (image.parentElement) {
                     documentRoot.removeChild(image);
                 }
@@ -482,8 +484,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     const attr = convertCamelCase(match[1]);
                     const value = CSS_PROPERTIES[attr]?.value;
                     if (Array.isArray(value)) {
-                        for (const name of value) {
-                            important[name] = true;
+                        for (let i = 0; i < value.length; ++i) {
+                            important[value[i]] = true;
                         }
                     }
                     else {
@@ -548,8 +550,8 @@ export default abstract class Application<T extends Node> implements squared.bas
                     if (fontFamily !== '' && match.length) {
                         const fontStyle = /\s*font-style:\s*(\w+)\s*;/.exec(attr)?.[1].toLowerCase() || 'normal';
                         const fontWeight = parseInt(/\s*font-weight:\s*(\d+)\s*;/.exec(attr)?.[1] || '400');
-                        for (const value of match) {
-                            const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(value);
+                        for (let i = 0; i < match.length; ++i) {
+                            const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(match[i]);
                             if (urlMatch) {
                                 let srcUrl: Undef<string>;
                                 let srcLocal: Undef<string>;

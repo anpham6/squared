@@ -132,7 +132,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     public addState(...values: number[]) {
-        for (const value of values) {
+        for (let i = 0; i < values.length; ++i) {
+            const value = values[i];
             if (!hasBit(this.synchronizeState, value)) {
                 this.synchronizeState |= value;
             }
@@ -140,7 +141,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
     }
 
     public removeState(...values: number[]) {
-        for (const value of values) {
+        for (let i = 0; i < values.length; ++i) {
+            const value = values[i];
             if (hasBit(this.synchronizeState, value)) {
                 this.synchronizeState ^= value;
             }

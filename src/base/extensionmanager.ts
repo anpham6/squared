@@ -13,20 +13,22 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
             }
             ext = item;
         }
-        let name = ext.name;
+        const name = ext.name;
         const index = extensions.findIndex(item => item.name === name);
         if (index !== -1) {
             extensions[index] = ext;
             return true;
         }
         else {
-            const framework = ext.framework;
+            const { framework, dependencies } = ext;
             if (framework > 0) {
-                for (const item of ext.dependencies) {
+                const length = dependencies.length;
+                let i = 0;
+                while (i < length) {
+                    const item = dependencies[i++];
                     if (item.preload) {
-                        name = item.name;
-                        if (this.retrieve(name) === null) {
-                            const extension = application.builtInExtensions[name];
+                        if (this.retrieve(item.name) === null) {
+                            const extension = application.builtInExtensions[item.name];
                             if (extension) {
                                 this.include(extension);
                             }
@@ -34,7 +36,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
                     }
                 }
             }
-            if ((framework === 0 || hasBit(framework, application.framework)) && ext.dependencies.every(item => !!this.retrieve(item.name))) {
+            if ((framework === 0 || hasBit(framework, application.framework)) && dependencies.every(item => !!this.retrieve(item.name))) {
                 ext.application = application;
                 extensions.push(ext);
                 return true;

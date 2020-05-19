@@ -113,32 +113,32 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         if (times.length) {
                             switch (item.tagName) {
                                 case 'set':
-                                    for (const time of times) {
-                                        addAnimation(new SvgAnimation(element, item), time);
+                                    for (let i = 0; i < times.length; ++i) {
+                                        addAnimation(new SvgAnimation(element, item), times[i]);
                                     }
                                     break;
                                 case 'animate':
-                                    for (const time of times) {
-                                        addAnimation(new SvgAnimate(element, item as SVGAnimateElement), time);
+                                    for (let i = 0; i < times.length; ++i) {
+                                        addAnimation(new SvgAnimate(element, item as SVGAnimateElement), times[i]);
                                     }
                                     break;
                                 case 'animateTransform':
-                                    for (const time of times) {
+                                    for (let i = 0; i < times.length; ++i) {
                                         const animate = new SvgAnimateTransform(element, item as SVGAnimateTransformElement);
                                         if (SvgBuild.isShape(this) && this.path) {
                                             animate.transformFrom = SvgBuild.drawRefit(element as SVGGraphicsElement, this.parent, this.viewport?.precision);
                                         }
-                                        addAnimation(animate, time);
+                                        addAnimation(animate, times[i]);
                                     }
                                     break;
                                 case 'animateMotion':
-                                    for (const time of times) {
+                                    for (let i = 0; i < times.length; ++i) {
                                         const animate = new SvgAnimateMotion(element, item as SVGAnimateMotionElement);
                                         const motionPathElement = animate.motionPathElement;
                                         if (motionPathElement) {
                                             animate.path = SvgBuild.drawRefit(motionPathElement, this.parent, this.viewport?.precision);
                                         }
-                                        addAnimation(animate, time);
+                                        addAnimation(animate, times[i]);
                                     }
                                     break;
                             }
@@ -362,8 +362,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     if (animation[0].key !== 0) {
                                         animateMotion.addKeyPoint({ key: 0, value: animateMotion.distance });
                                     }
-                                    for (const item of animation) {
-                                        animateMotion.addKeyPoint(item);
+                                    for (let j = 0; j < animation.length; ++j) {
+                                        animateMotion.addKeyPoint(animation[j]);
                                     }
                                     if ((animation.pop() as NumberValue).key !== 1) {
                                         animateMotion.addKeyPoint({ key: 1, value: animateMotion.distance });
@@ -453,8 +453,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         }
                     }
                     groupOrdering.reverse();
-                    for (const item of groupName) {
-                        item.setGroupOrdering(groupOrdering);
+                    for (let i = 0; i < groupName.length; ++i) {
+                        groupName[i].setGroupOrdering(groupOrdering);
                     }
                 }
             }

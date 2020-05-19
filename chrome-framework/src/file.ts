@@ -546,8 +546,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         const preserveCrossOrigin = options?.preserveCrossOrigin;
         const result: ChromeAsset[] = [];
         for (const fonts of Resource.ASSETS.fonts.values()) {
-            for (const font of fonts) {
-                const url = font.srcUrl;
+            for (let i = 0; i < fonts.length; ++i) {
+                const url = fonts[i].srcUrl;
                 if (url) {
                     const data = File.parseUri(url, { preserveCrossOrigin });
                     if (this.validFile(data)) {
@@ -610,7 +610,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     protected getAssetsAll(options: ChromeFileArchivingOptions = {}) {
         const result = this.getHtmlPage(options).concat(this.getLinkAssets(options));
         if (options.saveAsWebPage) {
-            for (const item of result) {
+            for (let i = 0; i < result.length; ++i) {
+                const item = result[i];
                 const mimeType = item.mimeType;
                 switch (mimeType) {
                     case 'text/html':

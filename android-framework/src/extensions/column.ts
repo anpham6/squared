@@ -156,7 +156,8 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                     const above: T[] = new Array(r);
                     for (let j = 0; j < r; ++j) {
                         const data = columns[j];
-                        for (const item of data) {
+                        for (let k = 0; k < data.length; ++k) {
+                            const item = data[k];
                             item.app('layout_constraintWidth_percent', truncate((1 / columnMin) - percentGap, node.localSettings.floatPrecision));
                             item.setLayoutWidth('0px');
                             item.setBox(BOX_STANDARD.MARGIN_RIGHT, { reset: 1 });
@@ -286,8 +287,8 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         }
                     }
                     const documentId = i < length - 1 ? anchorBottom.documentId : 'parent';
-                    for (const item of dividers) {
-                        item.anchor('bottom', documentId);
+                    for (let j = 0; j < dividers.length; ++j) {
+                        dividers[j].anchor('bottom', documentId);
                     }
                     previousRow = anchorBottom;
                 }

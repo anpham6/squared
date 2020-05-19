@@ -198,10 +198,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
     let columnWeight: Undef<string>;
     let rowWeight: Undef<string>;
     if (section.every(value => isPx(value))) {
-        let px = insideGap;
-        for (const value of section) {
-            px += parseFloat(value);
-        }
+        const px = section.reduce((a, b) => a + parseFloat(b), insideGap);
         const dimension = formatPX(px);
         if (horizontal) {
             width = dimension;
@@ -211,10 +208,7 @@ function getCellDimensions(node: View, horizontal: boolean, section: string[], i
         }
     }
     else if (section.every(value => CssGrid.isFr(value))) {
-        let fr = 0;
-        for (const value of section) {
-            fr += parseFloat(value);
-        }
+        const fr = section.reduce((a, b) => a + parseFloat(b), 0);
         const weight = truncate(fr, node.localSettings.floatPrecision);
         if (horizontal) {
             width = '0px';
@@ -299,7 +293,8 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     const { gap, length, unit } = data;
     let size = 0;
     let percent = 0;
-    for (const value of unit) {
+    for (let i = 0; i < unit.length; ++i) {
+        const value = unit[i];
         if (isPx(value)) {
             size += parseFloat(value);
         }
@@ -848,7 +843,6 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 if (node.hasHeight) {
                     const percent = requireDirectionSpacer(row, node.actualHeight);
                     if (percent !== 0 && percent < 100) {
-                        const length = row.length;
                         if (percent > 0) {
                             controller.addAfterOutsideTemplate(
                                 insertId,
@@ -857,7 +851,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                     height: formatPercent((100 - percent) / 100),
                                     columnSpan: column.length,
                                     android: {
-                                        layout_row: length.toString(),
+                                        layout_row: row.length.toString(),
                                         layout_column: '0',
                                         layout_rowWeight: row.flexible ? '0.01' : ''
                                     }
@@ -865,7 +859,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 false
                             );
                         }
-                        node.android('rowCount', (length + 1).toString());
+                        node.android('rowCount', (row.length + 1).toString());
                     }
                 }
                 if (wrapped) {
@@ -1059,8 +1053,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 for (let i = 0; i < length; ++i) {
                     const emptyRow = emptyRows[i];
                     if (emptyRow) {
-                        const q = emptyRow.length;
-                        for (let j = 0; j < q; ++j) {
+                        for (let j = 0; j < emptyRow.length; ++j) {
                             const value = emptyRow[j];
                             if (value > 0) {
                                 k = j;
@@ -1083,7 +1076,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (node.blockStatic && !node.hasPX('minWidth', false) && node.actualParent?.layoutElement === false) {
                 const { gap, length, unit } = mainData.column;
                 let minWidth = gap * (length - 1);
-                for (const value of unit) {
+                for (let i = 0; i < unit.length; ++i) {
+                    const value = unit[i];
                     if (isPx(value)) {
                         minWidth += parseFloat(value);
                     }

@@ -558,7 +558,10 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                     }
                     else if (node.floatContainer) {
                         let maxBottom = -Infinity;
-                        for (const item of node.naturalChildren) {
+                        const children = node.naturalChildren;
+                        const length = children.length;
+                        for (let j = 0; j < length; ++j) {
+                            const item = children[j];
                             if (item.floating) {
                                 maxBottom = Math.max(item.bounds.bottom, maxBottom);
                             }
@@ -822,7 +825,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const horizontal = dimension === 'width';
             let percent = 1;
             let valid = false;
-            for (let sibling of nodes) {
+            const length = nodes.length;
+            let i = 0;
+            while (i < length) {
+                let sibling = nodes[i++];
                 sibling = sibling.innerMostWrapped as T;
                 if (sibling.pageFlow) {
                     valid = true;
@@ -916,9 +922,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 case 'collapse':
                     this.hide({ collapse: true });
                     break;
-            }
-            if (!this.pageFlow && /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/.test(this.css('clip'))) {
-                this.hide({ hidden: true });
             }
             const actualParent = this.actualParent as T || this.documentParent;
             const renderParent = this.renderParent as T;
@@ -1029,9 +1032,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                 }
                             });
-                            if (maxWidth > 0 && nodes.length) {
+                            const length = nodes.length;
+                            if (length && maxWidth > 0) {
                                 const width = formatPX(maxWidth);
-                                for (const node of nodes) {
+                                let i = 0;
+                                while (i < length) {
+                                    const node = nodes[i++];
                                     if (!node.hasPX('maxWidth')) {
                                         node.css('maxWidth', width);
                                     }
@@ -1517,8 +1523,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             const indent = '\n' + '\t'.repeat(depth);
             let output = '';
-            for (const value of this.combine()) {
-                output += indent + value;
+            const items = this.combine();
+            const length = items.length;
+            let i = 0;
+            while (i < length) {
+                output += indent + items[i++];
             }
             return output;
         }
@@ -1979,7 +1988,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 else if (renderParent.layoutRelative) {
                     const layout: string[] = [];
-                    for (const value of position) {
+                    let i = 0;
+                    while (i < position.length) {
+                        const value = position[i++];
                         let attr: Undef<string> = LAYOUT_RELATIVE[value];
                         if (attr) {
                             layout.push(this.localizeString(attr));
@@ -2280,7 +2291,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     }
                                 }
                                 else {
-                                    for (const item of row) {
+                                    const q = row.length;
+                                    let j = 0;
+                                    while (j < q) {
+                                        const item = row[j++];
                                         if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
                                             setMarginOffset(item, lineHeight, onlyChild, top, bottom);
                                         }
@@ -2310,8 +2324,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (this.has('transform')) {
                     let pivoted = false;
-                    for (const transform of parseTransform(this.css('transform'), true, this.fontSize)) {
-                        const { method, values } = transform;
+                    const transforms = parseTransform(this.css('transform'), true, this.fontSize);
+                    let i = 0;
+                    while (i < transforms.length) {
+                        const { method, values } = transforms[i++];
                         const [x, y, z] = values;
                         switch (method) {
                             case 'rotate':
@@ -2359,6 +2375,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             this.android('transformPivotY', formatPX(top));
                         }
                     }
+                }
+                if (!this.pageFlow && /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/.test(this.css('clip'))) {
+                    this.hide({ hidden: true });
                 }
             }
         }

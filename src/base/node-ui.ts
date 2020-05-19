@@ -550,7 +550,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public delete(name: string, ...attrs: string[]) {
         const obj = this['__' + name];
         if (obj) {
-            for (const attr of attrs) {
+            for (let i = 0; i < attrs.length; ++i) {
+                const attr = attrs[i];
                 if (attr.includes('*')) {
                     for (const [key] of searchObject(obj, attr)) {
                         delete obj[key];
@@ -614,8 +615,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public inherit(node: T, ...modules: string[]) {
-        for (const name of modules) {
-            switch (name) {
+        for (let i = 0; i < modules.length; ++i) {
+            switch (modules[i]) {
                 case 'base': {
                     this._documentParent = node.documentParent;
                     this._bounds =  node.bounds;
@@ -637,9 +638,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 case 'alignment': {
                     this.cssCopy(node, 'position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex');
                     if (!this.positionStatic) {
-                        let i = 0;
-                        while (i < 4) {
-                            const attr = NodeUI.BOX_POSITION[i++];
+                        let j = 0;
+                        while (j < 4) {
+                            const attr = NodeUI.BOX_POSITION[j++];
                             if (node.hasPX(attr)) {
                                 this._styleMap[attr] = node.css(attr);
                             }
@@ -870,11 +871,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 if (siblings.every(item => item.inlineDimension)) {
                                     const actualParent = this.actualParent;
                                     if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
-                                        const length = actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length;
-                                        if (length === siblings.length + 1) {
+                                        const length = siblings.length;
+                                        if (actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length === length + 1) {
                                             let width = actualParent.box.width - getLayoutWidth(this);
-                                            for (const item of siblings) {
-                                                width -= getLayoutWidth(item);
+                                            let i = 0;
+                                            while (i < length) {
+                                                width -= getLayoutWidth(siblings[i++]);
                                             }
                                             if (width >= 0) {
                                                 return NODE_TRAVERSE.HORIZONTAL;
@@ -905,7 +907,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                         const float = siblings[0].float;
                                         let maxBottom = -Infinity;
                                         let contentWidth = 0;
-                                        for (const item of siblings) {
+                                        let i = 0;
+                                        while (i < siblings.length) {
+                                            const item = siblings[i++];
                                             if (item.floating) {
                                                 if (item.float === float) {
                                                     maxBottom = Math.max(item.actualRect('bottom', 'bounds'), maxBottom);
@@ -1211,8 +1215,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public unsetCache(...attrs: string[]) {
         if (attrs.length) {
             const cached = this._cached;
-            for (const attr of attrs) {
-                switch (attr) {
+            for (let i = 0; i < attrs.length; ++i) {
+                switch (attrs[i]) {
                     case 'top':
                     case 'right':
                     case 'bottom':

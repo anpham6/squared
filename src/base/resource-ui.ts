@@ -478,8 +478,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     else {
                                         let minRadius = Infinity;
                                         const radiusXY = name.split(' ');
-                                        const length = radiusXY.length;
-                                        for (let j = 0; j < length; ++j) {
+                                        for (let j = 0; j < radiusXY.length; ++j) {
                                             minRadius = Math.min(j === 0 ? node.parseWidth(radiusXY[j], false) : node.parseHeight(radiusXY[j], false), minRadius);
                                         }
                                         radius = minRadius;
@@ -575,15 +574,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 return undefined;
             default: {
                 const dimensions = value.split(/\s+/);
-                const length = dimensions.length;
-                if (length === 1) {
-                    dimensions[1] = dimensions[0];
-                }
-                dimensions.forEach((size, index) => {
+                for (let i = 0; i < dimensions.length; ++i) {
+                    let size = dimensions[i];
                     if (size === 'auto') {
                         size = '100%';
                     }
-                    switch (index) {
+                    switch (i) {
                         case 0:
                             width = node.parseUnit(size, 'width', false, screenDimension);
                             break;
@@ -591,7 +587,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             height = node.parseUnit(size, 'height', false, screenDimension);
                             break;
                     }
-                });
+                }
                 break;
             }
         }
