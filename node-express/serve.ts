@@ -521,6 +521,7 @@ let Image: serve.IImage;
                                 module = 'prettier';
                                 options = {
                                     parser: 'html',
+                                    width: 120,
                                     tabWidth: 4
                                 };
                                 break;
@@ -677,6 +678,7 @@ let Image: serve.IImage;
                                 module = 'prettier';
                                 options = {
                                     parser: 'babel',
+                                    width: 100,
                                     tabWidth: 4
                                 };
                                 break;

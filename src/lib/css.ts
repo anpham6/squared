@@ -307,7 +307,8 @@ export const enum CSS_TRAITS {
     SHORTHAND = 4,
     LAYOUT = 8,
     CONTAIN = 16,
-    COLOR = 32
+    COLOR = 32,
+    DEPRECATED = 64
 }
 
 export const CSS_PROPERTIES: CssProperties = {
@@ -635,6 +636,10 @@ export const CSS_PROPERTIES: CssProperties = {
     clear: {
         trait: CSS_TRAITS.LAYOUT,
         value: 'none'
+    },
+    clip: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.DEPRECATED,
+        value: 'clip'
     },
     color: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,

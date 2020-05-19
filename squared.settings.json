@@ -36,6 +36,7 @@
       "prettier": {
         "beautify": {
           "parser": "html",
+          "printWidth": 120,
           "tabWidth": 4
         }
       },
@@ -71,6 +72,7 @@
       "prettier": {
         "beautify": {
           "parser": "babel",
+          "printWidth": 100,
           "tabWidth": 4
         }
       },
