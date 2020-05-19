@@ -759,7 +759,7 @@ let Image: serve.IImage;
                 value = value.replace(/\./g, '\\.');
                 let found = false;
                 pattern = new RegExp(`^\\s*${value}[\\s\\n]*\\{[\\s\\S]*?\\}\\n*`, 'gm');
-                while ((match = pattern.exec(source)) !== null) {
+                while (match = pattern.exec(source)) {
                     if (result === undefined) {
                         result = source;
                     }
@@ -771,7 +771,7 @@ let Image: serve.IImage;
                     found = false;
                 }
                 pattern = new RegExp(`^[^,]*(,?[\\s\\n]*${value}[\\s\\n]*[,{](\\s*)).*?\\{?`, 'gm');
-                while ((match = pattern.exec(source)) !== null) {
+                while (match = pattern.exec(source)) {
                     if (result === undefined) {
                         result = source;
                     }
@@ -799,14 +799,14 @@ let Image: serve.IImage;
             let result: Undef<string>;
             let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=(["'])\\s*${(base64 ? '.+?' : '') + segment}\\s*\\2`, 'g');
             let match: Null<RegExpExecArray>;
-            while ((match = pattern.exec(source)) !== null) {
+            while (match = pattern.exec(source)) {
                 if (result === undefined) {
                     result = source;
                 }
                 result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
             }
             pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${(base64 ? '.+?' : '') + segment}\\s*\\1?\\s*\\)`, 'g');
-            while ((match = pattern.exec(source)) !== null) {
+            while (match = pattern.exec(source)) {
                 if (result === undefined) {
                     result = source;
                 }
@@ -1206,7 +1206,7 @@ class FileManager implements serve.IFileManager {
                 let source = html;
                 let pattern = /(\s*)<(script|link|style)[\s\S]*?([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[\s\S]*?\/?>(?:[\s\S]*?<\/\2>\n*)?/ig;
                 let match: Null<RegExpExecArray>;
-                while ((match = pattern.exec(html)) !== null) {
+                while (match = pattern.exec(html)) {
                     const segment = match[0];
                     const script = match[2].toLowerCase() === 'script';
                     const location = Express.getAbsoluteUrl(match[5].split('::')[0].trim(), baseUri);
@@ -1251,7 +1251,7 @@ class FileManager implements serve.IFileManager {
                                 pattern.lastIndex = 0;
                                 const content = minifySpace(item.content || '');
                                 const outerContent = minifySpace(outerHTML);
-                                while ((match = pattern.exec(html)) !== null) {
+                                while (match = pattern.exec(html)) {
                                     if (outerContent === minifySpace(match[0]) || content && content === minifySpace(match[3])) {
                                         source = source.replace(match[0], (replaceWith ? match[1] : '') + replaceWith);
                                         break;
@@ -1266,7 +1266,7 @@ class FileManager implements serve.IFileManager {
                         for (const trailing of trailingContent) {
                             content.push(minifySpace(trailing.value));
                         }
-                        while ((match = pattern.exec(html)) !== null) {
+                        while (match = pattern.exec(html)) {
                             const value = minifySpace(match[3]);
                             if (content.includes(value)) {
                                 source = source.replace(match[0], '');
@@ -1295,7 +1295,7 @@ class FileManager implements serve.IFileManager {
                     }
                     if (item.rootDir || Express.fromSameOrigin(baseUri, item.uri)) {
                         pattern = new RegExp(`((?:\\.\\.)?(?:[\\\\/]\\.\\.|\\.\\.[\\\\/]|[\\\\/])*)?(${path.join(item.pathname, item.filename).replace(/[\\/]/g, '[\\\\/]')})`, 'g');
-                        while ((match = pattern.exec(html)) !== null) {
+                        while (match = pattern.exec(html)) {
                             const pathname = match[0];
                             if (pathname !== value && item.uri === Express.resolvePath(pathname, baseUri)) {
                                 source = source.replace(pathname, value);
@@ -1583,7 +1583,7 @@ class FileManager implements serve.IFileManager {
             let source: Undef<string>;
             const pattern = /[uU][rR][lL]\(\s*(["'])?\s*((?:[^"')]|\\"|\\')+)\s*\1?\s*\)/g;
             let match: Null<RegExpExecArray>;
-            while ((match = pattern.exec(content)) !== null) {
+            while (match = pattern.exec(content)) {
                 if (source === undefined) {
                     source = content;
                 }

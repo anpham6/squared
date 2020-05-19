@@ -476,7 +476,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
             const pattern = /[\s\n]*(.+?\.[^\s,]+).*?,?/g;
             let match: Null<RegExpExecArray>;
-            while ((match = pattern.exec(element.srcset.trim())) !== null) {
+            while (match = pattern.exec(element.srcset.trim())) {
                 processUri(element, resolvePath(match[1]));
             }
         });

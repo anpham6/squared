@@ -557,7 +557,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 case 'baseline':
                                     if (horizontal) {
-                                        if (baseline === null) {
+                                        if (!baseline) {
                                             baseline = getBaseline(seg) as Null<T>;
                                         }
                                         if (baseline) {

@@ -2687,12 +2687,12 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             this._positioned = value;
         }
         get positioned() {
-            return this._positioned || this.target !== null;
+            return this._positioned || !!this.target;
         }
 
         get target() {
             const target = this.dataset.androidTarget;
-            return target && document.getElementById(target) || null;
+            return target ? document.getElementById(target) : null;
         }
     };
 };

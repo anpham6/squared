@@ -88,7 +88,11 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 container.setCacheValue('baseline', false);
                 container.setCacheValue('verticalAlign', 'middle');
             }
-            removeable.forEach(item => item.hide({ remove: true }));
+            length = removeable.length;
+            let i = 0;
+            while (i < length) {
+                removeable[i++].hide({ remove: true });
+            }
             this.subscribers.add(container);
             return {
                 renderAs: container,
@@ -119,8 +123,13 @@ export default class RadioGroup<T extends View> extends squared.base.ExtensionUI
                 while (i < length) {
                     const radio = radiogroup[i++];
                     const parents = radio.ascend({ condition: (item: T) => item.layoutLinear, error: (item: T) => item.controlName === controlName, every: true }) as T[];
-                    if (parents.length) {
-                        parents.forEach(item => data.set(item, (data.get(item) || 0) + 1));
+                    const q = parents.length;
+                    if (q) {
+                        let j = 0;
+                        while (j < q) {
+                            const item = parents[j++];
+                            data.set(item, (data.get(item) || 0) + 1);
+                        }
                     }
                     else {
                         data.clear();

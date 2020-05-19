@@ -2255,7 +2255,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             container.documentRoot = true;
             node.documentRoot = false;
         }
-        if (container.actualParent === null && parent.naturalElement) {
+        if (!container.actualParent && parent.naturalElement) {
             container.actualParent = parent;
         }
         if (containerType) {
@@ -2632,7 +2632,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         else {
                             switch (verticalAlign) {
                                 case 'text-top':
-                                    if (textBaseline === null) {
+                                    if (!textBaseline) {
                                         textBaseline = NodeUI.baseline(items, true);
                                     }
                                     if (textBaseline && item !== textBaseline) {
@@ -2673,10 +2673,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     break;
                                 }
                                 case 'text-bottom':
-                                    if (textBaseline === null) {
+                                    if (!textBaseline) {
                                         textBaseline = NodeUI.baseline(items, true);
                                     }
-                                    if (textBaseline !== item && textBaseline) {
+                                    if (textBaseline && textBaseline !== item) {
                                         item.anchor('bottom', textBaseline.documentId);
                                     }
                                     else if (baseline) {
@@ -2821,7 +2821,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 let requireBottom = false;
-                if (baseline === null) {
+                if (!baseline) {
                     baseline = items[0];
                     requireBottom = true;
                 }
@@ -2970,7 +2970,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         switch (item.css('verticalAlign')) {
                             case 'text-top':
-                                if (textBaseline === null) {
+                                if (!textBaseline) {
                                     textBaseline = NodeUI.baseline(children, true);
                                 }
                                 if (textBaseline && item !== textBaseline) {
@@ -2981,7 +2981,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 break;
                             case 'middle':
-                                if (baseline?.textElement === false || textBottom) {
+                                if (textBottom || baseline?.textElement === false) {
                                     valid = constraintAlignTop(node, item);
                                 }
                                 else {
@@ -2989,7 +2989,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 break;
                             case 'text-bottom':
-                                if (textBaseline === null) {
+                                if (!textBaseline) {
                                     textBaseline = NodeUI.baseline(children, true);
                                 }
                                 if (textBaseline && item !== textBaseline) {
@@ -3019,7 +3019,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 break;
                             case 'baseline':
-                                if (baseline === null || item.blockVertical || !item.textElement && getMaxHeight(item) > getMaxHeight(baseline)) {
+                                if (!baseline || item.blockVertical || !item.textElement && getMaxHeight(item) > getMaxHeight(baseline)) {
                                     valid = constraintAlignTop(node, item);
                                 }
                                 else {

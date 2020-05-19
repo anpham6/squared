@@ -43,7 +43,7 @@ function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr
         REGEX_DATAURI.lastIndex = 0;
         let result = value;
         let match: Null<RegExpExecArray>;
-        while ((match = REGEX_DATAURI.exec(value)) !== null) {
+        while (match = REGEX_DATAURI.exec(value)) {
             if (match[2]) {
                 const mimeType = match[2].split(';');
                 resourceHandler.addRawData(match[1], mimeType[0].trim(), mimeType[1]?.trim() || 'utf8', match[3]);
@@ -480,7 +480,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                 parseImageUrl(resourceHandler, baseMap, 'content', styleSheetHref);
                 const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
                 let match: Null<RegExpExecArray>;
-                while ((match = pattern.exec(cssText)) !== null) {
+                while (match = pattern.exec(cssText)) {
                     const attr = convertCamelCase(match[1]);
                     const value = CSS_PROPERTIES[attr]?.value;
                     if (Array.isArray(value)) {

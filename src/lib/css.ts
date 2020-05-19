@@ -1420,7 +1420,7 @@ export function parseSelectorText(value: string, document?: boolean) {
         let normalized = value;
         let found = false;
         let match: Null<RegExpExecArray>;
-        while ((match = CSS.SELECTOR_ATTR.exec(normalized)) !== null) {
+        while (match = CSS.SELECTOR_ATTR.exec(normalized)) {
             const index = match.index;
             const length = match[0].length;
             normalized = (index > 0 ? normalized.substring(0, index) : '') + '_'.repeat(length) + normalized.substring(index + length);
@@ -1454,7 +1454,7 @@ export function getSpecificity(value: string) {
     CSS.SELECTOR_G.lastIndex = 0;
     let result = 0;
     let match: Null<RegExpExecArray>;
-    while ((match = CSS.SELECTOR_G.exec(value)) !== null) {
+    while (match = CSS.SELECTOR_G.exec(value)) {
         let segment = match[1];
         if (segment.length === 1) {
             switch (segment.charAt(0)) {
@@ -1477,7 +1477,7 @@ export function getSpecificity(value: string) {
             return 0;
         }
         let subMatch: Null<RegExpExecArray>;
-        while ((subMatch = CSS.SELECTOR_ATTR.exec(segment)) !== null) {
+        while (subMatch = CSS.SELECTOR_ATTR.exec(segment)) {
             if (subMatch[1]) {
                 result += 1;
             }
@@ -1486,7 +1486,7 @@ export function getSpecificity(value: string) {
             }
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        while ((subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
+        while (subMatch = CSS.SELECTOR_PSEUDO_CLASS.exec(segment)) {
             if (subMatch[0].startsWith(':not(')) {
                 const attr = subMatch[1];
                 if (attr) {
@@ -1507,11 +1507,11 @@ export function getSpecificity(value: string) {
             }
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        while ((subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) !== null) {
+        while (subMatch = CSS.SELECTOR_PSEUDO_ELEMENT.exec(segment)) {
             result += 1;
             segment = spliceString(segment, subMatch.index, subMatch[0].length);
         }
-        while ((subMatch = CSS.SELECTOR_LABEL.exec(segment)) !== null) {
+        while (subMatch = CSS.SELECTOR_LABEL.exec(segment)) {
             const command = subMatch[0];
             switch (command.charAt(0)) {
                 case '#':
@@ -2442,12 +2442,12 @@ export function checkMediaRule(value: string, fontSize?: number) {
         default: {
             const pattern = /(?:(not|only)?\s*(?:all|screen)\s+and\s+)?((?:\([^)]+\)(?:\s+and\s+)?)+),?\s*/g;
             let match: Null<RegExpExecArray>;
-            while ((match = pattern.exec(value)) !== null) {
+            while (match = pattern.exec(value)) {
                 const patternCondition = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
                 const negate = match[1] === 'not';
                 let valid = false;
                 let condition: Null<RegExpExecArray>;
-                while ((condition = patternCondition.exec(match[2])) !== null) {
+                while (condition = patternCondition.exec(match[2])) {
                     const attr = condition[1];
                     let operation = condition[2];
                     const rule = condition[3];
@@ -2541,7 +2541,7 @@ export function isParentStyle(element: Element, attr: string, ...styles: string[
         return true;
     }
     const parentElement = element.parentElement;
-    return parentElement !== null && styles.includes(getStyle(parentElement)[attr]);
+    return !!parentElement && styles.includes(getStyle(parentElement)[attr]);
 }
 
 export function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]) {
@@ -2564,7 +2564,7 @@ export function parseVar(element: CSSElement, value: string) {
     const style = getStyle(element);
     const pattern = /var\((--[A-Za-z\d-]+)\s*(?!,\s*var\()(?:,\s*([a-z-]+\([^)]+\)|[^)]+))?\)/;
     let match: Null<RegExpMatchArray>;
-    while ((match = pattern.exec(value)) !== null) {
+    while (match = pattern.exec(value)) {
         let customValue = style.getPropertyValue(match[1]).trim();
         const fallback = match[2];
         if (fallback && (customValue === '' || isLength(fallback, true) && !isLength(customValue, true) || isNumber(fallback) && !isNumber(customValue) || parseColor(fallback) && !parseColor(customValue))) {
@@ -2664,7 +2664,7 @@ export function calculateVarAsString(element: CSSElement, value: string, options
     value = result.length === 1 ? result[0] : result.join(separator === ' ' ? ' ' : (separator ? separator + ' ' : ''));
     if (errorString) {
         let match: Null<RegExpExecArray>;
-        while ((match = errorString.exec(value)) !== null) {
+        while (match = errorString.exec(value)) {
             if (match[1] === undefined) {
                 return '';
             }
@@ -3547,7 +3547,7 @@ export function parseTransform(value: string, accumulate?: boolean, fontSize?: n
     const result: TransformData[] = [];
     const pattern = /(\w+)\([^)]+\)/g;
     let match: Null<RegExpExecArray>;
-    while ((match = pattern.exec(value)) !== null) {
+    while (match = pattern.exec(value)) {
         const method = match[1];
         if (method.startsWith('translate')) {
             const translate = TRANSFORM.TRANSLATE.exec(match[0]);

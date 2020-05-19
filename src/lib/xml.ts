@@ -175,7 +175,7 @@ export function formatTemplate(value: string, closeEmpty = false, startIndent = 
     const lines: XMLTagData[] = [];
     const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
     let match: Null<RegExpExecArray>;
-    while ((match = pattern.exec(value)) !== null) {
+    while (match = pattern.exec(value)) {
         lines.push({
             tag: match[1],
             closing: !!match[2],

@@ -25,7 +25,7 @@ function getCounterValue(value: string, counterName: string, fallback = 1) {
     if (value !== 'none') {
         const pattern = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
         let match: Null<RegExpExecArray>;
-        while ((match = pattern.exec(value)) !== null) {
+        while (match = pattern.exec(value)) {
             if (match[1] === counterName) {
                 return parseInt(match[2]);
             }
@@ -36,8 +36,8 @@ function getCounterValue(value: string, counterName: string, fallback = 1) {
 }
 
 function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) {
-    const value = (getElementCache(parent, `styleMap${pseudoElt}`, sessionId) as Undef<CSSStyleDeclaration>)?.counterIncrement;
-    return value && getCounterValue(value, counterName, fallback);
+    const counterIncrement = (getElementCache(parent, `styleMap${pseudoElt}`, sessionId) as Undef<CSSStyleDeclaration>)?.counterIncrement;
+    return counterIncrement && getCounterValue(counterIncrement, counterName, fallback);
 }
 
 function prioritizeExtensions<T extends NodeUI>(value: Undef<string>, extensions: ExtensionUI<T>[]) {
@@ -222,7 +222,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const extensions = this.extensions;
         const layouts = this._layouts;
         const children = cache.children;
-        const length = children.length;
+        let length = children.length;
         const rendered: T[] = new Array(length);
         let i = 0, j = 0;
         while (i < length) {
@@ -239,8 +239,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         rendered.length = j;
         controllerHandler.optimize(rendered);
-        for (i = 0; i < extensions.length; ++i) {
-            const ext = extensions[i];
+        length = extensions.length;
+        i = 0;
+        while (i < length) {
+            const ext = extensions[i++];
             for (const node of ext.subscribers) {
                 ext.postOptimize(node);
             }
@@ -265,8 +267,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
             }
         }
-        for (i = 0; i < extensions.length; ++i) {
-            extensions[i].beforeCascade(documentRoot);
+        i = 0;
+        while (i < length) {
+            extensions[i++].beforeCascade(documentRoot);
         }
         const baseTemplate = this._controllerSettings.layout.baseTemplate;
         const systemName = capitalize(this.systemName);
@@ -284,7 +287,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         this.resourceHandler.finalize(layouts);
         controllerHandler.finalize(layouts);
-        extensions.forEach(ext => ext.afterFinalize());
+        i = 0;
+        while (i < length) {
+            extensions[i++].afterFinalize();
+        }
         removeElementsByClassName('__squared.pseudo');
         this.closed = true;
     }
@@ -439,7 +445,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         this.controllerHandler.afterInsertNode(node);
         if (parent) {
             node.depth = parent.depth + 1;
-            if (parent.naturalElement && (!element || element.parentElement === null)) {
+            if (parent.naturalElement && (!element || !element.parentElement)) {
                 node.actualParent = parent;
             }
             const child = options.innerWrap;
@@ -1467,8 +1473,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
             const node = layout.node;
             const length = Math.max(floatedRows.length, staticRows.length);
             for (let i = 0; i < length; ++i) {
-                const pageFlow = staticRows[i] || [];
-                if (floatedRows[i] === null && pageFlow.length) {
+                const pageFlow = staticRows[i];
+                const floating = floatedRows[i];
+                const blockCount = pageFlow.length;
+                if (!floating && blockCount) {
                     const layoutType = controllerHandler.containerTypeVertical;
                     this.addLayout(new LayoutUI(
                         node,
@@ -1479,44 +1487,41 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     ));
                 }
                 else {
-                    const floating = floatedRows[i] || [];
-                    if (pageFlow.length || floating.length) {
-                        const basegroup = controllerHandler.createNodeGroup(floating[0] || pageFlow[0], [], { parent: node });
-                        const group = new LayoutUI(node, basegroup);
-                        group.type = controllerHandler.containerTypeVerticalMargin;
-                        const children: T[] = [];
-                        let subgroup!: T;
-                        if (floating.length) {
-                            const floatgroup = controllerHandler.createNodeGroup(floating[0], floating, { parent: basegroup });
-                            group.add(NODE_ALIGNMENT.FLOAT);
-                            if (pageFlow.length === 0 && floating.every(item => item.float === 'right')) {
-                                group.add(NODE_ALIGNMENT.RIGHT);
-                            }
-                            children.push(floatgroup);
+                    const basegroup = controllerHandler.createNodeGroup((floating || pageFlow)[0], [], { parent: node });
+                    const group = new LayoutUI(node, basegroup);
+                    group.type = controllerHandler.containerTypeVerticalMargin;
+                    const children: T[] = [];
+                    let subgroup!: T;
+                    if (floating) {
+                        const floatgroup = controllerHandler.createNodeGroup(floating[0], floating, { parent: basegroup });
+                        group.add(NODE_ALIGNMENT.FLOAT);
+                        if (pageFlow.length === 0 && floating.every(item => item.float === 'right')) {
+                            group.add(NODE_ALIGNMENT.RIGHT);
                         }
-                        if (pageFlow.length) {
-                            subgroup = controllerHandler.createNodeGroup(pageFlow[0], pageFlow, { parent: basegroup });
-                            children.push(subgroup);
+                        children.push(floatgroup);
+                    }
+                    if (blockCount) {
+                        subgroup = controllerHandler.createNodeGroup(pageFlow[0], pageFlow, { parent: basegroup });
+                        children.push(subgroup);
+                    }
+                    group.itemCount = children.length;
+                    this.addLayout(group);
+                    for (let j = 0; j < children.length; ++j) {
+                        let item = children[j];
+                        if (!item.nodeGroup) {
+                            item = controllerHandler.createNodeGroup(item, [item], { parent: basegroup, delegate: true });
                         }
-                        group.itemCount = children.length;
-                        this.addLayout(group);
-                        for (let j = 0; j < children.length; ++j) {
-                            let item = children[j];
-                            if (!item.nodeGroup) {
-                                item = controllerHandler.createNodeGroup(item, [item], { parent: basegroup, delegate: true });
-                            }
-                            this.addLayout(new LayoutUI(
-                                basegroup,
-                                item,
-                                containerType,
-                                alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
-                                item.children as T[]
-                            ));
-                        }
-                        if (pageFlow.length && floating.length) {
-                            const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
-                            this.setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
-                        }
+                        this.addLayout(new LayoutUI(
+                            basegroup,
+                            item,
+                            containerType,
+                            alignmentType | NODE_ALIGNMENT.SEGMENTED | NODE_ALIGNMENT.BLOCK,
+                            item.children as T[]
+                        ));
+                    }
+                    if (blockCount && floating) {
+                        const [leftAbove, rightAbove] = partitionArray(floating, item => item.float !== 'right');
+                        this.setFloatPadding(node, subgroup, pageFlow, leftAbove, rightAbove);
                     }
                 }
             }
@@ -1646,7 +1651,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                             const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
                             let found = false;
                             let match: Null<RegExpExecArray>;
-                            while ((match = pattern.exec(value)) !== null) {
+                            while (match = pattern.exec(value)) {
                                 const attr = match[1];
                                 if (attr) {
                                     content += getNamedItem(element, attr.trim());

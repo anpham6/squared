@@ -38,7 +38,7 @@ function parseAttribute(element: SVGElement, attr: string) {
         REGEX_TIMINGFUNCTION.lastIndex = 0;
         const result: string[] = [];
         let match: Null<RegExpMatchArray>;
-        while ((match = REGEX_TIMINGFUNCTION.exec(value)) !== null) {
+        while (match = REGEX_TIMINGFUNCTION.exec(value)) {
             result.push(match[1]);
         }
         return result;

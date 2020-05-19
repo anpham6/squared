@@ -8,7 +8,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
         const extensions = application.extensions;
         if (typeof ext === 'string') {
             const item = this.retrieve(ext);
-            if (item === null) {
+            if (!item) {
                 return false;
             }
             ext = item;
@@ -27,7 +27,7 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
                 while (i < length) {
                     const item = dependencies[i++];
                     if (item.preload) {
-                        if (this.retrieve(item.name) === null) {
+                        if (!this.retrieve(item.name)) {
                             const extension = application.builtInExtensions[item.name];
                             if (extension) {
                                 this.include(extension);

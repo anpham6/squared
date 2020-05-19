@@ -80,7 +80,7 @@ export function truncateString(value: string, precision = 3) {
     }
     let output = value;
     let match: Null<RegExpExecArray>;
-    while ((match = pattern.exec(value)) !== null) {
+    while (match = pattern.exec(value)) {
         let trailing = match[1];
         if (parseInt(match[2]) >= 5) {
             trailing = truncateFraction((parseFloat(trailing) + 1 / Math.pow(10, precision))).toString();

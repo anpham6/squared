@@ -184,7 +184,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         const seg = columns[j];
                         const elements: Element[] = [];
                         let height = 0;
-                        const s = seg.length;
+                        let s = seg.length;
                         let k = 0;
                         while (k < s) {
                             const column = seg[k++];
@@ -207,9 +207,16 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 height += column.linear.height;
                             }
                         }
-                        if (elements.length) {
-                            const container = createElement(document.body, 'div', { width: formatPX(columnWidth || node.box.width / columnMin), visibility: 'hidden' });
-                            elements.forEach(element => container.appendChild(element));
+                        s = elements.length;
+                        if (s) {
+                            const container = createElement(document.body, 'div', {
+                                width: formatPX(columnWidth || node.box.width / columnMin),
+                                visibility: 'hidden'
+                            });
+                            k = 0;
+                            while (k < s) {
+                                container.appendChild(elements[k++]);
+                            }
                             height += container.getBoundingClientRect().height;
                             document.body.removeChild(container);
                         }

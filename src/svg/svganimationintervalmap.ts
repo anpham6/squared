@@ -206,7 +206,7 @@ export default class SvgAnimationIntervalMap implements squared.svg.SvgAnimation
                                         const itemB = dataB[j];
                                         if (timeB > timeA) {
                                             const animationB = itemB.animation;
-                                            if (forwarded || animationB && (itemB.end && previous.includes(animationB) || animationA.animationElement === null && animationB.group.id < animationA.group.id)) {
+                                            if (forwarded || animationB && (itemB.end && previous.includes(animationB) || !animationA.animationElement && animationB.group.id < animationA.group.id)) {
                                                 dataB.splice(j--, 1);
                                             }
                                         }

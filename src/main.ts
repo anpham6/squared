@@ -184,7 +184,7 @@ export function retrieve(value: string) {
     let result: Null<Extension> = null;
     if (main) {
         result = main.extensionManager.retrieve(value);
-        if (result === null) {
+        if (!result) {
             for (const ext of extensionsExternal) {
                 if (ext.name === value) {
                     return ext;

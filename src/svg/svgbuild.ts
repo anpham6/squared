@@ -324,7 +324,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         let first = true;
         const pattern = /([A-Za-z])([^A-Za-z]+)?/g;
         let match: Null<RegExpExecArray>;
-        while ((match = pattern.exec(value.trim())) !== null) {
+        while (match = pattern.exec(value.trim())) {
             let key = match[1];
             if (first && key.toUpperCase() !== 'M') {
                 break;
@@ -806,7 +806,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         REGEX_DECIMAL.lastIndex = 0;
         const result: number[] = [];
         let match: Null<RegExpExecArray>;
-        while ((match = REGEX_DECIMAL.exec(value)) !== null) {
+        while (match = REGEX_DECIMAL.exec(value)) {
             const coord = parseFloat(match[0]);
             if (!isNaN(coord)) {
                 result.push(coord);

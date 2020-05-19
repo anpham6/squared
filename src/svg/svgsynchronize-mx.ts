@@ -880,7 +880,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                     else if (!itemB.evaluateStart && !itemB.evaluateEnd) {
                                         if (itemA.delay === itemB.delay && (!itemB.fillReplace || itemB.iterationCount === -1 || timeA <= itemB.getTotalDuration()) ||
                                             itemB.fillBackwards && itemA.delay <= itemB.delay && (itemB.fillForwards || itemA.fillReplace && timeA <= itemB.delay) ||
-                                            itemA.animationElement && itemB.animationElement === null && (itemA.delay >= itemB.delay && timeA <= itemB.getTotalDuration() || itemB.fillForwards))
+                                            itemA.animationElement && !itemB.animationElement && (itemA.delay >= itemB.delay && timeA <= itemB.getTotalDuration() || itemB.fillForwards))
                                         {
                                             excluded[i] = itemA;
                                             break;

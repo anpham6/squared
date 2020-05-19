@@ -178,7 +178,7 @@ export const TRANSFORM = {
             const result: SvgTransform[] = [];
             const pattern = /(\w+)\([^)]+\)/g;
             let match: Null<RegExpExecArray>;
-            while ((match = pattern.exec(value)) !== null) {
+            while (match = pattern.exec(value)) {
                 const method = match[1];
                 const isX = method.endsWith('X'), isY = method.endsWith('Y');
                 if (method.startsWith('translate')) {
@@ -344,7 +344,7 @@ export const TRANSFORM = {
         if (value !== '') {
             const pattern = /rotate\((-?[\d.]+)(?:,?\s+(-?[\d.]+))?(?:,?\s+(-?[\d.]+))?\)/g;
             let match: Null<RegExpExecArray>;
-            while ((match = pattern.exec(value)) !== null) {
+            while (match = pattern.exec(value)) {
                 const angle = parseFloat(match[1]);
                 if (angle !== 0) {
                     result.push({

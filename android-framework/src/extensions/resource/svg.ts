@@ -824,7 +824,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const transformTargets: SvgAnimation[][] = [];
                 const [companions, animations] = partitionArray(group.animate, child => 'companion' in child);
                 const targetSetTemplate: SetTemplate = { set: [], objectAnimator: [] };
-                const length = animations.length;
+                let length = animations.length;
                 for (let i = 0; i < length; ++i) {
                     const item = animations[i];
                     if (item.setterType) {
@@ -920,17 +920,22 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 for (let i = 0; i < isolatedData.length; ++i) {
                     isolatedTargets.push([[isolatedData[i]]]);
                 }
-                [togetherTargets, transformTargets, ...isolatedTargets].forEach((targets, index) => {
-                    if (targets.length === 0) {
-                        return;
+                const combined = [togetherTargets, transformTargets, ...isolatedTargets];
+                length = combined.length;
+                for (let index = 0; index < length; ++index) {
+                    const targets = combined[index];
+                    const t = targets.length;
+                    if (t === 0) {
+                        continue;
                     }
                     const setData: SetData = {
-                        ordering: index === 0 || targets.length === 1 ? '' : 'sequentially',
+                        ordering: index === 0 || t === 1 ? '' : 'sequentially',
                         set: [],
                         objectAnimator: []
                     };
-                    for (let z = 0; z < targets.length; ++z) {
-                        const items = targets[z];
+                    let y = 0;
+                    while (y < t) {
+                        const items = targets[y++];
                         let ordering = '';
                         let synchronized = false;
                         let checkBefore = false;
@@ -968,13 +973,15 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         let afterAnimator = fillAfter.objectAnimator;
                         let together: PropertyValue[] = [];
                         const targeted = synchronized ? partitionArray(items, (animate: SvgAnimate) => animate.iterationCount !== -1) : [items];
-                        for (let i = 0; i < targeted.length; ++i) {
+                        const u = targeted.length;
+                        for (let i = 0; i < u; ++i) {
                             const partition = targeted[i];
-                            if (i === 1 && partition.length > 1) {
+                            const v = partition.length;
+                            if (i === 1 && v > 1) {
                                 fillCustom.ordering = 'sequentially';
                             }
                             const animatorMap = new Map<string, PropertyValueHolder[]>();
-                            for (let j = 0; j < partition.length; ++j) {
+                            for (let j = 0; j < v; ++j) {
                                 const item = partition[j];
                                 const valueType = getValueType(item.attributeName);
                                 if (valueType === undefined) {
@@ -1096,7 +1103,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     let resetBefore = checkBefore;
                                     let repeatCount: string;
                                     if (i === 1) {
-                                        repeatCount = partition.length > 1 ? '0' : '-1';
+                                        repeatCount = v > 1 ? '0' : '-1';
                                     }
                                     else {
                                         repeatCount = item.iterationCount !== -1 ? Math.ceil(item.iterationCount - 1).toString() : '-1';
@@ -1405,7 +1412,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     if (setData.set.length || setData.objectAnimator.length) {
                         targetSetTemplate.set.push(setData);
                     }
-                });
+                }
                 insertTargetAnimation(data, name, targetSetTemplate, templateName, imageLength);
             }
             for (const [name, target] of this._animateTarget.entries()) {

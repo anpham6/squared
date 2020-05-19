@@ -1407,7 +1407,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         SELECTOR_G.lastIndex = 0;
                         let adjacent: Undef<string>;
                         let match: Null<RegExpExecArray>;
-                        while ((match = SELECTOR_G.exec(query)) !== null) {
+                        while (match = SELECTOR_G.exec(query)) {
                             let segment = match[1];
                             let all = false;
                             if (segment.length === 1) {
@@ -1453,7 +1453,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 let pseudoList: Undef<string[]>;
                                 let notList: Undef<string[]>;
                                 let subMatch: Null<RegExpExecArray>;
-                                while ((subMatch = SELECTOR_ATTR.exec(segment)) !== null) {
+                                while (subMatch = SELECTOR_ATTR.exec(segment)) {
                                     if (attrList === undefined) {
                                         attrList = [];
                                     }
@@ -1490,7 +1490,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     selectors.length = 0;
                                     break invalid;
                                 }
-                                while ((subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) !== null) {
+                                while (subMatch = SELECTOR_PSEUDO_CLASS.exec(segment)) {
                                     const pseudoClass = subMatch[0];
                                     if (pseudoClass.startsWith(':not(')) {
                                         if (subMatch[1]) {
@@ -1508,7 +1508,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                     }
                                     segment = spliceString(segment, subMatch.index, pseudoClass.length);
                                 }
-                                while ((subMatch = SELECTOR_LABEL.exec(segment)) !== null) {
+                                while (subMatch = SELECTOR_LABEL.exec(segment)) {
                                     const label = subMatch[0];
                                     switch (label.charAt(0)) {
                                         case '#':

@@ -367,7 +367,7 @@ export function capitalizeString(value: string) {
     let result: Undef<string[]>;
     const pattern = /\b([a-z].*?)\b/g;
     let match: Null<RegExpMatchArray>;
-    while ((match = pattern.exec(value)) !== null) {
+    while (match = pattern.exec(value)) {
         if (result === undefined) {
             result = value.split('');
         }
@@ -380,7 +380,7 @@ export function lowerCaseString(value: string) {
     const entities: string[] = [];
     const pattern = /&#?[A-Za-z\d]+?;/g;
     let match: Null<RegExpMatchArray>;
-    while ((match = pattern.exec(value)) !== null) {
+    while (match = pattern.exec(value)) {
         entities.push(match[0]);
     }
     if (entities.length) {

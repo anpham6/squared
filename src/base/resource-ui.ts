@@ -73,7 +73,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     }
     let previousOffset = 0;
     let match: Null<RegExpExecArray>;
-    while ((match = REGEX_COLORSTOP.exec(value)) !== null) {
+    while (match = REGEX_COLORSTOP.exec(value)) {
         const color = parseColor(match[1], 1, true);
         if (color) {
             let offset = -1;
@@ -371,7 +371,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             const images: (string | Gradient)[] = [];
             let i = 0;
             let match: Null<RegExpExecArray>;
-            while ((match = REGEX_BACKGROUNDIMAGE.exec(backgroundImage)) !== null) {
+            while (match = REGEX_BACKGROUNDIMAGE.exec(backgroundImage)) {
                 const value = match[0];
                 if (value.startsWith('url(') || value === 'initial') {
                     images.push(value);
@@ -998,7 +998,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         const sessionId = node.sessionId;
         element.childNodes.forEach((item: Element, index: number) => {
             const child = getElementAsNode<NodeUI>(item, sessionId);
-            if (child === null || !child.textElement || !child.pageFlow || child.positioned || child.pseudoElement || child.excluded) {
+            if (!child || !child.textElement || !child.pageFlow || child.positioned || child.pseudoElement || child.excluded) {
                 if (child) {
                     if (styled && child.htmlElement) {
                         const outerHTML = child.toElementString('outerHTML');

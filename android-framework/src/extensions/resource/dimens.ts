@@ -66,7 +66,7 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
                 const pattern = /:(\w+)="(-?[\d.]+px)"/g;
                 let content = layout.content!;
                 let match: Null<RegExpExecArray>;
-                while ((match = pattern.exec(layout.content!)) !== null) {
+                while (match = pattern.exec(layout.content!)) {
                     const [original, name, value] = match;
                     if (name !== 'text') {
                         const key = getResourceName(dimens, `custom_${convertUnderscore(name)}`, value);
