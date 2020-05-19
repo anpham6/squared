@@ -30,7 +30,7 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
             else if (item[attr] >= value) {
                 valid = true;
             }
-            else if (canCascadeChildren.call(item)) {
+            else if (canCascadeChildren(item)) {
                 if (!cascadeActualPadding(item.naturalChildren as T[], attr, value)) {
                     return false;
                 }
@@ -88,63 +88,63 @@ function traverseElementSibling(element: Null<Element>, direction: "previousSibl
     return result;
 }
 
-function canCascadeChildren(this: T) {
-    return this.naturalElements.length > 0 && !this.layoutElement && !this.tableElement;
+function canCascadeChildren(node: T) {
+    return node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 }
 
-function checkBlockDimension(this: T, previous: T) {
-    return this.blockDimension && Math.ceil(this.bounds.top) >= previous.bounds.bottom && (this.blockVertical || previous.blockVertical || this.percentWidth > 0 || previous.percentWidth > 0);
+function checkBlockDimension(node: T, previous: T) {
+    return node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (node.blockVertical || previous.blockVertical || node.percentWidth > 0 || previous.percentWidth > 0);
 }
 
-function getPercentWidth(this: T) {
-    return this.inlineDimension && !this.hasPX('maxWidth') ? this.percentWidth : -Infinity;
+function getPercentWidth(node: T) {
+    return node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
 }
 
-function getLayoutWidth(this: T) {
-    return this.actualWidth + Math.max(this.marginLeft, 0) + this.marginRight;
+function getLayoutWidth(node: T) {
+    return node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
 }
 
-function applyBoxReset(this: T, boxReset: BoxModel, attrs: string[], region: number, start: number, node?: NodeUI) {
+function applyBoxReset(node: T, boxReset: BoxModel, attrs: string[], region: number, start: number, other?: NodeUI) {
     for (let i = 0; i < 4; ++i) {
         const key = CSS_SPACINGKEYS[i + start];
         if (hasBit(region, key)) {
             const name = attrs[i];
             boxReset[name] = 1;
-            if (node) {
-                const previous = this.registerBox(key);
+            if (other) {
+                const previous = node.registerBox(key);
                 if (previous) {
-                    previous.resetBox(key, node);
+                    previous.resetBox(key, other);
                 }
                 else {
-                    if (this.naturalChild) {
-                        const value = this[name];
+                    if (node.naturalChild) {
+                        const value = node[name];
                         if (value >= 0) {
-                            node.modifyBox(key, value);
+                            other.modifyBox(key, value);
                         }
                     }
-                    this.transferBox(key, node);
+                    node.transferBox(key, other);
                 }
             }
         }
     }
 }
 
-function applyBoxAdjustment(this: T, boxAdjustment: BoxModel, attrs: string[], region: number, start: number, node: NodeUI) {
+function applyBoxAdjustment(node: T, boxAdjustment: BoxModel, attrs: string[], region: number, start: number, other: NodeUI) {
     for (let i = 0; i < 4; ++i) {
         const key = CSS_SPACINGKEYS[i + start];
         if (hasBit(region, key)) {
-            const previous = this.registerBox(key);
+            const previous = node.registerBox(key);
             if (previous) {
-                previous.transferBox(key, node);
+                previous.transferBox(key, other);
             }
             else {
                 const name = attrs[i];
                 const value: number = boxAdjustment[name];
                 if (value !== 0) {
-                    node.modifyBox(key, value, false);
+                    other.modifyBox(key, value, false);
                     boxAdjustment[name] = 0;
                 }
-                this.registerBox(key, node);
+                node.registerBox(key, other);
             }
         }
     }
@@ -806,7 +806,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 if (replaceTemplates) {
                                     const replaceIndex = replaceTemplates.findIndex(item => item.node === replaceWith);
                                     if (replaceIndex !== -1) {
-                                        options!.beforeReplace?.call(this, replaceWith);
+                                        options!.beforeReplace?.(this, replaceWith);
                                         renderChildren[index] = replaceWith;
                                         renderTemplates[index] = replaceTemplates[replaceIndex];
                                         replaceTemplates.splice(replaceIndex, 1);
@@ -824,7 +824,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                             }
                         }
                         else {
-                            options?.beforeReplace?.call(this, undefined);
+                            options?.beforeReplace?.(this, undefined);
                             renderChildren.splice(index, 1);
                             this.renderParent = undefined;
                             return renderTemplates.splice(index, 1)[0];
@@ -872,9 +872,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                     if (actualParent && actualParent.ascend({ condition: item => !item.inline && item.hasWidth, error: (item: T) => item.layoutElement, startSelf: true })) {
                                         const length = actualParent.naturalChildren.filter((item: T) => item.visible && item.pageFlow).length;
                                         if (length === siblings.length + 1) {
-                                            let width = actualParent.box.width - getLayoutWidth.call(this);
+                                            let width = actualParent.box.width - getLayoutWidth(this);
                                             for (const item of siblings) {
-                                                width -= getLayoutWidth.call(item);
+                                                width -= getLayoutWidth(item);
                                             }
                                             if (width >= 0) {
                                                 return NODE_TRAVERSE.HORIZONTAL;
@@ -944,12 +944,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         }
                     }
                 }
-                if (checkBlockDimension.call(this, previous)) {
+                if (checkBlockDimension(this, previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
                 else {
-                    const percentWidth = getPercentWidth.call(this);
-                    if (percentWidth > 0 && siblings.reduce((a, b) => a + getPercentWidth.call(b), percentWidth) > 1) {
+                    const percentWidth = getPercentWidth(this);
+                    if (percentWidth > 0 && siblings.reduce((a, b) => a + getPercentWidth(b), percentWidth) > 1) {
                         return NODE_TRAVERSE.PERCENT_WRAP;
                     }
                 }
@@ -987,7 +987,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 if (cleared?.has(previous) && !(siblings?.[0] === previous)) {
                     return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
-                else if (checkBlockDimension.call(this, previous)) {
+                else if (checkBlockDimension(this, previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }
@@ -1087,19 +1087,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public resetBox(region: number, node?: T) {
         if (hasBit(BOX_STANDARD.MARGIN, region)) {
-            applyBoxReset.call(this, this._boxReset, BOX_MARGIN, region, 0, node);
+            applyBoxReset(this, this._boxReset, BOX_MARGIN, region, 0, node);
         }
         if (hasBit(BOX_STANDARD.PADDING, region)) {
-            applyBoxReset.call(this, this._boxReset, BOX_PADDING, region, 4, node);
+            applyBoxReset(this, this._boxReset, BOX_PADDING, region, 4, node);
         }
     }
 
     public transferBox(region: number, node: T) {
         if (hasBit(BOX_STANDARD.MARGIN, region)) {
-            applyBoxAdjustment.call(this, this._boxAdjustment, BOX_MARGIN, region, 0, node);
+            applyBoxAdjustment(this, this._boxAdjustment, BOX_MARGIN, region, 0, node);
         }
         if (hasBit(BOX_STANDARD.PADDING, region)) {
-            applyBoxAdjustment.call(this, this._boxAdjustment, BOX_PADDING, region, 4, node);
+            applyBoxAdjustment(this, this._boxAdjustment, BOX_PADDING, region, 4, node);
         }
     }
 
@@ -1138,7 +1138,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     }
                 }
                 if (node.naturalChild) {
-                    return canCascadeChildren.call(node) && cascadeActualPadding(node.naturalChildren as T[], attr, value) ? 0 : value;
+                    return canCascadeChildren(node) && cascadeActualPadding(node.naturalChildren as T[], attr, value) ? 0 : value;
                 }
             }
             else if (this.gridElement) {

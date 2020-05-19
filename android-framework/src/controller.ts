@@ -582,12 +582,13 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
     if (!node.leftTopAxis && documentParent.originalRoot) {
         const renderParent = node.renderParent;
         if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length) {
-            if (horizontal) {
-                location = !opposing ? documentParent.marginLeft : documentParent.marginRight;
-            }
-            else {
-                location = !opposing ? documentParent.marginTop : documentParent.marginBottom;
-            }
+            location = horizontal
+                ? !opposing
+                    ? documentParent.marginLeft
+                    : documentParent.marginRight
+                : !opposing
+                    ? documentParent.marginTop
+                    : documentParent.marginBottom;
         }
     }
     if (percent) {
@@ -601,23 +602,23 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
     }
     if (!node.pageFlow) {
         if (documentParent.outerWrapper && node.parent === documentParent.outerMostWrapper) {
-            location += documentParent[!opposing
-                ? horizontal
+            location += documentParent[horizontal
+                ? !opposing
                     ? 'paddingLeft'
-                    : 'paddingTop'
-                : horizontal
-                    ? 'paddingRight'
+                    : 'paddingRight'
+                : !opposing
+                    ? 'paddingTop'
                     : 'paddingBottom'
             ];
         }
         else if (absoluteParent === node.documentParent) {
-            let direction: number;
-            if (horizontal) {
-                direction = !opposing ? BOX_STANDARD.PADDING_LEFT : BOX_STANDARD.PADDING_RIGHT;
-            }
-            else {
-                direction = !opposing ? BOX_STANDARD.PADDING_TOP : BOX_STANDARD.PADDING_BOTTOM;
-            }
+            const direction = horizontal
+                ? !opposing
+                    ? BOX_STANDARD.PADDING_LEFT
+                    : BOX_STANDARD.PADDING_RIGHT
+                : !opposing
+                    ? BOX_STANDARD.PADDING_TOP
+                    : BOX_STANDARD.PADDING_BOTTOM;
             location = adjustAbsolutePaddingOffset(documentParent, direction, location);
         }
     }
@@ -2234,7 +2235,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public createNodeWrapper(node: T, parent: T, options: CreateNodeWrapperOptions<T> = {}) {
         const { children, containerType, alignmentType, resource, procedure, section } = options;
-        const container = this.application.createNode({ parent, children, append: true, innerWrap: node, delegate: true, cascade: options.cascade === true || !!children && children.length > 0 && !node.originalRoot });
+        const container = this.application.createNode({
+            parent,
+            children,
+            append: true,
+            innerWrap: node,
+            delegate: true,
+            cascade: options.cascade === true || !!children && children.length > 0 && !node.originalRoot
+        });
         container.inherit(node, 'base', 'alignment');
         if (node.documentRoot) {
             container.documentRoot = true;
@@ -2849,13 +2857,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     protected processConstraintHorizontal(node: T, children: T[]) {
         const reverse = node.hasAlign(NODE_ALIGNMENT.RIGHT);
         const { anchorStart, anchorEnd, chainStart, chainEnd } = getAnchorDirection(reverse);
-        let bias = 0;
         let valid = true;
+        let bias = 0;
+        let baselineCount = 0;
         let tallest: Undef<T>;
         let bottom: Undef<T>;
         let previous: Undef<T>;
         let textBaseline: Null<T> = null;
-        let baselineCount = 0;
         if (!reverse) {
             switch (node.cssAscend('textAlign', true)) {
                 case 'center':
