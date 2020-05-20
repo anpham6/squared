@@ -25,7 +25,7 @@ const { absoluteAngle, offsetAngleY, relativeAngle, truncate, truncateFraction, 
 const { STRING } = squared.lib.regex;
 const { convertWord, hasBit, isArray, isString, plainMap } = squared.lib.util;
 
-const REGEX_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
+const REGEXP_DECIMAL = new RegExp(STRING.DECIMAL, 'g');
 const NAME_GRAPHICS = new Map<string, number>();
 
 export default class SvgBuild implements squared.svg.SvgBuild {
@@ -803,10 +803,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     }
 
     public static parseCoordinates(value: string) {
-        REGEX_DECIMAL.lastIndex = 0;
+        REGEXP_DECIMAL.lastIndex = 0;
         const result: number[] = [];
         let match: Null<RegExpExecArray>;
-        while (match = REGEX_DECIMAL.exec(value)) {
+        while (match = REGEXP_DECIMAL.exec(value)) {
             const coord = parseFloat(match[0]);
             if (!isNaN(coord)) {
                 result.push(coord);

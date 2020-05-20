@@ -8,7 +8,7 @@ const { getFontSize, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { hasValue, isNumber, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
-const REGEX_CUBICBEZIER = new RegExp(STRING_CUBICBEZIER);
+const REGEXP_CUBICBEZIER = new RegExp(STRING_CUBICBEZIER);
 
 function flatString<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
@@ -40,7 +40,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             return KEYSPLINE_NAME.linear;
         }
         else {
-            const match = REGEX_CUBICBEZIER.exec(value);
+            const match = REGEXP_CUBICBEZIER.exec(value);
             return match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : KEYSPLINE_NAME.ease;
         }
     }

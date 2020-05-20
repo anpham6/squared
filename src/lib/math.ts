@@ -1,4 +1,4 @@
-const REGEX_TRUNCATECACHE: ObjectMap<RegExp> = {};
+const REGEXP_TRUNCATECACHE: ObjectMap<RegExp> = {};
 
 function convertDecimalNotation(value: number) {
     const match = /^(-?\d+\.\d+)e(-?\d+)$/.exec(value.toString());
@@ -70,10 +70,10 @@ export function truncateTrailingZero(value: string) {
 }
 
 export function truncateString(value: string, precision = 3) {
-    let pattern = REGEX_TRUNCATECACHE[precision];
+    let pattern = REGEXP_TRUNCATECACHE[precision];
     if (!pattern) {
         pattern = new RegExp(`(-?\\d+\\.\\d{${precision}})(\\d)\\d*`, 'g');
-        REGEX_TRUNCATECACHE[precision] = pattern;
+        REGEXP_TRUNCATECACHE[precision] = pattern;
     }
     else {
         pattern.lastIndex = 0;

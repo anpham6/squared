@@ -16,13 +16,13 @@ const { BOX_STANDARD, NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 const ResourceUI = squared.base.ResourceUI;
 
+const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
+const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
+
 const {
     constraint: LAYOUT_CONSTRAINT,
     relative: LAYOUT_RELATIVE,
     relativeParent: LAYOUT_RELATIVE_PARENT } = LAYOUT_ANDROID;
-
-const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
-const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
 
 function checkTextAlign(value: string, ignoreStart: boolean) {
     switch (value) {

@@ -2,7 +2,7 @@ const { STRING } = squared.lib.regex;
 const { extractURL } = squared.lib.css;
 const { fromLastIndexOf, fromMimeType, hasMimeType, randomUUID } = squared.lib.util;
 
-const REGEX_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
+const REGEXP_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 
 export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
     public static KEY_NAME = 'squared.resource';
@@ -38,7 +38,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         if (element?.complete) {
             const uri = element.src;
             if (uri.startsWith('data:image/')) {
-                const match = REGEX_DATAURI.exec(uri);
+                const match = REGEXP_DATAURI.exec(uri);
                 if (match) {
                     const mimeType = match[1].split(';');
                     this.addRawData(uri, mimeType[0].trim(), mimeType[1]?.trim() || 'base64', match[2], element.naturalWidth, element.naturalHeight);

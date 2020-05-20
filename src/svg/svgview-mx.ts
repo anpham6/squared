@@ -29,16 +29,16 @@ const ANIMATION_DEFAULT = {
     'animation-timing-function': 'ease'
 };
 
-const KEYFRAME_MAP = getKeyframesRules();
-const REGEX_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
+const MAP_KEYFRAMES = getKeyframesRules();
+const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);
     if (attr === 'animation-timing-function') {
-        REGEX_TIMINGFUNCTION.lastIndex = 0;
+        REGEXP_TIMINGFUNCTION.lastIndex = 0;
         const result: string[] = [];
         let match: Null<RegExpMatchArray>;
-        while (match = REGEX_TIMINGFUNCTION.exec(value)) {
+        while (match = REGEXP_TIMINGFUNCTION.exec(value)) {
             result.push(match[1]);
         }
         return result;
@@ -163,7 +163,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                         cssData[name] = values;
                     }
                     for (let i = 0; i < length; ++i) {
-                        const keyframes = KEYFRAME_MAP[animationName[i]];
+                        const keyframes = MAP_KEYFRAMES[animationName[i]];
                         const duration = SvgAnimation.convertClockTime(cssData['animation-duration'][i]);
                         if (keyframes && duration > 0) {
                             ++id;

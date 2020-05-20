@@ -1,7 +1,7 @@
 const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, convertAngle, getFontSize, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse } = squared.lib.math;
-const { TRANSFORM: REGEX_TRANSFORM } = squared.lib.regex;
+const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
 const { getStyleValue } = squared.lib.session;
 const { convertCamelCase, convertFloat, isString } = squared.lib.util;
 
@@ -182,7 +182,7 @@ export const TRANSFORM = {
                 const method = match[1];
                 const isX = method.endsWith('X'), isY = method.endsWith('Y');
                 if (method.startsWith('translate')) {
-                    const translate = REGEX_TRANSFORM.TRANSLATE.exec(match[0]);
+                    const translate = REGEXP_TRANSFORM.TRANSLATE.exec(match[0]);
                     if (translate) {
                         const fontSize = getFontSize(element);
                         const arg1 = parseUnit(translate[2], fontSize);
@@ -193,7 +193,7 @@ export const TRANSFORM = {
                     }
                 }
                 else if (method.startsWith('rotate')) {
-                    const rotate = REGEX_TRANSFORM.ROTATE.exec(match[0]);
+                    const rotate = REGEXP_TRANSFORM.ROTATE.exec(match[0]);
                     if (rotate) {
                         const angle = convertAngle(rotate[2], rotate[3]);
                         if (!isNaN(angle)) {
@@ -213,7 +213,7 @@ export const TRANSFORM = {
                     }
                 }
                 else if (method.startsWith('scale')) {
-                    const scale = REGEX_TRANSFORM.SCALE.exec(match[0]);
+                    const scale = REGEXP_TRANSFORM.SCALE.exec(match[0]);
                     if (scale) {
                         const x = isY ? undefined : parseFloat(scale[2]);
                         const y = isY ? parseFloat(scale[2]) : (!isX && scale[3] ? parseFloat(scale[3]) : x);
@@ -221,7 +221,7 @@ export const TRANSFORM = {
                     }
                 }
                 else if (method.startsWith('skew')) {
-                    const skew = REGEX_TRANSFORM.SKEW.exec(match[0]);
+                    const skew = REGEXP_TRANSFORM.SKEW.exec(match[0]);
                     if (skew) {
                         const angle = convertAngle(skew[2], skew[3], 0);
                         const x = isY ? 0 : angle;
@@ -254,7 +254,7 @@ export const TRANSFORM = {
         return undefined;
     },
     matrix(element: SVGElement, value?: string): Undef<SvgMatrix> {
-        const match = REGEX_TRANSFORM.MATRIX.exec(value || getComputedStyle(element).transform);
+        const match = REGEXP_TRANSFORM.MATRIX.exec(value || getComputedStyle(element).transform);
         if (match) {
             switch (match[1]) {
                 case 'matrix':

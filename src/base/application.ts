@@ -16,7 +16,7 @@ const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.
 
 const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 
-const REGEX_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
+const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
     if (uri) {
@@ -40,10 +40,10 @@ function parseSrcSet(value: string) {
 function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr: string, styleSheetHref?: string) {
     const value = baseMap[attr];
     if (value && value !== 'initial') {
-        REGEX_DATAURI.lastIndex = 0;
+        REGEXP_DATAURI.lastIndex = 0;
         let result = value;
         let match: Null<RegExpExecArray>;
-        while (match = REGEX_DATAURI.exec(value)) {
+        while (match = REGEXP_DATAURI.exec(value)) {
             if (match[2]) {
                 const mimeType = match[2].split(';');
                 resourceHandler.addRawData(match[1], mimeType[0].trim(), mimeType[1]?.trim() || 'utf8', match[3]);

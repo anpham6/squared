@@ -12,7 +12,7 @@ const { STRING } = squared.lib.regex;
 const { extractURL } = squared.lib.css;
 const { cloneObject, iterateArray } = squared.lib.util;
 
-const REGEX_LENGTHPERCENTAGE = new RegExp(STRING.LENGTH_PERCENTAGE);
+const REGEXP_LENGTHPERCENTAGE = new RegExp(STRING.LENGTH_PERCENTAGE);
 
 function getNearestViewBox(instance: Undef<SvgContainer>) {
     while (instance) {
@@ -172,7 +172,7 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
 }
 
 const getViewport = (container: SvgContainer): Undef<Svg> => container.viewport || SvgBuild.asSvg(container) && container || undefined;
-const hasLength = (value: string) => REGEX_LENGTHPERCENTAGE.test(value);
+const hasLength = (value: string) => REGEXP_LENGTHPERCENTAGE.test(value);
 
 export default class SvgContainer extends squared.lib.base.Container<SvgView> implements squared.svg.SvgContainer {
     public aspectRatio: SvgAspectRatio = {

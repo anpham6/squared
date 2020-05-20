@@ -1,6 +1,5 @@
 import Node from './node';
 
-import { CSS_SPACING } from './lib/constant';
 import { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TRAVERSE } from './lib/enumeration';
 
 type T = NodeUI;
@@ -10,9 +9,31 @@ const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
 const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
 
-const CSS_SPACINGKEYS = Array.from(CSS_SPACING.keys());
+const CSS_SPACING = new Map<number, string>();
+
+const SPACING_MARGIN = [
+    BOX_STANDARD.MARGIN_TOP,
+    BOX_STANDARD.MARGIN_RIGHT,
+    BOX_STANDARD.MARGIN_BOTTOM,
+    BOX_STANDARD.MARGIN_LEFT
+];
 const BOX_MARGIN = CSS_PROPERTIES.margin.value as string[];
+
+const SPACING_PADDING = [
+    BOX_STANDARD.PADDING_TOP,
+    BOX_STANDARD.PADDING_RIGHT,
+    BOX_STANDARD.PADDING_BOTTOM,
+    BOX_STANDARD.PADDING_LEFT
+];
 const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
+
+for (let i = 0; i < 4; ++i) {
+    CSS_SPACING.set(SPACING_MARGIN[i], BOX_MARGIN[i]);
+}
+
+for (let i = 0; i < 4; ++i) {
+    CSS_SPACING.set(SPACING_PADDING[i], BOX_PADDING[i]);
+}
 
 function cascadeActualPadding(children: T[], attr: string, value: number) {
     let valid = false;
@@ -104,9 +125,9 @@ function getLayoutWidth(node: T) {
     return node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
 }
 
-function applyBoxReset(node: T, boxReset: BoxModel, attrs: string[], region: number, start: number, other?: NodeUI) {
+function applyBoxReset(node: T, boxReset: BoxModel, attrs: string[], spacing: number[], region: number, other?: NodeUI) {
     for (let i = 0; i < 4; ++i) {
-        const key = CSS_SPACINGKEYS[i + start];
+        const key = spacing[i];
         if (hasBit(region, key)) {
             const name = attrs[i];
             boxReset[name] = 1;
@@ -129,9 +150,9 @@ function applyBoxReset(node: T, boxReset: BoxModel, attrs: string[], region: num
     }
 }
 
-function applyBoxAdjustment(node: T, boxAdjustment: BoxModel, attrs: string[], region: number, start: number, other: NodeUI) {
+function applyBoxAdjustment(node: T, boxAdjustment: BoxModel, attrs: string[], spacing: number[], region: number, other: NodeUI) {
     for (let i = 0; i < 4; ++i) {
-        const key = CSS_SPACINGKEYS[i + start];
+        const key = spacing[i];
         if (hasBit(region, key)) {
             const previous = node.registerBox(key);
             if (previous) {
@@ -1102,19 +1123,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public resetBox(region: number, node?: T) {
         if (hasBit(BOX_STANDARD.MARGIN, region)) {
-            applyBoxReset(this, this._boxReset, BOX_MARGIN, region, 0, node);
+            applyBoxReset(this, this._boxReset, BOX_MARGIN, SPACING_MARGIN, region, node);
         }
         if (hasBit(BOX_STANDARD.PADDING, region)) {
-            applyBoxReset(this, this._boxReset, BOX_PADDING, region, 4, node);
+            applyBoxReset(this, this._boxReset, BOX_PADDING, SPACING_PADDING, region, node);
         }
     }
 
     public transferBox(region: number, node: T) {
         if (hasBit(BOX_STANDARD.MARGIN, region)) {
-            applyBoxAdjustment(this, this._boxAdjustment, BOX_MARGIN, region, 0, node);
+            applyBoxAdjustment(this, this._boxAdjustment, BOX_MARGIN, SPACING_MARGIN, region, node);
         }
         if (hasBit(BOX_STANDARD.PADDING, region)) {
-            applyBoxAdjustment(this, this._boxAdjustment, BOX_PADDING, region, 4, node);
+            applyBoxAdjustment(this, this._boxAdjustment, BOX_PADDING, SPACING_PADDING, region, node);
         }
     }
 

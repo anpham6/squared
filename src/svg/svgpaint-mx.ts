@@ -13,7 +13,7 @@ const { truncate } = squared.lib.math;
 const { STRING } = squared.lib.regex;
 const { convertCamelCase, convertFloat, isNumber, isString, joinArray, plainMap } = squared.lib.util;
 
-const REGEX_CACHE: ObjectMap<RegExp> = {
+const REGEXP_CACHE: ObjectMap<RegExp> = {
     polygon: /polygon\(([^)]+)\)/,
     inset: new RegExp(`inset\\(${STRING.LENGTH_PERCENTAGE}\\s?${STRING.LENGTH_PERCENTAGE}?\\s?${STRING.LENGTH_PERCENTAGE}?\\s?${STRING.LENGTH_PERCENTAGE}?\\)`),
     circle: new RegExp(`circle\\(${STRING.LENGTH_PERCENTAGE}(?:\\s+at\\s+${STRING.LENGTH_PERCENTAGE}\\s+${STRING.LENGTH_PERCENTAGE})?\\)`),
@@ -70,8 +70,8 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     this.clipPath = url;
                 }
                 else if (d?.length) {
-                    for (const name in REGEX_CACHE) {
-                        const match = REGEX_CACHE[name].exec(clipPath);
+                    for (const name in REGEXP_CACHE) {
+                        const match = REGEXP_CACHE[name].exec(clipPath);
                         if (match) {
                             const { top, right, bottom, left } = SvgBuild.getBoxRect(d);
                             const width = right - left;

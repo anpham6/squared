@@ -14,18 +14,18 @@ const { getElementAsNode } = squared.lib.session;
 const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray } = squared.lib.util;
 const { STRING_SPACE } = squared.lib.xml;
 
-const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
-const REGEX_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
-const REGEX_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
-const REGEX_TRAILINGINDENT = /\n([^\S\n]*)?$/;
-const REGEX_LEADINGSPACE = /^\s+/;
-const REGEX_TRAILINGSPACE = /\s+$/;
-
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
 const BORDER_RIGHT = CSS_PROPERTIES.borderRight.value as string[];
 const BORDER_BOTTOM = CSS_PROPERTIES.borderBottom.value as string[];
 const BORDER_LEFT = CSS_PROPERTIES.borderLeft.value as string[];
 const BORDER_OUTLINE = CSS_PROPERTIES.outline.value as string[];
+
+const STRING_COLORSTOP = `((?:rgb|hsl)a?\\(\\d+,\\s+\\d+%?,\\s+\\d+%?(?:,\\s+[\\d.]+)?\\)|#[A-Za-z\\d]{3,8}|[a-z]+)\\s*(${STRING.LENGTH_PERCENTAGE}|${STRING.CSS_ANGLE}|(?:${STRING.CSS_CALC}(?=,)|${STRING.CSS_CALC}))?,?\\s*`;
+const REGEXP_BACKGROUNDIMAGE = new RegExp(`(?:initial|url\\([^)]+\\)|(repeating-)?(linear|radial|conic)-gradient\\(((?:to\\s+[a-z\\s]+|(?:from\\s+)?-?[\\d.]+(?:deg|rad|turn|grad)|(?:circle|ellipse)?\\s*(?:closest-side|closest-corner|farthest-side|farthest-corner)?)?(?:\\s*(?:(?:-?[\\d.]+(?:[a-z%]+)?\\s*)+)?(?:at\\s+[\\w %]+)?)?),?\\s*((?:${STRING_COLORSTOP})+)\\))`, 'g');
+const REGEXP_COLORSTOP = new RegExp(STRING_COLORSTOP, 'g');
+const REGEXP_TRAILINGINDENT = /\n([^\S\n]*)?$/;
+const CHAR_LEADINGSPACE = /^\s+/;
+const CHAR_TRAILINGSPACE = /\s+$/;
 
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     const { width, height } = gradient.dimension as Dimension;
@@ -73,7 +73,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     }
     let previousOffset = 0;
     let match: Null<RegExpExecArray>;
-    while (match = REGEX_COLORSTOP.exec(value)) {
+    while (match = REGEXP_COLORSTOP.exec(value)) {
         const color = parseColor(match[1], 1, true);
         if (color) {
             let offset = -1;
@@ -170,7 +170,7 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     else if (percent < 1) {
         result.push({ ...result[length - 1], offset: 1 });
     }
-    REGEX_COLORSTOP.lastIndex = 0;
+    REGEXP_COLORSTOP.lastIndex = 0;
     return result;
 }
 
@@ -367,11 +367,11 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
 
     public static parseBackgroundImage(node: NodeUI, backgroundImage: string, screenDimension?: Dimension) {
         if (backgroundImage !== '') {
-            REGEX_BACKGROUNDIMAGE.lastIndex = 0;
+            REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
             const images: (string | Gradient)[] = [];
             let i = 0;
             let match: Null<RegExpExecArray>;
-            while (match = REGEX_BACKGROUNDIMAGE.exec(backgroundImage)) {
+            while (match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) {
                 const value = match[0];
                 if (value.startsWith('url(') || value === 'initial') {
                     images.push(value);
@@ -617,7 +617,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 if (nextSibling?.naturalElement) {
                     const textContent = node.textContent;
                     if (textContent.trim() !== '') {
-                        const match = REGEX_TRAILINGINDENT.exec(textContent);
+                        const match = REGEXP_TRAILINGINDENT.exec(textContent);
                         if (match) {
                             if (!nextSibling.textElement) {
                                 nextSibling = nextSibling.find(item => item.naturalChild && item.textElement, { cascade: true, error: item => item.naturalChild && !item.textElement && item.length === 0 }) as Undef<NodeUI>;
@@ -890,7 +890,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                     if (indent !== '') {
                                         adjacent.textContent = indent + adjacent.textContent;
                                     }
-                                    value = value.replace(REGEX_TRAILINGINDENT, '');
+                                    value = value.replace(REGEXP_TRAILINGINDENT, '');
                                 }
                                 value = value
                                     .replace(/\n/g, '\\n')
@@ -913,10 +913,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             default: {
                                 const trimBoth = node.onlyChild && node.htmlElement;
                                 if (trimBoth || node.previousSibling?.blockStatic) {
-                                    value = value.replace(REGEX_LEADINGSPACE, '');
+                                    value = value.replace(CHAR_LEADINGSPACE, '');
                                 }
                                 if (trimBoth || node.nextSibling?.blockStatic) {
-                                    value = value.replace(REGEX_TRAILINGSPACE, '');
+                                    value = value.replace(CHAR_TRAILINGSPACE, '');
                                 }
                             }
                         }
@@ -934,8 +934,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
                         let previousSpaceEnd = false;
                         if (value.length > 1) {
-                            if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.floating ||  previousSibling.plainText && REGEX_TRAILINGSPACE.test(previousSibling.textContent)) {
-                                value = value.replace(REGEX_LEADINGSPACE, '');
+                            if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.floating ||  previousSibling.plainText && CHAR_TRAILINGSPACE.test(previousSibling.textContent)) {
+                                value = value.replace(CHAR_LEADINGSPACE, '');
                             }
                             else if (previousSibling.naturalElement) {
                                 const textContent = previousSibling.textContent;
@@ -946,8 +946,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             }
                         }
                         if (inlined) {
-                            const trailingSpace = !node.lineBreakTrailing && REGEX_TRAILINGSPACE.test(value);
-                            if (REGEX_LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
+                            const trailingSpace = !node.lineBreakTrailing && CHAR_TRAILINGSPACE.test(value);
+                            if (CHAR_LEADINGSPACE.test(value) && previousSibling?.block === false && !previousSibling.lineBreak && !previousSpaceEnd) {
                                 value = STRING_SPACE + value.trim();
                             }
                             else {
@@ -958,13 +958,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             }
                         }
                         else if (value.trim() !== '') {
-                            value = value.replace(REGEX_LEADINGSPACE, previousSibling && (
+                            value = value.replace(CHAR_LEADINGSPACE, previousSibling && (
                                 previousSibling.block ||
                                 previousSibling.lineBreak ||
                                 previousSpaceEnd && previousSibling.htmlElement && previousSibling.textContent.length > 1 ||
                                 node.multiline && ResourceUI.hasLineBreak(node)) ? '' : STRING_SPACE
                             );
-                            value = value.replace(REGEX_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling?.floating ? '' : STRING_SPACE);
+                            value = value.replace(CHAR_TRAILINGSPACE, node.display === 'table-cell' || node.lineBreakTrailing || node.blockStatic || nextSibling?.floating ? '' : STRING_SPACE);
                         }
                         else if (!node.inlineText) {
                             return;
@@ -1029,10 +1029,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 if (!preserveWhitespace) {
                     if (index === 0) {
-                        value = value.replace(REGEX_LEADINGSPACE, '');
+                        value = value.replace(CHAR_LEADINGSPACE, '');
                     }
                     else if (index === length - 1) {
-                        value = value.replace(REGEX_TRAILINGSPACE, '');
+                        value = value.replace(CHAR_TRAILINGSPACE, '');
                     }
                 }
             }

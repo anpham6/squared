@@ -8,7 +8,7 @@ const NUMERALS = [
 
 const CACHE_CAMELCASE: StringMap = {};
 const CACHE_UNDERSCORE: StringMap = {};
-const REGEX_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
+const REGEXP_DECIMAL = new RegExp(`^${STRING.DECIMAL}$`);
 
 export function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
     return (...args: any[]) => {
@@ -667,7 +667,7 @@ export function hasBit(value: number, offset: number) {
 }
 
 export function isNumber(value: string) {
-    return REGEX_DECIMAL.test(value);
+    return REGEXP_DECIMAL.test(value);
 }
 
 export function isString(value: any): value is string {

@@ -705,7 +705,6 @@ declare module "base" {
 
     namespace lib {
         namespace constant {
-            const CSS_SPACING: Map<number, string>;
             const EXT_NAME: StringMap;
         }
 

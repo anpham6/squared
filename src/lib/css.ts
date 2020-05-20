@@ -5,14 +5,14 @@ import { CSS, STRING, TRANSFORM } from './regex';
 import { convertAlpha, convertFloat, convertRoman, hasKeys, isNumber, isString, iterateArray, replaceMap, resolvePath, spliceString, splitEnclosing } from './util';
 
 const STRING_SIZES = `(\\(\\s*(?:orientation:\\s*(?:portrait|landscape)|(?:max|min)-width:\\s*${STRING.LENGTH_PERCENTAGE})\\s*\\))`;
-const REGEX_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
-const REGEX_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
-const REGEX_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
-const REGEX_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
-const REGEX_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
-const REGEX_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
-const REGEX_CALCWITHIN = new RegExp(STRING.CSS_CALC);
-const REGEX_SOURCESIZES = new RegExp(`\\s*(?:(\\(\\s*)?${STRING_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${STRING_SIZES}(\\s*\\))?)?\\s*(.+)`);
+const REGEXP_LENGTH = new RegExp(`^${STRING.LENGTH}$`);
+const REGEXP_PERCENT = new RegExp(`^${STRING.PERCENT}$`);
+const REGEXP_LENGTHPERCENTAGE = new RegExp(`^${STRING.LENGTH_PERCENTAGE}$`);
+const REGEXP_ANGLE = new RegExp(`^${STRING.CSS_ANGLE}$`);
+const REGEXP_TIME = new RegExp(`^${STRING.CSS_TIME}$`);
+const REGEXP_CALC = new RegExp(`^${STRING.CSS_CALC}$`);
+const REGEXP_CALCWITHIN = new RegExp(STRING.CSS_CALC);
+const REGEXP_SOURCESIZES = new RegExp(`\\s*(?:(\\(\\s*)?${STRING_SIZES}|(\\(\\s*))?\\s*(and|or|not)?\\s*(?:${STRING_SIZES}(\\s*\\))?)?\\s*(.+)`);
 const CHAR_SPACE = /\s+/;
 const CHAR_SEPARATOR = /\s*,\s*/;
 const CHAR_DIVIDER = /\s*\/\s*/;
@@ -170,7 +170,7 @@ function calculateGeneric(element: CSSElement, value: string, unitType: number, 
     for (let i = 0; i < length; ++i) {
         const seg = segments[i];
         if (isCalc(seg)) {
-            const px = REGEX_LENGTH.test(seg);
+            const px = REGEXP_LENGTH.test(seg);
             const result = calculateVar(element, seg, px ? { dimension, boundingBox, min: 0, parent: false } : { unitType, min, supportPercent: false });
             if (!isNaN(result)) {
                 segments[i] = result + (px ? 'px' : '');
@@ -2260,7 +2260,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                     if (length > 2) {
                         let distance = url.slice(2).join('');
                         if (hasCalc(offset)) {
-                            distance = calculateStyle(element, REGEX_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate', distance, boundingBox);
+                            distance = calculateStyle(element, REGEXP_LENGTH.test(distance) ? 'offsetDistance' : 'offsetRotate', distance, boundingBox);
                             if (distance === '') {
                                 return '';
                             }
@@ -3144,7 +3144,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         if (isString(sizes)) {
             let width = NaN;
             for (const value of sizes.trim().split(CHAR_SEPARATOR)) {
-                let match = REGEX_SOURCESIZES.exec(value);
+                let match = REGEXP_SOURCESIZES.exec(value);
                 if (match) {
                     const ruleA = match[2] ? checkMediaRule(match[2]) : undefined;
                     const ruleB = match[6] ? checkMediaRule(match[6]) : undefined;
@@ -3172,7 +3172,7 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
                     }
                     const unit = match[9];
                     if (unit) {
-                        match = REGEX_CALC.exec(unit);
+                        match = REGEXP_CALC.exec(unit);
                         if (match) {
                             width = calculate(match[1], match[1].includes('%') ? { boundingSize: getContentBoxDimension(element.parentElement).width } : undefined);
                         }
@@ -3522,7 +3522,7 @@ export function calculate(value: string, options?: CalculateOptions) {
 }
 
 export function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension) {
-    const match = REGEX_LENGTH.exec(value);
+    const match = REGEXP_LENGTH.exec(value);
     if (match) {
         let result = parseFloat(match[1]);
         switch (match[2]) {
@@ -3743,7 +3743,7 @@ export function parseTransform(value: string, accumulate?: boolean, fontSize?: n
 }
 
 export function parseAngle(value: string, fallback = NaN) {
-    const match = REGEX_ANGLE.exec(value);
+    const match = REGEXP_ANGLE.exec(value);
     return match ? convertAngle(match[1], match[2]) : fallback;
 }
 
@@ -3766,7 +3766,7 @@ export function convertAngle(value: string, unit = 'deg', fallback = NaN) {
 }
 
 export function parseTime(value: string) {
-    const match = REGEX_TIME.exec(value);
+    const match = REGEXP_TIME.exec(value);
     if (match) {
         switch (match[2]) {
             case 'ms':
@@ -3794,7 +3794,7 @@ export function formatPercent(value: string | number, round?: boolean) {
 }
 
 export function isLength(value: string, percent?: boolean) {
-    return !percent ? REGEX_LENGTH.test(value) : REGEX_LENGTHPERCENTAGE.test(value);
+    return !percent ? REGEXP_LENGTH.test(value) : REGEXP_LENGTHPERCENTAGE.test(value);
 }
 
 export function isPx(value: string) {
@@ -3802,7 +3802,7 @@ export function isPx(value: string) {
 }
 
 export function isCalc(value: string) {
-    return REGEX_CALC.test(value);
+    return REGEXP_CALC.test(value);
 }
 
 export function isCustomProperty(value: string) {
@@ -3810,17 +3810,17 @@ export function isCustomProperty(value: string) {
 }
 
 export function isAngle(value: string) {
-    return REGEX_ANGLE.test(value);
+    return REGEXP_ANGLE.test(value);
 }
 
 export function isTime(value: string) {
-    return REGEX_TIME.test(value);
+    return REGEXP_TIME.test(value);
 }
 
 export function isPercent(value: string) {
-    return REGEX_PERCENT.test(value);
+    return REGEXP_PERCENT.test(value);
 }
 
 export function hasCalc(value: string) {
-    return REGEX_CALCWITHIN.test(value);
+    return REGEXP_CALCWITHIN.test(value);
 }

@@ -33,13 +33,13 @@ const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const STRING_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
 const STRING_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
 const STRING_NAMED = '\\[([\\w\\s\\-]+)\\]';
-const REGEX_UNIT = new RegExp(`^${STRING_UNIT}$`);
-const REGEX_NAMED = new RegExp(`\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s+(.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT}\\s*)\\s*`, 'g');
-const REGEX_REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
-const REGEX_CELL_UNIT = new RegExp(STRING_UNIT);
-const REGEX_CELL_MINMAX = new RegExp(STRING_MINMAX);
-const REGEX_CELL_FIT_CONTENT = new RegExp(STRING_FIT_CONTENT);
-const REGEX_CELL_NAMED = new RegExp(STRING_NAMED);
+const REGEXP_UNIT = new RegExp(`^${STRING_UNIT}$`);
+const REGEXP_NAMED = new RegExp(`\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s+(.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT}\\s*)\\s*`, 'g');
+const REGEXP_REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
+const REGEXP_CELL_UNIT = new RegExp(STRING_UNIT);
+const REGEXP_CELL_MINMAX = new RegExp(STRING_MINMAX);
+const REGEXP_CELL_FIT_CONTENT = new RegExp(STRING_FIT_CONTENT);
+const REGEXP_CELL_NAMED = new RegExp(STRING_NAMED);
 
 function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const repeat = data.repeat;
@@ -259,12 +259,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         for (let index = 0; index < 4; ++index) {
             const value = gridTemplates[index];
             if (value !== '' && value !== 'none' && value !== 'auto') {
-                REGEX_NAMED.lastIndex = 0;
+                REGEXP_NAMED.lastIndex = 0;
                 const data = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = data;
                 let i = 1;
                 let match: Null<RegExpMatchArray>;
-                while (match = REGEX_NAMED.exec(value)) {
+                while (match = REGEXP_NAMED.exec(value)) {
                     const command = match[1].trim();
                     switch (index) {
                         case 0:
@@ -288,26 +288,26 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         break;
                                 }
                                 if (iterations > 0) {
-                                    REGEX_REPEAT.lastIndex = 0;
+                                    REGEXP_REPEAT.lastIndex = 0;
                                     const repeating: RepeatItem[] = [];
                                     let subMatch: Null<RegExpMatchArray>;
-                                    while (subMatch = REGEX_REPEAT.exec(match[3])) {
+                                    while (subMatch = REGEXP_REPEAT.exec(match[3])) {
                                         const subPattern = subMatch[1];
                                         let namedMatch: Null<RegExpMatchArray>;
-                                        if (namedMatch = REGEX_CELL_NAMED.exec(subPattern)) {
+                                        if (namedMatch = REGEXP_CELL_NAMED.exec(subPattern)) {
                                             const subName = namedMatch[1];
                                             if (!name[subName]) {
                                                 name[subName] = [];
                                             }
                                             repeating.push({ name: subName });
                                         }
-                                        else if (namedMatch = REGEX_CELL_MINMAX.exec(subPattern)) {
+                                        else if (namedMatch = REGEXP_CELL_MINMAX.exec(subPattern)) {
                                             repeating.push({ unit: convertLength(node, namedMatch[2], index), unitMin: convertLength(node, namedMatch[1], index) });
                                         }
-                                        else if (namedMatch = REGEX_CELL_FIT_CONTENT.exec(subPattern)) {
+                                        else if (namedMatch = REGEXP_CELL_FIT_CONTENT.exec(subPattern)) {
                                             repeating.push({ unit: convertLength(node, namedMatch[1], index), unitMin: '0px' });
                                         }
-                                        else if (namedMatch = REGEX_CELL_UNIT.exec(subPattern)) {
+                                        else if (namedMatch = REGEXP_CELL_UNIT.exec(subPattern)) {
                                             repeating.push({ unit: convertLength(node, namedMatch[0], index) });
                                         }
                                     }
@@ -342,7 +342,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                 repeat.push(false);
                                 ++i;
                             }
-                            else if (REGEX_UNIT.test(command)) {
+                            else if (REGEXP_UNIT.test(command)) {
                                 unit.push(convertLength(node, command, index));
                                 unitMin.push('');
                                 repeat.push(false);
