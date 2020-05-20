@@ -1071,7 +1071,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.add(NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (layout.linearY) {
-            layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | (node.originalRoot || layout.some((item, index) => index > 0 && item.inlineFlow && layout.item(index - 1)!.inlineFlow) ? NODE_ALIGNMENT.UNKNOWN : 0));
+            layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | (node.originalRoot || layout.some((item, index) => item.inlineFlow && layout.item(index + 1)!.inlineFlow, { end: layout.length - 1 }) ? NODE_ALIGNMENT.UNKNOWN : 0));
         }
         else if (layout.every(item => item.inlineFlow)) {
             if (this.checkFrameHorizontal(layout)) {

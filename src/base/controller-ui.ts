@@ -391,8 +391,28 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
     public evaluateNonStatic(documentRoot: T, cache: squared.base.NodeList<T>) {
         const altered = new Set<T>();
         const removed = new Set<T>();
+        const escaped = new Map<T, { parent: T; appending: T[] }>();
         cache.each(node => {
-            if (!node.documentRoot && !node.pageFlow) {
+            if (node.floating) {
+                if (node.float === 'left') {
+                    const actualParent = node.actualParent as T;
+                    let parent: Null<T> = actualParent;
+                    let previousParent: Undef<T>;
+                    while (parent?.tagName === 'P' && !parent.documentRoot) {
+                        previousParent = parent;
+                        parent = parent.actualParent as Null<T>;
+                    }
+                    if (parent && previousParent && parent !== actualParent && parent.tagName === 'DIV') {
+                        if (escaped.has(previousParent)) {
+                            escaped.get(previousParent)!.appending.push(node);
+                        }
+                        else {
+                            escaped.set(previousParent, { parent, appending: [node] });
+                        }
+                    }
+                }
+            }
+            else if (!node.pageFlow && !node.documentRoot) {
                 const actualParent = node.parent as T;
                 let parent: Undef<T>;
                 switch (node.css('position')) {
@@ -509,6 +529,44 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
         });
         for (const node of removed) {
             node.each((item: T, index) => item.containerIndex = index);
+        }
+        for (const [previousParent, data] of escaped.entries()) {
+            const { parent, appending } = data;
+            const children = parent.children as T[];
+            if (children.includes(previousParent)) {
+                const actualParent = new Set<T>();
+                for (let i = 0, parentIndex = previousParent.containerIndex, prepend = false; i < appending.length; ++i, ++parentIndex) {
+                    const item = appending[i];
+                    if (i === 0) {
+                        prepend = item.containerIndex === 0;
+                    }
+                    else if (prepend) {
+                        prepend = item.containerIndex - appending[i - 1].containerIndex === 1;
+                    }
+                    if (prepend) {
+                        children[parentIndex].siblingsLeading.unshift(item);
+                    }
+                    children.splice(parentIndex + (prepend ? 0 : 1), 0, item);
+                    item.depth = -1;
+                    item.parent = parent;
+                    item.documentParent = parent;
+                    actualParent.add(item.actualParent as T);
+                }
+                parent.each((item: T, index) => item.containerIndex = index);
+                parent.floatContainer = true;
+                for (const item of actualParent) {
+                    let floating = false;
+                    item.each((child: T, index) => {
+                        if (child.floating) {
+                            floating = true;
+                        }
+                        child.containerIndex = index;
+                    });
+                    if (!floating) {
+                        item.floatContainer = false;
+                    }
+                }
+            }
         }
         for (const node of altered) {
             const layers: Array<T[]> = [];

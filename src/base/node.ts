@@ -2333,11 +2333,19 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     result = true;
                 }
                 else if (this.display !== 'inline' && !this.display.startsWith('table-') && !this.hasPX('maxWidth')) {
-                    const value = getInitialValue.call(this, 'width') || getInitialValue.call(this, 'minWidth');
-                    if (isPercent(value)) {
+                    const width = getInitialValue.call(this, 'width');
+                    const minWidth = getInitialValue.call(this, 'minWidth');
+                    let percent = 0;
+                    if (isPercent(width)) {
+                        percent = parseFloat(width);
+                    }
+                    if (isPercent(minWidth)) {
+                        percent = Math.max(parseFloat(minWidth), percent);
+                    }
+                    if (percent > 0) {
                         const marginLeft = getInitialValue.call(this, 'marginLeft');
                         const marginRight = getInitialValue.call(this, 'marginRight');
-                        result = parseFloat(value) + (isPercent(marginLeft) ? parseFloat(marginLeft) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
+                        result = percent + (isPercent(marginLeft) ? parseFloat(marginLeft) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
                     }
                 }
             }

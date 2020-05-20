@@ -195,8 +195,10 @@ export default abstract class Application<T extends Node> implements squared.bas
         }
         const resumeThread = () => {
             this.initializing = false;
-            for (let i = 0; i < preloaded.length; ++i) {
-                const image = preloaded[i];
+            const length = preloaded.length;
+            let i = 0;
+            while (i < length) {
+                const image = preloaded[i++];
                 if (image.parentElement) {
                     documentRoot.removeChild(image);
                 }

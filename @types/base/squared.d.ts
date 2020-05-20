@@ -555,7 +555,8 @@ declare module "base" {
         alignParent(position: string): boolean;
         alignSibling(position: string, documentId?: string): string;
         localizeString(value: string): string;
-        inherit(node: Node, ...modules: string[]): void;
+        inherit(node: Node, ...modules: string[]): Undef<StandardMap>;
+        inheritApply(module: string, data: StandardMap): void;
         clone(id?: number, attributes?: boolean, position?: boolean): NodeUI;
         cloneBase(node: NodeUI): void;
         is(containerType: number): boolean;

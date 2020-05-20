@@ -2226,6 +2226,15 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public applyOptimizations() {
             const renderParent = this.renderParent;
             if (renderParent) {
+                if (this.renderExclude) {
+                    if (!this.alignSibling('topBottom') && !this.alignSibling('bottomTop') && !this.alignSibling('leftRight') && !this.alignSibling('rightLeft')) {
+                        this.hide({ remove: true });
+                    }
+                    else {
+                        this.hide({ collapse: true });
+                    }
+                    return;
+                }
                 if (this.layoutLinear) {
                     const children = this.renderChildren;
                     if (this.layoutVertical) {
@@ -2376,9 +2385,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                if (!this.pageFlow && /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/.test(this.css('clip'))) {
-                    this.hide({ hidden: true });
-                }
             }
         }
 
@@ -2494,38 +2500,29 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             this._cached.renderExclude = value;
         }
         get renderExclude(): boolean {
-            let result = this._cached.renderExclude;
-            if (result === undefined) {
-                if (this.naturalChild && !this.originalRoot) {
-                    const renderParent = this.renderParent;
-                    if (renderParent) {
-                        if (!this.onlyChild && this.length === 0 && this.styleElement && !this.imageElement && !this.pseudoElement) {
-                            if (this.pageFlow) {
-                                if (renderParent.layoutVertical) {
-                                    result = excludeVertical(this) && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
-                                }
-                                else {
-                                    result = excludeHorizontal(this) && (renderParent.layoutHorizontal || excludeVertical(this)) && this.alignSibling('leftRight') === '' && this.alignSibling('rightLeft') === '' && this.alignSibling('topBottom') === '' && this.alignSibling('bottomTop') === '';
-                                }
-                            }
-                            else {
-                                result = excludeHorizontal(this) || excludeVertical(this);
-                            }
-                        }
-                        else {
-                            result = false;
-                        }
+            const result = this._cached.renderExclude;
+            if (result !== undefined) {
+                return result;
+            }
+            else if (this.naturalChild && !this.plainText && !this.originalRoot) {
+                if (!this.pageFlow) {
+                    this._cached.renderExclude = excludeHorizontal(this) || excludeVertical(this) || /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/.test(this.css('clip'));
+                    return this._cached.renderExclude;
+                }
+                else if (this.styleElement && this.length === 0 && !this.imageElement && !this.pseudoElement) {
+                    const parent = this.renderParent || this.parent as T;
+                    if (parent.layoutFrame) {
+                        return excludeHorizontal(this) || excludeVertical(this);
+                    }
+                    else if (parent.layoutVertical) {
+                        return excludeVertical(this);
                     }
                     else {
-                        return false;
+                        return excludeHorizontal(this) && (parent.layoutHorizontal || excludeVertical(this));
                     }
                 }
-                else {
-                    result = false;
-                }
-                this._cached.renderExclude = result;
             }
-            return result;
+            return false;
         }
 
         get baselineHeight() {

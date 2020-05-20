@@ -99,11 +99,11 @@
     "@types/jimp": "^0.2.28",
     "@types/js-beautify": "^1.8.2",
     "@types/md5": "^2.2.0",
-    "@types/node": "^14.0.3",
+    "@types/node": "^14.0.4",
     "@types/prettier": "^2.0.0",
     "@types/puppeteer": "^3.0.0",
     "@types/request": "^2.48.5",
-    "@types/uuid": "^7.0.3",
+    "@types/uuid": "^8.0.0",
     "@types/yargs": "^15.0.5",
     "@typescript-eslint/eslint-plugin": "^2.34.0",
     "@typescript-eslint/parser": "^2.34.0",
@@ -123,6 +123,6 @@
     "rollup-plugin-prettier": "^2.0.0",
     "rollup-plugin-terser": "^5.3.0",
     "terser": "^4.7.0",
-    "typescript": "^3.9.2"
+    "typescript": "^3.9.3"
   }
 }

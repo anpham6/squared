@@ -615,6 +615,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public inherit(node: T, ...modules: string[]) {
+        let result: Undef<StandardMap>;
         for (let i = 0; i < modules.length; ++i) {
             switch (modules[i]) {
                 case 'base': {
@@ -659,7 +660,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 case 'boxStyle': {
                     const { backgroundColor, backgroundImage } = node;
-                    this.cssApply(node.cssAsObject(
+                    result = node.cssAsObject(
                         'backgroundRepeat',
                         'backgroundSize',
                         'backgroundPositionX',
@@ -682,16 +683,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         'borderTopRightRadius',
                         'borderBottomRightRadius',
                         'borderBottomLeftRadius'
-                    ));
-                    this.cssApply({
+                    );
+                    Object.assign(result, {
                         backgroundColor,
                         backgroundImage,
                         border: 'inherit',
                         borderRadius: 'inherit'
                     });
-                    this.unsetCache('borderTopWidth', 'borderBottomWidth', 'borderRightWidth', 'borderLeftWidth');
-                    this.setCacheValue('backgroundColor', backgroundColor);
-                    this.setCacheValue('backgroundImage', backgroundImage);
+                    this.inheritApply('boxStyle', result);
                     node.setCacheValue('backgroundColor', '');
                     node.setCacheValue('backgroundImage', '');
                     node.cssApply({
@@ -710,6 +709,18 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
             }
+        }
+        return result;
+    }
+
+    public inheritApply(module: string, data: StandardMap) {
+        switch (module) {
+            case 'boxStyle':
+                this.cssApply(data);
+                this.unsetCache('borderTopWidth', 'borderBottomWidth', 'borderRightWidth', 'borderLeftWidth');
+                this.setCacheValue('backgroundColor', data.backgroundColor);
+                this.setCacheValue('backgroundImage', data.backgroundImage);
+                break;
         }
     }
 
