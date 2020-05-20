@@ -205,7 +205,7 @@ declare module "base" {
     class Resource<T extends Node> implements Resource<T> {
         static KEY_NAME: string;
         static ASSETS: ResourceAssetMap;
-        static canCompressImage(filename: string): boolean;
+        static canCompressImage(filename: string, mimeType?: string): boolean;
         readonly application: Application<T>;
         readonly cache: NodeList<T>;
         reset(): void;
@@ -229,7 +229,6 @@ declare module "base" {
 
     class ResourceUI<T extends NodeUI> extends Resource<T> {
         static STORED: ResourceStoredMap;
-        static canCompressImage(filename: string): boolean;
         static generateId(section: string, name: string, start?: number): string;
         static insertStoredAsset(asset: string, name: string, value: any): string;
         static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
@@ -298,11 +297,11 @@ declare module "base" {
         include(ext: Extension<T> | string): boolean;
         exclude(ext: Extension<T> | string): boolean;
         retrieve(name: string, checkBuiltIn?: boolean): Null<Extension<T>>;
-        optionValue(name: string, attr: string): any;
-        optionValueAsObject(name: string, attr: string): Null<{}>;
-        optionValueAsString(name: string, attr: string): string;
-        optionValueAsNumber(name: string, attr: string): number;
-        optionValueAsBoolean(name: string, attr: string): boolean;
+        optionValue(name: string, attr: string, fallback?: any): any;
+        optionValueAsObject(name: string, attr: string, fallback?: Null<{}>): Null<{}>;
+        optionValueAsString(name: string, attr: string, fallback?: string): string;
+        optionValueAsNumber(name: string, attr: string, fallback?: number): number;
+        optionValueAsBoolean(name: string, attr: string, fallback?: boolean): boolean;
         get extensions(): Extension<T>[];
     }
 

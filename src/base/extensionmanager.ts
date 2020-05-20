@@ -70,29 +70,29 @@ export default class ExtensionManager<T extends squared.base.Node> implements sq
         return checkBuiltIn && this.application.builtInExtensions[name] || null;
     }
 
-    public optionValue(name: string, attr: string) {
+    public optionValue(name: string, attr: string, fallback = undefined) {
         const options = this.retrieve(name)?.options;
-        return isObject(options) ? options[attr] : undefined;
+        return isObject(options) ? options[attr] : fallback;
     }
 
-    public optionValueAsObject(name: string, attr: string) {
+    public optionValueAsObject(name: string, attr: string, fallback = null) {
         const value = this.optionValue(name, attr);
-        return isObject(value) ? value : null;
+        return isObject(value) ? value : fallback;
     }
 
-    public optionValueAsString(name: string, attr: string) {
+    public optionValueAsString(name: string, attr: string, fallback = '') {
         const value = this.optionValue(name, attr);
-        return typeof value === 'string' ? value : '';
+        return typeof value === 'string' ? value : fallback;
     }
 
-    public optionValueAsNumber(name: string, attr: string) {
+    public optionValueAsNumber(name: string, attr: string, fallback = NaN) {
         const value = this.optionValue(name, attr);
-        return typeof value === 'number' ? value : NaN;
+        return typeof value === 'number' ? value : fallback;
     }
 
-    public optionValueAsBoolean(name: string, attr: string) {
+    public optionValueAsBoolean(name: string, attr: string, fallback = false) {
         const value = this.optionValue(name, attr);
-        return typeof value === 'boolean' ? value : false;
+        return typeof value === 'boolean' ? value : fallback;
     }
 
     get extensions() {

@@ -2337,7 +2337,24 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
 }
 
 export function checkStyleValue(element: HTMLElement, attr: string, value: string, style?: CSSStyleDeclaration) {
-    if (value === 'inherit') {
+    if (value === 'initial') {
+        switch (attr) {
+            case 'position':
+            case 'display':
+            case 'baseline':
+            case 'lineHeight':
+            case 'backgroundColor':
+            case 'backgroundImage':
+            case 'borderTopStyle':
+            case 'borderRightStyle':
+            case 'borderBottomStyle':
+            case 'borderLeftStyle':
+                return value;
+            default:
+                return '';
+        }
+    }
+    else if (value === 'inherit') {
         switch (attr) {
             case 'fontSize':
             case 'lineHeight':

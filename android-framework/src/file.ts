@@ -46,28 +46,25 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
     const length = items.length;
     if (length) {
         convertExt = convertExt.toLowerCase();
-        let convertMimeType = parseMimeType(convertExt);
-        if (!convertMimeType.startsWith('image/')) {
-            convertMimeType = '';
-        }
-        if (!/^[a-z\d]/.test(convertExt)) {
-            convertExt = '@' + convertExt;
+        let mimeTypeTo = parseMimeType(convertExt);
+        if (!mimeTypeTo.startsWith('image/')) {
+            mimeTypeTo = '';
         }
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
             const filename = items[i + 2].split('?')[0].trim().toLowerCase();
             let mimeType: Undef<string>;
-            if (convertMimeType !== '') {
-                const fileMimeType = parseMimeType(filename);
-                if (fileMimeType.startsWith('image/') && fileMimeType !== convertMimeType) {
-                    mimeType = convertExt + ':' + fileMimeType;
+            if (mimeTypeTo !== '') {
+                const mimeTypeFrom = parseMimeType(filename);
+                if (mimeTypeFrom !== mimeTypeTo && mimeTypeFrom.startsWith('image/')) {
+                    mimeType = (!/^[a-z\d]/.test(convertExt) ? '@' : '') + convertExt + ':' + mimeTypeFrom;
                 }
             }
             result[j++] = {
                 pathname: pathname + items[i + 1],
                 filename,
                 mimeType,
-                compress: compress && Resource.canCompressImage(filename) ? [{ format: 'png' }] : undefined,
+                compress: compress && Resource.canCompressImage(filename, mimeTypeTo) ? [{ format: 'png' }] : undefined,
                 uri: items[i]
             };
         }

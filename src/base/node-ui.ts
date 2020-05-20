@@ -1243,7 +1243,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             if (value) {
                 this._styleMap[attr] = value;
             }
-            else {
+            else if (value === null) {
                 delete this._styleMap[attr];
             }
             if (cache) {

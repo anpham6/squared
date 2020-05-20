@@ -526,7 +526,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 }
                             }
                             switch (chain.flexbox.alignSelf) {
-                                case 'first baseline:':
+                                case 'first baseline':
                                     if (TL === 'top' && chain.baselineElement) {
                                         const first = seg.find(item => item !== chain && item.baselineElement);
                                         if (first) {
@@ -538,7 +538,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                 case 'flex-start':
                                     chain.anchor(TL, 'parent');
                                     break;
-                                case 'last baseline:':
+                                case 'last baseline':
                                     if (BR === 'bottom' && chain.baselineElement) {
                                         const index = iterateReverseArray(seg, item => {
                                             if (item !== chain && item.baselineElement) {

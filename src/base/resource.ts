@@ -6,6 +6,7 @@ const REGEX_DATAURI = new RegExp(`^${STRING.DATAURI}$`);
 
 export default abstract class Resource<T extends squared.base.Node> implements squared.base.Resource<T> {
     public static KEY_NAME = 'squared.resource';
+
     public static ASSETS: ResourceAssetMap = {
         ids: new Map(),
         fonts: new Map(),
@@ -15,7 +16,7 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         rawData: new Map()
     };
 
-    public static canCompressImage = (filename: string) => /\.(png|jpg|jpeg)$/i.test(filename);
+    public static canCompressImage = (filename: string, mimeType?: string) => /\.(png|jpg|jpeg)$/i.test(filename) || mimeType === 'image/png' || mimeType === 'image/jpeg';
 
     private _fileHandler: Undef<squared.base.File<T>>;
 

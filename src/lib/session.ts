@@ -83,5 +83,5 @@ export function getElementCache(element: Element, attr: string, sessionId?: stri
 }
 
 export function deleteElementCache(element: Element, attr: string, sessionId: string) {
-    delete element[`__${attr}::${sessionId}`];
+    element[`__${attr}::${sessionId}`] = undefined;
 }

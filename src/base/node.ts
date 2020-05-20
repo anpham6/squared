@@ -720,6 +720,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         'bottom',
         'left'
     ];
+
     public static TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
@@ -846,7 +847,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public data(name: string, attr: string, value?: any, overwrite = true) {
         const data = this._data;
         if (value === null) {
-            delete data[name];
+            if (data[name]) {
+                delete data[name][attr];
+            }
             return undefined;
         }
         else if (value !== undefined) {
@@ -2833,7 +2836,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._fontSize;
         if (result === undefined) {
             if (this.naturalChild && this.styleElement) {
-                const value = this.css('fontSize');
+                const value = getInitialValue.call(this, 'fontSize');
                 if (isPx(value)) {
                     result = parseFloat(value);
                 }
