@@ -898,7 +898,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         continue;
                     }
                     let parentY = nodeY.parent as T;
-                    if (q > 1 && i < q - 1 && nodeY.pageFlow && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && !nodeY.nodeGroup && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
+                    if (q > 1 && i < q - 1 && nodeY.pageFlow && !nodeY.nodeGroup && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
                         let l = i;
@@ -948,30 +948,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         if (floatContainer) {
                                             const status = item.alignedVertically(orientation ? horizontal : vertical, clearMap, orientation);
                                             if (status > 0) {
-                                                if (orientation) {
-                                                    if (floatActive && status < NODE_TRAVERSE.FLOAT_CLEAR && !(item.blockStatic && item.siblingsLeading.some((node: T) => node.lineBreak && !clearMap.has(node)))) {
-                                                         if (!floating || previous.floating && item.bounds.top < Math.floor(previous.bounds.bottom)) {
-                                                            let floatBottom = -Infinity;
-                                                            if (!floating) {
-                                                                for (let j = 0; j < horizontal.length; ++j) {
-                                                                    const node = horizontal[j];
-                                                                    if (node.floating) {
-                                                                        floatBottom = Math.max(floatBottom, node.bounds.bottom);
-                                                                    }
-                                                                }
-                                                            }
-                                                            if (!floating && item.bounds.top < Math.floor(floatBottom) || floatActive) {
-                                                                if (!item.renderExclude) {
-                                                                    horizontal.push(item);
-                                                                }
-                                                                if (!floating && Math.ceil(item.bounds.bottom) > floatBottom) {
-                                                                    break traverse;
-                                                                }
-                                                                else {
-                                                                    continue;
-                                                                }
-                                                            }
-                                                        }
+                                                if (horizontal.length) {
+                                                    if (floatActive && status < NODE_TRAVERSE.FLOAT_CLEAR && !item.siblingsLeading.some((node: T) => clearMap.has(node) && !horizontal.includes(node))) {
+                                                        horizontal.push(item);
+                                                        continue;
                                                     }
                                                     else {
                                                         switch (status) {
@@ -985,29 +965,28 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                                     }
                                                     break traverse;
                                                 }
+                                                vertical.push(item);
+                                            }
+                                            else {
+                                                if (vertical.length) {
+                                                    break traverse;
+                                                }
+                                                horizontal.push(item);
+                                            }
+                                        }
+                                        else {
+                                            if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
                                                 if (horizontal.length) {
                                                     break traverse;
                                                 }
                                                 vertical.push(item);
                                             }
-                                            else if (vertical.length) {
-                                                break traverse;
-                                            }
                                             else {
+                                                if (vertical.length) {
+                                                    break traverse;
+                                                }
                                                 horizontal.push(item);
                                             }
-                                        }
-                                        else if (item.alignedVertically(orientation ? horizontal : vertical, undefined, orientation) > 0) {
-                                            if (horizontal.length) {
-                                                break traverse;
-                                            }
-                                            vertical.push(item);
-                                        }
-                                        else if (vertical.length) {
-                                            break traverse;
-                                        }
-                                        else {
-                                            horizontal.push(item);
                                         }
                                     }
                                     else {
