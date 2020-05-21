@@ -573,7 +573,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             case 'initial':
                 return undefined;
             default: {
-                const dimensions = value.split(/\s+/);
+                const dimensions = value.split(' ');
                 for (let i = 0; i < dimensions.length; ++i) {
                     let size = dimensions[i];
                     if (size === 'auto') {

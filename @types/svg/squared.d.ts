@@ -126,7 +126,7 @@ declare module "svg" {
         parent?: SvgContainer;
         viewport?: Svg;
         readonly element: SVGSVGElement | SVGGElement | SVGUseElement;
-        append(item: SvgView, viewport?: Svg): this;
+        add(item: SvgView, viewport?: Svg): this;
         refitX(value: number): number;
         refitY(value: number): number;
         refitSize(value: number): number;

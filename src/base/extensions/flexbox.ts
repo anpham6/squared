@@ -99,11 +99,11 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 offset = length;
             }
             else {
-                const item = rows[0];
-                node.retain(item);
-                maxCount = item.length;
+                const items = rows[0];
+                node.retainAs(items);
+                maxCount = items.length;
                 while (i < maxCount) {
-                    item[i].containerIndex = i++;
+                    items[i].containerIndex = i++;
                 }
                 offset = maxCount;
             }
@@ -111,7 +111,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
             while (i < absolute.length) {
                 absolute[i].containerIndex = offset + i++;
             }
-            node.concat(absolute);
+            node.addAll(absolute);
             node.sort();
             if (mainData.row) {
                 mainData.rowCount = length;

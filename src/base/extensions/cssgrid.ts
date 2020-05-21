@@ -1105,7 +1105,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         fillUnitEqually(column.unit, columnCount);
                     }
                 }
-                node.retain(children);
+                node.retainAs(children);
                 node.cssSort('zIndex');
                 if (node.cssTry('display', 'block')) {
                     node.each((item: T) => {

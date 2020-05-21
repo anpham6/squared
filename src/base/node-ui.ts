@@ -655,7 +655,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     break;
                 }
                 case 'initial':
-                    cloneObject(node.unsafe('initial') as InitialData<T>, this.initial);
+                    result = node.unsafe('initial') as InitialData<T>;
+                    this.inheritApply('initial', result);
                     break;
                 case 'alignment': {
                     this.cssCopy(node, 'position', 'display', 'verticalAlign', 'float', 'clear', 'zIndex');
@@ -676,11 +677,10 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     this.cssCopyIfEmpty(node, ...Object.keys(node.unsafe('styleMap')));
                     break;
                 case 'textStyle':
-                    this.cssApply(node.textStyle);
-                    this.setCacheValue('fontSize', node.fontSize);
+                    result = node.textStyle;
+                    this.inheritApply('textStyle', result);
                     break;
                 case 'boxStyle': {
-                    const { backgroundColor, backgroundImage } = node;
                     result = node.cssAsObject(
                         'backgroundRepeat',
                         'backgroundSize',
@@ -706,8 +706,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         'borderBottomLeftRadius'
                     );
                     Object.assign(result, {
-                        backgroundColor,
-                        backgroundImage,
+                        backgroundColor: node.backgroundColor,
+                        backgroundImage: node.backgroundImage,
                         border: 'inherit',
                         borderRadius: 'inherit'
                     });
@@ -715,7 +715,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                     node.setCacheValue('backgroundColor', '');
                     node.setCacheValue('backgroundImage', '');
                     node.cssApply({
-                        backgroundColor: 'rgba(0, 0, 0, 0)',
+                        backgroundColor: 'transparent',
                         backgroundImage: 'none',
                         border: 'initial',
                         borderRadius: 'initial'
@@ -736,6 +736,13 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public inheritApply(module: string, data: StandardMap) {
         switch (module) {
+            case 'initial':
+                cloneObject(data, this.initial);
+                break;
+            case 'textStyle':
+                this.cssApply(data);
+                this.setCacheValue('fontSize', parseFloat(data.fontSize));
+                break;
             case 'boxStyle':
                 this.cssApply(data);
                 this.unsetCache('borderTopWidth', 'borderBottomWidth', 'borderRightWidth', 'borderLeftWidth');
@@ -1238,7 +1245,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         node.documentRoot = this.documentRoot;
         node.renderParent = this.renderParent;
         if (this.length) {
-            node.retain(this.duplicate());
+            node.retainAs(this.duplicate());
         }
         node.inherit(this, 'initial', 'base', 'alignment', 'styleMap', 'textStyle');
         Object.assign(node.unsafe('cached'), this._cached);
@@ -1627,17 +1634,11 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get lastChild(): Null<NodeUI> {
-        const children = this.naturalChildren;
-        return children[children.length - 1] as NodeUI || null;
+        return this.naturalChildren[this.naturalChildren.length - 1] as NodeUI || null;
     }
 
     get firstStaticChild() {
-        for (const node of this.naturalChildren) {
-            if (node.pageFlow) {
-                return node as NodeUI;
-            }
-        }
-        return null;
+        return (this.naturalChildren as NodeUI[]).find(node => node.pageFlow) || null;
     }
 
     get lastStaticChild() {

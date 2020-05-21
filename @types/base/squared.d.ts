@@ -345,7 +345,7 @@ declare module "base" {
         init(): void;
         setContainerType(containerType: number, alignmentType?: number): void;
         hasAlign(value: number): boolean;
-        add(value: number): number;
+        addAlign(value: number): number;
         addRender(value: number): number;
         delete(value: number): number;
         set itemCount(value);
@@ -673,8 +673,8 @@ declare module "base" {
     class NodeGroupUI extends NodeUI {}
 
     class NodeList<T extends Node> extends squared.lib.base.Container<T> {
-        afterAppend?: (node: T, cascade?: boolean) => void;
-        append(node: T, delegate?: boolean, cascade?: boolean): this;
+        afterAdd?: (node: T, cascade?: boolean) => void;
+        add(node: T, delegate?: boolean, cascade?: boolean): this;
         reset(): void;
         get nextId(): number;
         constructor(children?: T[]);

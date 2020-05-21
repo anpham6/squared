@@ -197,10 +197,10 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         super();
     }
 
-    public append(item: SvgView, viewport?: Svg) {
+    public add(item: SvgView, viewport?: Svg) {
         item.parent = this;
         item.viewport = viewport || getViewport(this);
-        return super.append(item);
+        return super.add(item);
     }
 
     public build(options?: SvgBuildOptions) {
@@ -267,7 +267,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 }
             }
             if (svg) {
-                this.append(svg, viewport);
+                this.add(svg, viewport);
                 svg.build(options);
             }
         });

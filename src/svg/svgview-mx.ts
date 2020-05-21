@@ -43,7 +43,7 @@ function parseAttribute(element: SVGElement, attr: string) {
         }
         return result;
     }
-    return value.trim().split(/\s*,\s*/);
+    return value.split(/\s*,\s*/);
 }
 
 function sortAttribute(value: NumberValue[]) {

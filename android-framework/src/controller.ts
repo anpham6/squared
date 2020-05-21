@@ -1009,7 +1009,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     node.inlineText = true;
                     node.textContent = child.textContent;
                     layout.setContainerType(CONTAINER_NODE.TEXT);
-                    layout.add(NODE_ALIGNMENT.INLINE);
+                    layout.addAlign(NODE_ALIGNMENT.INLINE);
                 }
                 else if (layout.parent.flexElement && child.baselineElement && node.flexbox.alignSelf === 'baseline') {
                     layout.setContainerType(CONTAINER_NODE.LINEAR, NODE_ALIGNMENT.HORIZONTAL);
@@ -1026,7 +1026,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else {
                     layout.setContainerType(CONTAINER_NODE.FRAME);
                 }
-                layout.add(NODE_ALIGNMENT.SINGLE);
+                layout.addAlign(NODE_ALIGNMENT.SINGLE);
             }
             else {
                 return this.processUnknownChild(layout);
@@ -1038,17 +1038,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else if (this.checkConstraintFloat(layout)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
             if (layout.every(item => item.floating)) {
-                layout.add(NODE_ALIGNMENT.FLOAT);
+                layout.addAlign(NODE_ALIGNMENT.FLOAT);
             }
             else if (layout.linearY) {
-                layout.add(NODE_ALIGNMENT.VERTICAL);
+                layout.addAlign(NODE_ALIGNMENT.VERTICAL);
             }
             else if (layout.some(item => item.floating || item.rightAligned) && layout.singleRowAligned) {
-                layout.add(NODE_ALIGNMENT.HORIZONTAL);
+                layout.addAlign(NODE_ALIGNMENT.HORIZONTAL);
             }
             else {
-                layout.add(layout.some(item => item.blockStatic) ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.INLINE);
-                layout.add(NODE_ALIGNMENT.UNKNOWN);
+                layout.addAlign(layout.some(item => item.blockStatic) ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.INLINE);
+                layout.addAlign(NODE_ALIGNMENT.UNKNOWN);
             }
         }
         else if (layout.linearX || layout.singleRowAligned) {
@@ -1068,7 +1068,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             else {
                 layout.setContainerType(isConstraintLayout(layout, false) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.RELATIVE);
             }
-            layout.add(NODE_ALIGNMENT.HORIZONTAL);
+            layout.addAlign(NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (layout.linearY) {
             layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | (node.originalRoot || layout.some((item, index) => item.inlineFlow && layout.item(index + 1)!.inlineFlow, { end: layout.length - 1 }) ? NODE_ALIGNMENT.UNKNOWN : 0));
@@ -1781,7 +1781,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         break;
                     case 'image':
                     case 'color':
-                        if (node.width === 0) {
+                        if (!node.hasWidth) {
                             node.css('width', formatPX(node.bounds.width));
                         }
                         break;
@@ -2236,7 +2236,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             group.containerIndex = node.containerIndex;
         }
-        this.cache.append(group, delegate === true, cascade === true);
+        this.cache.add(group, delegate === true, cascade === true);
         return group;
     }
 

@@ -109,7 +109,7 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     else {
                         layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.UNKNOWN);
                     }
-                    layout.retain(ordinal.children as T[]);
+                    layout.retainAs(ordinal.children as T[]);
                 }
                 application.addLayoutTemplate(parent, ordinal, application.renderNode(layout));
             }

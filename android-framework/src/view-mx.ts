@@ -429,7 +429,7 @@ function transferVerticalStyle(node: T, sibling: T) {
 
 function transferLayoutAlignment(node: T, replaceWith: T) {
     replaceWith.anchorClear();
-    for (const name of node.unsafe('namespaces') as string[]) {
+    for (const name of ['android', 'app']) {
         const data = node.namespace(name);
         for (const attr in data) {
             switch (attr) {

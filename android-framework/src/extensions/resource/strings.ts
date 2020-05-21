@@ -193,7 +193,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (node.has('fontVariantCaps')) {
-                                for (const variant of node.css('fontVariantCaps').split(/\s+/)) {
+                                for (const variant of node.css('fontVariantCaps').split(' ')) {
                                     switch (variant) {
                                         case 'small-caps':
                                             fontFeature = delimitString({ value: fontFeature }, "'smcp'");
@@ -217,7 +217,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (node.has('fontVariantNumeric')) {
-                                for (const variant of node.css('fontVariantNumeric').split(/\s+/)) {
+                                for (const variant of node.css('fontVariantNumeric').split(' ')) {
                                     switch (variant) {
                                         case 'ordinal':
                                             fontFeature = delimitString({ value: fontFeature }, "'ordn'");
@@ -247,7 +247,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (node.has('fontVariantLigatures')) {
-                                for (const variant of node.css('fontVariantLigatures').split(/\s+/)) {
+                                for (const variant of node.css('fontVariantLigatures').split(' ')) {
                                     switch (variant) {
                                         case 'common-ligatures':
                                             fontFeature = delimitString({ value: fontFeature }, "'liga'");
@@ -277,7 +277,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 }
                             }
                             if (node.has('fontVariantEastAsian')) {
-                                for (const variant of node.css('fontVariantEastAsian').split(/\s+/)) {
+                                for (const variant of node.css('fontVariantEastAsian').split(' ')) {
                                     switch (variant) {
                                         case 'ruby':
                                             fontFeature = delimitString({ value: fontFeature }, "'ruby'");

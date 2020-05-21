@@ -3,10 +3,11 @@ declare module "lib" {
         class Container<T> implements Iterable<T> {
             [Symbol.iterator](): Iterator<T>;
             item(index?: number, value?: T): Undef<T>;
-            append(item: T): this;
+            add(item: T): this;
+            addAll(list: T[]): this;
             remove(...items: T[]): T[];
             removeAt(index: number): Undef<T>;
-            retain(list: T[]): this;
+            retainAs(list: T[]): this;
             contains(item: T): boolean;
             duplicate(): T[];
             clear(): this;
@@ -22,9 +23,8 @@ declare module "lib" {
             partition(predicate: IteratorPredicate<T, boolean>): [T[], T[]];
             findIndex(predicate: IteratorPredicate<T, boolean>): number;
             sort(predicate: (a: T, b: T) => number): this;
-            concat(list: T[]): this;
-            join(...other: Container<T>[]): this;
-            iter(): ListIterator<T>;
+            joinWith(...other: Container<T>[]): this;
+            iterator(): ListIterator<T>;
             get children(): T[];
             get isEmpty(): boolean;
             get length(): number;

@@ -95,7 +95,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                             }
                         }
                     });
-                    this.append(pattern);
+                    this.add(pattern);
                     remainingWidth -= tileWidth;
                 }
                 while (remainingWidth > 0);
@@ -108,7 +108,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                 path.strokeWidth = this.strokeWidth;
                 const shape = new SvgShape(element, false);
                 shape.path = path;
-                this.append(shape);
+                this.add(shape);
             }
         }
     }

@@ -9,7 +9,7 @@ export default class ViewGroup<T extends View> extends View$MX(squared.base.Node
         this.containerName = node.containerName + '_GROUP';
         this.actualParent = node.actualParent;
         this.documentParent = node.documentParent;
-        this.retain(children);
+        this.retainAs(children);
     }
 
     set containerType(value) {

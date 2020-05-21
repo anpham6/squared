@@ -61,7 +61,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
     public setContainerType(containerType: number, alignmentType?: number) {
         this.containerType = containerType;
         if (alignmentType) {
-            this.add(alignmentType);
+            this.addAlign(alignmentType);
         }
     }
 
@@ -69,7 +69,7 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         return hasBit(this.alignmentType, value);
     }
 
-    public add(value: number) {
+    public addAlign(value: number) {
         if (!hasBit(this.alignmentType, value)) {
             this.alignmentType |= value;
         }
@@ -90,8 +90,8 @@ export default class LayoutUI<T extends NodeUI> extends squared.lib.base.Contain
         return this.alignmentType;
     }
 
-    public retain(list: T[]) {
-        super.retain(list);
+    public retainAs(list: T[]) {
+        super.retainAs(list);
         this.init();
         return this;
     }

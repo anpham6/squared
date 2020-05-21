@@ -910,11 +910,12 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                     }
                     removeAnimations(animationsBase, removeable);
                 }
-                if (staggered.length + setterTotal > 1 || staggered.length === 1 && (staggered[0].alternate || staggered[0].end !== undefined)) {
+                const z = staggered.length;
+                if (z + setterTotal > 1 || z === 1 && (staggered[0].alternate || staggered[0].end !== undefined)) {
                     const groupName: ObjectMap<Map<number, SvgAnimate[]>> = {};
                     const groupAttributeMap: ObjectMap<SvgAnimate[]> = {};
                     let repeatingDuration = 0;
-                    for (let i = 0; i < staggered.length; ++i) {
+                    for (let i = 0; i < z; ++i) {
                         const item = staggered[i];
                         const ordering = item.group.ordering;
                         if (ordering) {
@@ -936,10 +937,15 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                     for (const attr in groupName) {
                         const groupDelay = new Map<number, SvgAnimate[]>();
                         const groupData = groupName[attr];
-                        for (const delay of sortNumber(Array.from(groupData.keys()))) {
+                        const timeData = sortNumber(Array.from(groupData.keys()));
+                        const length = timeData.length;
+                        let i = 0, j: number;
+                        while (i < length) {
+                            const delay = timeData[i++];
                             const group = groupData.get(delay) as SvgAnimate[];
-                            for (let i = 0; i < group.length; ++i) {
-                                repeatingDuration = Math.max(repeatingDuration, group[i].getTotalDuration(true));
+                            j = 0;
+                            while (j < group.length) {
+                                repeatingDuration = Math.max(repeatingDuration, group[j++].getTotalDuration(true));
                             }
                             groupDelay.set(delay, group.reverse());
                         }

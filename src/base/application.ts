@@ -29,10 +29,8 @@ function addImageSrc(uri: string, width = 0, height = 0) {
 
 function parseSrcSet(value: string) {
     if (value) {
-        for (const uri of value.trim().split(/\s*,\s*/)) {
-            if (uri !== '') {
-                addImageSrc(resolvePath(uri.split(' ')[0]));
-            }
+        for (const uri of value.split(',')) {
+            addImageSrc(resolvePath(uri.trim().split(' ')[0]));
         }
     }
 }
@@ -378,7 +376,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             node.documentRoot = true;
         }
         processing.node = node;
-        cache.afterAppend = undefined;
+        cache.afterAdd = undefined;
         return node;
     }
 
@@ -389,7 +387,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             const cache = processing.cache;
             node.depth = depth;
             if (depth === 0) {
-                cache.append(node);
+                cache.add(node);
             }
             if (controller.preventNodeCascade(parentElement)) {
                 return node;
@@ -412,14 +410,14 @@ export default abstract class Application<T extends Node> implements squared.bas
                     child = this.cascadeParentNode(element, depth + 1, extensions);
                     if (child) {
                         elements[k++] = child;
-                        cache.append(child);
+                        cache.add(child);
                         inlineText = false;
                     }
                 }
                 else {
                     child = this.insertNode(element);
                     if (child) {
-                        processing.excluded.append(child);
+                        processing.excluded.add(child);
                         inlineText = false;
                     }
                 }
@@ -516,15 +514,7 @@ export default abstract class Application<T extends Node> implements squared.bas
                                 const previous = specificityData[attr];
                                 const revised = specificity + (important[attr] ? 1000 : 0);
                                 if (previous === undefined || revised >= previous) {
-                                    const value = baseMap[attr];
-                                    if (value === 'initial' && /^background/.test(attr)) {
-                                        if (cssStyle.background === 'none') {
-                                            delete styleData[attr];
-                                        }
-                                    }
-                                    else {
-                                        styleData[attr] = value;
-                                    }
+                                    styleData[attr] = baseMap[attr];
                                     specificityData[attr] = revised;
                                 }
                             }

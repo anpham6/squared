@@ -616,7 +616,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         j += order.length;
                     }
                 }
-                node.retain(flatArray(children));
+                node.retainAs(flatArray(children));
             }
         }
     }

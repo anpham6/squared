@@ -1487,7 +1487,7 @@ class FileManager implements serve.IFileManager {
                                 .then(img => {
                                     const jpg = replaceExtension(filepath, 'jpg');
                                     img.quality(Compress.jpeg_quality);
-                                    Image.rotate(Image.opacity(Image.resize(img, width, height, mode), opacity), jpg, rotation).write(jpg, err => {
+                                    Image.rotate(Image.resize(img, width, height, mode), jpg, rotation).write(jpg, err => {
                                         if (err) {
                                             Node.writeFail(jpg, err);
                                         }

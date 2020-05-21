@@ -1704,7 +1704,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._parent = value;
             }
             if (!value.contains(this)) {
-                value.append(this);
+                value.add(this);
             }
             if (this.depth === -1) {
                 this.depth = value.depth + 1;
@@ -2640,8 +2640,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const backgroundImage = this.backgroundImage !== '';
                 let backgroundRepeatX = false, backgroundRepeatY = false;
                 if (backgroundImage) {
-                    for (const repeat of this.css('backgroundRepeat').split(/\s*,\s*/)) {
-                        const [repeatX, repeatY] = repeat.split(/\s+/);
+                    for (const repeat of this.css('backgroundRepeat').split(',')) {
+                        const [repeatX, repeatY] = repeat.trim().split(' ');
                         if (!backgroundRepeatX) {
                             backgroundRepeatX = repeatX === 'repeat' || repeatX === 'repeat-x';
                         }

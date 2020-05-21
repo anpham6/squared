@@ -42,8 +42,13 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return children[children.length - 1];
     }
 
-    public append(item: T) {
+    public add(item: T) {
         this._children.push(item);
+        return this;
+    }
+
+    public addAll(list: T[]) {
+        this._children = this._children.concat(list);
         return this;
     }
 
@@ -68,13 +73,13 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this._children.splice(index, 1)[0];
     }
 
-    public contains(item: T) {
-        return this._children.includes(item);
-    }
-
-    public retain(list: T[]) {
+    public retainAs(list: T[]) {
         this._children = list;
         return this;
+    }
+
+    public contains(item: T) {
+        return this._children.includes(item);
     }
 
     public duplicate() {
@@ -265,12 +270,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this;
     }
 
-    public concat(list: T[]) {
-        this._children = this._children.concat(list);
-        return this;
-    }
-
-    public join(...other: Container<T>[]) {
+    public joinWith(...other: Container<T>[]) {
         let children = this._children;
         for (let i = 0; i < other.length; ++i) {
             children = children.concat(other[i].children);
@@ -279,7 +279,7 @@ export default class Container<T> implements squared.lib.base.Container<T>, Iter
         return this;
     }
 
-    public iter() {
+    public iterator() {
         return new ListIterator(this._children);
     }
 

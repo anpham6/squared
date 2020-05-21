@@ -443,6 +443,32 @@ data-viewmodel-{namespace}-{attribute} -> data-viewmodel-android-text
 
 ### ALL: node-express / squared-apache
 
+These are some of the available options when creating archives or copying files.
+
+```javascript
+// NOTE: common: zip | tar | gz/tgz | node-express: br | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
+
+squared.settings.outputArchiveFormat = '7z'; // default format "zip"
+
+squared.saveToArchive('archive1', {
+    format: '7z',
+    assets: [
+        {
+            pathname: 'app/src/main/res/drawable',
+            filename: 'ic_launcher_background.xml',
+            uri: 'http://localhost:3000/common/images/ic_launcher_background.xml',
+            compress: [{ format: 'gz', level: 9 }, { format: 'br' }, { format: 'bz2' }, { format: 'lzma' }, { format: 'zstd' }, { format: 'lz4' }]
+        }
+    ],
+    exclusions: { // All attributes are optional
+        pathname: ['app/build', 'app/libs'],
+        filename: ['ic_launcher_foreground.xml'],
+        extension: ['iml', 'pro'],
+        pattern: ['outputs', 'grad.+\\.', '\\.git']
+    }
+});
+```
+
 Image conversion can be achieved using the mimeType property in a RequestAsset object. The supported formats are:
 
 * png
@@ -460,7 +486,7 @@ format[@%]?(minSize(0),maxSize(*))?(width(n)xheight(n)#?cover|contain|scale)?{..
 @ - replace  
 % - smaller
 
-Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands in the Android framework with the setting "convertImages".
+Placing an @ symbol (@png:image/jpeg) before the mime type will remove the original file from the package. The % symbol (%png:image/jpeg) will choose the smaller of the two files. You can also use these commands with the setting "convertImages" in the Android framework.
 
 ```javascript
 // NOTE: squared-apache uses TinyPNG for resizing and refitting (contain|cover|scale) and supports only PNG and JPEG. <https://tinypng.com/developers>
@@ -483,33 +509,10 @@ const options = {
 };
 ```
 
-```javascript
-// NOTE: common: zip | tar | gz/tgz | node-express: br | squared-apache: 7z | jar | cpio | xz | bz2 | lzma | lz4 | zstd
-
-squared.settings.outputArchiveFormat = '7z';
-
-squared.saveToArchive('archive1', {
-    assets: [
-        {
-            pathname: 'app/src/main/res/drawable',
-            filename: 'ic_launcher_background.xml',
-            uri: 'http://localhost:3000/common/images/ic_launcher_background.xml',
-            compress: [{ format: 'gz', level: 9 }, { format: 'br' }, { format: 'bz2' }, { format: 'lzma' }, { format: 'zstd' }, { format: 'lz4' }]
-        }
-    ],
-    exclusions: { // All attributes are optional
-        pathname: ['app/build', 'app/libs'],
-        filename: ['ic_launcher_foreground.xml'],
-        extension: ['iml', 'pro'],
-        pattern: ['outputs', 'grad.+\\.', '\\.git']
-    }
-});
-```
-
-You can also use these commands individually on any elements where the image is the primary output display. Image resizing only works with individual elements or assets and not globally with extensions.
+You can use these commands individually on any element where the image is the primary output display. Image resizing only works with individual elements or assets and not globally with extensions.
 
 ```xml
-<!-- NOTE: img | video | audio | source | track | object | embed -->
+<!-- NOTE (saveTo): img | video | audio | source | track | object | embed -->
 
 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)" />
 ```
