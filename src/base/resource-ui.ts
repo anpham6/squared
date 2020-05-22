@@ -616,7 +616,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 let nextSibling = node.nextSibling as Undef<NodeUI>;
                 if (nextSibling?.naturalElement) {
                     const textContent = node.textContent;
-                    if (textContent.trim() !== '') {
+                    if (isString(textContent)) {
                         const match = REGEXP_TRAILINGINDENT.exec(textContent);
                         if (match) {
                             if (!nextSibling.textElement) {
@@ -921,7 +921,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             }
                         }
                     }
-                    else if (node.naturalChildren.length === 0 && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle')) && node.textContent.trim() === '') {
+                    else if (node.naturalChildren.length === 0 && !node.hasPX('height') && ResourceUI.isBackgroundVisible(node.data(ResourceUI.KEY_NAME, 'boxStyle')) && !isString(node.textContent)) {
                         value = node.textContent;
                     }
                     break;
@@ -934,7 +934,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         const nextSibling = node.siblingsTrailing.find(item => !item.excluded || item.lineBreak);
                         let previousSpaceEnd = false;
                         if (value.length > 1) {
-                            if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.floating ||  previousSibling.plainText && CHAR_TRAILINGSPACE.test(previousSibling.textContent)) {
+                            if (!previousSibling || previousSibling.multiline || previousSibling.lineBreak || previousSibling.floating || previousSibling.plainText && CHAR_TRAILINGSPACE.test(previousSibling.textContent)) {
                                 value = value.replace(CHAR_LEADINGSPACE, '');
                             }
                             else if (previousSibling.naturalElement) {
@@ -957,7 +957,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                                 value += STRING_SPACE;
                             }
                         }
-                        else if (value.trim() !== '') {
+                        else if (!/^[\s\n]+$/.test(value)) {
                             value = value.replace(CHAR_LEADINGSPACE, previousSibling && (
                                 previousSibling.block ||
                                 previousSibling.lineBreak ||
@@ -1009,7 +1009,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             value = value.replace(outerHTML, '');
                         }
                         else if (!preserveWhitespace) {
-                            value = value.replace(outerHTML, child.pageFlow && child.textContent.trim() !== '' ? STRING_SPACE : '');
+                            value = value.replace(outerHTML, child.pageFlow && isString(child.textContent) ? STRING_SPACE : '');
                         }
                         return;
                     }
@@ -1025,7 +1025,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 }
                 else if (item instanceof HTMLElement) {
                     const position = getComputedStyle(item).getPropertyValue('position');
-                    value = value.replace(item.outerHTML, position !== 'absolute' && position !== 'fixed' && item.textContent!.trim() !== '' ? STRING_SPACE : '');
+                    value = value.replace(item.outerHTML, position !== 'absolute' && position !== 'fixed' && isString(item.textContent!) ? STRING_SPACE : '');
                 }
                 if (!preserveWhitespace) {
                     if (index === 0) {
@@ -1043,10 +1043,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         else if (!preserveWhitespace && /^[\s\n]+$/.test(value)) {
             return node.blockStatic ? STRING_SPACE : '';
         }
-        return value
-            .replace(/^\\n\\n/, '\\n')
-            .replace(/\\n\\n$/, '\\n')
-            .replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)));
+        return value.replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)));
     }
 
     get controllerSettings() {

@@ -8,10 +8,9 @@ const { convertListStyle } = squared.lib.css;
 const { isNumber } = squared.lib.util;
 
 const hasSingleImage = (visibleStyle: VisibleStyle) => visibleStyle.backgroundImage && !visibleStyle.backgroundRepeat;
+const createDataAttribute = (): ListData => ({ ordinal: '', imageSrc: '', imagePosition: '' });
 
 export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataAttribute = (): ListData => ({ ordinal: '', imageSrc: '', imagePosition: '' });
-
     public condition(node: T) {
         const length = node.length;
         if (length) {
@@ -60,7 +59,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
         const ordered = node.tagName === 'OL';
         let i = ordered && node.toElementInt('start') || 1;
         node.each((item: T) => {
-            const mainData = List.createDataAttribute();
+            const mainData = createDataAttribute();
             const type = item.css('listStyleType');
             const enabled = item.display === 'list-item';
             if (enabled || type !== '' && type !== 'none' || hasSingleImage(item.visibleStyle)) {

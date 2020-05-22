@@ -169,28 +169,28 @@ function getOpenRowIndex(cells: number[][]) {
     return Math.max(0, length - 1);
 }
 
+function createDataAttribute(data: GridAlignment): CssGridData<NodeUI> {
+    const autoFlow = data.gridAutoFlow;
+    return Object.assign(data, {
+        children: [],
+        rowData: [],
+        rowSpanMultiple: [],
+        rowDirection: !autoFlow.includes('column'),
+        dense: autoFlow.includes('dense'),
+        templateAreas: {},
+        row: CssGrid.createDataRowAttribute(),
+        column: CssGrid.createDataRowAttribute(),
+        emptyRows: [],
+        minCellHeight: 0
+    });
+}
+
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, index !== 0 ? 'width' : 'height')) : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static isFr = (value: string) => /\dfr$/.test(value);
     public static isAligned = (node: NodeUI) => node.hasHeight && /^space-|center|flex-end|end/.test(node.css('alignContent'));
     public static isJustified = (node: NodeUI) => (node.blockStatic || node.hasWidth) && /^space-|center|flex-end|end|right/.test(node.css('justifyContent'));
-
-    public static createDataAttribute(data: GridAlignment): CssGridData<NodeUI> {
-        const autoFlow = data.gridAutoFlow;
-        return Object.assign(data, {
-            children: [],
-            rowData: [],
-            rowSpanMultiple: [],
-            rowDirection: !autoFlow.includes('column'),
-            dense: autoFlow.includes('dense'),
-            templateAreas: {},
-            row: CssGrid.createDataRowAttribute(),
-            column: CssGrid.createDataRowAttribute(),
-            emptyRows: [],
-            minCellHeight: 0
-        });
-    }
 
     public static createDataRowAttribute(): CssGridDirectionData {
         return {
@@ -219,7 +219,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public processNode(node: T) {
-        const mainData = CssGrid.createDataAttribute(node.cssAsObject('alignItems', 'alignContent', 'justifyItems', 'justifyContent', 'gridAutoFlow') as GridAlignment);
+        const mainData = createDataAttribute(node.cssAsObject('alignItems', 'alignContent', 'justifyItems', 'justifyContent', 'gridAutoFlow') as GridAlignment);
         const { column, dense, row, rowDirection: horizontal } = mainData;
         const [rowA, colA, rowB, colB] =
             horizontal

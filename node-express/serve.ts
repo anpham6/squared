@@ -797,13 +797,18 @@ let Image: serve.IImage;
                 segment = segment.replace(/[\\/]/g, '[\\\\/]');
             }
             let result: Undef<string>;
-            let pattern = new RegExp(`([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=(["'])\\s*${(base64 ? '.+?' : '') + segment}\\s*\\2`, 'g');
+            let pattern = new RegExp(`(?:([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=)?(["'])(\\s*)${(base64 ? '.+?' : '') + segment}(\\s*)\\2`, 'g');
             let match: Null<RegExpExecArray>;
             while (match = pattern.exec(source)) {
                 if (result === undefined) {
                     result = source;
                 }
-                result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
+                if (match[1]) {
+                    result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
+                }
+                else {
+                    result = result.replace(match[0], match[2] + match[3] + value + match[4] + match[2]);
+                }
             }
             pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${(base64 ? '.+?' : '') + segment}\\s*\\1?\\s*\\)`, 'g');
             while (match = pattern.exec(source)) {
@@ -1273,6 +1278,7 @@ class FileManager implements serve.IFileManager {
                             }
                         }
                     }
+                    html = source;
                 }
                 for (const item of assets) {
                     if (item.excluded) {
@@ -1282,6 +1288,7 @@ class FileManager implements serve.IFileManager {
                         const replacement = Chrome.replacePath(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
                         if (replacement) {
                             source = replacement;
+                            html = source;
                         }
                         continue;
                     }
@@ -1289,19 +1296,19 @@ class FileManager implements serve.IFileManager {
                         continue;
                     }
                     const value = Express.getFullUri(item);
+                    if (item.rootDir || Express.fromSameOrigin(baseUri, item.uri)) {
+                        pattern = new RegExp(`(["'\\s\\n,=])(((?:\\.\\.)?(?:[\\\\/]\\.\\.|\\.\\.[\\\\/]|[\\\\/])*)?${path.join(item.pathname, item.filename).replace(/[\\/]/g, '[\\\\/]')})`, 'g');
+                        while (match = pattern.exec(html)) {
+                            if (match[2] !== value && item.uri === Express.resolvePath(match[2], baseUri)) {
+                                source = source.replace(match[0], match[1] + value);
+                            }
+                        }
+                    }
                     const replacement = Chrome.replacePath(source, item.uri, value);
                     if (replacement) {
                         source = replacement;
                     }
-                    if (item.rootDir || Express.fromSameOrigin(baseUri, item.uri)) {
-                        pattern = new RegExp(`((?:\\.\\.)?(?:[\\\\/]\\.\\.|\\.\\.[\\\\/]|[\\\\/])*)?(${path.join(item.pathname, item.filename).replace(/[\\/]/g, '[\\\\/]')})`, 'g');
-                        while (match = pattern.exec(html)) {
-                            const pathname = match[0];
-                            if (pathname !== value && item.uri === Express.resolvePath(pathname, baseUri)) {
-                                source = source.replace(pathname, value);
-                            }
-                        }
-                    }
+                    html = source;
                 }
                 source = source
                     .replace(/\s*<(script|link|style)[\s\S]*?data-chrome-file="exclude"[\s\S]*?>[\s\S]*?<\/\1>\n*/ig, '')

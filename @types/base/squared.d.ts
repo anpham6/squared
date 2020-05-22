@@ -97,7 +97,7 @@ declare module "base" {
         createCache(documentRoot: HTMLElement): Undef<T>;
         setStyleMap(cacheAssets: boolean): void;
         createNode(options: {}): T;
-        insertNode(element: Element, parent?: T, pseudoElt?: string): Undef<T>;
+        insertNode(element: Element): Undef<T>;
         afterCreateCache(node: T): void;
         getDatasetName(attr: string, element: HTMLElement): Undef<string>;
         setDatasetName(attr: string, element: HTMLElement, value: string): void;
@@ -133,6 +133,7 @@ declare module "base" {
         readonly extensions: ExtensionUI<T>[];
         conditionElement(element: HTMLElement, pseudoElt?: string): boolean;
         useElement(element: HTMLElement): boolean;
+        insertNode(element: Element, pseudoElt?: string): Undef<T>;
         createNode(options: CreateNodeOptions<T>): T;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         addLayout(layout: LayoutUI<T>): void;
@@ -160,7 +161,7 @@ declare module "base" {
         init(): void;
         reset(): void;
         includeElement(element: Element): boolean;
-        preventNodeCascade(element: Element): boolean;
+        preventNodeCascade(node: T): boolean;
         applyDefaultStyles(element: Element): void;
         get afterInsertNode(): BindGeneric<T, void>;
         get userSettings(): UserSettings;
@@ -181,7 +182,7 @@ declare module "base" {
         setConstraints(): void;
         renderNode(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
         renderNodeGroup(layout: LayoutUI<T>): Undef<NodeTemplate<T>>;
-        createNodeGroup(node: T, children: T[], options?: CreateNodeGroupOptions<T>): T;
+        createNodeGroup(node: T, children: T[], parent?: T, options?: CreateNodeGroupOptions<T>): T;
         sortRenderPosition(parent: T, templates: NodeTemplate<T>[]): NodeTemplate<T>[];
         addBeforeOutsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
         addBeforeInsideTemplate(id: number, value: string, format?: boolean, index?: number): void;
@@ -209,7 +210,7 @@ declare module "base" {
         readonly application: Application<T>;
         readonly cache: NodeList<T>;
         reset(): void;
-        addImage(element: Undef<HTMLImageElement>): void;
+        addImage(element: HTMLImageElement): void;
         getImage(uri: string): Undef<ImageAsset>;
         addFont(data: FontFaceData): void;
         getFont(fontFamily: string, fontStyle?: string, fontWeight?: string): Undef<FontFaceData>;
@@ -535,6 +536,7 @@ declare module "base" {
         lineBreakTrailing: boolean;
         floatContainer: boolean;
         localSettings: LocalSettingsUI;
+        documentChildren?: NodeUI[];
         renderParent?: NodeUI;
         renderExtension?: Extension<NodeUI>[];
         renderTemplates?: NodeTemplate<NodeUI>[];
@@ -685,10 +687,8 @@ declare module "base" {
         class Column<T extends NodeUI> extends ExtensionUI<T> {}
         class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             static isFr(value: string): boolean;
-            static isPx(value: string): boolean;
             static isAligned(node: NodeUI): boolean;
             static isJustified(node: NodeUI): boolean;
-            static createDataAttribute(alignItems: string, alignContent: string, justifyItems: string, justifyContent: string, autoFlow: string): CssGridData<NodeUI>;
             static createDataRowAttribute(): CssGridDirectionData;
         }
         class Flexbox<T extends NodeUI> extends ExtensionUI<T> {}

@@ -6,16 +6,16 @@ type NodeUI = squared.base.NodeUI;
 
 const { withinRange } = squared.lib.util;
 
-export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataAttribute(node: NodeUI, children: NodeUI[]): FlexboxData<NodeUI> {
-        return {
-            ...(node.flexdata as Required<FlexData>),
-            rowCount: 0,
-            columnCount: 0,
-            children
-        };
-    }
+function createDataAttribute(node: NodeUI, children: NodeUI[]): FlexboxData<NodeUI> {
+    return {
+        ...(node.flexdata as Required<FlexData>),
+        rowCount: 0,
+        columnCount: 0,
+        children
+    };
+}
 
+export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
         return node.flexElement;
     }
@@ -27,7 +27,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T) {
         const controller = this.controller;
         const [children, absolute] = node.partition((item: T) => item.pageFlow) as [T[], T[]];
-        const mainData = Flexbox.createDataAttribute(node, children);
+        const mainData = createDataAttribute(node, children);
         if (node.cssTry('align-items', 'start')) {
             if (node.cssTry('justify-items', 'start')) {
                 const length = children.length;
@@ -91,7 +91,7 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 while (i < length) {
                     const seg = rows[i];
                     maxCount = Math.max(seg.length, maxCount);
-                    const group = controller.createNodeGroup(seg[0], seg, { parent: node, delegate: true, cascade: true });
+                    const group = controller.createNodeGroup(seg[0], seg, node, { delegate: true, cascade: true });
                     group.addAlign(NODE_ALIGNMENT.SEGMENTED);
                     group.box[size] = boxSize;
                     group.containerIndex = i++;

@@ -34,8 +34,8 @@ export default abstract class Resource<T extends squared.base.Node> implements s
         this._fileHandler?.reset();
     }
 
-    public addImage(element: Undef<HTMLImageElement>) {
-        if (element?.complete) {
+    public addImage(element: HTMLImageElement) {
+        if (element.complete) {
             const uri = element.src;
             if (uri.startsWith('data:image/')) {
                 const match = REGEXP_DATAURI.exec(uri);

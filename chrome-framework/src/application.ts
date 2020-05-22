@@ -15,17 +15,12 @@ export default class Application<T extends chrome.base.View> extends squared.bas
         return new this.Node(this.nextId, this.processing.sessionId, options.element);
     }
 
-    public insertNode(element: Element, parent?: T) {
+    public insertNode(element: Element) {
         if (element.nodeName === '#text') {
             if (this.userSettings.excludePlainText) {
                 return undefined;
             }
             this.controllerHandler.applyDefaultStyles(element);
-            const node = this.createNode({ element });
-            if (parent) {
-                node.cssApply(parent.textStyle);
-            }
-            return node;
         }
         return this.createNode({ element });
     }

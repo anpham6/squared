@@ -38,7 +38,7 @@ function deleteStyleCache(element: HTMLElement, attr: string, sessionId: string)
 }
 
 const validateCssSet = (value: string, actualValue: string) => value === actualValue || isLength(value, true) && isPx(actualValue);
-const soryById = (a: T, b: T) => a.id < b.id ? -1 : 1;
+const sortById = (a: T, b: T) => a.id < b.id ? -1 : 1;
 const getFontSize = (style: CSSStyleDeclaration) => parseFloat(style.getPropertyValue('font-size'));
 const isEm = (value: string) => /\dem$/.test(value);
 const isInlineVertical = (value: string) => /^(inline|table-cell)/.test(value);
@@ -1322,6 +1322,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 case 'normal':
                 case 'rgba(0, 0, 0, 0)':
                     return false;
+                case 'top':
                 case 'baseline':
                     return attr !== 'verticalAlign';
                 case 'left':
@@ -1649,7 +1650,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(0, dataEnd.adjacent, [node])) {
                                 result.push(node);
                                 if (++count === resultCount) {
-                                    return result.sort(soryById);
+                                    return result.sort(sortById);
                                 }
                             }
                         }
@@ -1659,7 +1660,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             if (resultCount > 0 && pending.length > resultCount) {
                                 pending.length = resultCount;
                             }
-                            return pending.sort(soryById);
+                            return pending.sort(sortById);
                         }
                         else {
                             result = pending;
@@ -1675,7 +1676,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 if (!result.includes(node)) {
                                     result.push(node);
                                     if (++count === resultCount) {
-                                        return result.sort(soryById);
+                                        return result.sort(sortById);
                                     }
                                 }
                             }
@@ -1693,7 +1694,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 }
             }
         }
-        return result.sort(soryById);
+        return result.sort(sortById);
+    }
+
+    set $parent(value: T) {
+        this._parent = value;
     }
 
     set parent(value) {
@@ -1702,8 +1707,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (value !== parent) {
                 parent?.remove(this);
                 this._parent = value;
+                value.add(this);
             }
-            if (!value.contains(this)) {
+            else if (!value.contains(this)) {
                 value.add(this);
             }
             if (this.depth === -1) {
@@ -2286,7 +2292,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 this._inlineText = false;
                 break;
             case 'BUTTON':
-                this._inlineText = this.textContent.trim() !== '';
+                this._inlineText = isString(this.textContent);
                 break;
             default:
                 this._inlineText = value;

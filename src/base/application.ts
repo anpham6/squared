@@ -109,7 +109,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     }
 
     public abstract createNode(options: {}): T;
-    public abstract insertNode(element: Element, parent?: T): Undef<T>;
+    public abstract insertNode(element: Element): Undef<T>;
     public abstract afterCreateCache(node: T): void;
     public abstract finalize(): void;
 
@@ -389,13 +389,13 @@ export default abstract class Application<T extends Node> implements squared.bas
             if (depth === 0) {
                 cache.add(node);
             }
-            if (controller.preventNodeCascade(parentElement)) {
+            if (controller.preventNodeCascade(node)) {
                 return node;
             }
-            const { childElementCount, childNodes } = parentElement;
+            const childNodes = parentElement.childNodes;
             const length = childNodes.length;
             const children: T[] = new Array(length);
-            const elements: T[] = new Array(childElementCount);
+            const elements: T[] = new Array(parentElement.childElementCount);
             let inlineText = true;
             let i = 0, j = 0, k = 0;
             while (i < length) {
@@ -403,7 +403,10 @@ export default abstract class Application<T extends Node> implements squared.bas
                 let child: Undef<T>;
                 if (element.nodeName.charAt(0) === '#') {
                     if (element.nodeName === '#text') {
-                        child = this.insertNode(element, node);
+                        child = this.insertNode(element);
+                        if (child) {
+                            child.cssApply(node.textStyle);
+                        }
                     }
                 }
                 else if (controller.includeElement(element)) {
@@ -422,9 +425,9 @@ export default abstract class Application<T extends Node> implements squared.bas
                     }
                 }
                 if (child) {
-                    child.parent = node;
-                    child.actualParent = node;
+                    child.$parent = node;
                     child.childIndex = j;
+                    child.actualParent = node;
                     children[j++] = child;
                 }
             }
@@ -433,6 +436,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             node.naturalChildren = children;
             node.naturalElements = elements;
             node.inlineText = inlineText;
+            node.retainAs(children);
             if (k > 0 && this.userSettings.createQuerySelectorMap) {
                 node.queryMap = this.createQueryMap(elements, k);
             }
@@ -466,30 +470,35 @@ export default abstract class Application<T extends Node> implements squared.bas
                 this.applyCSSRuleList(((item as unknown) as CSSSupportsRule).cssRules);
                 break;
             case CSSRule.STYLE_RULE: {
-                const cssStyle = item.style;
-                const important: ObjectMap<boolean> = {};
                 const baseMap: StringMap = {};
-                const items = Array.from(cssStyle);
-                const length = items.length;
-                for (let i = 0; i < length; ++i) {
-                    const attr = items[i];
-                    baseMap[convertCamelCase(attr)] = cssStyle[attr];
+                {
+                    const cssStyle = item.style;
+                    const items = Array.from(cssStyle);
+                    const length = items.length;
+                    for (let i = 0; i < length; ++i) {
+                        const attr = items[i];
+                        baseMap[convertCamelCase(attr)] = cssStyle[attr];
+                    }
                 }
                 parseImageUrl(resourceHandler, baseMap, 'backgroundImage', styleSheetHref);
                 parseImageUrl(resourceHandler, baseMap, 'listStyleImage', styleSheetHref);
                 parseImageUrl(resourceHandler, baseMap, 'content', styleSheetHref);
-                const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
-                let match: Null<RegExpExecArray>;
-                while (match = pattern.exec(cssText)) {
-                    const attr = convertCamelCase(match[1]);
-                    const value = CSS_PROPERTIES[attr]?.value;
-                    if (Array.isArray(value)) {
-                        for (let i = 0; i < value.length; ++i) {
-                            important[value[i]] = true;
+                const important: ObjectMap<boolean> = {};
+                {
+                    const pattern = /\s*([a-z-]+):[^!;]+!important;/g;
+                    let match: Null<RegExpExecArray>;
+                    while (match = pattern.exec(cssText)) {
+                        const attr = convertCamelCase(match[1]);
+                        const value = CSS_PROPERTIES[attr]?.value;
+                        if (Array.isArray(value)) {
+                            let i = 0;
+                            while (i < value.length) {
+                                important[value[i++]] = true;
+                            }
                         }
-                    }
-                    else {
-                        important[attr] = true;
+                        else {
+                            important[attr] = true;
+                        }
                     }
                 }
                 for (const selectorText of parseSelectorText(item.selectorText, true)) {
@@ -538,12 +547,17 @@ export default abstract class Application<T extends Node> implements squared.bas
                 const attr = /\s*@font-face\s*{([^}]+)}\s*/.exec(cssText)?.[1];
                 if (attr) {
                     const fontFamily = (/\s*font-family:[^\w]*([^'";]+)/.exec(attr)?.[1] || '').trim();
+                    if (fontFamily === '') {
+                        break;
+                    }
                     const match = (/\s*src:\s*([^;]+);/.exec(attr)?.[1] || '').split(',');
-                    if (fontFamily !== '' && match.length) {
+                    const length = match.length;
+                    if (length) {
                         const fontStyle = /\s*font-style:\s*(\w+)\s*;/.exec(attr)?.[1].toLowerCase() || 'normal';
                         const fontWeight = parseInt(/\s*font-weight:\s*(\d+)\s*;/.exec(attr)?.[1] || '400');
-                        for (let i = 0; i < match.length; ++i) {
-                            const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(match[i]);
+                        let i = 0;
+                        while (i < length) {
+                            const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(match[i++]);
                             if (urlMatch) {
                                 let srcUrl: Undef<string>;
                                 let srcLocal: Undef<string>;

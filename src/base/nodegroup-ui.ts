@@ -7,11 +7,10 @@ const { isLength } = squared.lib.css;
 export default abstract class NodeGroupUI extends NodeUI {
     public init() {
         if (this.length) {
-            this.each(item => item.parent = this);
             this.setBounds();
             this.saveAsInitial();
-            this.dir = this.actualParent?.dir || '';
         }
+        this.dir = this.actualParent?.dir || '';
     }
 
     public setBounds() {

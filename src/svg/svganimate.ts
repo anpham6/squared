@@ -6,7 +6,7 @@ import { INSTANCE_TYPE, KEYSPLINE_NAME, STRING_CUBICBEZIER } from './lib/constan
 const { getHexCode, parseColor } = squared.lib.color;
 const { getFontSize, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { hasValue, isNumber, replaceMap, sortNumber, trimEnd } = squared.lib.util;
+const { isNumber, isString, replaceMap, sortNumber, trimEnd } = squared.lib.util;
 
 const REGEXP_CUBICBEZIER = new RegExp(STRING_CUBICBEZIER);
 
@@ -16,7 +16,7 @@ function flatString<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
     let i = 0;
     while (i < length) {
         const item = predicate(list[i], i++, list);
-        if (hasValue(item)) {
+        if (isString(item)) {
             result.push(item);
         }
     }

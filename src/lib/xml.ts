@@ -1,4 +1,4 @@
-import { isPlainObject, joinArray } from './util';
+import { isPlainObject, isString, joinArray } from './util';
 
 interface XMLTagData {
     tag: string;
@@ -199,7 +199,7 @@ export function formatTemplate(value: string, closeEmpty = false, startIndent = 
                 const next = lines[i + 1];
                 single = next.closing && line.tagName === next.tagName;
                 if (!/\/>\n*$/.exec(line.tag)) {
-                    if (closeEmpty && line.value.trim() === '') {
+                    if (closeEmpty && !isString(line.value)) {
                         if (next?.closing && next.tagName === line.tagName) {
                             line.tag = line.tag.replace(/\s*>$/, ' />');
                             ++i;
@@ -245,7 +245,7 @@ export function formatTemplate(value: string, closeEmpty = false, startIndent = 
 export function replaceCharacterData(value: string, tab?: number) {
     value = value
         .replace(/&nbsp;/g, '&#160;')
-        .replace(/&(?!#[A-Za-z\d]{2,};)/g, '&amp;');
+        .replace(/&(?!#?[A-Za-z\d]{2,};)/g, '&amp;');
     const char: { i: number; text: string }[] = [];
     const length = value.length;
     for (let i = 0; i < length; ++i) {

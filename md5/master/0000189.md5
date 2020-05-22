@@ -8,7 +8,7 @@ af8753c407198cba87e092d82e584ee2  ./app/src/main/res/drawable/a_textview_2.xml
 a14019e84c3d4006331d9c4a0c0467e0  ./app/src/main/res/drawable/bg_here.png
 809e59ba7cb4364251d011753e59f9ec  ./app/src/main/res/drawable/bg_newshead.png
 891924a8dff9e8862214bcf27772733a  ./app/src/main/res/drawable/bg_story.png
-ff7407f5745e96e61c62abc1110645fc  ./app/src/main/res/drawable/body_constraintlayout_1.xml
+47cb1bcb642014f831d59cd77e06db19  ./app/src/main/res/drawable/body_feature.xml
 8c221cbea220372969b81b9df3d25f96  ./app/src/main/res/drawable/column_bg.png
 4720ffa7fd7f4fca0aa574a182218ab0  ./app/src/main/res/drawable/div_banner.xml
 c6516654f8f9e44fb0c6a9b4ccd4e5e7  ./app/src/main/res/drawable/div_legal.xml
@@ -23,9 +23,9 @@ c6516654f8f9e44fb0c6a9b4ccd4e5e7  ./app/src/main/res/drawable/div_legal.xml
 fa33dd5a1a0117faf2283edaad2b75ba  ./app/src/main/res/drawable/ne.png
 beb0a1809aea2f54887afb2417377ef2  ./app/src/main/res/drawable/page_bg.png
 3701aacea774c5100ee4bf4778b58029  ./app/src/main/res/drawable/warning.png
-4330b1a594e18d322c24453a0bdfd97f  ./app/src/main/res/layout/activity_main.xml
+5212d834ca1632e39f46ab150f7bc00e  ./app/src/main/res/layout/activity_main.xml
 8c009eb0dbb34d358f67da2c93e45e04  ./app/src/main/res/values/colors.xml
-5706e9dc3c8e8b7a5b4c25f5f18852ff  ./app/src/main/res/values/dimens.xml
-26c58b96b5c79bad5b7f8debcebd647e  ./app/src/main/res/values/strings.xml
+a05e7be0ab2a35d6dc991e71617ccc4f  ./app/src/main/res/values/dimens.xml
+17be38258ccc9d7cee47a3045f688d0f  ./app/src/main/res/values/strings.xml
 4718fdf5e2b63f2c036941f297445d0c  ./app/src/main/res/values/styles.xml
-c518ce63e9067a1c537d19862ee10b24  ./app/src/main/res/values/themes.xml
+8f84718076a6cda6b68b7c531bf46a1a  ./app/src/main/res/values/themes.xml

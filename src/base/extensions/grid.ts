@@ -11,6 +11,9 @@ function getRowIndex(columns: NodeUI[][], target: NodeUI) {
     let i = 0;
     while (i < length) {
         const index = columns[i++].findIndex(item => {
+            if (!item) {
+                return false;
+            }
             const top = item.bounds.top;
             return withinRange(topA, top) || Math.ceil(topA) >= top && topA < Math.floor(item.bounds.bottom);
         });

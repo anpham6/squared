@@ -12,7 +12,7 @@ export default abstract class Controller<T extends squared.base.Node> implements
 
     public abstract get userSettings(): UserSettings;
 
-    public preventNodeCascade(element: Element) {
+    public preventNodeCascade(node: T) {
         return false;
     }
 

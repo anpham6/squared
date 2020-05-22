@@ -22,7 +22,7 @@ const { formatPX, getSrcSet, hasComputedStyle, isLength, isPercent } = squared.l
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode, getPseudoElt } = squared.lib.session;
-const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, plainMap, safeNestedArray, withinRange } = squared.lib.util;
+const { assignEmptyValue, convertFloat, hasBit, hasMimeType, isString, iterateArray, parseMimeType, partitionArray, safeNestedArray, withinRange } = squared.lib.util;
 const { STRING_XMLENCODING, replaceTab } = squared.lib.xml;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -888,7 +888,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             video: ['video/3gpp', 'video/mp4', 'video/mp2t', 'video/x-matroska', 'video/webm']
         },
         unsupported: {
-            cascade: new Set(['SELECT', 'svg']),
+            cascade: new Set([
+                'IMG',
+                'INPUT',
+                'SELECT',
+                'TEXTAREA',
+                'PROGRESS',
+                'METER',
+                'HR',
+                'IFRAME',
+                'svg'
+            ]),
             tagName: new Set([
                 'HEAD',
                 'TITLE',
@@ -1150,17 +1160,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 return undefined;
             }
             else {
-                layout.node = this.createNodeGroup(layout.node, layout.children, { parent });
+                layout.node = this.createNodeGroup(layout.node, layout.children, parent);
                 layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.FLOAT);
             }
         }
         else if (this.checkFrameHorizontal(layout)) {
-            layout.node = this.createNodeGroup(layout.node, layout.children, { parent });
+            layout.node = this.createNodeGroup(layout.node, layout.children, parent);
             layout.addRender(NODE_ALIGNMENT.FLOAT);
             layout.addRender(NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (layout.length !== siblings.length || parent.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
-            layout.node = this.createNodeGroup(layout.node, layout.children, { parent });
+            layout.node = this.createNodeGroup(layout.node, layout.children, parent);
             this.processLayoutHorizontal(layout);
         }
         else {
@@ -2118,7 +2128,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 android: {},
                 app: {
                     barrierDirection,
-                    constraint_referenced_ids: plainMap(unbound, item => getDocumentId(item.anchorTarget.documentId)).join(',')
+                    constraint_referenced_ids: unbound.map(item => getDocumentId(item.anchorTarget.documentId)).join(',')
                 }
             });
             const { api, anchorTarget } = unbound[length - 1];
@@ -2225,18 +2235,16 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
     }
 
-    public createNodeGroup(node: T, children: T[], options: CreateNodeGroupOptions<T> = {}) {
-        const { parent, delegate, cascade } = options;
+    public createNodeGroup(node: T, children: T[], parent?: T, options: CreateNodeGroupOptions<T> = {}) {
         const group = new ViewGroup(this.cache.nextId, node, children) as T;
         this.afterInsertNode(group);
         if (parent) {
             parent.replaceTry({ child: node, replaceWith: group, notFoundAppend: true });
-            group.init();
         }
         else {
             group.containerIndex = node.containerIndex;
         }
-        this.cache.add(group, delegate === true, cascade === true);
+        this.cache.add(group, options.delegate === true, options.cascade === true);
         return group;
     }
 
@@ -2763,7 +2771,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     if (node.cssInitial('textAlign') === 'center' && length > 1) {
                         const application = this.application;
-                        const group = this.createNodeGroup(items[0], items, { parent: node });
+                        const group = this.createNodeGroup(items[0], items, node);
                         group.setControlType(CONTAINER_ANDROID.RELATIVE, CONTAINER_NODE.RELATIVE);
                         group.render(node);
                         group.anchorParent('horizontal');
@@ -3293,7 +3301,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     protected createLayoutGroup(layout: LayoutUI<T>) {
-        return this.createNodeGroup(layout.node, layout.children, { parent: layout.parent });
+        return this.createNodeGroup(layout.node, layout.children, layout.parent);
     }
 
     get containerTypeHorizontal(): LayoutType {

@@ -2313,7 +2313,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                     }
-                    else if (hasOwnStyle || renderParent.lineHeight === 0) {
+                    else if ((hasOwnStyle || renderParent.lineHeight === 0) && this.inlineText && !this.textEmpty) {
                         setMarginOffset(this, lineHeight, hasOwnStyle, true, true);
                     }
                 }

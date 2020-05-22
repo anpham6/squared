@@ -5,7 +5,7 @@ type Extension = chrome.base.Extension<View>;
 type BundleIndex = ObjectMap<ChromeAsset[]>;
 
 const { FILE } = squared.lib.regex;
-const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, plainMap, randomUUID, resolvePath, safeNestedArray, trimEnd } = squared.lib.util;
+const { appendSeparator, convertWord, fromLastIndexOf, isString, iterateReverseArray, parseMimeType, partitionLastIndexOf, randomUUID, resolvePath, safeNestedArray, trimEnd } = squared.lib.util;
 
 function parseFileAs(attr: string, value: Undef<string>): [string, Undef<string>, boolean] | undefined {
     if (value) {
@@ -461,7 +461,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             return undefined;
         };
-        document.querySelectorAll('video').forEach((source: HTMLVideoElement) => processUri(null, resolvePath(source.poster)));
+        document.querySelectorAll('video').forEach((element: HTMLVideoElement) => processUri(null, resolvePath(element.poster)));
         document.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => {
             for (const uri of source.srcset.trim().split(',')) {
                 processUri(source, resolvePath(uri.split(' ')[0]));
@@ -474,7 +474,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
         });
         document.querySelectorAll('img[srcset], picture > source[srcset]').forEach((element: HTMLImageElement) => {
-            const pattern = /[\s\n]*(.+?\.[^\s,]+).*?,?/g;
+            const pattern = /[\s\n]*(.+?\.[^\s,]+)(\s+[\d.]+[wx]\s*)?,?/g;
             let match: Null<RegExpExecArray>;
             while (match = pattern.exec(element.srcset.trim())) {
                 processUri(element, resolvePath(match[1]));
@@ -634,7 +634,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     get outputFileExclusions() {
         let result = this._outputFileExclusions;
         if (result === undefined) {
-            result = plainMap(this.userSettings.outputFileExclusions, value => convertFileMatch(value));
+            result = this.userSettings.outputFileExclusions.map(value => convertFileMatch(value));
             this._outputFileExclusions = result;
         }
         return result;

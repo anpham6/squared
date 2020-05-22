@@ -128,7 +128,6 @@ interface CreateNodeOptions<T> {
 }
 
 interface CreateNodeGroupOptions<T> {
-    parent?: T;
     delegate?: boolean;
     cascade?: boolean;
 }

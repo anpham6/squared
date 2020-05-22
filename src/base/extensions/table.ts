@@ -42,22 +42,22 @@ function hideCell(node: NodeUI) {
     node.hide();
 }
 
+function createDataAttribute(node: NodeUI): TableData {
+    return {
+        layoutType: 0,
+        rowCount: 0,
+        columnCount: 0,
+        layoutFixed: node.css('tableLayout') === 'fixed',
+        borderCollapse: node.css('borderCollapse') === 'collapse',
+        expand: false
+    };
+}
+
 const setBoundsWidth = (node: NodeUI) => node.css('width', formatPX(node.bounds.width), true);
 
 export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
-    public static createDataAttribute(node: NodeUI): TableData {
-        return {
-            layoutType: 0,
-            rowCount: 0,
-            columnCount: 0,
-            layoutFixed: node.css('tableLayout') === 'fixed',
-            borderCollapse: node.css('borderCollapse') === 'collapse',
-            expand: false
-        };
-    }
-
     public processNode(node: T) {
-        const mainData = Table.createDataAttribute(node);
+        const mainData = createDataAttribute(node);
         const tbody: T[] = [];
         let table: T[] = [];
         let tfoot: Undef<T>;

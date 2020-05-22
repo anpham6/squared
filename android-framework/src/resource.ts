@@ -137,7 +137,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 const partial =
                     trimString(
                         (name || (value.length > 64 ? value.substring(0, 64) : value))
-                            .replace(/(<\/?[a-z]+>|&#?[A-Za-z\d]{2,};)/g, '_')
+                            .replace(/(\\[nt]|<\/?[a-z]+>|&#?[A-Za-z\d]{2,};)/g, '_')
                             .replace(/[^A-Za-z\d]+/g, '_'),
                         '_'
                     )

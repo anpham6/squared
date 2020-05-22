@@ -7,7 +7,7 @@ type T = NodeUI;
 const { CSS_PROPERTIES } = squared.lib.css;
 const { equal } = squared.lib.math;
 const { getElementAsNode } = squared.lib.session;
-const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
+const { capitalize, cloneObject, convertWord, hasBit, hasKeys, isArray, isString, iterateArray, safeNestedMap, searchObject, withinRange } = squared.lib.util;
 
 const CSS_SPACING = new Map<number, string>();
 
@@ -457,6 +457,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public lineBreakTrailing = false;
     public baselineActive = false;
     public baselineAltered = false;
+    public documentChildren?: T[];
     public abstract localSettings: LocalSettingsUI;
     public abstract renderParent?: T;
     public abstract renderExtension?: squared.base.ExtensionUI<T>[];
@@ -817,8 +818,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             const item = children[i];
             if (item === child || item === child.outerMostWrapper) {
                 children[i] = replaceWith;
-                replaceWith.parent = this;
+                replaceWith.$parent = this;
                 replaceWith.containerIndex = child.containerIndex;
+                replaceWith.depth = child.depth;
                 return true;
             }
         }
@@ -1719,7 +1721,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get textEmpty() {
         if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
             const value = this.textContent;
-            return value === '' || !this.preserveWhiteSpace && value.trim() === '';
+            return value === '' || !this.preserveWhiteSpace && !isString(value);
         }
         return false;
     }
