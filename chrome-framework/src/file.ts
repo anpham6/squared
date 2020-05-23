@@ -50,9 +50,12 @@ function getFilePath(value: string, saveTo = false): [Undef<string>, string, str
 }
 
 function resolveAssetSource(element: HTMLVideoElement | HTMLAudioElement | HTMLObjectElement | HTMLEmbedElement | HTMLSourceElement | HTMLTrackElement, data: Map<HTMLElement, string>) {
-    const value = resolvePath(element instanceof HTMLObjectElement ? element.data : element.src);
-    if (value !== '') {
-        data.set(element, value);
+    const src = element instanceof HTMLObjectElement ? element.data : element.src;
+    if (isString(src)) {
+        const value = resolvePath(src);
+        if (value !== '') {
+            data.set(element, value);
+        }
     }
 }
 

@@ -692,11 +692,13 @@ const options = {
     }
 };
 ```
+
 There are a few ways to save the entire page or portions using the system methods.
 
 ```xml
 <script>
-    chrome.saveAsWebPage({ // default is false
+    chrome.saveAsWebPage('index', { // default is false
+        format: 'zip', // optional
         removeUnusedStyles: true, // Use only when you are not switching classnames with JavaScript
         productionRelease: true, // Ignore local url rewriting and load assets using absolute paths
         preserveCrossOrigin: true // Ignore downloading a local copy of assets hosted on other domains

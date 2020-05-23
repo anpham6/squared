@@ -1156,8 +1156,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                     if (percent !== 0) {
                                         top = Math.round((boundsHeight - height) * percent);
                                     }
-                                    if (!node.hasPX('height')) {
-                                        node.css('height', formatPX(boundsHeight - node.contentBoxHeight));
+                                    const attr = node.layoutConstraint || node.layoutRelative ? 'minHeight' : 'height';
+                                    if (!node.hasPX(attr)) {
+                                        node.css(attr, formatPX(boundsHeight - node.contentBoxHeight));
                                     }
                                     if (!offsetX) {
                                         gravityAlign = 'center_horizontal|fill_horizontal';

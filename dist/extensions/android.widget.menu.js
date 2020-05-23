@@ -1,30 +1,18 @@
-/* android.widget.menu 1.8.0
+/* android.widget.menu 1.9.0
    https://github.com/anpham6/squared */
 
 this.android = this.android || {};
 this.android.widget = this.android.widget || {};
 this.android.widget.menu = (function () {
-    "use strict";
+    'use strict';
 
-    const $lib = android.lib;
-    const {
-        appendSeparator,
-        capitalize,
-        isNumber,
-        sameArray,
-        safeNestedMap,
-    } = squared.lib.util;
-    const {
-        NODE_ALIGNMENT,
-        NODE_PROCEDURE,
-        NODE_RESOURCE,
-        NODE_TEMPLATE,
-    } = squared.base.lib.enumeration;
-    const { EXT_ANDROID } = $lib.constant;
-    const { CONTAINER_NODE } = $lib.enumeration;
-    const { createViewAttribute } = $lib.util;
+    const { appendSeparator, capitalize, isNumber, sameArray, safeNestedMap } = squared.lib.util;
+    const { createViewAttribute } = android.lib.util;
+    const { NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
+    const { EXT_ANDROID } = android.lib.constant;
+    const { CONTAINER_NODE } = android.lib.enumeration;
     const Resource = android.base.Resource;
-    const REGEX_ITEM = {
+    const REGEXP_ITEM = {
         id: /^@\+id\/\w+$/,
         title: /^.+$/,
         titleCondensed: /^.+$/,
@@ -44,7 +32,7 @@ this.android.widget.menu = (function () {
         menuCategory: /^(container|system|secondary|alternative)$/,
         orderInCategory: /^\d+$/,
     };
-    const REGEX_GROUP = {
+    const REGEXP_GROUP = {
         id: /^@\+id\/\w+$/,
         checkableBehavior: /^(none|all|single)$/,
         visible: /^(true|false)$/,
@@ -52,17 +40,13 @@ this.android.widget.menu = (function () {
         menuCategory: /^(container|system|secondary|alternative)$/,
         orderInCategory: /^\d+$/,
     };
-    const NAMESPACE_APP = [
-        "showAsAction",
-        "actionViewClass",
-        "actionProviderClass",
-    ];
     const NAVIGATION = {
-        MENU: "menu",
-        ITEM: "item",
-        GROUP: "group",
+        MENU: 'menu',
+        ITEM: 'item',
+        GROUP: 'group',
     };
-    const PREFIX_MENU = "ic_menu_";
+    const NAMESPACE_APP = ['showAsAction', 'actionViewClass', 'actionProviderClass'];
+    const PREFIX_MENU = 'ic_menu_';
     function parseDataSet(validator, element, options) {
         const dataset = element.dataset;
         for (const attr in dataset) {
@@ -72,10 +56,9 @@ this.android.widget.menu = (function () {
                 if (value) {
                     const match = pattern.exec(value);
                     if (match) {
-                        safeNestedMap(
-                            options,
-                            NAMESPACE_APP.includes(attr) ? "app" : "android"
-                        )[attr] = Array.from(new Set(match)).join("|");
+                        safeNestedMap(options, NAMESPACE_APP.includes(attr) ? 'app' : 'android')[attr] = Array.from(
+                            new Set(match)
+                        ).join('|');
                     }
                 }
             }
@@ -86,16 +69,18 @@ this.android.widget.menu = (function () {
         if (title) {
             return title;
         } else {
-            for (const child of node.naturalChildren) {
+            const children = node.naturalChildren;
+            const length = children.length;
+            for (let i = 0; i < length; ++i) {
+                const child = children[i];
                 if (child.textElement) {
                     return child.textContent.trim();
                 }
             }
         }
-        return "";
+        return '';
     }
-    const hasInputType = (node, value) =>
-        node.some((item) => item.toElementString("type") === value);
+    const hasInputType = (node, value) => node.some(item => item.toElementString('type') === value);
     class Menu extends squared.base.ExtensionUI {
         constructor(name, framework, options, tagNames) {
             super(name, framework, options, tagNames);
@@ -105,16 +90,13 @@ this.android.widget.menu = (function () {
         init(element) {
             if (this.included(element)) {
                 if (element.childElementCount) {
-                    if (!sameArray(element.children, (item) => item.tagName)) {
+                    if (!sameArray(element.children, item => item.tagName)) {
                         return false;
                     }
                     const application = this.application;
                     let current = element.parentElement;
                     while (current) {
-                        if (
-                            current.tagName === "NAV" &&
-                            application.rootElements.has(current)
-                        ) {
+                        if (current.tagName === 'NAV' && application.rootElements.has(current)) {
                             return false;
                         }
                         current = current.parentElement;
@@ -128,29 +110,21 @@ this.android.widget.menu = (function () {
             return this.included(node.element);
         }
         processNode(node, parent) {
-            const outerParent = this.application.createNode({
-                parent,
-                append: false,
-            });
+            const outerParent = this.application.createNode({ parent, append: false });
             outerParent.childIndex = node.childIndex;
             outerParent.actualParent = parent.actualParent;
             node.documentRoot = true;
             node.setControlType(NAVIGATION.MENU, CONTAINER_NODE.INLINE);
             node.addAlign(4 /* AUTO_LAYOUT */);
-            node.exclude({
-                resource: NODE_RESOURCE.ALL,
-                procedure: NODE_PROCEDURE.ALL,
-            });
+            node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
             node.render(outerParent);
-            node.cascade((item) => {
+            node.cascade(item => {
                 this.addDescendant(item);
                 return false;
             });
-            node.dataset[
-                "pathname" + capitalize(this.application.systemName)
-            ] = appendSeparator(
+            node.dataset['pathname' + capitalize(this.application.systemName)] = appendSeparator(
                 this.controller.userSettings.outputDirectory,
-                "res/menu"
+                'res/menu'
             );
             return {
                 outerParent,
@@ -172,31 +146,26 @@ this.android.widget.menu = (function () {
             const element = node.element;
             let controlName;
             let title;
-            if (node.tagName === "NAV") {
+            if (node.tagName === 'NAV') {
                 controlName = NAVIGATION.MENU;
                 title = getTitle(node, element);
-            } else if (node.some((item) => item.length > 0)) {
-                if (node.some((item) => item.tagName === "NAV")) {
+            } else if (node.some(item => item.length > 0)) {
+                if (node.some(item => item.tagName === 'NAV')) {
                     controlName = NAVIGATION.ITEM;
                 } else {
                     controlName = NAVIGATION.GROUP;
-                    if (node.every((item) => hasInputType(item, "radio"))) {
-                        android.checkableBehavior = "single";
-                    } else if (
-                        node.every((item) => hasInputType(item, "checkbox"))
-                    ) {
-                        android.checkableBehavior = "all";
+                    if (node.every(item => hasInputType(item, 'radio'))) {
+                        android.checkableBehavior = 'single';
+                    } else if (node.every(item => hasInputType(item, 'checkbox'))) {
+                        android.checkableBehavior = 'all';
                     }
                 }
                 title = getTitle(node, element);
             } else {
                 controlName = NAVIGATION.ITEM;
                 title = (element.title || element.innerText).trim();
-                if (
-                    hasInputType(node, "checkbox") &&
-                    !parent.android("checkableBehavior")
-                ) {
-                    android.checkable = "true";
+                if (hasInputType(node, 'checkbox') && !parent.android('checkableBehavior')) {
+                    android.checkable = 'true';
                 }
             }
             switch (controlName) {
@@ -205,52 +174,38 @@ this.android.widget.menu = (function () {
                     break;
                 case NAVIGATION.GROUP:
                     node.addAlign(4 /* AUTO_LAYOUT */);
-                    parseDataSet(REGEX_GROUP, element, options);
+                    parseDataSet(REGEXP_GROUP, element, options);
                     break;
                 case NAVIGATION.ITEM:
-                    parseDataSet(REGEX_ITEM, element, options);
+                    parseDataSet(REGEXP_ITEM, element, options);
                     if (!android.icon) {
                         const resource = this.resource;
-                        let src = resource.addImageSrc(
-                            node.backgroundImage,
-                            PREFIX_MENU
-                        );
-                        if (src !== "") {
+                        let src = resource.addImageSrc(node.backgroundImage, PREFIX_MENU);
+                        if (src !== '') {
                             android.icon = `@drawable/${src}`;
                         } else {
-                            const image = node.find(
-                                (item) => item.imageElement
-                            );
+                            const image = node.find(item => item.imageElement);
                             if (image) {
-                                src = resource.addImageSrc(
-                                    image.element,
-                                    PREFIX_MENU
-                                );
-                                if (src !== "") {
+                                src = resource.addImageSrc(image.element, PREFIX_MENU);
+                                if (src !== '') {
                                     android.icon = `@drawable/${src}`;
                                 }
                             }
                         }
                     }
-                    node.each((item) => item.tagName !== "NAV" && item.hide());
+                    node.each(item => item.tagName !== 'NAV' && item.hide());
                     break;
             }
-            if (title !== "") {
+            if (title !== '') {
                 const numberResourceValue = this.application.extensionManager.optionValueAsBoolean(
                     EXT_ANDROID.RESOURCE_STRINGS,
-                    "numberResourceValue"
+                    'numberResourceValue'
                 );
-                const name = Resource.addString(title, "", numberResourceValue);
-                android.title =
-                    numberResourceValue || !isNumber(name)
-                        ? `@string/${name}`
-                        : title;
+                const name = Resource.addString(title, '', numberResourceValue);
+                android.title = numberResourceValue || !isNumber(name) ? `@string/${name}` : title;
             }
             node.setControlType(controlName, CONTAINER_NODE.INLINE);
-            node.exclude({
-                resource: NODE_RESOURCE.ALL,
-                procedure: NODE_PROCEDURE.ALL,
-            });
+            node.exclude({ resource: NODE_RESOURCE.ALL, procedure: NODE_PROCEDURE.ALL });
             node.render(parent);
             node.apply(options);
             return {
@@ -265,9 +220,7 @@ this.android.widget.menu = (function () {
         }
     }
 
-    const menu = new Menu("android.widget.menu" /* MENU */, 2 /* ANDROID */, [
-        "NAV",
-    ]);
+    const menu = new Menu('android.widget.menu' /* MENU */, 2 /* ANDROID */, ['NAV']);
     if (squared) {
         squared.include(menu);
     }

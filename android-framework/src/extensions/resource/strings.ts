@@ -49,7 +49,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         setTextValue(
                             node,
                             'tooltipText',
-                            Resource.addString(title, `${node.controlId.toLowerCase()}_title`, numberResourceValue),
+                            Resource.addString(replaceCharacterData(title), `${node.controlId.toLowerCase()}_title`, numberResourceValue),
                             numberResourceValue
                         );
                     }
@@ -66,7 +66,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         setTextValue(
                             node,
                             'hint',
-                            name,
+                            Resource.addString(replaceCharacterData(hintString), `${node.controlId.toLowerCase()}_hint`, numberResourceValue),
                             numberResourceValue
                         );
                     }

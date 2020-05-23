@@ -1806,7 +1806,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
                 break;
             case 'TEXTAREA': {
-                const { cols, maxLength, placeholder, rows } = node.element as HTMLTextAreaElement;
+                const { cols, maxLength, rows } = node.element as HTMLTextAreaElement;
                 node.android('minLines', rows > 0 ? rows.toString() : '2');
                 switch (node.css('verticalAlign')) {
                     case 'middle':
@@ -1825,7 +1825,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (!node.hasPX('width') && cols > 0) {
                     node.css('width', formatPX(cols * 8));
                 }
-                node.android('hint', placeholder);
                 node.android('scrollbars', 'vertical');
                 node.android('inputType', 'textMultiLine');
                 if (node.overflowX) {
@@ -2605,7 +2604,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                     }
                     const baselineAlign: T[] = [];
-                    let documentId = i === 0 ? 'true' : baseline?.documentId;
+                    const documentId = i === 0 ? 'true' : baseline?.documentId;
                     let maxCenterHeight = 0;
                     let textBaseline: Null<T> = null;
                     let j = 0;
@@ -2693,19 +2692,18 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                     break;
                                 case 'sub':
                                     if (!item.baselineAltered) {
-                                        item.modifyBox(BOX_STANDARD.MARGIN_BOTTOM, Math.ceil(item.baselineHeight * this.localSettings.deviations.subscriptBottomOffset) * -1);
+                                        item.modifyBox(BOX_STANDARD.MARGIN_TOP, Math.ceil(item.baselineHeight * this.localSettings.deviations.subscriptBottomOffset) * 1);
                                     }
                                 case 'bottom':
                                     if (documentId && !withinRange(node.bounds.height, item.bounds.height)) {
-                                        if (!node.hasHeight && documentId === 'true') {
-                                            if (!alignmentMultiLine) {
-                                                node.css('height', formatPX(node.bounds.height));
-                                            }
-                                            else if (baseline) {
-                                                documentId = baseline.documentId;
-                                            }
+                                        if (documentId === 'true' && !node.hasHeight) {
+                                            item.anchor('top', documentId);
+                                            item.setBox(BOX_STANDARD.MARGIN_TOP, { reset: 1, adjustment: item.bounds.top - node.box.top });
+                                            item.baselineAltered = true;
                                         }
-                                        item.anchor('bottom', documentId);
+                                        else {
+                                            item.anchor('bottom', documentId);
+                                        }
                                     }
                                     break;
                                 default:

@@ -114,25 +114,25 @@ function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: s
     while (current?.tagName === 'Q') {
         const quotes = (getElementCache(current, `styleMap`, sessionId) as Undef<CSSStyleDeclaration>)?.quotes || getComputedStyle(current).quotes;
         if (quotes) {
-            const match = /"([^"]|\\")+"\s+"([^"]|\\")+"(?:\s+"([^"]|\\")+"\s+"([^"]|\\")+")?/.exec(quotes);
+            const match = /("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+)(?:\s+("(?:[^"]|\\")+"|[^\s]+)\s+("(?:[^"]|\\")+"|[^\s]+))?/.exec(quotes);
             if (match) {
                 if (pseudoElt === '::before') {
                     if (found === 0) {
-                        outside = match[1];
+                        outside = extractQuote(match[1]);
                         ++found;
                     }
                     if (match[3] && found < 2) {
-                        inside = match[3];
+                        inside = extractQuote(match[3]);
                         ++found;
                     }
                 }
                 else {
                     if (found === 0) {
-                        outside = match[2];
+                        outside = extractQuote(match[2]);
                         ++found;
                     }
                     if (match[4] && found < 2) {
-                        inside = match[4];
+                        inside = extractQuote(match[4]);
                         ++found;
                     }
                 }
@@ -172,6 +172,7 @@ function setMapDepth(map: LayoutMap, depth: number, node: NodeUI) {
     }
 }
 
+const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
 const hasOuterParentExtension = (node: NodeUI) => node.ascend({ condition: (item: NodeUI) => isString(item.use) }).length > 0;

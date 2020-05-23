@@ -863,6 +863,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     break;
                 case 'TEXTAREA':
                     value = element.value;
+                    hint = element.placeholder;
                     break;
                 case 'IFRAME':
                     value = element.src;
@@ -927,6 +928,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     break;
                 }
             }
+            if (hint !== '') {
+                node.data(ResourceUI.KEY_NAME, 'hintString', hint);
+            }
             if (value !== '') {
                 if (trimming) {
                     if (node.pageFlow) {
@@ -977,9 +981,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 if (value !== '') {
                     node.data(ResourceUI.KEY_NAME, 'valueString', value);
                 }
-            }
-            if (hint !== '') {
-                node.data(ResourceUI.KEY_NAME, 'hintString', hint);
             }
         }
         else if (node.inlineText) {

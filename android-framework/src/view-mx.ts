@@ -522,6 +522,10 @@ function excludeVertical(node: T) {
     return node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
 }
 
+function inheritLineHeight(node: T) {
+    return node.renderChildren.length === 0 && !node.multiline && !isNaN(node.lineHeight) && !node.has('lineHeight');
+}
+
 function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment: BoxModel, margin: boolean) {
     let top = 0, right = 0, bottom = 0, left = 0;
     for (let i = 0; i < 4; ++i) {
@@ -635,6 +639,10 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                     }
                     break;
             }
+        }
+        if (node.tagName === 'PICTURE') {
+            bottom += 4;
+            right += 4;
         }
         switch (node.controlName) {
             case CONTAINER_ANDROID.RADIO:
@@ -2271,8 +2279,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                         else if (this.layoutVertical || this.layoutFrame) {
                             this.renderEach((item: T) => {
-                                if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
-                                    setMarginOffset(item, lineHeight, true, true, true);
+                                if (inheritLineHeight(item)) {
+                                    setMarginOffset(item, item.lineHeight || lineHeight, true, true, true);
                                 }
                             });
                         }
@@ -2304,7 +2312,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     let j = 0;
                                     while (j < q) {
                                         const item = row[j++];
-                                        if (item.length === 0 && !item.multiline && !isNaN(item.lineHeight) && !item.has('lineHeight')) {
+                                        if (inheritLineHeight(item)) {
                                             setMarginOffset(item, lineHeight, onlyChild, top, bottom);
                                         }
                                     }
