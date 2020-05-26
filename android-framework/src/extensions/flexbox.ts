@@ -230,12 +230,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
             };
         }
         else {
-            const containerType = row && node.hasHeight || column && node.hasWidth || node.some(item => !item.pageFlow) ? CONTAINER_NODE.CONSTRAINT : CONTAINER_NODE.LINEAR;
             return {
                 output: this.application.renderNode(LayoutUI.create({
                     parent,
                     node,
-                    containerType,
+                    containerType: CONTAINER_NODE.CONSTRAINT,
                     alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (column ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
                     itemCount: node.length,
                     rowCount,
@@ -336,12 +335,6 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                             largest = sibling;
                                         }
                                     }
-                                    if (wrapReverse) {
-                                        const offset = item.linear.left - largest.actualRect('right');
-                                        if (offset > 0) {
-                                            item.modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
-                                        }
-                                    }
                                     item.constraint.horizontal = true;
                                 }
                                 chainVertical.push(pageFlow);
@@ -351,31 +344,38 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                         }
                     }
                 });
-                if (node.layoutLinear) {
-                    if (wrapReverse && column) {
-                        node.mergeGravity('gravity', 'right');
-                    }
+                if (row) {
+                    chainVertical.push(segmented);
                 }
-                else if (segmented.length) {
-                    if (row) {
-                        chainVertical.push(segmented);
+                else {
+                    if (wrapReverse) {
+                        const item = chainVertical[0][0];
+                        const offset = item.linear.left - node.box.left;
+                        if (offset > 0) {
+                            item.modifyBox(BOX_STANDARD.MARGIN_LEFT, offset);
+                        }
+                        else {
+                            segmented[0].anchorStyle('horizontal', 0, 'packed');
+                        }
                     }
                     else {
-                        chainHorizontal.push(segmented);
+                        const item = chainVertical[chainVertical.length - 1][0];
+                        const offset = node.box.right - item.linear.right;
+                        if (offset > 0) {
+                            item.modifyBox(BOX_STANDARD.MARGIN_RIGHT, offset);
+                        }
+                        else {
+                            segmented[0].anchorStyle('horizontal', 0, 'packed');
+                        }
                     }
+                    chainHorizontal.push(segmented);
                 }
             }
             else {
                 if (row) {
-                    if (reverse) {
-                        children.reverse();
-                    }
                     chainHorizontal[0] = children;
                 }
                 else {
-                    if (reverse) {
-                        children.reverse();
-                    }
                     chainVertical[0] = children;
                 }
             }
@@ -404,6 +404,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     let parentEnd = true;
                     let baseline: Null<T> = null;
                     let growAll: boolean;
+                    let percentWidth = 0;
                     segStart.anchor(LT, 'parent');
                     segEnd.anchor(RB, 'parent');
                     if (opposing) {
@@ -427,7 +428,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             segStart.anchorStyle(orientation, bias, chainStyle);
                         }
                         else {
-                            segStart.anchorStyle(orientation, 0, 'packed');
+                            segStart.anchorStyle(orientation, 0, 'spread_inside', false);
                         }
                     }
                     else {
@@ -454,6 +455,9 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             if (sizeCount === q) {
                                 maxSize = NaN;
                             }
+                            if (horizontal) {
+                                percentWidth = View.availablePercent(seg, 'width', node.box.width);
+                            }
                         }
                     }
                     for (let j = 0; j < q; ++j) {
@@ -467,10 +471,16 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                             chain.anchor(LRTB, previous.documentId);
                         }
                         if (opposing) {
-                            if (parentEnd && q > 1 && dimensionInverse) {
-                                setLayoutWeight(chain, horizontal, WHL, orientationWeight, 1);
-                            }
                             chain.anchor(TL, 'parent');
+                            if (parentEnd) {
+                                if (dimensionInverse) {
+                                    setLayoutWeight(chain, horizontal, WHL, orientationWeight, 1);
+                                }
+                                else {
+                                    chain.anchor(BR, 'parent');
+                                    chain.anchorStyle(orientationInverse, reverse ? 1 : 0, 'packed');
+                                }
+                            }
                         }
                         else {
                             const innerWrapped = getOuterFrameChild(chain);
@@ -675,7 +685,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                                     break;
                                 }
                             }
-                            View.setFlexDimension(chain, WHL as DimensionAttr);
+                            percentWidth = View.setFlexDimension(chain, WHL as DimensionAttr, percentWidth);
                             if (!chain.innerMostWrapped.has('flexGrow')) {
                                 growAll = false;
                             }

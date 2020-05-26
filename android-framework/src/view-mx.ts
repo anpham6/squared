@@ -261,8 +261,8 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
             boxPercent = !parent.gridElement ? node.contentBoxHeight / height : 0;
             marginPercent = (Math.max(node.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0 ? node.marginTop : 0, 0) + (node.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0 ? node.marginBottom : 0)) / height;
         }
-        if (percent === 1 && value + marginPercent >= percent) {
-            value = percent - marginPercent;
+        if (percent === 1 && value + marginPercent >= 1) {
+            value = 1 - marginPercent;
         }
         else {
             if (boxPercent > 0) {
@@ -783,7 +783,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return percentWidth;
         }
 
-        public static setFlexDimension<T extends View>(node: T, dimension: DimensionAttr) {
+        public static setFlexDimension<T extends View>(node: T, dimension: DimensionAttr, percentWidth = NaN) {
             const { grow, basis, shrink } = node.flexbox;
             const horizontal = dimension === 'width';
             if (isLength(basis)) {
@@ -810,7 +810,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 }
                 if (!flexible) {
                     if (horizontal) {
-                        constraintPercentWidth(node, 0);
+                        percentWidth = constraintPercentWidth(node, percentWidth);
                     }
                     else {
                         constraintPercentHeight(node, 0);
@@ -827,6 +827,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 constraintMinMax(node, true);
                 constraintMinMax(node, false);
             }
+            return percentWidth;
         }
 
         public static availablePercent(nodes: T[], dimension: DimensionAttr, boxSize: number) {
@@ -1066,10 +1067,11 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     else if (
                         flexibleWidth && (
                             this.nodeGroup && (renderParent.layoutFrame && (this.hasAlign(NODE_ALIGNMENT.FLOAT) || this.hasAlign(NODE_ALIGNMENT.RIGHT)) || this.hasAlign(NODE_ALIGNMENT.PERCENT)) ||
+                            actualParent.flexElement && this.some(item => item.multiline, { cascade: true }) ||
                             this.layoutGrid && this.some((node: T) => node.flexibleWidth)
                         ))
                     {
-                        layoutWidth = 'match_parent';
+                        layoutWidth = matchParent;
                     }
                     else if (!this.imageElement && !this.inputElement && !this.controlElement) {
                         const checkParentWidth = (block: boolean) => {
@@ -1114,12 +1116,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         else if (this.floating && this.block && !this.rightAligned && this.alignParent('left') && this.alignParent('right')) {
                             layoutWidth = 'match_parent';
                         }
-                        else if (
-                            this.inlineStatic && !this.blockDimension && this.naturalElement && this.some(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (
-                                renderParent.layoutVertical ||
-                                !this.alignSibling('leftRight') && !this.alignSibling('rightLeft')
-                            ))
-                        {
+                        else if (this.naturalElement && this.inlineStatic && !this.blockDimension && this.some(item => item.naturalElement && item.blockStatic) && !actualParent.layoutElement && (renderParent.layoutVertical || !this.alignSibling('leftRight') && !this.alignSibling('rightLeft'))) {
                             checkParentWidth(false);
                         }
                     }

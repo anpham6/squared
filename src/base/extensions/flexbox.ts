@@ -112,7 +112,6 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 absolute[i].containerIndex = offset + i++;
             }
             node.addAll(absolute);
-            node.sort();
             if (mainData.row) {
                 mainData.rowCount = length;
                 mainData.columnCount = maxCount;
@@ -135,6 +134,9 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     }
                     return orderA > orderB ? c : d;
                 });
+            }
+            else if (mainData.reverse) {
+                children.reverse();
             }
             if (mainData.row) {
                 mainData.rowCount = 1;

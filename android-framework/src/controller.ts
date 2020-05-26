@@ -366,12 +366,7 @@ function getVerticalAlignedLayout(layout: LayoutUI<View>) {
             : CONTAINER_NODE.LINEAR;
 }
 
-function getAnchorDirection(reverse = false) {
-    return reverse
-        ? { anchorStart: 'right', anchorEnd: 'left', chainStart: 'rightLeft', chainEnd: 'leftRight' }
-        : { anchorStart: 'left', anchorEnd: 'right', chainStart: 'leftRight', chainEnd: 'rightLeft' };
-}
-
+const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, data: RelativeLayoutData) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + (node.hasWidth ? node.actualWidth : 0)) < data.boxWidth);
 const isBaselineImage = (node: View) => node.imageOrSvgElement && node.baseline;
 const getBaselineAnchor = (node: View) => node.imageOrSvgElement ? 'baseline' : 'bottom';
@@ -2875,7 +2870,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     protected processConstraintHorizontal(node: T, children: T[]) {
         const reverse = node.hasAlign(NODE_ALIGNMENT.RIGHT);
-        const { anchorStart, anchorEnd, chainStart, chainEnd } = getAnchorDirection(reverse);
+        const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
         let valid = true;
         let bias = 0;
         let baselineCount = 0;
@@ -3115,7 +3110,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (q === 0) {
                     return;
                 }
-                const { anchorStart, anchorEnd, chainStart, chainEnd } = getAnchorDirection(reverse);
+                const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
                 const rowStart = seg[0];
                 const rowEnd = seg[q - 1];
                 if (q > 1) {

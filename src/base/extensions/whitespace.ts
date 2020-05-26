@@ -289,7 +289,7 @@ function getBottomChild(node: NodeUI) {
 }
 
 function isVerticalOverflow(node: NodeUI) {
-    for (const value of [node.cssInitial('overflowX'), node.cssInitial('overflowY')]) {
+    for (const value of [node.cssInitial('overflow'), node.cssInitial('overflowX'), node.cssInitial('overflowY')]) {
         switch (value) {
             case 'auto':
             case 'hidden':

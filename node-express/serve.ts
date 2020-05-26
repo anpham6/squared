@@ -793,11 +793,9 @@ let Image: serve.IImage;
             return result;
         }
         replacePath(source: string, segment: string, value: string, base64?: boolean) {
-            if (!base64) {
-                segment = segment.replace(/[\\/]/g, '[\\\\/]');
-            }
+            segment = !base64 ? segment.replace(/[\\/]/g, '[\\\\/]') : '[^"\'\\s]+' + segment;
             let result: Undef<string>;
-            let pattern = new RegExp(`(?:([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=)?(["'])(\\s*)${(base64 ? '.+?' : '') + segment}(\\s*)\\2`, 'g');
+            let pattern = new RegExp(`(?:([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=)?(["'])(\\s*)${segment}(\\s*)\\2`, 'g');
             let match: Null<RegExpExecArray>;
             while (match = pattern.exec(source)) {
                 if (result === undefined) {
@@ -810,7 +808,7 @@ let Image: serve.IImage;
                     result = result.replace(match[0], match[2] + match[3] + value + match[4] + match[2]);
                 }
             }
-            pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${(base64 ? '.+?' : '') + segment}\\s*\\1?\\s*\\)`, 'g');
+            pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
             while (match = pattern.exec(source)) {
                 if (result === undefined) {
                     result = source;

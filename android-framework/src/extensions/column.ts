@@ -5,7 +5,7 @@ type View = android.base.View;
 
 const { formatPX } = squared.lib.css;
 const { createElement } = squared.lib.dom;
-const { maxArray, truncate } = squared.lib.math;
+const { truncate } = squared.lib.math;
 const { safeNestedArray } = squared.lib.util;
 
 const { APP_SECTION, BOX_STANDARD, NODE_ALIGNMENT, NODE_PROCEDURE, NODE_RESOURCE, NODE_TEMPLATE } = squared.base.lib.enumeration;
@@ -109,7 +109,6 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         let perRowCount = q >= columnMin ? Math.ceil(q / columnMin) : 1;
                         let rowReduce = multiline || perRowCount > 1 && (q % perRowCount !== 0 || !isNaN(columnCount) && perRowCount * columnCount % q > 1);
                         let excessCount = rowReduce && q % columnMin !== 0 ? q - columnMin : Infinity;
-                        let totalGap = 0;
                         for (let j = 0, k = 0, l = 0; j < q; ++j, ++l) {
                             const item = row[j];
                             const iteration = l % perRowCount === 0;
@@ -130,9 +129,6 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             }
                             const column = safeNestedArray(columns, k);
                             column.push(item);
-                            if (item.length) {
-                                totalGap += maxArray(item.map(child => child.marginLeft + child.marginRight));
-                            }
                             if (j > 0 && /^H\d/.test(item.tagName)) {
                                 if (column.length === 1 && j === q - 2) {
                                     --columnMin;
@@ -147,7 +143,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                                 perRowCount = 1;
                             }
                         }
-                        percentGap = columnMin > 1 ? Math.max(((totalGap + (columnGap * (columnMin - 1))) / boxWidth) / columnMin, 0.01) : 0;
+                        percentGap = columnMin > 1 ? Math.max(((columnGap * (columnMin - 1)) / boxWidth) / columnMin, 0.01) : 0;
                     }
                     else {
                         columns.push(row);
@@ -191,7 +187,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                             if (column.naturalChild) {
                                 const element = column.element!.cloneNode(true) as HTMLElement;
                                 if (column.styleElement) {
-                                    if (column.imageOrSvgElement) {
+                                    if (column.imageOrSvgElement || column.some((item: T) => item.imageOrSvgElement, { cascade: true })) {
                                         element.style.height = formatPX(column.bounds.height);
                                     }
                                     else {
@@ -237,7 +233,7 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         const item = above[j];
                         if (j === 0) {
                             item.anchor('left', 'parent');
-                            item.anchorStyle('horizontal', 0, 'spread_inside');
+                            item.anchorStyle('horizontal', 0, 'packed');
                         }
                         else {
                             const previous = above[j - 1];
