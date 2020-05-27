@@ -1,4 +1,4 @@
-/* squared.base 1.9.0
+/* squared.base 1.9.1
    https://github.com/anpham6/squared */
 
 (function (global, factory) {
@@ -11755,7 +11755,6 @@
                     absolute[i].containerIndex = offset + i++;
                 }
                 node.addAll(absolute);
-                node.sort();
                 if (mainData.row) {
                     mainData.rowCount = length;
                     mainData.columnCount = maxCount;
@@ -11774,6 +11773,8 @@
                         }
                         return orderA > orderB ? c : d;
                     });
+                } else if (mainData.reverse) {
+                    children.reverse();
                 }
                 if (mainData.row) {
                     mainData.rowCount = 1;
@@ -13404,7 +13405,7 @@
         return bottomChild;
     }
     function isVerticalOverflow(node) {
-        for (const value of [node.cssInitial('overflowX'), node.cssInitial('overflowY')]) {
+        for (const value of [node.cssInitial('overflow'), node.cssInitial('overflowX'), node.cssInitial('overflowY')]) {
             switch (value) {
                 case 'auto':
                 case 'hidden':
