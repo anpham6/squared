@@ -770,12 +770,11 @@ export function cloneObject(data: {}, result = {}, array = false) {
 export function resolvePath(value: string, href?: string) {
     value = value.trim();
     if (!FILE.PROTOCOL.test(value)) {
-        const origin = location.origin;
-        const pathname = (href?.replace(origin, '') || location.pathname).replace(/\\/g, '/').split('/');
+        const pathname = (href?.replace(location.origin, '') || location.pathname).replace(/\\/g, '/').split('/');
         pathname.pop();
         value = value.replace(/\\/g, '/');
         if (value.charAt(0) === '/') {
-            return origin + value;
+            return location.origin + value;
         }
         else if (value.startsWith('../')) {
             const trailing: string[] = [];
@@ -794,7 +793,10 @@ export function resolvePath(value: string, href?: string) {
             }
             value = trailing.join('/');
         }
-        return origin + pathname.join('/') + '/' + value;
+        else if (value.startsWith('./')) {
+            value = value.substring(2);
+        }
+        return location.origin + pathname.join('/') + '/' + value;
     }
     return value;
 }

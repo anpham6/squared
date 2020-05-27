@@ -7,7 +7,7 @@ type View = android.base.View;
 const { isPercent, parseAngle } = squared.lib.css;
 const { measureTextWidth } = squared.lib.dom;
 const { clamp } = squared.lib.math;
-const { capitalizeString, delimitString, lowerCaseString, isNumber, isString } = squared.lib.util;
+const { capitalizeString, delimitString, lowerCaseString, isString } = squared.lib.util;
 const { STRING_SPACE, replaceCharacterData } = squared.lib.xml;
 
 const { NODE_RESOURCE } = squared.base.lib.enumeration;
@@ -27,9 +27,9 @@ function getFontVariationStyle(value: string) {
     return '';
 }
 
-function setTextValue(node: View, attr: string, name: string, useNumber: boolean) {
+function setTextValue(node: View, attr: string, name: string) {
     if (name !== '') {
-        node.android(attr, useNumber || !isNumber(name) ? `@string/${name}` : name, false);
+        node.android(attr, name, false);
     }
 }
 
@@ -49,8 +49,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         setTextValue(
                             node,
                             'tooltipText',
-                            Resource.addString(replaceCharacterData(title), `${node.controlId.toLowerCase()}_title`, numberResourceValue),
-                            numberResourceValue
+                            Resource.addString(replaceCharacterData(title), `${node.controlId.toLowerCase()}_title`, numberResourceValue)
                         );
                     }
                 }
@@ -66,8 +65,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                         setTextValue(
                             node,
                             'hint',
-                            Resource.addString(replaceCharacterData(hintString), `${node.controlId.toLowerCase()}_hint`, numberResourceValue),
-                            numberResourceValue
+                            Resource.addString(replaceCharacterData(hintString), `${node.controlId.toLowerCase()}_hint`, numberResourceValue)
                         );
                     }
                 }
@@ -328,8 +326,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                             setTextValue(
                                 node,
                                 'text',
-                                Resource.addString(valueString, '', numberResourceValue),
-                                numberResourceValue
+                                Resource.addString(valueString, '', numberResourceValue)
                             );
                         }
                     }
@@ -354,7 +351,7 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                 while (i < length) {
                     const value = Resource.addString(replaceCharacterData(resourceArray[i++]), '', numberResourceValue);
                     if (value !== '') {
-                        result.push(`@string/${value}`);
+                        result.push(value);
                     }
                 }
             }

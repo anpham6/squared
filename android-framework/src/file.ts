@@ -11,7 +11,6 @@ import STRING_TMPL from './template/resources/string';
 import STRINGARRAY_TMPL from './template/resources/string-array';
 import STYLE_TMPL from './template/resources/style';
 
-type FileActionOptions = squared.base.FileActionOptions;
 type FileArchivingOptions = squared.base.FileArchivingOptions;
 type FileCopyingOptions = squared.base.FileCopyingOptions;
 type View = android.base.View;
@@ -509,18 +508,6 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
             }
         }
         return result;
-    }
-
-    public getDataMap(options: FileActionOptions) {
-        return undefined;
-    }
-
-    public getCopyQueryParameters(options: FileCopyingOptions) {
-        return '';
-    }
-
-    public getArchiveQueryParameters(options: FileArchivingOptions) {
-        return '';
     }
 
     protected getAssetsAll(assets?: FileAsset[]) {

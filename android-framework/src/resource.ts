@@ -22,10 +22,7 @@ function formatObject(obj: {}, numberAlias = false) {
                 switch (attr) {
                     case 'text':
                         if (!value.startsWith('@string/')) {
-                            value = Resource.addString(value, '', numberAlias);
-                            if (value !== '') {
-                                obj[attr] = `@string/${value}`;
-                            }
+                            obj[attr] =  Resource.addString(value, '', numberAlias);
                         }
                         break;
                     case 'src':
@@ -131,7 +128,7 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 const strings = STORED.strings;
                 for (const [resourceName, resourceValue] of strings.entries()) {
                     if (resourceValue === value) {
-                        return resourceName;
+                        return '@string/' + resourceName;
                     }
                 }
                 const partial =
@@ -162,10 +159,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                     name = Resource.generateId('string', name);
                 }
                 strings.set(name, value);
+                return '@string/' + name;
             }
-            return name || value;
         }
-        return '';
+        return value;
     }
 
     public static addImage(images: StringMap, prefix = '', imageFormat?: MIMEOrAll) {

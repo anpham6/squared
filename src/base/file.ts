@@ -34,9 +34,17 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public abstract get userSettings(): UserSettings;
 
-    public abstract getDataMap(options: FileActionOptions): Undef<StandardMap>;
-    public abstract getCopyQueryParameters(options: FileCopyingOptions): string;
-    public abstract getArchiveQueryParameters(options: FileArchivingOptions): string;
+    public getDataMap(options: FileActionOptions) {
+        return undefined;
+    }
+
+    public getCopyQueryParameters(options: FileCopyingOptions) {
+        return '';
+    }
+
+    public getArchiveQueryParameters(options: FileArchivingOptions) {
+        return '';
+    }
 
     public createFrom(format: string, options: FileArchivingOptions) {
         return this.archiving({
