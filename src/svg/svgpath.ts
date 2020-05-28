@@ -344,8 +344,8 @@ export default class SvgPath extends SvgPaint$MX(SvgBaseVal$MX(SvgElement)) impl
             }
         }
         else if (SVG.rect(element)) {
-            let x = this.getBaseValue('x'), y = this.getBaseValue('y');
-            let width = this.getBaseValue('width'), height = this.getBaseValue('height');
+            let x: number = this.getBaseValue('x'), y: number = this.getBaseValue('y');
+            let width: number = this.getBaseValue('width'), height: number = this.getBaseValue('height');
             if (requireRefit || transforms?.length) {
                 let points: SvgPoint[] = [
                     { x, y },

@@ -38,7 +38,7 @@ function getFileAssets(pathname: string, items: string[]) {
         }
         return result;
     }
-    return items as any[];
+    return items as [];
 }
 
 function getImageAssets(pathname: string, items: string[], convertExt: string, compress: boolean) {
@@ -69,7 +69,7 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
         }
         return result;
     }
-    return items as any[];
+    return items as [];
 }
 
 function getRawAssets(pathname: string, items: string[]) {
@@ -86,7 +86,7 @@ function getRawAssets(pathname: string, items: string[]) {
         }
         return result;
     }
-    return items as any[];
+    return items as [];
 }
 
 function getOutputDirectory(value: string) {

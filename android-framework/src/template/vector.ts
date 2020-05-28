@@ -30,7 +30,7 @@ export const VECTOR_GROUP = {
         '>': {
             'clip-path': {
                 '^': 'android',
-                '@': ['name', 'pathData']
+                '@': ['name', 'pathData', 'fillType']
             },
             'path': VECTOR_PATH.path
         },

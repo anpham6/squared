@@ -29,9 +29,6 @@ const BOX_PADDING = CSS_PROPERTIES.padding.value as string[];
 
 for (let i = 0; i < 4; ++i) {
     CSS_SPACING.set(SPACING_MARGIN[i], BOX_MARGIN[i]);
-}
-
-for (let i = 0; i < 4; ++i) {
     CSS_SPACING.set(SPACING_PADDING[i], BOX_PADDING[i]);
 }
 
@@ -1089,7 +1086,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public getBox(region: number): [number, number] {
         const attr = CSS_SPACING.get(region);
         return attr
-            ? [this._boxReset[attr], this._boxAdjustment[attr]]
+            ? [this._boxReset[attr] as number, this._boxAdjustment[attr] as number]
             : [NaN, 0];
     }
 

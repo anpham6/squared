@@ -36,7 +36,7 @@ const { convertCamelCase, convertInt, convertWord, formatString, hasKeys, isArra
 const { applyTemplate } = squared.lib.xml;
 
 const { KEYSPLINE_NAME, SYNCHRONIZE_MODE } = squared.svg.lib.constant;
-const { MATRIX, SVG, TRANSFORM } = squared.svg.lib.util;
+const { MATRIX, SVG, TRANSFORM, getAttribute } = squared.svg.lib.util;
 
 const NodeUI = squared.base.NodeUI;
 
@@ -200,9 +200,9 @@ const ATTRIBUTE_ANDROID = {
     'clip-path': ['pathData']
 };
 
-function getPathInterpolator(keySplines: Undef<string[]>, index: number): string {
+function getPathInterpolator(keySplines: Undef<string[]>, index: number) {
     const name = keySplines?.[index];
-    return name ? INTERPOLATOR_ANDROID[name] || createPathInterpolator(name) : '';
+    return name ? INTERPOLATOR_ANDROID[name] as string || createPathInterpolator(name) : '';
 }
 
 function getPaintAttribute(value: string) {
@@ -215,7 +215,7 @@ function getPaintAttribute(value: string) {
 }
 
 function createPathInterpolator(value: string) {
-    const interpolator = INTERPOLATOR_ANDROID[value];
+    const interpolator: string = INTERPOLATOR_ANDROID[value];
     if (interpolator) {
         return interpolator;
     }
@@ -1474,7 +1474,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const scaleX = svg.width / box.width;
                 const scaleY = svg.height / box.height;
                 const offset = getParentOffset(image.element, svg.element);
-                let x = image.getBaseValue('x', 0) * scaleX, y = image.getBaseValue('y', 0) * scaleY;
+                let x = image.getBaseValue('x', 0) as number * scaleX, y = image.getBaseValue('y', 0) as number * scaleY;
                 let w: number = image.getBaseValue('width', 0), h: number = image.getBaseValue('height', 0);
                 x += offset.x;
                 y += offset.y;
@@ -1693,7 +1693,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         path.transformResidual?.forEach(item => renderData.push(createTransformData(item)));
         for (let i = 0; i < PATH_ATTRIBUTES.length; ++i) {
             let attr = PATH_ATTRIBUTES[i];
-            let value = useTarget && target[attr] || path[attr];
+            let value: string = useTarget && target[attr] || path[attr];
             if (value) {
                 switch (attr) {
                     case 'name':
@@ -1727,7 +1727,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                         break;
                     case 'fillPattern': {
                         const definition = this._svgInstance.definitions.gradient.get(value);
-                        let valid = false;
                         if (definition) {
                             switch (path.element.tagName) {
                                 case 'path':
@@ -1741,25 +1740,17 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 case 'ellipse': {
                                     const gradient = createFillGradient(definition, path, precision);
                                     if (gradient) {
-                                        value = {
+                                        result['aapt:attr'] = {
                                             name: 'android:fillColor',
                                             gradient
                                         };
-                                        valid = true;
+                                        result.fillColor = '';
+                                        this._namespaceAapt = true;
                                     }
-                                    break;
                                 }
                             }
                         }
-                        if (valid) {
-                            attr = 'aapt:attr';
-                            result.fillColor = '';
-                            this._namespaceAapt = true;
-                        }
-                        else {
-                            continue;
-                        }
-                        break;
+                        continue;
                     }
                     case 'fillRule':
                         if (value === 'evenodd') {
@@ -1953,7 +1944,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                     if (!this.queueAnimations(child, name, item => SvgBuild.asAnimate(item) || SvgBuild.asSet(item), pathData)) {
                                         name = '';
                                     }
-                                    clipArray.push({ name, pathData });
+                                    clipArray.push({ name, pathData, fillType: getAttribute(child.element, 'fillRule', true) === 'evenodd' ? 'evenOdd' : '' });
                                     valid = true;
                                 }
                             }
@@ -1965,7 +1956,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     if (!this.queueAnimations(target, name, item => item.attributeName === 'clip-path' && (SvgBuild.asAnimate(item) || SvgBuild.asSet(item)), value)) {
                         name = '';
                     }
-                    clipArray.push({ name, pathData: value });
+                    clipArray.push({ name, pathData: value, fillType: getAttribute(target.element, 'fillRule', true) === 'evenodd' ? 'evenOdd' : '' });
                     valid = true;
                 }
             });

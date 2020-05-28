@@ -91,7 +91,7 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             if (columnLength !== -1) {
-                columns = plainMap(nextCoordsX, value => nextMapX[value]);
+                columns = plainMap<string, T[]>(nextCoordsX, value => nextMapX[value]);
             }
             else {
                 const columnRight: number[] = [];

@@ -20,8 +20,8 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
     public build(options?: SvgBuildOptions) {
         this.setRect();
         super.build({ ...options, symbolElement: this.symbolElement });
-        const x = this.getBaseValue('x', 0);
-        const y = this.getBaseValue('y', 0);
+        const x: number = this.getBaseValue('x', 0);
+        const y: number = this.getBaseValue('y', 0);
         if (x !== 0 || y !== 0) {
             const pt = { x, y };
             this.cascade(item => {
