@@ -39,14 +39,28 @@ function checkTextAlign(value: string, ignoreStart: boolean) {
     return value;
 }
 
-function checkMergableGravity(value: string, direction: Set<string>) {
-    const horizontal = value + '_horizontal';
-    const vertical = value + '_vertical';
-    if (direction.has(value) || direction.has(horizontal) && direction.has(vertical)) {
-        direction.delete(horizontal);
-        direction.delete(vertical);
-        direction.add(value);
+function checkMergableGravity(value: string, direction: string[]) {
+    const indexA = direction.indexOf(value + '_horizontal');
+    const indexB = direction.indexOf(value + '_vertical');
+    if (indexA !== -1 && indexB !== -1) {
+        direction.splice(Math.min(indexA, indexB), 1);
+        direction.splice(Math.max(indexA, indexB) - 1, 1);
+        if (!direction.includes(value)) {
+            direction.push(value);
+        }
+        return true;
     }
+    else if (direction.includes(value)) {
+        if (indexA !== -1) {
+            direction.splice(indexA, 1);
+            return true;
+        }
+        if (indexB !== -1) {
+            direction.splice(indexB, 1);
+            return true;
+        }
+    }
+    return false;
 }
 
 function setAutoMargin(node: T, autoMargin: AutoMargin) {
@@ -450,32 +464,17 @@ function transferLayoutAlignment(node: T, replaceWith: T) {
 
 function finalizeGravity(node: T, attr: string) {
     const direction = getGravityValues(node, attr);
-    if (direction.size > 1) {
-        checkMergableGravity('center', direction);
-        checkMergableGravity('fill', direction);
-    }
-    let result = '';
-    let x = '', y = '', z = '';
-    for (const value of direction.values()) {
-        if (isHorizontalAlign(value)) {
-            x = value;
+    if (direction && direction.length > 1) {
+        let modified = false;
+        if (checkMergableGravity('center', direction)) {
+            modified = true;
         }
-        else if (isVerticalAlign(value)) {
-            y = value;
+        if (checkMergableGravity('fill', direction)) {
+            modified = true;
         }
-        else {
-            z += (z !== '' ? '|' : '') + value;
+        if (modified) {
+            node.android(attr, direction.join('|'));
         }
-    }
-    result = x !== '' && y !== '' ? x + '|' + y : x || y;
-    if (z !== '') {
-        result += (result !== '' ? '|' : '') + z;
-    }
-    if (result !== '') {
-        node.android(attr, result);
-    }
-    else {
-        node.delete('android', attr);
     }
 }
 
@@ -760,7 +759,24 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
     }
 }
 
-const getGravityValues = (node: T, attr: string) => new Set<string>(node.android(attr).split('|'));
+function getGravityValues(node: T, attr: string, value?: string) {
+    const gravity = node.android(attr);
+    if (gravity !== '') {
+        const result = gravity.split('|');
+        if (value) {
+            if (result.includes(value)) {
+                return undefined;
+            }
+            result.push(value);
+        }
+        return result;
+    }
+    else if (value) {
+        node.android(attr, value);
+    }
+    return undefined;
+}
+
 const excludeHorizontal = (node: T) => node.bounds.width === 0 && node.contentBoxWidth === 0 && node.textEmpty && node.marginLeft === 0 && node.marginRight === 0 && !node.visibleStyle.background;
 const excludeVertical = (node: T) => node.bounds.height === 0 && node.contentBoxHeight === 0 && (node.marginTop === 0 && node.marginBottom === 0 || node.css('overflow') === 'hidden');
 const inheritLineHeight = (node: T) => node.renderChildren.length === 0 && !node.multiline && !isNaN(node.lineHeight) && !node.has('lineHeight');
@@ -1812,6 +1828,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     return value;
                 }
             }
+            else if (value === '') {
+                this.delete('android', attr);
+                return '';
+            }
             return this.__android[attr] || '';
         }
 
@@ -1821,6 +1841,10 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (value !== '') {
                     return value;
                 }
+            }
+            else if (value === '') {
+                this.delete('app', attr);
+                return '';
             }
             return this.__app[attr] || '';
         }
@@ -2191,13 +2215,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         break;
                 }
             }
-            const direction = getGravityValues(this, attr);
-            const gravity = this.localizeString(alignment);
-            if (!direction.has(gravity)) {
-                direction.add(gravity);
+            const direction = getGravityValues(this, attr, this.localizeString(alignment));
+            if (direction) {
                 let result = '';
                 let x = '', y = '', z = '';
-                for (const value of direction.values()) {
+                let i = 0;
+                while (i < direction.length) {
+                    const value = direction[i++];
                     if (isHorizontalAlign(value)) {
                         if (x === '' || overwrite) {
                             x = value;
@@ -2216,9 +2240,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                 if (z !== '') {
                     result += (result !== '' ? '|' : '') + z;
                 }
-                if (result !== '') {
-                    this.android(attr, result);
-                }
+                this.android(attr, result);
             }
         }
 
