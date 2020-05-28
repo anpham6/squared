@@ -213,10 +213,6 @@ function convertBox(node: T, attr: string, margin: boolean) {
     return node.parseUnit(node.css(attr), 'width', !(node.actualParent?.gridElement === true));
 }
 
-function canTextAlign(node: T) {
-    return node.naturalChild && (node.length === 0 || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
-}
-
 function convertPosition(node: T, attr: string) {
     if (!node.positionStatic) {
         const unit = getInitialValue.call(node, attr, true);
@@ -709,6 +705,8 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     return true;
 }
 
+const canTextAlign = (node: T) => node.naturalChild && (node.length === 0 || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
+
 function getInitialValue(this: T, attr: string, modified?: boolean, computed?: boolean) {
     return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, modified, computed);
 }
@@ -1168,12 +1166,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result: Undef<number>;
         if (this.styleElement) {
             const element = this._element as Element;
-            if (this.pseudoElement) {
-                result = getElementCache(element.parentElement as Element, `styleSpecificity${getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr] as number;
-            }
-            else {
-                result = getElementCache(element, 'styleSpecificity', this.sessionId)?.[attr] as number;
-            }
+            result = this.pseudoElement
+                ? getElementCache(element.parentElement as Element, `styleSpecificity${getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr] as number
+                : getElementCache(element, 'styleSpecificity', this.sessionId)?.[attr] as number;
         }
         return result || 0;
     }

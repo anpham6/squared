@@ -93,6 +93,9 @@ export default abstract class NodeGroupUI extends NodeUI {
     }
 
     get block() {
+        if (this.hasAlign(NODE_ALIGNMENT.BLOCK)) {
+            return true;
+        }
         let result = this._cached.block;
         if (result === undefined) {
             result = this.some(node => node.block);
@@ -110,8 +113,8 @@ export default abstract class NodeGroupUI extends NodeUI {
             const documentParent = this.actualParent || this.documentParent;
             result = (
                 this.some(node => node.blockStatic || node.percentWidth > 0) ||
-                documentParent.percentWidth > 0 ||
                 this.layoutVertical && (documentParent.hasWidth || this.some(node => node.centerAligned || node.rightAligned)) ||
+                documentParent.percentWidth > 0 ||
                 documentParent.blockStatic && (documentParent.layoutVertical || this.hasAlign(NODE_ALIGNMENT.COLUMN))
             );
             if (result || this.containerType !== 0) {
@@ -155,12 +158,14 @@ export default abstract class NodeGroupUI extends NodeUI {
     get baseline() {
         let result = this._cached.baseline;
         if (result === undefined) {
-            const value = this.cssInitial('verticalAlign', true);
-            if (value === '') {
-                result = this.every((node: NodeUI) => node.baseline);
+            if (this.some((node: NodeUI) => node.floating || node.hasAlign(NODE_ALIGNMENT.FLOAT))) {
+                result = false;
             }
             else {
-                result = value === 'baseline' || isLength(value, true);
+                const value = this.css('verticalAlign');
+                result = value === ''
+                    ? this.every((node: NodeUI) => node.baseline)
+                    : value === 'baseline' || isLength(value, true);
             }
             this._cached.baseline = result;
         }
