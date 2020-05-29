@@ -397,7 +397,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     backgroundColor: {
         trait: CSS_TRAITS.CALC,
-        value: 'transparent'
+        value: 'rgba(0, 0, 0, 0)'
     },
     backgroundImage: {
         trait: CSS_TRAITS.CALC,
@@ -428,7 +428,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     backgroundSize: {
         trait: CSS_TRAITS.CALC,
-        value: 'auto auto'
+        value: 'auto'
     },
     border: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.SHORTHAND | CSS_TRAITS.LAYOUT,
@@ -980,7 +980,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     listStyleImage: {
         trait: CSS_TRAITS.LAYOUT,
-        value: 'normal'
+        value: 'none'
     },
     listStylePosition: {
         trait: CSS_TRAITS.LAYOUT,
@@ -1253,7 +1253,7 @@ export const CSS_PROPERTIES: CssProperties = {
     },
     textAlign: {
         trait: 0,
-        value: 'left'
+        value: 'start'
     },
     textAlignLast: {
         trait: 0,

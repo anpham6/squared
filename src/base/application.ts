@@ -64,11 +64,10 @@ const isSvg = (value: string) => FILE.SVG.test(value);
 const parseConditionText = (rule: string, value: string) => new RegExp(`\\s*@${rule}([^{]+)`).exec(value)?.[1].trim() || value;
 
 export default abstract class Application<T extends Node> implements squared.base.Application<T> {
-    public static KEY_NAME = 'squared.application';
+    public static readonly KEY_NAME = 'squared.application';
 
     public initializing = false;
     public closed = false;
-    public systemName = '';
     public readonly Node: Constructor<T>;
     public readonly rootElements = new Set<HTMLElement>();
     public readonly session: squared.base.AppSession = {
@@ -83,6 +82,7 @@ export default abstract class Application<T extends Node> implements squared.bas
     public abstract builtInExtensions: ObjectMap<Extension<T>>;
     public abstract extensions: Extension<T>[];
     public abstract userSettings: UserSettings;
+    public abstract readonly systemName: string;
 
     protected _cascadeAll = false;
     protected _cache: squared.base.NodeList<T>;
@@ -159,32 +159,33 @@ export default abstract class Application<T extends Node> implements squared.bas
         controller.sessionId = sessionId;
         controller.init();
         this.setStyleMap();
-        const preloaded: HTMLImageElement[] = [];
         const preloadImages = this.userSettings.preloadImages;
+        const preloaded: HTMLImageElement[] = [];
         const imageElements: PreloadImage[] = [];
         const styleElement = insertStyleSheetRule('html > body { overflow: hidden !important; }');
-        let documentRoot!: HTMLElement;
+        let documentRoot: Undef<HTMLElement>;
         if (elements.length === 0) {
-            elements.push(document.body);
+            documentRoot = document.body;
+            this.rootElements.add(documentRoot);
         }
-        for (let i = 0; i < elements.length; ++i) {
-            const value = elements[i];
-            let element: Null<HTMLElement>;
-            if (typeof value === 'string') {
-                element = document.getElementById(value);
-            }
-            else if (hasComputedStyle(value)) {
-                element = value;
-            }
-            else {
-                continue;
-            }
-            if (element) {
+        else {
+            let i = 0;
+            while (i < elements.length) {
+                let element: Null<HTMLElement | string> = elements[i++];
+                if (typeof element === 'string') {
+                    element = document.getElementById(element);
+                }
+                if (!element || !hasComputedStyle(element)) {
+                    continue;
+                }
                 if (!documentRoot) {
                     documentRoot = element;
                 }
                 this.rootElements.add(element);
             }
+        }
+        if (!documentRoot) {
+            return Promise.reject(new Error('Document root not found.'));
         }
         for (const element of this.rootElements) {
             element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
@@ -198,7 +199,7 @@ export default abstract class Application<T extends Node> implements squared.bas
             while (i < length) {
                 const image = preloaded[i++];
                 if (image.parentElement) {
-                    documentRoot.removeChild(image);
+                    documentRoot!.removeChild(image);
                 }
             }
             preloaded.length = 0;

@@ -3,7 +3,7 @@ import { NODE_ALIGNMENT } from './lib/enumeration';
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
-const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isLength, isPercent, isPx, parseSelectorText, parseUnit } = squared.lib.css;
+const { CSS_PROPERTIES, CSS_TRAITS, CSS_UNIT, checkStyleValue, checkWritingMode, formatPX, getInheritedStyle, getStyle, hasComputedStyle, isAngle, isLength, isPercent, isTime, isPx, parseSelectorText, parseUnit } = squared.lib.css;
 const { ELEMENT_BLOCK, assignRect, getNamedItem, getRangeClientRect, newBoxRectDimension } = squared.lib.dom;
 const { CSS, FILE } = squared.lib.regex;
 const { actualClientRect, actualTextRangeRect, deleteElementCache, getElementAsNode, getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
@@ -712,14 +712,14 @@ function getInitialValue(this: T, attr: string, modified?: boolean, computed?: b
 }
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
-    public static BOX_POSITION = [
+    public static readonly BOX_POSITION = [
         'top',
         'right',
         'bottom',
         'left'
     ];
 
-    public static TEXT_STYLE = [
+    public static readonly TEXT_STYLE = [
         'fontFamily',
         'fontWeight',
         'fontStyle',
@@ -1304,43 +1304,37 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public has(attr: string, options?: HasOptions) {
-        let map: Undef<string>, not: Undef<string | string[]>, type: Undef<number>;
-        if (options) {
-            ({ map, not, type } = options);
-        }
-        const value = (map === 'initial' && this._initial?.styleMap || this._styleMap)[attr];
+        const value = (options?.map === 'initial' && this._initial?.styleMap || this._styleMap)[attr];
         if (value) {
-            switch (value) {
-                case 'auto':
-                case 'none':
-                case 'initial':
-                case 'normal':
-                case 'rgba(0, 0, 0, 0)':
+            if (value === 'initial' || value === CSS_PROPERTIES[attr].value) {
+                return false;
+            }
+            let not: Undef<string | string[]>, type: Undef<number>;
+            if (options) {
+                ({ not, type } = options);
+            }
+            if (not) {
+                if (value === not) {
                     return false;
-                case 'top':
-                case 'baseline':
-                    return attr !== 'verticalAlign';
-                case 'left':
-                case 'start':
-                    return attr !== 'textAlign';
-                default:
-                    if (not) {
-                        if (Array.isArray(not)) {
-                            for (let i = 0; i < not.length; ++i) {
-                                if (value === not[i]) {
-                                    return false;
-                                }
-                            }
-                        }
-                        else if (value === not) {
+                }
+                else if (Array.isArray(not)) {
+                    let i = 0;
+                    while (i < not.length) {
+                        if (value === not[i++]) {
                             return false;
                         }
                     }
-                    if (type) {
-                        return hasBit(type, CSS_UNIT.LENGTH) && isLength(value) || hasBit(type, CSS_UNIT.PERCENT) && isPercent(value);
-                    }
-                    return true;
+                }
             }
+            if (type) {
+                return (
+                    hasBit(type, CSS_UNIT.LENGTH) && isLength(value) ||
+                    hasBit(type, CSS_UNIT.PERCENT) && isPercent(value) ||
+                    hasBit(type, CSS_UNIT.TIME) && isTime(value) ||
+                    hasBit(type, CSS_UNIT.ANGLE) && isAngle(value)
+                );
+            }
+            return true;
         }
         return false;
     }

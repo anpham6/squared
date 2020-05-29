@@ -1115,8 +1115,7 @@ class FileManager implements serve.IFileManager {
                             try {
                                 fs.unlinkSync(gz);
                             }
-                            catch (err) {
-                                Node.writeFail(gz, err);
+                            catch {
                             }
                             finalize('');
                         }
@@ -1138,8 +1137,7 @@ class FileManager implements serve.IFileManager {
                             try {
                                 fs.unlinkSync(br);
                             }
-                            catch (err) {
-                                Node.writeFail(br, err);
+                            catch {
                             }
                             finalize('');
                         }
@@ -1174,8 +1172,7 @@ class FileManager implements serve.IFileManager {
                                     fs.renameSync(jpg, filepath);
                                 }
                             }
-                            catch (error) {
-                                Node.writeFail(jpg, error);
+                            catch {
                             }
                         }
                         finalize('');
@@ -2024,9 +2021,11 @@ class FileManager implements serve.IFileManager {
         }
         const length = this.dirname.length;
         for (const value of this.filesToRemove) {
+            this.files.delete(value.substring(length + 1));
             try {
-                fs.unlinkSync(value);
-                this.files.delete(value.substring(length + 1));
+                if (fs.existsSync(value)) {
+                    fs.unlinkSync(value);
+                }
             }
             catch (err) {
                 Node.writeFail(value, err);

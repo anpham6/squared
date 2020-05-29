@@ -5,11 +5,11 @@ type View = android.base.View;
 const isTargeted = (node: View, target: Null<HTMLElement | string>) => node.element === target || node.elementId === target || node.controlId === target;
 
 export default class Application<T extends View> extends squared.base.ApplicationUI<T> implements android.base.Application<T> {
-    public systemName = 'android';
     public userSettings!: AndroidUserSettingsUI;
     public readonly controllerHandler!: android.base.Controller<T>;
     public readonly resourceHandler!: android.base.Resource<T>;
     public readonly fileHandler!: android.base.File<T>;
+    public readonly systemName = 'android';
 
     private _viewModel?: AppViewModel;
 

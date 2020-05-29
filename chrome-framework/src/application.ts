@@ -5,9 +5,9 @@ import { APP_QUERYSTATE } from './lib/enumeration';
 export default class Application<T extends chrome.base.View> extends squared.base.Application<T> implements chrome.base.Application<T> {
     public builtInExtensions: ObjectMap<chrome.base.Extension<T>> = {};
     public extensions: chrome.base.Extension<T>[] = [];
-    public systemName = 'chrome';
     public queryState = 0;
     public userSettings!: ChromeUserSettings;
+    public readonly systemName = 'chrome';
 
     public finalize() {}
 

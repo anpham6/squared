@@ -266,7 +266,7 @@ function getGradientPosition(value: string) {
 }
 
 export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> implements squared.base.ResourceUI<T> {
-    public static STORED: ResourceStoredMap = {
+    public static readonly STORED: ResourceStoredMap = {
         strings: new Map(),
         arrays: new Map(),
         fonts: new Map(),

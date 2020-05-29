@@ -139,6 +139,7 @@ declare module "lib" {
         function isPercent(value: string): boolean;
         function isCalc(value: string): boolean;
         function isCustomProperty(value: string): boolean;
+        function isTime(value: string): boolean;
         function isAngle(value: string): boolean;
         function hasCalc(value: string): boolean;
     }

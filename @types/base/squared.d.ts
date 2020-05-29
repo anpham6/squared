@@ -80,11 +80,11 @@ declare module "base" {
     }
 
     class Application<T extends Node> implements FileActionAsync {
-        static KEY_NAME: string;
+        static readonly KEY_NAME: string;
         userSettings: UserSettings;
         initializing: boolean;
         closed: boolean;
-        systemName: string;
+        readonly systemName: string;
         readonly framework: number;
         readonly session: AppSession;
         readonly processing: AppProcessing<T>;
@@ -204,8 +204,8 @@ declare module "base" {
     }
 
     class Resource<T extends Node> implements Resource<T> {
-        static KEY_NAME: string;
-        static ASSETS: ResourceAssetMap;
+        static readonly KEY_NAME: string;
+        static readonly ASSETS: ResourceAssetMap;
         static canCompressImage(filename: string, mimeType?: string): boolean;
         static getExtension(value: string): string;
         readonly application: Application<T>;
@@ -230,7 +230,7 @@ declare module "base" {
     }
 
     class ResourceUI<T extends NodeUI> extends Resource<T> {
-        static STORED: ResourceStoredMap;
+        static readonly STORED: ResourceStoredMap;
         static generateId(section: string, name: string, start?: number): string;
         static insertStoredAsset(asset: string, name: string, value: any): string;
         static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled?: boolean): Undef<string[]>[];
@@ -362,8 +362,8 @@ declare module "base" {
     }
 
     class Node extends squared.lib.base.Container<Node> implements BoxModel {
-        static BOX_POSITION: string[];
-        static TEXT_STYLE: string[];
+        static readonly BOX_POSITION: string[];
+        static readonly TEXT_STYLE: string[];
         id: number;
         depth: number;
         childIndex: number;
