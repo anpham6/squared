@@ -1,4 +1,4 @@
-const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, convertAngle, getFontSize, isLength, isPercent, parseUnit } = squared.lib.css;
+const { CSS_UNIT, calculateStyle: calculateCssStyle, calculateVar, calculateVarAsString, convertAngle, getFontSize, isLength, isPercent, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { clamp, convertRadian, hypotenuse } = squared.lib.math;
 const { TRANSFORM: REGEXP_TRANSFORM } = squared.lib.regex;
@@ -466,6 +466,8 @@ export function calculateStyle(element: SVGElement, attr: string, value: string)
             }
             return '0';
         }
+        case 'strokeDasharray':
+            return calculateVarAsString(element, value, { boundingSize: getViewportArea(false, viewBox), min: 0 });
         case 'strokeDashoffset': {
             const result = calculateVar(element, value, { boundingSize: getViewportArea(true, viewBox), unitType: CSS_UNIT.DECIMAL });
             return !isNaN(result) ? result.toString() : '';

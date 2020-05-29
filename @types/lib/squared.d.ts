@@ -101,6 +101,7 @@ declare module "lib" {
             CONTAIN = 16
         }
         const CSS_PROPERTIES: CssProperties;
+        const SVG_PROPERTIES: CssProperties;
         function newBoxModel(): BoxModel;
         function getStyle(element: Null<Element>, pseudoElt?: string): CSSStyleDeclaration;
         function getFontSize(element: Element): number;

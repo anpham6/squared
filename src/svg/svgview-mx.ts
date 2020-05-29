@@ -4,7 +4,7 @@ import SvgAnimateTransform from './svganimatetransform';
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { KEYSPLINE_NAME, STRING_CUBICBEZIER } from './lib/constant';
+import { KEYSPLINE_NAME } from './lib/constant';
 import { TRANSFORM, calculateStyle, getAttribute } from './lib/util';
 
 type SvgElement = squared.svg.SvgElement;
@@ -30,7 +30,7 @@ const ANIMATION_DEFAULT = {
 };
 
 const MAP_KEYFRAMES = getKeyframesRules();
-const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${STRING_CUBICBEZIER}),?\\s*`, 'g');
+const REGEXP_TIMINGFUNCTION = new RegExp(`(ease|ease-in|ease-out|ease-in-out|linear|step-(?:start|end)|steps\\(\\d+,\\s+(?:start|end)\\)|${SvgAnimate.PATTERN_CUBICBEZIER}),?\\s*`, 'g');
 
 function parseAttribute(element: SVGElement, attr: string) {
     const value = getAttribute(element, attr);

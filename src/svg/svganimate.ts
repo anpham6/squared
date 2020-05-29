@@ -1,14 +1,12 @@
 import SvgAnimation from './svganimation';
 import SvgBuild from './svgbuild';
 
-import { INSTANCE_TYPE, KEYSPLINE_NAME, STRING_CUBICBEZIER } from './lib/constant';
+import { INSTANCE_TYPE, KEYSPLINE_NAME } from './lib/constant';
 
 const { getHexCode, parseColor } = squared.lib.color;
 const { getFontSize, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
 const { isNumber, isString, replaceMap, sortNumber, trimEnd } = squared.lib.util;
-
-const REGEXP_CUBICBEZIER = new RegExp(STRING_CUBICBEZIER);
 
 function flatString<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
     const length = list.length;
@@ -26,6 +24,8 @@ function flatString<T, U>(list: T[], predicate: IteratorPredicate<T, U>): U[] {
 const invertControlPoint = (value: number) => parseFloat((1 - value).toPrecision(5));
 
 export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgAnimate {
+    public static PATTERN_CUBICBEZIER = 'cubic-bezier\\(([\\d.]+), ([\\d.]+), ([\\d.]+), ([\\d.]+)\\)';
+
     public static getSplitValue = (value: number, next: number, percent: number) => value + (next - value) * percent;
 
     public static convertTimingFunction(value: string) {
@@ -40,7 +40,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             return KEYSPLINE_NAME.linear;
         }
         else {
-            const match = REGEXP_CUBICBEZIER.exec(value);
+            const match = new RegExp(SvgAnimate.PATTERN_CUBICBEZIER).exec(value);
             return match ? match[1] + ' ' + match[2] + ' ' + match[3] + ' ' + match[4] : KEYSPLINE_NAME.ease;
         }
     }

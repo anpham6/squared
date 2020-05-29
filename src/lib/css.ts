@@ -641,6 +641,10 @@ export const CSS_PROPERTIES: CssProperties = {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.DEPRECATED,
         value: 'clip'
     },
+    clipPath: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
     color: {
         trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
         value: ''
@@ -1373,6 +1377,101 @@ export const CSS_PROPERTIES: CssProperties = {
         value: 'auto'
     }
 };
+
+export const SVG_PROPERTIES: CssProperties = {
+    clipRule: {
+        trait: 0,
+        value: 'nonzero'
+    },
+    cx: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    cy: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    fill: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: 'black'
+    },
+    fillOpacity: {
+        trait: CSS_TRAITS.CALC,
+        value: '1'
+    },
+    fillRule: {
+        trait: 0,
+        value: 'nonzero'
+    },
+    stroke: {
+        trait: CSS_TRAITS.CALC | CSS_TRAITS.COLOR,
+        value: 'none'
+    },
+    strokeDasharray: {
+        trait: CSS_TRAITS.CALC,
+        value: 'none'
+    },
+    strokeDashoffset: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    strokeLinecap: {
+        trait: 0,
+        value: 'butt'
+    },
+    strokeLinejoin: {
+        trait: 0,
+        value: 'miter'
+    },
+    strokeMiterlimit: {
+        trait: CSS_TRAITS.CALC,
+        value: '4'
+    },
+    strokeOpacity: {
+        trait: CSS_TRAITS.CALC,
+        value: '1'
+    },
+    strokeWidth: {
+        trait: CSS_TRAITS.CALC,
+        value: '1'
+    },
+    r: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    rx: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    ry: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    x: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    x1: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    x2: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    y: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    y1: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    },
+    y2: {
+        trait: CSS_TRAITS.CALC,
+        value: '0'
+    }
+}
 
 export function newBoxModel(): BoxModel {
     return {
@@ -2133,20 +2232,17 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
             const length = path.length;
             if (length === 2) {
                 const prefix = path[0].trim();
+                let shape = trimEnclosing(path[1].trim());
                 switch (prefix) {
                     case 'url':
                     case 'path':
                         return !hasCalc(path[1]) ? value : '';
                     case 'linear-gradient':
-                    case 'repeating-linear-gradient':
                     case 'radial-gradient':
-                    case 'repeating-radial-gradient':
                     case 'conic-gradient':
+                    case 'repeating-linear-gradient':
+                    case 'repeating-radial-gradient':
                         return calculateStyle(element, 'backgroundImage', value, boundingBox);
-                }
-                let shape = path[1].trim();
-                shape = trimEnclosing(shape);
-                switch (prefix) {
                     case 'circle':
                     case 'ellipse': {
                         const result: string[] = [];
@@ -2215,6 +2311,8 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                         shape = result.join(', ');
                         break;
                     }
+                    default:
+                        return value;
                 }
                 if (shape !== '') {
                     return `${prefix}(${shape})`;

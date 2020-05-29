@@ -42,7 +42,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
 
         protected _retainStyle = true;
 
-        private _strokeWidth = '1';
+        private _strokeWidth!: string;
 
         public setStroke() {
             this.setAttribute('stroke');
@@ -174,7 +174,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
                 switch (attr) {
                     case 'strokeDasharray':
-                        value = value !== 'none' ? joinArray(value.split(/,\s*/), unit => this.convertLength(unit).toString(), ', ', false) : '';
+                        value = value !== 'none' ? joinArray(value.replace(/[,\s]+/g, ',').split(','), unit => this.convertLength(unit).toString(), ', ', false) : '';
                         break;
                     case 'strokeDashoffset':
                     case 'strokeWidth':

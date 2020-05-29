@@ -546,6 +546,7 @@ declare module "svg" {
     }
 
     class SvgAnimate extends SvgAnimation {
+        static PATTERN_CUBICBEZIER: string;
         static getSplitValue(value: number, next: number, percent: number): number;
         static convertTimingFunction(value: string): string;
         static convertStepTimingFunction(attributeName: string, keyTimes: number[], values: string[], keySpline: string, index: number, fontSize?: number): Undef<[number[], string[]]>;
@@ -682,7 +683,6 @@ declare module "svg" {
                 'step-start': string;
                 'step-end': string;
             };
-            const STRING_CUBICBEZIER: string;
         }
 
         namespace util {
