@@ -273,7 +273,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             file = element.dataset.chromeFile;
         }
         if (!isString(file) && saveAs?.filename) {
-            file = fromLastIndexOf(saveAs.filename);
+            file = fromLastIndexOf(saveAs.filename, '/', '\\');
             format = saveAs.format;
         }
         const data = File.parseUri(href, { preserveCrossOrigin: options?.preserveCrossOrigin, saveAs: file, format });

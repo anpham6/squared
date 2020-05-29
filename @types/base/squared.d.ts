@@ -207,6 +207,7 @@ declare module "base" {
         static KEY_NAME: string;
         static ASSETS: ResourceAssetMap;
         static canCompressImage(filename: string, mimeType?: string): boolean;
+        static getExtension(value: string): string;
         readonly application: Application<T>;
         readonly cache: NodeList<T>;
         reset(): void;

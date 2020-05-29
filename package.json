@@ -117,7 +117,7 @@
     "js-beautify": "^1.11.0",
     "md5": "^2.2.1",
     "prettier": "^2.0.5",
-    "puppeteer": "^3.1.0",
+    "puppeteer": "^3.2.0",
     "readdirp": "^3.4.0",
     "rollup": "^2.11.2",
     "rollup-plugin-prettier": "^2.1.0",

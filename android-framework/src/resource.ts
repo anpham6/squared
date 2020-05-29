@@ -175,8 +175,10 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
                 }
             }
             const src = fromLastIndexOf(mdpi, '/');
-            if (!imageFormat || hasMimeType(imageFormat, src)) {
-                const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - fromLastIndexOf(src, '.').length - 1)).toLowerCase(), images);
+            const ext = this.getExtension(src);
+            const length = ext.length;
+            if (!imageFormat || length === 0 || hasMimeType(imageFormat, ext)) {
+                const asset = Resource.insertStoredAsset('images', Resource.formatName(prefix + src.substring(0, src.length - (length > 0 ? length + 1 : 0))).toLowerCase(), images);
                 CACHE_IMAGE[mdpi] = asset;
                 return asset;
             }

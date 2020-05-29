@@ -51,12 +51,15 @@ function getImageAssets(pathname: string, items: string[], convertExt: string, c
         }
         const result: FileAsset[] = new Array(length / 3);
         for (let i = 0, j = 0; i < length; i += 3) {
-            const filename = items[i + 2].split('?')[0].trim().toLowerCase();
+            const filename = items[i + 2];
             let mimeType: Undef<string>;
-            if (mimeTypeTo !== '') {
+            if (filename.endsWith('.unknown')) {
+                mimeType = (compress ? 'png@:' : '') + 'image/unknown';
+            }
+            else if (mimeTypeTo !== '') {
                 const mimeTypeFrom = parseMimeType(filename);
                 if (mimeTypeFrom !== mimeTypeTo && mimeTypeFrom.startsWith('image/')) {
-                    mimeType = (!/^[a-z\d]/.test(convertExt) ? '@' : '') + convertExt + ':' + mimeTypeFrom;
+                    mimeType = convertExt + (!/[@%]/.test(convertExt) ? '@' : '') + ':' + mimeTypeFrom;
                 }
             }
             result[j++] = {
@@ -245,7 +248,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     if (uri) {
                         this.addAsset({
                             pathname: outputDirectory + pathname,
-                            filename: fontName + '.' + fromLastIndexOf(uri.split('?')[0], '.').toLowerCase(),
+                            filename: fontName + '.' + (Resource.getExtension(uri.split('?')[0]).toLowerCase() || 'ttf'),
                             uri
                         });
                     }
@@ -409,7 +412,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                         result.push(
                             value,
                             imageDirectory + '-' + dpi,
-                            name + '.' + fromLastIndexOf(value, '.').toLowerCase()
+                            name + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
                         );
                     }
                 }
@@ -419,7 +422,7 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                         result.push(
                             value,
                             imageDirectory,
-                            name + '.' + fromLastIndexOf(value, '.').toLowerCase()
+                            name + '.' + (Resource.getExtension(value).toLowerCase() || 'unknown')
                         );
                     }
                 }

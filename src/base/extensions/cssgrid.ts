@@ -29,17 +29,17 @@ interface RepeatItem {
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
 const { convertFloat, isNumber, safeNestedArray, trimString, withinRange } = squared.lib.util;
 
-const STRING_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
-const STRING_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
-const STRING_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
-const STRING_NAMED = '\\[([\\w\\s\\-]+)\\]';
-const REGEXP_UNIT = new RegExp(`^${STRING_UNIT}$`);
-const REGEXP_NAMED = new RegExp(`\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s+(.+)\\)|${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT}\\s*)\\s*`, 'g');
-const REGEXP_REPEAT = new RegExp(`\\s*(${STRING_NAMED}|${STRING_MINMAX}|${STRING_FIT_CONTENT}|${STRING_UNIT})\\s*`, 'g');
-const REGEXP_CELL_UNIT = new RegExp(STRING_UNIT);
-const REGEXP_CELL_MINMAX = new RegExp(STRING_MINMAX);
-const REGEXP_CELL_FIT_CONTENT = new RegExp(STRING_FIT_CONTENT);
-const REGEXP_CELL_NAMED = new RegExp(STRING_NAMED);
+const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
+const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
+const PATTERN_FIT_CONTENT = 'fit-content\\(\\s*([\\d.]+[a-z%]+)\\s*\\)';
+const PATTERN_NAMED = '\\[([\\w\\s\\-]+)\\]';
+const REGEXP_UNIT = new RegExp(`^${PATTERN_UNIT}$`);
+const REGEXP_NAMED = new RegExp(`\\s*(repeat\\(\\s*(auto-fit|auto-fill|\\d+),\\s+(.+)\\)|${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT}\\s*)\\s*`, 'g');
+const REGEXP_REPEAT = new RegExp(`\\s*(${PATTERN_NAMED}|${PATTERN_MINMAX}|${PATTERN_FIT_CONTENT}|${PATTERN_UNIT})\\s*`, 'g');
+const REGEXP_CELL_UNIT = new RegExp(PATTERN_UNIT);
+const REGEXP_CELL_MINMAX = new RegExp(PATTERN_MINMAX);
+const REGEXP_CELL_FIT_CONTENT = new RegExp(PATTERN_FIT_CONTENT);
+const REGEXP_CELL_NAMED = new RegExp(PATTERN_NAMED);
 
 function repeatUnit(data: CssGridDirectionData, sizes: string[]) {
     const repeat = data.repeat;
