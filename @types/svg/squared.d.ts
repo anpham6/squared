@@ -61,6 +61,8 @@ declare module "svg" {
         readonly animations: SvgAnimation[];
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        getTitle(lang?: string): string;
+        getDesc(lang?: string): string;
     }
 
     interface SvgViewRect extends SvgBaseVal, SvgRect {
@@ -158,12 +160,14 @@ declare module "svg" {
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
         verifyBaseValue(attr: string, value?: any): Undef<boolean>;
-        getTransforms(element?: SVGGraphicsElement): SvgTransform[];
-        getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
         animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
+        getTransforms(element?: SVGGraphicsElement): SvgTransform[];
+        getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        getTitle(lang?: string): string;
+        getDesc(lang?: string): string;
         set name(value);
         get name(): string;
         set x(value);
@@ -205,11 +209,13 @@ declare module "svg" {
         constructor(element: SVGGElement);
         setPaint(d?: string[], precision?: number): void;
         resetPaint(): void;
-        getTransforms(element?: SVGGraphicsElement): SvgTransform[];
-        getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
         setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
         getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
         convertLength(value: string, dimension?: string | number): number;
+        getTransforms(element?: SVGGraphicsElement): SvgTransform[];
+        getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        getTitle(lang?: string): string;
+        getDesc(lang?: string): string;
         set name(value);
         get name(): string;
         set strokeWidth(value);
@@ -227,10 +233,12 @@ declare module "svg" {
         getAnimateShape(element: SVGGraphicsElement): SvgAnimate[];
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
-        getTransforms(element?: SVGGraphicsElement): SvgTransform[];
-        getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
         animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
         setPath(): void;
+        getTransforms(element?: SVGGraphicsElement): SvgTransform[];
+        getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        getTitle(lang?: string): string;
+        getDesc(lang?: string): string;
         set name(value);
         get name(): string;
         set path(value);
@@ -252,9 +260,11 @@ declare module "svg" {
         getBaseValue(attr: string, fallback?: any): any;
         refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
         verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        extract(exclude?: number[]): void;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
-        extract(exclude?: number[]): void;
+        getTitle(lang?: string): string;
+        getDesc(lang?: string): string;
         set name(value);
         get name(): string;
         set x(value);
@@ -394,8 +404,6 @@ declare module "svg" {
         getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
         resetPaint(): void;
         convertLength(value: string, dimension?: string|number): number;
-        getTransforms(element?: SVGGraphicsElement): SvgTransform[];
-        getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
         setRect(): void;
         setBaseValue(attr: string, value?: any): boolean;
         getBaseValue(attr: string, fallback?: any): any;
@@ -405,6 +413,10 @@ declare module "svg" {
         getAnimateTransform(options?: SvgSynchronizeOptions): SvgAnimateTransform[];
         getAnimateViewRect(animations?: SvgAnimation[]): SvgAnimate[];
         animateSequentially(animations?: SvgAnimation[], transforms?: SvgAnimateTransform[], path?: SvgPath, options?: SvgSynchronizeOptions): void;
+        getTransforms(element?: SVGGraphicsElement): SvgTransform[];
+        getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        getTitle(lang?: string): string;
+        getDesc(lang?: string): string;
         set name(value);
         get name(): string;
         set x(value);
@@ -431,6 +443,8 @@ declare module "svg" {
         readonly patternElement: SVGPatternElement;
         getTransforms(element?: SVGGraphicsElement): SvgTransform[];
         getAnimations(element?: SVGGraphicsElement): SvgAnimation[];
+        getTitle(lang?: string): string;
+        getDesc(lang?: string): string;
         set name(value);
         get name(): string;
         get transforms(): SvgTransform[];

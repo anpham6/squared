@@ -570,10 +570,10 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                             continue;
                         }
                     }
-                    else {
-                        match = /^:lang\(\s*(.+)\s*\)$/.exec(pseudo);
+                    else if (child.attributes['lang']) {
+                        match = /^:lang\((.+)\)$/.exec(pseudo);
                         if (match) {
-                            if (child.attributes['lang']?.trim().toLowerCase() === match[1].toLowerCase()) {
+                            if (child.attributes['lang'].trim().toLowerCase() === match[1].trim().toLowerCase()) {
                                 continue;
                             }
                         }
@@ -1167,8 +1167,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (this.styleElement) {
             const element = this._element as Element;
             result = this.pseudoElement
-                ? getElementCache(element.parentElement as Element, `styleSpecificity${getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr] as number
-                : getElementCache(element, 'styleSpecificity', this.sessionId)?.[attr] as number;
+                ? getElementCache(element.parentElement as Element, `styleSpecificity${getPseudoElt(element, this.sessionId)}`, this.sessionId)?.[attr]
+                : getElementCache(element, 'styleSpecificity', this.sessionId)?.[attr];
         }
         return result || 0;
     }

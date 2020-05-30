@@ -72,10 +72,11 @@ export default <T extends Constructor<SvgBaseVal>>(Base: T) => {
             }
             else {
                 const element = this.getRectElement();
-                if (element) {
-                    return hasUnsupportedAccess(element) ? element.getBoundingClientRect().width : element.width.baseVal.value;
-                }
-                return 0;
+                return element
+                    ? hasUnsupportedAccess(element)
+                        ? element.getBoundingClientRect().width
+                        : element.width.baseVal.value
+                    : 0;
             }
         }
 
@@ -89,10 +90,11 @@ export default <T extends Constructor<SvgBaseVal>>(Base: T) => {
             }
             else {
                 const element = this.getRectElement();
-                if (element) {
-                    return hasUnsupportedAccess(element) ? element.getBoundingClientRect().height : element.height.baseVal.value;
-                }
-                return 0;
+                return element
+                    ? hasUnsupportedAccess(element)
+                        ? element.getBoundingClientRect().height
+                        : element.height.baseVal.value
+                    : 0;
             }
         }
     };

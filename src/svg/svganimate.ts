@@ -33,7 +33,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         if (keySpline) {
             return keySpline;
         }
-        else if (/^\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$/.test(value)) {
+        else if (/\s*[\d.]+\s+[\d.]+\s+[\d.]+\s+[\d.]+\s*$/.test(value)) {
             return value;
         }
         else if (value.startsWith('step')) {
@@ -210,10 +210,13 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             }
             const repeatDur = getNamedItem(animationElement, 'repeatDur');
             if (repeatDur !== '' && repeatDur !== 'indefinite') {
-                this._repeatDuration = SvgAnimation.convertClockTime(repeatDur);
+                const value = SvgAnimation.convertClockTime(repeatDur);
+                if (!isNaN(value) && value > 0) {
+                    this._repeatDuration = value;
+                }
             }
             const repeatCount = getNamedItem(animationElement, 'repeatCount');
-            this.iterationCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount);
+            this.iterationCount = repeatCount === 'indefinite' ? -1 : parseFloat(repeatCount) || 0;
             if (animationElement.tagName === 'animate') {
                 this.setCalcMode();
             }
@@ -371,7 +374,7 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
         const animationElement = this.animationElement;
         const end = animationElement && getNamedItem(animationElement, 'end');
         if (end) {
-            const endTime = sortNumber(replaceMap(end.split(';'), (time: string) => SvgAnimation.convertClockTime(time)))[0];
+            const endTime = sortNumber(replaceMap(end.split(';'), (time: string) => SvgAnimation.convertClockTime(time)).filter(time => !isNaN(time)))[0];
             if (!isNaN(endTime)) {
                 const { duration, iterationCount } = this;
                 if (iterationCount === -1 || duration > 0 && endTime < duration * iterationCount) {

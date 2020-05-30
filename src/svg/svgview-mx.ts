@@ -71,6 +71,16 @@ function getKeyframeOrigin(attrMap: AttributeMap, element: SVGGraphicsElement, o
     return origin ? TRANSFORM.origin(element, origin.value) : undefined;
 }
 
+function getTextContent(element: SVGElement, attr: string, lang?: string) {
+    if (lang) {
+        const child = element.querySelector(`:scope > ${attr}[lang="${lang}"]`);
+        if (child) {
+            return child.textContent!.trim() || '';
+        }
+    }
+    return element.querySelector(`:scope > ${attr}`)?.textContent!.trim() || '';
+}
+
 export default <T extends Constructor<SvgElement>>(Base: T) => {
     return class extends Base implements squared.svg.SvgView {
         public transformed?: SvgTransform[];
@@ -106,10 +116,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 iterateArray(element.children, (item: SVGElement) => {
                     if (item instanceof SVGAnimationElement) {
                         const begin = getNamedItem(item, 'begin');
-                        if (/^[a-zA-Z]+$/.test(begin)) {
-                            return;
-                        }
-                        const times = begin !== '' ? sortNumber(replaceMap(begin.split(';'), (value: string) => SvgAnimation.convertClockTime(value))) : [0];
+                        const times = begin !== '' ? sortNumber(replaceMap(begin.split(';'), (value: string) => SvgAnimation.convertClockTime(value)).filter(value => !isNaN(value))) : [0];
                         if (times.length) {
                             switch (item.tagName) {
                                 case 'set':
@@ -165,12 +172,12 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                     for (let i = 0; i < length; ++i) {
                         const keyframes = MAP_KEYFRAMES[animationName[i]];
                         const duration = SvgAnimation.convertClockTime(cssData['animation-duration'][i]);
-                        if (keyframes && duration > 0) {
+                        if (keyframes && !isNaN(duration) && duration > 0) {
                             ++id;
                             const attrMap: AttributeMap = {};
                             const keyframeMap: AttributeMap = {};
                             const paused = cssData['animation-play-state'][i] === 'paused';
-                            const delay = SvgAnimation.convertClockTime(cssData['animation-delay'][i]);
+                            const delay = SvgAnimation.convertClockTime(cssData['animation-delay'][i]) || 0;
                             const iterationCount = cssData['animation-iteration-count'][i];
                             const fillMode = cssData['animation-fill-mode'][i];
                             const keyframeIndex = animationName[i] + '_' + i;
@@ -459,6 +466,14 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
             }
             return result;
+        }
+
+        public getTitle(lang?: string) {
+            return getTextContent(this.element, 'title', lang);
+        }
+
+        public getDesc(lang?: string) {
+            return !lang && getNamedItem(this.element, 'aria-describedby') || getTextContent(this.element, 'desc', lang);
         }
 
         set name(value) {

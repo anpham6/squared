@@ -807,6 +807,15 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     include: vectorData
                 }])
             );
+            const title = svg.getTitle();
+            const desc = svg.getDesc();
+            if (title !== '') {
+                node.android('tooltipText', Resource.addString(title, `svg_${node.controlId.toLowerCase()}_title`, true));
+            }
+            if (desc !== '') {
+                node.android('contentDescription', Resource.addString(desc, `svg_${node.controlId.toLowerCase()}_desc`, true));
+            }
+            node.data(Resource.KEY_NAME, 'svgViewBox', viewBox);
         }
         if (animateData.size) {
             const data: AnimatedVectorTemplate[] = [{
@@ -1504,7 +1513,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         else {
             drawable = vectorName;
         }
-        node.data(Resource.KEY_NAME, 'svgViewBox', viewBox);
         return drawable;
     }
 

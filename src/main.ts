@@ -197,10 +197,11 @@ export function retrieve(value: string) {
 
 export function get(...elements: (Element | string)[]) {
     const result = new Map<Element, Node[]>();
+    const length = elements.length;
     if (main) {
         for (const sessionId of main.session.active) {
             let i = 0;
-            while (i < elements.length) {
+            while (i < length) {
                 let element = elements[i++];
                 if (typeof element === 'string') {
                     element = document.getElementById(element) as HTMLElement;
@@ -219,7 +220,11 @@ export function get(...elements: (Element | string)[]) {
             }
         }
     }
-    return result;
+    return length <= 1
+        ? result.size === 1
+            ? result.values().next().value as Node[]
+            : []
+        : result;
 }
 
 export function reset() {

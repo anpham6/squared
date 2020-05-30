@@ -9,7 +9,7 @@ type SvgPath = squared.svg.SvgPath;
 
 const { getFontSize, isLength, parseUnit } = squared.lib.css;
 const { getNamedItem } = squared.lib.dom;
-const { capitalize, hasBit, isNumber, isString } = squared.lib.util;
+const { capitalize, hasBit, isString } = squared.lib.util;
 
 function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
     const valid = hasBit(this.fillMode, value);
@@ -25,49 +25,40 @@ function setFillMode(this: SvgAnimation, mode: boolean, value: number) {
 
 export default class SvgAnimation implements squared.svg.SvgAnimation {
     public static convertClockTime(value: string) {
-        let s = 0;
-        let ms = 0;
-        if (isNumber(value)) {
-            s = parseInt(value);
-        }
-        else if (/-?\d+ms$/.test(value)) {
-            ms = parseFloat(value);
-        }
-        else if (/-?\d+s$/.test(value)) {
-            s = parseFloat(value);
-        }
-        else if (/-?\d+min$/.test(value)) {
-            s = parseFloat(value) * 60;
-        }
-        else if (/-?\d+(.\d+)?h$/.test(value)) {
-            s = parseFloat(value) * 60 * 60;
-        }
-        else {
-            const match = /^(?:(-?)(\d?\d):)?(?:(\d?\d):)?(\d?\d)\.?(\d?\d?\d)?$/.exec(value);
+        value = value.trim();
+        if (value !== '') {
+            let match = /^(-)?(\d+(?:\.\d+)?)(ms|s|min|h)?$/.exec(value);
             if (match) {
-                const hr = match[2];
-                const mt = match[3];
-                const sec = match[4];
-                const mil = match[5];
-                if (hr) {
-                    s += parseInt(hr) * 60 * 60;
+                let time = parseFloat(match[2]) * (match[1] ? -1 : 1);
+                switch (match[3]) {
+                    case 'ms':
+                        break;
+                    case 'h':
+                        time *= 60;
+                    case 'min':
+                        time *= 60;
+                    default:
+                        time *= 1000;
+                        break;
                 }
-                if (mt) {
-                    s += parseInt(mt) * 60;
-                }
-                if (sec) {
-                    s += parseInt(sec);
-                }
-                if (mil) {
-                    ms = parseInt(mil) * (mil.length < 3 ? Math.pow(10, 3 - mil.length) : 1);
-                }
-                if (match[1]) {
-                    s *= -1;
-                    ms *= -1;
+                return Math.round(time);
+            }
+            else {
+                match = /^(-)?(?:(\d+):)?(?:([0-5][0-9]):)?([0-5][0-9])(?:\.(\d{1,3}))?$/.exec(value);
+                if (match) {
+                    const ms = match[5];
+                    let time = parseInt(match[4]) * (match[1] ? -1 : 1);
+                    if (match[1]) {
+                        time += parseInt(match[2]) * 60 * 60;
+                    }
+                    if (match[2]) {
+                        time += parseInt(match[3]) * 60;
+                    }
+                    return time * 1000 + (ms ? parseInt(ms) * (ms.length < 3 ? Math.pow(10, 3 - ms.length) : 1) : 0);
                 }
             }
         }
-        return s * 1000 + ms;
+        return NaN;
     }
 
     public element: Null<SVGGraphicsElement> = null;
@@ -110,7 +101,8 @@ export default class SvgAnimation implements squared.svg.SvgAnimation {
             this.setAttribute('fill', 'freeze');
             const dur = getNamedItem(animationElement, 'dur');
             if (dur !== '' && dur !== 'indefinite') {
-                this.duration = SvgAnimation.convertClockTime(dur);
+                const value = SvgAnimation.convertClockTime(dur);
+                this.duration = !isNaN(value) && value > 0 ? value : 0;
             }
         }
     }
