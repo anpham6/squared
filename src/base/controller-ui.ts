@@ -810,8 +810,4 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             }
         }
     }
-
-    get generateSessionId() {
-        return new Date().getTime().toString();
-    }
 }

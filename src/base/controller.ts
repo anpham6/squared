@@ -17,7 +17,7 @@ export default abstract class Controller<T extends squared.base.Node> implements
     }
 
     get generateSessionId() {
-        return new Date().getTime().toString();
+        return Date.now().toString() + '-' + this.application.session.active.length;
     }
 
     get afterInsertNode(): BindGeneric<T, void> {

@@ -1306,7 +1306,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public has(attr: string, options?: HasOptions) {
         const value = (options?.map === 'initial' && this._initial?.styleMap || this._styleMap)[attr];
         if (value) {
-            if (value === 'initial' || value === CSS_PROPERTIES[attr].value) {
+            if (value === 'initial' || value === CSS_PROPERTIES[attr]?.value) {
                 return false;
             }
             let not: Undef<string | string[]>, type: Undef<number>;

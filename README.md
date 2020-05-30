@@ -195,10 +195,12 @@ There is no official documentation as this project is still in early development
 .settings // see user preferences section
 
 setFramework(module: {}, settings?: {}, cached?: boolean) // install application interpreter
-setHostname(value: string) // use another cors-enabled server for processing archives - (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
+setHostname(value: string) // use another cors-enabled server for processing archives (--cors <origin> | node-express + squared.settings.json: <https://github.com/expressjs/cors>)
 setViewModel(data?: {}) // object data for layout bindings
 
 parseDocument() // see installation section (Promise)
+
+get(...elements: (Element | string)[]) // Element map of any Node objects created during the active "parseDocument" session
 
 // Required: node-express / squared-apache
 // NOTE: options: { assets?: RequestAsset[], exclusions?: {}, callback?: () => void }

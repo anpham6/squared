@@ -195,6 +195,33 @@ export function retrieve(value: string) {
     return result;
 }
 
+export function get(...elements: (Element | string)[]) {
+    const result = new Map<Element, Node[]>();
+    if (main) {
+        for (const sessionId of main.session.active) {
+            let i = 0;
+            while (i < elements.length) {
+                let element = elements[i++];
+                if (typeof element === 'string') {
+                    element = document.getElementById(element) as HTMLElement;
+                }
+                if (element instanceof Element) {
+                    const node = session.getElementAsNode<Node>(element, sessionId);
+                    if (node) {
+                        if (result.has(element)) {
+                            result.get(element)!.push(node);
+                        }
+                        else {
+                            result.set(element, [node]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return result;
+}
+
 export function reset() {
     main?.reset();
 }
