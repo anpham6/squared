@@ -13,6 +13,20 @@ import jimp = require('jimp');
 import tinify = require('tinify');
 import chalk = require('chalk');
 
+function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
+    return (...args: any[]) => {
+        return new Promise((resolve, reject) => {
+            try {
+                const result: T = fn.call(null, ...args);
+                resolve(result);
+            }
+            catch (err) {
+                reject(err);
+            }
+        });
+    };
+}
+
 const app = express();
 
 let Node: serve.INode;
@@ -40,6 +54,7 @@ let Image: serve.IImage;
 
     try {
         const settings = require('./squared.settings.json') as serve.Settings;
+
         const {
             disk_read,
             disk_write,
@@ -54,18 +69,13 @@ let Image: serve.IImage;
             port,
         } = settings;
 
-        CORS = settings.cors;
-        EXTERNAL = settings.external;
-        ROUTING = settings.routing;
+        ({ cors: CORS, external: EXTERNAL, routing: ROUTING } = settings);
 
         DISK_READ = disk_read === true || disk_read === 'true';
         DISK_WRITE = disk_write === true || disk_write === 'true';
         UNC_READ = unc_read === true || unc_read === 'true';
         UNC_WRITE = unc_write === true || unc_write === 'true';
 
-        const gzip = parseInt(gzip_level as string);
-        const brotli = parseInt(brotli_quality as string);
-        const jpeg = parseInt(jpeg_quality as string);
         if (!process.env.NODE_ENV && env?.startsWith('prod')) {
             ENV = 'production';
         }
@@ -75,6 +85,10 @@ let Image: serve.IImage;
                 PORT = value.toString();
             }
         }
+
+        const gzip = parseInt(gzip_level as string);
+        const brotli = parseInt(brotli_quality as string);
+        const jpeg = parseInt(jpeg_quality as string);
         if (!isNaN(gzip)) {
             GZIP_LEVEL = gzip;
         }
@@ -84,6 +98,7 @@ let Image: serve.IImage;
         if (!isNaN(jpeg)) {
             JPEG_QUALITY = jpeg;
         }
+
         if (tinypng_api_key) {
             tinify.key = tinypng_api_key;
             tinify.validate(err => {
@@ -92,6 +107,7 @@ let Image: serve.IImage;
                 }
             });
         }
+
         app.use(body_parser.json({ limit: request_post_limit || '100mb' }));
     }
     catch (err) {
@@ -792,31 +808,6 @@ let Image: serve.IImage;
             }
             return result;
         }
-        replacePath(source: string, segment: string, value: string, base64?: boolean) {
-            segment = !base64 ? segment.replace(/[\\/]/g, '[\\\\/]') : '[^"\'\\s]+' + segment;
-            let result: Undef<string>;
-            let pattern = new RegExp(`(?:([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=)?(["'])(\\s*)${segment}(\\s*)\\2`, 'g');
-            let match: Null<RegExpExecArray>;
-            while (match = pattern.exec(source)) {
-                if (result === undefined) {
-                    result = source;
-                }
-                if (match[1]) {
-                    result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
-                }
-                else {
-                    result = result.replace(match[0], match[2] + match[3] + value + match[4] + match[2]);
-                }
-            }
-            pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
-            while (match = pattern.exec(source)) {
-                if (result === undefined) {
-                    result = source;
-                }
-                result = result.replace(match[0], `url(${value})`);
-            }
-            return result;
-        }
     }
     (EXTERNAL);
 
@@ -887,23 +878,43 @@ let Image: serve.IImage;
             }
             return self;
         }
-        rotate(self: jimp, filepath: string, values: number[]) {
-            const length = values.length;
+        rotate(self: jimp, filepath: string, values: number[], manager: FileManager) {
+            let length = values.length;
             if (length > 1) {
-                const first = values.shift() as number;
-                values.push(first);
-            }
-            for (let i = 0; i < length; ++i) {
-                const value = values[i];
-                if (i > 0) {
-                    self.rotate(-values[i - 1]);
+                const rotations = values.slice(1);
+                const master = filepath + path.extname(filepath);
+                try {
+                    fs.copyFileSync(filepath, master);
+                    --length;
                 }
-                self.rotate(value);
-                if (i < length - 1) {
-                    const index = filepath.lastIndexOf('.');
-                    self.write(filepath.substring(0, index) + '.' + value + filepath.substring(index));
+                catch {
+                    length = 0;
+                }
+                for (let i = 0; i < length; ++i) {
+                    manager.delayed++;
+                    jimp.read(master)
+                        .then(img => {
+                            const value = rotations[i];
+                            img.rotate(value);
+                            const index = filepath.lastIndexOf('.');
+                            const output = filepath.substring(0, index) + '.' + value + filepath.substring(index);
+                            img.write(output, err => {
+                                if (err) {
+                                    manager.finalize('');
+                                    Node.writeFail(output, err);
+                                }
+                                else {
+                                    manager.finalize(output);
+                                }
+                            });
+                        })
+                        .catch(err => {
+                            manager.finalize('');
+                            Node.writeFail(master, err);
+                        });
                 }
             }
+            self.rotate(values[0]);
             return self;
         }
         opacity(self: jimp, value: Undef<number>) {
@@ -911,20 +922,6 @@ let Image: serve.IImage;
         }
     }
     (TINIFY_API_KEY);
-}
-
-function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>> {
-    return (...args: any[]) => {
-        return new Promise((resolve, reject) => {
-            try {
-                const result: T = fn.call(null, ...args);
-                resolve(result);
-            }
-            catch (err) {
-                reject(err);
-            }
-        });
-    };
 }
 
 class FileManager implements serve.IFileManager {
@@ -938,7 +935,8 @@ class FileManager implements serve.IFileManager {
 
     constructor(
         public readonly dirname: string,
-        public readonly assets: ExpressAsset[])
+        public readonly assets: ExpressAsset[],
+        public readonly finalize: (filepath?: string) => void)
     {
         this.requestMain = assets.find(item => item.requestMain);
         this.dataMap = assets[0].dataMap;
@@ -953,13 +951,23 @@ class FileManager implements serve.IFileManager {
     replace(file: ExpressAsset, replaceWith: string) {
         const filepath = file.filepath;
         if (filepath) {
-            this.filesToRemove.add(filepath);
-            this.delete(filepath);
-            if (!file.originalName) {
-                file.originalName = file.filename;
+            if (replaceWith.includes('__copy__') && path.extname(filepath) === path.extname(replaceWith)) {
+                try {
+                    fs.renameSync(replaceWith, filepath);
+                }
+                catch (err) {
+                    Node.writeFail(replaceWith, err);
+                }
             }
-            file.filename = path.basename(replaceWith);
-            this.add(replaceWith);
+            else {
+                this.filesToRemove.add(filepath);
+                this.delete(filepath);
+                if (!file.originalName) {
+                    file.originalName = file.filename;
+                }
+                file.filename = path.basename(replaceWith);
+                this.add(replaceWith);
+            }
         }
     }
     validate(file: ExpressAsset, exclusions: Exclusions) {
@@ -1058,6 +1066,31 @@ class FileManager implements serve.IFileManager {
         }
         return undefined;
     }
+    replacePath(source: string, segment: string, value: string, base64?: boolean) {
+        segment = !base64 ? segment.replace(/[\\/]/g, '[\\\\/]') : '[^"\'\\s]+' + segment;
+        let result: Undef<string>;
+        let pattern = new RegExp(`(?:([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=)?(["'])(\\s*)${segment}(\\s*)\\2`, 'g');
+        let match: Null<RegExpExecArray>;
+        while (match = pattern.exec(source)) {
+            if (result === undefined) {
+                result = source;
+            }
+            if (match[1]) {
+                result = result.replace(match[0], match[1].toLowerCase() + `="${value}"`);
+            }
+            else {
+                result = result.replace(match[0], match[2] + match[3] + value + match[4] + match[2]);
+            }
+        }
+        pattern = new RegExp(`[uU][rR][lL]\\(\\s*(["'])?\\s*${segment}\\s*\\1?\\s*\\)`, 'g');
+        while (match = pattern.exec(source)) {
+            if (result === undefined) {
+                result = source;
+            }
+            result = result.replace(match[0], `url(${value})`);
+        }
+        return result;
+    }
     appendContent(file: ExpressAsset, content: string, outputOnly = false) {
         const filepath = file.filepath || this.getFileOutput(file).filepath;
         if (filepath && file.bundleIndex !== undefined) {
@@ -1099,11 +1132,11 @@ class FileManager implements serve.IFileManager {
         }
         return undefined;
     }
-    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void) {
+    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const compress = file.compress;
         const jpeg = Image.isJpeg(file, filepath) && Compress.findFormat(compress, 'jpeg');
         const resumeThread = () => {
-            this.transformBuffer(assets, file, filepath, finalize);
+            this.transformBuffer(assets, file, filepath);
             const gzip = Compress.findFormat(compress, 'gz');
             const brotli = Compress.findFormat(compress, 'br');
             if (gzip && Compress.withinSizeRange(filepath, gzip.condition)) {
@@ -1117,15 +1150,15 @@ class FileManager implements serve.IFileManager {
                             }
                             catch {
                             }
-                            finalize('');
+                            this.finalize('');
                         }
                         else {
-                            finalize(gz);
+                            this.finalize(gz);
                         }
                     })
                     .on('error', err => {
                         Node.writeFail(gz, err);
-                        finalize('');
+                        this.finalize('');
                     });
             }
             if (brotli && Node.checkVersion(11, 7) && Compress.withinSizeRange(filepath, brotli.condition)) {
@@ -1139,15 +1172,15 @@ class FileManager implements serve.IFileManager {
                             }
                             catch {
                             }
-                            finalize('');
+                            this.finalize('');
                         }
                         else {
-                            finalize(br);
+                            this.finalize(br);
                         }
                     })
                     .on('error', err => {
                         Node.writeFail(br, err);
-                        finalize('');
+                        this.finalize('');
                     });
             }
         };
@@ -1175,13 +1208,13 @@ class FileManager implements serve.IFileManager {
                             catch {
                             }
                         }
-                        finalize('');
+                        this.finalize('');
                         resumeThread();
                     });
                 })
                 .catch(err => {
                     Node.writeFail(filepath, err);
-                    finalize('');
+                    this.finalize('');
                     resumeThread();
                 });
         }
@@ -1189,7 +1222,7 @@ class FileManager implements serve.IFileManager {
             resumeThread();
         }
     }
-    transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void) {
+    transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const mimeType = file.mimeType as string;
         if (!mimeType || mimeType.charAt(0) === '&') {
             return;
@@ -1280,7 +1313,7 @@ class FileManager implements serve.IFileManager {
                         continue;
                     }
                     if (item.base64) {
-                        const replacement = Chrome.replacePath(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
+                        const replacement = this.replacePath(source, item.base64.replace(/\+/g, '\\+'), Express.getFullUri(item), true);
                         if (replacement) {
                             source = replacement;
                             html = source;
@@ -1299,7 +1332,7 @@ class FileManager implements serve.IFileManager {
                             }
                         }
                     }
-                    const replacement = Chrome.replacePath(source, item.uri, value);
+                    const replacement = this.replacePath(source, item.uri, value);
                     if (replacement) {
                         source = replacement;
                     }
@@ -1444,11 +1477,13 @@ class FileManager implements serve.IFileManager {
                                 if (!err && resultData) {
                                     fs.writeFileSync(location, resultData);
                                 }
-                                finalize(location);
+                                if (filepath !== location) {
+                                    this.finalize(location);
+                                }
                             });
                         }
                         catch (err) {
-                            finalize('');
+                            this.finalize('');
                             Node.writeFail(location, err);
                         }
                     };
@@ -1467,10 +1502,10 @@ class FileManager implements serve.IFileManager {
                                             const renameTo = replaceExtension(filepath, mime.split('/')[1]);
                                             fs.renameSync(filepath, renameTo);
                                             afterConvert(renameTo, '@');
-                                            finalize(renameTo);
+                                            this.finalize(renameTo);
                                         }
                                         catch (err) {
-                                            finalize('');
+                                            this.finalize('');
                                             Node.writeFail(filepath, err);
                                         }
                                         break;
@@ -1478,19 +1513,19 @@ class FileManager implements serve.IFileManager {
                                         const png = replaceExtension(filepath, 'png');
                                         img.write(png, err => {
                                             if (err) {
-                                                finalize('');
+                                                this.finalize('');
                                                 Node.writeFail(png, err);
                                             }
                                             else {
                                                 afterConvert(png, '@');
-                                                finalize(png);
+                                                this.finalize(png);
                                             }
                                         });
                                     }
                                 }
                             })
                             .catch(err => {
-                                finalize('');
+                                this.finalize('');
                                 Node.writeFail(filepath, err);
                             });
                     }
@@ -1504,28 +1539,40 @@ class FileManager implements serve.IFileManager {
                             const { width, height, mode } = Image.parseResizeMode(value);
                             const opacity = Image.parseOpacity(value);
                             const rotation = Image.parseRotation(value);
+                            let image = filepath;
+                            const setImagePath = (extension: string, saveAs?: string) => {
+                                if (mimeType.endsWith('/' + extension)) {
+                                    if (!value.includes('@')) {
+                                        image = replaceExtension(filepath, '__copy__.' + (saveAs || extension));
+                                        fs.copyFileSync(filepath, image);
+                                    }
+                                }
+                                else {
+                                    image = replaceExtension(filepath, saveAs || extension);
+                                }
+                            };
                             if (value.startsWith('png')) {
                                 ++this.delayed;
                                 jimp.read(filepath)
                                     .then(img => {
-                                        const png = replaceExtension(filepath, 'png');
-                                        Image.rotate(Image.opacity(Image.resize(img, width, height, mode), opacity), png, rotation).write(png, err => {
+                                        setImagePath('png');
+                                        Image.rotate(Image.opacity(Image.resize(img, width, height, mode), opacity), image, rotation, this).write(image, err => {
                                             if (err) {
-                                                finalize('');
-                                                Node.writeFail(png, err);
+                                                this.finalize('');
+                                                Node.writeFail(image, err);
                                             }
                                             else {
-                                                afterConvert(png, value);
+                                                afterConvert(image, value);
                                                 if (Image.findCompress(file.compress)) {
-                                                    compressImage(png);
+                                                    compressImage(image);
                                                     return;
                                                 }
-                                                finalize(png);
+                                                this.finalize(filepath !== image ? image : '');
                                             }
                                         });
                                     })
                                     .catch(err => {
-                                        finalize('');
+                                        this.finalize('');
                                         Node.writeFail(filepath, err);
                                     });
                             }
@@ -1533,25 +1580,25 @@ class FileManager implements serve.IFileManager {
                                 ++this.delayed;
                                 jimp.read(filepath)
                                     .then(img => {
-                                        const jpg = replaceExtension(filepath, 'jpg');
+                                        setImagePath('jpeg', 'jpg');
                                         img.quality(Compress.jpeg_quality);
-                                        Image.rotate(Image.resize(img, width, height, mode), jpg, rotation).write(jpg, err => {
+                                        Image.rotate(Image.resize(img, width, height, mode), image, rotation, this).write(image, err => {
                                             if (err) {
-                                                finalize('');
-                                                Node.writeFail(jpg, err);
+                                                this.finalize('');
+                                                Node.writeFail(image, err);
                                             }
                                             else {
-                                                afterConvert(jpg, value);
+                                                afterConvert(image, value);
                                                 if (Image.findCompress(file.compress)) {
-                                                    compressImage(jpg);
+                                                    compressImage(image);
                                                     return;
                                                 }
-                                                finalize(jpg);
+                                                this.finalize(filepath !== image ? image : '');
                                             }
                                         });
                                     })
                                     .catch(err => {
-                                        finalize('');
+                                        this.finalize('');
                                         Node.writeFail(filepath, err);
                                     });
                             }
@@ -1559,20 +1606,20 @@ class FileManager implements serve.IFileManager {
                                 ++this.delayed;
                                 jimp.read(filepath)
                                     .then(img => {
-                                        const bmp = replaceExtension(filepath, 'bmp');
-                                        Image.rotate(Image.opacity(Image.resize(img, width, height, mode), opacity), bmp, rotation).write(bmp, err => {
+                                        setImagePath('bmp');
+                                        Image.rotate(Image.opacity(Image.resize(img, width, height, mode), opacity), image, rotation, this).write(image, err => {
                                             if (err) {
-                                                finalize('');
-                                                Node.writeFail(bmp, err);
+                                                this.finalize('');
+                                                Node.writeFail(image, err);
                                             }
                                             else {
-                                                afterConvert(bmp, value);
-                                                finalize(bmp);
+                                                afterConvert(image, value);
+                                                this.finalize(filepath !== image ? image : '');
                                             }
                                         });
                                     })
                                     .catch(err => {
-                                        finalize('');
+                                        this.finalize('');
                                         Node.writeFail(filepath, err);
                                     });
                             }
@@ -1624,7 +1671,7 @@ class FileManager implements serve.IFileManager {
                 if (item.base64 && item.uri && !item.excluded) {
                     const url = this.getRelativeUrl(file, item.uri);
                     if (url) {
-                        const replacement = Chrome.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
+                        const replacement = this.replacePath(content, item.base64.replace(/\+/g, '\\+'), url, true);
                         if (replacement) {
                             content = replacement;
                         }
@@ -1669,7 +1716,7 @@ class FileManager implements serve.IFileManager {
         }
         return undefined;
     }
-    writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void) {
+    writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string) {
         const png = Image.findCompress(file.compress);
         if (png && Compress.withinSizeRange(filepath, png.condition)) {
             try {
@@ -1680,19 +1727,19 @@ class FileManager implements serve.IFileManager {
                     if (Image.isJpeg(file)) {
                         Compress.removeFormat(file.compress, 'jpeg');
                     }
-                    this.compressFile(assets, file, filepath, finalize);
+                    this.compressFile(assets, file, filepath);
                 });
             }
             catch (err) {
-                this.compressFile(assets, file, filepath, finalize);
+                this.compressFile(assets, file, filepath);
                 Node.writeFail(filepath, err);
             }
         }
         else {
-            this.compressFile(assets, file, filepath, finalize);
+            this.compressFile(assets, file, filepath);
         }
     }
-    processAssetsSync(empty: boolean, finalize: (filepath?: string) => void) {
+    processAssetsSync(empty: boolean) {
         const emptyDir = new Set<string>();
         const notFound: ObjectMap<boolean> = {};
         const processing: ObjectMap<ExpressAsset[]> = {};
@@ -1716,8 +1763,8 @@ class FileManager implements serve.IFileManager {
             }
             else if (!content) {
                 if (completed.includes(filepath)) {
-                    this.writeBuffer(assets, file, filepath, finalize);
-                    finalize('');
+                    this.writeBuffer(assets, file, filepath);
+                    this.finalize('');
                     return true;
                 }
                 else {
@@ -1811,30 +1858,30 @@ class FileManager implements serve.IFileManager {
                     processQueue(queue, filepath, !bundleMain || bundleMain.excluded ? !file.excluded && file || queue : bundleMain);
                 }
                 else if (Compress.getFileSize(filepath) > 0) {
-                    this.compressFile(assets, bundleMain || file, filepath, finalize);
-                    finalize(filepath);
+                    this.compressFile(assets, bundleMain || file, filepath);
+                    this.finalize(filepath);
                 }
                 else {
                     (bundleMain || file).excluded = true;
-                    finalize('');
+                    this.finalize('');
                 }
             }
             else if (Array.isArray(processing[filepath])) {
                 completed.push(filepath);
                 for (const item of processing[filepath]) {
                     if (item.excluded) {
-                        finalize('');
+                        this.finalize('');
                     }
                     else {
-                        this.writeBuffer(assets, item, filepath, finalize);
-                        finalize(filepath);
+                        this.writeBuffer(assets, item, filepath);
+                        this.finalize(filepath);
                     }
                 }
                 delete processing[filepath];
             }
             else {
-                this.writeBuffer(assets, file, filepath, finalize);
-                finalize(filepath);
+                this.writeBuffer(assets, file, filepath);
+                this.finalize(filepath);
             }
         };
         const errorRequest = (file: ExpressAsset, filepath: string, message: Error | string, stream?: fs.WriteStream) => {
@@ -1844,7 +1891,7 @@ class FileManager implements serve.IFileManager {
                     processQueue(file, filepath);
                 }
                 else {
-                    finalize('');
+                    this.finalize('');
                 }
                 notFound[uri] = true;
             }
@@ -1903,7 +1950,7 @@ class FileManager implements serve.IFileManager {
                             processQueue(file, filepath);
                         }
                         else {
-                            finalize('');
+                            this.finalize('');
                         }
                     }
                 );
@@ -1916,12 +1963,12 @@ class FileManager implements serve.IFileManager {
                     'base64',
                     err => {
                         if (!err) {
-                            this.writeBuffer(assets, file, filepath, finalize);
-                            finalize(filepath);
+                            this.writeBuffer(assets, file, filepath);
+                            this.finalize(filepath);
                         }
                         else {
                             file.excluded = true;
-                            finalize('');
+                            this.finalize('');
                         }
                     }
                 );
@@ -1968,7 +2015,7 @@ class FileManager implements serve.IFileManager {
                                         processQueue(file, filepath);
                                     }
                                     else {
-                                        finalize('');
+                                        this.finalize('');
                                     }
                                 }
                             );
@@ -2088,25 +2135,24 @@ app.post('/api/assets/copy', (req, res) => {
             return;
         }
         let cleared = false;
-        const manager = new FileManager(dirname, req.body as ExpressAsset[]);
-        const finalize = (filepath?: string) => {
-            if (manager.delayed === Infinity) {
+        const manager = new FileManager(dirname, req.body as ExpressAsset[], function(this: FileManager, filepath?: string) {
+            if (this.delayed === Infinity) {
                 return;
             }
             if (filepath) {
-                manager.add(filepath);
+                this.add(filepath);
             }
-            if (filepath === undefined || --manager.delayed === 0 && cleared) {
-                manager.finalizeAssetsAsync(req.query.release === '1').then(() => {
-                    res.json({ success: manager.files.size > 0, files: Array.from(manager.files) } as ResultOfFileAction);
-                    manager.delayed = Infinity;
+            if (filepath === undefined || --this.delayed === 0 && cleared) {
+                this.finalizeAssetsAsync(req.query.release === '1').then(() => {
+                    res.json({ success: this.files.size > 0, files: Array.from(this.files) } as ResultOfFileAction);
+                    this.delayed = Infinity;
                 });
             }
-        };
+        });
         try {
-            manager.processAssetsSync(req.query.empty === '1', finalize);
+            manager.processAssetsSync(req.query.empty === '1');
             if (manager.delayed === 0) {
-                finalize();
+                manager.finalize();
             }
             else {
                 cleared = true;
@@ -2161,9 +2207,22 @@ app.post('/api/assets/archive', (req, res) => {
             format = 'zip';
             break;
     }
-    const manager = new FileManager(dirname, req.body as ExpressAsset[]);
+    const archive = archiver(format, { zlib: { level: Compress.gzip_level } });
+    const manager = new FileManager(dirname, req.body as ExpressAsset[], function(this: FileManager, filepath?: string) {
+        if (this.delayed === Infinity) {
+            return;
+        }
+        if (filepath) {
+            this.add(filepath);
+        }
+        if (filepath === undefined || --this.delayed === 0 && cleared) {
+            this.finalizeAssetsAsync(req.query.release === '1').then(() => {
+                archive.directory(dirname, false);
+                archive.finalize();
+            });
+        }
+    });
     const resumeThread = (unzip_to = '') => {
-        const archive = archiver(format, { zlib: { level: Compress.gzip_level } });
         zipname = path.join(dirname_zip, (req.query.filename || zipname || uuid.v4()) + '.' + format);
         const output = fs.createWriteStream(zipname);
         output.on('close', () => {
@@ -2199,27 +2258,14 @@ app.post('/api/assets/archive', (req, res) => {
             console.log(`${chalk.blue('WRITE')}: ${zipname} ${chalk.yellow('[') + chalk.grey(bytes + ' bytes') + chalk.yellow(']')}`);
         });
         archive.pipe(output);
-        const finalize = (filepath?: string) => {
-            if (manager.delayed === Infinity) {
-                return;
-            }
-            if (filepath) {
-                manager.add(filepath);
-            }
-            if (filepath === undefined || --manager.delayed === 0 && cleared) {
-                manager.finalizeAssetsAsync(req.query.release === '1').then(() => {
-                    archive.directory(dirname, false);
-                    archive.finalize();
-                });
-            }
-        };
         try {
             if (unzip_to) {
                 archive.directory(unzip_to, false);
             }
-            manager.processAssetsSync(false, finalize);
+            manager.processAssetsSync(false);
             if (manager.delayed === 0) {
-                finalize();
+                manager.processAssetsSync(false);
+                manager.finalize();
             }
             else {
                 cleared = true;

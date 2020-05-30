@@ -517,11 +517,11 @@ You can use these commands individually on any element where the image is the pr
 <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/12005/harbour1.jpg" data-chrome-file="saveTo:../images/harbour::png@(10000,75000)(800x600#contain)" />
 ```
 
-You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets.
+You can also add most of the "file" commands programatically (except "exclude") with JavaScript before saving or copying the assets. Multiple transformations can be achieved using the ":" separator.
 
 ```javascript
 document.querySelectorAll('img').forEach(element => {
-    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600){90,180,270}|0.5|';
+    element.dataset.chromeFile = 'saveTo:images/resized::png%(100000,*)(800x600){90,180,270}|0.5|:jpeg(600x400){45,135,225}';
 });
 
 chrome.saveAsWebPage();

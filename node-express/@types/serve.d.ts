@@ -48,7 +48,7 @@ interface IImage {
     parseOpacity(value: string): Undef<number>;
     parseRotation(value: string): number[];
     resize(self: jimp, width: Undef<number>, height: Undef<number>, mode?: string): jimp;
-    rotate(self: jimp, filepath: string, values: number[]): jimp;
+    rotate(self: jimp, filepath: string, values: number[], manager: IFileManager): jimp;
     opacity(self: jimp, value: Undef<number>): jimp;
 }
 
@@ -61,7 +61,6 @@ interface IChrome {
     minifyJs(format: string, value: string): Undef<string>;
     formatContent(value: string, mimeType: string, format: string): Undef<string>;
     removeCss(source: string, styles: string[]): Undef<string>;
-    replacePath(source: string, segment: string, value: string, base64?: boolean): Undef<string>;
 }
 
 interface IFileManager {
@@ -79,13 +78,14 @@ interface IFileManager {
     validate(file: ExpressAsset, exclusions: Exclusions): boolean;
     getFileOutput(file: ExpressAsset): { pathname: string; filepath: string };
     getRelativeUrl(file: ExpressAsset, url: string): Undef<string>;
+    replacePath(source: string, segment: string, value: string, base64?: boolean): Undef<string>;
     getTrailingContent(file: ExpressAsset): Undef<string>;
     appendContent(file: ExpressAsset, content: string, outputOnly?: boolean): Undef<string>;
-    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void): void;
-    transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void): void;
+    transformBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;
     transformCss(file: ExpressAsset, content: string): Undef<string>;
-    writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string, finalize: (filepath?: string) => void): void;
-    processAssetsSync(empty: boolean, finalize: (filepath?: string) => void): void;
+    compressFile(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;
+    writeBuffer(assets: ExpressAsset[], file: ExpressAsset, filepath: string): void;
+    processAssetsSync(empty: boolean): void;
     finalizeAssetsAsync(release: boolean): Promise<void>;
 }
 
