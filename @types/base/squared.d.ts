@@ -445,6 +445,7 @@ declare module "base" {
         get tableElement(): boolean;
         get inputElement(): boolean;
         get pseudoElement(): boolean;
+        get scrollElement(): boolean;
         get documentBody(): boolean;
         get dataset(): DOMStringMap;
         get centerAligned(): boolean;

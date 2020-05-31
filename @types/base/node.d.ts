@@ -9,6 +9,8 @@ interface CachedValue<T> {
     htmlElement?: boolean;
     svgElement?: boolean;
     naturalElement?: boolean;
+    inputElement?: boolean;
+    scrollElement?: boolean;
     naturalChild?: boolean;
     pageFlow?: boolean;
     positionStatic?: boolean;

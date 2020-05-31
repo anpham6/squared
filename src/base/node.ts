@@ -142,7 +142,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin
 
 function setOverflow(node: T) {
     let result = 0;
-    if (node.htmlElement && !node.inputElement && !node.imageElement && node.tagName !== 'HR' && !node.documentBody) {
+    if (node.scrollElement) {
         const element = node.element as HTMLElement;
         const [overflowX, overflowY] = node.cssAsTuple('overflowX', 'overflowY');
         if (node.hasHeight && (node.hasPX('height') || node.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
@@ -474,7 +474,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                     }
                     break;
                 case ':root':
-                    if (!last || adjacent) {
+                    if (!last && node.tagName !== 'HTML') {
                         return false;
                     }
                     break;
@@ -619,7 +619,7 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
                     break;
                 }
                 default:
-                    if (/[a-zA-Z\d]/.test(not)) {
+                    if (/^[a-z\d+#.-]+$/i.test(not)) {
                         notData.tagName = not;
                     }
                     else {
@@ -743,7 +743,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     protected _preferInitial = false;
     protected _styleMap!: StringMap;
     protected _cssStyle!: StringMap;
-    protected _textBounds!: Null<BoxRectDimension>;
+    protected _textBounds?: Null<BoxRectDimension>;
     protected _box?: BoxRectDimension;
     protected _bounds?: BoxRectDimension;
     protected _linear?: BoxRectDimension;
@@ -1372,7 +1372,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         this._bounds = undefined;
         this._box = undefined;
         this._linear = undefined;
-        this._textBounds = undefined as any;
+        this._textBounds = undefined;
         this._cached.multiline = undefined;
     }
 
@@ -1794,15 +1794,72 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get inputElement() {
-        switch (this.tagName) {
-            case 'INPUT':
-            case 'BUTTON':
-            case 'SELECT':
-            case 'TEXTAREA':
-                return true;
-            default:
-                return false;
+        let result = this._cached.inputElement;
+        if (result === undefined) {
+            switch (this.tagName) {
+                case 'INPUT':
+                case 'BUTTON':
+                case 'SELECT':
+                case 'TEXTAREA':
+                    result = true;
+                    break;
+                default:
+                    result = false;
+                    break;
+            }
+            this._cached.inputElement = result;
         }
+        return result;
+    }
+
+    get scrollElement() {
+        let result = this._cached.scrollElement;
+        if (result === undefined) {
+            if (this.htmlElement) {
+                switch (this.tagName) {
+                    case 'INPUT':
+                        switch (this.toElementString('type')) {
+                            case 'button':
+                            case 'submit':
+                            case 'reset':
+                            case 'file':
+                            case 'date':
+                            case 'datetime-local':
+                            case 'month':
+                            case 'week':
+                            case 'time':
+                            case 'range':
+                            case 'color':
+                                result = true;
+                                break;
+                            default:
+                                result = false;
+                                break;
+                        }
+                        break;
+                    case 'IMG':
+                    case 'SELECT':
+                    case 'VIDEO':
+                    case 'AUDIO':
+                    case 'PICTURE':
+                    case 'PROGRESS':
+                    case 'METER':
+                    case 'HR':
+                    case 'BR':
+                    case 'WBR':
+                        result = false;
+                        break;
+                    default:
+                        result = true;
+                        break;
+                }
+            }
+            else {
+                result = false;
+            }
+            this._cached.scrollElement = result;
+        }
+        return result;
     }
 
     get plainText() {
@@ -1927,7 +1984,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get flexbox() {
         let result = this._cached.flexbox;
         if (result === undefined) {
-            if (this.actualParent?.flexElement && this.styleElement) {
+            if (this.styleElement && this.actualParent!.flexElement) {
                 const [alignSelf, justifySelf, basis] = this.cssAsTuple('alignSelf', 'justifySelf', 'flexBasis');
                 result = {
                     alignSelf: alignSelf === 'auto' ? this.cssParent('alignItems') : alignSelf,
@@ -2552,28 +2609,33 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get backgroundColor() {
         let result = this._cached.backgroundColor;
         if (result === undefined) {
-            result = this.css('backgroundColor');
-            switch (result) {
-                case 'initial':
-                case 'transparent':
-                case 'rgba(0, 0, 0, 0)':
-                    result = '';
-                    break;
-                default:
-                    if (result !== '' && this.pageFlow && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.call(this, 'backgroundColor') === result)) {
-                        let parent = this.actualParent;
-                        while (parent) {
-                            const color = getInitialValue.call(parent, 'backgroundColor', true);
-                            if (color !== '') {
-                                if (color === result && parent.backgroundColor === '') {
-                                    result = '';
+            if (!this.plainText) {
+                result = this.css('backgroundColor');
+                switch (result) {
+                    case 'initial':
+                    case 'transparent':
+                    case 'rgba(0, 0, 0, 0)':
+                        result = '';
+                        break;
+                    default:
+                        if (result !== '' && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.call(this, 'backgroundColor') === result)) {
+                            let parent = this.actualParent;
+                            while (parent) {
+                                const color = getInitialValue.call(parent, 'backgroundColor', true);
+                                if (color !== '') {
+                                    if (color === result && parent.backgroundColor === '') {
+                                        result = '';
+                                    }
+                                    break;
                                 }
-                                break;
+                                parent = parent.actualParent;
                             }
-                            parent = parent.actualParent;
                         }
-                    }
-                    break;
+                        break;
+                }
+            }
+            else {
+                result = '';
             }
             this._cached.backgroundColor = result;
         }
@@ -2583,24 +2645,29 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get backgroundImage() {
         let result = this._cached.backgroundImage;
         if (result === undefined) {
-            let value = this.css('backgroundImage');
-            if (value !== '' && value !== 'none' && value !== 'initial') {
-                result = value;
-            }
-            else {
-                result = '';
-                const pattern = /\s*(url|[a-z-]+gradient)/;
-                value = this.css('background');
-                if (pattern.test(value)) {
-                    const background = splitEnclosing(value);
-                    const length = background.length;
-                    for (let i = 1; i < length; ++i) {
-                        const name = background[i - 1].trim();
-                        if (pattern.test(name)) {
-                            result += (result !== '' ? ', ' : '') + name + background[i];
+            if (!this.plainText) {
+                let value = this.css('backgroundImage');
+                if (value !== '' && value !== 'none' && value !== 'initial') {
+                    result = value;
+                }
+                else {
+                    result = '';
+                    const pattern = /\s*(url|[a-z-]+gradient)/;
+                    value = this.css('background');
+                    if (pattern.test(value)) {
+                        const background = splitEnclosing(value);
+                        const length = background.length;
+                        for (let i = 1; i < length; ++i) {
+                            const name = background[i - 1].trim();
+                            if (pattern.test(name)) {
+                                result += (result !== '' ? ', ' : '') + name + background[i];
+                            }
                         }
                     }
                 }
+            }
+            else {
+                result = '';
             }
             this._cached.backgroundImage = result;
         }

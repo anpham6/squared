@@ -13,7 +13,7 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
     }
 
     public condition(node: T) {
-        return node.overflowX && node.hasPX('width') || node.overflowY && node.hasPX('height') && node.hasHeight;
+        return (node.overflowX && node.hasPX('width') || node.overflowY && node.hasPX('height') && node.hasHeight) && !node.originalRoot;
     }
 
     public processNode(node: T, parent: T) {
