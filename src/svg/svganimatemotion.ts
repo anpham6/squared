@@ -383,10 +383,7 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         this.setOffsetPath();
         const path = this._offsetPath;
         if (path) {
-            return plainMap(path, item => {
-                const { x, y } = item.value;
-                return `${x} ${y}`;
-            });
+            return plainMap(path, item => `${item.value.x} ${item.value.y}`);
         }
         return super.values;
     }

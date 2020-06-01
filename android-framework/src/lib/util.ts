@@ -148,15 +148,14 @@ export function createViewAttribute(data?: StandardMap, options?: ViewAttribute)
         options.android = {};
     }
     if (data) {
-        const { android, app } = data;
-        if (android) {
-            Object.assign(options.android, android);
+        if (data.android) {
+            Object.assign(options.android, data.android);
         }
-        if (app) {
+        if (data.app) {
             if (!options.app) {
                 options.app = {};
             }
-            Object.assign(options.app, app);
+            Object.assign(options.app, data.app);
         }
     }
     return options;

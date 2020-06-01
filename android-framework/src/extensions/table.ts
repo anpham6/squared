@@ -30,21 +30,18 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
                     requireWidth = true;
                 }
                 else {
-                    const { downsized, expand, percent } = data;
-                    if (expand) {
-                        if (percent) {
-                            const value = convertFloat(percent) / 100;
-                            if (value > 0) {
-                                item.setLayoutWidth('0px');
-                                item.android('layout_columnWeight', trimEnd(value.toPrecision(3), '0'));
-                                requireWidth = true;
-                            }
-                        }
-                    }
-                    else if (expand === false) {
+                    if (data.expand === false) {
                         item.android('layout_columnWeight', '0');
                     }
-                    if (downsized) {
+                    else if (data.percent) {
+                        const value = convertFloat(data.percent) / 100;
+                        if (value > 0) {
+                            item.setLayoutWidth('0px');
+                            item.android('layout_columnWeight', trimEnd(value.toPrecision(3), '0'));
+                            requireWidth = true;
+                        }
+                    }
+                    if (data.downsized) {
                         if (data.exceed) {
                             item.setLayoutWidth('0px');
                             item.android('layout_columnWeight', '0.01');
@@ -118,21 +115,20 @@ export default class <T extends View> extends squared.base.extensions.Table<T> {
     public processChild(node: T, parent: T) {
         const cellData: TableCellData = node.data(this.name, 'cellData');
         if (cellData) {
-            const { rowSpan, colSpan, spaceSpan } = cellData;
-            if (rowSpan > 1) {
-                node.android('layout_rowSpan', rowSpan.toString());
+            if (cellData.rowSpan > 1) {
+                node.android('layout_rowSpan', cellData.rowSpan.toString());
             }
-            if (colSpan > 1) {
-                node.android('layout_columnSpan', colSpan.toString());
+            if (cellData.colSpan > 1) {
+                node.android('layout_columnSpan', cellData.colSpan.toString());
             }
-            if (spaceSpan) {
+            if (cellData.spaceSpan) {
                 const controller = this.controller as android.base.Controller<T>;
                 controller.addAfterOutsideTemplate(
                     node.id,
                     controller.renderSpace({
                         width: 'wrap_content',
                         height: 'wrap_content',
-                        columnSpan: spaceSpan,
+                        columnSpan: cellData.spaceSpan,
                         android: {}
                     }),
                     false

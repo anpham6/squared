@@ -50,9 +50,9 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
         const absoluteParent = node.absoluteParent || parent;
         const requireWidth = !absoluteParent.hasPX('width', false);
         const requireHeight = !absoluteParent.hasPX('height', false);
-        const percentWidth = requireWidth && hasPercentWidth(node) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
+        const percentWidth = requireWidth && hasPercentWidth(node) && !parent.layoutConstraint && (node.cssInitial('width') !== '100%' || node.has('maxWidth', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || (parent.layoutVertical || node.onlyChild) && (parent.blockStatic || parent.percentWidth > 0));
         const marginHorizontal = requireWidth && hasMarginHorizontal(node, parent, this.application.clearMap);
-        const percentHeight = requireHeight && hasPercentHeight(node, parent) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.originalRoot || parent.percentHeight > 0);
+        const percentHeight = requireHeight && hasPercentHeight(node, parent) && (node.cssInitial('height') !== '100%' || node.has('maxHeight', { type: CSS_UNIT.PERCENT, not: '100%' })) && (node.rootElement || parent.percentHeight > 0);
         const marginVertical = requireHeight && hasMarginVertical(node);
         if (percentWidth || percentHeight || marginHorizontal || marginVertical) {
             node.data(this.name, 'mainData', { percentWidth, percentHeight, marginHorizontal, marginVertical } as PercentData);

@@ -70,14 +70,13 @@ export function assignRect(rect: DOMRect | ClientRect | BoxRectDimension, scroll
         height: rect.height
     };
     if (scrollPosition) {
-        const { scrollX, scrollY } = window;
-        if (scrollY !== 0) {
-            result.top += scrollY;
-            result.bottom += scrollY;
+        if (window.scrollY !== 0) {
+            result.top += window.scrollY;
+            result.bottom += window.scrollY;
         }
-        if (scrollX !== 0) {
-            result.left += scrollX;
-            result.right += scrollX;
+        if (window.scrollX !== 0) {
+            result.left += window.scrollX;
+            result.right += window.scrollX;
         }
     }
     return result;

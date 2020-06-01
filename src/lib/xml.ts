@@ -279,8 +279,8 @@ export function replaceCharacterData(value: string, tab?: number) {
         const parts = value.split('');
         let j = 0;
         while (j < char.length) {
-            const { i, text } = char[j++];
-            parts[i] = text;
+            const item = char[j++];
+            parts[item.i] = item.text;
         }
         return parts.join('');
     }

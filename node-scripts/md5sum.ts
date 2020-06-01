@@ -185,14 +185,36 @@ if (master) {
                 }
             }
             if (errors.length || notFound.length) {
-                stderr.write('\n' + (screenshot ? '\n' : ''));
-                for (const value of errors) {
-                    warnMessage('MD5 not matched', value);
+                stderr.write('\n\n');
+                if (data && host) {
+                    parse(fs.readFileSync(path.resolve(__dirname, data)), (err, csv: string[][]) => {
+                        if (!err) {
+                            for (const row of csv) {
+                                const filename = row[1];
+                                const url = row[2];
+                                if (errors.includes(filename)) {
+                                    warnMessage('MD5 not matched -> ' + host + url, filename);
+                                }
+                                else if (notFound.includes(filename)) {
+                                    warnMessage('MD5 not found', filename);
+                                }
+                            }
+                            failMessage((errors.length + notFound.length) + ' errors', snapshot);
+                        }
+                        else {
+                            failMessage("Unable to read CSV data file", data);
+                        }
+                    });
                 }
-                for (const value of notFound) {
-                    warnMessage('MD5 not found', value);
+                else {
+                    for (const value of errors) {
+                        warnMessage('MD5 not matched', value);
+                    }
+                    for (const value of notFound) {
+                        warnMessage('MD5 not found', value);
+                    }
+                    failMessage((errors.length + notFound.length) + ' errors', snapshot);
                 }
-                failMessage((errors.length + notFound.length) + ' errors', snapshot);
             }
             else {
                 successMessage('MD5 matched', master + ' -> ' + snapshot);

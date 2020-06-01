@@ -65,9 +65,8 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
         node.exclude({ resource: NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET });
         Resource.formatOptions(options, this.application.extensionManager.optionValueAsBoolean(EXT_ANDROID.RESOURCE_STRINGS, 'numberResourceValue'));
         if (!node.pageFlow) {
-            const { leftRight, topBottom } = node.autoMargin;
             const offsetParent = (this.application as android.base.Application<T>).resolveTarget(target) || parent;
-            if (leftRight) {
+            if (node.autoMargin.leftRight) {
                 node.mergeGravity('layout_gravity', 'center_horizontal');
             }
             else if (node.hasPX('left')) {
@@ -78,7 +77,7 @@ export default class FloatingActionButton<T extends View> extends squared.base.E
                 node.mergeGravity('layout_gravity', node.localizeString('right'));
                 node.modifyBox(BOX_STANDARD.MARGIN_RIGHT, adjustAbsolutePaddingOffset(offsetParent, BOX_STANDARD.PADDING_RIGHT, node.right));
             }
-            if (topBottom) {
+            if (node.autoMargin.topBottom) {
                 node.mergeGravity('layout_gravity', 'center_vertical');
             }
             else if (node.hasPX('top')) {

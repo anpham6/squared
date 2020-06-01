@@ -32,9 +32,8 @@ function getBaseValue(element: SVGElement, ...attrs: string[]) {
         const attr = attrs[i];
         const item = element[attr];
         if (item) {
-            const { value, valueAsString } = item.baseVal;
-            result[attr] = value;
-            result[attr + 'AsString'] = valueAsString;
+            result[attr] = item.baseVal.value;
+            result[attr + 'AsString'] = item.baseVal.valueAsString;
         }
     }
     return result;

@@ -715,10 +715,11 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
         left += node.borderLeftWidth;
     }
     if (top !== 0 || left !== 0 || bottom !== 0 || right !== 0) {
-        let horizontal = 0, vertical = 0, combine = 0;
+        let horizontal = 0, vertical = 0;
         if ((!margin || !(node.renderParent as T).layoutGrid) && node.api >= BUILD_ANDROID.OREO) {
             if (top === right && right === bottom && bottom === left) {
-                combine = top;
+                node.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, formatPX(top));
+                return;
             }
             else {
                 if (left === right) {
@@ -729,31 +730,26 @@ function setBoxModel(node: T, attrs: string[], boxReset: BoxModel, boxAdjustment
                 }
             }
         }
-        if (combine !== 0) {
-            node.android(margin ? STRING_ANDROID.MARGIN : STRING_ANDROID.PADDING, formatPX(combine));
+        if (horizontal !== 0) {
+            node.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, formatPX(horizontal));
         }
         else {
-            if (horizontal !== 0) {
-                node.android(margin ? STRING_ANDROID.MARGIN_HORIZONTAL : STRING_ANDROID.PADDING_HORIZONTAL, formatPX(horizontal));
+            if (left !== 0) {
+                node.android(node.localizeString(margin ? STRING_ANDROID.MARGIN_LEFT : STRING_ANDROID.PADDING_LEFT), formatPX(left));
             }
-            else {
-                if (left !== 0) {
-                    node.android(node.localizeString(margin ? STRING_ANDROID.MARGIN_LEFT : STRING_ANDROID.PADDING_LEFT), formatPX(left));
-                }
-                if (right !== 0) {
-                    node.android(node.localizeString(margin ? STRING_ANDROID.MARGIN_RIGHT : STRING_ANDROID.PADDING_RIGHT), formatPX(right));
-                }
+            if (right !== 0) {
+                node.android(node.localizeString(margin ? STRING_ANDROID.MARGIN_RIGHT : STRING_ANDROID.PADDING_RIGHT), formatPX(right));
             }
-            if (vertical !== 0) {
-                node.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, formatPX(vertical));
+        }
+        if (vertical !== 0) {
+            node.android(margin ? STRING_ANDROID.MARGIN_VERTICAL : STRING_ANDROID.PADDING_VERTICAL, formatPX(vertical));
+        }
+        else {
+            if (top !== 0) {
+                node.android(margin ? STRING_ANDROID.MARGIN_TOP : STRING_ANDROID.PADDING_TOP, formatPX(top));
             }
-            else {
-                if (top !== 0) {
-                    node.android(margin ? STRING_ANDROID.MARGIN_TOP : STRING_ANDROID.PADDING_TOP, formatPX(top));
-                }
-                if (bottom !== 0) {
-                    node.android(margin ? STRING_ANDROID.MARGIN_BOTTOM : STRING_ANDROID.PADDING_BOTTOM, formatPX(bottom));
-                }
+            if (bottom !== 0) {
+                node.android(margin ? STRING_ANDROID.MARGIN_BOTTOM : STRING_ANDROID.PADDING_BOTTOM, formatPX(bottom));
             }
         }
     }
@@ -1111,15 +1107,18 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                             }
                         }
                         else if (this.blockStatic) {
-                            if (!actualParent.layoutElement) {
-                                if (this.nodeGroup || renderParent.hasWidth || this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.originalRoot || this.documentRoot) {
+                            if (this.documentRoot) {
+                                layoutWidth = 'match_parent';
+                            }
+                            else if (!actualParent.layoutElement) {
+                                if (this.nodeGroup || renderParent.hasWidth || this.hasAlign(NODE_ALIGNMENT.BLOCK) || this.rootElement) {
                                     layoutWidth = getMatchParent(this, renderParent);
                                 }
                                 else {
                                     checkParentWidth(true);
                                 }
                             }
-                            else if (containsWidth && actualParent.gridElement && !renderParent.layoutElement) {
+                            else if (containsWidth && (actualParent.gridElement && !renderParent.layoutElement || actualParent.flexElement && this.layoutVertical && this.some(item => item.textElement && item.multiline))) {
                                 layoutWidth = getMatchParent(this, renderParent);
                             }
                         }
@@ -1196,7 +1195,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         if (this.is(CONTAINER_NODE.LINE) && this.tagName !== 'HR' && this.hasPX('height', true, true)) {
                             value += this.borderTopWidth + this.borderBottomWidth;
                         }
-                        if (this.styleText && this.multiline && !actualParent.layoutElement && !this.hasPX('minHeight')) {
+                        if (this.styleText && this.multiline && !this.overflowY && !this.hasPX('minHeight') && !actualParent.layoutElement) {
                             this.android('minHeight', formatPX(value));
                             layoutHeight = 'wrap_content';
                         }
@@ -1696,13 +1695,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     x += value;
                 }
                 if (contain) {
-                    const { left, right } = renderParent.box;
-                    const { left: x1, right: x2 } = this.linear;
-                    if (x1 + x < left) {
-                        x = Math.max(x1 - left, 0);
+                    const box = renderParent.box;
+                    const linear = this.linear;
+                    if (linear.left + x < box.left) {
+                        x = Math.max(linear.left - box.left, 0);
                     }
-                    else if (x2 + x > right) {
-                        x = Math.max(right - x2, 0);
+                    else if (linear.right + x > box.right) {
+                        x = Math.max(box.right - linear.right, 0);
                     }
                 }
                 if (x !== 0) {
@@ -1732,13 +1731,13 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     y += value;
                 }
                 if (contain) {
-                    const { top, bottom } = renderParent.box;
-                    const { top: y1, bottom: y2 } = this.linear;
-                    if (y1 + y < top) {
-                        y = Math.max(y1 - top, 0);
+                    const box = renderParent.box;
+                    const linear = this.linear;
+                    if (linear.top + y < box.top) {
+                        y = Math.max(linear.top - box.top, 0);
                     }
-                    else if (y2 + y > bottom) {
-                        y = Math.max(bottom - y2, 0);
+                    else if (linear.bottom + y > box.bottom) {
+                        y = Math.max(box.bottom - linear.bottom, 0);
                     }
                 }
                 if (y !== 0) {
@@ -1801,8 +1800,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         return false;
                     }
                 }
-                const { grow, shrink } = this.flexbox;
-                return grow > 0 || shrink !== 1;
+                return this.flexbox.grow > 0 || this.flexbox.shrink !== 1;
             }
             return false;
         }
@@ -2357,9 +2355,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     const transforms = parseTransform(this.css('transform'), true, this.fontSize);
                     let i = 0;
                     while (i < transforms.length) {
-                        const { method, values } = transforms[i++];
-                        const [x, y, z] = values;
-                        switch (method) {
+                        const item = transforms[i++];
+                        const [x, y, z] = item.values;
+                        switch (item.method) {
                             case 'rotate':
                                 if (x === y) {
                                     this.android('rotation', x.toString());
@@ -2525,7 +2523,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             if (result !== undefined) {
                 return result;
             }
-            else if (this.naturalChild && !this.plainText && !this.originalRoot) {
+            else if (this.naturalChild && !this.plainText && !this.rootElement) {
                 if (!this.pageFlow) {
                     this._cached.renderExclude = excludeHorizontal(this) || excludeVertical(this) || /^rect\(0[a-z]*,\s+0[a-z]*,\s+0[a-z]*,\s+0[a-z]*\)$/.test(this.css('clip'));
                     return this._cached.renderExclude;

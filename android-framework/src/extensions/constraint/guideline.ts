@@ -54,19 +54,16 @@ export default class Guideline<T extends View> extends squared.base.ExtensionUI<
                 if (item.anchored) {
                     anchor = item;
                 }
-                else {
-                    const { horizontal, vertical } = item.constraint;
-                    if (anchor) {
-                        if (vertical && !anchor.constraint.vertical) {
-                            anchor = item;
-                        }
-                    }
-                    else if (vertical) {
+                else if (anchor) {
+                    if (item.constraint.vertical && !anchor.constraint.vertical) {
                         anchor = item;
                     }
-                    else if (horizontal) {
-                        anchor = item;
-                    }
+                }
+                else if (item.constraint.vertical) {
+                    anchor = item;
+                }
+                else if (item.constraint.horizontal) {
+                    anchor = item;
                 }
             }
             item.positioned = true;

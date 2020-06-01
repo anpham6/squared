@@ -458,24 +458,22 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
     public createCache(documentRoot: HTMLElement) {
         const node = this.createRootNode(documentRoot);
         if (node) {
-            const controllerHandler = this.controllerHandler;
             const cache = this._cache as NodeList<T>;
-            const excluded = this.processing.excluded;
-            const parent = node.parent as T;
+            {
+                const parent = node.parent as T;
+                parent.visible = false;
+                node.documentParent = parent;
+                if (parent.tagName === 'HTML') {
+                    parent.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
+                    parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
+                    cache.add(parent);
+                }
+            }
+            node.rootElement = true;
             const preAlignment: ObjectIndex<StringMap> = {};
             const direction = new Set<HTMLElement>();
             const pseudoElements: T[] = [];
             let resetBounds = false;
-            if (node.documentBody) {
-                parent.naturalChild = true;
-                parent.setCacheValue('naturalElement', true);
-                parent.visible = false;
-                parent.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
-                parent.exclude({ resource: NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING, procedure: NODE_PROCEDURE.ALL });
-                cache.add(parent);
-            }
-            node.originalRoot = true;
-            node.documentParent = parent;
             cache.each(item => {
                 if (item.styleElement) {
                     const element = item.element as HTMLElement;
@@ -508,7 +506,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     }
                 }
             });
-            excluded.each(item => {
+            this.processing.excluded.each(item => {
                 if (!item.pageFlow) {
                     item.cssTry('display', 'none');
                 }
@@ -556,7 +554,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     data.item.cssFinally('display');
                 }
             }
-            excluded.each(item => {
+            this.processing.excluded.each(item => {
                 if (!item.lineBreak) {
                     item.setBounds(!resetBounds);
                     item.saveAsInitial();
@@ -580,8 +578,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 item.saveAsInitial();
             });
-            controllerHandler.evaluateNonStatic(node, cache);
-            controllerHandler.sortInitialCache();
+            this.controllerHandler.evaluateNonStatic(node, cache);
+            this.controllerHandler.sortInitialCache();
         }
         return node;
     }
@@ -1041,12 +1039,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 const ext = combined[j++];
                                 const result = ext.processChild(nodeY, parentY);
                                 if (result) {
-                                    const { output, renderAs, outputAs } = result;
-                                    if (output) {
-                                        this.addLayoutTemplate(result.outerParent || parentY, nodeY, output);
+                                    if (result.output) {
+                                        this.addLayoutTemplate(result.outerParent || parentY, nodeY, result.output);
                                     }
-                                    if (renderAs && outputAs) {
-                                        this.addLayoutTemplate(result.parentAs || parentY, renderAs, outputAs);
+                                    if (result.renderAs && result.outputAs) {
+                                        this.addLayoutTemplate(result.parentAs || parentY, result.renderAs, result.outputAs);
                                     }
                                     parentY = result.parent || parentY;
                                     if (result.subscribe) {
@@ -1072,12 +1069,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     if (ext.condition(nodeY, parentY) && (!descendant || !descendant.includes(ext))) {
                                         const result = ext.processNode(nodeY, parentY);
                                         if (result) {
-                                            const { output, renderAs, outputAs } = result;
-                                            if (output) {
-                                                this.addLayoutTemplate(result.outerParent || parentY, nodeY, output);
+                                            if (result.output) {
+                                                this.addLayoutTemplate(result.outerParent || parentY, nodeY, result.output);
                                             }
-                                            if (renderAs && outputAs) {
-                                                this.addLayoutTemplate(result.parentAs || parentY, renderAs, outputAs);
+                                            if (result.renderAs && result.outputAs) {
+                                                this.addLayoutTemplate(result.parentAs || parentY, result.renderAs, result.outputAs);
                                             }
                                             parentY = result.parent || parentY;
                                             if (result.include) {

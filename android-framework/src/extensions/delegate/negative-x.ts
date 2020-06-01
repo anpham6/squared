@@ -24,7 +24,7 @@ function outsideX(node: View, parent: View) {
 
 export default class NegativeX<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return node.length > 0 && !node.originalRoot && node.css('overflowX') !== 'hidden';
+        return node.length > 0 && !node.rootElement && node.css('overflowX') !== 'hidden';
     }
 
     public condition(node: T) {

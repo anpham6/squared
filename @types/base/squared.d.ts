@@ -55,6 +55,7 @@ declare module "base" {
         unusedStyles: Set<string>;
         sessionId: string;
         node?: T;
+        documentElement?: T;
     }
 
     interface AppSessionUI<T extends NodeUI> extends AppSession {
@@ -445,7 +446,6 @@ declare module "base" {
         get tableElement(): boolean;
         get inputElement(): boolean;
         get pseudoElement(): boolean;
-        get scrollElement(): boolean;
         get documentBody(): boolean;
         get dataset(): DOMStringMap;
         get centerAligned(): boolean;
@@ -499,8 +499,6 @@ declare module "base" {
         get backgroundImage(): string;
         get visibleStyle(): VisibleStyle;
         get fontSize(): number;
-        get overflowX(): boolean;
-        get overflowY(): boolean;
         get verticalAlign(): string;
         get absoluteParent(): Null<Node>;
         get actualWidth(): number;
@@ -533,7 +531,7 @@ declare module "base" {
         baselineAltered: boolean;
         rendered: boolean;
         excluded: boolean;
-        originalRoot: boolean;
+        rootElement: boolean;
         lineBreakLeading: boolean;
         lineBreakTrailing: boolean;
         floatContainer: boolean;
@@ -609,6 +607,7 @@ declare module "base" {
         get naturalChild(): boolean;
         set documentParent(value);
         get documentParent(): NodeUI;
+        get scrollElement(): boolean;
         set renderAs(value);
         get renderAs(): Null<NodeUI>;
         set containerName(value);
@@ -667,6 +666,8 @@ declare module "base" {
         get firstStaticChild(): Null<NodeUI>;
         get lastStaticChild(): Null<NodeUI>;
         get onlyChild(): boolean;
+        get overflowX(): boolean;
+        get overflowY(): boolean;
         get textEmpty(): boolean;
         get innerMostWrapped(): NodeUI;
         get outerMostWrapper(): NodeUI;

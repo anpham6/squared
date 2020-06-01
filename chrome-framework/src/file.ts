@@ -135,7 +135,6 @@ const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(valu
 
 export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
     public static parseUri(uri: string, options: UriOptions = {}): Undef<ChromeAsset> {
-        const { preserveCrossOrigin, saveTo } = options;
         let { saveAs, format, preserve } = options;
         let value = trimEnd(uri, '/');
         let relocate: Undef<string>;
@@ -153,7 +152,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 value = resolvePath(relocate, location.href);
             }
         }
-        if (preserveCrossOrigin && !local && !relocate) {
+        if (options.preserveCrossOrigin && !local && !relocate) {
             return undefined;
         }
         const match = FILE.PROTOCOL.exec(value);
@@ -166,7 +165,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             let prefix!: string;
             const getDirectory = (start: number) => path.substring(start, path.lastIndexOf('/'));
             if (!local) {
-                if (saveTo && relocate) {
+                if (options.saveTo && relocate) {
                     [moveTo, pathname, filename] = getFilePath(relocate + '/' + randomUUID() + (extension ? '.' + extension : ''));
                 }
                 else {
@@ -192,7 +191,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             if (filename === '') {
                 if (local && relocate) {
-                    [moveTo, pathname, filename] = getFilePath(relocate, saveTo);
+                    [moveTo, pathname, filename] = getFilePath(relocate, options.saveTo);
                 }
                 else if (path && path !== '/') {
                     filename = fromLastIndexOf(path, '/', '\\');
@@ -315,13 +314,10 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 let format: Undef<string>;
                 let outerHTML: Undef<string>;
                 let preserve: Undef<boolean>;
-                if (!isString(file) && saveAs) {
-                    const { pathname, filename } = saveAs;
-                    if (filename) {
-                        file = appendSeparator(pathname || '', filename);
-                        format = saveAs.format;
-                        outerHTML = element.outerHTML;
-                    }
+                if (!isString(file) && saveAs?.filename) {
+                    file = appendSeparator(saveAs.pathname || '', saveAs.filename);
+                    format = saveAs.format;
+                    outerHTML = element.outerHTML;
                 }
                 let data: Undef<ChromeAsset>;
                 if (src !== '') {
@@ -371,14 +367,11 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 let format: Undef<string>;
                 let preserve: Undef<boolean>;
                 let outerHTML: Undef<string>;
-                if (!isString(file) && saveAs && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
-                    const { pathname, filename } = saveAs;
-                    if (filename) {
-                        file = appendSeparator(pathname || '', filename);
-                        format = saveAs.format;
-                        preserve = saveAs.preserve;
-                        outerHTML = element.outerHTML;
-                    }
+                if (!isString(file) && saveAs?.filename && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
+                    file = appendSeparator(saveAs.pathname || '', saveAs.filename);
+                    format = saveAs.format;
+                    preserve = saveAs.preserve;
+                    outerHTML = element.outerHTML;
                 }
                 if (element instanceof HTMLLinkElement) {
                     const href = element.href.trim();
@@ -491,7 +484,7 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                 continue;
             }
             else {
-                const { base64, content, filename } = rawData;
+                const { base64, filename } = rawData;
                 let mimeType = rawData.mimeType;
                 let data: Undef<ChromeAsset>;
                 if (base64) {
@@ -521,8 +514,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
                     }
                     data = { pathname: '__generated__/base64', filename, mimeType, base64 };
                 }
-                else if (content && mimeType) {
-                    data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content };
+                else if (mimeType && rawData.content) {
+                    data = { pathname: `__generated__/${mimeType.split('/').pop()}`, filename, content: rawData.content };
                 }
                 else {
                     continue;

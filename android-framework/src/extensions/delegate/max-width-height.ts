@@ -13,7 +13,7 @@ const { NODE_ALIGNMENT } = squared.base.lib.enumeration;
 
 export default class MaxWidthHeight<T extends View> extends squared.base.ExtensionUI<T> {
     public is(node: T) {
-        return !node.inputElement && !node.support.maxDimension;
+        return !node.support.maxDimension && !node.inputElement && !node.controlElement;
     }
 
     public condition(node: T, parent: T) {

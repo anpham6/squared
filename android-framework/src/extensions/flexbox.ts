@@ -218,11 +218,11 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
     public processNode(node: T, parent: T) {
         super.processNode(node, parent);
         const mainData: FlexboxData<T> = node.data(this.name, 'mainData');
-        const { column, row, rowCount, columnCount } = mainData;
-        if (row && rowCount === 1 || column && columnCount === 1) {
+        const { rowCount, columnCount } = mainData;
+        if (rowCount === 1 && mainData.row || columnCount === 1 && mainData.column) {
             node.containerType = CONTAINER_NODE.CONSTRAINT;
             node.addAlign(NODE_ALIGNMENT.AUTO_LAYOUT);
-            node.addAlign(column ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL);
+            node.addAlign(mainData.column ? NODE_ALIGNMENT.VERTICAL : NODE_ALIGNMENT.HORIZONTAL);
             mainData.wrap = false;
             return {
                 include: true,
@@ -235,7 +235,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     parent,
                     node,
                     containerType: CONTAINER_NODE.CONSTRAINT,
-                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (column ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
+                    alignmentType: NODE_ALIGNMENT.AUTO_LAYOUT | (mainData.column ? NODE_ALIGNMENT.HORIZONTAL : NODE_ALIGNMENT.VERTICAL),
                     itemCount: node.length,
                     rowCount,
                     columnCount

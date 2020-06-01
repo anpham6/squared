@@ -365,16 +365,20 @@ export default abstract class Application<T extends Node> implements squared.bas
         const cache = processing.cache;
         cache.clear();
         processing.excluded.clear();
+        processing.documentElement = undefined;
         this._cascadeAll = false;
         const extensions = this.extensionsCascade;
-        const node = this.cascadeParentNode(element, 0, extensions.length ? extensions : undefined);
+        const node = extensions.length ? this.cascadeParentNode(element, 0, extensions) : this.cascadeParentNode(element, 0);
         if (node) {
-            const parent = new this.Node(0, processing.sessionId, element.parentElement || document.body);
+            const parent = new this.Node(0, processing.sessionId, element.parentElement || document.documentElement);
             this._afterInsertNode(parent);
             node.parent = parent;
             node.actualParent = parent;
             node.childIndex = 0;
             node.documentRoot = true;
+            if (parent.tagName === 'HTML') {
+                processing.documentElement = parent;
+            }
         }
         processing.node = node;
         cache.afterAdd = undefined;

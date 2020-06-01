@@ -373,7 +373,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 rowCount: row.length,
                 columnCount
             });
-            if (!node.originalRoot && !node.hasWidth && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => CssGrid.isFr(value)) && node.ascend({ condition: (item: T) => isFlexibleParent(item, this.name), error: item => item.hasWidth }).length > 0) {
+            if (!node.rootElement && !node.hasWidth && mainData.rowSpanMultiple.length === 0 && unit.length === columnCount && unit.every(value => CssGrid.isFr(value)) && node.ascend({ condition: (item: T) => isFlexibleParent(item, this.name), error: item => item.hasWidth }).length > 0) {
                 const rowData = mainData.rowData;
                 const rowCount = rowData.length;
                 const constraintData: T[][] = new Array(rowCount);
@@ -430,7 +430,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
         let renderAs: Undef<T>;
         let outputAs: Undef<NodeXmlTemplate<T>>;
         if (mainData && cellData) {
-            const { alignContent, column, row } = mainData;
+            const { column, row } = mainData;
             const alignSelf = node.has('alignSelf') ? node.css('alignSelf') : mainData.alignItems;
             const justifySelf = node.has('justifySelf') ? node.css('justifySelf') : mainData.justifyItems;
             const layoutConstraint = parent.layoutConstraint;
@@ -738,10 +738,10 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 target.mergeGravity('layout_gravity', 'fill_horizontal');
             }
             const [rowStart, rowSpan] = applyLayout(target, false, 'height');
-            if (alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (node.data(this.name, 'boundsData') as BoxRectDimension)?.height && checkRowSpan(node, rowSpan, rowStart, mainData, this.name)) {
+            if (mainData.alignContent === 'normal' && !parent.hasPX('height') && !node.hasPX('minHeight') && (!row.unit[rowStart] || row.unit[rowStart] === 'auto') && Math.floor(node.bounds.height) > (node.data(this.name, 'boundsData') as BoxRectDimension)?.height && checkRowSpan(node, rowSpan, rowStart, mainData, this.name)) {
                 target.css('minHeight', formatPX(node.box.height));
             }
-            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && alignContent.startsWith('space') && !hasAlignment(mainData.alignItems))) {
+            else if (!target.hasPX('height') && !target.hasPX('maxHeight') && !(row.length === 1 && mainData.alignContent.startsWith('space') && !hasAlignment(mainData.alignItems))) {
                 target.mergeGravity('layout_gravity', 'fill_vertical');
             }
         }

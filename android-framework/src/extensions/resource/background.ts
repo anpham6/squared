@@ -893,7 +893,6 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     }
                 }
             }
-            const { backgroundClip, backgroundOrigin } = data;
             const documentBody = node.innerMostWrapped.documentBody;
             for (let i = length - 1, j = 0; i >= 0; --i) {
                 const value = images[i];
@@ -1233,8 +1232,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             break;
                     }
                 }
-                if (backgroundClip) {
-                    const { top: clipTop, right: clipRight, left: clipLeft, bottom: clipBottom } = backgroundClip;
+                if (data.backgroundClip) {
+                    const { top: clipTop, right: clipRight, left: clipLeft, bottom: clipBottom } = data.backgroundClip;
                     if (width === 0) {
                         width = boundsWidth;
                     }
@@ -1265,21 +1264,21 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     gravityY = '';
                 }
                 else if (recalibrate) {
-                    if (backgroundOrigin) {
+                    if (data.backgroundOrigin) {
                         if (tileModeX !== 'repeat') {
                             if (!isNaN(posRight)) {
-                                right += backgroundOrigin.right;
+                                right += data.backgroundOrigin.right;
                             }
                             else {
-                                left += backgroundOrigin.left;
+                                left += data.backgroundOrigin.left;
                             }
                         }
                         if (tileModeY !== 'repeat') {
                             if (!isNaN(posBottom)) {
-                                bottom += backgroundOrigin.bottom;
+                                bottom += data.backgroundOrigin.bottom;
                             }
                             else {
-                                top += backgroundOrigin.top;
+                                top += data.backgroundOrigin.top;
                             }
                         }
                     }

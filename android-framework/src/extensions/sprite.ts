@@ -20,8 +20,6 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
         if (mainData) {
             const drawable = (this.resource as android.base.Resource<T>).addImageSrc(node.backgroundImage);
             if (drawable !== '') {
-                const { width, height } = mainData.image;
-                const { top, left } = mainData.position;
                 const container = this.application.createNode({ parent, innerWrap: node });
                 container.inherit(node, 'base', 'initial', 'styleMap');
                 container.setControlType(CONTAINER_ANDROID.FRAME, CONTAINER_NODE.FRAME);
@@ -41,8 +39,8 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                     bottom: 'auto',
                     left: 'auto',
                     display: 'inline-block',
-                    width: width > 0 ? formatPX(width) : 'auto',
-                    height: height > 0 ? formatPX(height) : 'auto',
+                    width: mainData.image.width > 0 ? formatPX(mainData.image.width) : 'auto',
+                    height: mainData.image.height > 0 ? formatPX(mainData.image.height) : 'auto',
                     borderTopStyle: 'none',
                     borderRightStyle: 'none',
                     borderBottomStyle: 'none',
@@ -54,8 +52,8 @@ export default class <T extends View> extends squared.base.extensions.Sprite<T> 
                 });
                 node.unsetCache();
                 node.android('src', `@drawable/${drawable}`);
-                node.android('layout_marginTop', formatPX(top));
-                node.android(node.localizeString('layout_marginLeft'), formatPX(left));
+                node.android('layout_marginTop', formatPX(mainData.position.top));
+                node.android(node.localizeString('layout_marginLeft'), formatPX(mainData.position.left));
                 return {
                     renderAs: container,
                     outputAs: this.application.renderNode(

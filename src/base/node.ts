@@ -1,5 +1,3 @@
-import { NODE_ALIGNMENT } from './lib/enumeration';
-
 type T = Node;
 
 const { USER_AGENT, isUserAgent } = squared.lib.client;
@@ -138,21 +136,6 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin
         }
     }
     return maxValue > 0 ? Math.min(value, maxValue) : value;
-}
-
-function setOverflow(node: T) {
-    let result = 0;
-    if (node.scrollElement) {
-        const element = node.element as HTMLElement;
-        const [overflowX, overflowY] = node.cssAsTuple('overflowX', 'overflowY');
-        if (node.hasHeight && (node.hasPX('height') || node.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
-            result |= NODE_ALIGNMENT.VERTICAL;
-        }
-        if ((node.hasPX('width') || node.hasPX('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
-            result |= NODE_ALIGNMENT.HORIZONTAL;
-        }
-    }
-    return result;
 }
 
 function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[]) {
@@ -885,8 +868,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         cached.percentWidth = undefined;
                     case 'minWidth':
                         cached.width = undefined;
-                    case 'maxWidth':
-                        cached.overflow = undefined;
                         break;
                     case 'height':
                         cached.actualHeight = undefined;
@@ -897,8 +878,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                             this.unsetCache('blockVertical');
                             this.each(item => item.unsetCache('height', 'actualHeight', 'blockVertical', 'overflow', 'bottomAligned'));
                         }
-                    case 'maxHeight':
-                        cached.overflow = undefined;
                         break;
                     case 'verticalAlign':
                         cached.baseline = undefined;
@@ -912,10 +891,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'top':
                     case 'bottom':
                         cached.bottomAligned = undefined;
-                        break;
-                    case 'overflowX':
-                    case 'overflowY':
-                        cached.overflow = undefined;
                         break;
                     default:
                         if (attr.startsWith('margin')) {
@@ -1812,56 +1787,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    get scrollElement() {
-        let result = this._cached.scrollElement;
-        if (result === undefined) {
-            if (this.htmlElement) {
-                switch (this.tagName) {
-                    case 'INPUT':
-                        switch (this.toElementString('type')) {
-                            case 'button':
-                            case 'submit':
-                            case 'reset':
-                            case 'file':
-                            case 'date':
-                            case 'datetime-local':
-                            case 'month':
-                            case 'week':
-                            case 'time':
-                            case 'range':
-                            case 'color':
-                                result = true;
-                                break;
-                            default:
-                                result = false;
-                                break;
-                        }
-                        break;
-                    case 'IMG':
-                    case 'SELECT':
-                    case 'VIDEO':
-                    case 'AUDIO':
-                    case 'PICTURE':
-                    case 'PROGRESS':
-                    case 'METER':
-                    case 'HR':
-                    case 'BR':
-                    case 'WBR':
-                        result = false;
-                        break;
-                    default:
-                        result = true;
-                        break;
-                }
-            }
-            else {
-                result = false;
-            }
-            this._cached.scrollElement = result;
-        }
-        return result;
-    }
-
     get plainText() {
         return this.tagName === '#text';
     }
@@ -2492,23 +2417,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.naturalChild && !this.svgElement ? this._element!.textContent as string : '';
     }
 
-    get overflowX() {
-        let result = this._cached.overflow;
-        if (result === undefined) {
-            result = setOverflow(this);
-            this._cached.overflow = result;
-        }
-        return hasBit(result, NODE_ALIGNMENT.HORIZONTAL);
-    }
-    get overflowY() {
-        let result = this._cached.overflow;
-        if (result === undefined) {
-            result = setOverflow(this);
-            this._cached.overflow = result;
-        }
-        return hasBit(result, NODE_ALIGNMENT.VERTICAL);
-    }
-
     get baseline() {
         let result = this._cached.baseline;
         if (result === undefined) {
@@ -2889,8 +2797,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 const length = attributes.length;
                 let i = 0;
                 while (i < length) {
-                    const { name, value } = attributes.item(i++) as Attr;
-                    result[name] = value;
+                    const item = attributes.item(i++) as Attr;
+                    result[item.name] = item.value;
                 }
             }
             this._cached.attributes = result;
@@ -2910,8 +2818,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                 if (isPx(value)) {
                     result = parseFloat(value);
                 }
-                else if (isPercent(value) && !this.documentBody) {
-                    result = (this.actualParent?.fontSize || getFontSize(getStyle(document.body))) * parseFloat(value) / 100;
+                else if (isPercent(value) && this._element !== document.documentElement) {
+                    result = (this.actualParent?.fontSize || getFontSize(getStyle((this._element as Element).parentElement || document.documentElement))) * parseFloat(value) / 100;
                 }
                 else {
                     result = getFontSize(this.style);
@@ -2922,12 +2830,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             }
             if (result === 0 && !this.naturalChild) {
                 const element = this.element;
-                if (element && hasComputedStyle(element)) {
-                    result = getElementAsNode<T>(element, this.sessionId)?.fontSize || getFontSize(getStyle(element));
-                }
-                else {
-                    result = this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize || getFontSize(getStyle(document.body));
-                }
+                result = element && hasComputedStyle(element)
+                    ? getElementAsNode<T>(element, this.sessionId)?.fontSize || getFontSize(getStyle(element))
+                    : this.ascend({ condition: item => item.fontSize > 0 })[0]?.fontSize || getFontSize(getStyle(document.documentElement));
             }
             this._fontSize = result;
         }

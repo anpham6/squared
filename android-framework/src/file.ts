@@ -126,7 +126,6 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public resourceAllToXml(options: FileUniversalOptions = {}) {
-        const { directory, filename } = options;
         const result = {
             string: this.resourceStringToXml(),
             stringArray: this.resourceStringArrayToXml(),
@@ -145,14 +144,13 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 delete result[name];
             }
         }
-        if (directory || filename) {
-            const userSettings = this.userSettings;
-            const outputDirectory = getOutputDirectory(userSettings.outputDirectory);
+        if (options.directory || options.filename) {
+            const outputDirectory = getOutputDirectory(this.userSettings.outputDirectory);
             let assets: FileAsset[] = [];
             for (const name in result) {
                 switch (name) {
                     case 'drawableImage':
-                        assets = assets.concat(getImageAssets(outputDirectory, result[name], userSettings.convertImages, userSettings.compressImages));
+                        assets = assets.concat(getImageAssets(outputDirectory, result[name], this.userSettings.convertImages, this.userSettings.compressImages));
                         break;
                     case 'rawVideo':
                         assets = assets.concat(getRawAssets(outputDirectory + this.directory.video, result[name]));
@@ -166,10 +164,10 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                 }
             }
             options.assets = assets.concat(options.assets || []);
-            if (directory) {
+            if (options.directory) {
                 this.copying(options);
             }
-            if (filename) {
+            if (options.filename) {
                 this.archiving(options);
             }
         }
@@ -402,7 +400,6 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceDrawableImageToString(options: FileUniversalOptions = {}): string[] {
         if (STORED.images.size) {
-            const { directory, filename } = options;
             const imageDirectory = this.directory.image;
             const result: string[] = [];
             for (const [name, images] of STORED.images.entries()) {
@@ -427,13 +424,12 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
                     }
                 }
             }
-            if (directory || filename) {
-                const { outputDirectory, convertImages, compressImages } = this.userSettings;
-                options.assets = getImageAssets(getOutputDirectory(outputDirectory), result, convertImages, compressImages).concat(options.assets || []);
-                if (directory) {
+            if (options.directory || options.filename) {
+                options.assets = getImageAssets(getOutputDirectory(this.userSettings.outputDirectory), result, this.userSettings.convertImages, this.userSettings.compressImages).concat(options.assets || []);
+                if (options.directory) {
                     this.copying(options);
                 }
-                if (filename) {
+                if (options.filename) {
                     this.archiving(options);
                 }
             }
@@ -444,19 +440,17 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceRawVideoToString(options: FileUniversalOptions = {}): string[] {
         if (Resource.ASSETS.video.size) {
-            const { directory, filename } = options;
-            const videoDirectory = this.directory.video;
             const result: string[] = [];
             for (const video of Resource.ASSETS.video.values()) {
                 const uri = video.uri as string;
                 result.push(uri, video.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
             }
-            if (directory || filename) {
-                options.assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + videoDirectory, result).concat(options.assets || []);
-                if (directory) {
+            if (options.directory || options.filename) {
+                options.assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory.video, result).concat(options.assets || []);
+                if (options.directory) {
                     this.copying(options);
                 }
-                if (filename) {
+                if (options.filename) {
                     this.archiving(options);
                 }
             }
@@ -467,19 +461,17 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
 
     public resourceRawAudioToString(options: FileUniversalOptions = {}): string[] {
         if (Resource.ASSETS.video.size) {
-            const { directory, filename } = options;
-            const audioDirectory = this.directory.audio;
             const result: string[] = [];
             for (const video of Resource.ASSETS.audio.values()) {
                 const uri = video.uri as string;
                 result.push(uri, video.mimeType || '', fromLastIndexOf(uri, '/', '\\'));
             }
-            if (directory || filename) {
-                options.assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + audioDirectory, result).concat(options.assets || []);
-                if (directory) {
+            if (options.directory || options.filename) {
+                options.assets = getRawAssets(getOutputDirectory(this.userSettings.outputDirectory) + this.directory.audio, result).concat(options.assets || []);
+                if (options.directory) {
                     this.copying(options);
                 }
-                if (filename) {
+                if (options.filename) {
                     this.archiving(options);
                 }
             }
@@ -489,24 +481,23 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     public layoutAllToXml(layouts: FileAsset[], options: FileUniversalOptions = {}) {
-        const { directory, filename } = options;
-        const actionable = directory || filename;
+        const actionable = options.directory || options.filename;
         const result = {};
         const assets: FileAsset[] = [];
         const length = layouts.length;
         for (let i = 0; i < length; ++i) {
-            const { content, filename: filenameA, pathname } = layouts[i];
-            result[filenameA] = [content];
+            const { content, filename, pathname } = layouts[i];
+            result[filename] = [content];
             if (actionable) {
-                assets.push({ pathname, filename: i === 0 ? this.userSettings.outputMainFileName : `${filenameA}.xml`, content } as FileAsset);
+                assets.push({ pathname, filename: i === 0 ? this.userSettings.outputMainFileName : `${filename}.xml`, content } as FileAsset);
             }
         }
         if (actionable) {
             options.assets = options.assets ? assets.concat(options.assets) : assets;
-            if (directory) {
+            if (options.directory) {
                 this.copying(options);
             }
-            if (filename) {
+            if (options.filename) {
                 this.archiving(options);
             }
         }
@@ -554,13 +545,12 @@ export default class File<T extends View> extends squared.base.FileUI<T> impleme
     }
 
     protected checkFileAssets(content: string[], options: FileUniversalOptions) {
-        const { directory, filename } = options;
-        if (directory || filename) {
+        if (options.directory || options.filename) {
             options.assets = getFileAssets(getOutputDirectory(this.userSettings.outputDirectory), content).concat(options.assets || []);
-            if (directory) {
+            if (options.directory) {
                 this.copying(options);
             }
-            if (filename) {
+            if (options.filename) {
                 this.archiving(options);
             }
         }

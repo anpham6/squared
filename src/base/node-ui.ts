@@ -152,6 +152,21 @@ function applyBoxAdjustment(node: T, boxAdjustment: BoxModel, attrs: string[], s
     }
 }
 
+function setOverflow(node: T) {
+    let result = 0;
+    if (node.scrollElement) {
+        const element = node.element as HTMLElement;
+        const [overflowX, overflowY] = node.cssAsTuple('overflowX', 'overflowY');
+        if (node.hasHeight && (node.hasPX('height') || node.hasPX('maxHeight')) && (overflowY === 'scroll' || overflowY === 'auto' && element.clientHeight !== element.scrollHeight)) {
+            result |= NODE_ALIGNMENT.VERTICAL;
+        }
+        if ((node.hasPX('width') || node.hasPX('maxWidth')) && (overflowX === 'scroll' || overflowX === 'auto' && element.clientWidth !== element.scrollWidth)) {
+            result |= NODE_ALIGNMENT.HORIZONTAL;
+        }
+    }
+    return result;
+}
+
 const canCascadeChildren = (node: T) =>  node.naturalElements.length > 0 && !node.layoutElement && !node.tableElement;
 const checkBlockDimension = (node: T, previous: T) => node.blockDimension && Math.ceil(node.bounds.top) >= previous.bounds.bottom && (node.blockVertical || previous.blockVertical || node.percentWidth > 0 || previous.percentWidth > 0);
 const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWidth') ? node.percentWidth : -Infinity;
@@ -437,7 +452,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public alignmentType = 0;
     public rendered = false;
     public excluded = false;
-    public originalRoot = false;
+    public rootElement = false;
     public floatContainer = false;
     public lineBreakLeading = false;
     public lineBreakTrailing = false;
@@ -987,16 +1002,16 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
             const blockStatic = this.blockStatic || this.display === 'table';
             const length = this.siblingsLeading.length;
-            if (blockStatic && (this.containerIndex === 0 || length === 0)) {
+            if (blockStatic && (length === 0 || this.containerIndex === 0)) {
                 return NODE_TRAVERSE.VERTICAL;
             }
             let i = 0;
             while (i < length) {
                 const previous = this.siblingsLeading[i++];
-                if (previous.lineBreak) {
-                    return NODE_TRAVERSE.LINEBREAK;
+                if (previous.excluded && cleared?.has(previous)) {
+                    return NODE_TRAVERSE.FLOAT_CLEAR;
                 }
-                else if (previous.blockStatic || previous.autoMargin.leftRight || (floating && previous.childIndex === 0 || horizontal === false) && previous.plainText && previous.multiline) {
+                else if (previous.blockStatic || previous.autoMargin.leftRight || (horizontal === false || floating && previous.childIndex === 0) && previous.plainText && previous.multiline) {
                     return NODE_TRAVERSE.VERTICAL;
                 }
                 else if (blockStatic && (!previous.floating || cleared?.has(previous) || i === length - 1 && !previous.pageFlow)) {
@@ -1015,10 +1030,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         return NODE_TRAVERSE.FLOAT_BLOCK;
                     }
                 }
-                if (cleared?.has(previous) && !(siblings?.[0] === previous)) {
-                    return NODE_TRAVERSE.FLOAT_CLEAR;
-                }
-                else if (checkBlockDimension(this, previous)) {
+                if (checkBlockDimension(this, previous)) {
                     return NODE_TRAVERSE.INLINE_WRAP;
                 }
             }
@@ -1259,6 +1271,14 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         cached.preserveWhiteSpace = undefined;
                         cached.textEmpty = undefined;
                         break;
+                    case 'width':
+                    case 'height':
+                    case 'maxWidth':
+                    case 'maxHeight':
+                    case 'overflowX':
+                    case 'overflowY':
+                        cached.overflow = undefined;
+                        break;
                 }
             }
         }
@@ -1306,7 +1326,12 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get naturalChild() {
         let result = this._cached.naturalChild;
         if (result === undefined) {
-            result = !!this._element?.parentElement;
+            const element = this._element;
+            result = element
+                ? element.parentElement
+                    ? true
+                    : element === document.documentElement
+                : false;
             this._cached.naturalChild = result;
         }
         return result;
@@ -1321,6 +1346,56 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         if (result === undefined) {
             result = this.flexElement || this.gridElement;
             this._cached.layoutElement = result;
+        }
+        return result;
+    }
+
+    get scrollElement() {
+        let result = this._cached.scrollElement;
+        if (result === undefined) {
+            if (this.htmlElement) {
+                switch (this.tagName) {
+                    case 'INPUT':
+                        switch (this.toElementString('type')) {
+                            case 'button':
+                            case 'submit':
+                            case 'reset':
+                            case 'file':
+                            case 'date':
+                            case 'datetime-local':
+                            case 'month':
+                            case 'week':
+                            case 'time':
+                            case 'range':
+                            case 'color':
+                                result = true;
+                                break;
+                            default:
+                                result = false;
+                                break;
+                        }
+                        break;
+                    case 'IMG':
+                    case 'SELECT':
+                    case 'TABLE':
+                    case 'VIDEO':
+                    case 'AUDIO':
+                    case 'PROGRESS':
+                    case 'METER':
+                    case 'HR':
+                    case 'BR':
+                    case 'WBR':
+                        result = false;
+                        break;
+                    default:
+                        result = this.blockDimension;
+                        break;
+                }
+            }
+            else {
+                result = false;
+            }
+            this._cached.scrollElement = result;
         }
         return result;
     }
@@ -1645,6 +1720,31 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return (this.renderParent?.renderChildren.length ?? this.parent?.length) === 1 && !this.documentRoot;
     }
 
+    get overflowX() {
+        let result = this._cached.overflow;
+        if (result === undefined) {
+            result = setOverflow(this);
+            this._cached.overflow = result;
+        }
+        return hasBit(result, NODE_ALIGNMENT.HORIZONTAL);
+    }
+    get overflowY() {
+        let result = this._cached.overflow;
+        if (result === undefined) {
+            result = setOverflow(this);
+            this._cached.overflow = result;
+        }
+        return hasBit(result, NODE_ALIGNMENT.VERTICAL);
+    }
+
+    get textEmpty() {
+        if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
+            const value = this.textContent;
+            return value === '' || !this.preserveWhiteSpace && !isString(value);
+        }
+        return false;
+    }
+
     set childIndex(value) {
         this._childIndex = value;
     }
@@ -1702,14 +1802,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             }
         }
         return result;
-    }
-
-    get textEmpty() {
-        if (this.styleElement && !this.imageElement && !this.svgElement && !this.inputElement) {
-            const value = this.textContent;
-            return value === '' || !this.preserveWhiteSpace && !isString(value);
-        }
-        return false;
     }
 
     get innerMostWrapped() {

@@ -1026,9 +1026,9 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
             }
         }
         if (rgba) {
-            const { r, g, b, a } = rgba;
+            const a = rgba.a;
             if (a > 0 || transparency) {
-                const hexAsString = getHexCode(r, g, b);
+                const hexAsString = getHexCode(rgba.r, rgba.g, rgba.b);
                 const alphaAsString = getHexCode(a);
                 const valueAsRGBA = `#${hexAsString + alphaAsString}`;
                 if (CACHE_COLORDATA[valueAsRGBA]) {

@@ -315,12 +315,11 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                                         for (let j = 0; j < iterations; ++j) {
                                             for (let k = 0; k < repeating.length; ++k) {
                                                 const item = repeating[k];
-                                                const { name: nameA, unit: unitA } = item;
-                                                if (nameA) {
-                                                    name[nameA].push(i);
+                                                if (item.name) {
+                                                    name[item.name].push(i);
                                                 }
-                                                else if (unitA) {
-                                                    unit.push(unitA);
+                                                else if (item.unit) {
+                                                    unit.push(item.unit);
                                                     unitMin.push(item.unitMin || '');
                                                     repeat.push(true);
                                                     ++i;
@@ -1006,7 +1005,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
             if (children.length === node.length) {
                 const { gap: rowGap, unit: rowUnit } = row;
-                const { gap: columnGap, unit: columnUnit } = column;
+                const columnGap = column.gap;
                 const rowCount = Math.max(rowUnit.length, rowMain.length);
                 const rowMax: number[] = new Array(rowCount).fill(0);
                 const columnMax: number[] = new Array(columnCount).fill(0);
@@ -1089,7 +1088,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     if (node.hasPX('width', false)) {
                         column.fixedWidth = true;
                         column.flexible = false;
-                        setFlexibleDimension(node.actualWidth, columnGap, columnCount, columnUnit, columnMax);
+                        setFlexibleDimension(node.actualWidth, columnGap, columnCount, column.unit, columnMax);
                     }
                     if (node.hasHeight && !CssGrid.isAligned(node)) {
                         fillUnitEqually(row.unit, rowCount);

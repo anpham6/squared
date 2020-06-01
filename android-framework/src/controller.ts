@@ -387,8 +387,7 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
         const parent = node.actualParent as Null<View>;
         if (parent) {
             if (node.naturalElement && node.inlineStatic && parent.blockStatic && parent === renderParent) {
-                const { left, width } = parent.box;
-                return width - (node.linear.left - left);
+                return parent.box.width - (node.linear.left - parent.box.left);
             }
             else if (parent.floatContainer) {
                 const { containerType, alignmentType } = this.containerTypeVerticalMargin;
@@ -483,7 +482,7 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
             let i = 0;
             while (i < length) {
                 const item = renderChildren[i++] as View;
-                if (item === node || item.plainText || item.pseudoElement || item.originalRoot) {
+                if (item === node || item.plainText || item.pseudoElement || item.rootElement) {
                     continue;
                 }
                 const itemA = item.innerMostWrapped as View;
@@ -536,7 +535,7 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
             i = 0;
             while (i < length) {
                 const item = renderChildren[i++] as View;
-                if (item === node || item.pageFlow || item.originalRoot || !item.constraint[value]) {
+                if (item === node || item.pageFlow || item.rootElement || !item.constraint[value]) {
                     continue;
                 }
                 const itemA = item.innerMostWrapped as View;
@@ -573,7 +572,7 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
     const bounds = node.positionStatic ? node.bounds : linear;
     let attr = 'layout_constraintGuide_';
     let location = 0;
-    if (!node.leftTopAxis && documentParent.originalRoot) {
+    if (!node.leftTopAxis && documentParent.rootElement) {
         const renderParent = node.renderParent;
         if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length) {
             location = horizontal
@@ -1004,7 +1003,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else if (layout.length <= 1) {
             const child = node.item(0) as Undef<T>;
             if (child) {
-                if (node.originalRoot && child.target) {
+                if (node.rootElement && child.target) {
                     node.hide();
                     return { layout, next: true };
                 }
@@ -1022,7 +1021,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 else if (child.percentWidth > 0 && child.percentWidth < 1) {
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.PERCENT);
                 }
-                else if (node.autoMargin.leftRight || node.autoMargin.left) {
+                else if (node.autoMargin.leftRight || node.autoMargin.left || child.hasPX('maxWidth') && !child.support.maxDimension && !child.inputElement) {
                     layout.setContainerType(CONTAINER_NODE.CONSTRAINT);
                 }
                 else if (child.baselineElement) {
@@ -1076,7 +1075,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             layout.addAlign(NODE_ALIGNMENT.HORIZONTAL);
         }
         else if (layout.linearY) {
-            layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | (node.originalRoot || layout.some((item, index) => item.inlineFlow && layout.item(index + 1)!.inlineFlow, { end: layout.length - 1 }) ? NODE_ALIGNMENT.UNKNOWN : 0));
+            layout.setContainerType(getVerticalLayout(layout), NODE_ALIGNMENT.VERTICAL | (node.rootElement || layout.some((item, index) => item.inlineFlow && layout.item(index + 1)!.inlineFlow, { end: layout.length - 1 }) ? NODE_ALIGNMENT.UNKNOWN : 0));
         }
         else if (layout.every(item => item.inlineFlow)) {
             if (this.checkFrameHorizontal(layout)) {
@@ -1119,7 +1118,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             node.marginBottom === 0 &&
             node.marginLeft === 0 &&
             !background &&
-            !node.originalRoot &&
+            !node.rootElement &&
             !node.use)
         {
             node.hide();
@@ -1321,7 +1320,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     while (i < length) {
                         const item = nested[i++];
                         const node = item.node.innerMostWrapped;
-                        const adjacent = node.ascend({ condition: (above: T) => actualParent.includes(above), error: (above: T) => above.originalRoot })[0] as T | undefined;
+                        const adjacent = node.ascend({ condition: (above: T) => actualParent.includes(above), error: (above: T) => above.rootElement })[0] as T | undefined;
                         if (adjacent) {
                             map.get(adjacent)?.push(item) || map.set(adjacent, [item]);
                         }
@@ -1527,11 +1526,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         else {
                             const item = pageFlow[0];
-                            const { horizontal, vertical } = item.constraint;
-                            if (!horizontal) {
+                            if (!item.constraint.horizontal) {
                                 setHorizontalAlignment(item);
                             }
-                            if (!vertical) {
+                            if (!item.constraint.vertical) {
                                 item.anchorParent('vertical');
                                 setVerticalAlignment(item);
                             }
@@ -2035,11 +2033,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute) {
-        const { controlType, width, height, content } = attrs;
         let controlName = attrs.controlName;
         if (!isString(controlName)) {
-            if (controlType) {
-                controlName = View.getControlName(controlType, this.userSettings.targetAPI);
+            if (attrs.controlType) {
+                controlName = View.getControlName(attrs.controlType, this.userSettings.targetAPI);
             }
             else {
                 return '';
@@ -2048,13 +2045,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         const node = new View();
         this.afterInsertNode(node as T);
         node.setControlType(controlName);
-        node.setLayoutWidth(width || 'wrap_content');
-        node.setLayoutHeight(height || 'wrap_content');
+        node.setLayoutWidth(attrs.width || 'wrap_content');
+        node.setLayoutHeight(attrs.height || 'wrap_content');
         if (options) {
             node.apply(options);
             options.documentId = node.documentId;
         }
-        return this.getEnclosingXmlTag(controlName, this.userSettings.showAttributes ? node.extractAttributes(1) : undefined, content);
+        return this.getEnclosingXmlTag(controlName, this.userSettings.showAttributes ? node.extractAttributes(1) : undefined, attrs.content);
     }
 
     public renderSpace(options: RenderSpaceAttribute) {
@@ -2155,11 +2152,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let i = 0;
         while (i < length) {
             const node = nodes[i++];
-            const { horizontal, vertical } = node.constraint;
-            if (horizontal) {
+            if (node.constraint.horizontal) {
                 horizontalAligned.push(node);
             }
-            if (vertical) {
+            if (node.constraint.vertical) {
                 verticalAligned.push(node);
             }
             if (node.alignParent('top') || node.alignSibling('top')) {
@@ -2243,23 +2239,21 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public createNodeWrapper(node: T, parent: T, options: CreateNodeWrapperOptions<T> = {}) {
-        const { children, containerType, alignmentType, resource, procedure, section } = options;
+        const { children, containerType, alignmentType } = options;
         const container = this.application.createNode({
             parent,
             children,
             append: true,
             innerWrap: node,
             delegate: true,
-            cascade: options.cascade === true || !!children && children.length > 0 && !node.originalRoot
+            cascade: options.cascade === true || !!children && children.length > 0 && !node.rootElement
         });
         container.inherit(node, 'base', 'alignment');
         if (node.documentRoot) {
             container.documentRoot = true;
             node.documentRoot = false;
         }
-        if (!container.actualParent && parent.naturalElement) {
-            container.actualParent = parent;
-        }
+        container.actualParent = parent.naturalElement ? parent : node.actualParent;
         if (containerType) {
             container.setControlType(View.getControlName(containerType, node.api), containerType);
         }
@@ -2268,9 +2262,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         container.addAlign(NODE_ALIGNMENT.WRAPPER);
         container.exclude({
-            resource: resource === undefined ? NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET : resource,
-            procedure: procedure === undefined ? NODE_PROCEDURE.CUSTOMIZATION : procedure,
-            section: section === undefined ? APP_SECTION.ALL : section
+            resource: options.resource ?? NODE_RESOURCE.BOX_STYLE | NODE_RESOURCE.ASSET,
+            procedure: options.procedure ?? NODE_PROCEDURE.CUSTOMIZATION,
+            section: options.section ?? APP_SECTION.ALL
         });
         container.saveAsInitial();
         container.cssApply({

@@ -1504,7 +1504,7 @@ export function getStyle(element: Null<Element>, pseudoElt = ''): CSSStyleDeclar
 
 export function getFontSize(element: Element) {
     if (element.nodeName.charAt(0) === '#') {
-        element = element.parentElement || document.body;
+        element = element.parentElement || document.documentElement;
     }
     return parseFloat(getStyle(element).getPropertyValue('font-size'));
 }
@@ -1873,7 +1873,7 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
         case 'lineHeight':
             return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element), min: 0 }));
         case 'fontSize':
-            return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element.parentElement || document.body), min: 0 }));
+            return formatVar(calculateVar(element, value, { boundingSize: getFontSize(element.parentElement || document.documentElement), min: 0 }));
         case 'margin':
             return calculateVarAsString(element, value, { dimension: 'width', boundingBox });
         case 'borderBottomLeftRadius':
@@ -3188,10 +3188,8 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     if (parentElement?.tagName === 'PICTURE') {
         iterateArray(parentElement.children, (item: HTMLSourceElement) => {
             if (item.tagName === 'SOURCE') {
-                const { media, type, srcset: srcsetA } = item;
-                if (isString(srcsetA) && !(isString(media) && !checkMediaRule(media)) && (!isString(type) || !mimeType || mimeType.includes(type.trim().toLowerCase()))) {
-                    srcset = srcsetA;
-                    sizes = item.sizes;
+                if (isString(item.srcset) && !(isString(item.media) && !checkMediaRule(item.media)) && (!isString(item.type) || !mimeType || mimeType.includes(item.type.trim().toLowerCase()))) {
+                    ({ srcset, sizes } = item);
                     return true;
                 }
             }
@@ -3630,9 +3628,9 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
                 result /= 2;
             case 'em':
             case 'ch':
-                return result * (fontSize ?? (getFontSize(document.body) || 16));
+                return result * (fontSize ?? getFontSize(document.documentElement));
             case 'rem':
-                return result * (getFontSize(document.querySelector('html') || document.body) || 16);
+                return result * getFontSize(document.documentElement);
             case 'pc':
                 result *= 12;
             case 'pt':

@@ -82,13 +82,12 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public copying(options: FileCopyingOptions) {
         if (this.hasHttpProtocol()) {
-            const { assets, directory } = options;
-            const body = this.createRequestBody(assets, options);
-            if (body && isString(directory)) {
+            const body = this.createRequestBody(options.assets, options);
+            if (body && isString(options.directory)) {
                 return fetch(
                     this.hostname +
                     '/api/assets/copy' +
-                    '?to=' + encodeURIComponent(directory.trim()) +
+                    '?to=' + encodeURIComponent(options.directory.trim()) +
                     '&empty=' + (this.userSettings.outputEmptyCopyDirectory ? '1' : '0') +
                     this.getCopyQueryParameters(options), {
                         method: 'POST',
@@ -118,13 +117,12 @@ export default abstract class File<T extends squared.base.Node> implements squar
 
     public archiving(options: FileArchivingOptions) {
         if (this.hasHttpProtocol()) {
-            const { assets, filename } = options;
-            const body = this.createRequestBody(assets, options);
-            if (body && isString(filename)) {
+            const body = this.createRequestBody(options.assets, options);
+            if (body && isString(options.filename)) {
                 return fetch(
                     this.hostname +
                     '/api/assets/archive' +
-                    '?filename=' + encodeURIComponent(filename.trim()) +
+                    '?filename=' + encodeURIComponent(options.filename.trim()) +
                     '&format=' + (options.format || this.userSettings.outputArchiveFormat).trim().toLowerCase() +
                     '&to=' + encodeURIComponent((options.copyTo || '').trim()) +
                     '&append_to=' + encodeURIComponent((options.appendTo || '').trim()) +

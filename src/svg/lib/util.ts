@@ -29,10 +29,7 @@ function getDataSetValue(element: SVGElement, attr: string) {
     return '';
 }
 
-function getViewportArea(min: boolean, viewBox: DOMRect) {
-    const { width, height } = viewBox;
-    return min ? Math.min(width, height) : hypotenuse(width, height);
-}
+const getViewportArea = (min: boolean, viewBox: DOMRect) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
 
 export const SVG = {
     svg: (element: Element): element is SVGSVGElement => {

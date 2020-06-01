@@ -768,7 +768,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     public createSvgDrawable(node: T, element: SVGSVGElement) {
-        const { floatPrecisionValue: precision, floatPrecisionKeyTime, transformExclude: exclude } = this.options;
+        const { floatPrecisionValue: precision, floatPrecisionKeyTime } = this.options;
         const svg = new Svg(element);
         const supportedKeyFrames = node.api >= BUILD_ANDROID.MARSHMALLOW;
         const keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyFrames ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
@@ -782,7 +782,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         this._namespaceAapt = false;
         this._synchronizeMode = keyTimeMode;
         const templateName = (node.tagName + '_' + convertWord(node.controlId, true) + '_viewbox').toLowerCase();
-        svg.build({ exclude, residual: partitionTransforms, precision });
+        svg.build({ exclude: this.options.transformExclude, residual: partitionTransforms, precision });
         svg.synchronize({ keyTimeMode, framesPerSecond: this.controller.userSettings.framesPerSecond, precision });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
         const vectorData = this.parseVectorData(svg);
@@ -1932,7 +1932,6 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     private createClipPath(target: SvgView, clipArray: StringMap[], clipPath: string) {
         if (isString(clipPath)) {
-            const { transformExclude: exclude, floatPrecisionValue: precision } = this.options;
             const definitions = this._svgInstance.definitions;
             const keyTimeMode = this._synchronizeMode;
             let valid = false;
@@ -1941,8 +1940,8 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     const element = (definitions.clipPath.get(value) as unknown) as SVGGElement;
                     if (element) {
                         const g = new SvgG(element);
-                        g.build({ exclude, residual: partitionTransforms, precision });
-                        g.synchronize({ keyTimeMode, precision });
+                        g.build({ exclude: this.options.transformExclude, residual: partitionTransforms, precision: this.options.floatPrecisionValue });
+                        g.synchronize({ keyTimeMode, precision: this.options.floatPrecisionValue });
                         g.each((child: SvgShape) => {
                             const path = child.path;
                             if (path) {
