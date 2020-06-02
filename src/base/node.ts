@@ -1054,10 +1054,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const { left, right } = this[dimension];
             const { left: leftA, right: rightA } = rect;
             return (
-                Math.ceil(left) >= leftA && Math.floor(left) <= rightA ||
-                right >= Math.floor(leftA) && right <= Math.ceil(rightA) ||
-                Math.ceil(leftA) >= left && Math.floor(leftA) <= right ||
-                rightA >= Math.floor(left) && rightA <= Math.ceil(right)
+                Math.ceil(left) >= leftA && left < Math.floor(rightA) ||
+                Math.floor(right) > leftA && right <= Math.ceil(rightA) ||
+                Math.ceil(leftA) >= left && leftA < Math.floor(right) ||
+                Math.floor(rightA) > left && rightA <= Math.ceil(right)
             );
         }
         return false;
@@ -1068,10 +1068,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             const { top, bottom } = this[dimension];
             const { top: topA, bottom: bottomA } = rect;
             return (
-                Math.ceil(top) >= topA && Math.floor(top) <= bottomA ||
-                bottom >= Math.floor(topA) && bottom <= Math.ceil(bottomA) ||
-                Math.ceil(topA) >= top && Math.floor(topA) <= bottom ||
-                bottomA >= Math.floor(top) && bottomA <= Math.ceil(bottom)
+                Math.ceil(top) >= topA && top < Math.floor(bottomA) ||
+                Math.floor(bottom) > topA && bottom <= Math.ceil(bottomA) ||
+                Math.ceil(topA) >= top && topA < Math.floor(bottom) ||
+                Math.floor(bottomA) > top && bottomA <= Math.ceil(bottom)
             );
         }
         return false;
@@ -1746,6 +1746,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
+    get textElement() {
+        return this.plainText || this.inlineText && this.tagName !== 'BUTTON';
+    }
+
     get pseudoElement() {
         return false;
     }
@@ -1762,31 +1766,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this.display.endsWith('grid');
     }
 
-    get textElement() {
-        return this.plainText || this.inlineText && this.tagName !== 'BUTTON';
-    }
-
     get tableElement() {
         return this.tagName === 'TABLE' || this.display === 'table';
     }
 
     get inputElement() {
-        let result = this._cached.inputElement;
-        if (result === undefined) {
-            switch (this.tagName) {
-                case 'INPUT':
-                case 'BUTTON':
-                case 'SELECT':
-                case 'TEXTAREA':
-                    result = true;
-                    break;
-                default:
-                    result = false;
-                    break;
-            }
-            this._cached.inputElement = result;
+        switch (this.tagName) {
+            case 'INPUT':
+            case 'BUTTON':
+            case 'SELECT':
+            case 'TEXTAREA':
+                return true;
+            default:
+                return false;
         }
-        return result;
     }
 
     get plainText() {
@@ -1799,6 +1792,44 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     get lineBreak() {
         return this.tagName === 'BR';
+    }
+
+    get display() {
+        return this.css('display');
+    }
+
+    get positionRelative() {
+        return this.css('position') === 'relative';
+    }
+
+    get floating() {
+        return this.float !== 'none';
+    }
+
+    get float() {
+        return this.pageFlow && this.css('float') || 'none';
+    }
+
+    get zIndex() {
+        return this.toInt('zIndex', 0);
+    }
+
+    get textContent() {
+        return this.naturalChild && !this.svgElement ? this._element!.textContent as string : '';
+    }
+
+    get dataset(): DOMStringMap {
+        if (this.styleElement) {
+            return (this._element as HTMLElement).dataset;
+        }
+        else {
+            let result = this._dataset;
+            if (result === undefined) {
+                result = {};
+                this._dataset = result;
+            }
+            return result;
+        }
     }
 
     get documentBody() {
@@ -1868,20 +1899,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._box = result;
         }
         return result;
-    }
-
-    get dataset(): DOMStringMap {
-        if (this.styleElement) {
-            return (this._element as HTMLElement).dataset;
-        }
-        else {
-            let result = this._dataset;
-            if (result === undefined) {
-                result = {};
-                this._dataset = result;
-            }
-            return result;
-        }
     }
 
     get flexdata() {
@@ -2033,10 +2050,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    get display() {
-        return this.css('display');
-    }
-
     get positionStatic() {
         let result = this._cached.positionStatic;
         if (result === undefined) {
@@ -2067,10 +2080,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             this._cached.positionStatic = result;
         }
         return result;
-    }
-
-    get positionRelative() {
-        return this.css('position') === 'relative';
     }
 
     get top() {
@@ -2403,22 +2412,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return result;
     }
 
-    get floating() {
-        return this.float !== 'none';
-    }
-
-    get float() {
-        return this.pageFlow && this.css('float') || 'none';
-    }
-
-    get zIndex() {
-        return this.toInt('zIndex', 0);
-    }
-
-    get textContent() {
-        return this.naturalChild && !this.svgElement ? this._element!.textContent as string : '';
-    }
-
     get baseline() {
         let result = this._cached.baseline;
         if (result === undefined) {
@@ -2502,14 +2495,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     get multiline() {
         let result = this._cached.multiline;
         if (result === undefined) {
-            if (this.plainText) {
-                result = Math.floor(getRangeClientRect(this._element!).width) > this.actualParent!.box.width;
-            }
-            else if (this.styleText && (this.inline || this.naturalElements.length === 0 || isInlineVertical(this.display) || this.floating)) {
-                result = this.textBounds?.numberOfLines as number > 1;
+            if (this.styleText) {
+                result = (this.inline || this.naturalElements.length === 0 || isInlineVertical(this.display) || this.floating) && this.textBounds?.numberOfLines as number > 1;
             }
             else {
-                result = false;
+                result = this.plainText && Math.floor(getRangeClientRect(this._element!).width) > this.actualParent!.box.width;
             }
             this._cached.multiline = result;
         }
@@ -2526,6 +2516,21 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     case 'transparent':
                     case 'rgba(0, 0, 0, 0)':
                         result = '';
+                        if (this.inputElement) {
+                            if (this.tagName === 'BUTTON') {
+                                result = 'rgba(0, 0, 0, 0)';
+                            }
+                            else {
+                                switch (this.toElementString('type')) {
+                                    case 'button':
+                                    case 'submit':
+                                    case 'reset':
+                                    case 'image':
+                                        result = 'rgba(0, 0, 0, 0)';
+                                        break;
+                                }
+                            }
+                        }
                         break;
                     default:
                         if (result !== '' && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.call(this, 'backgroundColor') === result)) {

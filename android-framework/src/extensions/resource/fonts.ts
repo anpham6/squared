@@ -207,7 +207,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                     fontWeight,
                     fontSize: stored.fontSize,
                     color: Resource.addColor(stored.color),
-                    backgroundColor: Resource.addColor(stored.backgroundColor)
+                    backgroundColor: Resource.addColor(stored.backgroundColor, node.inputElement)
                 };
                 for (let j = 0; j < 6; ++j) {
                     const key = styleKeys[j];

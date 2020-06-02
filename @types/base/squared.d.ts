@@ -520,6 +520,7 @@ declare module "base" {
     }
 
     class NodeUI extends Node implements LayoutType {
+        static justified<T>(node: T): boolean;
         static refitScreen<T>(node: T, value: Dimension): Dimension;
         static linearData<T>(list: T[], cleared?: Map<T, string>): LinearData<T>;
         static outerRegion<T>(node: T): BoxRectDimension;

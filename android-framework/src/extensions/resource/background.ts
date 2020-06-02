@@ -601,7 +601,7 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 else {
                     const backgroundColor = stored.backgroundColor;
                     if (backgroundColor) {
-                        const color = getColorValue(backgroundColor, false);
+                        const color = getColorValue(backgroundColor, node.inputElement);
                         if (color !== '') {
                             if (!themeBackground) {
                                 if (node.tagName === 'HTML') {

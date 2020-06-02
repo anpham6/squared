@@ -3,7 +3,10 @@ interface AndroidLocalSettingsUI extends LocalSettingsUI {
     floatPrecision: number;
 }
 
-interface AndroidCachedValueUI<T> extends CachedValueUI<T> {}
+interface AndroidCachedValueUI<T> extends CachedValueUI<T> {
+    renderExclude?: boolean;
+    support?: AndroidSupportUI;
+}
 
 interface AndroidSupportUI extends SupportUI {
     maxDimension: boolean;

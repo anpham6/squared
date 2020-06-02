@@ -71,8 +71,12 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
                 }
             }
         }
-        else if (node.hasWidth) {
+        else if (node.hasPX('width', { percent: false })) {
             container.setLayoutWidth('wrap_content');
+        }
+        else if (node.hasPX('width')) {
+            container.css('width', node.css('width'), true);
+            node.setLayoutWidth('0px');
         }
         node.data(this.name, 'mainData', {
             container,

@@ -11,7 +11,7 @@ const { getNamedItem } = squared.lib.dom;
 const { cos, equal, hypotenuse, offsetAngleX, offsetAngleY, relativeAngle, sin, triangulate, truncateFraction } = squared.lib.math;
 const { STRING } = squared.lib.regex;
 const { getElementAsNode } = squared.lib.session;
-const { appendSeparator, convertCamelCase, convertFloat, hasValue, isEqual, isNumber, isString, iterateArray } = squared.lib.util;
+const { appendSeparator, convertCamelCase, hasValue, isEqual, isNumber, isString, iterateArray } = squared.lib.util;
 const { STRING_SPACE } = squared.lib.xml;
 
 const BORDER_TOP = CSS_PROPERTIES.borderTop.value as string[];
@@ -185,7 +185,7 @@ function getBackgroundSize(node: NodeUI, index: number, value: string, screenDim
 function setBorderStyle(node: NodeUI, boxStyle: BoxStyle, attr: string, border: string[]) {
     const style = node.css(border[1]) || 'none';
     if (style !== 'none') {
-        let width = formatPX(attr !== 'outline' ? node[border[0]] : convertFloat(node.style[border[0]]));
+        let width = formatPX(attr !== 'outline' ? node[border[0]] : parseFloat(node.style[border[0]]));
         if (width !== '0px') {
             let color: Undef<string | ColorData> = node.css(border[2]) || 'initial';
             switch (color) {
@@ -685,7 +685,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                 backgroundImage = ResourceUI.parseBackgroundImage(node, node.backgroundImage, node.localSettings.screenDimension);
             }
             if (backgroundColor || backgroundImage || borderWidth || node.data(Resource.KEY_NAME, 'embedded')) {
-                boxStyle.backgroundColor = parseColor(backgroundColor)?.valueAsRGBA || '';
+                boxStyle.backgroundColor = parseColor(backgroundColor, 1, node.inputElement)?.valueAsRGBA || '';
                 boxStyle.backgroundImage = backgroundImage;
                 Object.assign(boxStyle, node.cssAsObject('backgroundSize', 'backgroundRepeat', 'backgroundPositionX', 'backgroundPositionY'));
                 if (setBackgroundOffset(node, boxStyle, 'backgroundClip')) {

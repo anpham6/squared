@@ -1,7 +1,7 @@
 import SvgBuild from './svgbuild';
 
 import { INSTANCE_TYPE } from './lib/constant';
-import { SVG, getAttribute, getParentAttribute, getTargetElement } from './lib/util';
+import { SVG, getAttribute, getDOMRect, getParentAttribute, getTargetElement } from './lib/util';
 
 type Svg = squared.svg.Svg;
 type SvgGroup = squared.svg.SvgGroup;
@@ -50,8 +50,15 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
             const { width, height } = aspectRatio;
             if (width > 0 && height > 0) {
                 const ratio = width / height;
-                const parentWidth = parentAspectRatio.width || parent.viewBox.width;
-                const parentHeight = parentAspectRatio.height || parent.viewBox.height;
+                let parentWidth = parentAspectRatio.width || parent.viewBox.width;
+                let parentHeight = parentAspectRatio.height || parent.viewBox.height;
+                let parentUnknown = false;
+                if (parentWidth === 0 && parentHeight === 0) {
+                    ({ width: parentWidth, height: parentHeight } = getDOMRect(parent.element));
+                    parentAspectRatio.width = parentWidth;
+                    parentAspectRatio.height = parentHeight;
+                    parentUnknown = true;
+                }
                 const parentRatio = parentWidth / parentHeight;
                 const ratioWidth = parentWidth / width;
                 const ratioHeight = parentHeight / height;
@@ -59,7 +66,11 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
                 const h = getAttribute(element, 'height');
                 let boxWidth: number;
                 let boxHeight: number;
-                if (SVG.svg(element)) {
+                if (parentUnknown) {
+                    boxWidth = parentWidth;
+                    boxHeight = parentHeight;
+                }
+                else if (SVG.svg(element)) {
                     boxWidth = element.width.baseVal.value;
                     boxHeight = element.height.baseVal.value;
                 }
@@ -76,7 +87,7 @@ function setAspectRatio(parent: Svg | SvgUseSymbol | undefined, group: SvgGroup,
                     aspectRatio.unit = Math.min(boxRatioWidth, boxRatioHeight);
                     resizeUnit = false;
                 }
-                else if (ratioWidth !== ratioHeight) {
+                else if (ratioWidth !== ratioHeight || parentUnknown) {
                     aspectRatio.unit = Math.min(ratioWidth, ratioHeight);
                 }
                 if (hasWidth || hasHeight) {

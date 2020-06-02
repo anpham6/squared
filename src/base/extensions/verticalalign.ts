@@ -4,7 +4,6 @@ import NodeUI from '../node-ui';
 import { BOX_STANDARD } from '../lib/enumeration';
 
 const { isLength } = squared.lib.css;
-const { convertFloat } = squared.lib.util;
 
 export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
     public is(node: T) {
@@ -24,16 +23,16 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
                 return false;
             }
             else if (item.inlineVertical) {
-                const value = convertFloat(item.verticalAlign);
-                if (value !== 0) {
+                const value = parseFloat(item.verticalAlign);
+                if (!isNaN(value)) {
                     valid = true;
-                }
-                if (!isNaN(sameValue)) {
-                    if (sameValue === 0) {
-                        sameValue = value;
-                    }
-                    else if (sameValue !== value) {
-                        sameValue = NaN;
+                    if (!isNaN(sameValue)) {
+                        if (sameValue === 0) {
+                            sameValue = value;
+                        }
+                        else if (sameValue !== value) {
+                            sameValue = NaN;
+                        }
                     }
                 }
                 ++inlineVertical;

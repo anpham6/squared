@@ -202,16 +202,18 @@ function isBlockElement(node: Null<NodeUI>, direction?: boolean): boolean {
             case 'table':
             case 'list-item':
                 return true;
+            case 'inline-flex':
+            case 'inline-grid':
+            case 'inline-table':
+                return false;
         }
-        if (direction !== undefined) {
-            if (direction) {
-                const firstChild = node.firstStaticChild as NodeUI;
-                return isBlockElement(firstChild) && validAboveChild(firstChild, false);
-            }
-            else {
-                const lastChild = node.lastStaticChild as NodeUI;
-                return isBlockElement(lastChild) && validBelowChild(lastChild, false);
-            }
+        if (direction) {
+            const firstChild = node.firstStaticChild as NodeUI;
+            return isBlockElement(firstChild) && validAboveChild(firstChild, false);
+        }
+        else if (direction === false) {
+            const lastChild = node.lastStaticChild as NodeUI;
+            return isBlockElement(lastChild) && validBelowChild(lastChild, false);
         }
     }
     return false;
@@ -812,11 +814,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     }
                                 }
                                 let maxBottom = -Infinity;
-                                const naturalChildren = node.actualParent!.naturalChildren;
+                                const naturalChildren = node.actualParent!.naturalChildren as T[];
                                 length = naturalChildren.length;
                                 i = 0;
                                 while (i < length) {
-                                    const item = naturalChildren[i++] as T;
+                                    const item = naturalChildren[i++];
                                     if (children.includes(item)) {
                                         break;
                                     }
@@ -833,11 +835,12 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                             }
                         }
                     }
-                    if (!renderParent.layoutVertical && !outerWrapper.alignParent('left')) {
+
+                    if (!renderParent.layoutVertical && !outerWrapper.alignParent('left') && !NodeUI.justified(node)) {
                         const documentId = outerWrapper.alignSibling('leftRight');
                         if (documentId !== '') {
                             const previousSibling = renderParent.renderChildren.find(item => item.documentId === documentId);
-                            if (previousSibling?.inlineVertical) {
+                            if (previousSibling?.inlineVertical && previousSibling.bounds.width > 0) {
                                 setSpacingOffset(outerWrapper, BOX_STANDARD.MARGIN_LEFT, previousSibling.actualRect('right'));
                             }
                         }

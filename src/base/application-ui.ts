@@ -15,7 +15,7 @@ type LayoutMap = Map<number, Set<NodeUI>>;
 const { convertListStyle, formatPX, getStyle, insertStyleSheetRule, resolveURL } = squared.lib.css;
 const { getNamedItem, removeElementsByClassName } = squared.lib.dom;
 const { maxArray } = squared.lib.math;
-const { appendSeparator, capitalize, convertFloat, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
+const { appendSeparator, capitalize, convertWord, flatArray, hasBit, hasMimeType, isString, iterateArray, partitionArray, safeNestedArray, safeNestedMap, trimBoth, trimString } = squared.lib.util;
 const { getElementCache, getPseudoElt, setElementCache } = squared.lib.session;
 const { isPlainText } = squared.lib.xml;
 
@@ -37,7 +37,7 @@ function getCounterValue(value: string, counterName: string, fallback = 1) {
 
 function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) {
     const counterIncrement = (getElementCache(parent, `styleMap${pseudoElt}`, sessionId) as Undef<CSSStyleDeclaration>)?.counterIncrement;
-    return counterIncrement && getCounterValue(counterIncrement, counterName, fallback);
+    return counterIncrement ? getCounterValue(counterIncrement, counterName, fallback) : undefined;
 }
 
 function prioritizeExtensions<T extends NodeUI>(value: string, extensions: ExtensionUI<T>[]) {
@@ -93,12 +93,22 @@ function checkPseudoAfter(element: Element) {
 }
 
 function checkPseudoDimension(styleMap: StringMap, after: boolean, absolute: boolean) {
-    if ((after || convertFloat(styleMap.width) === 0) && convertFloat(styleMap.height) === 0) {
+    switch (styleMap.display) {
+        case undefined:
+        case 'block':
+        case 'inline':
+        case 'inherit':
+        case 'initial':
+            break;
+        default:
+            return true;
+    }
+    if ((after || !parseFloat(styleMap.width)) && !parseFloat(styleMap.height)) {
         for (const attr in styleMap) {
-            if (/(padding|Width|Height)/.test(attr) && convertFloat(styleMap[attr]) > 0) {
+            if (/(padding|Width|Height)/.test(attr) && parseFloat(styleMap[attr]) > 0) {
                 return true;
             }
-            else if (!absolute && attr.startsWith('margin') && convertFloat(styleMap[attr]) !== 0) {
+            else if (!absolute && attr.startsWith('margin') && parseFloat(styleMap[attr])) {
                 return true;
             }
         }
@@ -1132,14 +1142,13 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 else if (b === outerA || !outerB && outerA) {
                     return 1;
                 }
-                const groupA = a.nodeGroup, groupB = b.nodeGroup;
-                if (groupA && groupB) {
+                if (a.nodeGroup && b.nodeGroup) {
                     return a.id < b.id ? -1 : 1;
                 }
-                else if (groupA) {
+                else if (a.nodeGroup) {
                     return -1;
                 }
-                else if (groupB) {
+                else if (b.nodeGroup) {
                     return 1;
                 }
                 return 0;
@@ -1587,16 +1596,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 break;
                             }
                         }
-                        switch (styleMap.display) {
-                            case undefined:
-                            case 'block':
-                            case 'inline':
-                            case 'inherit':
-                            case 'initial':
-                                if (!checkPseudoDimension(styleMap, false, absolute)) {
-                                    return undefined;
-                                }
-                                break;
+                        if (!checkPseudoDimension(styleMap, false, absolute)) {
+                            return undefined;
                         }
                     }
                 }
@@ -1666,7 +1667,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                         counterType
                                             ? [match[3], match[4] || 'decimal']
                                             : [match[6], match[8] || 'decimal'];
-                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) || 0) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
+                                    const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) ?? 1) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
                                     const subcounter: number[] = [];
                                     let current: Null<HTMLElement> = element;
                                     let counter = initialValue;

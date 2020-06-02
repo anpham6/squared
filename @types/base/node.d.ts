@@ -10,7 +10,6 @@ interface CachedValue<T> {
     htmlElement?: boolean;
     svgElement?: boolean;
     naturalElement?: boolean;
-    inputElement?: boolean;
     naturalChild?: boolean;
     pageFlow?: boolean;
     positionStatic?: boolean;
@@ -69,6 +68,15 @@ interface CachedValue<T> {
 }
 
 interface CachedValueUI<T> extends CachedValue<T> {
+    float?: string;
+    floating?: boolean;
+    textContent?: string;
+    contentBox?: boolean;
+    imageElement?: boolean;
+    flexElement?: boolean;
+    gridElement?: boolean;
+    inputElement?: boolean;
+    tableElement?: boolean;
     layoutElement?: boolean;
     scrollElement?: boolean;
     leftTopAxis?: boolean;
@@ -81,11 +89,9 @@ interface CachedValueUI<T> extends CachedValue<T> {
     blockDimension?: boolean;
     blockVertical?: boolean;
     overflow?: number;
-    baselineHeight?: number;
-    textContent?: string;
     textEmpty?: boolean;
     containerName?: string;
-    support?: SupportUI;
+    baselineHeight?: number;
 }
 
 interface LocalSettingsUI {

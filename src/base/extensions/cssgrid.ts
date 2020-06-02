@@ -27,7 +27,8 @@ interface RepeatItem {
 }
 
 const { formatPercent, formatPX, isLength, isPercent, isPx } = squared.lib.css;
-const { convertFloat, isNumber, safeNestedArray, trimString, withinRange } = squared.lib.util;
+const { maxArray } = squared.lib.math;
+const { isNumber, plainMap, safeNestedArray, trimString, withinRange } = squared.lib.util;
 
 const PATTERN_UNIT = '[\\d.]+[a-z%]+|auto|max-content|min-content';
 const PATTERN_MINMAX = 'minmax\\(\\s*([^,]+),\\s+([^)]+)\\s*\\)';
@@ -712,11 +713,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         let ITERATION: number;
         {
-            const [data, outerCoord] =
-                horizontal
-                    ? [column, node.box.top]
-                    : [row, node.box.left];
-            let unit = data.unit;
             let length = 1;
             let outerCount = 0;
             for (let i = 0; i < layout.length; ++i) {
@@ -730,75 +726,12 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     if (placement.some(value => value > 0)) {
                         length = Math.max(length, totalSpan, placement[start], placement[end] - 1);
                     }
-                    if (withinRange(item.outerCoord, outerCoord)) {
+                    if (withinRange(item.outerCoord, horizontal ? node.box.top : node.box.left)) {
                         outerCount += totalSpan;
                     }
                 }
             }
-            let q = unit.length;
-            ITERATION = Math.max(length, outerCount, horizontal && !autoWidth || !horizontal && !autoHeight ? q : 0);
-            data.length = ITERATION;
-            if (q < ITERATION) {
-                if (data.autoFill || data.autoFit) {
-                    if (q === 0) {
-                        unit.push('auto');
-                        data.unitMin.push('');
-                        data.repeat.push(true);
-                    }
-                    unit = repeatUnit(data, unit);
-                    data.unit = unit;
-                    data.unitMin = repeatUnit(data, data.unitMin);
-                }
-                else {
-                    const auto = data.auto;
-                    const r = auto.length;
-                    if (r) {
-                        let i = 0;
-                        while (unit.length < ITERATION) {
-                            if (i === r) {
-                                i = 0;
-                            }
-                            unit.push(auto[i++]);
-                        }
-                    }
-                }
-            }
-            else if (data.autoFit || data.autoFill && node.blockStatic && (horizontal && !node.hasWidth && !node.hasPX('maxWidth', { percent: false }) || !horizontal && !node.hasHeight)) {
-                unit.length = ITERATION;
-            }
-            let percent = 1;
-            let fr = 0;
-            let auto = 0;
-            for (let i = 0; i < unit.length; ++i) {
-                const value = unit[i];
-                if (isPercent(value)) {
-                    percent -= parseFloat(value) / 100;
-                }
-                else if (CssGrid.isFr(value)) {
-                    fr += parseFloat(value);
-                }
-                else if (value === 'auto') {
-                    ++auto;
-                }
-            }
-            data.flexible = percent < 1 || fr > 0;
-            if (percent < 1) {
-                if (fr > 0) {
-                    q = unit.length;
-                    for (let i = 0; i < q; ++i) {
-                        const value = unit[i];
-                        if (CssGrid.isFr(value)) {
-                            unit[i] = percent * (parseFloat(value) / fr) + 'fr';
-                        }
-                    }
-                }
-                else if (auto === 1) {
-                    const index = unit.findIndex(value => value === 'auto');
-                    if (index !== -1) {
-                        unit[index] = formatPercent(percent);
-                    }
-                }
-            }
+            ITERATION = Math.max(length, outerCount, horizontal && !autoWidth ? column.unit.length : 0, !horizontal && !autoHeight ? row.unit.length : 0);
         }
         node.each((item: T, index) => {
             const { placement, rowSpan, columnSpan } = layout[index];
@@ -960,11 +893,13 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 } as CssGridCellData);
             }
         });
-        if (rowData.length) {
+        let columnCount = rowData.length;
+        if (columnCount) {
             let rowMain: RowData;
             if (horizontal) {
                 rowMain = rowData;
                 mainData.rowData = rowData;
+                columnCount = Math.max(maxArray(plainMap(rowData, item => item.length)), column.unit.length);
             }
             else {
                 rowMain = mainData.rowData;
@@ -979,7 +914,6 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             }
             const unitTotal = horizontal ? row.unitTotal : column.unitTotal;
             const children = mainData.children;
-            const columnCount = column.unit.length;
             for (let i = 0; i < rowMain.length; ++i) {
                 const data = rowMain[i];
                 const q = data.length;
@@ -1077,7 +1011,9 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                     }
                     else {
-                        rowMax[i] = convertFloat(unitHeight);
+                        if (isNumber(unitHeight)) {
+                            rowMax[i] = parseFloat(unitHeight);
+                        }
                         if (horizontal) {
                             mainData.emptyRows[i] = [Infinity];
                         }
@@ -1113,6 +1049,72 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     });
                     node.cssFinally('display');
                 }
+                [column, row].forEach((data, index) => {
+                    const iteration = index === 0 ? columnCount : rowCount;
+                    let unit = data.unit;
+                    const length = unit.length;
+                    if (length < iteration) {
+                        if (data.autoFill || data.autoFit) {
+                            if (length === 0) {
+                                unit.push('auto');
+                                data.unitMin.push('');
+                                data.repeat.push(true);
+                            }
+                            unit = repeatUnit(data, unit);
+                            data.unit = unit;
+                            data.unitMin = repeatUnit(data, data.unitMin);
+                        }
+                        else {
+                            const auto = data.auto;
+                            const q = auto.length;
+                            if (q) {
+                                let i = 0;
+                                while (unit.length < iteration) {
+                                    if (i === q) {
+                                        i = 0;
+                                    }
+                                    unit.push(auto[i++]);
+                                }
+                            }
+                        }
+                    }
+                    else if (data.autoFit || data.autoFill && (index === 0 && node.blockStatic && !node.hasWidth && !node.hasPX('maxWidth', { percent: false }) || index === 1 && !node.hasHeight)) {
+                        unit.length = iteration;
+                    }
+                    let percent = 1;
+                    let fr = 0;
+                    let auto = 0;
+                    for (let i = 0; i < unit.length; ++i) {
+                        const value = unit[i];
+                        if (isPercent(value)) {
+                            percent -= parseFloat(value) / 100;
+                        }
+                        else if (CssGrid.isFr(value)) {
+                            fr += parseFloat(value);
+                        }
+                        else if (value === 'auto') {
+                            ++auto;
+                        }
+                    }
+                    data.flexible = percent < 1 || fr > 0;
+                    if (percent < 1) {
+                        if (fr > 0) {
+                            const q = unit.length;
+                            for (let i = 0; i < q; ++i) {
+                                const value = unit[i];
+                                if (CssGrid.isFr(value)) {
+                                    unit[i] = percent * (parseFloat(value) / fr) + 'fr';
+                                }
+                            }
+                        }
+                        else if (auto === 1) {
+                            const j = unit.findIndex(value => value === 'auto');
+                            if (j !== -1) {
+                                unit[j] = formatPercent(percent);
+                            }
+                        }
+                    }
+                });
                 node.data(this.name, 'mainData', mainData);
             }
         }

@@ -217,7 +217,12 @@ if (master) {
                 }
             }
             else {
-                successMessage('MD5 matched', master + ' -> ' + snapshot);
+                if (rebase) {
+                    successMessage('MD5 rebase', snapshot + ' -> ' + master);
+                }
+                else {
+                    successMessage('MD5 matched', master + ' -> ' + snapshot);
+                }
             }
         }
         else {

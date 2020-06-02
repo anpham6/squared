@@ -144,19 +144,14 @@ function setMarginOffset(node: T, lineHeight: number, inlineStyle: boolean, top:
                     }
                 }
             };
-            if (height > 0) {
-                if (node.styleText) {
-                    setBoxPadding(getLineSpacingExtra(node, lineHeight));
-                }
-                else {
-                    const offset = (lineHeight / 2) - node.paddingTop;
-                    if (offset > 0) {
-                        node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
-                    }
-                }
-            }
-            else if (node.textElement) {
+            if (node.textElement) {
                 setBoxPadding(getLineSpacingExtra(node, lineHeight));
+            }
+            else if (height > 0) {
+                const offset = (lineHeight / 2) - node.paddingTop;
+                if (offset > 0) {
+                    node.modifyBox(BOX_STANDARD.PADDING_TOP, offset);
+                }
             }
             else if (node.inputElement) {
                 const element = createElement(document.body, 'div', { ...node.textStyle, visibility: 'hidden' });
@@ -296,12 +291,22 @@ function setConstraintPercent(node: T, value: number, horizontal: boolean, perce
             value = Math.min(value + boxPercent, 1);
         }
     }
+    let outerWrapper = node.outerMostWrapper as T;
+    if (outerWrapper !== node && outerWrapper.css(horizontal ? 'width' : 'height') !== node.css(horizontal ? 'width' : 'height')) {
+        outerWrapper = node;
+    }
     if (value === 1 && !node.hasPX(horizontal ? 'maxWidth' : 'maxHeight')) {
-        setLayoutDimension(node, horizontal ? getMatchParent(node, node.renderParent as T) : 'match_parent', horizontal, false);
+        setLayoutDimension(outerWrapper, horizontal ? getMatchParent(outerWrapper, outerWrapper.renderParent as T) : 'match_parent', horizontal, false);
+        if (node !== outerWrapper) {
+            setLayoutDimension(node, horizontal ? getMatchParent(node, node.renderParent as T) : 'match_parent', horizontal, false);
+        }
     }
     else {
-        node.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', truncate(value, node.localSettings.floatPrecision));
-        setLayoutDimension(node, '0px', horizontal, false);
+        outerWrapper.app(horizontal ? 'layout_constraintWidth_percent' : 'layout_constraintHeight_percent', truncate(value, node.localSettings.floatPrecision));
+        setLayoutDimension(outerWrapper, '0px', horizontal, false);
+        if (node !== outerWrapper) {
+            setLayoutDimension(node, '0px', horizontal, false);
+        }
     }
     return percent;
 }
@@ -1291,6 +1296,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     if (height >= 0) {
                         this.android('maxHeight', formatPX(height));
+                        if (this.flexibleHeight) {
+                            this.setLayoutHeight('wrap_content');
+                        }
                     }
                 }
             }
@@ -1421,7 +1429,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
             }
-            if (this.flexElement && this.textElement) {
+            if (this.textElement && this.layoutElement) {
                 switch (this.css('justifyContent')) {
                     case 'center':
                     case 'space-around':
@@ -1432,7 +1440,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         this.mergeGravity('gravity', 'right');
                         break;
                 }
-                if (this.hasHeight) {
+                if (this.hasHeight || this.gridElement) {
                     switch (this.css('alignItems')) {
                         case 'center':
                             this.mergeGravity('gravity', 'center_vertical');
@@ -2596,7 +2604,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             return this._innerWrapped;
         }
         set innerWrapped(value) {
-            if (value) {
+            if (value && !this.naturalChild) {
                 value = value.outerMostWrapper as T;
                 this._innerWrapped = value;
                 value.outerWrapper = this;

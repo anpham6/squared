@@ -173,6 +173,29 @@ const getPercentWidth = (node: T) => node.inlineDimension && !node.hasPX('maxWid
 const getLayoutWidth = (node: T) => node.actualWidth + Math.max(node.marginLeft, 0) + node.marginRight;
 
 export default abstract class NodeUI extends Node implements squared.base.NodeUI {
+    public static justified(node: T) {
+        if (node.naturalChild && node.cssAscend('textAlign') === 'justify') {
+            let inlineWidth = 0;
+            const { box, naturalChildren } = node.actualParent!;
+            const length = naturalChildren.length;
+            let i = 0;
+            while (i < length) {
+                const item = naturalChildren[i++] as T;
+                if (!item.inlineVertical) {
+                    inlineWidth = NaN;
+                    break;
+                }
+                else {
+                    inlineWidth += item.linear.width;
+                }
+            }
+            if (Math.floor(inlineWidth) > box.width) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static refitScreen(node: T, value: Dimension): Dimension {
         const { width: screenWidth, height: screenHeight } = node.localSettings.screenDimension;
         let { width, height } = value;
@@ -458,6 +481,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public lineBreakTrailing = false;
     public baselineActive = false;
     public baselineAltered = false;
+    public visible = true;
     public documentChildren?: T[];
     public abstract localSettings: LocalSettingsUI;
     public abstract renderParent?: T;
@@ -486,7 +510,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     private _excludeResource = 0;
     private _childIndex = Infinity;
     private _containerIndex = Infinity;
-    private _visible = true;
     private _renderAs: Null<T> = null;
     private _locked: ObjectMapNested<boolean> = {};
     private _siblingsLeading?: T[];
@@ -1267,6 +1290,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         cached.autoPosition = undefined;
                         cached.positiveAxis = undefined;
                         break;
+                    case 'float':
+                        cached.floating = undefined;
+                        break;
                     case 'fontSize':
                     case 'lineHeight':
                         cached.baselineHeight = undefined;
@@ -1404,6 +1430,99 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
+    get imageElement() {
+        return (
+            this._cached.imageElement ??
+            (() => {
+                this._cached.imageElement = super.imageElement;
+                return this._cached.imageElement;
+            })()
+        );
+    }
+
+    get flexElement() {
+        return (
+            this._cached.flexElement ??
+            (() => {
+                this._cached.flexElement = super.flexElement;
+                return this._cached.flexElement;
+            })()
+        );
+    }
+
+    get gridElement() {
+        return (
+            this._cached.gridElement ??
+            (() => {
+                this._cached.gridElement = super.gridElement;
+                return this._cached.gridElement;
+            })()
+        );
+    }
+
+    get tableElement() {
+        return (
+            this._cached.tableElement ??
+            (() => {
+                this._cached.tableElement = super.tableElement;
+                return this._cached.tableElement;
+            })()
+        );
+    }
+
+    get inputElement() {
+        return (
+            this._cached.inputElement ??
+            (() => {
+                this._cached.inputElement = super.inputElement;
+                return this._cached.inputElement;
+            })()
+        );
+    }
+
+    get floating() {
+        return (
+            this._cached.floating ??
+            (() => {
+                this._cached.floating = super.floating;
+                return this._cached.floating;
+            })()
+        );
+    }
+
+    get float() {
+        return (
+            this._cached.float ??
+            (() => {
+                this._cached.float = super.float;
+                return this._cached.float;
+            })()
+        );
+    }
+
+    set textContent(value) {
+        this._cached.textContent = value;
+    }
+    get textContent() {
+        return (
+            this._cached.textContent ??
+                (() => {
+                this._cached.textContent = super.textContent;
+                return this._cached.textContent;
+            })()
+        );
+    }
+
+    get contentBox() {
+        return (
+            this._cached.contentBox ??
+            (() => {
+                this._cached.contentBox = super.contentBox;
+                return this._cached.contentBox;
+            })()
+        );
+    }
+
     set documentParent(value) {
         this._documentParent = value;
     }
@@ -1471,7 +1590,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get inlineVertical() {
         let result = this._cached.inlineVertical;
         if (result === undefined) {
-            if (this.naturalElement && !this.floating) {
+            if ((this.naturalElement || this.pseudoElement) && !this.floating) {
                 const value = this.display;
                 result = value.startsWith('inline') || value === 'table-cell';
             }
@@ -1486,7 +1605,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get inlineDimension() {
         let result = this._cached.inlineDimension;
         if (result === undefined) {
-            result = this.naturalElement && (this.display.startsWith('inline-') || this.floating);
+            result = (this.naturalElement || this.pseudoElement) && (this.display.startsWith('inline-') || this.floating);
             this._cached.inlineDimension = result;
         }
         return result;
@@ -1551,16 +1670,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         return result;
     }
 
-    set textContent(value) {
-        this._cached.textContent = value;
-    }
-    get textContent() {
-        return this._cached.textContent ?? (() => {
-            this._cached.textContent = super.textContent;
-            return this._cached.textContent;
-        })();
-    }
-
     get positiveAxis() {
         let result = this._cached.positiveAxis;
         if (result === undefined) {
@@ -1615,13 +1724,6 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
     get multiline() {
         return super.multiline;
-    }
-
-    set visible(value) {
-        this._visible = value;
-    }
-    get visible() {
-        return this._visible;
     }
 
     set controlName(value) {
@@ -1697,24 +1799,32 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     get firstChild(): Null<NodeUI> {
-        return this.naturalChildren[0] as NodeUI || null;
+        return (this.naturalChildren as NodeUI[]).find(node => !node.excluded || node.lineBreak) || null;
     }
 
     get lastChild(): Null<NodeUI> {
-        return this.naturalChildren[this.naturalChildren.length - 1] as NodeUI || null;
+        const children = this.naturalChildren;
+        let i = children.length - 1;
+        while (i >= 0) {
+            const node = children[i--] as NodeUI;
+            if (!node.excluded || node.lineBreak) {
+                return node;
+            }
+        }
+        return null;
     }
 
     get firstStaticChild() {
-        return (this.naturalChildren as NodeUI[]).find(node => node.pageFlow) || null;
+        return (this.naturalChildren as NodeUI[]).find(node => node.pageFlow && (!node.excluded || node.lineBreak)) || null;
     }
 
     get lastStaticChild() {
         const children = this.naturalChildren;
         let i = children.length - 1;
         while (i >= 0) {
-            const node = children[i--];
-            if (node.pageFlow) {
-                return node as NodeUI;
+            const node = children[i--] as NodeUI;
+            if (node.pageFlow && (!node.excluded || node.lineBreak)) {
+                return node;
             }
         }
         return null;

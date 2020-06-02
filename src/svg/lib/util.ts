@@ -506,7 +506,7 @@ export function getParentAttribute(element: SVGElement, attr: string, computed =
 }
 
 export function getTargetElement(element: SVGElement, rootElement?: SVGElement) {
-    const value = getNamedItem(element, 'href');
+    const value = getNamedItem(element, 'href') || getNamedItem(element, 'xlink:href');
     if (value.charAt(0) === '#') {
         const id = value.substring(1);
         let parent: Null<SVGElement | HTMLElement>;
@@ -530,11 +530,9 @@ export function getTargetElement(element: SVGElement, rootElement?: SVGElement) 
                 }
             }
         }
-        else {
-            const target = document.getElementById(id);
-            if (target instanceof SVGElement) {
-                return target;
-            }
+        const target = document.getElementById(id);
+        if (target instanceof SVGElement) {
+            return target;
         }
     }
     return null;

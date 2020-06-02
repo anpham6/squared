@@ -330,6 +330,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 break;
             }
             const coordinates = SvgBuild.parseCoordinates((match[2] || '').trim());
+            const items: number[][] = [];
+            let length = coordinates.length;
             let previousCommand: Undef<string>;
             let previousPoint: Undef<Point>;
             if (!first) {
@@ -337,128 +339,118 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                 previousCommand = previous.key.toUpperCase();
                 previousPoint = previous.end;
             }
-            let radiusX: Undef<number>;
-            let radiusY: Undef<number>;
-            let xAxisRotation: Undef<number>;
-            let largeArcFlag: Undef<number>;
-            let sweepFlag: Undef<number>;
             switch (key.toUpperCase()) {
                 case 'M':
                     if (first) {
                         key = 'M';
                     }
                 case 'L':
-                    if (coordinates.length >= 2) {
-                        if (coordinates.length % 2 !== 0) {
-                            --coordinates.length;
-                        }
-                        break;
+                    if (length >= 2) {
+                        length -= length % 2;
+                        items.push(coordinates);
                     }
-                    else {
-                        continue;
-                    }
+                    break;
                 case 'H':
-                    if (previousPoint && coordinates.length) {
-                        coordinates[1] = key === 'h' ? 0 : previousPoint.y;
-                        coordinates.length = 2;
-                        break;
+                    if (previousPoint && length) {
+                        let i = 0;
+                        while (i < length) {
+                            items.push([coordinates[i++], key === 'h' ? 0 : previousPoint.y]);
+                        }
                     }
-                    else {
-                        continue;
-                    }
+                    break;
                 case 'V':
-                    if (previousPoint && coordinates.length) {
-                        const y = coordinates[0];
-                        coordinates[0] = key === 'v' ? 0 : previousPoint.x;
-                        coordinates[1] = y;
-                        coordinates.length = 2;
-                        break;
+                    if (previousPoint && length) {
+                        let i = 0;
+                        while (i < length) {
+                            items.push([key === 'v' ? 0 : previousPoint.x, coordinates[i++]]);
+                        }
                     }
-                    else {
-                        continue;
-                    }
+                    break;
                 case 'Z':
                     if (!first) {
-                        const coordinatesData = result[0].coordinates;
-                        coordinates[0] = coordinatesData[0];
-                        coordinates[1] = coordinatesData[1];
-                        coordinates.length = 2;
+                        items.push(result[0].coordinates.slice(0, 2));
                         key = 'Z';
-                        break;
                     }
-                    else {
-                        continue;
-                    }
+                    break;
                 case 'C':
-                    if (coordinates.length >= 6) {
-                        coordinates.length = 6;
-                        break;
+                    if (length >= 6) {
+                        length -= length % 6;
+                        for (let i = 0; i < length; i += 6) {
+                            const points = coordinates.slice(i, i + 6);
+                            items.push(points);
+                        }
                     }
-                    else {
-                        continue;
-                    }
+                    break;
                 case 'S':
-                    if (coordinates.length >= 4 && (previousCommand === 'C' || previousCommand === 'S')) {
-                        coordinates.length = 4;
-                        break;
+                    if (length >= 4 && (previousCommand === 'C' || previousCommand === 'S')) {
+                        length -= length % 4;
+                        for (let i = 0; i < length; i += 4) {
+                            const points = coordinates.slice(i, i + 4);
+                            items.push(points);
+                        }
                     }
-                    else {
-                        continue;
-                    }
+                    break;
                 case 'Q':
-                    if (coordinates.length >= 4) {
-                        coordinates.length = 4;
-                        break;
+                    if (length >= 4) {
+                        length -= length % 4;
+                        for (let i = 0; i < length; i += 4) {
+                            const points = coordinates.slice(i, i + 4);
+                            items.push(points);
+                        }
                     }
-                    else {
-                        continue;
-                    }
+                    break;
                 case 'T':
-                    if (coordinates.length >= 2 && (previousCommand === 'Q' || previousCommand === 'T')) {
-                        coordinates.length = 2;
-                        break;
+                    if (length >= 2 && (previousCommand === 'Q' || previousCommand === 'T')) {
+                        length -= length % 2;
+                        for (let i = 0; i < length; i += 2) {
+                            const points = coordinates.slice(i, i + 2);
+                            items.push(points);
+                        }
                     }
-                    else {
-                        continue;
-                    }
+                    break;
                 case 'A':
-                    if (coordinates.length >= 7) {
-                        [radiusX, radiusY, xAxisRotation, largeArcFlag, sweepFlag] = coordinates.splice(0, 5);
-                        coordinates.length = 2;
-                        break;
+                    if (length >= 7) {
+                        length -= length % 7;
+                        for (let i = 0; i < length; i += 7) {
+                            const points = coordinates.slice(i, i + 7);
+                            items.push(points);
+                        }
                     }
-                    else {
-                        continue;
-                    }
+                    break;
                 default:
                     continue;
             }
-            const length = coordinates.length;
-            if (length >= 2) {
-                const relative = key === key.toLowerCase();
-                const points: SvgPoint[] = [];
-                let i = 0;
-                while (i < length) {
-                    let x = coordinates[i++], y = coordinates[i++];
+            for (const item of items) {
+                const lowerKey = key.toLowerCase();
+                const commandA = lowerKey === 'a' ? item.splice(0, 5) : undefined;
+                const relative = key === lowerKey;
+                const itemCount = item.length;
+                const points: SvgPoint[] = new Array(itemCount / 2);
+                for (let i = 0, j = 0; i < itemCount; i += 2) {
+                    let x = item[i], y = item[i + 1];
                     if (relative && previousPoint) {
                         x += previousPoint.x;
                         y += previousPoint.y;
                     }
-                    points.push({ x, y });
+                    points[j++] = { x, y };
                 }
-                result.push({
+                const data: SvgPathCommand = {
                     key,
                     value: points,
                     start: points[0],
                     end: points[points.length - 1],
                     relative,
-                    coordinates,
-                    radiusX,
-                    radiusY,
-                    xAxisRotation,
-                    largeArcFlag,
-                    sweepFlag
-                });
+                    coordinates: item
+                };
+                if (commandA) {
+                    data.radiusX = commandA[0];
+                    data.radiusY = commandA[1];
+                    data.xAxisRotation = commandA[2];
+                    data.largeArcFlag = commandA[3];
+                    data.sweepFlag = commandA[4];
+                }
+                result.push(data);
+                previousPoint = data.end;
                 first = false;
             }
         }
@@ -505,17 +497,15 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             let i = 0;
             while (i < length) {
                 const item = values[i++];
-                const coordinates = item.coordinates;
+                const { key, coordinates, value } = item;
                 if (item.relative) {
                     if (location) {
-                        if (transformed && (item.key === 'H' || item.key === 'V')) {
+                        if (transformed && (key === 'H' || key === 'V')) {
                             const pt = points.shift();
                             if (pt) {
                                 coordinates[0] = pt.x;
                                 coordinates[1] = pt.y;
-                                item.value[0] = pt;
-                                item.start = pt;
-                                item.end = pt;
+                                value[0] = pt;
                                 item.key = 'L';
                                 item.relative = false;
                             }
@@ -531,26 +521,26 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                                 if (pt) {
                                     coordinates[j++] = pt.x - location.x;
                                     coordinates[j++] = pt.y - location.y;
-                                    if (item.key === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
+                                    if (key === 'a' && pt.rx !== undefined && pt.ry !== undefined) {
                                         item.radiusX = pt.rx;
                                         item.radiusY = pt.ry;
                                     }
-                                    item.value[k++] = pt;
+                                    value[k++] = pt;
+                                    location = pt;
                                 }
                                 else {
                                     break invalid;
                                 }
                             }
-                            item.key = item.key.toLowerCase();
+                            item.key = key.toLowerCase();
                         }
-                        location = item.end;
                     }
                     else {
                         break;
                     }
                 }
                 else {
-                    switch (item.key.toUpperCase()) {
+                    switch (key.toUpperCase()) {
                         case 'M':
                         case 'L':
                         case 'H':
@@ -592,10 +582,10 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                             break;
                         }
                     }
-                    if (!item.relative) {
-                        location = item.end;
-                    }
                 }
+                location = value[value.length - 1];
+                item.start = value[0];
+                item.end = location;
             }
         }
         return values;

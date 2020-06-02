@@ -945,12 +945,12 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 }
             }
             else {
-                const { emptyRows, rowDirection } = mainData;
-                const { flexible, gap, unit } = rowDirection ? column : row;
+                const { emptyRows, rowDirection: horizontal } = mainData;
+                const { flexible, gap, unit } = horizontal ? column : row;
                 const unitSpan = unit.length;
                 let k = -1;
                 let l = 0;
-                const createSpacer = (i: number, horizontal: boolean, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) => {
+                const createSpacer = (i: number, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) => {
                     if (k !== -1) {
                         const section = unitData.slice(k, k + l);
                         let width = '';
@@ -1038,7 +1038,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         const data = rowData[i];
                         for (let j = 0; j < unitSpan; ++j) {
                             if (data[j]) {
-                                createSpacer(i, rowDirection, unit, gap);
+                                createSpacer(i, unit, gap);
                             }
                             else {
                                 if (k === -1) {
@@ -1047,22 +1047,41 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                                 ++l;
                             }
                         }
-                        createSpacer(i, rowDirection, unit, gap);
+                        createSpacer(i, unit, gap);
                     }
                 }
                 length = emptyRows.length;
                 for (let i = 0; i < length; ++i) {
                     const emptyRow = emptyRows[i];
                     if (emptyRow) {
-                        for (let j = 0; j < emptyRow.length; ++j) {
+                        const q = emptyRow.length;
+                        for (let j = 0; j < q; ++j) {
                             const value = emptyRow[j];
                             if (value > 0) {
                                 k = j;
-                                const { unit: unitA, gap: gapA } = rowDirection ? row : column;
-                                const { unit: unitB, gap: gapB } = !rowDirection ? row : column;
-                                const dimensions = getCellDimensions(node, !rowDirection, [unitA[j]], 0);
-                                l = value === Infinity ? unitB.length : 1;
-                                createSpacer(i, rowDirection, unitB, gapB, dimensions[rowDirection ? 1 : 0], dimensions[rowDirection ? 3 : 2], i < length - 1 ? gapA : 0);
+                                const { unit: unitOpposing, gap: gapOpposing } = horizontal ? row : column;
+                                const dimensions = getCellDimensions(node, !horizontal, [unitOpposing[horizontal ? j : i]], 0);
+                                l = value === Infinity ? unit.length : 1;
+                                if (horizontal) {
+                                    createSpacer(
+                                        i,
+                                        unitOpposing,
+                                        gapOpposing,
+                                        dimensions[1],
+                                        dimensions[3],
+                                        i < length - 1 ? gap : 0
+                                    );
+                                }
+                                else {
+                                    createSpacer(
+                                        i,
+                                        unitOpposing,
+                                        gapOpposing,
+                                        dimensions[0],
+                                        dimensions[2],
+                                        j < q - 1 ? gap : 0
+                                    );
+                                }
                             }
                         }
                     }

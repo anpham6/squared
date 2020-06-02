@@ -11,7 +11,7 @@ const { parseColor } = squared.lib.color;
 const { extractURL, getFontSize, hasCalc, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
 const { truncate } = squared.lib.math;
 const { STRING } = squared.lib.regex;
-const { convertCamelCase, convertFloat, isNumber, isString, joinArray, plainMap } = squared.lib.util;
+const { convertCamelCase, isString, isNumber, joinArray, plainMap } = squared.lib.util;
 
 const REGEXP_CACHE: ObjectMap<RegExp> = {
     polygon: /polygon\(([^)]+)\)/,
@@ -241,15 +241,16 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         }
 
         public convertLength(value: string, dimension?: string | number) {
-            if (!isNumber(value)) {
-                if (isLength(value)) {
-                    return parseUnit(value, getFontSize(this.element));
-                }
-                else if (isPercent(value)) {
-                    return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * parseFloat(value) / 100);
-                }
+            if (isNumber(value)) {
+                return parseFloat(value);
             }
-            return convertFloat(value);
+            else if (isLength(value)) {
+                return parseUnit(value, getFontSize(this.element));
+            }
+            else if (isPercent(value)) {
+                return Math.round((typeof dimension === 'number' ? dimension : this.element.getBoundingClientRect()[dimension || 'width']) * parseFloat(value) / 100);
+            }
+            return 0;
         }
 
         public resetPaint() {

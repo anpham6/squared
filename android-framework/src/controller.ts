@@ -474,13 +474,26 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
             }
         }
         if (!node.pageFlow && node.css('position') !== 'fixed' && !parent.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT)) {
+            const canAlignPosition = (item: View) => {
+                if (!item.pageFlow) {
+                    if (horizontal) {
+                        if (item.has('right') && !item.has('left')) {
+                            return !node.has('left') && !node.has('right');
+                        }
+                    }
+                    else if (item.has('bottom') && !item.has('top')) {
+                        return !node.has('top') && !node.has('bottom');
+                    }
+                }
+                return true;
+            };
             const bounds = node.innerMostWrapped.bounds;
             const renderChildren = parent.renderChildren;
             const length = renderChildren.length;
             let i = 0;
             while (i < length) {
                 const item = renderChildren[i++] as View;
-                if (item === node || item.plainText || item.pseudoElement || item.rootElement) {
+                if (item === node || item.plainText || item.pseudoElement || item.rootElement || !canAlignPosition(item)) {
                     continue;
                 }
                 const itemA = item.innerMostWrapped as View;
@@ -533,7 +546,7 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
             i = 0;
             while (i < length) {
                 const item = renderChildren[i++] as View;
-                if (item === node || item.pageFlow || item.rootElement || !item.constraint[value]) {
+                if (item === node || item.pageFlow || item.rootElement || !item.constraint[value] || !canAlignPosition(item)) {
                     continue;
                 }
                 const itemA = item.innerMostWrapped as View;
@@ -738,6 +751,16 @@ export function setVerticalAlignment(node: View, onlyChild = true, biasOnly = fa
                     break;
             }
         }
+        else {
+            switch (node.display) {
+                case 'inline-flex':
+                case 'inline-grid':
+                case 'inline-table':
+                case 'table-cell':
+                    bias = 0;
+                    break;
+            }
+        }
     }
     if (!isNaN(bias)) {
         if (biasOnly) {
@@ -889,6 +912,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 'METER',
                 'HR',
                 'IFRAME',
+                'VIDEO',
+                'AUDIO',
                 'svg'
             ]),
             tagName: new Set([
@@ -1912,6 +1937,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     this.application.resourceHandler.addVideo(src, mimeType);
                     node.inlineText = false;
                     node.exclude({ resource: NODE_RESOURCE.FONT_STYLE });
+                    if (isString(element.poster)) {
+                        Resource.addImage({ mdpi: element.poster });
+                    }
                 }
                 else if (isString(element.poster)) {
                     node.setCacheValue('tagName', 'IMG');
@@ -2298,6 +2326,15 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 }
             }
         }
+        if ((node.renderParent || parent).layoutGrid && node.android('layout_width') === '0px') {
+            const columnWeight = node.android('layout_columnWeight');
+            if (parseFloat(columnWeight) > 0) {
+                node.delete('android', 'layout_columnWeight');
+                node.setLayoutWidth('match_parent');
+                container.android('layout_columnWeight', columnWeight);
+                container.setLayoutWidth('0px');
+            }
+        }
         if (node.renderParent && node.removeTry({ alignSiblings: true })) {
             node.rendered = false;
         }
@@ -2615,7 +2652,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         }
                         let alignTop = false;
                         if (item.baseline) {
-                            if (item.naturalElements.length && (isLength(item.verticalAlign) || !item.baselineElement)) {
+                            if (item.renderChildren.length && (isLength(item.verticalAlign) || !item.baselineElement)) {
                                 alignTop = true;
                             }
                             else {
@@ -2949,7 +2986,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             }
             else {
                 item.anchor(anchorStart, 'parent');
-                item.anchorStyle('horizontal', bias, 'packed');
+                item.anchorStyle('horizontal', bias, NodeUI.justified(item.innerMostWrapped) ? 'spread_inside' : 'packed');
             }
             if (item.pageFlow) {
                 if (item !== baseline) {
@@ -3110,7 +3147,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         rowEnd.anchorStyle('horizontal', 1, 'packed');
                     }
                     else {
-                        rowStart.anchorStyle('horizontal', !floating && parent.css('textAlign') === 'center' ? 0.5 : 0, 'packed');
+                        rowStart.anchorStyle('horizontal', !floating && parent.css('textAlign') === 'center' ? 0.5 : 0, length === 1 && NodeUI.justified(rowStart.innerMostWrapped) ? 'spread_inside' : 'packed');
                     }
                     rowEnd.anchor(anchorEnd, 'parent');
                 }

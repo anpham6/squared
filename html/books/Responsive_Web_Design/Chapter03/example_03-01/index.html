@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Media Query Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        background-color: grey;
+      }
+      @media screen and (min-width: 320px) {
+        body {
+          background-color: green;
+        }
+      }
+      @media screen and (min-width: 550px) {
+        body {
+          background-color: yellow;
+        }
+      }
+      @media screen and (min-width: 768px) {
+        body {
+          background-color: orange;
+        }
+      }
+      @media screen and (min-width: 960px) {
+        body {
+          background-color: red;
+        }
+      }
+    </style>
+    <script src="/common/system.js"></script>
+    <script src="/common/transform.js"></script>
+    <script src="/common/babel-transform.js"></script>
+    <script src="/dist/squared.js"></script>
+    <script src="/dist/squared.base.js"></script>
+    <script src="/dist/android.framework.js"></script>
+    <script src="/common/loader.js"></script>
+  </head>
+  <body></body>
+</html>
