@@ -268,7 +268,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             hideCell(tr);
             columnCount = Math.max(columnCount, row.length);
         }
-        if (node.hasPX('width', false) && mapWidth.some(value => isPercent(value))) {
+        if (node.hasPX('width', { percent: false }) && mapWidth.some(value => isPercent(value))) {
             replaceMap(mapWidth, (value: string, index) => {
                 if (value === 'auto') {
                     const dimension = mapBounds[index];
@@ -431,7 +431,7 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
                                 }
                             }
                             else {
-                                if (!td.hasPX('width', false) || td.percentWidth) {
+                                if (!td.hasPX('width', { percent: false }) || td.percentWidth) {
                                     setBoundsWidth(td);
                                 }
                                 data.expand = false;

@@ -229,22 +229,20 @@ function setImageDimension(node: View, width: number, height: number, image: Und
 }
 
 function setInputMinDimension(node: View, element: HTMLInputElement) {
-    const { minLength, maxLength } = element;
-    if (minLength !== -1) {
-        node.android('minLength', minLength.toString());
+    if (element.minLength !== -1) {
+        node.android('minLength', element.minLength.toString());
     }
-    if (maxLength > 0) {
-        node.android('maxLength', maxLength.toString());
+    if (element.maxLength > 0) {
+        node.android('maxLength', element.maxLength.toString());
     }
 }
 
 function setInputMinMax(node: View, element: HTMLInputElement) {
-    const { min, max } = element;
-    if (isString(min)) {
-        node.android('min', min);
+    if (isString(element.min)) {
+        node.android('min', element.min);
     }
-    if (isString(max)) {
-        node.android('max', max);
+    if (isString(element.max)) {
+        node.android('max', element.max);
     }
 }
 
@@ -393,7 +391,7 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
                 const { containerType, alignmentType } = this.containerTypeVerticalMargin;
                 const container = node.ascend({ condition: (item: View) => item.of(containerType, alignmentType), including: parent, attr: 'renderParent' });
                 if (container.length) {
-                    const { left, right, width } = node.box;
+                    const box = node.box;
                     let offsetLeft = 0, offsetRight = 0;
                     const naturalChildren = parent.naturalChildren;
                     const length = naturalChildren.length;
@@ -404,17 +402,17 @@ function getBoxWidth(this: Controller<View>, node: View, children: View[]) {
                             const linear = item.linear;
                             if (!children.includes(item) && node.intersectY(linear)) {
                                 if (item.float === 'left') {
-                                    if (Math.floor(linear.right) > left) {
-                                        offsetLeft = Math.max(offsetLeft, linear.right - left);
+                                    if (Math.floor(linear.right) > box.left) {
+                                        offsetLeft = Math.max(offsetLeft, linear.right - box.left);
                                     }
                                 }
-                                else if (right > Math.ceil(linear.left)) {
-                                    offsetRight = Math.max(offsetRight, right - linear.left);
+                                else if (box.right > Math.ceil(linear.left)) {
+                                    offsetRight = Math.max(offsetRight, box.right - linear.left);
                                 }
                             }
                         }
                     }
-                    return width - offsetLeft - offsetRight;
+                    return box.width - offsetLeft - offsetRight;
                 }
             }
         }
@@ -499,12 +497,12 @@ function applyGuideline(this: Controller<View>, node: View, parent: View, value:
                     }
                     else if (withinRange(linear[LT], linearA[RB])) {
                         if (horizontal) {
-                            if (!node.hasPX('left') && !node.hasPX('right') || !item.inlineStatic && item.hasPX('width', false, true)) {
+                            if (!node.hasPX('left') && !node.hasPX('right') || !item.inlineStatic && item.hasPX('width', { percent: false, initial: true })) {
                                 position = 'leftRight';
                                 offset = bounds.left - boundsA.right;
                             }
                         }
-                        else if (!node.hasPX('top') && !node.hasPX('bottom') || !item.inlineStatic && item.hasPX('height', false, true)) {
+                        else if (!node.hasPX('top') && !node.hasPX('bottom') || !item.inlineStatic && item.hasPX('height', { percent: false, initial: true })) {
                             position = 'topBottom';
                             offset = bounds.top - boundsA.bottom;
                         }
@@ -1552,12 +1550,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 valid = true;
                 break;
             case CONTAINER_NODE.GRID: {
-                const { columnCount, rowCount } = layout;
                 const android = options.android;
-                if (rowCount > 0) {
-                    android.rowCount = rowCount.toString();
+                if (layout.rowCount > 0) {
+                    android.rowCount = layout.rowCount.toString();
                 }
-                android.columnCount = columnCount > 0 ? columnCount.toString() : '1';
+                android.columnCount = layout.columnCount > 0 ? layout.columnCount.toString() : '1';
                 valid = true;
                 break;
             }
@@ -1664,14 +1661,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                 }
                 node.android('scaleType', scaleType);
-                if (width > 0 && parent.hasPX('maxWidth', false) && (percentWidth === -1 || percentWidth === 100)) {
+                if (width > 0 && parent.hasPX('maxWidth', { percent: false }) && (percentWidth === -1 || percentWidth === 100)) {
                     const parentWidth = parent.parseWidth(parent.css('maxWidth'));
                     if (parentWidth <= width) {
                         width = parentWidth;
                         node.css('width', formatPX(width));
                     }
                 }
-                else if (height > 0 && parent.hasPX('maxHeight', false) && (percentHeight === -1 || percentHeight === 100)) {
+                else if (height > 0 && parent.hasPX('maxHeight', { percent: false }) && (percentHeight === -1 || percentHeight === 100)) {
                     const parentHeight = parent.parseHeight(parent.css('maxHeight'));
                     if (parentHeight <= height) {
                         height = parentHeight;
@@ -2055,7 +2052,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     }
 
     public renderSpace(options: RenderSpaceAttribute) {
-        const { android, app, column, columnSpan, row, rowSpan } = options;
+        const android = options.android;
         let { width, height } = options;
         if (width) {
             if (isPercent(width)) {
@@ -2075,21 +2072,21 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         else {
             height = 'wrap_content';
         }
-        if (column !== undefined) {
-            android.layout_column = column.toString();
+        if (options.column !== undefined) {
+            android.layout_column = options.column.toString();
         }
-        if (columnSpan) {
-            android.layout_columnSpan = columnSpan.toString();
+        if (options.columnSpan) {
+            android.layout_columnSpan = options.columnSpan.toString();
         }
-        if (row !== undefined) {
-            android.layout_row = row.toString();
+        if (options.row !== undefined) {
+            android.layout_row = options.row.toString();
         }
-        if (rowSpan) {
-            android.layout_rowSpan = rowSpan.toString();
+        if (options.rowSpan) {
+            android.layout_rowSpan = options.rowSpan.toString();
         }
-        const optionsA: RenderSpaceAttribute = { android, app };
-        const output = this.renderNodeStatic({ controlName: CONTAINER_ANDROID.SPACE, width, height }, optionsA);
-        options.documentId = optionsA.documentId;
+        const result: RenderSpaceAttribute = { android, app: options.app };
+        const output = this.renderNodeStatic({ controlName: CONTAINER_ANDROID.SPACE, width, height }, result);
+        options.documentId = result.documentId;
         return output;
     }
 
@@ -2374,7 +2371,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 let alignParent: string;
                 let rows: T[][];
                 if (leftAlign) {
-                    if ((!node.naturalElement && seg[0].actualParent || node).cssInitialAny('textAlign', 'right', 'end')) {
+                    if ((!node.naturalElement && seg[0].actualParent || node).cssAny('textAlign', { initial: true, values: ['right', 'end'] })) {
                         alignParent = 'right';
                         leftForward = false;
                         seg[length - 1].anchor(alignParent, 'true');
@@ -2873,7 +2870,7 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         let previous: Undef<T>;
         let textBaseline: Null<T> = null;
         if (!reverse) {
-            switch (node.cssAscend('textAlign', true)) {
+            switch (node.cssAscend('textAlign', { startSelf: true })) {
                 case 'center':
                     bias = 0.5;
                     break;

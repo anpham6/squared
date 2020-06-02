@@ -424,13 +424,12 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                 const totalDuration = sub.getTotalDuration();
                 sub.addState(SYNCHRONIZE_STATE.INTERRUPTED);
                 if (totalDuration > maxTime) {
-                    const { delay: subDelay, duration: subDuration } = sub;
                     const [subKeyTimes, subValues, subKeySplines] = cloneKeyTimes(sub);
                     setStartItemValues(map, forwardMap, baseValueMap, sub, baseValue, subKeyTimes, subValues, subKeySplines);
                     let nextStartTime = intervalEndTime;
                     partialEnd: {
                         let joined = false;
-                        let j = getStartIteration(maxTime, subDelay, subDuration) - 1;
+                        let j = getStartIteration(maxTime, sub.delay, sub.duration) - 1;
                         const insertSubstituteTimeValue = (subTime: number, splitTime: number, index: number) => {
                             let resultTime: number;
                             let splitValue: Undef<string>;
@@ -444,7 +443,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                                 splitValue = convertToString(getItemValue(sub, subValues, j, index, baseValue));
                             }
                             else {
-                                splitValue = getIntermediateSplitValue(subTime, splitTime, sub, subKeyTimes, subValues, subDuration, j, baseValue);
+                                splitValue = getIntermediateSplitValue(subTime, splitTime, sub, subKeyTimes, subValues, sub.duration, j, baseValue);
                             }
                             if (splitValue) {
                                 if (resultTime > 0) {
@@ -497,7 +496,7 @@ function appendPartialKeyTimes(map: SvgAnimationIntervalMap, forwardMap: Forward
                             }
                             const q = subKeyTimes.length;
                             for (let l = 0; l < q; ++l) {
-                                const time = getItemTime(subDelay, subDuration, subKeyTimes, j, l);
+                                const time = getItemTime(sub.delay, sub.duration, subKeyTimes, j, l);
                                 if (time >= maxTime) {
                                     if (!joined) {
                                         insertSubstituteTimeValue(time, maxTime, l);
@@ -1393,14 +1392,13 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                         threadTimeExceeded: {
                                             const forwardItem = getForwardItem(forwardMap, attr);
                                             for (let k = getStartIteration(actualMaxTime, delay, duration); k < iterationTotal; ++k) {
-                                                const { evaluateStart, evaluateEnd } = item;
                                                 let keyTimes: number[];
                                                 let values: string[];
                                                 let keySplines: Undef<string[]>;
-                                                if (evaluateStart || evaluateEnd) {
+                                                if (item.evaluateStart || item.evaluateEnd) {
                                                     [keyTimes, values, keySplines] = cloneKeyTimes(item);
                                                     const r = data.length;
-                                                    if (evaluateStart) {
+                                                    if (item.evaluateStart) {
                                                         const pending = incomplete.concat(data.slice(j + 1, r)).filter(previous => !!previous.animationElement && previous.delay < maxThreadTime);
                                                         if (pending.length) {
                                                             sortEvaluateStart(pending, actualMaxTime);
@@ -1413,7 +1411,7 @@ export default <T extends Constructor<SvgView>>(Base: T) => {
                                                             }
                                                         }
                                                     }
-                                                    if (evaluateEnd) {
+                                                    if (item.evaluateEnd) {
                                                         if (item.getIntervalEndTime(actualMaxTime) < maxThreadTime && (incomplete.length || j < r - 1)) {
                                                             const pending = incomplete.filter(previous => !!previous.animationElement);
                                                             let l = j + 1;

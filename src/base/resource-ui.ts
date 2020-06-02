@@ -581,10 +581,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     }
                     switch (i) {
                         case 0:
-                            width = node.parseUnit(size, 'width', false, screenDimension);
+                            width = node.parseUnit(size, { parent: false, screenDimension });
                             break;
                         case 1:
-                            height = node.parseUnit(size, 'height', false, screenDimension);
+                            height = node.parseUnit(size, { dimension: 'height', parent: false, screenDimension });
                             break;
                     }
                 }
@@ -708,7 +708,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         const dimension = horizontal ? 'width' : 'height';
                         let i = 0;
                         while (i < length) {
-                            borderRadius[i] = formatPX(node.parseUnit(borderRadius[i++], dimension, false));
+                            borderRadius[i] = formatPX(node.parseUnit(borderRadius[i++], { dimension, parent: false }));
                         }
                         boxStyle.borderRadius = borderRadius;
                     }

@@ -278,12 +278,12 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
             result.mdpi = mdpi;
             const rawData = resource.getRawData(mdpi);
             if (rawData) {
-                const { base64, filename } = rawData;
-                if (base64) {
+                if (rawData.base64) {
+                    const filename = rawData.filename;
                     if (FILE.SVG.test(filename)) {
                         return '';
                     }
-                    resource.writeRawImage(prefix + filename, base64);
+                    resource.writeRawImage(prefix + filename, rawData.base64);
                     return filename.substring(0, filename.lastIndexOf('.'));
                 }
             }

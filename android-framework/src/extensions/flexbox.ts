@@ -84,7 +84,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
             const dimension = item.bounds[attr];
             let growPercent = false;
             if (grow > 0 || shrink !== 1) {
-                const value = item.parseUnit(basis === 'auto' ? item.css(attr) : basis, attr);
+                const value = item.parseUnit(basis === 'auto' ? item.css(attr) : basis, { dimension: attr });
                 if (value > 0) {
                     let largest = false;
                     if (dimension < value) {
@@ -120,7 +120,7 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
             else if (isLength(basis)) {
                 groupBasis.push({
                     item,
-                    basis: Math.min(dimension, item.parseUnit(basis, attr)),
+                    basis: Math.min(dimension, item.parseUnit(basis, { dimension: attr })),
                     dimension,
                     shrink,
                     grow
@@ -308,7 +308,7 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
         if (mainData) {
             const controller = this.controller as android.base.Controller<T>;
             const { row, column, reverse, wrap, wrapReverse, alignContent, justifyContent, children } = mainData;
-            const parentBottom = node.hasPX('height', false) || node.percentHeight > 0 ? node.linear.bottom : 0;
+            const parentBottom = node.hasPX('height', { percent: false }) || node.percentHeight > 0 ? node.linear.bottom : 0;
             const chainHorizontal: T[][] = [];
             const chainVertical: T[][] = [];
             const segmented: T[] = [];

@@ -185,7 +185,7 @@ function createDataAttribute(data: GridAlignment): CssGridData<NodeUI> {
     });
 }
 
-const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, index !== 0 ? 'width' : 'height')) : value;
+const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, { dimension: index !== 0 ? 'width' : 'height' })) : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public static isFr = (value: string) => /\dfr$/.test(value);
@@ -255,7 +255,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         };
         column.gap = node.parseWidth(node.css('columnGap'), false);
         row.gap = node.parseHeight(node.css('rowGap'), false);
-        const gridTemplates = [node.cssInitial('gridTemplateRows', true), node.cssInitial('gridTemplateColumns', true), node.css('gridAutoRows'), node.css('gridAutoColumns')];
+        const gridTemplates = [node.cssInitial('gridTemplateRows'), node.cssInitial('gridTemplateColumns'), node.css('gridAutoRows'), node.css('gridAutoColumns')];
         for (let index = 0; index < 4; ++index) {
             const value = gridTemplates[index];
             if (value !== '' && value !== 'none' && value !== 'auto') {
@@ -352,7 +352,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         case 3:
                             (index === 2 ? row : column).auto.push(
                                 isLength(command)
-                                    ? formatPX(node.parseUnit(command, index !== 2 ? 'width' : 'height'))
+                                    ? formatPX(node.parseUnit(command, { dimension: index !== 2 ? 'width' : 'height' }))
                                     : command
                             );
                             break;
@@ -362,26 +362,26 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
         }
         if (horizontal) {
             node.sort((a, b) => {
-                const { left, top } = a.linear;
-                const { left: leftB, top: topB } = b.linear;
-                if (!withinRange(top, topB)) {
-                    return top < topB ? -1 : 1;
+                const linearA = a.linear;
+                const linearB = b.linear;
+                if (!withinRange(linearA.top, linearB.top)) {
+                    return linearA.top < linearB.top ? -1 : 1;
                 }
-                else if (!withinRange(left, leftB)) {
-                    return left < leftB ? -1 : 1;
+                else if (!withinRange(linearA.left, linearB.left)) {
+                    return linearA.left < linearB.left ? -1 : 1;
                 }
                 return 0;
             });
         }
         else {
             node.sort((a, b) => {
-                const { left, top } = a.linear;
-                const { left: leftB, top: topB } = b.linear;
-                if (!withinRange(left, leftB)) {
-                    return left < leftB ? -1 : 1;
+                const linearA = a.linear;
+                const linearB = b.linear;
+                if (!withinRange(linearA.left, linearB.left)) {
+                    return linearA.left < linearB.left ? -1 : 1;
                 }
-                else if (!withinRange(top, topB)) {
-                    return top < topB ? -1 : 1;
+                else if (!withinRange(linearA.top, linearB.top)) {
+                    return linearA.top < linearB.top ? -1 : 1;
                 }
                 return 0;
             });
@@ -763,7 +763,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
             }
-            else if (data.autoFit || data.autoFill && node.blockStatic && (horizontal && !node.hasWidth && !node.hasPX('maxWidth', false) || !horizontal && !node.hasHeight)) {
+            else if (data.autoFit || data.autoFill && node.blockStatic && (horizontal && !node.hasWidth && !node.hasPX('maxWidth', { percent: false }) || !horizontal && !node.hasHeight)) {
                 unit.length = ITERATION;
             }
             let percent = 1;
@@ -1085,7 +1085,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 mainData.minCellHeight = minCellHeight;
                 if (horizontal) {
-                    if (node.hasPX('width', false)) {
+                    if (node.hasPX('width', { percent: false })) {
                         column.fixedWidth = true;
                         column.flexible = false;
                         setFlexibleDimension(node.actualWidth, columnGap, columnCount, column.unit, columnMax);
@@ -1095,7 +1095,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 else {
-                    if (node.hasPX('height', false)) {
+                    if (node.hasPX('height', { percent: false })) {
                         row.fixedWidth = true;
                         row.flexible = false;
                         setFlexibleDimension(node.actualHeight, rowGap, rowCount, rowUnit, rowMax);
@@ -1105,7 +1105,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     }
                 }
                 node.retainAs(children);
-                node.cssSort('zIndex');
+                node.cssSort('zIndex', { byInt: true });
                 if (node.cssTry('display', 'block')) {
                     node.each((item: T) => {
                         const { width, height } = item.boundingClientRect;

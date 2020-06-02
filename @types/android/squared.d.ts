@@ -82,6 +82,7 @@ declare namespace base {
         readonly documentId: string;
         android(attr: string, value?: string, overwrite?: boolean): string;
         app(attr: string, value?: string, overwrite?: boolean): string;
+        clone(id: number, options?: AndroidCloneOptions): View;
         applyOptimizations(): void;
         applyCustomizations(overwrite?: boolean): void;
         formatted(value: string, overwrite?: boolean): void;

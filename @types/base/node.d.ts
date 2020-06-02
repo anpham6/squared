@@ -3,6 +3,7 @@ type BoxType = "bounds" | "box" | "linear";
 interface InitialData<T> {
     styleMap?: StringMap;
     children?: T[];
+    bounds?: BoxRectDimension;
 }
 
 interface CachedValue<T> {
@@ -141,11 +142,48 @@ interface HasOptions {
     type?: number;
 }
 
+interface HasPXOptions {
+    percent?: boolean;
+    initial?: boolean;
+}
+
 interface BoxOptions {
     reset?: 0 | 1;
     adjustment?: number;
     accumulate?: boolean;
     negative?: boolean;
+}
+
+interface CssSortOptions {
+    ascending?: boolean;
+    duplicate?: boolean;
+    byFloat?: true;
+    byInt?: true;
+}
+
+interface CssPXOptions {
+    negative?: boolean;
+}
+
+interface CssAscendOptions {
+    startSelf?: boolean;
+    initial?: boolean;
+}
+
+interface CssInitialOptions {
+    modified?: boolean;
+    computed?: boolean;
+}
+
+interface CssAnyOptions extends CssInitialOptions {
+    values: string[];
+    initial?: boolean
+}
+
+interface ParseUnitOptions {
+    dimension?: DimensionAttr;
+    parent?: boolean;
+    screenDimension?: Dimension;
 }
 
 interface LinearData<T> {

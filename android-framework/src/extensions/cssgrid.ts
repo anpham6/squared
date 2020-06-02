@@ -98,7 +98,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                                 adjusted.add(item);
                             }
                             else {
-                                item.cssPX(dimension, gridSize / itemCount, false, true);
+                                item.cssPX(dimension, gridSize / itemCount, true);
                             }
                         }
                     }
@@ -116,14 +116,14 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                                         adjusted.add(item);
                                     }
                                     else {
-                                        item.cssPX(dimension, marginEnd, false, true);
+                                        item.cssPX(dimension, marginEnd, true);
                                     }
                                 }
                                 else {
                                     const unitSpan = parseInt(item.android(horizontal ? 'layout_columnSpan' : 'layout_rowSpan'));
                                     if (unitSpan > 1) {
                                         const marginEnd = marginSize + (marginExcess > 0 ? Math.max(marginExcess - 1, 1) : 0);
-                                        item.cssPX(dimension, marginEnd, false, true);
+                                        item.cssPX(dimension, marginEnd, true);
                                         if (adjusted.has(item)) {
                                             item.modifyBox(MARGIN_END, -marginEnd, false);
                                         }
@@ -156,7 +156,7 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
                                 adjusted.add(item);
                             }
                             else {
-                                item.cssPX(dimension, marginEnd, false, true);
+                                item.cssPX(dimension, marginEnd, true);
                             }
                         }
                     }
@@ -290,7 +290,7 @@ function isFlexibleParent(node: View, dataName: string) {
 }
 
 function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
-    const { gap, length, unit } = data;
+    const unit = data.unit;
     let size = 0;
     let percent = 0;
     for (let i = 0; i < unit.length; ++i) {
@@ -305,7 +305,7 @@ function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
             return 0;
         }
     }
-    const content = Math.ceil(size + (length - 1) * gap);
+    const content = Math.ceil(size + (data.length - 1) * data.gap);
     if (percent > 0) {
         return (percent + (content / dimension * 100));
     }
@@ -332,7 +332,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (CssGrid.isJustified(node)) {
                 node.setLayoutWidth(getLayoutDimension(node.css('justifyContent')));
             }
-            else if (node.hasPX('width', false)) {
+            else if (node.hasPX('width', { percent: false })) {
                 node.setLayoutWidth('match_parent');
             }
             else {
@@ -341,7 +341,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
             if (CssGrid.isAligned(node)) {
                 node.setLayoutHeight(getLayoutDimension(node.css('alignContent')));
             }
-            else if (node.hasPX('height', false)) {
+            else if (node.hasPX('height', { percent: false })) {
                 node.setLayoutHeight('match_parent');
             }
             else {
@@ -451,7 +451,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     const k = cellStart + i++;
                     const min = unitMin[k];
                     if (min !== '') {
-                        minUnitSize += parent.parseUnit(min, horizontal ? 'width' : 'height');
+                        minUnitSize += horizontal ? parent.parseUnit(min) : parent.parseUnit(min, { dimension: 'height' });
                     }
                     let value = unit[k];
                     if (!isString(value)) {
@@ -515,7 +515,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         size = 0;
                     }
                     else {
-                        const cellSize = item.parseUnit(value, horizontal ? 'width' : 'height');
+                        const cellSize = horizontal ? item.parseUnit(value) : item.parseUnit(value, { dimension:  'height' });
                         if (minSize === 0) {
                             size += cellSize;
                         }
@@ -553,7 +553,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 }
                 if (layoutConstraint) {
                     if (horizontal) {
-                        if (!item.hasPX('width', false)) {
+                        if (!item.hasPX('width', { percent: false })) {
                             item.app('layout_constraintWidth_percent', truncate(sizeWeight / column.frTotal, item.localSettings.floatPrecision));
                             item.setLayoutWidth('0px');
                         }
@@ -573,7 +573,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         }
                         item.positioned = true;
                     }
-                    else if (!item.hasPX('height', false)) {
+                    else if (!item.hasPX('height', { percent: false })) {
                         if (sizeWeight > 0) {
                             if (row.length === 1) {
                                 item.setLayoutHeight('match_parent');
@@ -755,12 +755,12 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
         const mainData: CssGridData<T> = node.data(this.name, 'mainData');
         if (mainData) {
             const controller = this.controller as android.base.Controller<T>;
-            const { alignContent, children, column, emptyRows, justifyContent, row, rowDirection, rowData } = mainData;
+            const { children, column, row, rowData } = mainData;
             const wrapped = node.data(this.name, 'unsetContentBox') === true;
             const insertId = children[children.length - 1].id;
             if (CssGrid.isJustified(node)) {
-                setContentSpacing(node, mainData, justifyContent, true, 'width', wrapped, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);
-                switch (justifyContent) {
+                setContentSpacing(node, mainData, mainData.justifyContent, true, 'width', wrapped, BOX_STANDARD.MARGIN_LEFT, BOX_STANDARD.MARGIN_RIGHT, controller.userSettings.resolutionScreenWidth - node.bounds.left, 0);
+                switch (mainData.justifyContent) {
                     case 'center':
                     case 'space-around':
                     case 'space-evenly':
@@ -812,7 +812,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     }
                 }
                 if (wrapped) {
-                    if (node.contentBoxWidth > 0 && node.hasPX('width', false)) {
+                    if (node.contentBoxWidth > 0 && node.hasPX('width', { percent: false })) {
                         node.anchorParent('horizontal', 0.5, '', true);
                     }
                     else if (length === 1) {
@@ -824,9 +824,9 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 }
             }
             if (CssGrid.isAligned(node)) {
-                setContentSpacing(node, mainData, alignContent, false, 'height', wrapped, BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, 0, (this.controller as android.base.Controller<T>).userSettings.resolutionScreenHeight);
+                setContentSpacing(node, mainData, mainData.alignContent, false, 'height', wrapped, BOX_STANDARD.MARGIN_TOP, BOX_STANDARD.MARGIN_BOTTOM, 0, (this.controller as android.base.Controller<T>).userSettings.resolutionScreenHeight);
                 if (wrapped) {
-                    switch (alignContent) {
+                    switch (mainData.alignContent) {
                         case 'center':
                         case 'space-around':
                         case 'space-evenly':
@@ -863,7 +863,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                     }
                 }
                 if (wrapped) {
-                    if (node.contentBoxHeight > 0 && node.hasPX('height', false)) {
+                    if (node.contentBoxHeight > 0 && node.hasPX('height', { percent: false })) {
                         node.anchorParent('vertical', 0.5, '', true);
                     }
                     else {
@@ -945,6 +945,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 }
             }
             else {
+                const { emptyRows, rowDirection } = mainData;
                 const { flexible, gap, unit } = rowDirection ? column : row;
                 const unitSpan = unit.length;
                 let k = -1;
@@ -1073,7 +1074,7 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
     public postOptimize(node: T) {
         const mainData: CssGridData<T> = node.data(this.name, 'mainData');
         if (mainData) {
-            if (node.blockStatic && !node.hasPX('minWidth', false) && node.actualParent?.layoutElement === false) {
+            if (node.blockStatic && !node.hasPX('minWidth', { percent: false }) && node.actualParent?.layoutElement === false) {
                 const { gap, length, unit } = mainData.column;
                 let minWidth = gap * (length - 1);
                 for (let i = 0; i < unit.length; ++i) {

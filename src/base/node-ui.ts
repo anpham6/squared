@@ -497,7 +497,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     public abstract setAlignment(): void;
     public abstract setBoxSpacing(): void;
     public abstract apply(options: {}): void;
-    public abstract clone(id?: number, attributes?: boolean, position?: boolean): T;
+    public abstract clone(id: number): T;
     public abstract extractAttributes(depth?: number): string;
     public abstract alignParent(position: string): boolean;
     public abstract alignSibling(position: string, documentId?: string): string;
@@ -607,16 +607,19 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
         this.rendered = true;
     }
 
-    public parseUnit(value: string, dimension: DimensionAttr = 'width', parent = true, screenDimension?: Dimension) {
-        return super.parseUnit(value, dimension, parent, screenDimension || this.localSettings.screenDimension);
+    public parseUnit(value: string, options: ParseUnitOptions = {}) {
+        if (!options.screenDimension) {
+            options.screenDimension = this.localSettings.screenDimension;
+        }
+        return super.parseUnit(value, options);
     }
 
     public parseWidth(value: string, parent = true) {
-        return super.parseUnit(value, 'width', parent, this.localSettings.screenDimension);
+        return super.parseUnit(value, { parent, screenDimension: this.localSettings.screenDimension });
     }
 
     public parseHeight(value: string, parent = true) {
-        return super.parseUnit(value, 'height', parent, this.localSettings.screenDimension);
+        return super.parseUnit(value, { dimension: 'height', parent, screenDimension: this.localSettings.screenDimension });
     }
 
     public renderEach(predicate: IteratorPredicate<T, void>) {
@@ -1205,7 +1208,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             let offsetRight = 0;
             let current = this.actualParent;
             while (current) {
-                if (current.hasPX('width', false) || !current.pageFlow) {
+                if (current.hasPX('width', { percent: false }) || !current.pageFlow) {
                     return value;
                 }
                 else {
@@ -1228,22 +1231,23 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     }
 
     public cloneBase(node: T) {
+        node.depth = this.depth;
+        node.childIndex = this.childIndex;
+        node.inlineText = this.inlineText;
+        node.actualParent = this.actualParent;
+        node.documentRoot = this.documentRoot;
         node.localSettings = this.localSettings;
         node.alignmentType = this.alignmentType;
         node.containerName = this.containerName;
-        node.depth = this.depth;
         node.visible = this.visible;
         node.excluded = this.excluded;
         node.rendered = this.rendered;
-        node.childIndex = this.childIndex;
         node.containerIndex = this.containerIndex;
-        node.inlineText = this.inlineText;
         node.lineBreakLeading = this.lineBreakLeading;
         node.lineBreakTrailing = this.lineBreakTrailing;
-        node.actualParent = this.actualParent;
         node.documentParent = this.documentParent;
-        node.documentRoot = this.documentRoot;
         node.renderParent = this.renderParent;
+        node.rootElement = this.rootElement;
         if (this.length) {
             node.retainAs(this.duplicate());
         }
@@ -1491,7 +1495,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
     get inlineFlow() {
         let result = this._cached.inlineFlow;
         if (result === undefined) {
-            result = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement || this.svgElement && this.hasPX('width', false) || this.tableElement && this.previousSibling?.floating === true;
+            result = this.inline || this.inlineDimension || this.inlineVertical || this.imageElement || this.svgElement && this.hasPX('width', { percent: false }) || this.tableElement && this.previousSibling?.floating === true;
             this._cached.inlineFlow = result;
         }
         return result;

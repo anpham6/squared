@@ -2804,9 +2804,8 @@ export function calculateVarAsString(element: CSSElement, value: string, options
 export function calculateVar(element: CSSElement, value: string, options: CalculateVarOptions = {}) {
     const output = parseVar(element, value);
     if (output) {
-        const { precision, unitType } = options;
         if (value.includes('%')) {
-            if (options.supportPercent === false || unitType === CSS_UNIT.INTEGER) {
+            if (options.supportPercent === false || options.unitType === CSS_UNIT.INTEGER) {
                 return NaN;
             }
             else if (options.boundingSize === undefined) {
@@ -2868,12 +2867,12 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
         else if (options.supportPercent) {
             return NaN;
         }
-        if ((!unitType || unitType === CSS_UNIT.LENGTH) && /\d(em|ch)/.test(value) && options.fontSize === undefined) {
+        if ((!options.unitType || options.unitType === CSS_UNIT.LENGTH) && /\d(em|ch)/.test(value) && options.fontSize === undefined) {
             options.fontSize = getFontSize(element);
         }
         let result = calculate(output, options);
-        if (precision !== undefined) {
-            result = precision === 0 ? Math.floor(result) : parseFloat(truncate(result, precision));
+        if (options.precision !== undefined) {
+            result = options.precision === 0 ? Math.floor(result) : parseFloat(truncate(result, options.precision));
         }
         else if (options.roundValue) {
             result = Math.round(result);

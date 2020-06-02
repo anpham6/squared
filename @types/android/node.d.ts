@@ -9,6 +9,11 @@ interface AndroidSupportUI extends SupportUI {
     maxDimension: boolean;
 }
 
+interface AndroidCloneOptions {
+    position?: boolean;
+    attributes?: boolean;
+}
+
 interface CreateNodeWrapperOptions<T> extends ExcludeOptions {
     children?: T[];
     containerType?: number;

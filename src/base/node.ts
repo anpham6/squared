@@ -80,18 +80,19 @@ function getFlexValue(node: T, attr: string, fallback: number, parent?: Null<Nod
 }
 
 function hasTextAlign(node: T, ...values: string[]) {
-    const value = node.cssAscend('textAlign', node.textElement && node.blockStatic && !node.hasPX('width', true, true));
+    const value = node.cssAscend('textAlign', { startSelf: node.textElement && node.blockStatic && !node.hasPX('width', { initial: true }) });
     return value !== '' && values.includes(value) && (
         node.blockStatic
-            ? node.textElement && !node.hasPX('width', true, true) && !node.hasPX('maxWidth', true, true)
+            ? node.textElement && !node.hasPX('width', { initial: true }) && !node.hasPX('maxWidth', { initial: true })
             : node.display.startsWith('inline')
     );
 }
 
 function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin: string, attrMax: string) {
+    const options = { dimension: attr };
     const valueA = styleMap[attr];
-    const baseValue = node.parseUnit(valueA, attr);
-    let value = Math.max(baseValue, node.parseUnit(styleMap[attrMin], attr));
+    const baseValue = node.parseUnit(valueA, options);
+    let value = Math.max(baseValue, node.parseUnit(styleMap[attrMin], options));
     if (value === 0 && node.styleElement) {
         const element =  node.element as HTMLInputElement;
         switch (element.tagName) {
@@ -111,7 +112,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin
             case 'EMBED': {
                 const size = getNamedItem(element, attr);
                 if (size !== '') {
-                    value = isNumber(size) ? parseFloat(size) : node.parseUnit(size, attr);
+                    value = isNumber(size) ? parseFloat(size) : node.parseUnit(size, options);
                     if (value > 0) {
                         node.css(attr, isPercent(size) ? size : size + 'px');
                     }
@@ -127,7 +128,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin
             delete styleMap[attrMax];
         }
         else {
-            maxValue = node.parseUnit(valueB, attr);
+            maxValue = node.parseUnit(valueB, { dimension: attr });
             if (maxValue > 0 && maxValue <= baseValue && isLength(valueA)) {
                 maxValue = 0;
                 styleMap[attr] = valueB;
@@ -147,7 +148,7 @@ function convertBorderWidth(node: T, dimension: DimensionAttr, border: string[])
                 return 0;
         }
         const width = node.css(border[0]);
-        const result = isLength(width, true) ? node.parseUnit(width, dimension) : convertFloat(node.style[border[0]]);
+        const result = isLength(width, true) ? node.parseUnit(width, { dimension }) : convertFloat(node.style[border[0]]);
         if (result > 0) {
             return Math.max(Math.round(result), 1);
         }
@@ -177,10 +178,10 @@ function convertBox(node: T, attr: string, margin: boolean) {
                             switch (attr) {
                                 case 'marginTop':
                                 case 'marginBottom':
-                                    return vertical ? node.parseUnit(vertical, 'height', false) : node.parseUnit(horizontal, 'width', false);
+                                    return vertical ? node.parseUnit(vertical, { dimension: 'height', parent: false }) : node.parseUnit(horizontal, { parent: false });
                                 case 'marginRight':
                                     if (node.actualParent!.lastChild !== node) {
-                                        return node.parseUnit(horizontal, 'width', false);
+                                        return node.parseUnit(horizontal, { parent: false });
                                     }
                                 case 'marginLeft':
                                     return 0;
@@ -193,14 +194,14 @@ function convertBox(node: T, attr: string, margin: boolean) {
             }
             break;
     }
-    return node.parseUnit(node.css(attr), 'width', !(node.actualParent?.gridElement === true));
+    return node.parseUnit(node.css(attr), { parent: !(node.actualParent?.gridElement === true) });
 }
 
 function convertPosition(node: T, attr: string) {
     if (!node.positionStatic) {
-        const unit = getInitialValue.call(node, attr, true);
+        const unit = getInitialValue.call(node, attr, { modified: true });
         if (isLength(unit)) {
-            return node.parseUnit(unit, attr === 'left' || attr === 'right' ? 'width' : 'height');
+            return node.parseUnit(unit, { dimension: attr === 'left' || attr === 'right' ? 'width' : 'height' });
         }
         else if (isPercent(unit) && node.styleElement) {
             return convertFloat(node.style[attr]);
@@ -688,10 +689,75 @@ function validateQuerySelector(node: T, child: T, selector: QueryData, index: nu
     return true;
 }
 
+function ascendQuerySelector(node: T, selectors: QueryData[], i: number, index: number, adjacent: Undef<string>, nodes: T[]): boolean {
+    const depth = node.depth;
+    const selector = selectors[index];
+    const length = selectors.length;
+    const last = index === length - 1;
+    const next: T[] = [];
+    const q = nodes.length;
+    let j = 0;
+    while (j < q) {
+        const child = nodes[j++];
+        if (adjacent) {
+            const parent = child.actualParent as T;
+            if (adjacent === '>') {
+                if (validateQuerySelector(node, parent, selector, i, last, adjacent)) {
+                    next.push(parent);
+                }
+            }
+            else {
+                const children = parent.naturalElements;
+                switch (adjacent) {
+                    case '+': {
+                        const k = children.indexOf(child) - 1;
+                        if (k >= 0) {
+                            const sibling = children[k];
+                            if (validateQuerySelector(node, sibling, selector, i, last, adjacent)) {
+                                next.push(sibling);
+                            }
+                        }
+                        break;
+                    }
+                    case '~': {
+                        const r = children.length;
+                        let k = 0;
+                        while (k < r) {
+                            const sibling = children[k++];
+                            if (sibling === child) {
+                                break;
+                            }
+                            else if (validateQuerySelector(node, sibling, selector, i, last, adjacent)) {
+                                next.push(sibling);
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        else if (child.depth - depth >= length - index) {
+            let parent = child.actualParent as T;
+            do {
+                if (validateQuerySelector(node, parent, selector, i, last)) {
+                    next.push(parent);
+                }
+                parent = parent.actualParent as T;
+            }
+            while (parent);
+        }
+    }
+    return next.length
+        ? ++index === length
+            ? true
+            : ascendQuerySelector(node, selectors, i, index, selector.adjacent, next)
+        : false;
+}
+
 const canTextAlign = (node: T) => node.naturalChild && (node.length === 0 || isInlineVertical(node.display)) && !node.floating && node.autoMargin.horizontal !== true;
 
-function getInitialValue(this: T, attr: string, modified?: boolean, computed?: boolean) {
-    return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, modified, computed);
+function getInitialValue(this: T, attr: string, options?: CssInitialOptions) {
+    return !this._preferInitial && this._styleMap[attr] || this.cssInitial(attr, options);
 }
 
 export default abstract class Node extends squared.lib.base.Container<T> implements squared.base.Node {
@@ -719,13 +785,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public documentRoot = false;
     public depth = -1;
     public childIndex = Infinity;
-    public style!: CSSStyleDeclaration;
+
+    public readonly style: CSSStyleDeclaration;
 
     public abstract queryMap?: T[][];
 
     protected _preferInitial = false;
     protected _styleMap!: StringMap;
-    protected _cssStyle!: StringMap;
+    protected _cssStyle?: StringMap;
     protected _textBounds?: Null<BoxRectDimension>;
     protected _box?: BoxRectDimension;
     protected _bounds?: BoxRectDimension;
@@ -754,11 +821,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         super();
         if (element) {
             this._element = element;
+            this.style = !this.pseudoElement ? getStyle(element) : getStyle(element.parentElement, getPseudoElt(element, sessionId));
         }
         else {
             this.style = {} as CSSStyleDeclaration;
             this._styleMap = {};
-            this._cssStyle = {};
         }
         this._documentBody = element === document.body;
     }
@@ -766,12 +833,10 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     public init() {
         const element = this._element as HTMLElement;
         if (element) {
-            const { styleElement, sessionId } = this;
+            const { style, styleElement, sessionId } = this;
             const styleMap: StringMap = getElementCache(element, 'styleMap', sessionId) || {};
-            let style: CSSStyleDeclaration;
-            if (!this.pseudoElement) {
-                style = getStyle(element);
-                if (styleElement) {
+            if (styleElement) {
+                if (!this.pseudoElement) {
                     const items = Array.from(element.style);
                     const length = items.length;
                     if (length) {
@@ -782,11 +847,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                     }
                 }
-            }
-            else {
-                style = getStyle(element.parentElement, getPseudoElt(element, sessionId));
-            }
-            if (styleElement) {
                 const revisedMap: StringMap = {};
                 const writingMode = style.writingMode;
                 for (let attr in styleMap) {
@@ -810,7 +870,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             else {
                 this._styleMap = styleMap;
             }
-            this.style = style;
             this._cssStyle = styleMap;
             if (sessionId !== '0') {
                 setElementCache(element, 'node', sessionId, this);
@@ -820,8 +879,9 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public saveAsInitial() {
         this._initial = {
-            children: this.duplicate(),
-            styleMap: { ...this._styleMap }
+            styleMap: { ...this._styleMap },
+            children: this.length ? this.duplicate() : undefined,
+            bounds: this._bounds
         };
     }
 
@@ -1073,25 +1133,19 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return this;
     }
 
-    public cssInitial(attr: string, modified = false, computed = false) {
-        let value = (this._initial?.styleMap || this._styleMap)[attr] || modified && this._styleMap[attr];
-        if (!value && computed) {
-            value = this.style[attr];
+    public cssParent(attr: string, value?: string, cache = false) {
+        return this.actualParent?.css(attr, value, cache) || '';
+    }
+
+    public cssInitial(attr: string, options?: CssInitialOptions): string {
+        return (this._initial?.styleMap || this._styleMap)[attr] || options?.modified && this._styleMap[attr] || options?.computed && this.style[attr] || '';
+    }
+
+    public cssAscend(attr: string, options?: CssAscendOptions) {
+        let startSelf: Undef<boolean>, initial: Undef<boolean>;
+        if (options) {
+            ({ startSelf, initial } = options);
         }
-        return value || '';
-    }
-
-    public cssAny(attr: string, ...values: string[]) {
-        const value = this.css(attr);
-        return value !== '' && values.includes(value);
-    }
-
-    public cssInitialAny(attr: string, ...values: string[]) {
-        const value = this.cssInitial(attr);
-        return value !== '' && values.includes(value);
-    }
-
-    public cssAscend(attr: string, startSelf = false, initial = false) {
         let parent = startSelf ? this : this.actualParent;
         let value: string;
         while (parent) {
@@ -1107,9 +1161,27 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return '';
     }
 
-    public cssSort(attr: string, ascending = true, duplicate = false) {
-        return (duplicate ? this.duplicate() : this.children).sort((a, b) => {
-            const valueA = a.toFloat(attr, a.childIndex), valueB = b.toFloat(attr, b.childIndex);
+    public cssAny(attr: string, options: CssAnyOptions) {
+        const value = options.initial ? this.cssInitial(attr, options) : this.css(attr);
+        return value !== '' && options.values.includes(value);
+    }
+
+    public cssSort(attr: string, options: CssSortOptions = {}) {
+        const ascending = options.ascending !== false;
+        const byFloat = options.byFloat === true;
+        const byInt = !byFloat && options.byInt === true;
+        return (options.duplicate ? this.duplicate() : this.children).sort((a, b) => {
+            let valueA: string | number;
+            let valueB: string | number;
+            if (byFloat) {
+                valueA = a.toFloat(attr, a.childIndex), valueB = b.toFloat(attr, b.childIndex);
+            }
+            else if (byInt) {
+                valueA = a.toInt(attr, a.childIndex), valueB = b.toInt(attr, b.childIndex);
+            }
+            else {
+                valueA = a.css(attr), valueB = b.css(attr);
+            }
             if (valueA === valueB) {
                 return 0;
             }
@@ -1120,11 +1192,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         });
     }
 
-    public cssPX(attr: string, value: number, negative = false, cache = false) {
+    public cssPX(attr: string, value: number, cache = false, options?: CssPXOptions) {
         const current = this._styleMap[attr];
         if (current && isLength(current)) {
             value += parseUnit(current, this.fontSize);
-            if (!negative && value < 0) {
+            if (value < 0 && options?.negative !== true) {
                 value = 0;
             }
             const unit = formatPX(value);
@@ -1191,10 +1263,6 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return undefined;
     }
 
-    public cssParent(attr: string, value?: string, cache = false) {
-        return this.naturalChild ? this.actualParent!.css(attr, value, cache) : '';
-    }
-
     public cssCopy(node: T, ...attrs: string[]) {
         const styleMap = this._styleMap;
         for (let i = 0; i < attrs.length; ++i) {
@@ -1234,12 +1302,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
 
     public toInt(attr: string, fallback = NaN, initial = false) {
         const value = parseInt((initial && this._initial?.styleMap || this._styleMap)[attr]);
-        return isNaN(value) ? fallback : value;
+        return !isNaN(value) ? value : fallback;
     }
 
     public toFloat(attr: string, fallback = NaN, initial = false) {
         const value = parseFloat((initial && this._initial?.styleMap || this._styleMap)[attr]);
-        return isNaN(value) ? fallback : value;
+        return !isNaN(value) ? value : fallback;
     }
 
     public toElementInt(attr: string, fallback = NaN) {
@@ -1261,21 +1329,21 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return (this._element?.[attr] ?? fallback).toString();
     }
 
-    public parseUnit(value: string, dimension: DimensionAttr = 'width', parent = true, screenDimension?: Dimension) {
+    public parseUnit(value: string, options?: ParseUnitOptions) {
         if (isPercent(value)) {
-            const bounds = parent && this.absoluteParent?.box || this.bounds;
+            const bounds = options?.parent !== false && this.absoluteParent?.box || this.bounds;
             let result = parseFloat(value) / 100;
-            switch (dimension) {
-                case 'width':
-                    result *= bounds.width;
-                    break;
+            switch (options?.dimension) {
                 case 'height':
                     result *= bounds.height;
+                    break;
+                default:
+                    result *= bounds.width;
                     break;
             }
             return result;
         }
-        return parseUnit(value, this.fontSize, screenDimension);
+        return parseUnit(value, this.fontSize, options?.screenDimension);
     }
 
     public has(attr: string, options?: HasOptions) {
@@ -1314,8 +1382,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         return false;
     }
 
-    public hasPX(attr: string, percent = true, initial = false) {
-        return isLength((initial && this._initial?.styleMap || this._styleMap)[attr], percent);
+    public hasPX(attr: string, options?: HasPXOptions) {
+        return isLength((options?.initial && this._initial?.styleMap || this._styleMap)[attr], options?.percent !== false);
     }
 
     public setBounds(cache = true) {
@@ -1539,79 +1607,13 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         }
                     }
                     if (selectors.length) {
-                        const depth = this.depth;
                         selectors.reverse();
-                        length = selectors.length;
-                        const ascendQuerySelector = (index: number, adjacent: Undef<string>, nodes: T[]): boolean => {
-                            const selector = selectors[index];
-                            const last = index === length - 1;
-                            const next: T[] = [];
-                            const q = nodes.length;
-                            let j = 0;
-                            while (j < q) {
-                                const node = nodes[j++];
-                                if (adjacent) {
-                                    const parent = node.actualParent as T;
-                                    if (adjacent === '>') {
-                                        if (validateQuerySelector(this, parent, selector, i, last, adjacent)) {
-                                            next.push(parent);
-                                        }
-                                    }
-                                    else {
-                                        const children = parent.naturalElements;
-                                        switch (adjacent) {
-                                            case '+': {
-                                                const indexA = children.indexOf(node);
-                                                if (indexA > 0) {
-                                                    const sibling = children[indexA - 1];
-                                                    if (sibling && validateQuerySelector(this, sibling, selector, i, last, adjacent)) {
-                                                        next.push(sibling);
-                                                    }
-                                                }
-                                                break;
-                                            }
-                                            case '~': {
-                                                const r = children.length;
-                                                let k = 0;
-                                                while (k < r) {
-                                                    const sibling = children[k++];
-                                                    if (sibling === node) {
-                                                        break;
-                                                    }
-                                                    else if (validateQuerySelector(this, sibling, selector, i, last, adjacent)) {
-                                                        next.push(sibling);
-                                                    }
-                                                }
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                                else if (node.depth - depth >= length - index) {
-                                    let parent = node.actualParent as T;
-                                    do {
-                                        if (validateQuerySelector(this, parent, selector, i, last)) {
-                                            next.push(parent);
-                                        }
-                                        parent = parent.actualParent as T;
-                                    }
-                                    while (parent);
-                                }
-                            }
-                            if (next.length) {
-                                if (++index === length) {
-                                    return true;
-                                }
-                                return ascendQuerySelector(index, selector.adjacent, next);
-                            }
-                            return false;
-                        };
                         let count = currentCount;
                         const r = pending.length;
                         let j = 0;
                         while (j < r) {
                             const node = pending[j++];
-                            if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(0, dataEnd.adjacent, [node])) {
+                            if ((currentCount === 0 || !result.includes(node)) && ascendQuerySelector(this, selectors, i, 0, dataEnd.adjacent, [node])) {
                                 result.push(node);
                                 if (++count === resultCount) {
                                     return result.sort(sortById);
@@ -1963,7 +1965,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     : this.css('position') === 'fixed' || this.hasPX('top') || this.hasPX('bottom');
             }
             else {
-                result = this.height > 0 || this.hasPX('height', false);
+                result = this.height > 0 || this.hasPX('height', { percent: false });
             }
             this._cached.hasHeight = result;
         }
@@ -1987,7 +1989,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     else {
                         value = parseUnit(lineHeight, this.fontSize);
-                        if (isPx(lineHeight) && this._cssStyle.lineHeight !== 'inherit') {
+                        if (isPx(lineHeight) && this._cssStyle?.lineHeight !== 'inherit') {
                             const fontSize = getInitialValue.call(this, 'fontSize');
                             if (isEm(fontSize)) {
                                 value *= parseFloat(fontSize);
@@ -2438,7 +2440,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             if (this.pageFlow) {
                 result = this.css('verticalAlign');
                 if (isLength(result, true)) {
-                    result = this.parseUnit(result, 'height') + 'px';
+                    result = this.parseUnit(result, { dimension: 'height' }) + 'px';
                 }
             }
             else {
@@ -2529,7 +2531,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         if (result !== '' && this.styleElement && !this.inputElement && (!this._initial || getInitialValue.call(this, 'backgroundColor') === result)) {
                             let parent = this.actualParent;
                             while (parent) {
-                                const color = getInitialValue.call(parent, 'backgroundColor', true);
+                                const color = getInitialValue.call(parent, 'backgroundColor', { modified: true });
                                 if (color !== '') {
                                     if (color === result && parent.backgroundColor === '') {
                                         result = '';
@@ -2644,7 +2646,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
             result = this.actualParent;
             if (!this.pageFlow && !this.documentBody) {
                 while (result && !result.documentBody) {
-                    switch (getInitialValue.call(result, 'position', false, true)) {
+                    switch (getInitialValue.call(result, 'position', { computed: true })) {
                         case 'static':
                         case 'initial':
                         case 'unset':
@@ -2840,7 +2842,7 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get cssStyle() {
-        return this._cssStyle;
+        return { ...this._cssStyle };
     }
 
     get textStyle() {

@@ -113,8 +113,10 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
 
     public afterParseDocument() {
         const resource = this.resource as android.base.Resource<T>;
+        const userSettings = resource.userSettings;
         const disableFontAlias = this.options.disableFontAlias;
-        const convertPixels = resource.userSettings.convertPixels === 'dp';
+        const api = userSettings.targetAPI;
+        const convertPixels = userSettings.convertPixels === 'dp';
         const { fonts, styles } = Resource.STORED as AndroidResourceStoredMap;
         const styleKeys = Object.keys(FONT_STYLE);
         const nameMap: ObjectMap<T[]> = {};
@@ -133,7 +135,7 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             let i = 0;
             while (i < length) {
                 let node = data[i++];
-                const { id, companion, api } = node;
+                const { id, companion } = node;
                 const stored: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
                 let { fontFamily, fontStyle, fontWeight } = stored;
                 if (companion?.tagName === 'LABEL' && !companion.visible) {

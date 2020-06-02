@@ -273,9 +273,8 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
         });
         if (SvgBuild.asSvg(this) && (this.documentRoot || aspectRatio.meetOrSlice)) {
             if (this.documentRoot) {
-                const { x, y } = aspectRatio;
-                if (x < 0 || y < 0) {
-                    this.clipViewBox(x, y, aspectRatio.width, aspectRatio.height, precision, true);
+                if (aspectRatio.x < 0 || aspectRatio.y < 0) {
+                    this.clipViewBox(aspectRatio.x, aspectRatio.y, aspectRatio.width, aspectRatio.height, precision, true);
                 }
             }
             else {

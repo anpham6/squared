@@ -31,8 +31,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
     public processNode(node: T, parent: T) {
         const controller = this.controller as android.base.Controller<T>;
         const { backgroundColor, backgroundImage, visibleStyle } = node;
-        const { backgroundColor: backgroundColorA, backgroundImage: backgroundImageA, backgroundRepeatX, backgroundRepeatY, borderWidth } = visibleStyle;
-        const backgroundSeparate = isBackgroundSeparate(node, parent, backgroundColorA, backgroundImageA, backgroundRepeatX, backgroundRepeatY, borderWidth);
+        const backgroundSeparate = isBackgroundSeparate(node, parent, visibleStyle.backgroundColor, visibleStyle.backgroundImage, visibleStyle.backgroundRepeatX, visibleStyle.backgroundRepeatY, visibleStyle.borderWidth);
         const hasHeight = node.hasHeight || node.actualParent!.hasHeight === true;
         let renderParent = parent;
         let container: Undef<T>;
@@ -40,7 +39,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         const parentVisible = isParentVisible(node, parent);
         const fixed = node.css('backgroundAttachment') === 'fixed';
         if (backgroundColor !== '') {
-            if (!(backgroundImageA && backgroundRepeatX && backgroundRepeatY)) {
+            if (!(visibleStyle.backgroundImage && visibleStyle.backgroundRepeatX && visibleStyle.backgroundRepeatY)) {
                 container = controller.createNodeWrapper(node, renderParent, { resource: NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING });
                 container.css('backgroundColor', backgroundColor);
                 container.setCacheValue('backgroundColor', backgroundColor);
@@ -57,7 +56,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             node.setCacheValue('backgroundColor', '');
             visibleStyle.backgroundColor = false;
         }
-        if (backgroundImage !== '' && (parentVisible || backgroundSeparate || backgroundRepeatY || parent.visibleStyle.background || hasMargin(node))) {
+        if (backgroundImage !== '' && (parentVisible || backgroundSeparate || visibleStyle.backgroundRepeatY || parent.visibleStyle.background || hasMargin(node))) {
             if (container) {
                 if (backgroundSeparate || fixed) {
                     container.setControlType(View.getControlName(CONTAINER_NODE.CONSTRAINT, node.api), CONTAINER_NODE.CONSTRAINT);
@@ -85,7 +84,7 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
             const minHeight = parent.cssInitial('minHeight');
             let backgroundSize = node.css('backgroundSize');
             if (height === '' && minHeight === '') {
-                container.setLayoutHeight(!parentVisible && (fixed || !(backgroundSeparate && hasHeight) && (backgroundRepeatY || node.has('backgroundSize') || node.css('backgroundPosition').split(' ').some(value => isLength(value) && parseInt(value) > 0))) ? 'match_parent' : 'wrap_content');
+                container.setLayoutHeight(!parentVisible && (fixed || !(backgroundSeparate && hasHeight) && (visibleStyle.backgroundRepeatY || node.has('backgroundSize') || node.css('backgroundPosition').split(' ').some(value => isLength(value) && parseInt(value) > 0))) ? 'match_parent' : 'wrap_content');
             }
             else {
                 if (height !== '100%' && minHeight !== '100%') {
