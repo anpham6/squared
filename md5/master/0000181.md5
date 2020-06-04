@@ -7,7 +7,7 @@ c242aff6a4f4daf03a410c6ca93595d6  ./app/src/main/res/drawable/a_textview_20.xml
 5ee15843554004d12736f0404f8d443a  ./app/src/main/res/drawable/acrobat.png
 d4a12ce137a066ddd55e7d72423c4097  ./app/src/main/res/drawable/bg_banner.jpg
 7f551e83dab8ab9de7cc0649bdc74987  ./app/src/main/res/drawable/bg_body.png
-d9cf1802bab9f0cea1c1e6df4318577d  ./app/src/main/res/drawable/body_framelayout_1.xml
+d9cf1802bab9f0cea1c1e6df4318577d  ./app/src/main/res/drawable/body_constraintlayout_1.xml
 feed20d160a2247041f8ddd9ca001729  ./app/src/main/res/drawable/div_main.xml
 f6042a624ecc83b7b5cada99761ec241  ./app/src/main/res/drawable/email.gif
 6bc744e7a29df3ac4b4bb2b08beb627e  ./app/src/main/res/drawable/globe.png
@@ -15,9 +15,9 @@ e423c6056f3441c82ea8e9b0b8b73260  ./app/src/main/res/drawable/h2_textview_16.xml
 0a055ad95c1e5d5dec4a4c95bb438799  ./app/src/main/res/drawable/p_legal.xml
 38af291953d5b90b0aee30dd0d2126a4  ./app/src/main/res/drawable/word.png
 2eba6780fc7d3663bc44808480c6bd8a  ./app/src/main/res/drawable/zip.png
-281efc325b8d1ca892cc1f3c66419579  ./app/src/main/res/layout/activity_main.xml
+9c8a71f9801e92d859481c4d3f25c2c3  ./app/src/main/res/layout/activity_main.xml
 05abf8982619cda4796a26b04c709181  ./app/src/main/res/values/colors.xml
 cf084d74befc4aa510f7be7d39be22f4  ./app/src/main/res/values/dimens.xml
 ba2d0b867596aa448c778baad123709e  ./app/src/main/res/values/strings.xml
-00338027eab866ec3fa804b83dda4be8  ./app/src/main/res/values/styles.xml
-34508fdd9e64f50a816d306b614c22b4  ./app/src/main/res/values/themes.xml
+77f3376f1774c42c4924f55e8796a9c4  ./app/src/main/res/values/styles.xml
+1d6edc52040dd67db85d35466695f907  ./app/src/main/res/values/themes.xml

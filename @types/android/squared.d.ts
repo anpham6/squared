@@ -22,8 +22,6 @@ declare namespace base {
 
     class Controller<T extends View> extends squared.base.ControllerUI<T> {
         static anchorPosition<T extends View>(node: T, parent: T, horizontal: boolean, modifyAnchor?: boolean): Partial<BoxRect>;
-        static setConstraintDimension<T extends View>(node: T, percentWidth?: number): number;
-        static setFlexDimension<T extends View>(node: T, horizontal: boolean): void;
         readonly application: Application<T>;
         readonly cache: squared.base.NodeList<T>;
         renderNodeStatic(attrs: RenderNodeStaticAttribute, options?: ViewAttribute): string;
@@ -74,8 +72,11 @@ declare namespace base {
     }
 
     class View extends squared.base.NodeUI {
+        static horizontalMatchConstraint<T extends View>(node: T, parent: T): boolean;
+        static setConstraintDimension<T extends View>(node: T, percentWidth?: number): number;
+        static setFlexDimension<T extends View>(node: T, dimension: DimensionAttr, percentWidth?: number): number;
+        static availablePercent<T extends View>(nodes: T[], dimension: DimensionAttr, boxSize: number): number;
         static getControlName(containerType: number, api?: number): string;
-        static availablePercent(nodes: View[], dimension: DimensionAttr, boxSize: number): number;
         tagName: string;
         api: number;
         readonly constraint: Constraint;

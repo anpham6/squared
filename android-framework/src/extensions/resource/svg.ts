@@ -1510,6 +1510,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             }
             return Resource.insertStoredAsset('drawables', templateName, applyTemplate('layer-list', LAYERLIST_TMPL, layerData));
         }
+        node.data(Resource.KEY_NAME, 'svg', svg);
         return vectorName;
     }
 

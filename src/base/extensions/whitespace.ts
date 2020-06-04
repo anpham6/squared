@@ -248,7 +248,7 @@ function getBottomChild(node: NodeUI) {
     let bottomChild: Undef<NodeUI>;
     if (!node.floatContainer) {
         bottomChild = node.lastStaticChild as NodeUI;
-        if (!isBlockElement(node, false) || node.hasHeight && Math.floor(bottomChild.linear.bottom) < node.box.bottom) {
+        if (!isBlockElement(node, false) || bottomChild && node.hasHeight && Math.floor(bottomChild.linear.bottom) < node.box.bottom) {
             bottomChild = undefined;
         }
     }

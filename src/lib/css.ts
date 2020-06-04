@@ -3659,7 +3659,11 @@ export function parseUnit(value: string, fontSize?: number, screenDimension?: Di
     return 0;
 }
 
-export function parseTransform(value: string, accumulate?: boolean, fontSize?: number) {
+export function parseTransform(value: string, options?: TransformOptions) {
+    let accumulate: Undef<boolean>, fontSize: Undef<number>, boundingBox: Undef<Dimension>;
+    if (options) {
+        ({ accumulate, fontSize, boundingBox } = options);
+    }
     const result: TransformData[] = [];
     const pattern = /(\w+)\([^)]+\)/g;
     let match: Null<RegExpExecArray>;
@@ -3668,23 +3672,53 @@ export function parseTransform(value: string, accumulate?: boolean, fontSize?: n
         if (method.startsWith('translate')) {
             const translate = TRANSFORM.TRANSLATE.exec(match[0]);
             if (translate) {
+                const tX = translate[2];
+                const tY = translate[3];
                 if (accumulate) {
                     let x = 0, y = 0, z = 0;
                     switch (method) {
                         case 'translate':
-                            x = parseUnit(translate[2], fontSize);
-                            if (translate[3]) {
-                                y = parseUnit(translate[3], fontSize);
+                            if (isPercent(tX)) {
+                                if (boundingBox) {
+                                    x = parseFloat(tX) / 100 * boundingBox.width;
+                                }
+                            }
+                            else {
+                                x = parseUnit(tX, fontSize);
+                            }
+                            if (tY) {
+                                if (isPercent(tY)) {
+                                    if (boundingBox) {
+                                        y = parseFloat(tY) / 100 * boundingBox.height;
+                                    }
+                                }
+                                else {
+                                    y = parseUnit(tY, fontSize);
+                                }
                             }
                             break;
                         case 'translateX':
-                            x = parseUnit(translate[2], fontSize);
+                            if (isPercent(tX)) {
+                                if (boundingBox) {
+                                    x = parseFloat(tX) / 100 * boundingBox.width;
+                                }
+                            }
+                            else {
+                                x = parseUnit(tX, fontSize);
+                            }
                             break;
                         case 'translateY':
-                            y = parseUnit(translate[2], fontSize);
+                            if (isPercent(tY)) {
+                                if (boundingBox) {
+                                    y = parseFloat(tY) / 100 * boundingBox.height;
+                                }
+                            }
+                            else {
+                                y = parseUnit(tY, fontSize);
+                            }
                             break;
                         case 'translateZ':
-                            z = parseUnit(translate[2], fontSize);
+                            z = parseUnit(tX, fontSize);
                             break;
                     }
                     const values = result.find(item => item.method === 'translate')?.values;
@@ -3698,9 +3732,9 @@ export function parseTransform(value: string, accumulate?: boolean, fontSize?: n
                     }
                 }
                 else {
-                    const values: number[] = [parseUnit(translate[2], fontSize)];
-                    if (method === 'translate' && translate[3]) {
-                        values.push(parseUnit(translate[3], fontSize));
+                    const values: number[] = [parseUnit(tX, fontSize)];
+                    if (method === 'translate' && tY) {
+                        values.push(parseUnit(tY, fontSize));
                     }
                     result.push({ method, values });
                 }
@@ -3752,9 +3786,7 @@ export function parseTransform(value: string, accumulate?: boolean, fontSize?: n
                     switch (method) {
                         case 'scale':
                             x = parseFloat(scale[2]);
-                            if (scale[3]) {
-                                y = parseFloat(scale[3]);
-                            }
+                            y = parseFloat(scale[3]) || x;
                             break;
                         case 'scaleX':
                             x = parseFloat(scale[2]);

@@ -1849,15 +1849,14 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     get linear() {
-        let result = this._linear;
-        if (result === undefined) {
+        return this._linear ?? (() => {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement) {
                     const { marginBottom, marginRight } = this;
                     const marginTop = Math.max(this.marginTop, 0);
                     const marginLeft = Math.max(this.marginLeft, 0);
-                    result = {
+                    this._linear = {
                         top: bounds.top - marginTop,
                         right: bounds.right + marginRight,
                         bottom: bounds.bottom + marginBottom,
@@ -1867,24 +1866,20 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     };
                 }
                 else {
-                    result = bounds;
+                    this._linear = bounds;
                 }
+                return this._linear;
             }
-            else {
-                result = newBoxRectDimension();
-            }
-            this._linear = result;
-        }
-        return result;
+            return newBoxRectDimension();
+        })();
     }
 
     get box() {
-        let result = this._box;
-        if (result === undefined) {
+        return this._box ?? (() => {
             const bounds = this.bounds;
             if (bounds) {
                 if (this.styleElement && this.naturalChildren.length) {
-                    result = {
+                    this._box = {
                         top: bounds.top + (this.paddingTop + this.borderTopWidth),
                         right: bounds.right - (this.paddingRight + this.borderRightWidth),
                         bottom: bounds.bottom - (this.paddingBottom + this.borderBottomWidth),
@@ -1894,15 +1889,12 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     };
                 }
                 else {
-                    result = bounds;
+                    this._box = bounds;
                 }
+                return this._box;
             }
-            else {
-                result = newBoxRectDimension();
-            }
-            this._box = result;
-        }
-        return result;
+            return newBoxRectDimension();
+        })();
     }
 
     get flexdata() {
@@ -2320,25 +2312,24 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         let result = this._cached.blockStatic;
         if (result === undefined) {
             result = false;
-            if (this.pageFlow) {
-                if (this.block && !this.floating || this.lineBreak) {
-                    result = true;
+            const pageFlow = this.pageFlow;
+            if (pageFlow && (this.block && !this.floating || this.lineBreak)) {
+                result = true;
+            }
+            else if (!pageFlow || !this.inline && !this.display.startsWith('table-') && !this.hasPX('maxWidth')) {
+                const width = getInitialValue.call(this, 'width');
+                const minWidth = getInitialValue.call(this, 'minWidth');
+                let percent = 0;
+                if (isPercent(width)) {
+                    percent = parseFloat(width);
                 }
-                else if (this.display !== 'inline' && !this.display.startsWith('table-') && !this.hasPX('maxWidth')) {
-                    const width = getInitialValue.call(this, 'width');
-                    const minWidth = getInitialValue.call(this, 'minWidth');
-                    let percent = 0;
-                    if (isPercent(width)) {
-                        percent = parseFloat(width);
-                    }
-                    if (isPercent(minWidth)) {
-                        percent = Math.max(parseFloat(minWidth), percent);
-                    }
-                    if (percent > 0) {
-                        const marginLeft = getInitialValue.call(this, 'marginLeft');
-                        const marginRight = getInitialValue.call(this, 'marginRight');
-                        result = percent + (isPercent(marginLeft) ? parseFloat(marginLeft) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
-                    }
+                if (isPercent(minWidth)) {
+                    percent = Math.max(parseFloat(minWidth), percent);
+                }
+                if (percent > 0) {
+                    const marginLeft = getInitialValue.call(this, 'marginLeft');
+                    const marginRight = getInitialValue.call(this, 'marginRight');
+                    result = percent + (isPercent(marginLeft) ? parseFloat(marginLeft) : 0) + (isPercent(marginRight) ? parseFloat(marginRight) : 0) >= 100;
                 }
             }
             this._cached.blockStatic = result;

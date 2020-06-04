@@ -128,7 +128,7 @@ declare module "lib" {
         function resolveURL(value: string): string;
         function insertStyleSheetRule(value: string, index?: number): HTMLStyleElement;
         function parseUnit(value: string, fontSize?: number, screenDimension?: Dimension): number;
-        function parseTransform(value: string, accumulate?: boolean, fontSize?: number): TransformData[];
+        function parseTransform(value: string, options?: TransformOptions): TransformData[];
         function parseAngle(value: string, fallback?: number): number;
         function convertAngle(value: string, unit?: string, fallback?: number): number;
         function parseTime(value: string): number;

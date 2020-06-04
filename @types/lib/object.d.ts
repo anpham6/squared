@@ -67,6 +67,12 @@ interface CalculateVarOptions extends Omit<CalculateVarAsStringOptions, "ordered
     dimension?: DimensionAttr;
 }
 
+interface TransformOptions {
+    boundingBox?: Dimension;
+    accumulate?: boolean;
+    fontSize?: number;
+}
+
 interface DelimitStringOptions {
     value: string;
     delimiter?: string;
