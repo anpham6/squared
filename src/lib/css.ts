@@ -2479,29 +2479,33 @@ export function getKeyframesRules(): ObjectMap<KeyframesData> {
         const length = styleSheets.length;
         let i = 0;
         while (i < length) {
-            const cssRules = (styleSheets[i++] as CSSStyleSheet).cssRules;
-            if (cssRules) {
-                const q = cssRules.length;
-                for (let j = 0; j < q; ++j) {
-                    try {
-                        const item = cssRules[j] as CSSKeyframesRule;
-                        if (item.type === CSSRule.KEYFRAMES_RULE) {
-                            const value = parseKeyframes(item.cssRules);
-                            if (hasKeys(value)) {
-                                const name = item.name;
-                                if (result[name]) {
-                                    Object.assign(result[name], value);
-                                }
-                                else {
-                                    result[name] = value;
+            try {
+                const cssRules = (styleSheets[i++] as CSSStyleSheet).cssRules;
+                if (cssRules) {
+                    const q = cssRules.length;
+                    for (let j = 0; j < q; ++j) {
+                        try {
+                            const item = cssRules[j] as CSSKeyframesRule;
+                            if (item.type === CSSRule.KEYFRAMES_RULE) {
+                                const value = parseKeyframes(item.cssRules);
+                                if (hasKeys(value)) {
+                                    const name = item.name;
+                                    if (result[name]) {
+                                        Object.assign(result[name], value);
+                                    }
+                                    else {
+                                        result[name] = value;
+                                    }
                                 }
                             }
                         }
-                    }
-                    catch {
-                        break violation;
+                        catch {
+                            break violation;
+                        }
                     }
                 }
+            }
+            catch {
             }
         }
     }

@@ -1,19 +1,21 @@
 declare module "svg" {
-    type SvgGroup = Svg | SvgG | SvgUseSymbol | SvgPattern | SvgShapePattern | SvgUsePattern;
+    type SvgGroup = Svg | SvgG | SvgUseG | SvgUseSymbol | SvgPattern | SvgShapePattern | SvgUseShapePattern;
 
     class SvgBuild {
         static isContainer(object: SvgElement): object is SvgGroup;
         static isElement(object: SvgElement): object is SvgElement;
         static isShape(object: SvgElement): object is SvgShape;
+        static isUse(object: SvgElement): object is SvgUse;
         static isAnimate(object: SvgAnimation): object is SvgAnimate;
         static isAnimateTransform(object: SvgAnimation): object is SvgAnimateTransform;
         static asSvg(object: SvgElement): object is Svg;
         static asG(object: SvgElement): object is SvgG;
+        static asImage(object: SvgElement): object is SvgImage;
         static asPattern(object: SvgElement): object is SvgPattern;
         static asShapePattern(object: SvgElement): object is SvgShapePattern;
-        static asUsePattern(object: SvgElement): object is SvgUsePattern;
-        static asImage(object: SvgElement): object is SvgImage;
-        static asUse(object: SvgElement): object is SvgUse;
+        static asUseShapePattern(object: SvgElement): object is SvgUseShapePattern;
+        static asUseG(object: SvgElement): object is SvgUseG;
+        static asUseShape(object: SvgElement): object is SvgUseShape;
         static asUseSymbol(object: SvgElement): object is SvgUseSymbol;
         static asSet(object: SvgAnimation): boolean;
         static asAnimate(object: SvgAnimation): object is SvgAnimate;
@@ -90,7 +92,7 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
-        useParent?: SvgUse | SvgUseSymbol;
+        useParent?: SvgUseShape | SvgUseSymbol;
         patternParent?: SvgShapePattern;
         setPaint(d?: string[], precision?: number): void;
         setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
@@ -203,7 +205,7 @@ declare module "svg" {
         clipPath: string;
         clipRule: string;
         transformed?: SvgTransform[];
-        useParent?: SvgUse | SvgUseSymbol;
+        useParent?: SvgUseShape | SvgUseSymbol;
         patternParent?: SvgShapePattern;
         readonly element: SVGGElement;
         constructor(element: SVGGElement);
@@ -224,6 +226,42 @@ declare module "svg" {
         get animations(): SvgAnimation[];
         get visible(): boolean;
         get opacity(): string;
+    }
+
+    class SvgUse extends SvgElement implements SvgViewRect, SvgBaseVal {
+        element: SVGUseElement;
+        setRect(): void;
+        setBaseValue(attr: string, value?: any): boolean;
+        getBaseValue(attr: string, fallback?: any): any;
+        refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
+        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        set x(value);
+        get x(): number;
+        set y(value);
+        get y(): number;
+        set width(value);
+        get width(): number;
+        set height(value);
+        get height(): number;
+    }
+
+    class SvgUseG extends SvgG implements SvgUse {
+        readonly element: SVGUseElement;
+        readonly groupElement: SVGGElement;
+        setRect(): void;
+        setBaseValue(attr: string, value?: any): boolean;
+        getBaseValue(attr: string, fallback?: any): any;
+        refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
+        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        set x(value);
+        get x(): number;
+        set y(value);
+        get y(): number;
+        set width(value);
+        get width(): number;
+        set height(value);
+        get height(): number;
+        constructor(element: SVGUseElement, groupElement: SVGGElement);
     }
 
     class SvgShape extends SvgElement implements SvgView, SvgSynchronize {
@@ -248,6 +286,50 @@ declare module "svg" {
         get visible(): boolean;
         get opacity(): string;
         constructor(element: SVGGraphicsElement, initialize?: boolean);
+    }
+
+    class SvgUseShape extends SvgShape implements SvgViewRect, SvgBaseVal, SvgPaint {
+        color: string;
+        fill: string;
+        fillPattern: string;
+        fillOpacity: string;
+        fillRule: string;
+        stroke: string;
+        strokePattern: string;
+        strokeOpacity: string;
+        strokeLinecap: string;
+        strokeLinejoin: string;
+        strokeMiterlimit: string;
+        strokeDasharray: string;
+        strokeDashoffset: string;
+        clipPath: string;
+        clipRule: string;
+        useParent?: SvgUseShape | SvgUseSymbol;
+        patternParent?: SvgShapePattern;
+        readonly element: SVGUseElement;
+        readonly shapeElement: SVGGeometryElement;
+        setRect(): void;
+        setBaseValue(attr: string, value?: any): boolean;
+        getBaseValue(attr: string, fallback?: any): any;
+        refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
+        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
+        setPaint(d?: string[], precision?: number): void;
+        resetPaint(): void;
+        setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
+        getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
+        convertLength(value: string, dimension?: string|number): number;
+        synchronize(options?: SvgSynchronizeOptions): void;
+        set x(value);
+        get x(): number;
+        set y(value);
+        get y(): number;
+        set width(value);
+        get width(): number;
+        set height(value);
+        get height(): number;
+        set strokeWidth(value);
+        get strokeWidth(): string;
+        constructor(element: SVGUseElement, shapeElement: SVGGraphicsElement, initialize?: boolean);
     }
 
     class SvgImage extends SvgElement implements SvgView, SvgViewRect, SvgBaseVal, SvgTransformable {
@@ -283,51 +365,6 @@ declare module "svg" {
         constructor(element: SVGImageElement | SVGUseElement, imageElement?: SVGImageElement);
     }
 
-    class SvgUse extends SvgShape implements SvgViewRect, SvgBaseVal, SvgPaint {
-        color: string;
-        fill: string;
-        fillPattern: string;
-        fillOpacity: string;
-        fillRule: string;
-        stroke: string;
-        strokePattern: string;
-        strokeOpacity: string;
-        strokeLinecap: string;
-        strokeLinejoin: string;
-        strokeMiterlimit: string;
-        strokeDasharray: string;
-        strokeDashoffset: string;
-        clipPath: string;
-        clipRule: string;
-        transformed?: SvgTransform[];
-        useParent?: SvgUse | SvgUseSymbol;
-        patternParent?: SvgShapePattern;
-        readonly element: SVGUseElement;
-        readonly shapeElement: SVGGeometryElement;
-        setRect(): void;
-        setBaseValue(attr: string, value?: any): boolean;
-        getBaseValue(attr: string, fallback?: any): any;
-        refitBaseValue(x: number, y: number, precision?: number, scaleX?: number, scaleY?: number): void;
-        verifyBaseValue(attr: string, value?: any): Undef<boolean>;
-        setPaint(d?: string[], precision?: number): void;
-        resetPaint(): void;
-        setAttribute(attr: string, computed?: boolean, inherited?: boolean): void;
-        getAttribute(attr: string, computed?: boolean, inherited?: boolean): string;
-        convertLength(value: string, dimension?: string|number): number;
-        synchronize(options?: SvgSynchronizeOptions): void;
-        set x(value);
-        get x(): number;
-        set y(value);
-        get y(): number;
-        set width(value);
-        get width(): number;
-        set height(value);
-        get height(): number;
-        set strokeWidth(value);
-        get strokeWidth(): string;
-        constructor(element: SVGUseElement, shapeElement: SVGGraphicsElement, initialize?: boolean);
-    }
-
     class SvgPath implements SvgBaseVal, SvgPaint, SvgTransformable {
         static transform(value: string, transforms: SvgTransform[], element?: SVGGeometryElement, precision?: number): string;
         static extrapolate(attr: string, value: string, values: string[], transforms?: SvgTransform[], companion?: SvgShape, precision?: number): Undef<string[]>;
@@ -349,7 +386,7 @@ declare module "svg" {
         strokeDashoffset: string;
         clipPath: string;
         clipRule: string;
-        useParent?: SvgUse | SvgUseSymbol;
+        useParent?: SvgUseShape | SvgUseSymbol;
         patternParent?: SvgShapePattern;
         transformed?: SvgTransform[];
         transformResidual?: SvgTransform[][];
@@ -395,7 +432,7 @@ declare module "svg" {
         clipPath: string;
         clipRule: string;
         transformed?: SvgTransform[];
-        useParent?: SvgUse | SvgUseSymbol;
+        useParent?: SvgUseShape | SvgUseSymbol;
         patternParent?: SvgShapePattern;
         readonly element: SVGUseElement;
         readonly symbolElement: SVGSymbolElement;
@@ -472,7 +509,7 @@ declare module "svg" {
         clipRule: string;
         drawRegion?: BoxRect;
         transformed?: SvgTransform[];
-        useParent?: SvgUse | SvgUseSymbol;
+        useParent?: SvgUseShape | SvgUseSymbol;
         patternParent?: SvgShapePattern;
         readonly element: SVGGeometryElement | SVGUseElement;
         readonly patternElement: SVGPatternElement;
@@ -497,8 +534,7 @@ declare module "svg" {
         constructor(element: SVGGraphicsElement, patternElement: SVGPatternElement);
     }
 
-    class SvgUsePattern extends SvgShapePattern implements SvgViewRect {
-        transformed?: SvgTransform[];
+    class SvgUseShapePattern extends SvgShapePattern implements SvgViewRect {
         readonly element: SVGUseElement;
         readonly shapeElement: SVGGeometryElement;
         setRect(): void;
@@ -645,22 +681,24 @@ declare module "svg" {
     namespace lib {
         namespace constant {
             const enum INSTANCE_TYPE {
+                SVG_USE = 1,
                 SVG_CONTAINER = 2,
                 SVG_ELEMENT = 4,
                 SVG_ANIMATION = 8,
                 SVG = 2 | 16,
                 SVG_G = 2 | 32,
-                SVG_USE_SYMBOL = 2 | 64,
-                SVG_PATTERN = 2 | 128,
-                SVG_SHAPE_PATTERN = 2 | 256,
-                SVG_USE_PATTERN = 2 | 512,
-                SVG_PATH = 4 | 1024,
+                SVG_USE_G = 1 | 2 | 32 | 64,
+                SVG_USE_SYMBOL = 1 | 2 | 128,
+                SVG_PATTERN = 2 | 256,
+                SVG_SHAPE_PATTERN = 2 | 512,
+                SVG_USE_SHAPE_PATTERN = 1 | 2 | 512 | 1024,
                 SVG_SHAPE = 4 | 2048,
-                SVG_IMAGE = 4 | 4096,
-                SVG_USE = 4 | 2048 | 8192,
-                SVG_ANIMATE = 8 | 16384,
-                SVG_ANIMATE_TRANSFORM = 8 | 16384 | 32768,
-                SVG_ANIMATE_MOTION = 8 | 16384 | 65536 | 49160
+                SVG_USE_SHAPE = 1 | 4 | 2048 | 4096,
+                SVG_IMAGE = 4 | 8192,
+                SVG_PATH = 4 | 16384,
+                SVG_ANIMATE = 8 | 32768,
+                SVG_ANIMATE_TRANSFORM = 8 | 32768 | 65536,
+                SVG_ANIMATE_MOTION = 8 | 32768 | 65536 | 131072
             }
             const enum SYNCHRONIZE_MODE {
                 FROMTO_ANIMATE = 2,

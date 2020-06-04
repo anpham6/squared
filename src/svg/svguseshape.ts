@@ -7,7 +7,7 @@ import SvgShape from './svgshape';
 
 import { INSTANCE_TYPE } from './lib/constant';
 
-export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUse {
+export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUseShape {
     protected _retainStyle = false;
 
     private __get_transforms = false;
@@ -65,6 +65,6 @@ export default class SvgUse extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(Svg
     }
 
     get instanceType() {
-        return INSTANCE_TYPE.SVG_USE;
+        return INSTANCE_TYPE.SVG_USE_SHAPE;
     }
 }

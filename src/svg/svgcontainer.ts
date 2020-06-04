@@ -215,11 +215,11 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     public build(options?: SvgBuildOptions) {
-        let element: SVGGraphicsElement | SVGSymbolElement, precision: Undef<number>;
+        let element: SVGGraphicsElement | SVGSymbolElement | SVGPatternElement | SVGGElement, precision: Undef<number>;
         if (options) {
-            element = options.symbolElement || options.patternElement || options.element || this.element;
+            element = options.targetElement || options.element || this.element;
             precision = options.precision;
-            options = { ...options, symbolElement: undefined, patternElement: undefined, element: undefined };
+            options = { ...options, targetElement: undefined, element: undefined };
         }
         else {
             element = this.element;
@@ -255,12 +255,16 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                     else if (SVG.shape(target)) {
                         const pattern = getFillPattern(item, viewport);
                         if (pattern) {
-                            svg = new squared.svg.SvgUsePattern(item, target, pattern);
+                            svg = new squared.svg.SvgUseShapePattern(item, target, pattern);
                             setAspectRatio(container, svg as SvgGroup);
                         }
                         else {
-                            svg = new squared.svg.SvgUse(item, target, initialize);
+                            svg = new squared.svg.SvgUseShape(item, target, initialize);
                         }
+                    }
+                    else if (SVG.g(target)) {
+                        svg = new squared.svg.SvgUseG(item, target);
+                        setAspectRatio(container, svg as SvgGroup);
                     }
                 }
             }

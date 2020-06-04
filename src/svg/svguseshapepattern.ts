@@ -5,7 +5,7 @@ import SvgShapePattern from './svgshapepattern';
 
 import { INSTANCE_TYPE } from './lib/constant';
 
-export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgShapePattern)) implements squared.svg.SvgUsePattern {
+export default class SvgUseShapePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgShapePattern)) implements squared.svg.SvgUseShapePattern {
     constructor(
         public readonly element: SVGUseElement,
         public shapeElement: SVGGeometryElement,
@@ -28,6 +28,6 @@ export default class SvgUsePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgS
     }
 
     get instanceType() {
-        return INSTANCE_TYPE.SVG_USE_PATTERN;
+        return INSTANCE_TYPE.SVG_USE_SHAPE_PATTERN;
     }
 }

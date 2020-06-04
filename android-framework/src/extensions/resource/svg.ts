@@ -710,7 +710,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
                 if (element) {
                     const drawable = this.createSvgDrawable(node, element);
-                    if (drawable !== '') {
+                    if (drawable) {
                         if (node.api >= BUILD_ANDROID.LOLLIPOP) {
                             node.android('src', getDrawableSrc(drawable));
                         }
@@ -726,6 +726,17 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     }
                     if (node.baseline) {
                         node.android('baselineAlignBottom', 'true');
+                    }
+                    const svg: Svg = node.data(Resource.KEY_NAME, 'svg');
+                    if (svg) {
+                        const title = svg.getTitle();
+                        const desc = svg.getDesc();
+                        if (title !== '') {
+                            node.android('tooltipText', Resource.addString(title, `svg_${node.controlId.toLowerCase()}_title`, true));
+                        }
+                        if (desc !== '') {
+                            node.android('contentDescription', Resource.addString(desc, `svg_${node.controlId.toLowerCase()}_desc`, true));
+                        }
                     }
                     if (parentElement) {
                         parentElement.removeChild(element);
@@ -786,11 +797,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         svg.synchronize({ keyTimeMode, framesPerSecond: this.controller.userSettings.framesPerSecond, precision });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
         const vectorData = this.parseVectorData(svg);
-        const viewBox = svg.viewBox;
         const imageLength = imageData.length;
-        let drawable: string;
-        let vectorName: string;
-        {
+        let vectorName: Undef<string>;
+        if (vectorData !== '') {
             const { width, height } = NodeUI.refitScreen(node, { width: svg.width, height: svg.height });
             vectorName = Resource.insertStoredAsset(
                 'drawables',
@@ -801,108 +810,34 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     'android:name': animateData.size ? svg.name : '',
                     'android:width': formatPX(width),
                     'android:height': formatPX(height),
-                    'android:viewportWidth': (viewBox.width || width).toString(),
-                    'android:viewportHeight': (viewBox.height || height).toString(),
+                    'android:viewportWidth': (svg.viewBox.width || width).toString(),
+                    'android:viewportHeight': (svg.viewBox.height || height).toString(),
                     'android:alpha': parseFloat(svg.opacity) < 1 ? svg.opacity.toString() : '',
                     include: vectorData
                 }])
             );
-            const title = svg.getTitle();
-            const desc = svg.getDesc();
-            if (title !== '') {
-                node.android('tooltipText', Resource.addString(title, `svg_${node.controlId.toLowerCase()}_title`, true));
-            }
-            if (desc !== '') {
-                node.android('contentDescription', Resource.addString(desc, `svg_${node.controlId.toLowerCase()}_desc`, true));
-            }
-            node.data(Resource.KEY_NAME, 'svgViewBox', viewBox);
-        }
-        if (animateData.size) {
-            const data: AnimatedVectorTemplate[] = [{
-                'xmlns:android': XMLNS_ANDROID.android,
-                'android:drawable': getDrawableSrc(vectorName),
-                target: []
-            }];
-            for (const [name, group] of animateData.entries()) {
-                const sequentialMap = new Map<string, SvgAnimate[]>();
-                const transformMap = new Map<string, SvgAnimateTransform[]>();
-                const togetherData: SvgAnimation[] = [];
-                const isolatedData: SvgAnimation[] = [];
-                const togetherTargets: SvgAnimation[][] = [];
-                const isolatedTargets: SvgAnimation[][][] = [];
-                const transformTargets: SvgAnimation[][] = [];
-                const [companions, animations] = partitionArray(group.animate, child => 'companion' in child);
-                const targetSetTemplate: SetTemplate = { set: [], objectAnimator: [] };
-                let length = animations.length;
-                for (let i = 0; i < length; ++i) {
-                    const item = animations[i];
-                    if (item.setterType) {
-                        if (ATTRIBUTE_ANDROID[item.attributeName] && isString(item.to)) {
-                            if (item.fillReplace && item.duration > 0) {
-                                isolatedData.push(item);
-                            }
-                            else {
-                                togetherData.push(item);
-                            }
-                        }
-                    }
-                    else if (SvgBuild.isAnimate(item)) {
-                        const children = companions.filter((child: SvgAnimation) => (child.companion as AnimateCompanion).value === item);
-                        const q = children.length;
-                        if (q) {
-                            children.sort((a, b) => (a.companion as AnimateCompanion).key >= (b.companion as AnimateCompanion).key ? 1 : 0);
-                            const sequentially: SvgAnimation[] = [];
-                            const after: SvgAnimation[] = [];
-                            for (let j = 0; j < q; ++j) {
-                                const child = children[j];
-                                if ((child.companion as AnimateCompanion).key <= 0) {
-                                    sequentially.push(child);
-                                    if (j === 0) {
-                                        child.delay += item.delay;
-                                        item.delay = 0;
-                                    }
-                                }
-                                else {
-                                    after.push(child);
-                                }
-                            }
-                            sequentially.push(item);
-                            sequentialMap.set(`sequentially_companion_${i}`, sequentially.concat(after) as SvgAnimate[]);
-                        }
-                        else {
-                            const synchronized = item.synchronized;
-                            if (synchronized) {
-                                const value = synchronized.value;
-                                if (SvgBuild.isAnimateTransform(item)) {
-                                    const values = transformMap.get(value);
-                                    if (values) {
-                                        values.push(item);
-                                    }
-                                    else {
-                                        transformMap.set(value, [item]);
-                                    }
-                                }
-                                else {
-                                    const values = sequentialMap.get(value);
-                                    if (values) {
-                                        values.push(item);
-                                    }
-                                    else {
-                                        sequentialMap.set(value, [item]);
-                                    }
-                                }
-                            }
-                            else {
-                                if (SvgBuild.isAnimateTransform(item)) {
-                                    item.expandToValues();
-                                }
-                                if (item.iterationCount === -1) {
-                                    isolatedData.push(item);
-                                }
-                                else if ((!item.fromToType || SvgBuild.isAnimateTransform(item) && item.transformOrigin) && !(supportedKeyFrames && getValueType(item.attributeName) !== 'pathType')) {
-                                    togetherTargets.push([item]);
-                                }
-                                else if (item.fillReplace) {
+            if (animateData.size) {
+                const data: AnimatedVectorTemplate[] = [{
+                    'xmlns:android': XMLNS_ANDROID.android,
+                    'android:drawable': getDrawableSrc(vectorName),
+                    target: []
+                }];
+                for (const [name, group] of animateData.entries()) {
+                    const sequentialMap = new Map<string, SvgAnimate[]>();
+                    const transformMap = new Map<string, SvgAnimateTransform[]>();
+                    const togetherData: SvgAnimation[] = [];
+                    const isolatedData: SvgAnimation[] = [];
+                    const togetherTargets: SvgAnimation[][] = [];
+                    const isolatedTargets: SvgAnimation[][][] = [];
+                    const transformTargets: SvgAnimation[][] = [];
+                    const [companions, animations] = partitionArray(group.animate, child => 'companion' in child);
+                    const targetSetTemplate: SetTemplate = { set: [], objectAnimator: [] };
+                    let length = animations.length;
+                    for (let i = 0; i < length; ++i) {
+                        const item = animations[i];
+                        if (item.setterType) {
+                            if (ATTRIBUTE_ANDROID[item.attributeName] && isString(item.to)) {
+                                if (item.fillReplace && item.duration > 0) {
                                     isolatedData.push(item);
                                 }
                                 else {
@@ -910,571 +845,636 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 }
                             }
                         }
-                    }
-                }
-                if (togetherData.length) {
-                    togetherTargets.push(togetherData);
-                }
-                for (const [keyName, item] of sequentialMap.entries()) {
-                    if (keyName.startsWith('sequentially_companion')) {
-                        togetherTargets.push(item);
-                    }
-                    else {
-                        togetherTargets.push(item.sort(sortSynchronized));
-                    }
-                }
-                for (const item of transformMap.values()) {
-                    transformTargets.push(item.sort(sortSynchronized));
-                }
-                for (let i = 0; i < isolatedData.length; ++i) {
-                    isolatedTargets.push([[isolatedData[i]]]);
-                }
-                const combined = [togetherTargets, transformTargets, ...isolatedTargets];
-                length = combined.length;
-                for (let index = 0; index < length; ++index) {
-                    const targets = combined[index];
-                    const t = targets.length;
-                    if (t === 0) {
-                        continue;
-                    }
-                    const setData: SetData = {
-                        ordering: index === 0 || t === 1 ? '' : 'sequentially',
-                        set: [],
-                        objectAnimator: []
-                    };
-                    let y = 0;
-                    while (y < t) {
-                        const items = targets[y++];
-                        let ordering = '';
-                        let synchronized = false;
-                        let checkBefore = false;
-                        let useKeyFrames = true;
-                        if (index <= 1 && items.some((item: SvgAnimate) => !!item.synchronized && item.synchronized.value !== '')) {
-                            if (!SvgBuild.isAnimateTransform(items[0])) {
-                                ordering = 'sequentially';
+                        else if (SvgBuild.isAnimate(item)) {
+                            const children = companions.filter((child: SvgAnimation) => (child.companion as AnimateCompanion).value === item);
+                            const q = children.length;
+                            if (q) {
+                                children.sort((a, b) => (a.companion as AnimateCompanion).key >= (b.companion as AnimateCompanion).key ? 1 : 0);
+                                const sequentially: SvgAnimation[] = [];
+                                const after: SvgAnimation[] = [];
+                                for (let j = 0; j < q; ++j) {
+                                    const child = children[j];
+                                    if ((child.companion as AnimateCompanion).key <= 0) {
+                                        sequentially.push(child);
+                                        if (j === 0) {
+                                            child.delay += item.delay;
+                                            item.delay = 0;
+                                        }
+                                    }
+                                    else {
+                                        after.push(child);
+                                    }
+                                }
+                                sequentially.push(item);
+                                sequentialMap.set(`sequentially_companion_${i}`, sequentially.concat(after) as SvgAnimate[]);
                             }
-                            synchronized = true;
-                            useKeyFrames = false;
+                            else {
+                                const synchronized = item.synchronized;
+                                if (synchronized) {
+                                    const value = synchronized.value;
+                                    if (SvgBuild.isAnimateTransform(item)) {
+                                        const values = transformMap.get(value);
+                                        if (values) {
+                                            values.push(item);
+                                        }
+                                        else {
+                                            transformMap.set(value, [item]);
+                                        }
+                                    }
+                                    else {
+                                        const values = sequentialMap.get(value);
+                                        if (values) {
+                                            values.push(item);
+                                        }
+                                        else {
+                                            sequentialMap.set(value, [item]);
+                                        }
+                                    }
+                                }
+                                else {
+                                    if (SvgBuild.isAnimateTransform(item)) {
+                                        item.expandToValues();
+                                    }
+                                    if (item.iterationCount === -1) {
+                                        isolatedData.push(item);
+                                    }
+                                    else if ((!item.fromToType || SvgBuild.isAnimateTransform(item) && item.transformOrigin) && !(supportedKeyFrames && getValueType(item.attributeName) !== 'pathType')) {
+                                        togetherTargets.push([item]);
+                                    }
+                                    else if (item.fillReplace) {
+                                        isolatedData.push(item);
+                                    }
+                                    else {
+                                        togetherData.push(item);
+                                    }
+                                }
+                            }
                         }
-                        else if (index <= 1 && items.some((item: SvgAnimate) => !!item.synchronized && item.synchronized.value === '')) {
-                            ordering = 'sequentially';
-                            synchronized = true;
-                            checkBefore = true;
-                        }
-                        else if (index <= 1 && items.some(item => 'companion' in item)) {
-                            ordering = 'sequentially';
+                    }
+                    if (togetherData.length) {
+                        togetherTargets.push(togetherData);
+                    }
+                    for (const [keyName, item] of sequentialMap.entries()) {
+                        if (keyName.startsWith('sequentially_companion')) {
+                            togetherTargets.push(item);
                         }
                         else {
-                            if (index > 0) {
-                                ordering = 'sequentially';
+                            togetherTargets.push(item.sort(sortSynchronized));
+                        }
+                    }
+                    for (const item of transformMap.values()) {
+                        transformTargets.push(item.sort(sortSynchronized));
+                    }
+                    for (let i = 0; i < isolatedData.length; ++i) {
+                        isolatedTargets.push([[isolatedData[i]]]);
+                    }
+                    const combined = [togetherTargets, transformTargets, ...isolatedTargets];
+                    length = combined.length;
+                    for (let index = 0; index < length; ++index) {
+                        const targets = combined[index];
+                        const t = targets.length;
+                        if (t === 0) {
+                            continue;
+                        }
+                        const setData: SetData = {
+                            ordering: index === 0 || t === 1 ? '' : 'sequentially',
+                            set: [],
+                            objectAnimator: []
+                        };
+                        let y = 0;
+                        while (y < t) {
+                            const items = targets[y++];
+                            let ordering = '';
+                            let synchronized = false;
+                            let checkBefore = false;
+                            let useKeyFrames = true;
+                            if (index <= 1 && items.some((item: SvgAnimate) => !!item.synchronized && item.synchronized.value !== '')) {
+                                if (!SvgBuild.isAnimateTransform(items[0])) {
+                                    ordering = 'sequentially';
+                                }
+                                synchronized = true;
+                                useKeyFrames = false;
                             }
-                            if (index > 1 && SvgBuild.isAnimateTransform(items[0])) {
+                            else if (index <= 1 && items.some((item: SvgAnimate) => !!item.synchronized && item.synchronized.value === '')) {
+                                ordering = 'sequentially';
+                                synchronized = true;
                                 checkBefore = true;
                             }
-                        }
-                        const fillBefore = getFillData();
-                        const repeating = getFillData();
-                        const fillCustom = getFillData();
-                        const fillAfter = getFillData();
-                        const objectAnimator = repeating.objectAnimator;
-                        const customAnimator = fillCustom.objectAnimator;
-                        let beforeAnimator = fillBefore.objectAnimator;
-                        let afterAnimator = fillAfter.objectAnimator;
-                        let together: PropertyValue[] = [];
-                        const targeted = synchronized ? partitionArray(items, (animate: SvgAnimate) => animate.iterationCount !== -1) : [items];
-                        const u = targeted.length;
-                        for (let i = 0; i < u; ++i) {
-                            const partition = targeted[i];
-                            const v = partition.length;
-                            if (i === 1 && v > 1) {
-                                fillCustom.ordering = 'sequentially';
+                            else if (index <= 1 && items.some(item => 'companion' in item)) {
+                                ordering = 'sequentially';
                             }
-                            const animatorMap = new Map<string, PropertyValueHolder[]>();
-                            for (let j = 0; j < v; ++j) {
-                                const item = partition[j];
-                                const valueType = getValueType(item.attributeName);
-                                if (valueType === undefined) {
-                                    continue;
+                            else {
+                                if (index > 0) {
+                                    ordering = 'sequentially';
                                 }
-                                const requireBefore = item.delay > 0;
-                                let transforming = false;
-                                let transformOrigin: Undef<Point[]>;
-                                const insertFillAfter = (propertyName: string, propertyValues?: PropertyValue[], startOffset?: number) => {
-                                    if (!synchronized && item.fillReplace) {
-                                        let valueTo = item.replaceValue;
-                                        if (!valueTo) {
-                                            if (transforming) {
-                                                valueTo = getTransformInitialValue(propertyName);
-                                            }
-                                            else {
-                                                const parent = item.parent;
-                                                if (parent) {
-                                                    if (SvgBuild.isShape(parent)) {
-                                                        const path = parent.path;
-                                                        if (path) {
-                                                            valueTo = propertyName === 'pathData' ? path.value : path[getPaintAttribute(propertyName)];
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                            if (!valueTo) {
-                                                valueTo = item.baseValue;
-                                            }
-                                        }
-                                        let previousValue: Undef<string>;
-                                        if (propertyValues?.length) {
-                                            const lastValue = propertyValues[propertyValues.length - 1];
-                                            if (isArray(lastValue.propertyValuesHolder)) {
-                                                const propertyValue = lastValue.propertyValuesHolder[lastValue.propertyValuesHolder.length - 1];
-                                                previousValue = propertyValue.keyframe[propertyValue.keyframe.length - 1].value;
-                                            }
-                                            else {
-                                                previousValue = lastValue.valueTo;
-                                            }
-                                        }
-                                        if (isString(valueTo) && valueTo !== previousValue) {
-                                            valueTo = convertValueType(item, valueTo);
-                                            if (valueTo) {
-                                                switch (propertyName) {
-                                                    case 'trimPathStart':
-                                                    case 'trimPathEnd':
-                                                        valueTo = valueTo.split(' ')[propertyName === 'trimPathStart' ? 0 : 1];
-                                                        break;
-                                                }
-                                                afterAnimator.push(this.createPropertyValue(propertyName, valueTo, '1', valueType, valueType === 'pathType' ? previousValue : '', startOffset ? startOffset.toString() : ''));
-                                            }
-                                        }
-                                        if (transformOrigin) {
-                                            if (propertyName.endsWith('X')) {
-                                                afterAnimator.push(this.createPropertyValue('translateX', '0', '1', valueType));
-                                            }
-                                            else if (propertyName.endsWith('Y')) {
-                                                afterAnimator.push(this.createPropertyValue('translateY', '0', '1', valueType));
-                                            }
-                                        }
+                                if (index > 1 && SvgBuild.isAnimateTransform(items[0])) {
+                                    checkBefore = true;
+                                }
+                            }
+                            const fillBefore = getFillData();
+                            const repeating = getFillData();
+                            const fillCustom = getFillData();
+                            const fillAfter = getFillData();
+                            const objectAnimator = repeating.objectAnimator;
+                            const customAnimator = fillCustom.objectAnimator;
+                            let beforeAnimator = fillBefore.objectAnimator;
+                            let afterAnimator = fillAfter.objectAnimator;
+                            let together: PropertyValue[] = [];
+                            const targeted = synchronized ? partitionArray(items, (animate: SvgAnimate) => animate.iterationCount !== -1) : [items];
+                            const u = targeted.length;
+                            for (let i = 0; i < u; ++i) {
+                                const partition = targeted[i];
+                                const v = partition.length;
+                                if (i === 1 && v > 1) {
+                                    fillCustom.ordering = 'sequentially';
+                                }
+                                const animatorMap = new Map<string, PropertyValueHolder[]>();
+                                for (let j = 0; j < v; ++j) {
+                                    const item = partition[j];
+                                    const valueType = getValueType(item.attributeName);
+                                    if (valueType === undefined) {
+                                        continue;
                                     }
-                                };
-                                if (item.setterType) {
-                                    const propertyNames = getAttributePropertyName(item.attributeName);
-                                    if (propertyNames) {
-                                        const values = isColorType(item.attributeName) ? getColorValue<true>(item.to, true) : item.to.trim().split(' ');
-                                        const q = propertyNames.length;
-                                        if (values.length === q && !values.some(value => value === '')) {
-                                            let companionBefore: Undef<PropertyValue[]>;
-                                            let companionAfter: Undef<PropertyValue[]>;
-                                            for (let k = 0; k < q; ++k) {
-                                                let valueFrom: Undef<string>;
-                                                if (valueType === 'pathType') {
-                                                    valueFrom = values[k];
-                                                }
-                                                else if (requireBefore) {
-                                                    const baseValue = item.baseValue;
-                                                    if (baseValue) {
-                                                        valueFrom = convertValueType(item, baseValue.trim().split(' ')[k]);
-                                                    }
-                                                }
-                                                const propertyValue = this.createPropertyValue(propertyNames[k], values[k], '1', valueType, valueFrom, item.delay > 0 ? item.delay.toString() : '');
-                                                if (index > 1) {
-                                                    customAnimator.push(propertyValue);
-                                                    insertFillAfter(propertyNames[k], undefined, index > 1 ? item.duration : 0);
+                                    const requireBefore = item.delay > 0;
+                                    let transforming = false;
+                                    let transformOrigin: Undef<Point[]>;
+                                    const insertFillAfter = (propertyName: string, propertyValues?: PropertyValue[], startOffset?: number) => {
+                                        if (!synchronized && item.fillReplace) {
+                                            let valueTo = item.replaceValue;
+                                            if (!valueTo) {
+                                                if (transforming) {
+                                                    valueTo = getTransformInitialValue(propertyName);
                                                 }
                                                 else {
-                                                    const companion = item.companion;
-                                                    if (companion) {
-                                                        if (companion.key <= 0) {
-                                                            if (!companionBefore) {
-                                                                companionBefore = [];
+                                                    const parent = item.parent;
+                                                    if (parent) {
+                                                        if (SvgBuild.isShape(parent)) {
+                                                            const path = parent.path;
+                                                            if (path) {
+                                                                valueTo = propertyName === 'pathData' ? path.value : path[getPaintAttribute(propertyName)];
                                                             }
-                                                            companionBefore.push(propertyValue);
                                                         }
-                                                        else if (companion.key > 0) {
-                                                            if (!companionAfter) {
-                                                                companionAfter = [];
-                                                            }
-                                                            companionAfter.push(propertyValue);
+                                                    }
+                                                }
+                                                if (!valueTo) {
+                                                    valueTo = item.baseValue;
+                                                }
+                                            }
+                                            let previousValue: Undef<string>;
+                                            if (propertyValues?.length) {
+                                                const lastValue = propertyValues[propertyValues.length - 1];
+                                                if (isArray(lastValue.propertyValuesHolder)) {
+                                                    const propertyValue = lastValue.propertyValuesHolder[lastValue.propertyValuesHolder.length - 1];
+                                                    previousValue = propertyValue.keyframe[propertyValue.keyframe.length - 1].value;
+                                                }
+                                                else {
+                                                    previousValue = lastValue.valueTo;
+                                                }
+                                            }
+                                            if (isString(valueTo) && valueTo !== previousValue) {
+                                                valueTo = convertValueType(item, valueTo);
+                                                if (valueTo) {
+                                                    switch (propertyName) {
+                                                        case 'trimPathStart':
+                                                        case 'trimPathEnd':
+                                                            valueTo = valueTo.split(' ')[propertyName === 'trimPathStart' ? 0 : 1];
+                                                            break;
+                                                    }
+                                                    afterAnimator.push(this.createPropertyValue(propertyName, valueTo, '1', valueType, valueType === 'pathType' ? previousValue : '', startOffset ? startOffset.toString() : ''));
+                                                }
+                                            }
+                                            if (transformOrigin) {
+                                                if (propertyName.endsWith('X')) {
+                                                    afterAnimator.push(this.createPropertyValue('translateX', '0', '1', valueType));
+                                                }
+                                                else if (propertyName.endsWith('Y')) {
+                                                    afterAnimator.push(this.createPropertyValue('translateY', '0', '1', valueType));
+                                                }
+                                            }
+                                        }
+                                    };
+                                    if (item.setterType) {
+                                        const propertyNames = getAttributePropertyName(item.attributeName);
+                                        if (propertyNames) {
+                                            const values = isColorType(item.attributeName) ? getColorValue<true>(item.to, true) : item.to.trim().split(' ');
+                                            const q = propertyNames.length;
+                                            if (values.length === q && !values.some(value => value === '')) {
+                                                let companionBefore: Undef<PropertyValue[]>;
+                                                let companionAfter: Undef<PropertyValue[]>;
+                                                for (let k = 0; k < q; ++k) {
+                                                    let valueFrom: Undef<string>;
+                                                    if (valueType === 'pathType') {
+                                                        valueFrom = values[k];
+                                                    }
+                                                    else if (requireBefore) {
+                                                        const baseValue = item.baseValue;
+                                                        if (baseValue) {
+                                                            valueFrom = convertValueType(item, baseValue.trim().split(' ')[k]);
                                                         }
+                                                    }
+                                                    const propertyValue = this.createPropertyValue(propertyNames[k], values[k], '1', valueType, valueFrom, item.delay > 0 ? item.delay.toString() : '');
+                                                    if (index > 1) {
+                                                        customAnimator.push(propertyValue);
+                                                        insertFillAfter(propertyNames[k], undefined, index > 1 ? item.duration : 0);
                                                     }
                                                     else {
-                                                        together.push(propertyValue);
+                                                        const companion = item.companion;
+                                                        if (companion) {
+                                                            if (companion.key <= 0) {
+                                                                if (!companionBefore) {
+                                                                    companionBefore = [];
+                                                                }
+                                                                companionBefore.push(propertyValue);
+                                                            }
+                                                            else if (companion.key > 0) {
+                                                                if (!companionAfter) {
+                                                                    companionAfter = [];
+                                                                }
+                                                                companionAfter.push(propertyValue);
+                                                            }
+                                                        }
+                                                        else {
+                                                            together.push(propertyValue);
+                                                        }
+                                                    }
+                                                }
+                                                if (companionBefore) {
+                                                    beforeAnimator = beforeAnimator.concat(companionBefore);
+                                                }
+                                                if (companionAfter) {
+                                                    afterAnimator = afterAnimator.concat(companionAfter);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    else if (SvgBuild.isAnimate(item)) {
+                                        let resetBefore = checkBefore;
+                                        let repeatCount: string;
+                                        if (i === 1) {
+                                            repeatCount = v > 1 ? '0' : '-1';
+                                        }
+                                        else {
+                                            repeatCount = item.iterationCount !== -1 ? Math.ceil(item.iterationCount - 1).toString() : '-1';
+                                        }
+                                        const options = this.createPropertyValue('', '', item.duration.toString(), valueType, '', item.delay > 0 ? item.delay.toString() : '', repeatCount);
+                                        let beforeValues: Undef<string[]>;
+                                        let propertyNames: Undef<string[]>;
+                                        let values:  Undef<string[] |number[][]>;
+                                        if (!synchronized && valueType === 'pathType') {
+                                            if (group.pathData) {
+                                                const parent = item.parent;
+                                                let transforms: Undef<SvgTransform[]>;
+                                                let companion: Undef<SvgShape>;
+                                                if (parent && SvgBuild.isShape(parent)) {
+                                                    companion = parent;
+                                                    transforms = parent.path?.transformed;
+                                                }
+                                                propertyNames = ['pathData'];
+                                                values = SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, companion, precision);
+                                            }
+                                        }
+                                        else if (SvgBuild.asAnimateTransform(item)) {
+                                            propertyNames = getTransformPropertyName(item.type);
+                                            values = getTransformValues(item);
+                                            if (propertyNames && values) {
+                                                if (checkBefore && item.keyTimes[0] === 0) {
+                                                    resetBefore = false;
+                                                }
+                                                if (resetBefore || requireBefore) {
+                                                    beforeValues = plainMap(propertyNames, value => getTransformInitialValue(value) || '0');
+                                                }
+                                                transformOrigin = item.transformOrigin;
+                                            }
+                                            transforming = true;
+                                        }
+                                        else if (SvgBuild.asAnimateMotion(item)) {
+                                            propertyNames = getTransformPropertyName(item.type);
+                                            values = getTransformValues(item);
+                                            if (propertyNames && values) {
+                                                const rotateValues = item.rotateValues;
+                                                const q = values.length;
+                                                if (rotateValues?.length === q) {
+                                                    propertyNames.push('rotation');
+                                                    let k = 0;
+                                                    while (k < q) {
+                                                        values[k].push(rotateValues[k++]);
                                                     }
                                                 }
                                             }
-                                            if (companionBefore) {
-                                                beforeAnimator = beforeAnimator.concat(companionBefore);
-                                            }
-                                            if (companionAfter) {
-                                                afterAnimator = afterAnimator.concat(companionAfter);
-                                            }
+                                            transforming = true;
                                         }
-                                    }
-                                }
-                                else if (SvgBuild.isAnimate(item)) {
-                                    let resetBefore = checkBefore;
-                                    let repeatCount: string;
-                                    if (i === 1) {
-                                        repeatCount = v > 1 ? '0' : '-1';
-                                    }
-                                    else {
-                                        repeatCount = item.iterationCount !== -1 ? Math.ceil(item.iterationCount - 1).toString() : '-1';
-                                    }
-                                    const options = this.createPropertyValue('', '', item.duration.toString(), valueType, '', item.delay > 0 ? item.delay.toString() : '', repeatCount);
-                                    let beforeValues: Undef<string[]>;
-                                    let propertyNames: Undef<string[]>;
-                                    let values:  Undef<string[] |number[][]>;
-                                    if (!synchronized && valueType === 'pathType') {
-                                        if (group.pathData) {
-                                            const parent = item.parent;
-                                            let transforms: Undef<SvgTransform[]>;
-                                            let companion: Undef<SvgShape>;
-                                            if (parent && SvgBuild.isShape(parent)) {
-                                                companion = parent;
-                                                transforms = parent.path?.transformed;
-                                            }
-                                            propertyNames = ['pathData'];
-                                            values = SvgPath.extrapolate(item.attributeName, group.pathData, item.values, transforms, companion, precision);
-                                        }
-                                    }
-                                    else if (SvgBuild.asAnimateTransform(item)) {
-                                        propertyNames = getTransformPropertyName(item.type);
-                                        values = getTransformValues(item);
-                                        if (propertyNames && values) {
-                                            if (checkBefore && item.keyTimes[0] === 0) {
-                                                resetBefore = false;
-                                            }
-                                            if (resetBefore || requireBefore) {
-                                                beforeValues = plainMap(propertyNames, value => getTransformInitialValue(value) || '0');
-                                            }
-                                            transformOrigin = item.transformOrigin;
-                                        }
-                                        transforming = true;
-                                    }
-                                    else if (SvgBuild.asAnimateMotion(item)) {
-                                        propertyNames = getTransformPropertyName(item.type);
-                                        values = getTransformValues(item);
-                                        if (propertyNames && values) {
-                                            const rotateValues = item.rotateValues;
-                                            const q = values.length;
-                                            if (rotateValues?.length === q) {
-                                                propertyNames.push('rotation');
-                                                let k = 0;
-                                                while (k < q) {
-                                                    values[k].push(rotateValues[k++]);
-                                                }
-                                            }
-                                        }
-                                        transforming = true;
-                                    }
-                                    else {
-                                        propertyNames = getAttributePropertyName(item.attributeName);
-                                        switch (valueType) {
-                                            case 'intType':
-                                                values = plainMap(item.values, value => convertInt(value).toString());
-                                                if (requireBefore) {
-                                                    const baseValue = item.baseValue;
-                                                    if (baseValue) {
-                                                        beforeValues = replaceMap(SvgBuild.parseCoordinates(baseValue), (value: number) => Math.trunc(value).toString());
-                                                    }
-                                                }
-                                                break;
-                                            case 'floatType':
-                                                if (item.attributeName === 'stroke-dasharray') {
-                                                    values = plainMap(item.values, value => replaceMap(value.split(' '), (fraction: string) => parseFloat(fraction)));
-                                                }
-                                                else {
-                                                    values = item.values;
-                                                }
-                                                if (requireBefore) {
-                                                    const baseValue = item.baseValue;
-                                                    if (baseValue) {
-                                                        beforeValues = replaceMap(SvgBuild.parseCoordinates(baseValue), (value: number) => value.toString());
-                                                    }
-                                                }
-                                                break;
-                                            default:
-                                                values = item.values.slice(0);
-                                                if (isColorType(item.attributeName)) {
+                                        else {
+                                            propertyNames = getAttributePropertyName(item.attributeName);
+                                            switch (valueType) {
+                                                case 'intType':
+                                                    values = plainMap(item.values, value => convertInt(value).toString());
                                                     if (requireBefore) {
                                                         const baseValue = item.baseValue;
                                                         if (baseValue) {
-                                                            beforeValues = getColorValue<true>(baseValue, true);
+                                                            beforeValues = replaceMap(SvgBuild.parseCoordinates(baseValue), (value: number) => Math.trunc(value).toString());
                                                         }
                                                     }
-                                                    for (let k = 0; k < values.length; ++k) {
-                                                        if (values[k] !== '') {
-                                                            values[k] = getColorValue(values[k]);
-                                                        }
-                                                    }
-                                                }
-                                                break;
-                                        }
-                                    }
-                                    if (!item.keySplines) {
-                                        const timingFunction = item.timingFunction;
-                                        options.interpolator = isString(timingFunction) ? createPathInterpolator(timingFunction) : this.options.animateInterpolator;
-                                    }
-                                    if (values && propertyNames) {
-                                        const { keyTimes, synchronized: syncData } = item;
-                                        const q = propertyNames.length;
-                                        const r = keyTimes.length;
-                                        const keyName = syncData
-                                            ? syncData.key + syncData.value
-                                            : index !== 0 || q > 1
-                                                ? JSON.stringify(options)
-                                                : '';
-                                        for (let k = 0; k < q; ++k) {
-                                            const propertyName = propertyNames[k];
-                                            if (resetBefore && beforeValues) {
-                                                this.resetBeforeValue(beforeAnimator, propertyName, beforeValues[k], valueType);
-                                            }
-                                            if (useKeyFrames && r > 1) {
-                                                if (supportedKeyFrames && valueType !== 'pathType') {
-                                                    if (!resetBefore && requireBefore && beforeValues) {
-                                                        this.resetBeforeValue(beforeAnimator, propertyName, beforeValues[k], valueType);
-                                                    }
-                                                    const propertyValuesHolder = animatorMap.get(keyName) || [];
-                                                    const keyframe: KeyFrame[] = [];
-                                                    for (let l = 0; l < r; ++l) {
-                                                        let value = getPropertyValue(values, l, k, true);
-                                                        if (value && valueType === 'floatType') {
-                                                            value = truncate(value, precision);
-                                                        }
-                                                        keyframe.push({
-                                                            interpolator: l > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, l - 1) : '',
-                                                            fraction: keyTimes[l] === 0 && value === '' ? '' : truncate(keyTimes[l], floatPrecisionKeyTime),
-                                                            value
-                                                        });
-                                                    }
-                                                    propertyValuesHolder.push({ propertyName, keyframe });
-                                                    if (!animatorMap.has(keyName)) {
-                                                        if (keyName !== '') {
-                                                            animatorMap.set(keyName, propertyValuesHolder);
-                                                        }
-                                                        (i === 0 ? objectAnimator : customAnimator).push({ ...options, propertyValuesHolder });
-                                                    }
-                                                    transformOrigin = undefined;
-                                                }
-                                                else {
-                                                    ordering = 'sequentially';
-                                                    const translateData = getFillData('sequentially');
-                                                    for (let l = 0; l < r; ++l) {
-                                                        const keyTime = keyTimes[l];
-                                                        const propertyOptions: PropertyValue = {
-                                                            ...options,
-                                                            propertyName,
-                                                            startOffset: l === 0 ? (item.delay + (keyTime > 0 ? Math.floor(keyTime * item.duration) : 0)).toString() : '',
-                                                            propertyValuesHolder: false
-                                                        };
-                                                        let valueTo = getPropertyValue(values, l, k, false, valueType === 'pathType' ? group.pathData : item.baseValue);
-                                                        if (valueTo) {
-                                                            let duration: number;
-                                                            if (l === 0) {
-                                                                if (!checkBefore && requireBefore && beforeValues) {
-                                                                    propertyOptions.valueFrom = beforeValues[k];
-                                                                }
-                                                                else if (valueType === 'pathType') {
-                                                                    propertyOptions.valueFrom = group.pathData || values[0].toString();
-                                                                }
-                                                                else {
-                                                                    propertyOptions.valueFrom = item.baseValue || item.replaceValue || '';
-                                                                }
-                                                                duration = 0;
-                                                            }
-                                                            else {
-                                                                propertyOptions.valueFrom = getPropertyValue(values, l - 1, k).toString();
-                                                                duration = Math.floor((keyTime - keyTimes[l - 1]) * item.duration);
-                                                            }
-                                                            if (valueType === 'floatType') {
-                                                                valueTo = truncate(valueTo, precision);
-                                                            }
-                                                            const origin = transformOrigin?.[l];
-                                                            if (origin) {
-                                                                let direction: Undef<string>;
-                                                                let translateTo = 0;
-                                                                if (propertyName.endsWith('X')) {
-                                                                    direction = 'translateX';
-                                                                    translateTo = origin.x;
-                                                                }
-                                                                else if (propertyName.endsWith('Y')) {
-                                                                    direction = 'translateY';
-                                                                    translateTo = origin.y;
-                                                                }
-                                                                if (direction) {
-                                                                    const valueData = this.createPropertyValue(direction, truncate(translateTo, precision), duration.toString(), 'floatType');
-                                                                    valueData.interpolator = createPathInterpolator(KEYSPLINE_NAME['step-start']);
-                                                                    translateData.objectAnimator.push(valueData);
-                                                                }
-                                                            }
-                                                            if (l > 0) {
-                                                                propertyOptions.interpolator = getPathInterpolator(item.keySplines, l - 1);
-                                                            }
-                                                            propertyOptions.duration = duration.toString();
-                                                            propertyOptions.valueTo = valueTo;
-                                                            objectAnimator.push(propertyOptions);
-                                                        }
-                                                    }
-                                                    if (translateData.objectAnimator.length) {
-                                                        setData.set.push(translateData);
-                                                    }
-                                                }
-                                            }
-                                            else {
-                                                const propertyOptions: PropertyValue = {
-                                                    ...options,
-                                                    propertyName,
-                                                    interpolator: item.duration > 1 ? getPathInterpolator(item.keySplines, 0) : '',
-                                                    propertyValuesHolder: false
-                                                };
-                                                const s = values.length;
-                                                if (Array.isArray(values[0])) {
-                                                    const valueTo = values[s - 1][k];
-                                                    if (s > 1) {
-                                                        const from = values[0][k];
-                                                        if (from !== valueTo) {
-                                                            propertyOptions.valueFrom = from.toString();
-                                                        }
-                                                    }
-                                                    propertyOptions.valueTo = valueTo.toString();
-                                                }
-                                                else {
-                                                    let valueFrom: Undef<string>;
-                                                    if (s > 1) {
-                                                        valueFrom = values[0].toString();
-                                                        propertyOptions.valueTo = values[s - 1].toString();
+                                                    break;
+                                                case 'floatType':
+                                                    if (item.attributeName === 'stroke-dasharray') {
+                                                        values = plainMap(item.values, value => replaceMap(value.split(' '), (fraction: string) => parseFloat(fraction)));
                                                     }
                                                     else {
-                                                        valueFrom = item.from || (!checkBefore && requireBefore && beforeValues ? beforeValues[j] : '');
-                                                        propertyOptions.valueTo = item.to;
+                                                        values = item.values;
                                                     }
-                                                    if (valueType === 'pathType') {
-                                                        propertyOptions.valueFrom = valueFrom || group.pathData || propertyOptions.valueTo;
+                                                    if (requireBefore) {
+                                                        const baseValue = item.baseValue;
+                                                        if (baseValue) {
+                                                            beforeValues = replaceMap(SvgBuild.parseCoordinates(baseValue), (value: number) => value.toString());
+                                                        }
                                                     }
-                                                    else if (valueFrom !== propertyOptions.valueTo && valueFrom) {
-                                                        propertyOptions.valueFrom = convertValueType(item, valueFrom);
+                                                    break;
+                                                default:
+                                                    values = item.values.slice(0);
+                                                    if (isColorType(item.attributeName)) {
+                                                        if (requireBefore) {
+                                                            const baseValue = item.baseValue;
+                                                            if (baseValue) {
+                                                                beforeValues = getColorValue<true>(baseValue, true);
+                                                            }
+                                                        }
+                                                        for (let k = 0; k < values.length; ++k) {
+                                                            if (values[k] !== '') {
+                                                                values[k] = getColorValue(values[k]);
+                                                            }
+                                                        }
                                                     }
-                                                }
-                                                const valueA = propertyOptions.valueTo;
-                                                if (valueA) {
-                                                    if (valueType === 'floatType') {
-                                                        propertyOptions.valueTo = truncate(valueA, precision);
-                                                    }
-                                                    (i === 0 ? objectAnimator : customAnimator).push(propertyOptions);
-                                                }
-                                            }
-                                            if (i === 0 && !synchronized && item.iterationCount !== -1) {
-                                                insertFillAfter(propertyName, objectAnimator);
+                                                    break;
                                             }
                                         }
-                                        if (requireBefore && transformOrigin?.length) {
-                                            this.resetBeforeValue(beforeAnimator, 'translateX', '0', valueType);
-                                            this.resetBeforeValue(beforeAnimator, 'translateY', '0', valueType);
+                                        if (!item.keySplines) {
+                                            const timingFunction = item.timingFunction;
+                                            options.interpolator = isString(timingFunction) ? createPathInterpolator(timingFunction) : this.options.animateInterpolator;
+                                        }
+                                        if (values && propertyNames) {
+                                            const { keyTimes, synchronized: syncData } = item;
+                                            const q = propertyNames.length;
+                                            const r = keyTimes.length;
+                                            const keyName = syncData
+                                                ? syncData.key + syncData.value
+                                                : index !== 0 || q > 1
+                                                    ? JSON.stringify(options)
+                                                    : '';
+                                            for (let k = 0; k < q; ++k) {
+                                                const propertyName = propertyNames[k];
+                                                if (resetBefore && beforeValues) {
+                                                    this.resetBeforeValue(beforeAnimator, propertyName, beforeValues[k], valueType);
+                                                }
+                                                if (useKeyFrames && r > 1) {
+                                                    if (supportedKeyFrames && valueType !== 'pathType') {
+                                                        if (!resetBefore && requireBefore && beforeValues) {
+                                                            this.resetBeforeValue(beforeAnimator, propertyName, beforeValues[k], valueType);
+                                                        }
+                                                        const propertyValuesHolder = animatorMap.get(keyName) || [];
+                                                        const keyframe: KeyFrame[] = [];
+                                                        for (let l = 0; l < r; ++l) {
+                                                            let value = getPropertyValue(values, l, k, true);
+                                                            if (value && valueType === 'floatType') {
+                                                                value = truncate(value, precision);
+                                                            }
+                                                            keyframe.push({
+                                                                interpolator: l > 0 && value !== '' && propertyName !== 'pivotX' && propertyName !== 'pivotY' ? getPathInterpolator(item.keySplines, l - 1) : '',
+                                                                fraction: keyTimes[l] === 0 && value === '' ? '' : truncate(keyTimes[l], floatPrecisionKeyTime),
+                                                                value
+                                                            });
+                                                        }
+                                                        propertyValuesHolder.push({ propertyName, keyframe });
+                                                        if (!animatorMap.has(keyName)) {
+                                                            if (keyName !== '') {
+                                                                animatorMap.set(keyName, propertyValuesHolder);
+                                                            }
+                                                            (i === 0 ? objectAnimator : customAnimator).push({ ...options, propertyValuesHolder });
+                                                        }
+                                                        transformOrigin = undefined;
+                                                    }
+                                                    else {
+                                                        ordering = 'sequentially';
+                                                        const translateData = getFillData('sequentially');
+                                                        for (let l = 0; l < r; ++l) {
+                                                            const keyTime = keyTimes[l];
+                                                            const propertyOptions: PropertyValue = {
+                                                                ...options,
+                                                                propertyName,
+                                                                startOffset: l === 0 ? (item.delay + (keyTime > 0 ? Math.floor(keyTime * item.duration) : 0)).toString() : '',
+                                                                propertyValuesHolder: false
+                                                            };
+                                                            let valueTo = getPropertyValue(values, l, k, false, valueType === 'pathType' ? group.pathData : item.baseValue);
+                                                            if (valueTo) {
+                                                                let duration: number;
+                                                                if (l === 0) {
+                                                                    if (!checkBefore && requireBefore && beforeValues) {
+                                                                        propertyOptions.valueFrom = beforeValues[k];
+                                                                    }
+                                                                    else if (valueType === 'pathType') {
+                                                                        propertyOptions.valueFrom = group.pathData || values[0].toString();
+                                                                    }
+                                                                    else {
+                                                                        propertyOptions.valueFrom = item.baseValue || item.replaceValue || '';
+                                                                    }
+                                                                    duration = 0;
+                                                                }
+                                                                else {
+                                                                    propertyOptions.valueFrom = getPropertyValue(values, l - 1, k).toString();
+                                                                    duration = Math.floor((keyTime - keyTimes[l - 1]) * item.duration);
+                                                                }
+                                                                if (valueType === 'floatType') {
+                                                                    valueTo = truncate(valueTo, precision);
+                                                                }
+                                                                const origin = transformOrigin?.[l];
+                                                                if (origin) {
+                                                                    let direction: Undef<string>;
+                                                                    let translateTo = 0;
+                                                                    if (propertyName.endsWith('X')) {
+                                                                        direction = 'translateX';
+                                                                        translateTo = origin.x;
+                                                                    }
+                                                                    else if (propertyName.endsWith('Y')) {
+                                                                        direction = 'translateY';
+                                                                        translateTo = origin.y;
+                                                                    }
+                                                                    if (direction) {
+                                                                        const valueData = this.createPropertyValue(direction, truncate(translateTo, precision), duration.toString(), 'floatType');
+                                                                        valueData.interpolator = createPathInterpolator(KEYSPLINE_NAME['step-start']);
+                                                                        translateData.objectAnimator.push(valueData);
+                                                                    }
+                                                                }
+                                                                if (l > 0) {
+                                                                    propertyOptions.interpolator = getPathInterpolator(item.keySplines, l - 1);
+                                                                }
+                                                                propertyOptions.duration = duration.toString();
+                                                                propertyOptions.valueTo = valueTo;
+                                                                objectAnimator.push(propertyOptions);
+                                                            }
+                                                        }
+                                                        if (translateData.objectAnimator.length) {
+                                                            setData.set.push(translateData);
+                                                        }
+                                                    }
+                                                }
+                                                else {
+                                                    const propertyOptions: PropertyValue = {
+                                                        ...options,
+                                                        propertyName,
+                                                        interpolator: item.duration > 1 ? getPathInterpolator(item.keySplines, 0) : '',
+                                                        propertyValuesHolder: false
+                                                    };
+                                                    const s = values.length;
+                                                    if (Array.isArray(values[0])) {
+                                                        const valueTo = values[s - 1][k];
+                                                        if (s > 1) {
+                                                            const from = values[0][k];
+                                                            if (from !== valueTo) {
+                                                                propertyOptions.valueFrom = from.toString();
+                                                            }
+                                                        }
+                                                        propertyOptions.valueTo = valueTo.toString();
+                                                    }
+                                                    else {
+                                                        let valueFrom: Undef<string>;
+                                                        if (s > 1) {
+                                                            valueFrom = values[0].toString();
+                                                            propertyOptions.valueTo = values[s - 1].toString();
+                                                        }
+                                                        else {
+                                                            valueFrom = item.from || (!checkBefore && requireBefore && beforeValues ? beforeValues[j] : '');
+                                                            propertyOptions.valueTo = item.to;
+                                                        }
+                                                        if (valueType === 'pathType') {
+                                                            propertyOptions.valueFrom = valueFrom || group.pathData || propertyOptions.valueTo;
+                                                        }
+                                                        else if (valueFrom !== propertyOptions.valueTo && valueFrom) {
+                                                            propertyOptions.valueFrom = convertValueType(item, valueFrom);
+                                                        }
+                                                    }
+                                                    const valueA = propertyOptions.valueTo;
+                                                    if (valueA) {
+                                                        if (valueType === 'floatType') {
+                                                            propertyOptions.valueTo = truncate(valueA, precision);
+                                                        }
+                                                        (i === 0 ? objectAnimator : customAnimator).push(propertyOptions);
+                                                    }
+                                                }
+                                                if (i === 0 && !synchronized && item.iterationCount !== -1) {
+                                                    insertFillAfter(propertyName, objectAnimator);
+                                                }
+                                            }
+                                            if (requireBefore && transformOrigin?.length) {
+                                                this.resetBeforeValue(beforeAnimator, 'translateX', '0', valueType);
+                                                this.resetBeforeValue(beforeAnimator, 'translateY', '0', valueType);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            const valid = objectAnimator.length > 0 || customAnimator.length > 0;
+                            if (ordering === 'sequentially') {
+                                if (valid && beforeAnimator.length === 1) {
+                                    objectAnimator.unshift(beforeAnimator[0]);
+                                    beforeAnimator.length = 0;
+                                }
+                                if (customAnimator.length === 1) {
+                                    objectAnimator.push(customAnimator[0]);
+                                    customAnimator.length = 0;
+                                }
+                                if (valid && afterAnimator.length === 1) {
+                                    objectAnimator.push(afterAnimator[0]);
+                                    afterAnimator.length = 0;
+                                }
+                            }
+                            if (beforeAnimator.length === 0 && customAnimator.length === 0 && afterAnimator.length === 0) {
+                                if (ordering === 'sequentially' && objectAnimator.length === 1) {
+                                    ordering = '';
+                                }
+                                if (setData.ordering !== 'sequentially' && ordering !== 'sequentially') {
+                                    together = together.concat(objectAnimator);
+                                    objectAnimator.length = 0;
+                                }
+                            }
+                            if (objectAnimator.length || customAnimator.length) {
+                                if (beforeAnimator.length) {
+                                    setData.ordering = 'sequentially';
+                                    setData.set.push(fillBefore);
+                                }
+                                if (objectAnimator.length) {
+                                    repeating.ordering = ordering;
+                                    setData.set.push(repeating);
+                                }
+                                if (customAnimator.length) {
+                                    setData.ordering = 'sequentially';
+                                    setData.set.push(fillCustom);
+                                }
+                                if (afterAnimator.length) {
+                                    setData.ordering = 'sequentially';
+                                    setData.set.push(fillAfter);
+                                }
+                            }
+                            if (together.length) {
+                                setData.objectAnimator = setData.objectAnimator.concat(together);
+                            }
+                        }
+                        if (setData.set.length || setData.objectAnimator.length) {
+                            targetSetTemplate.set.push(setData);
+                        }
+                    }
+                    insertTargetAnimation(data, name, targetSetTemplate, templateName, imageLength);
+                }
+                for (const [name, target] of this._animateTarget.entries()) {
+                    let objectAnimator: Undef<PropertyValue[]>;
+                    const insertResetValue = (propertyName: string, valueTo: string, valueType: string, valueFrom?: string, startOffset?: string) => {
+                        if (!objectAnimator) {
+                            objectAnimator = [];
+                        }
+                        objectAnimator.push(this.createPropertyValue(propertyName, valueTo, '0', valueType, valueFrom, startOffset));
+                    };
+                    const animate = target.animate;
+                    const length = animate.length;
+                    let i = 0;
+                    while (i < length) {
+                        const item = animate[i++];
+                        if (SvgBuild.asAnimateMotion(item)) {
+                            const parent = item.parent;
+                            if (parent && SvgBuild.isShape(parent)) {
+                                const path = parent.path;
+                                if (path) {
+                                    const { value, baseValue } = path;
+                                    if (value !== baseValue) {
+                                        insertResetValue('pathData', baseValue, 'pathType', value);
+                                        if (item.iterationCount !== -1 && !item.setterType) {
+                                            insertResetValue('pathData', value, 'pathType', baseValue, item.getTotalDuration().toString());
                                         }
                                     }
                                 }
                             }
                         }
-                        const valid = objectAnimator.length > 0 || customAnimator.length > 0;
-                        if (ordering === 'sequentially') {
-                            if (valid && beforeAnimator.length === 1) {
-                                objectAnimator.unshift(beforeAnimator[0]);
-                                beforeAnimator.length = 0;
-                            }
-                            if (customAnimator.length === 1) {
-                                objectAnimator.push(customAnimator[0]);
-                                customAnimator.length = 0;
-                            }
-                            if (valid && afterAnimator.length === 1) {
-                                objectAnimator.push(afterAnimator[0]);
-                                afterAnimator.length = 0;
-                            }
-                        }
-                        if (beforeAnimator.length === 0 && customAnimator.length === 0 && afterAnimator.length === 0) {
-                            if (ordering === 'sequentially' && objectAnimator.length === 1) {
-                                ordering = '';
-                            }
-                            if (setData.ordering !== 'sequentially' && ordering !== 'sequentially') {
-                                together = together.concat(objectAnimator);
-                                objectAnimator.length = 0;
-                            }
-                        }
-                        if (objectAnimator.length || customAnimator.length) {
-                            if (beforeAnimator.length) {
-                                setData.ordering = 'sequentially';
-                                setData.set.push(fillBefore);
-                            }
-                            if (objectAnimator.length) {
-                                repeating.ordering = ordering;
-                                setData.set.push(repeating);
-                            }
-                            if (customAnimator.length) {
-                                setData.ordering = 'sequentially';
-                                setData.set.push(fillCustom);
-                            }
-                            if (afterAnimator.length) {
-                                setData.ordering = 'sequentially';
-                                setData.set.push(fillAfter);
-                            }
-                        }
-                        if (together.length) {
-                            setData.objectAnimator = setData.objectAnimator.concat(together);
-                        }
                     }
-                    if (setData.set.length || setData.objectAnimator.length) {
-                        targetSetTemplate.set.push(setData);
+                    if (objectAnimator) {
+                        insertTargetAnimation(
+                            data,
+                            name,
+                            {
+                                set: [{ set: undefined as any, objectAnimator }],
+                                objectAnimator: undefined as any
+                            },
+                            templateName,
+                            imageLength
+                        );
                     }
                 }
-                insertTargetAnimation(data, name, targetSetTemplate, templateName, imageLength);
-            }
-            for (const [name, target] of this._animateTarget.entries()) {
-                let objectAnimator: Undef<PropertyValue[]>;
-                const insertResetValue = (propertyName: string, valueTo: string, valueType: string, valueFrom?: string, startOffset?: string) => {
-                    if (!objectAnimator) {
-                        objectAnimator = [];
-                    }
-                    objectAnimator.push(this.createPropertyValue(propertyName, valueTo, '0', valueType, valueFrom, startOffset));
-                };
-                const animate = target.animate;
-                const length = animate.length;
-                let i = 0;
-                while (i < length) {
-                    const item = animate[i++];
-                    if (SvgBuild.asAnimateMotion(item)) {
-                        const parent = item.parent;
-                        if (parent && SvgBuild.isShape(parent)) {
-                            const path = parent.path;
-                            if (path) {
-                                const { value, baseValue } = path;
-                                if (value !== baseValue) {
-                                    insertResetValue('pathData', baseValue, 'pathType', value);
-                                    if (item.iterationCount !== -1 && !item.setterType) {
-                                        insertResetValue('pathData', value, 'pathType', baseValue, item.getTotalDuration().toString());
-                                    }
-                                }
-                            }
-                        }
-                    }
+                if (data[0].target) {
+                    vectorName = Resource.insertStoredAsset('drawables', getTemplateFilename(templateName, imageLength, 'anim'), applyTemplate('animated-vector', ANIMATEDVECTOR_TMPL, data));
                 }
-                if (objectAnimator) {
-                    insertTargetAnimation(
-                        data,
-                        name,
-                        {
-                            set: [{ set: undefined as any, objectAnimator }],
-                            objectAnimator: undefined as any
-                        },
-                        templateName,
-                        imageLength
-                    );
-                }
-            }
-            if (data[0].target) {
-                vectorName = Resource.insertStoredAsset('drawables', getTemplateFilename(templateName, imageLength, 'anim'), applyTemplate('animated-vector', ANIMATEDVECTOR_TMPL, data));
             }
         }
         if (imageLength) {
             const resource = this.resource as android.base.Resource<T>;
             const item: StandardMap[] = [];
             const layerData: StandardMap[] = [{ 'xmlns:android': XMLNS_ANDROID.android, item }];
-            if (vectorName !== '') {
+            if (vectorName) {
                 item.push({ drawable: getDrawableSrc(vectorName) });
             }
             for (let i = 0; i < imageData.length; ++i) {
@@ -1508,12 +1508,9 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 }
                 item.push(data);
             }
-            drawable = Resource.insertStoredAsset('drawables', templateName, applyTemplate('layer-list', LAYERLIST_TMPL, layerData));
+            return Resource.insertStoredAsset('drawables', templateName, applyTemplate('layer-list', LAYERLIST_TMPL, layerData));
         }
-        else {
-            drawable = vectorName;
-        }
-        return drawable;
+        return vectorName;
     }
 
     private createPropertyValue(propertyName: string, valueTo: string, duration: string, valueType: string, valueFrom = '', startOffset = '', repeatCount = '0'): PropertyValue {
@@ -1611,9 +1608,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             result[length - 1].include = output;
             return applyTemplate('group', VECTOR_GROUP, result, depth + 1);
         }
-        else {
-            return output;
-        }
+        return output;
     }
 
     private createGroup(target: SvgGroup) {
@@ -1623,7 +1618,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const groupBox: VectorGroupData = { 'clip-path': clipBox };
         const result: VectorGroupData[] = [];
         const transformData: TransformData = {};
-        if ((SvgBuild.asSvg(target) && !target.documentRoot || SvgBuild.asUseSymbol(target) || SvgBuild.asUsePattern(target)) && (target.x !== 0 || target.y !== 0)) {
+        if ((SvgBuild.asSvg(target) && !target.documentRoot || SvgBuild.isUse(target)) && (target.x !== 0 || target.y !== 0)) {
             transformData.name = getVectorName(target, 'main');
             transformData.translateX = target.x.toString();
             transformData.translateY = target.y.toString();
@@ -1665,18 +1660,18 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
     }
 
     private createPath(target: SvgShape, path: SvgPath): [PathData, VectorGroupData[]] {
-        const precision = this.options.floatPrecisionValue;
         const result: PathData = { name: target.name };
         const renderData: VectorGroupData[] = [];
         const clipElement: StringMap[] = [];
         const baseData: VectorGroupData = {};
         const groupName = getVectorName(target, 'group');
         const opacity = getOuterOpacity(target);
-        const useTarget = SvgBuild.asUse(target);
-        if (SvgBuild.asUse(target) && isString(target.clipPath)) {
+        const useTarget = SvgBuild.asUseShape(target);
+        if (SvgBuild.asUseShape(target) && isString(target.clipPath)) {
             this.createClipPath(target, clipElement, target.clipPath);
         }
         if (isString(path.clipPath)) {
+            const precision = this.options.floatPrecisionValue;
             const shape = new SvgShape(path.element);
             shape.build({ exclude: this.options.transformExclude, residual: partitionTransforms, precision });
             shape.synchronize({ keyTimeMode: this._synchronizeMode, precision });
@@ -1688,7 +1683,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         else if (clipElement.length) {
             baseData.name = '';
         }
-        if (SvgBuild.asUse(target) && (target.x !== 0 || target.y !== 0)) {
+        if (SvgBuild.asUseShape(target) && (target.x !== 0 || target.y !== 0)) {
             baseData.translateX = target.x.toString();
             baseData.translateY = target.y.toString();
         }
@@ -1746,7 +1741,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                                 case 'polyline':
                                 case 'circle':
                                 case 'ellipse': {
-                                    const gradient = createFillGradient(definition, path, precision);
+                                    const gradient = createFillGradient(definition, path, this.options.floatPrecisionValue);
                                     if (gradient) {
                                         result['aapt:attr'] = {
                                             name: 'android:fillColor',

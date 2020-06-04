@@ -124,8 +124,7 @@ interface SvgBuildOptions {
     residual?: SvgTransformResidual;
     precision?: number;
     element?: SVGGeometryElement;
-    symbolElement?: SVGSymbolElement;
-    patternElement?: SVGPatternElement;
+    targetElement?: SVGSymbolElement | SVGPatternElement | SVGGElement;
     initialize?: boolean;
 }
 

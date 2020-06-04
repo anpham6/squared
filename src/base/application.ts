@@ -10,7 +10,7 @@ type FileActionOptions = squared.base.FileActionOptions;
 type PreloadImage = HTMLImageElement | string;
 
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
-const { capitalize, convertCamelCase, isString, plainMap, promisify, resolvePath } = squared.lib.util;
+const { capitalize, convertCamelCase, isString, parseMimeType, plainMap, promisify, resolvePath } = squared.lib.util;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
 
@@ -191,6 +191,11 @@ export default abstract class Application<T extends Node> implements squared.bas
             element.querySelectorAll('picture > source').forEach((source: HTMLSourceElement) => parseSrcSet(source.srcset));
             element.querySelectorAll('video').forEach((source: HTMLVideoElement) => addImageSrc(source.poster));
             element.querySelectorAll('input[type=image]').forEach((image: HTMLInputElement) => addImageSrc(image.src, image.width, image.height));
+            element.querySelectorAll('object').forEach((source: HTMLObjectElement) => {
+                if (source.type.startsWith('image/') || parseMimeType(source.data).startsWith('image/')) {
+                    addImageSrc(source.data.trim());
+                }
+            });
         }
         const resumeThread = () => {
             this.initializing = false;

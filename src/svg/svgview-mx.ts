@@ -215,7 +215,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                 while (j < q) {
                                     const transform = transforms[j++];
                                     const key = transform.key;
-                                    const origin = getKeyframeOrigin(attrMap, element, key);
+                                    const origin = getKeyframeOrigin(attrMap, element, key) || TRANSFORM.origin(element);
                                     TRANSFORM.parse(element, transform.value)?.forEach(item => {
                                         const m = item.matrix;
                                         let name: string;

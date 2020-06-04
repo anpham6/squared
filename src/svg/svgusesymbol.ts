@@ -19,7 +19,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
 
     public build(options?: SvgBuildOptions) {
         this.setRect();
-        super.build({ ...options, symbolElement: this.symbolElement });
+        super.build({ ...options, targetElement: this.symbolElement });
         const x: number = this.getBaseValue('x', 0);
         const y: number = this.getBaseValue('y', 0);
         if (x !== 0 || y !== 0) {
@@ -28,6 +28,7 @@ export default class SvgUseSymbol extends SvgPaint$MX(SvgSynchronize$MX(SvgViewR
                 if (SvgBuild.asImage(item)) {
                     item.translationOffset = pt;
                 }
+                return false;
             });
         }
         this.setPaint(this.getPathAll(), options?.precision);

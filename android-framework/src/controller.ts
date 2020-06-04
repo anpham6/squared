@@ -364,6 +364,31 @@ function getVerticalAlignedLayout(layout: LayoutUI<View>) {
             : CONTAINER_NODE.LINEAR;
 }
 
+function setObjectContainer(layout: LayoutUI<View>) {
+    const node = layout.node;
+    const element = node.element as HTMLObjectElement;
+    const type = element.type || parseMimeType(element.data);
+    if (type.startsWith('image/')) {
+        node.setCacheValue('tagName', 'IMG');
+        node.setCacheValue('imageElement', true);
+        element['src'] = element.data.trim();
+        layout.setContainerType(CONTAINER_NODE.IMAGE);
+    }
+    else if (type.startsWith('video/')) {
+        node.setCacheValue('tagName', 'VIDEO');
+        element['src'] = element.data.trim();
+        layout.setContainerType(CONTAINER_NODE.VIDEOVIEW);
+    }
+    else if (type.startsWith('audio/')) {
+        node.setCacheValue('tagName', 'AUDIO');
+        element['src'] = element.data.trim();
+        layout.setContainerType(CONTAINER_NODE.VIDEOVIEW);
+    }
+    else {
+        layout.setContainerType(CONTAINER_NODE.TEXT);
+    }
+}
+
 const getAnchorDirection = (reverse = false) => reverse ? ['right', 'left', 'rightLeft', 'leftRight'] : ['left', 'right', 'leftRight', 'rightLeft'];
 const relativeFloatWrap = (node: View, previous: View, multiline: boolean, rowWidth: number, data: RelativeLayoutData) => previous.floating && previous.alignParent(previous.float) && (multiline || Math.floor(rowWidth + (node.hasWidth ? node.actualWidth : 0)) < data.boxWidth);
 const isBaselineImage = (node: View) => node.imageOrSvgElement && node.baseline;
@@ -1020,7 +1045,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     public processUnknownParent(layout: LayoutUI<T>) {
         const node = layout.node;
-        if (layout.some(item => !item.pageFlow && !item.autoPosition)) {
+        if (node.tagName === 'OBJECT') {
+            setObjectContainer(layout);
+        }
+        else if (layout.some(item => !item.pageFlow && !item.autoPosition)) {
             layout.setContainerType(CONTAINER_NODE.CONSTRAINT, NODE_ALIGNMENT.ABSOLUTE | NODE_ALIGNMENT.UNKNOWN);
         }
         else if (layout.length <= 1) {
@@ -1125,7 +1153,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     public processUnknownChild(layout: LayoutUI<T>) {
         const node = layout.node;
         const background = node.visibleStyle.background;
-        if (node.inlineText && (background || !node.textEmpty)) {
+        if (node.tagName === 'OBJECT') {
+            setObjectContainer(layout);
+        }
+        else if (node.inlineText && (background || !node.textEmpty)) {
             layout.setContainerType(CONTAINER_NODE.TEXT);
         }
         else if (node.blockStatic && node.naturalChildren.length === 0 && (background || node.contentBoxHeight > 0)) {

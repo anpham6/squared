@@ -4,7 +4,7 @@ import { calculateStyle, getAttribute } from './lib/util';
 
 type SvgElement = squared.svg.SvgElement;
 type SvgShapePattern = squared.svg.SvgShapePattern;
-type SvgUse = squared.svg.SvgUse;
+type SvgUseShape = squared.svg.SvgUseShape;
 type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
 const { parseColor } = squared.lib.color;
@@ -38,7 +38,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public clipPath!: string;
         public clipRule!: string;
         public patternParent?: SvgShapePattern;
-        public useParent?: SvgUse | SvgUseSymbol;
+        public useParent?: SvgUseShape | SvgUseSymbol;
 
         protected _retainStyle = true;
 

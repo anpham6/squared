@@ -761,8 +761,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                                 const [parentElement, element] = svgInstance.createSvgElement(node, value);
                                 if (parentElement && element) {
                                     const drawable = svgInstance.createSvgDrawable(node, element);
-                                    if (drawable !== '') {
-                                        const dimension = node.data(Resource.KEY_NAME, 'svgViewBox') as DOMRect || { width: element.width.baseVal.value, height: element.height.baseVal.value };
+                                    if (drawable) {
+                                        const dimension = node.data(Resource.KEY_NAME, 'svg')?.viewBox as DOMRect || { width: element.width.baseVal.value, height: element.height.baseVal.value };
                                         if (!node.svgElement) {
                                             let { width, height } = dimension;
                                             if (width > boundsWidth || height > boundsHeight) {

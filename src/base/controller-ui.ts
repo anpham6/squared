@@ -788,7 +788,7 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     styleMap[attr] = value;
                 }
             }
-            else if (tagName === 'IFRAME') {
+            else if (element.clientWidth === 300 && element.clientHeight === 150) {
                 if (attr === 'width') {
                     styleMap.width = '300px';
                 }

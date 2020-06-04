@@ -1383,7 +1383,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
     }
 
     public hasPX(attr: string, options?: HasPXOptions) {
-        return isLength((options?.initial && this._initial?.styleMap || this._styleMap)[attr], options?.percent !== false);
+        let initial: Undef<boolean>, percent: Undef<boolean>;
+        if (options) {
+            ({ initial, percent } = options);
+        }
+        return isLength((initial && this._initial?.styleMap || this._styleMap)[attr], percent !== false);
     }
 
     public setBounds(cache = true) {
