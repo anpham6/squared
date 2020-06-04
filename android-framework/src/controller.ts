@@ -18,7 +18,7 @@ interface RelativeLayoutData {
 
 const { PLATFORM, isPlatform } = squared.lib.client;
 const { parseColor } = squared.lib.color;
-const { formatPX, getSrcSet, hasComputedStyle, isLength, isPercent } = squared.lib.css;
+const { CSS_UNIT, formatPX, getSrcSet, hasComputedStyle, isLength, isPercent } = squared.lib.css;
 const { getElementsBetweenSiblings, getRangeClientRect } = squared.lib.dom;
 const { truncate } = squared.lib.math;
 const { getElementAsNode, getPseudoElt } = squared.lib.session;
@@ -659,6 +659,24 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                                 }
                                 else {
                                     node.setLayoutHeight('0px');
+                                }
+                                if (parent.innerMostWrapped.documentBody) {
+                                    const options = { type: CSS_UNIT.LENGTH | CSS_UNIT.PERCENT, not: '100%' };
+                                    do {
+                                        if (!parent.has(dimension, options) && !parent.has(horizontal ? 'maxWidth' : 'maxHeight', options)) {
+                                            if (horizontal) {
+                                                parent.setLayoutWidth('match_parent', parent.inlineWidth);
+                                            }
+                                            else {
+                                                parent.setLayoutHeight('match_parent', parent.inlineWidth);
+                                            }
+                                            parent = parent.outerWrapper as T;
+                                        }
+                                        else {
+                                            break;
+                                        }
+                                    }
+                                    while (parent);
                                 }
                             }
                             break;
@@ -1638,8 +1656,11 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 if (maxLength > 0) {
                     node.android('maxLength', maxLength.toString());
                 }
-                if (!node.hasPX('width') && cols > 0) {
+                if (!node.hasWidth && cols > 0) {
                     node.css('width', formatPX(cols * 8));
+                }
+                if (!node.hasHeight) {
+                    node.css('height', formatPX(node.bounds.height));
                 }
                 node.android('scrollbars', 'vertical');
                 node.android('inputType', 'textMultiLine');

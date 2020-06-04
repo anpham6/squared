@@ -740,6 +740,7 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                         borderRadius: 'inherit'
                     });
                     this.inheritApply('boxStyle', result);
+                    this.setCacheValue('visibleStyle', undefined);
                     node.setCacheValue('backgroundColor', '');
                     node.setCacheValue('backgroundImage', '');
                     node.cssApply({

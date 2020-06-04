@@ -751,8 +751,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public setValueString(node: T) {
         const element = node.element as HTMLInputElement;
         if (element) {
-            let value = '';
-            let hint = '';
+            let value: Undef<string>;
+            let hint: Undef<string>;
             let trimming = false;
             let inlined = false;
             switch (element.tagName) {
@@ -875,9 +875,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         inlined = true;
                     }
                     else if (node.inlineText) {
-                        value = node.textEmpty ? STRING_SPACE : this.removeExcludedFromText(node, element);
+                        value = node.textEmpty
+                            ? STRING_SPACE
+                            : node.tagName === 'BUTTON'
+                                ? node.textContent
+                                : this.removeExcludedFromText(node, element);
                     }
-                    if (value !== '') {
+                    if (value) {
                         value = value.replace(/\u00A0/g, STRING_SPACE);
                         switch (node.css('whiteSpace')) {
                             case 'pre':
@@ -928,10 +932,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     break;
                 }
             }
-            if (hint !== '') {
+            if (hint) {
                 node.data(ResourceUI.KEY_NAME, 'hintString', hint);
             }
-            if (value !== '') {
+            if (value) {
                 if (trimming) {
                     if (node.pageFlow) {
                         const previousSibling = node.siblingsLeading[0];
@@ -978,14 +982,14 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                         value = value.trim();
                     }
                 }
-                if (value !== '') {
+                if (value) {
                     node.data(ResourceUI.KEY_NAME, 'valueString', value);
                 }
             }
         }
         else if (node.inlineText) {
             const value = node.textContent;
-            if (value !== '') {
+            if (value) {
                 node.data(ResourceUI.KEY_NAME, 'valueString', value);
             }
         }

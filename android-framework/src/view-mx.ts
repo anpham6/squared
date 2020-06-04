@@ -1161,7 +1161,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                 const maxValue = this.parseHeight(maxHeight);
                                 const absoluteParent = this.absoluteParent || actualParent;
                                 if (maxHeight === '100%') {
-                                    if (containsHeight && Math.ceil(maxValue) >= absoluteParent.box.height) {
+                                    if (containsHeight || Math.ceil(maxValue) >= absoluteParent.box.height) {
                                         layoutHeight = 'match_parent';
                                     }
                                     else {
@@ -1175,6 +1175,9 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                                     else {
                                         layoutHeight = Math.floor(maxValue) < absoluteParent.box.height ? 'wrap_content' : 'match_parent';
                                     }
+                                }
+                                else if (containsHeight) {
+                                    layoutHeight = 'match_parent';
                                 }
                             }
                             if (layoutHeight === '') {

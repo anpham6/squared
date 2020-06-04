@@ -123,6 +123,6 @@
     "rollup-plugin-prettier": "^2.1.0",
     "rollup-plugin-terser": "^6.1.0",
     "terser": "^4.7.0",
-    "typescript": "^3.9.3"
+    "typescript": "^3.9.5"
   }
 }

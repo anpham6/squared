@@ -2,6 +2,8 @@ import Resource from '../resource';
 
 type View = android.base.View;
 
+const { formatPX } = squared.lib.css;
+
 const { NODE_PROCEDURE, NODE_RESOURCE } = squared.base.lib.enumeration;
 
 export default class <T extends View> extends squared.base.extensions.Accessibility<T> {
@@ -64,6 +66,21 @@ export default class <T extends View> extends squared.base.extensions.Accessibil
                         break;
                     case 'BUTTON':
                         if (node.length) {
+                            let { width, height } = node.bounds;
+                            let modified = false;
+                            node.cascade((item: T) => {
+                                if (item.width >= width && item.height >= height) {
+                                    ({ width, height } = item);
+                                    if (!node.visibleStyle.background) {
+                                        node.inherit(item, 'boxStyle');
+                                    }
+                                    modified = true;
+                                }
+                            });
+                            if (modified) {
+                                node.css('minWidth', formatPX(width));
+                                node.css('minHeight', formatPX(height));
+                            }
                             const embedded = node.extract((item: T) => !item.textElement) as T[];
                             if (embedded.length && node.hasResource(NODE_RESOURCE.IMAGE_SOURCE)) {
                                 node.data(Resource.KEY_NAME, 'embedded', embedded);
