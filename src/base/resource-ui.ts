@@ -30,10 +30,10 @@ const CHAR_TRAILINGSPACE = /\s+$/;
 function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
     const { width, height } = gradient.dimension as Dimension;
     const result: ColorStop[] = [];
-    let repeat = false;
-    let horizontal = true;
-    let extent = 1;
-    let size: number;
+    let repeat = false,
+        horizontal = true,
+        extent = 1,
+        size: number;
     switch (gradient.type) {
        case 'linear': {
             const { repeating, angle } = gradient as LinearGradient;
@@ -71,8 +71,8 @@ function parseColorStops(node: NodeUI, gradient: Gradient, value: string) {
         default:
             return result;
     }
-    let previousOffset = 0;
-    let match: Null<RegExpExecArray>;
+    let previousOffset = 0,
+        match: Null<RegExpExecArray>;
     while (match = REGEXP_COLORSTOP.exec(value)) {
         const color = parseColor(match[1], 1, true);
         if (color) {
@@ -332,8 +332,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static getOptionArray(element: HTMLSelectElement | HTMLOptGroupElement, showDisabled = false) {
-        let result: string[] = [];
-        let numberArray = true;
+        let result: string[] = [],
+            numberArray = true;
         iterateArray(element.children, (item: HTMLOptionElement) => {
             if (item.disabled && !showDisabled) {
                 return;
@@ -369,8 +369,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         if (backgroundImage !== '') {
             REGEXP_BACKGROUNDIMAGE.lastIndex = 0;
             const images: (string | Gradient)[] = [];
-            let i = 0;
-            let match: Null<RegExpExecArray>;
+            let i = 0,
+                match: Null<RegExpExecArray>;
             while (match = REGEXP_BACKGROUNDIMAGE.exec(backgroundImage)) {
                 const value = match[0];
                 if (value.startsWith('url(') || value === 'initial') {
@@ -463,13 +463,13 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             const center = getBackgroundPosition(position?.[2] || 'center', dimension, { fontSize: node.fontSize, imageDimension, screenDimension });
                             const { left, top } = center;
                             const { width, height } = dimension;
-                            let shape = 'ellipse';
-                            let closestSide = top;
-                            let farthestSide = top;
-                            let closestCorner = Infinity;
-                            let farthestCorner = -Infinity;
-                            let radius = 0;
-                            let radiusExtent = 0;
+                            let shape = 'ellipse',
+                                closestSide = top,
+                                farthestSide = top,
+                                closestCorner = Infinity,
+                                farthestCorner = -Infinity,
+                                radius = 0,
+                                radiusExtent = 0;
                             if (position) {
                                 const name = position[1]?.trim();
                                 if (name) {
@@ -562,8 +562,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     public static getBackgroundSize(node: NodeUI, value: string, screenDimension?: Dimension): Undef<Dimension> {
-        let width = 0;
-        let height = 0;
+        let width = 0,
+            height = 0;
         switch (value) {
             case '':
             case 'cover':
@@ -659,7 +659,9 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public setBoxStyle(node: T) {
         if ((node.styleElement || node.visibleStyle.background) && node.hasResource(NODE_RESOURCE.BOX_STYLE)) {
             const boxStyle = {} as BoxStyle;
-            let borderWidth = node.visibleStyle.borderWidth;
+            let borderWidth = node.visibleStyle.borderWidth,
+                backgroundColor = node.backgroundColor,
+                backgroundImage: Undef<(string | Gradient)[]>;
             if (borderWidth) {
                 if (node.borderTopWidth > 0) {
                     setBorderStyle(node, boxStyle, 'borderTop', BORDER_TOP);
@@ -677,8 +679,6 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
             if (setBorderStyle(node, boxStyle, 'outline', BORDER_OUTLINE)) {
                 borderWidth = true;
             }
-            let backgroundColor = node.backgroundColor;
-            let backgroundImage: Undef<(string | Gradient)[]>;
             if (backgroundColor === '' && node.has('backgroundColor') && !node.documentParent.visible) {
                 backgroundColor = node.css('backgroundColor');
             }
@@ -752,10 +752,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     public setValueString(node: T) {
         const element = node.element as HTMLInputElement;
         if (element) {
-            let value: Undef<string>;
-            let hint: Undef<string>;
-            let trimming = false;
-            let inlined = false;
+            let trimming = false,
+                inlined = false,
+                hint: Undef<string>,
+                value: Undef<string>;
             switch (element.tagName) {
                 case 'INPUT':
                     value = getNamedItem(element, 'value');
@@ -829,7 +829,8 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                             const { width, height } = node.actualDimension;
                             const backgroundSize = `${width - 10}px ${height - 10}px, ${width - 8}px ${height - 8}px`;
                             const backgroundRepeat = 'no-repeat, no-repeat';
-                            const backgroundPositionX = 'center, center', backgroundPositionY = 'center, center';
+                            const backgroundPositionX = 'center, center';
+                            const backgroundPositionY = 'center, center';
                             const backgroundImage = ResourceUI.parseBackgroundImage(node, `linear-gradient(${backgroundColor}, ${backgroundColor}), linear-gradient(${borderColor}, ${borderColor})`) as Gradient[];
                             value = '';
                             let boxStyle: BoxStyle = node.data(ResourceUI.KEY_NAME, 'boxStyle');
@@ -997,11 +998,10 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
     }
 
     protected removeExcludedFromText(node: T, element: Element) {
+        const { preserveWhiteSpace, sessionId } = node;
         const styled = element.children.length > 0 || element.tagName === 'CODE';
-        const preserveWhitespace = node.preserveWhiteSpace;
         const attr = styled ? 'innerHTML' : 'textContent';
         let value: string = element[attr] || '';
-        const sessionId = node.sessionId;
         element.childNodes.forEach((item: Element, index: number) => {
             const child = getElementAsNode<NodeUI>(item, sessionId);
             if (!child || !child.textElement || !child.pageFlow || child.positioned || child.pseudoElement || child.excluded) {
@@ -1009,12 +1009,12 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     if (styled && child.htmlElement) {
                         const outerHTML = child.toElementString('outerHTML');
                         if (child.lineBreak) {
-                            value = value.replace(!preserveWhitespace ? new RegExp(`\\s*${outerHTML}\\s*`) : outerHTML, '\\n');
+                            value = value.replace(!preserveWhiteSpace ? new RegExp(`\\s*${outerHTML}\\s*`) : outerHTML, '\\n');
                         }
                         else if (child.positioned) {
                             value = value.replace(outerHTML, '');
                         }
-                        else if (!preserveWhitespace) {
+                        else if (!preserveWhiteSpace) {
                             value = value.replace(outerHTML, child.pageFlow && isString(child.textContent) ? STRING_SPACE : '');
                         }
                         return;
@@ -1022,7 +1022,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     else {
                         const textContent = child.plainText ? child.textContent : child[attr];
                         if (isString(textContent)) {
-                            if (!preserveWhitespace) {
+                            if (!preserveWhiteSpace) {
                                 value = value.replace(textContent, '');
                             }
                             return;
@@ -1033,7 +1033,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
                     const position = getComputedStyle(item).getPropertyValue('position');
                     value = value.replace(item.outerHTML, position !== 'absolute' && position !== 'fixed' && isString(item.textContent!) ? STRING_SPACE : '');
                 }
-                if (!preserveWhitespace) {
+                if (!preserveWhiteSpace) {
                     if (index === 0) {
                         value = value.replace(CHAR_LEADINGSPACE, '');
                     }
@@ -1046,7 +1046,7 @@ export default abstract class ResourceUI<T extends NodeUI> extends Resource<T> i
         if (!styled) {
             return value;
         }
-        else if (!preserveWhitespace && /^[\s\n]+$/.test(value)) {
+        else if (!preserveWhiteSpace && /^[\s\n]+$/.test(value)) {
             return node.blockStatic ? STRING_SPACE : '';
         }
         return value.replace(/&#(\d+);/g, (match, capture) => String.fromCharCode(parseInt(capture)));

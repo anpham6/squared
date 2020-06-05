@@ -29,7 +29,7 @@ function getDataSetValue(element: SVGElement, attr: string) {
     return '';
 }
 
-const getViewportArea = (min: boolean, viewBox: DOMRect) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
+const getViewportArea = (viewBox: DOMRect, min?: boolean) => min ? Math.min(viewBox.width, viewBox.height) : hypotenuse(viewBox.width, viewBox.height);
 
 export const SVG = {
     svg: (element: Element): element is SVGSVGElement => {
@@ -177,7 +177,8 @@ export const TRANSFORM = {
             let match: Null<RegExpExecArray>;
             while (match = pattern.exec(value)) {
                 const method = match[1];
-                const isX = method.endsWith('X'), isY = method.endsWith('Y');
+                const isX = method.endsWith('X');
+                const isY = method.endsWith('Y');
                 if (method.startsWith('translate')) {
                     const translate = REGEXP_TRANSFORM.TRANSLATE.exec(match[0]);
                     if (translate) {
@@ -283,8 +284,8 @@ export const TRANSFORM = {
         const result: Point = { x: 0, y: 0 };
         if (value !== '') {
             const viewBox = getNearestViewBox(element);
-            let width: Undef<number>;
-            let height: Undef<number>;
+            let width: Undef<number>,
+                height: Undef<number>;
             if (viewBox) {
                 ({ width, height } = viewBox);
             }
@@ -446,31 +447,33 @@ export function calculateStyle(element: SVGElement, attr: string, value: string)
             return !isNaN(result) ? result.toString() : '';
         }
         case 'r': {
-            const result = calculateVar(element, value, { boundingSize: getViewportArea(true, viewBox), min: 0 });
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(viewBox, true), min: 0 });
             return !isNaN(result) ? result.toString() : '0';
         }
         case 'rx': {
             const result = calculateVar(element, value, { boundingSize: viewBox.width, min: 0 });
-            if (!isNaN(result)) {
-                return SVG.rect(element) ? Math.min(result, viewBox.width / 2).toString() : result.toString();
-            }
-            return '0';
+            return !isNaN(result)
+                ? SVG.rect(element)
+                    ? Math.min(result, viewBox.width / 2).toString()
+                    : result.toString()
+                : '0';
         }
         case 'ry': {
             const result = calculateVar(element, value, { boundingSize: viewBox.height, min: 0 });
-            if (!isNaN(result)) {
-                return SVG.rect(element) ? Math.min(result, viewBox.height / 2).toString() : result.toString();
-            }
-            return '0';
+            return !isNaN(result)
+                ? SVG.rect(element)
+                    ? Math.min(result, viewBox.height / 2).toString()
+                    : result.toString()
+                : '0';
         }
         case 'strokeDasharray':
-            return calculateVarAsString(element, value, { boundingSize: getViewportArea(false, viewBox), min: 0 });
+            return calculateVarAsString(element, value, { boundingSize: getViewportArea(viewBox), min: 0 });
         case 'strokeDashoffset': {
-            const result = calculateVar(element, value, { boundingSize: getViewportArea(true, viewBox), unitType: CSS_UNIT.DECIMAL });
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(viewBox, true), unitType: CSS_UNIT.DECIMAL });
             return !isNaN(result) ? result.toString() : '';
         }
         case 'strokeWidth': {
-            const result = calculateVar(element, value, { boundingSize: getViewportArea(false, viewBox), unitType: CSS_UNIT.DECIMAL, min: 0 });
+            const result = calculateVar(element, value, { boundingSize: getViewportArea(viewBox), unitType: CSS_UNIT.DECIMAL, min: 0 });
             return !isNaN(result) ? result.toString() : '';
         }
     }
@@ -492,8 +495,8 @@ export function getAttribute(element: SVGElement, attr: string, computed = false
 }
 
 export function getParentAttribute(element: SVGElement, attr: string, computed = true) {
-    let current: Null<CSSElement> = element;
-    let value: string;
+    let current: Null<CSSElement> = element,
+        value: string;
     do {
         value = getAttribute(current, attr, computed);
         if (value !== '' && value !== 'inherit') {
@@ -563,14 +566,26 @@ export function getNearestViewBox(element: SVGElement) {
             const viewBox = current.viewBox;
             if (viewBox) {
                 const baseVal = viewBox.baseVal;
-                if (baseVal.width > 0 && baseVal.height > 0) {
-                    return baseVal;
-                }
+                return baseVal && baseVal.width > 0 && baseVal.height > 0 ? baseVal : getDOMRect(current);
             }
         }
         current = current.parentElement;
     }
     return undefined;
+}
+
+export function getRootOffset(element: SVGGraphicsElement, rootElement: Element) {
+    let x = 0,
+        y = 0,
+        parent = element.parentElement;
+    while (parent && parent !== rootElement) {
+        if (SVG.svg(parent) || SVG.use(parent)) {
+            x += parent.x.baseVal.value;
+            y += parent.y.baseVal.value;
+        }
+        parent = parent.parentElement;
+    }
+    return { x, y };
 }
 
 export function createPath(value: string) {

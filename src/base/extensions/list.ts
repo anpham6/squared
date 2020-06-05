@@ -14,13 +14,13 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
     public condition(node: T) {
         const length = node.length;
         if (length) {
-            const floated = new Set<string>();
-            let blockStatic = true;
-            let inlineVertical = true;
-            let floating = true;
-            let blockAlternate = true;
-            let bulletVisible = false;
             const children = node.children;
+            let blockStatic = true,
+                inlineVertical = true,
+                floating = true,
+                blockAlternate = true,
+                bulletVisible = false,
+                floated: Undef<Set<string>>;
             for (let i = 0; i < length; ++i) {
                 const item = children[i] as T;
                 const type = item.css('listStyleType');
@@ -29,6 +29,9 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                 }
                 if (floating || blockAlternate) {
                     if (item.floating) {
+                        if (floated === undefined) {
+                            floated = new Set<string>();
+                        }
                         floated.add(item.float);
                         blockAlternate = false;
                     }
@@ -50,7 +53,7 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                     return false;
                 }
             }
-            return bulletVisible && (blockStatic || inlineVertical || floating && floated.size === 1 || blockAlternate);
+            return bulletVisible && (blockStatic || inlineVertical || floated?.size === 1 || blockAlternate);
         }
         return false;
     }
@@ -83,8 +86,8 @@ export default abstract class List<T extends NodeUI> extends ExtensionUI<T> {
                                 ordinal = '■';
                                 break;
                             case 'none': {
-                                let src = '';
-                                let position = '';
+                                let src = '',
+                                    position = '';
                                 if (!item.visibleStyle.backgroundRepeat) {
                                     src = item.backgroundImage;
                                     position = item.css('backgroundPosition');

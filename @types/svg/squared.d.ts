@@ -684,20 +684,19 @@ declare module "svg" {
                 SVG_ELEMENT = 4,
                 SVG_ANIMATION = 8,
                 SVG = 2 | 16,
-                SVG_USE_SVG = 1 | 2 | 16 | 32,
-                SVG_G = 2 | 64,
-                SVG_USE_G = 1 | 2 | 64 | 128,
-                SVG_USE_SYMBOL = 1 | 2 | 256,
-                SVG_PATTERN = 2 | 512,
-                SVG_SHAPE_PATTERN = 2 | 1024,
-                SVG_USE_SHAPE_PATTERN = 1 | 2 | 1024 | 2048,
-                SVG_SHAPE = 4 | 4096,
-                SVG_USE_SHAPE = 1 | 4 | 4096 | 8192,
-                SVG_IMAGE = 4 | 16384,
-                SVG_PATH = 4 | 32768,
-                SVG_ANIMATE = 8 | 65536,
-                SVG_ANIMATE_TRANSFORM = 8 | 65536 | 131072,
-                SVG_ANIMATE_MOTION = 8 | 65536 | 131072 | 262144
+                SVG_G = 2 | 32,
+                SVG_USE_G = 1 | 2 | 32 | 64,
+                SVG_USE_SYMBOL = 1 | 2 | 128,
+                SVG_PATTERN = 2 | 256,
+                SVG_SHAPE_PATTERN = 2 | 512,
+                SVG_USE_SHAPE_PATTERN = 1 | 2 | 512 | 1024,
+                SVG_SHAPE = 4 | 2048,
+                SVG_USE_SHAPE = 1 | 4 | 2048 | 4096,
+                SVG_IMAGE = 4 | 8192,
+                SVG_PATH = 4 | 16384,
+                SVG_ANIMATE = 8 | 32768,
+                SVG_ANIMATE_TRANSFORM = 8 | 32768 | 65536,
+                SVG_ANIMATE_MOTION = 8 | 32768 | 65536 | 131072
             }
             const enum SYNCHRONIZE_MODE {
                 FROMTO_ANIMATE = 2,
@@ -781,6 +780,7 @@ declare module "svg" {
             function getDOMRect(element: SVGElement): DOMRect;
             function getTargetElement(element: SVGElement, rootElement?: Null<SVGSVGElement>, contentMap?: StringMap): Null<SVGElement>;
             function getNearestViewBox(element: SVGElement): Undef<DOMRect>;
+            function getRootOffset(element: SVGGraphicsElement, rootElement: Element): Point;
             function getPathLength(value: string): string;
         }
     }

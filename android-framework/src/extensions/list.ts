@@ -46,12 +46,14 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
             const controller = this.controller as android.base.Controller<T>;
             const firstChild = parent.firstStaticChild === node;
             const marginTop = node.marginTop;
-            let value = mainData.ordinal || '';
-            let minWidth = node.marginLeft;
-            let marginLeft = 0;
-            let columnCount = 0;
-            let adjustPadding = false;
-            let resetPadding = NaN;
+            let value = mainData.ordinal || '',
+                minWidth = node.marginLeft,
+                marginLeft = 0,
+                columnCount = 0,
+                adjustPadding = false,
+                resetPadding = NaN,
+                wrapped = false,
+                container: T;
             node.setBox(BOX_STANDARD.MARGIN_LEFT, { reset: 1 });
             if (parent.layoutGrid) {
                 columnCount = convertInt(parent.android('columnCount')) || 1;
@@ -68,8 +70,6 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                     minWidth += parent.marginLeft;
                 }
             }
-            let container: T;
-            let wrapped = false;
             if (node.length === 0 && !node.outerWrapper) {
                 container = controller.createNodeWrapper(node, parent);
                 wrapped = true;
@@ -114,11 +114,11 @@ export default class <T extends View> extends squared.base.extensions.List<T> {
                 application.addLayoutTemplate(parent, ordinal, application.renderNode(layout));
             }
             else {
-                let gravity = 'right';
                 let top = 0,
                     left = 0,
-                    paddingRight = 0;
-                let image: Undef<string>;
+                    paddingRight = 0,
+                    gravity = 'right',
+                    image: Undef<string>;
                 if (mainData.imageSrc !== '') {
                     const resource = this.resource as android.base.Resource<T>;
                     if (mainData.imagePosition) {

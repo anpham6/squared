@@ -46,9 +46,10 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
     }
 
     public static convertStepTimingFunction(attributeName: string, timingFunction: string, keyTimes: number[], values: string[], index: number, fontSize?: number): Undef<[number[], string[]]> {
-        const valueA = values[index], valueB = values[index + 1];
-        let currentValue: Undef<any[]>;
-        let nextValue: Undef<any[]>;
+        const valueA = values[index];
+        const valueB = values[index + 1];
+        let currentValue: Undef<any[]>,
+            nextValue: Undef<any[]>;
         switch (attributeName) {
             case 'fill':
             case 'stroke': {
@@ -111,7 +112,8 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
                         switch (attributeName) {
                             case 'fill':
                             case 'stroke': {
-                                const rgbaA = (currentValue[0] as ColorData).rgba, rgbaB = (nextValue[0] as ColorData).rgba;
+                                const rgbaA = (currentValue[0] as ColorData).rgba;
+                                const rgbaB = (nextValue[0] as ColorData).rgba;
                                 const rgb = getHexCode(
                                     SvgAnimate.getSplitValue(rgbaA.r, rgbaB.r, percent),
                                     SvgAnimate.getSplitValue(rgbaA.g, rgbaB.g, percent),
@@ -269,9 +271,9 @@ export default class SvgAnimate extends SvgAnimation implements squared.svg.SvgA
             switch (mode) {
                 case 'discrete':
                     if (keyTimesBase[0] === 0 && keyTimesBase.length === 2) {
-                        let keyTimes: number[] = [];
-                        let values: string[] = [];
                         const valuesBase = this.values;
+                        let keyTimes: number[] = [],
+                            values: string[] = [];
                         const length = keyTimesBase.length - 1;
                         let i = 0;
                         while (i < length) {

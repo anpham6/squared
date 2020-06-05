@@ -22,9 +22,11 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
             const { width, height } = aspectRatio;
             if (width > 0 && height > 0) {
                 const ratio = width / height;
-                let parentUnknown = false;
                 let parentWidth = parentAspectRatio.width || parent.viewBox.width,
-                    parentHeight = parentAspectRatio.height || parent.viewBox.height;
+                    parentHeight = parentAspectRatio.height || parent.viewBox.height,
+                    parentUnknown = false,
+                    boxWidth: number,
+                    boxHeight: number;
                 if (parentWidth === 0 && parentHeight === 0) {
                     ({ width: parentWidth, height: parentHeight } = getDOMRect(parent.element));
                     parentAspectRatio.width = parentWidth;
@@ -36,8 +38,6 @@ function setAspectRatio(parent: Undef<Svg | SvgUseSymbol>, group: SvgGroup, view
                 const ratioHeight = parentHeight / height;
                 const w = getAttribute(element, 'width');
                 const h = getAttribute(element, 'height');
-                let boxWidth: number,
-                    boxHeight: number;
                 if (parentUnknown) {
                     boxWidth = parentWidth;
                     boxHeight = parentHeight;

@@ -257,8 +257,8 @@ function constraintMinMax(node: T, horizontal: boolean) {
 function setConstraintPercent(node: T, value: number, horizontal: boolean, percent: number) {
     if (value < 1 && !isNaN(percent) && node.pageFlow) {
         const parent = node.actualParent || node.documentParent;
-        let boxPercent: number;
-        let marginPercent: number;
+        let boxPercent: number,
+            marginPercent: number;
         if (horizontal) {
             const width = parent.box.width;
             boxPercent = !parent.gridElement ? node.contentBoxWidth / width : 0;
@@ -1260,8 +1260,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             }
             if (maxDimension) {
                 const maxWidth = this.css('maxWidth');
-                let maxHeight = this.css('maxHeight');
-                let width = -1;
+                let maxHeight = this.css('maxHeight'),
+                    width = -1;
                 if (isLength(maxWidth, true)) {
                     if (maxWidth === '100%') {
                         if (this.svgElement) {
@@ -1318,8 +1318,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
             const renderParent = this.renderParent as T;
             const outerRenderParent = (node.renderParent || renderParent) as T;
             const autoMargin = this.autoMargin;
-            let textAlign = checkTextAlign(this.cssInitial('textAlign', { modified: true }), false);
-            let textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
+            let textAlign = checkTextAlign(this.cssInitial('textAlign', { modified: true }), false),
+                textAlignParent = checkTextAlign(this.cssAscend('textAlign'), true);
             if (this.nodeGroup && textAlign === '' && !this.hasAlign(NODE_ALIGNMENT.FLOAT)) {
                 const parent = this.actualParent;
                 if (parent) {
@@ -1795,8 +1795,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     if (grandParent) {
                         if (grandParent.flexElement && !grandParent.flexdata.column) {
                             if (!grandParent.hasHeight) {
-                                let maxHeight = 0;
-                                let parentHeight = 0;
+                                let maxHeight = 0,
+                                    parentHeight = 0;
                                 for (const item of grandParent) {
                                     const height = (item.data(EXT_NAME.FLEXBOX, 'boundsData') || item.bounds).height;
                                     if (height > maxHeight) {
@@ -2099,8 +2099,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         public combine(...objs: string[]) {
             const all = objs.length === 0;
             const result: string[] = [];
-            let requireId = false;
-            let id = '';
+            let requireId = false,
+                id = '';
             for (const name of this._namespaces) {
                 if (all || objs.includes(name)) {
                     const obj: StringMap = this['__' + name];
@@ -2271,7 +2271,7 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
         }
 
         public applyOptimizations() {
-            const renderParent = this.renderParent;
+            const { lineHeight, renderChildren, renderParent } = this;
             if (renderParent) {
                 if (this.renderExclude) {
                     if (!this.alignSibling('topBottom') && !this.alignSibling('bottomTop') && !this.alignSibling('leftRight') && !this.alignSibling('rightLeft')) {
@@ -2282,7 +2282,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                     return;
                 }
-                const renderChildren = this.renderChildren;
                 if (this.layoutLinear) {
                     if (this.layoutVertical) {
                         if (!renderParent.layoutFrame && !this.documentRoot && renderChildren.length && (this.baselineElement || !renderChildren[0].multiline && renderChildren.every(node => node.textElement))) {
@@ -2306,7 +2305,6 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                         }
                     }
                 }
-                const lineHeight = this.lineHeight;
                 if (lineHeight > 0) {
                     const hasOwnStyle = this.has('lineHeight', { map: 'initial' });
                     if (this.multiline) {
@@ -2379,8 +2377,8 @@ export default (Base: Constructor<squared.base.NodeUI>) => {
                     }
                 }
                 if (this.has('transform')) {
-                    let pivoted = false;
                     const transforms = parseTransform(this.css('transform'), { accumulate: true, boundingBox: this.bounds, fontSize: this.fontSize });
+                    let pivoted = false;
                     let i = 0;
                     while (i < transforms.length) {
                         const item = transforms[i++];

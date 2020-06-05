@@ -153,8 +153,8 @@ export default class ResourceStrings<T extends View> extends squared.base.Extens
                                 const width = measureTextWidth(' ', node.css('fontFamily'), node.fontSize) || node.fontSize / 2;
                                 valueString = STRING_SPACE.repeat(Math.max(Math.floor(indent / width), 1)) + valueString;
                             }
-                            let fontVariation = getFontVariationStyle(node.css('fontStyle'));
-                            let fontFeature = '';
+                            let fontVariation = getFontVariationStyle(node.css('fontStyle')),
+                                fontFeature = '';
                             if (node.has('fontStretch')) {
                                 let percent = node.css('fontStretch');
                                 switch (percent) {

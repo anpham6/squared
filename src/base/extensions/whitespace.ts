@@ -329,8 +329,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                 }
                 const pageFlow = node.pageFlow;
                 const collapseMargin = pageFlow && isBlockElement(node, true) && !node.actualParent!.layoutElement;
-                let firstChild: Undef<T>;
-                let lastChild: Undef<T>;
+                let firstChild: Undef<T>,
+                    lastChild: Undef<T>;
                 for (let i = 0; i < length; ++i) {
                     const current = children[i] as T;
                     if (current.pageFlow) {
@@ -358,8 +358,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                     let inheritedTop = false;
                                     const previous = previousSiblings[q - 1];
                                     if (isBlockElement(previous, false)) {
-                                        let marginBottom = previous.marginBottom;
-                                        let marginTop = current.marginTop;
+                                        let marginBottom = previous.marginBottom,
+                                            marginTop = current.marginTop;
                                         if (previous.marginTop < 0 && previous.bounds.height === 0) {
                                             const offset = Math.min(marginBottom, previous.marginTop);
                                             if (offset < 0) {
@@ -388,13 +388,13 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                                 continue;
                                             }
                                         }
-                                        let inheritedBottom = false;
-                                        let inherit = previous;
+                                        let inheritedBottom = false,
+                                            inherit = previous;
                                         while (validAboveChild(inherit, true)) {
                                             let bottomChild = getBottomChild(inherit);
                                             if (bottomChild?.getBox(BOX_STANDARD.MARGIN_BOTTOM)[0] === 0) {
-                                                let childBottom = bottomChild.marginBottom;
-                                                let currentChild = bottomChild;
+                                                let childBottom = bottomChild.marginBottom,
+                                                    currentChild = bottomChild;
                                                 while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
                                                     const currentTop = currentChild.marginTop;
                                                     childBottom = Math.max(currentTop, currentChild.marginBottom, childBottom);
@@ -443,8 +443,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         while (validBelowChild(inherit, true)) {
                                             let topChild = inherit.firstStaticChild as T;
                                             if (isBlockElement(topChild, true) && topChild.getBox(BOX_STANDARD.MARGIN_TOP)[0] === 0) {
-                                                let childTop = topChild.marginTop;
-                                                let currentChild = topChild;
+                                                let childTop = topChild.marginTop,
+                                                    currentChild = topChild;
                                                 while (currentChild.bounds.height === 0 && !currentChild.pseudoElement) {
                                                     const currentBottom = currentChild.marginBottom;
                                                     childTop = Math.max(currentChild.marginTop, currentBottom, childTop);
@@ -624,11 +624,11 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                     const actualParent = node.actualParent as T;
                     const nextSiblings = node.nextSiblings();
                     if (nextSiblings.length) {
-                        let above = previousSiblings.pop() as T;
-                        let below = nextSiblings.pop() as T;
-                        let lineHeight = 0;
-                        let aboveLineBreak: Undef<T>;
-                        let offset: number;
+                        let above = previousSiblings.pop() as T,
+                            below = nextSiblings.pop() as T,
+                            lineHeight = 0,
+                            aboveLineBreak: Undef<T>,
+                            offset: number;
                         if (above.rendered && below.rendered) {
                             const inline = above.inlineStatic && below.inlineStatic;
                             if (inline && previousSiblings.length === 0) {
@@ -654,8 +654,8 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 }
                                 aboveLineBreak?.setBounds(false);
                             }
-                            let aboveParent = above.renderParent;
-                            let belowParent = below.renderParent;
+                            let aboveParent = above.renderParent,
+                                belowParent = below.renderParent;
                             if (aboveParent !== belowParent) {
                                 while (aboveParent && aboveParent !== actualParent) {
                                     above = aboveParent as T;
@@ -798,8 +798,9 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                 horizontal = renderParent.renderChildren as T[];
                             }
                             if (horizontal) {
-                                let children: T[] = [];
-                                let length = horizontal.length;
+                                let children: T[] = [],
+                                    maxBottom = -Infinity,
+                                    length = horizontal.length;
                                 let i = 0;
                                 while (i < length) {
                                     const item = horizontal[i++];
@@ -813,7 +814,6 @@ export default abstract class WhiteSpace<T extends NodeUI> extends ExtensionUI<T
                                         children.push(item);
                                     }
                                 }
-                                let maxBottom = -Infinity;
                                 const naturalChildren = node.actualParent!.naturalChildren as T[];
                                 length = naturalChildren.length;
                                 i = 0;

@@ -1517,9 +1517,9 @@ export function hasComputedStyle(element: Element): element is HTMLElement {
 export function parseSelectorText(value: string, document?: boolean) {
     value = document ? value.trim() : trimSelector(value.trim());
     if (value.includes(',')) {
-        let normalized = value;
-        let found = false;
-        let match: Null<RegExpExecArray>;
+        let normalized = value,
+            found = false,
+            match: Null<RegExpExecArray>;
         while (match = CSS.SELECTOR_ATTR.exec(normalized)) {
             const index = match.index;
             const length = match[0].length;
@@ -1552,8 +1552,8 @@ export function parseSelectorText(value: string, document?: boolean) {
 
 export function getSpecificity(value: string) {
     CSS.SELECTOR_G.lastIndex = 0;
-    let result = 0;
-    let match: Null<RegExpExecArray>;
+    let result = 0,
+        match: Null<RegExpExecArray>;
     while (match = CSS.SELECTOR_G.exec(value)) {
         let segment = match[1];
         if (segment.length === 1) {
@@ -2390,8 +2390,8 @@ export function calculateStyle(element: CSSElement, attr: string, value: string,
                     slice = calculateStyle(element, 'borderImageSlice', slice, boundingBox);
                 }
                 if (slice !== '') {
-                    let width: Undef<string>;
-                    let outset: Undef<string>;
+                    let width: Undef<string>,
+                        outset: Undef<string>;
                     if (match[3]) {
                         [width, outset] = match[3].trim().split(CHAR_DIVIDER);
                         if (hasCalc(width)) {
@@ -2565,8 +2565,8 @@ export function checkMediaRule(value: string, fontSize?: number) {
             while (match = pattern.exec(value)) {
                 const patternCondition = /\(([a-z-]+)\s*(:|<?=?|=?>?)?\s*([\w.%]+)?\)(?:\s+and\s+)?/g;
                 const negate = match[1] === 'not';
-                let valid = false;
-                let condition: Null<RegExpExecArray>;
+                let valid = false,
+                    condition: Null<RegExpExecArray>;
                 while (condition = patternCondition.exec(match[2])) {
                     const attr = condition[1];
                     let operation = condition[2];
@@ -2665,8 +2665,8 @@ export function isParentStyle(element: Element, attr: string, ...styles: string[
 }
 
 export function getInheritedStyle(element: Element, attr: string, exclude?: RegExp, ...tagNames: string[]) {
-    let value = '';
-    let current = element.parentElement;
+    let value = '',
+        current = element.parentElement;
     while (current && !tagNames.includes(current.tagName)) {
         value = getStyle(current)[attr];
         if (value === 'inherit' || exclude?.test(value)) {
@@ -2825,8 +2825,8 @@ export function calculateVar(element: CSSElement, value: string, options: Calcul
                         options.boundingSize = boundingBox[dimension];
                     }
                     else {
-                        let offsetPadding = 0;
-                        let boundingElement: Null<Element>;
+                        let offsetPadding = 0,
+                            boundingElement: Null<Element>;
                         if (options.parent === false) {
                             boundingElement = element;
                         }
@@ -3214,8 +3214,8 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
         for (const value of srcset.trim().split(CHAR_SEPARATOR)) {
             const match = /^(.*?)(?:\s+([\d.]+)([xw]))?$/.exec(value);
             if (match) {
-                let width = 0;
-                let pixelRatio = 0;
+                let width = 0,
+                    pixelRatio = 0;
                 switch (match[3]) {
                     case 'w':
                         width = convertFloat(match[2]);
@@ -3237,14 +3237,16 @@ export function getSrcSet(element: HTMLImageElement, mimeType?: string[]) {
     }
     else if (length > 1) {
         result.sort((a, b) => {
-            const pxA = a.pixelRatio, pxB = b.pixelRatio;
+            const pxA = a.pixelRatio;
+            const pxB = b.pixelRatio;
             if (pxA > 0 && pxB > 0) {
                 if (pxA !== pxB) {
                     return pxA < pxB ? -1 : 1;
                 }
             }
             else {
-                const widthA = a.width, widthB = b.width;
+                const widthA = a.width;
+                const widthB = b.width;
                 if (widthA !== widthB && widthA > 0 && widthB > 0) {
                     return widthA < widthB ? -1 : 1;
                 }
@@ -3414,8 +3416,8 @@ export function calculate(value: string, options?: CalculateOptions) {
         let index = 0;
         while (true) {
             for (let i = 0; i < closing.length; ++i) {
-                let j = closing[i] - 1;
-                let valid = false;
+                let valid = false,
+                    j = closing[i] - 1;
                 for ( ; j >= 0; j--) {
                     if (opening[j]) {
                         valid = true;
@@ -3435,8 +3437,8 @@ export function calculate(value: string, options?: CalculateOptions) {
                     if (options) {
                         ({ boundingSize, min, max, unitType, fontSize } = options);
                     }
-                    let found = false;
-                    let operand: Undef<string>,
+                    let found = false,
+                        operand: Undef<string>,
                         operator: Undef<string>;
                     const seg: number[] = [];
                     const evaluate: string[] = [];

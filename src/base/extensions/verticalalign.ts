@@ -11,10 +11,10 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
     }
 
     public condition(node: T) {
-        let valid = false;
-        let inlineVertical = 0;
-        let sameValue = 0;
         const children = node.children as T[];
+        let valid = false,
+            inlineVertical = 0,
+            sameValue = 0;
         const length = children.length;
         let i = 0;
         while (i < length) {
@@ -57,8 +57,8 @@ export default class VerticalAlign<T extends NodeUI> extends ExtensionUI<T> {
         if (node.layoutHorizontal) {
             for (const children of (node.horizontalRows as T[][] || [node.renderChildren])) {
                 const aboveBaseline: T[] = [];
-                let minTop = Infinity;
-                let baseline: Undef<T>;
+                let minTop = Infinity,
+                    baseline: Undef<T>;
                 const length = children.length;
                 let i = 0;
                 while (i < length) {

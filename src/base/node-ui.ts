@@ -62,9 +62,9 @@ function cascadeActualPadding(children: T[], attr: string, value: number) {
 }
 
 function parseExclusions(attr: string, enumeration: {}, dataset: DOMStringMap, parentDataset: DOMStringMap, systemName: string) {
-    let exclude = dataset[attr + systemName] || dataset[attr] || '';
-    let offset = 0;
     const value = parentDataset[attr + 'Child' + systemName] || parentDataset[attr + 'Child'];
+    let exclude = dataset[attr + systemName] || dataset[attr] || '',
+        offset = 0;
     if (value) {
         exclude += (exclude !== '' ? '|' : '') + value;
     }
@@ -297,7 +297,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (b.length && a.length === 0) {
                     return -1;
                 }
-                const heightA = a.baselineHeight + a.marginBottom, heightB = b.baselineHeight + b.marginBottom;
+                const heightA = a.baselineHeight + a.marginBottom;
+                const heightB = b.baselineHeight + b.marginBottom;
                 if (!equal(heightA, heightB)) {
                     return heightA > heightB ? -1 : 1;
                 }
@@ -324,7 +325,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                 else if (a.textElement && b.inputElement && a.childIndex < b.childIndex) {
                     return -1;
                 }
-                const bottomA = a.bounds.bottom, bottomB = b.bounds.bottom;
+                const bottomA = a.bounds.bottom;
+                const bottomB = b.bounds.bottom;
                 if (bottomA > bottomB) {
                     return -1;
                 }
@@ -441,8 +443,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
 
     public static partitionRows(list: T[], cleared?: Map<T, string>) {
         const result: T[][] = [];
-        let row: T[] = [];
-        let siblings: T[] = [];
+        let row: T[] = [],
+            siblings: T[] = [];
         const length = list.length;
         let i = 0;
         while (i < length) {
@@ -987,8 +989,8 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
                                 else if (siblings[0].floating) {
                                     if (siblings.length > 1) {
                                         const float = siblings[0].float;
-                                        let maxBottom = -Infinity;
-                                        let contentWidth = 0;
+                                        let maxBottom = -Infinity,
+                                            contentWidth = 0;
                                         let i = 0;
                                         while (i < siblings.length) {
                                             const item = siblings[i++];
@@ -1241,9 +1243,9 @@ export default abstract class NodeUI extends Node implements squared.base.NodeUI
             value = this.box.width;
         }
         if (this.pageFlow && !this.documentRoot) {
-            let offsetLeft = 0;
-            let offsetRight = 0;
-            let current = this.actualParent;
+            let offsetLeft = 0,
+                offsetRight = 0,
+                current = this.actualParent;
             while (current) {
                 if (current.hasPX('width', { percent: false }) || !current.pageFlow) {
                     return value;

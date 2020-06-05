@@ -121,9 +121,9 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             const [marginLeft, marginRight] = node.cssAsTuple('marginLeft', 'marginRight');
             const boxRect = Controller.anchorPosition(node, renderParent, true, false);
             const rightAligned = node.rightAligned;
-            let percentWidth = node.percentWidth;
-            let leftPercent = validPercent(marginLeft) ? parseFloat(marginLeft) / 100 : 0;
-            let rightPercent = validPercent(marginRight) ? parseFloat(marginRight) / 100 : 0;
+            let percentWidth = node.percentWidth,
+                leftPercent = validPercent(marginLeft) ? parseFloat(marginLeft) / 100 : 0,
+                rightPercent = validPercent(marginRight) ? parseFloat(marginRight) / 100 : 0;
             if (percentWidth > 0) {
                 if (rightAligned) {
                     if (percentWidth + rightPercent < 1) {
@@ -236,9 +236,9 @@ export default class Percent<T extends View> extends squared.base.ExtensionUI<T>
             const [marginTop, marginBottom] = node.cssAsTuple('marginTop', 'marginBottom');
             const boxRect = Controller.anchorPosition(node, renderParent, true, false);
             const bottomAligned = node.bottomAligned;
-            let percentHeight = node.percentHeight;
-            let topPercent = validPercent(marginTop) ? parseFloat(marginTop) / 100 : 0;
-            let bottomPercent = validPercent(marginBottom) ? parseFloat(marginBottom) / 100 : 0;
+            let percentHeight = node.percentHeight,
+                topPercent = validPercent(marginTop) ? parseFloat(marginTop) / 100 : 0,
+                bottomPercent = validPercent(marginBottom) ? parseFloat(marginBottom) / 100 : 0;
             if (percentHeight > 0) {
                 if (bottomAligned) {
                     if (percentHeight + bottomPercent < 1) {

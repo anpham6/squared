@@ -29,28 +29,26 @@ function promisify<T = unknown>(fn: FunctionType<any>): FunctionType<Promise<T>>
 
 const app = express();
 
-let Node: serve.INode;
-let Express: serve.IExpress;
-let Compress: serve.ICompress;
-let Chrome: serve.IChrome;
-let Image: serve.IImage;
+let Node: serve.INode,
+    Express: serve.IExpress,
+    Compress: serve.ICompress,
+    Chrome: serve.IChrome,
+    Image: serve.IImage;
 
 {
-    let DISK_READ = false;
-    let DISK_WRITE = false;
-    let UNC_READ = false;
-    let UNC_WRITE = false;
-    let GZIP_LEVEL = 9;
-    let BROTLI_QUALITY = 11;
-    let JPEG_QUALITY = 100;
-    let TINIFY_API_KEY = false;
-
-    let ROUTING: Undef<serve.Routing>;
-    let CORS: Undef<cors.CorsOptions>;
-    let ENV: serve.Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development';
-    let PORT = process.env.PORT || '3000';
-
-    let EXTERNAL: Undef<ExternalModules>;
+    let DISK_READ = false,
+        DISK_WRITE = false,
+        UNC_READ = false,
+        UNC_WRITE = false,
+        GZIP_LEVEL = 9,
+        BROTLI_QUALITY = 11,
+        JPEG_QUALITY = 100,
+        TINIFY_API_KEY = false,
+        ROUTING: Undef<serve.Routing>,
+        CORS: Undef<cors.CorsOptions>,
+        ENV: serve.Environment = process.env.NODE_ENV?.toLowerCase().startsWith('prod') ? 'production' : 'development',
+        PORT = process.env.PORT || '3000',
+        EXTERNAL: Undef<ExternalModules>;
 
     try {
         const settings = require('./squared.settings.json') as serve.Settings;
@@ -768,9 +766,9 @@ let Image: serve.IImage;
             return undefined;
         }
         removeCss(source: string, styles: string[]) {
-            let result: Undef<string>;
-            let pattern: Undef<RegExp>;
-            let match: Null<RegExpExecArray>;
+            let result: Undef<string>,
+                pattern: Undef<RegExp>,
+                match: Null<RegExpExecArray>;
             for (let value of styles) {
                 value = value.replace(/\./g, '\\.');
                 let found = false;
@@ -1017,8 +1015,8 @@ class FileManager implements serve.IFileManager {
         return { pathname, filepath };
     }
     getRelativeUrl(file: ExpressAsset, url: string) {
-        let asset = this.assets.find(item => item.uri === url);
-        let origin: Undef<string> = file.uri;
+        let asset = this.assets.find(item => item.uri === url),
+            origin: Undef<string> = file.uri;
         if (!asset && origin) {
             const location = Express.resolvePath(url, origin);
             if (location) {
@@ -1069,9 +1067,9 @@ class FileManager implements serve.IFileManager {
     }
     replacePath(source: string, segment: string, value: string, base64?: boolean) {
         segment = !base64 ? segment.replace(/[\\/]/g, '[\\\\/]') : '[^"\'\\s]+' + segment;
-        let result: Undef<string>;
-        let pattern = new RegExp(`(?:([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=)?(["'])(\\s*)${segment}(\\s*)\\2`, 'g');
-        let match: Null<RegExpExecArray>;
+        let result: Undef<string>,
+            pattern = new RegExp(`(?:([sS][rR][cC]|[hH][rR][eE][fF]|[dD][aA][tT][aA]|[pP][oO][sS][tT][eE][rR])=)?(["'])(\\s*)${segment}(\\s*)\\2`, 'g'),
+            match: Null<RegExpExecArray>;
         while (match = pattern.exec(source)) {
             if (result === undefined) {
                 result = source;
@@ -1234,12 +1232,12 @@ class FileManager implements serve.IFileManager {
             case '@application/xhtml+xml': {
                 const getOuterHTML = (script: boolean, value: string) => script ? `<script type="text/javascript" src="${value}"></script>` : `<link rel="stylesheet" type="text/css" href="${value}" />`;
                 const minifySpace = (value: string) => value.replace(/[\s\n]+/g, '');
-                const baseUri = file.uri!;
                 const saved = new Set<string>();
-                let html = fs.readFileSync(filepath).toString('utf8');
-                let source = html;
-                let pattern = /(\s*)<(script|link|style)[\s\S]*?([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[\s\S]*?\/?>(?:[\s\S]*?<\/\2>\n*)?/ig;
-                let match: Null<RegExpExecArray>;
+                const baseUri = file.uri!;
+                let html = fs.readFileSync(filepath).toString('utf8'),
+                    source = html,
+                    pattern = /(\s*)<(script|link|style)[\s\S]*?([\s\n]+data-chrome-file="\s*(save|export)As:\s*((?:[^"]|\\")+)")[\s\S]*?\/?>(?:[\s\S]*?<\/\2>\n*)?/ig,
+                    match: Null<RegExpExecArray>;
                 while (match = pattern.exec(html)) {
                     const segment = match[0];
                     const script = match[2].toLowerCase() === 'script';
@@ -2050,14 +2048,14 @@ class FileManager implements serve.IFileManager {
         const filesToRemove = this.filesToRemove;
         for (const [file, output] of this.filesToCompare) {
             const originalPath = file.filepath!;
-            let minFile = originalPath;
-            let minSize = Compress.getFileSize(minFile);
+            let minFile = originalPath,
+                minSize = Compress.getFileSize(minFile);
             for (const filepath of output) {
                 const size = Compress.getFileSize(filepath);
                 if (size < minSize) {
-                    filesToRemove.add(minFile);
                     minFile = filepath;
                     minSize = size;
+                    filesToRemove.add(minFile);
                 }
                 else {
                     filesToRemove.add(filepath);
@@ -2189,14 +2187,14 @@ app.post('/api/assets/archive', (req, res) => {
         res.json({ application: `DIRECTORY: ${dirname}`, system });
         return;
     }
-    let append_to = req.query.append_to as string;
+    let append_to = req.query.append_to as string,
+        zipname = '',
+        format: archiver.Format,
+        cleared = false,
+        formatGzip = false;
     if (path.isAbsolute(append_to)) {
         append_to = path.normalize(append_to);
     }
-    let zipname = '';
-    let format: archiver.Format;
-    let cleared = false;
-    let formatGzip = false;
     switch (req.query.format) {
         case 'gz':
         case 'tgz':

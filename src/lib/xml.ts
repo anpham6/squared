@@ -86,8 +86,9 @@ export function replaceTab(value: string, spaces = 4, preserve = false) {
 export function applyTemplate(tagName: string, template: StandardMap, children: StandardMap[], depth?: number) {
     const tag: ObjectMap<any> = template[tagName];
     const nested = tag['>>'] === true;
-    let output = '';
-    let indent = '';
+    let output = '',
+        indent = '',
+        length = children.length;
     if (depth === undefined) {
         output += STRING_XMLENCODING;
         depth = 0;
@@ -95,7 +96,6 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
     else {
         indent += '\t'.repeat(depth);
     }
-    let length = children.length;
     for (let i = 0; i < length; ++i) {
         const item = children[i];
         const include: Undef<string> = tag['#'] && item[tag['#']];
@@ -174,7 +174,10 @@ export function applyTemplate(tagName: string, template: StandardMap, children: 
 export function formatTemplate(value: string, closeEmpty = false, startIndent = -1, char = '\t') {
     const lines: XMLTagData[] = [];
     const pattern = /\s*(<(\/)?([?\w]+)[^>]*>)\n?([^<]*)/g;
-    let match: Null<RegExpExecArray>;
+    let output = '',
+        indent = startIndent,
+        ignoreIndent = false,
+        match: Null<RegExpExecArray>;
     while (match = pattern.exec(value)) {
         lines.push({
             tag: match[1],
@@ -183,9 +186,6 @@ export function formatTemplate(value: string, closeEmpty = false, startIndent = 
             value: match[4]
         });
     }
-    let output = '';
-    let indent = startIndent;
-    let ignoreIndent = false;
     const length = lines.length;
     for (let i = 0; i < length; ++i) {
         const line = lines[i];

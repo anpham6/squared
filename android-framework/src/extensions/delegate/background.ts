@@ -33,11 +33,11 @@ export default class Background<T extends View> extends squared.base.ExtensionUI
         const { backgroundColor, backgroundImage, visibleStyle } = node;
         const backgroundSeparate = isBackgroundSeparate(node, parent, visibleStyle.backgroundColor, visibleStyle.backgroundImage, visibleStyle.backgroundRepeatX, visibleStyle.backgroundRepeatY, visibleStyle.borderWidth);
         const hasHeight = node.hasHeight || node.actualParent!.hasHeight === true;
-        let renderParent = parent;
-        let container: Undef<T>;
-        let parentAs!: T;
         const parentVisible = isParentVisible(node, parent);
         const fixed = node.css('backgroundAttachment') === 'fixed';
+        let renderParent = parent,
+            container: Undef<T>,
+            parentAs!: T;
         if (backgroundColor !== '') {
             if (!(visibleStyle.backgroundImage && visibleStyle.backgroundRepeatX && visibleStyle.backgroundRepeatY) || /\.(gif|png)"?\)$/i.test(backgroundImage)) {
                 container = controller.createNodeWrapper(node, renderParent, { resource: NODE_RESOURCE.BOX_SPACING | NODE_RESOURCE.FONT_STYLE | NODE_RESOURCE.VALUE_STRING });

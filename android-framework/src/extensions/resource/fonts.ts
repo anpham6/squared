@@ -135,16 +135,16 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
             let i = 0;
             while (i < length) {
                 let node = data[i++];
-                const { id, companion } = node;
                 const stored: FontAttribute = node.data(Resource.KEY_NAME, 'fontStyle');
+                const { id, companion } = node;
                 let { fontFamily, fontStyle, fontWeight } = stored;
                 if (companion?.tagName === 'LABEL' && !companion.visible) {
                     node = companion as T;
                 }
                 fontFamily.replace(/"/g, '').split(',').some((value, index, array) => {
                     value = trimBoth(value.trim(), "'").toLowerCase();
-                    let fontName = value;
-                    let actualFontWeight = '';
+                    let fontName = value,
+                        actualFontWeight = '';
                     if (!disableFontAlias && FONTREPLACE_ANDROID[fontName]) {
                         fontName = this.options.systemDefaultFont;
                     }
@@ -157,13 +157,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                             createFont = true;
                         }
                         else {
-                            let font: Undef<FontFaceData>;
-                            if (fontStyle.startsWith('oblique')) {
-                                font = resource.getFont(value, 'italic') || resource.getFont(value, 'normal');
-                            }
-                            else {
-                                font = resource.getFont(value, fontStyle);
-                            }
+                            const font = fontStyle.startsWith('oblique')
+                                ? resource.getFont(value, 'italic') || resource.getFont(value, 'normal')
+                                : resource.getFont(value, fontStyle);
                             if (font) {
                                 actualFontWeight = fontWeight;
                                 fontWeight = font.fontWeight.toString();
@@ -253,7 +249,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 return 0;
             });
             do {
-                if (sorted.length === 1) {
+                const length = sorted.length;
+                if (length === 1) {
                     const data = sorted[0];
                     for (const attr in data) {
                         const item = data[attr];
@@ -265,7 +262,6 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 }
                 else {
                     const styleKey: AttributeMap = {};
-                    const length = sorted.length;
                     for (let i = 0; i < length; ++i) {
                         const dataA = sorted[i];
                         const filtered: AttributeMap = {};
@@ -385,8 +381,8 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
                 });
             }
             styleData.sort((a, b) => {
-                let c: number | string = a.ids!.length;
-                let d: number | string = b.ids!.length;
+                let c: number | string = a.ids!.length,
+                    d: number | string = b.ids!.length;
                 if (c === d) {
                     c = (a.items as StringValue[]).length;
                     d = (b.items as StringValue[]).length;
@@ -433,9 +429,9 @@ export default class ResourceFonts<T extends View> extends squared.base.Extensio
         }
         for (const value of parentStyle) {
             const styleName: string[] = [];
-            let parent = '';
-            let items: Undef<StringValue[]>;
             const values = value.split('.');
+            let parent = '',
+                items: Undef<StringValue[]>;
             const q = values.length;
             for (i = 0; i < q; ++i) {
                 const name = values[i];

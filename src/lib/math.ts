@@ -78,8 +78,8 @@ export function truncateString(value: string, precision = 3) {
     else {
         pattern.lastIndex = 0;
     }
-    let output = value;
-    let match: Null<RegExpExecArray>;
+    let output = value,
+        match: Null<RegExpExecArray>;
     while (match = pattern.exec(value)) {
         let trailing = match[1];
         if (parseInt(match[2]) >= 5) {

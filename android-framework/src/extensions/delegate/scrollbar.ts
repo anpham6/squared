@@ -34,8 +34,8 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
         }
         if (overflow.includes(horizontalScroll)) {
             boxWidth = node.actualWidth - node.contentBoxWidth;
-            let valid = true;
-            let contentWidth = 0;
+            let valid = true,
+                contentWidth = 0;
             node.each((child: T) => {
                 if (child.textElement && child.css('whiteSpace') !== 'nowrap') {
                     children.push(child);
@@ -131,8 +131,8 @@ export default class ScrollBar<T extends View> extends squared.base.ExtensionUI<
                     child.css('maxWidth', formatPX(boxWidth));
                 }
             }
-            let first = true;
-            let item: T;
+            let first = true,
+                item: T;
             do {
                 item = scrollView.pop() as T;
                 if (first) {

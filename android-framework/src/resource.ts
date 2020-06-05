@@ -74,7 +74,9 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         const themes = STORED.themes;
         const { items, output } = theme;
         let path = 'res/values',
-            file = 'themes.xml';
+            file = 'themes.xml',
+            name = theme.name,
+            appTheme = '';
         if (output) {
             if (isString(output.path)) {
                 path = trimString(output.path.trim().replace(/\\/g, '/'), '/');
@@ -85,8 +87,6 @@ export default class Resource<T extends View> extends squared.base.ResourceUI<T>
         }
         const filename = path + '/' + file;
         const storedFile = themes.get(filename) || new Map<string, StyleAttribute>();
-        let name = theme.name;
-        let appTheme = '';
         if (name === '' || name.charAt(0) === '.') {
             found: {
                 for (const data of themes.values()) {

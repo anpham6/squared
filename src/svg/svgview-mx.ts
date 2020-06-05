@@ -218,9 +218,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     const origin = getKeyframeOrigin(attrMap, element, key) || TRANSFORM.origin(element);
                                     TRANSFORM.parse(element, transform.value)?.forEach(item => {
                                         const m = item.matrix;
-                                        let name: string;
-                                        let value: string;
-                                        let transformOrigin: Undef<Point>;
+                                        let name: string,
+                                            value: string,
+                                            transformOrigin: Undef<Point>;
                                         switch (item.type) {
                                             case SVGTransform.SVG_TRANSFORM_TRANSLATE:
                                                 name = 'translate';

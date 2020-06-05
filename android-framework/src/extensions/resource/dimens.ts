@@ -64,8 +64,8 @@ export default class ResourceDimens<T extends View> extends squared.base.Extensi
             while (i < length) {
                 const layout = layouts[i++];
                 const pattern = /:(\w+)="(-?[\d.]+px)"/g;
-                let content = layout.content!;
-                let match: Null<RegExpExecArray>;
+                let content = layout.content!,
+                    match: Null<RegExpExecArray>;
                 while (match = pattern.exec(layout.content!)) {
                     const [original, name, value] = match;
                     if (name !== 'text') {

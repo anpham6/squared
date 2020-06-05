@@ -31,7 +31,8 @@ const NodeUI = squared.base.NodeUI;
 
 function sortHorizontalFloat(list: View[]) {
     list.sort((a, b) => {
-        const floatA = a.float, floatB = b.float;
+        const floatA = a.float;
+        const floatB = b.float;
         if (floatA !== 'none' && floatB !== 'none') {
             if (floatA !== floatB) {
                 return floatA === 'left' ? -1 : 1;
@@ -51,7 +52,8 @@ function sortHorizontalFloat(list: View[]) {
 }
 
 function getSortOrderStandard(above: View, below: View): number {
-    const parentA = above.actualParent as View, parentB = below.actualParent as View;
+    const parentA = above.actualParent as View;
+    const parentB = below.actualParent as View;
     if (above === parentB) {
         return -1;
     }
@@ -73,7 +75,8 @@ function getSortOrderStandard(above: View, below: View): number {
 }
 
 function getSortOrderInvalid(above: View, below: View): number {
-    const depthA = above.depth, depthB = below.depth;
+    const depthA = above.depth;
+    const depthB = below.depth;
     if (depthA === depthB) {
         const parentA = above.actualParent as View;
         const parentB = below.actualParent as View;
@@ -98,8 +101,8 @@ function getSortOrderInvalid(above: View, below: View): number {
 
 function adjustBaseline(baseline: View, nodes: View[], singleRow: boolean, boxTop: number) {
     const baselineHeight = baseline.baselineHeight;
-    let imageHeight = 0;
-    let imageBaseline: Undef<View>;
+    let imageHeight = 0,
+        imageBaseline: Undef<View>;
     const length = nodes.length;
     let i = 0;
     while (i < length) {
@@ -312,8 +315,8 @@ function segmentLeftAligned<T extends View>(children: T[]) {
 }
 
 function relativeWrapWidth(node: View, bounds: BoxRectDimension, multiline: boolean, previousRowLeft: Undef<View>, rowWidth: number, data: RelativeLayoutData) {
-    let maxWidth = 0;
-    let baseWidth = rowWidth + node.marginLeft;
+    let maxWidth = 0,
+        baseWidth = rowWidth + node.marginLeft;
     if (previousRowLeft && !data.items!.includes(previousRowLeft)) {
         baseWidth += previousRowLeft.linear.width;
     }
@@ -1217,8 +1220,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     return true;
                 }
                 else if (layout.floated.has('right')) {
-                    let pageFlow = 0;
-                    let multiline = false;
+                    let pageFlow = 0,
+                        multiline = false;
                     for (const node of layout) {
                         if (node.floating) {
                             if (multiline) {
@@ -1438,12 +1441,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const application = this.application;
                 const element = node.element as HTMLImageElement;
                 const absoluteParent = node.absoluteParent || node.documentParent;
-                let width = node.toFloat('width', 0);
-                let height = node.toFloat('height', 0);
-                let percentWidth = node.percentWidth > 0 ? width : -1;
+                let width = node.toFloat('width', 0),
+                    height = node.toFloat('height', 0),
+                    percentWidth = node.percentWidth > 0 ? width : -1,
+                    scaleType = 'fitXY',
+                    imageSet: Undef<ImageSrcSet[]>;
                 const percentHeight = node.percentHeight > 0 ? height : -1;
-                let scaleType = 'fitXY';
-                let imageSet: Undef<ImageSrcSet[]>;
                 if (isString(element.srcset) || node.actualParent!.tagName === 'PICTURE') {
                     const mimeType = this.localSettings.mimeType.image;
                     imageSet = getSrcSet(element, mimeType === '*' ? undefined : mimeType);
@@ -1684,8 +1687,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'METER':
             case 'PROGRESS': {
                 const { min, max, value } = node.element as HTMLMeterElement;
-                let foregroundColor: Undef<string>;
-                let backgroundColor: Undef<string>;
+                let foregroundColor: Undef<string>,
+                    backgroundColor: Undef<string>;
                 if (node.tagName === 'METER') {
                     ({ meterForegroundColor: foregroundColor, meterBackgroundColor: backgroundColor } = this.localSettings.style);
                     if (max) {
@@ -1723,8 +1726,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             case 'VIDEO': {
                 const videoMimeType = this.localSettings.mimeType.video;
                 const element = node.element as HTMLVideoElement;
-                let src = element.src;
-                let mimeType: Undef<string>;
+                let src = element.src,
+                    mimeType: Undef<string>;
                 if (hasMimeType(videoMimeType, src)) {
                     mimeType = parseMimeType(src);
                 }
@@ -2167,9 +2170,9 @@ export default class Controller<T extends View> extends squared.base.ControllerU
 
     protected processRelativeHorizontal(node: T, children: T[]) {
         const rowsLeft: T[][] = [];
-        let rowsRight: Undef<T[][]>;
-        let autoPosition = false;
-        let alignmentMultiLine = false;
+        let rowsRight: Undef<T[][]>,
+            autoPosition = false,
+            alignmentMultiLine = false;
         if (node.hasAlign(NODE_ALIGNMENT.VERTICAL)) {
             let previous: Undef<T>;
             const length = children.length;
@@ -2195,8 +2198,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             const boxParent = node.nodeGroup ? node.documentParent : node;
             const clearMap = this.application.clearMap;
             const lineWrap = node.css('whiteSpace') !== 'nowrap';
-            let boxWidth = boxParent.actualBoxWidth(getBoxWidth.call(this, node, children));
-            let textIndent = 0;
+            let boxWidth = boxParent.actualBoxWidth(getBoxWidth.call(this, node, children)),
+                textIndent = 0;
             if (node.naturalElement) {
                 if (node.blockDimension) {
                     textIndent = node.parseUnit(node.css('textIndent'));
@@ -2225,12 +2228,14 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     continue;
                 }
                 const leftAlign = j === 1;
-                let leftForward = true;
-                let rowWidth = 0;
-                let previousRowLeft: Undef<T>;
-                let textIndentSpacing = false;
-                let alignParent: string;
-                let rows: T[][];
+                let leftForward = true,
+                    rowWidth = 0,
+                    textIndentSpacing = false,
+                    previousRowLeft: Undef<T>,
+                    alignParent: string,
+                    rows: T[][],
+                    previous!: T,
+                    items!: T[];
                 if (leftAlign) {
                     if ((!node.naturalElement && seg[0].actualParent || node).cssAny('textAlign', { initial: true, values: ['right', 'end'] })) {
                         alignParent = 'right';
@@ -2251,8 +2256,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     rowsRight = [];
                     rows = rowsRight;
                 }
-                let previous!: T;
-                let items!: T[];
                 for (let i = 0; i < length; ++i) {
                     const item = seg[i];
                     let alignSibling: string;
@@ -2282,20 +2285,20 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                         autoPosition = true;
                         continue;
                     }
-                    let bounds = item.bounds;
-                    let siblings: Undef<Element[]>;
+                    let bounds = item.bounds,
+                        multiline = item.multiline,
+                        anchored = item.autoMargin.horizontal === true,
+                        siblings: Undef<Element[]>;
                     if (item.styleText && !item.hasPX('width')) {
                         const textBounds = item.textBounds;
                         if (textBounds && (textBounds.numberOfLines as number > 1 || Math.ceil(textBounds.width) < item.box.width)) {
                             bounds = textBounds;
                         }
                     }
-                    let multiline = item.multiline;
                     if (multiline && Math.floor(bounds.width) <= boxWidth && !item.hasPX('width') && !isMultiline(item)) {
                         multiline = false;
                         item.multiline = false;
                     }
-                    let anchored = item.autoMargin.horizontal === true;
                     if (anchored) {
                         if (item.autoMargin.leftRight) {
                             item.anchorParent('horizontal');
@@ -2306,8 +2309,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     if (previous) {
                         siblings = item.inlineVertical && previous.inlineVertical && item.previousSibling !== previous ? getElementsBetweenSiblings(previous.element, item.element!) : undefined;
-                        let retainMultiline = false;
-                        let textNewRow = false;
+                        let textNewRow = false,
+                            retainMultiline = false;
                         if (item.textElement) {
                             let checkWidth = true;
                             if (previous.textElement) {
@@ -2439,8 +2442,10 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                 const q = items.length;
                 if (q > 1) {
                     const bottomAligned = getTextBottom(items);
-                    let textBottom = bottomAligned[0] as Undef<T>;
                     baseline = NodeUI.baseline(bottomAligned.length ? items.filter(item => !bottomAligned.includes(item)) : items);
+                    let textBottom = bottomAligned[0] as Undef<T>,
+                        maxCenterHeight = 0,
+                        textBaseline: Null<T> = null;
                     if (baseline && textBottom) {
                         if (baseline !== textBottom && baseline.bounds.height < textBottom.bounds.height) {
                             baseline.anchor('bottom', textBottom.documentId);
@@ -2452,8 +2457,6 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     }
                     const baselineAlign: T[] = [];
                     const documentId = i === 0 ? 'true' : baseline?.documentId;
-                    let maxCenterHeight = 0;
-                    let textBaseline: Null<T> = null;
                     j = 0;
                     while (j < q) {
                         const item = items[j++];
@@ -2723,13 +2726,13 @@ export default class Controller<T extends View> extends squared.base.ControllerU
     protected processConstraintHorizontal(node: T, children: T[]) {
         const reverse = node.hasAlign(NODE_ALIGNMENT.RIGHT);
         const [anchorStart, anchorEnd, chainStart, chainEnd] = getAnchorDirection(reverse);
-        let valid = true;
-        let bias = 0;
-        let baselineCount = 0;
-        let tallest: Undef<T>;
-        let bottom: Undef<T>;
-        let previous: Undef<T>;
-        let textBaseline: Null<T> = null;
+        let valid = true,
+            bias = 0,
+            baselineCount = 0,
+            textBaseline: Null<T> = null,
+            tallest: Undef<T>,
+            bottom: Undef<T>,
+            previous: Undef<T>;
         if (!reverse) {
             switch (node.cssAscend('textAlign', { startSelf: true })) {
                 case 'center':
@@ -2946,17 +2949,17 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         if (!node.hasWidth && children.some(item => item.percentWidth > 0)) {
             node.setLayoutWidth('match_parent', false);
         }
-        let previousSiblings: T[] = [];
-        let previousRow: Undef<T[]>;
-        let previousAlignParent = false;
+        let previousSiblings: T[] = [],
+            previousRow: Undef<T[]>,
+            previousAlignParent = false;
         const length = horizontal.length;
         for (let i = 0; i < length; ++i) {
             const partition = horizontal[i];
             const [floatingRight, floatingLeft] = partitionArray(partition, item => item.float === 'right' || item.autoMargin.left === true);
-            let aboveRowEnd: Undef<T>;
-            let currentRowTop: Undef<T>;
-            let tallest: Undef<T>;
-            let alignParent = false;
+            let alignParent = false,
+                aboveRowEnd: Undef<T>,
+                currentRowTop: Undef<T>,
+                tallest: Undef<T>;
             const applyLayout = (seg: T[], reverse: boolean) => {
                 const q = seg.length;
                 if (q === 0) {
@@ -3092,7 +3095,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
             if (!alignParent) {
                 if (previousRow) {
                     const current = partition[0];
-                    const q = previousRow.length, r = partition.length;
+                    const q = previousRow.length;
+                    const r = partition.length;
                     if (q === 1 && r === 1) {
                         const above = previousRow[0];
                         above.anchor('bottomTop', current.documentId);
@@ -3227,8 +3231,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
                     const itemA = item.innerMostWrapped as T;
                     if (itemA.pageFlow || item.constraint[axis]) {
                         const { linear: linearA, bounds: boundsA } = itemA;
-                        let position: Undef<string>;
-                        let offset = NaN;
+                        let offset = NaN,
+                            position: Undef<string>;
                         if (withinRange(bounds[LT], boundsA[LT])) {
                             position = LT;
                         }
@@ -3310,8 +3314,8 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         const absoluteParent = node.absoluteParent as T;
         const bounds = node.positionStatic ? node.bounds : linear;
-        let attr = 'layout_constraintGuide_';
-        let location = 0;
+        let attr = 'layout_constraintGuide_',
+            location = 0;
         if (!node.leftTopAxis && documentParent.rootElement) {
             const renderParent = node.renderParent;
             if (documentParent.ascend({ condition: item => item === renderParent, attr: 'renderParent' }).length) {
@@ -3326,12 +3330,12 @@ export default class Controller<T extends View> extends squared.base.ControllerU
         }
         if (percent) {
             const position = Math.abs(bounds[LT] - box[LT]) / (horizontal ? box.width : box.height);
-            location += parseFloat(truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision));
             attr += 'percent';
+            location += parseFloat(truncate(!opposing ? position : 1 - position, node.localSettings.floatPrecision));
         }
         else {
-            location += bounds[LT] - box[!opposing ? LT : RB];
             attr += 'begin';
+            location += bounds[LT] - box[!opposing ? LT : RB];
         }
         if (!node.pageFlow) {
             if (documentParent.outerWrapper && node.parent === documentParent.outerMostWrapper) {

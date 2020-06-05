@@ -193,10 +193,10 @@ function setContentSpacing(node: View, mainData: CssGridData<View>, alignment: s
 }
 
 function getCellDimensions(node: View, horizontal: boolean, section: string[], insideGap: number): Undef<string>[] {
-    let width: Undef<string>;
-    let height: Undef<string>;
-    let columnWeight: Undef<string>;
-    let rowWeight: Undef<string>;
+    let width: Undef<string>,
+        height: Undef<string>,
+        columnWeight: Undef<string>,
+        rowWeight: Undef<string>;
     if (section.every(value => isPx(value))) {
         const px = section.reduce((a, b) => a + parseFloat(b), insideGap);
         const dimension = formatPX(px);
@@ -291,8 +291,8 @@ function isFlexibleParent(node: View, dataName: string) {
 
 function requireDirectionSpacer(data: CssGridDirectionData, dimension: number) {
     const unit = data.unit;
-    let size = 0;
-    let percent = 0;
+    let size = 0,
+        percent = 0;
     for (let i = 0; i < unit.length; ++i) {
         const value = unit[i];
         if (isPx(value)) {
@@ -320,9 +320,9 @@ const hasAlignment = (value: string) => /start|end|center|baseline/.test(value);
 
 export default class CssGrid<T extends View> extends squared.base.extensions.CssGrid<T> {
     public processNode(node: T, parent: T) {
-        let container: Undef<T>;
-        let renderAs: Undef<T>;
-        let outputAs: Undef<NodeTemplate<T>>;
+        let container: Undef<T>,
+            renderAs: Undef<T>,
+            outputAs: Undef<NodeTemplate<T>>;
         if (CssGrid.isJustified(node) || CssGrid.isAligned(node)) {
             container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { containerType: CONTAINER_NODE.CONSTRAINT, resource: NODE_RESOURCE.ASSET });
             container.inherit(node, 'styleMap', 'boxStyle');
@@ -427,8 +427,8 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
     public processChild(node: T, parent: T) {
         const mainData: CssGridData<T> = parent.data(this.name, 'mainData');
         const cellData: CssGridCellData = node.data(this.name, 'cellData');
-        let renderAs: Undef<T>;
-        let outputAs: Undef<NodeXmlTemplate<T>>;
+        let renderAs: Undef<T>,
+            outputAs: Undef<NodeXmlTemplate<T>>;
         if (mainData && cellData) {
             const { column, row } = mainData;
             const alignSelf = node.has('alignSelf') ? node.css('alignSelf') : mainData.alignItems;
@@ -440,12 +440,12 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                         ? [column, cellData.columnStart, cellData.columnSpan, 'minWidth']
                         : [row, cellData.rowStart, cellData.rowSpan, 'minHeight'];
                 const { unit, unitMin } = data;
-                let size = 0;
-                let minSize = 0;
-                let minUnitSize = 0;
-                let sizeWeight = 0;
-                let fitContent = false;
-                let autoSize = false;
+                let size = 0,
+                    minSize = 0,
+                    minUnitSize = 0,
+                    sizeWeight = 0,
+                    fitContent = false,
+                    autoSize = false;
                 let i = 0, j = 0;
                 while (i < cellSpan) {
                     const k = cellStart + i++;
@@ -948,19 +948,18 @@ export default class CssGrid<T extends View> extends squared.base.extensions.Css
                 const { emptyRows, rowDirection: horizontal } = mainData;
                 const { flexible, gap, unit } = horizontal ? column : row;
                 const unitSpan = unit.length;
-                let k = -1;
-                let l = 0;
+                let k = -1, l = 0;
                 const createSpacer = (i: number, unitData: string[], gapSize: number, opposing = 'wrap_content', opposingWeight = '', opposingMargin = 0) => {
                     if (k !== -1) {
                         const section = unitData.slice(k, k + l);
-                        let width = '';
-                        let height = '';
-                        let layout_columnWeight = '';
-                        let layout_rowWeight = '';
-                        let rowSpan = 1;
-                        let columnSpan = 1;
-                        let layout_row: string;
-                        let layout_column: string;
+                        let width = '',
+                            height = '',
+                            layout_columnWeight = '',
+                            layout_rowWeight = '',
+                            rowSpan = 1,
+                            columnSpan = 1,
+                            layout_row: string,
+                            layout_column: string;
                         if (horizontal) {
                             layout_row = i.toString();
                             layout_column = k.toString();

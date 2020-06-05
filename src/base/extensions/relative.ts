@@ -96,7 +96,8 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                             const length = unaligned.length;
                             if (length) {
                                 unaligned.sort((a, b) => {
-                                    const topA = a.linear.top, topB = b.linear.top;
+                                    const topA = a.linear.top;
+                                    const topB = b.linear.top;
                                     if (withinRange(topA, topB)) {
                                         return 0;
                                     }
@@ -125,9 +126,9 @@ export default abstract class Relative<T extends NodeUI> extends ExtensionUI<T> 
                 const bounds = node.bounds;
                 const hasVertical = top !== 0 || bottom !== 0;
                 const hasHorizontal = left !== 0 || right !== 0;
-                let preceding = false;
-                let previous: Undef<T>;
                 const children = node.actualParent!.naturalChildren as T[];
+                let preceding = false,
+                    previous: Undef<T>;
                 const length = children.length;
                 let i = 0;
                 while (i < length) {

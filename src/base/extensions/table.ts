@@ -59,9 +59,9 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T) {
         const mainData = createDataAttribute(node);
         const tbody: T[] = [];
-        let table: T[] = [];
-        let tfoot: Undef<T>;
-        let thead: Undef<T>;
+        let table: T[] = [],
+            tfoot: Undef<T>,
+            thead: Undef<T>;
         const inheritStyles = (parent: Undef<T>) => {
             if (parent) {
                 parent.cascade((item: T) => {
@@ -479,7 +479,10 @@ export default abstract class Table<T extends NodeUI> extends ExtensionUI<T> {
             const borderRight = node.cssAsObject('borderRightColor', 'borderRightStyle', 'borderRightWidth');
             const borderBottom = node.cssAsObject('borderBottomColor', 'borderBottomStyle', 'borderBottomWidth');
             const borderLeft = node.cssAsObject('borderLeftColor', 'borderLeftStyle', 'borderLeftWidth');
-            const borderTopWidth = parseInt(borderTop.borderTopWidth), borderRightWidth = parseInt(borderRight.borderRightWidth), borderBottomWidth = parseInt(borderBottom.borderBottomWidth), borderLeftWidth = parseInt(borderLeft.borderLeftWidth);
+            const borderTopWidth = parseInt(borderTop.borderTopWidth);
+            const borderRightWidth = parseInt(borderRight.borderRightWidth);
+            const borderBottomWidth = parseInt(borderBottom.borderBottomWidth);
+            const borderLeftWidth = parseInt(borderLeft.borderLeftWidth);
             let hideTop = false,
                 hideRight = false,
                 hideBottom = false,

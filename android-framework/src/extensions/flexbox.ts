@@ -49,9 +49,9 @@ const MAP_VERTICAL = {
 function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
     const horizontal = attr === 'width';
     const hasDimension = horizontal ? 'hasWidth' : 'hasHeight';
-    let percent = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseWidth(parent.css('maxWidth')), parent.box.width);
-    let result = 0;
-    let growShrinkType = 0;
+    let percent = parent[hasDimension] || horizontal && parent.blockStatic && withinRange(parent.parseWidth(parent.css('maxWidth')), parent.box.width),
+        growShrinkType = 0,
+        result = 0;
     const length = items.length;
     let i = 0;
     while (i < length) {
@@ -73,10 +73,10 @@ function adjustGrowRatio(parent: View, items: View[], attr: DimensionAttr) {
     if (length > 1 && (horizontal || percent)) {
         const groupBasis: FlexBasis[] = [];
         const percentage: View[] = [];
-        let maxBasis: Undef<View>;
-        let maxBasisUnit = 0;
-        let maxDimension = 0;
-        let maxRatio = NaN;
+        let maxBasisUnit = 0,
+            maxDimension = 0,
+            maxRatio = NaN,
+            maxBasis: Undef<View>;
         i = 0;
         while (i < length) {
             const item = items[i++];
@@ -399,19 +399,19 @@ export default class <T extends View> extends squared.base.extensions.Flexbox<T>
                     const justified = !opposing && seg.every(item => item.flexbox.grow === 0);
                     const spreadInside = justified && (justifyContent === 'space-between' || justifyContent === 'space-around' && q > 1);
                     const layoutWeight: T[] = [];
-                    let maxSize = 0;
-                    let growAvailable = 0;
-                    let parentEnd = true;
-                    let baseline: Null<T> = null;
-                    let growAll: boolean;
-                    let percentWidth = 0;
+                    let maxSize = 0,
+                        growAvailable = 0,
+                        percentWidth = 0,
+                        parentEnd = true,
+                        baseline: Null<T> = null,
+                        growAll: boolean;
                     segStart.anchor(LT, 'parent');
                     segEnd.anchor(RB, 'parent');
                     if (opposing) {
                         growAll = false;
                         if (dimensionInverse) {
-                            let chainStyle = 'spread';
-                            let bias = 0;
+                            let chainStyle = 'spread',
+                                bias = 0;
                             switch (alignContent) {
                                 case 'left':
                                 case 'right':

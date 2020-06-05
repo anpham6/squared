@@ -170,8 +170,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             value = SvgBuild.drawPolyline(points, precision);
         }
         else if (SVG.circle(element) || SVG.ellipse(element)) {
-            let rx: number;
-            let ry: number;
+            let rx: number,
+                ry: number;
             if (SVG.ellipse(element)) {
                 rx = element.rx.baseVal.value;
                 ry = element.ry.baseVal.value;
@@ -238,8 +238,13 @@ export default class SvgBuild implements squared.svg.SvgBuild {
         if (totalLength) {
             const keyPoints: Point[] = [];
             const rotatingPoints: boolean[] = [];
-            let rotateFixed = 0;
-            let rotateInitial = 0;
+            let rotating = false,
+                rotateFixed = 0,
+                rotateInitial = 0,
+                rotatePrevious = 0,
+                overflow = 0,
+                center: Undef<SvgPoint>,
+                key = -1;
             if (isAngle(rotation)) {
                 rotateFixed = parseAngle(rotation, 0);
             }
@@ -272,11 +277,6 @@ export default class SvgBuild implements squared.svg.SvgBuild {
                     rotateInitial = parseAngle(rotation.split(' ').pop() as string, 0);
                 }
             }
-            let rotating = false;
-            let rotatePrevious = 0;
-            let overflow = 0;
-            let center: Undef<SvgPoint>;
-            let key = -1;
             while (++key <= totalLength) {
                 const nextPoint = element.getPointAtLength(key);
                 if (keyPoints.length) {
@@ -327,9 +327,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static getPathCommands(value: string) {
         const result: SvgPathCommand[] = [];
-        let first = true;
         const pattern = /([A-Za-z])([^A-Za-z]+)?/g;
-        let match: Null<RegExpExecArray>;
+        let first = true,
+            match: Null<RegExpExecArray>;
         while (match = pattern.exec(value.trim())) {
             let key = match[1];
             if (first && key.toUpperCase() !== 'M') {
@@ -337,9 +337,9 @@ export default class SvgBuild implements squared.svg.SvgBuild {
             }
             const coordinates = SvgBuild.parseCoordinates((match[2] || '').trim());
             const items: number[][] = [];
-            let length = coordinates.length;
-            let previousCommand: Undef<string>;
-            let previousPoint: Undef<Point>;
+            let length = coordinates.length,
+                previousCommand: Undef<string>,
+                previousPoint: Undef<Point>;
             if (!first) {
                 const previous = result[result.length - 1];
                 previousCommand = previous.key.toUpperCase();
@@ -830,8 +830,8 @@ export default class SvgBuild implements squared.svg.SvgBuild {
 
     public static setName(element?: SVGElement) {
         if (element) {
-            let value: Undef<string>;
-            let tagName: Undef<string>;
+            let value: Undef<string>,
+                tagName: Undef<string>;
             if (isString(element.id)) {
                 const id = convertWord(element.id, true);
                 if (!NAME_GRAPHICS.has(id)) {

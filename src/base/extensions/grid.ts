@@ -44,8 +44,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                 return node.every(item => item.display === 'table-row' && item.every(child => child.display === 'table-cell')) || node.every(item => item.display === 'table-cell');
             }
             else if (node.percentWidth === 0 || !node.find(item => item.percentWidth > 0, { cascade: true })) {
-                let minLength = false;
-                let itemCount = 0;
+                let minLength = false,
+                    itemCount = 0;
                 for (const item of node) {
                     if (item.pageFlow && item.blockStatic && !item.visibleStyle.background && item.percentWidth === 0 && !item.autoMargin.leftRight && !item.autoMargin.left) {
                         if (item.length > 1) {
@@ -198,8 +198,8 @@ export default abstract class Grid<T extends NodeUI> extends ExtensionUI<T> {
                     const rowData = safeNestedArray(rows, j);
                      if (!item['spacer']) {
                         const data: GridCellData<T> = Object.assign(Grid.createDataCellAttribute(), item.data(this.name, 'cellData'));
-                        let rowSpan = 1;
-                        let columnSpan = 1 + spacer;
+                        let rowSpan = 1,
+                            columnSpan = 1 + spacer;
                         let k = i + 1;
                         while (k < columnCount) {
                             const row = columns[k++][j] as any;

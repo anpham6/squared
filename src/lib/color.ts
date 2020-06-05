@@ -953,8 +953,8 @@ export function findColorShade(value: string) {
         }
         else if (q > 1) {
             const total = hsl.l + hsl.s;
-            let nearest = Infinity;
-            let index = -1;
+            let nearest = Infinity,
+                index = -1;
             for (i = 0; i < q; ++i) {
                 const { l, s } = result[i].hsl;
                 const offset = Math.abs(total - (l + s));
@@ -978,8 +978,8 @@ export function parseColor(value: string, opacity = 1, transparency = false) {
         if (colorData) {
             return colorData;
         }
-        let key = '';
-        let rgba: Undef<RGBA>;
+        let key = '',
+            rgba: Undef<RGBA>;
         if (value.startsWith('#')) {
             rgba = parseRGBA(value);
         }
@@ -1178,9 +1178,9 @@ export function convertRGBA(value: HSLA): RGBA {
     h /= 360;
     s /= 100;
     l /= 100;
-    let r;
-    let g;
-    let b;
+    let r,
+        g,
+        b;
     if (s === 0) {
         r = l;
         g = l;

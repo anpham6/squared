@@ -10,10 +10,10 @@ export default abstract class Column<T extends squared.base.NodeUI> extends Exte
     }
 
     public processNode(node: T, parent: T) {
-        let items: T[] = [];
+        let items: T[] = [],
+            maxSize = Infinity,
+            multiline = false;
         const rows: T[][] = [items];
-        let maxSize = Infinity;
-        let multiline = false;
         node.each((item: T) => {
             if (item.css('columnSpan') === 'all') {
                 if (items.length) {
@@ -45,8 +45,8 @@ export default abstract class Column<T extends squared.base.NodeUI> extends Exte
         const boxWidth = node.box.width;
         const columnCount = node.toInt('columnCount');
         const columnWidth = node.parseWidth(node.css('columnWidth'));
-        let columnGap = node.parseWidth(node.css('columnGap'));
-        let columnSized: number;
+        let columnGap = node.parseWidth(node.css('columnGap')),
+            columnSized: number;
         const getColumnSizing = () => isNaN(columnCount) && columnWidth > 0 ? boxWidth / (columnWidth + columnGap) : Infinity;
         if (columnGap > 0) {
             columnSized = Math.floor(getColumnSizing());

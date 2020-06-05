@@ -10,7 +10,7 @@ type FileActionOptions = squared.base.FileActionOptions;
 type PreloadImage = HTMLImageElement | string;
 
 const { CSS_PROPERTIES, checkMediaRule, getSpecificity, getStyle, hasComputedStyle, insertStyleSheetRule, parseSelectorText } = squared.lib.css;
-const { capitalize, convertCamelCase, isString, parseMimeType, plainMap, promisify, resolvePath } = squared.lib.util;
+const { capitalize, convertCamelCase, isString, parseMimeType, plainMap, promisify, resolvePath, trimBoth } = squared.lib.util;
 const { FILE, STRING } = squared.lib.regex;
 const { frameworkNotInstalled, getElementCache, setElementCache } = squared.lib.session;
 
@@ -39,8 +39,8 @@ function parseImageUrl(resourceHandler: Resource<Node>, baseMap: StringMap, attr
     const value = baseMap[attr];
     if (value && value !== 'initial') {
         REGEXP_DATAURI.lastIndex = 0;
-        let result = value;
-        let match: Null<RegExpExecArray>;
+        let result = value,
+            match: Null<RegExpExecArray>;
         while (match = REGEXP_DATAURI.exec(value)) {
             if (match[2]) {
                 const mimeType = match[2].split(';');
@@ -565,36 +565,32 @@ export default abstract class Application<T extends Node> implements squared.bas
             case CSSRule.FONT_FACE_RULE: {
                 const attr = /\s*@font-face\s*{([^}]+)}\s*/.exec(cssText)?.[1];
                 if (attr) {
-                    const fontFamily = (/\s*font-family:[^\w]*([^;]+)/.exec(attr)?.[1] || '').trim();
-                    if (fontFamily === '') {
-                        break;
-                    }
-                    const match = (/\s*src:\s*([^;]+);/.exec(attr)?.[1] || '').split(',');
-                    const length = match.length;
-                    if (length) {
-                        const fontStyle = /\s*font-style:\s*(\w+)\s*;/.exec(attr)?.[1].toLowerCase() || 'normal';
-                        const fontWeight = parseInt(/\s*font-weight:\s*(\d+)\s*;/.exec(attr)?.[1] || '400');
-                        let i = 0;
-                        while (i < length) {
-                            const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(match[i++]);
-                            if (urlMatch) {
-                                let srcUrl: Undef<string>;
-                                let srcLocal: Undef<string>;
-                                const url = (urlMatch[2] || urlMatch[3]).trim();
-                                if (urlMatch[1] === 'url') {
-                                    srcUrl = resolvePath(url, styleSheetHref);
+                    const fontFamily = trimBoth((/\s*font-family:([^;]+);/.exec(attr)?.[1] || '').trim(), '"');
+                    if (fontFamily !== '') {
+                        const match = (/\s*src:\s*([^;]+);/.exec(attr)?.[1] || '').split(',');
+                        const length = match.length;
+                        if (length) {
+                            const fontStyle = /\s*font-style:\s*(\w+)\s*;/.exec(attr)?.[1].toLowerCase() || 'normal';
+                            const fontWeight = parseInt(/\s*font-weight:\s*(\d+)\s*;/.exec(attr)?.[1] || '400');
+                            let i = 0;
+                            while (i < length) {
+                                const urlMatch = /\s*(url|local)\((?:"((?:[^"]|\\")+)"|([^)]+))\)(?:\s*format\("?([\w-]+)"?\))?\s*/.exec(match[i++]);
+                                if (urlMatch) {
+                                    const data: FontFaceData = {
+                                        fontFamily,
+                                        fontWeight,
+                                        fontStyle,
+                                        srcFormat: urlMatch[4]?.toLowerCase().trim() || 'truetype'
+                                    };
+                                    const url = (urlMatch[2] || urlMatch[3]).trim();
+                                    if (urlMatch[1] === 'url') {
+                                        data.srcUrl = resolvePath(url, styleSheetHref);
+                                    }
+                                    else {
+                                        data.srcLocal = url;
+                                    }
+                                    resourceHandler.addFont(data);
                                 }
-                                else {
-                                    srcLocal = url;
-                                }
-                                resourceHandler.addFont({
-                                    fontFamily,
-                                    fontWeight,
-                                    fontStyle,
-                                    srcUrl,
-                                    srcLocal,
-                                    srcFormat: urlMatch[4]?.toLowerCase().trim() || 'truetype'
-                                });
                             }
                         }
                     }

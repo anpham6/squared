@@ -404,8 +404,8 @@ export function convertUnderscore(value: string) {
     if (cacheData) {
         return cacheData;
     }
-    let result = value[0].toLowerCase();
-    let lower = true;
+    let result = value[0].toLowerCase(),
+        lower = true;
     const length = value.length;
     let i = 1;
     while (i < length) {
@@ -432,8 +432,8 @@ export function convertCamelCase(value: string, char = '-') {
     if (cacheData) {
         return cacheData;
     }
-    let result = value.substring(0, i);
-    let previous = '';
+    let result = value.substring(0, i),
+        previous = '';
     const length = value.length;
     while (i < length) {
         const ch = value.charAt(i++);
@@ -588,8 +588,8 @@ export function splitEnclosing(value: string, prefix?: string, separator = '', o
             }
         }
     };
-    let position = 0;
-    let index = -1;
+    let position = 0,
+        index = -1;
     const length = value.length;
     while ((index = value.indexOf(combined, position)) !== -1) {
         let preceding = '';
@@ -971,10 +971,11 @@ export function safeNestedMap<T>(map: ObjectMapNested<T>, index: number | string
 export function sortArray<T>(list: T[], ascending: boolean, ...attrs: string[]) {
     return list.sort((a, b) => {
         for (let i = 0; i < attrs.length; ++i) {
-            let valueA: any = a;
-            let valueB: any = b;
+            let valueA: any = a,
+                valueB: any = b;
             for (const name of attrs[i].split('.')) {
-                const vA = valueA[name], vB = valueB[name];
+                const vA = valueA[name];
+                const vB = valueB[name];
                 if (vA !== undefined && vB !== undefined) {
                     valueA = vA;
                     valueB = vB;

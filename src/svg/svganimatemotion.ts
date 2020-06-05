@@ -133,8 +133,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
 
     protected setOffsetPath() {
         if (this._offsetPath === undefined && isString(this.path)) {
-            let offsetPath = SvgBuild.getOffsetPath(this.path, this.rotate);
-            let distance = offsetPath.length;
+            let offsetPath = SvgBuild.getOffsetPath(this.path, this.rotate),
+                distance = offsetPath.length;
             if (distance > 0) {
                 const { duration, keyPoints, rotateData, framesPerSecond } = this;
                 let increment = 1;
@@ -188,8 +188,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
                                 }
                             }
                             else {
-                                let j = 0;
                                 let nextFrame = baseTime;
+                                let j = 0;
                                 if (from === to) {
                                     const { value, rotate } = offsetPath[Math.floor(from * length)];
                                     if (equalPoint(previous, baseTime, value, rotate)) {
@@ -344,8 +344,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
     }
 
     protected reverseKeyPoints() {
-        let keyTimes: Undef<number[]>;
-        let keyPoints: Undef<number[]>;
+        let keyTimes: Undef<number[]>,
+            keyPoints: Undef<number[]>;
         if (this.validKeyPoints()) {
             keyPoints = this._keyPoints.slice(0).reverse();
             keyTimes = plainMap(super.keyTimes, value => 1 - value).reverse();
@@ -407,8 +407,8 @@ export default class SvgAnimateMotion extends SvgAnimateTransform implements squ
         if (value !== super.alternate && (iterationCount === -1 || iterationCount > 1)) {
             const { keyTimes, keyPoints } = this.reverseKeyPoints();
             if (keyTimes && keyPoints) {
-                let keyTimesBase = super.keyTimes;
-                let keyPointsBase = this.keyPoints;
+                let keyTimesBase = super.keyTimes,
+                    keyPointsBase = this.keyPoints;
                 const length = keyTimesBase.length;
                 if (iterationCount === -1) {
                     let i = 0;

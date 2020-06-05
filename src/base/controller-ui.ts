@@ -392,8 +392,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
             if (node.floating) {
                 if (node.float === 'left') {
                     const actualParent = node.actualParent as T;
-                    let parent: Null<T> = actualParent;
-                    let previousParent: Undef<T>;
+                    let parent: Null<T> = actualParent,
+                        previousParent: Undef<T>;
                     while (parent?.tagName === 'P' && !parent.documentRoot) {
                         previousParent = parent;
                         parent = parent.actualParent as Null<T>;
@@ -504,8 +504,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                         node.unset('box');
                         node.unset('linear');
                     }
-                    let opacity = node.toFloat('opacity', 1);
-                    let current = actualParent;
+                    let opacity = node.toFloat('opacity', 1),
+                        current = actualParent;
                     do {
                         opacity *= current.toFloat('opacity', 1);
                         current = current.actualParent as T;
@@ -675,7 +675,8 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                     if (order) {
                         order.sort((a, b) => {
                             if (a.parent === b.parent) {
-                                const zA = a.zIndex, zB = b.zIndex;
+                                const zA = a.zIndex;
+                                const zB = b.zIndex;
                                 if (zA === zB) {
                                     return a.id < b.id ? -1 : 1;
                                 }
@@ -705,9 +706,11 @@ export default abstract class ControllerUI<T extends NodeUI> extends Controller<
                 return a.depth < b.depth ? -1 : 1;
             }
             else {
-                const parentA = a.documentParent, parentB = b.documentParent;
+                const parentA = a.documentParent;
+                const parentB = b.documentParent;
                 if (parentA !== parentB) {
-                    const depthA = parentA.depth, depthB = parentB.depth;
+                    const depthA = parentA.depth;
+                    const depthB = parentB.depth;
                     if (depthA !== depthB) {
                         return depthA < depthB ? -1 : 1;
                     }

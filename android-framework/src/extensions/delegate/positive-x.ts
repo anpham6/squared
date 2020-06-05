@@ -24,12 +24,12 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
 
     public condition(node: T) {
         const { documentBody, lastStaticChild } = node;
-        let contentBox = node.contentBoxWidth > 0 || node.contentBoxHeight > 0 || node.marginTop !== 0 || node.marginRight !== 0 || node.marginBottom !== 0 || node.marginLeft !== 0;
-        let aboveInvalid = false,
+        let contentBox = node.contentBoxWidth > 0 || node.contentBoxHeight > 0 || node.marginTop !== 0 || node.marginRight !== 0 || node.marginBottom !== 0 || node.marginLeft !== 0,
+            aboveInvalid = false,
             belowInvalid = false;
         if (node.firstStaticChild?.lineBreak) {
-            aboveInvalid = true;
             contentBox = true;
+            aboveInvalid = true;
         }
         if (lastStaticChild?.lineBreak && lastStaticChild.previousSibling?.blockStatic) {
             contentBox = true;
@@ -40,11 +40,11 @@ export default class PositiveX<T extends View> extends squared.base.ExtensionUI<
         }
         const rootElement = node.rootElement;
         const expandBody = documentBody && node.positionStatic;
-        const children = new Set<View>();
         const paddingTop = node.paddingTop + (documentBody ? node.marginTop : 0);
         const paddingRight = node.paddingRight + (documentBody ? node.marginRight : 0);
         const paddingBottom = node.paddingBottom + (documentBody ? node.marginBottom : 0);
         const paddingLeft = node.paddingLeft + (documentBody ? node.marginLeft : 0);
+        const children = new Set<View>();
         let right = false,
             bottom = false;
         node.each((item: View) => {

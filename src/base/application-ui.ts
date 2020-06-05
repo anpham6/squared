@@ -42,9 +42,9 @@ function prioritizeExtensions<T extends NodeUI>(value: string, extensions: Exten
 }
 
 function getFloatAlignmentType(nodes: NodeUI[]) {
-    let result = 0;
-    let right = true;
-    let floating = true;
+    let result = 0,
+        right = true,
+        floating = true;
     const length = nodes.length;
     let i = 0;
     while (i < length) {
@@ -99,8 +99,8 @@ function checkPseudoDimension(styleMap: StringMap, after: boolean, absolute: boo
 }
 
 function getPseudoQuoteValue(element: HTMLElement, pseudoElt: string, outside: string, inside: string, sessionId: string) {
-    let current: Null<HTMLElement> = element;
-    let found = 0;
+    let current: Null<HTMLElement> = element,
+        found = 0;
     let i = 0, j = -1;
     while (current?.tagName === 'Q') {
         const quotes = (getElementCache(current, `styleMap`, sessionId) as Undef<CSSStyleDeclaration>)?.quotes || getComputedStyle(current).quotes;
@@ -531,8 +531,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 for (let i = 0; i < pseudoElements.length; ++i) {
                     const item = pseudoElements[i];
                     const parentElement = item.actualParent!.element as HTMLElement;
-                    let id = parentElement.id;
-                    let styleElement: Undef<HTMLStyleElement>;
+                    let id = parentElement.id,
+                        styleElement: Undef<HTMLStyleElement>;
                     if (item.pageFlow) {
                         if (id === '') {
                             id = '__squared_' + Math.round(Math.random() * new Date().getTime());
@@ -726,11 +726,11 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const cache = this._cache;
         const length = children.length;
         if (length > 1) {
-            let siblingsLeading: T[] = [];
-            let siblingsTrailing: T[] = [];
-            let trailing = children[0];
-            let floating = false;
-            let excluded: Undef<boolean>;
+            let siblingsLeading: T[] = [],
+                siblingsTrailing: T[] = [],
+                trailing = children[0],
+                floating = false,
+                excluded: Undef<boolean>;
             for (let i = 0, j = 0; i < length; ++i) {
                 const child = children[i];
                 if (child.pageFlow) {
@@ -880,16 +880,15 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                     if (q > 1 && i < q - 1 && nodeY.pageFlow && !nodeY.nodeGroup && (parentY.alignmentType === 0 || parentY.hasAlign(NODE_ALIGNMENT.UNKNOWN) || nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) && !parentY.hasAlign(NODE_ALIGNMENT.AUTO_LAYOUT) && nodeY.hasSection(APP_SECTION.DOM_TRAVERSE)) {
                         const horizontal: T[] = [];
                         const vertical: T[] = [];
-                        let l = i;
-                        let m = 0;
+                        let l = i, m = 0;
                         if (parentY.layoutVertical && nodeY.hasAlign(NODE_ALIGNMENT.EXTENDABLE)) {
                             horizontal.push(nodeY);
                             ++l;
                             ++m;
                         }
                         traverse: {
-                            let floatActive = false;
-                            let floating: Undef<boolean>;
+                            let floatActive = false,
+                                floating: Undef<boolean>;
                             for ( ; l < q; ++l, ++m) {
                                 const item = axisY[l];
                                 if (item.pageFlow) {
@@ -986,9 +985,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                             }
                         }
-                        let layout: Undef<LayoutUI<T>>;
-                        let segEnd: Undef<T>;
-                        let r = horizontal.length;
+                        let r = horizontal.length,
+                            complete = true,
+                            layout: Undef<LayoutUI<T>>,
+                            segEnd: Undef<T>;
                         if (r > 1) {
                             const items = horizontal.filter(item => !item.renderExclude || clearMap.has(item));
                             if (items.length > 1) {
@@ -1009,7 +1009,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                 }
                             }
                         }
-                        let complete = true;
                         if (layout) {
                             if (this.addLayout(layout)) {
                                 parentY = nodeY.parent as T;
@@ -1132,7 +1131,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 else if (a === b.innerWrapped) {
                     return 1;
                 }
-                const outerA = a.outerWrapper, outerB = b.outerWrapper;
+                const outerA = a.outerWrapper;
+                const outerB = b.outerWrapper;
                 if (a === outerB || !outerA && outerB) {
                     return -1;
                 }
@@ -1199,15 +1199,19 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const controllerHandler = this.controllerHandler;
         const { containerType, alignmentType } = controllerHandler.containerTypeVertical;
         const clearMap = this.session.clearMap;
+        const layerIndex: Array<T[] | T[][]> = [];
         const inlineAbove: T[] = [];
-        const leftAbove: T[] = [], rightAbove: T[] = [];
+        const leftAbove: T[] = [];
+        const rightAbove: T[] = [];
         let leftBelow: Undef<T[]>,
             rightBelow: Undef<T[]>,
             leftSub: Undef<T[] | T[][]>,
             rightSub: Undef<T[] | T[][]>,
             inlineBelow: Undef<T[]>,
+            inheritStyle = false,
             clearing = false,
-            clearedFloat = false;
+            clearedFloat = false,
+            boxStyle: Undef<StandardMap>;
         layout.each((node, index) => {
             const float = node.float;
             if (clearing && float === 'left') {
@@ -1292,9 +1296,6 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         if (rightAbove.length + (rightBelow?.length || 0) === layout.length) {
             layout.addAlign(NODE_ALIGNMENT.RIGHT);
         }
-        const layerIndex: Array<T[] | T[][]> = [];
-        let inheritStyle = false;
-        let boxStyle: Undef<StandardMap>;
         if (inlineAbove.length) {
             layerIndex.push(inlineAbove);
             inheritStyle = layout.every(item => inlineAbove.includes(item) || !item.imageElement);
@@ -1332,8 +1333,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         layout.addAlign(NODE_ALIGNMENT.BLOCK);
         for (let i = 0; i < layout.itemCount; ++i) {
             const item = layerIndex[i];
-            let segments: T[][];
-            let floatgroup: Undef<T>;
+            let segments: T[][],
+                floatgroup: Undef<T>;
             if (Array.isArray(item[0])) {
                 segments = item as T[][];
                 const itemCount = segments.length;
@@ -1427,9 +1428,9 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const floatedRows: Null<T[]>[] = [];
         const current: T[] = [];
         const floated: T[] = [];
-        let clearReset = false;
-        let blockArea = false;
-        let layoutVertical = true;
+        let clearReset = false,
+            blockArea = false,
+            layoutVertical = true;
         layout.each(node => {
             if (node.blockStatic && floated.length === 0) {
                 current.push(node);
@@ -1492,8 +1493,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                 }
                 else {
                     const children: T[] = [];
-                    let alignmentFloat = 0;
-                    let subgroup: Undef<T>;
+                    let alignmentFloat = 0,
+                        subgroup: Undef<T>;
                     if (floating) {
                         if (floating.length > 1) {
                             const floatgroup = controllerHandler.createNodeGroup(floating[0], floating);
@@ -1618,8 +1619,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         styleMap[attr] = style[attr];
                     }
                 }
-                let tagName = '';
-                let content = '';
+                let tagName = '',
+                    content = '';
                 switch (value) {
                     case 'normal':
                     case 'none':
@@ -1653,8 +1654,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                         }
                         else {
                             const pattern = /\s*(?:attr\(([^)]+)\)|(counter)\(([^,)]+)(?:,\s+([a-z-]+))?\)|(counters)\(([^,]+),\s+"([^"]*)"(?:,\s+([a-z-]+))?\)|"([^"]+)")\s*/g;
-                            let found = false;
-                            let match: Null<RegExpExecArray>;
+                            let found = false,
+                                match: Null<RegExpExecArray>;
                             while (match = pattern.exec(value)) {
                                 const attr = match[1];
                                 if (attr) {
@@ -1668,10 +1669,10 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                             : [match[6], match[8] || 'decimal'];
                                     const initialValue = (getCounterIncrementValue(element, counterName, pseudoElt, sessionId, 0) ?? 1) + (getCounterValue(style.getPropertyValue('counter-reset'), counterName, 0) || 0);
                                     const subcounter: number[] = [];
-                                    let current: Null<HTMLElement> = element;
-                                    let counter = initialValue;
-                                    let ascending = false;
-                                    let lastResetElement: Undef<Element>;
+                                    let current: Null<HTMLElement> = element,
+                                        counter = initialValue,
+                                        ascending = false,
+                                        lastResetElement: Undef<Element>;
                                     const incrementCounter = (increment: number, pseudo: boolean) => {
                                         const length = subcounter.length;
                                         if (length === 0) {
@@ -1855,8 +1856,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         const boxWidth = parent.actualBoxWidth();
         let q = leftAbove.length;
         if (q) {
-            let floatPosition = -Infinity;
-            let spacing = false;
+            let floatPosition = -Infinity,
+                spacing = false;
             let i = 0;
             while (i < q) {
                 const child = leftAbove[i++];
@@ -1895,8 +1896,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
         }
         q = rightAbove.length;
         if (q) {
-            let floatPosition = Infinity;
-            let spacing = false;
+            let floatPosition = Infinity,
+                spacing = false;
             let i = 0;
             while (i < q) {
                 const child = rightAbove[i++];
@@ -1937,7 +1938,8 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
 
     get layouts() {
         return this._layouts.sort((a, b) => {
-            const indexA = a.index, indexB = b.index;
+            const indexA = a.index;
+            const indexB = b.index;
             if (indexA !== indexB) {
                 if (indexA === 0 || indexB === Infinity || indexB === undefined && !(indexA === Infinity)) {
                     return -1;

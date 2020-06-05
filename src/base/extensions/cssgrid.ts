@@ -99,9 +99,9 @@ function setAutoFill(data: CssGridDirectionData, dimension: number) {
 }
 
 function setFlexibleDimension(dimension: number, gap: number, count: number, unit: string[], max: number[]) {
-    let filled = 0;
-    let fractional = 0;
-    let percent = 1;
+    let filled = 0,
+        fractional = 0,
+        percent = 1;
     const length = unit.length;
     let i = 0;
     while (i < length) {
@@ -186,6 +186,32 @@ function createDataAttribute(data: GridAlignment): CssGridData<NodeUI> {
     });
 }
 
+function setDataRows(rowData: Undef<NodeUI[]>[][], openCells: number[][], rowA: number, rowB: number, colA: number, colB: number, item: NodeUI, placement: number[], length: number, dense: boolean) {
+    if (placement.every(value => value > 0)) {
+        for (let i = placement[rowA] - 1; i < placement[rowB] - 1; ++i) {
+            const data = safeNestedArray(rowData, i);
+            let cell = openCells[i],
+                j = placement[colA] - 1;
+            if (!cell) {
+                cell = new Array(length).fill(0);
+                if (!dense) {
+                    let k = 0;
+                    while (k < j) {
+                        cell[k++] = 1;
+                    }
+                }
+                openCells[i] = cell;
+            }
+            while (j < placement[colB] - 1) {
+                safeNestedArray(data as NodeUI[][], j).push(item);
+                cell[j++] = 1;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
 const convertLength = (node: NodeUI, value: string, index: number) => isLength(value) ? formatPX(node.parseUnit(value, { dimension: index !== 0 ? 'width' : 'height' })) : value;
 
 export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
@@ -222,49 +248,27 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
     public processNode(node: T) {
         const mainData = createDataAttribute(node.cssAsObject('alignItems', 'alignContent', 'justifyItems', 'justifyContent', 'gridAutoFlow') as GridAlignment);
         const { column, dense, row, rowDirection: horizontal } = mainData;
+        const rowData: Undef<T[]>[][] = [];
+        const openCells: number[][] = [];
+        const layout: GridLayout[] = [];
+        const gridTemplates = [node.cssInitial('gridTemplateRows'), node.cssInitial('gridTemplateColumns'), node.css('gridAutoRows'), node.css('gridAutoColumns')];
         const [rowA, colA, rowB, colB] =
             horizontal
                 ? [0, 1, 2, 3]
                 : [1, 0, 3, 2];
-        const rowData: Undef<T[]>[][] = [];
-        const openCells: number[][] = [];
-        const layout: GridLayout[] = [];
-        const setDataRows = (item: T, placement: number[], length: number) => {
-            if (placement.every(value => value > 0)) {
-                for (let i = placement[rowA] - 1; i < placement[rowB] - 1; ++i) {
-                    const data = safeNestedArray(rowData, i);
-                    let cell = openCells[i];
-                    let j = placement[colA] - 1;
-                    if (!cell) {
-                        cell = new Array(length).fill(0);
-                        if (!dense) {
-                            let k = 0;
-                            while (k < j) {
-                                cell[k++] = 1;
-                            }
-                        }
-                        openCells[i] = cell;
-                    }
-                    while (j < placement[colB] - 1) {
-                        safeNestedArray(data as T[][], j).push(item);
-                        cell[j++] = 1;
-                    }
-                }
-                return true;
-            }
-            return false;
-        };
+        let autoWidth = false,
+            autoHeight = false,
+            ITERATION: number;
         column.gap = node.parseWidth(node.css('columnGap'), false);
         row.gap = node.parseHeight(node.css('rowGap'), false);
-        const gridTemplates = [node.cssInitial('gridTemplateRows'), node.cssInitial('gridTemplateColumns'), node.css('gridAutoRows'), node.css('gridAutoColumns')];
         for (let index = 0; index < 4; ++index) {
             const value = gridTemplates[index];
             if (value !== '' && value !== 'none' && value !== 'auto') {
                 REGEXP_NAMED.lastIndex = 0;
                 const data = index === 0 ? row : column;
                 const { name, repeat, unit, unitMin } = data;
-                let i = 1;
-                let match: Null<RegExpMatchArray>;
+                let i = 1,
+                    match: Null<RegExpMatchArray>;
                 while (match = REGEXP_NAMED.exec(value)) {
                     const command = match[1].trim();
                     switch (index) {
@@ -387,17 +391,15 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 return 0;
             });
         }
-        let autoWidth = false,
-            autoHeight = false;
         if (!node.has('gridTemplateAreas') && node.every(item => item.css('gridRowStart') === 'auto' && item.css('gridColumnStart') === 'auto')) {
             const [directionA, directionB, indexA, indexB, indexC] =
                 horizontal
                     ? ['top', 'bottom', 2, 1, 3]
                     : ['left', 'right', 3, 0, 2];
             let rowIndex = 0,
-                columnIndex = 0;
-            let columnMax = 0;
-            let previous: Undef<T>;
+                columnIndex = 0,
+                columnMax = 0,
+                previous: Undef<T>;
             if (horizontal) {
                 if (column.autoFill) {
                     autoWidth = setAutoFill(column, node.actualWidth);
@@ -413,8 +415,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     columnIndex = 1;
                 }
                 const [gridRowEnd, gridColumnEnd] = item.cssAsTuple('gridRowEnd', 'gridColumnEnd');
-                let rowSpan = 1;
-                let columnSpan = 1;
+                let rowSpan = 1,
+                    columnSpan = 1;
                 if (gridRowEnd.startsWith('span')) {
                     rowSpan = parseInt(gridRowEnd.split(' ')[1]);
                 }
@@ -638,8 +640,8 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                         }
                         return false;
                     };
-                    let rowStart: Undef<string[]>;
-                    let colStart: Undef<string[]>;
+                    let rowStart: Undef<string[]>,
+                        colStart: Undef<string[]>;
                     for (let i = 0; i < 4; ++i) {
                         const value = positions[i];
                         if (value !== 'auto' && placement[i] === 0) {
@@ -714,10 +716,9 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                 previousPlacement = placement;
             });
         }
-        let ITERATION: number;
         {
-            let length = 1;
-            let outerCount = 0;
+            let length = 1,
+                outerCount = 0;
             for (let i = 0; i < layout.length; ++i) {
                 const item = layout[i];
                 if (item) {
@@ -865,7 +866,7 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
             if (placement[colB] === 0) {
                 placement[colB] = placement[colA] + COLUMN_SPAN;
             }
-            if (setDataRows(item, placement, ITERATION)) {
+            if (setDataRows(rowData, openCells, rowA, rowB, colA, colB, item, placement, ITERATION, dense)) {
                 const [a, b, c, d] = placement;
                 const rowStart = a - 1;
                 const rowCount = c - a;
@@ -1084,9 +1085,9 @@ export default class CssGrid<T extends NodeUI> extends ExtensionUI<T> {
                     else if (data.autoFit || data.autoFill && (index === 0 && node.blockStatic && !node.hasWidth && !node.hasPX('maxWidth', { percent: false }) || index === 1 && !node.hasHeight)) {
                         unit.length = iteration;
                     }
-                    let percent = 1;
-                    let fr = 0;
-                    let auto = 0;
+                    let percent = 1,
+                        fr = 0,
+                        auto = 0;
                     for (let i = 0; i < unit.length; ++i) {
                         const value = unit[i];
                         if (isPercent(value)) {

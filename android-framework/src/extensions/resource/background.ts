@@ -636,13 +636,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
         const borderVisible: boolean[] = new Array(4);
         const corners = !borderOnly ? getBorderRadius(data.borderRadius) : undefined;
         const indentOffset = indentWidth > 0 ? formatPX(indentWidth) : '';
-        let borders: Undef<BorderAttribute>[];
-        let borderStyle = true;
-        let borderAll = true;
-        let border: Undef<BorderAttribute>;
-        let borderData: Undef<BorderAttribute>;
-        let shapeData: Undef<StandardMap[]>;
-        let layerListData: Undef<StandardMap[]>;
+        let borderStyle = true,
+            borderAll = true,
+            borders: Undef<BorderAttribute>[],
+            border: Undef<BorderAttribute>,
+            borderData: Undef<BorderAttribute>,
+            shapeData: Undef<StandardMap[]>,
+            layerListData: Undef<StandardMap[]>;
         if (outline) {
             borderData = outline;
             borders = new Array(4);
@@ -743,10 +743,11 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
             const svg: boolean[] = [];
             const imageDimensions: Undef<Dimension>[] = [];
             const backgroundPosition: BoxRectPosition[] = [];
-            const backgroundPositionX = data.backgroundPositionX.split(CHAR_SEPARATOR), backgroundPositionY = data.backgroundPositionY.split(CHAR_SEPARATOR);
-            let backgroundRepeat = data.backgroundRepeat.split(CHAR_SEPARATOR);
-            let backgroundSize = data.backgroundSize.split(CHAR_SEPARATOR);
-            let length = 0;
+            const backgroundPositionX = data.backgroundPositionX.split(CHAR_SEPARATOR);
+            const backgroundPositionY = data.backgroundPositionY.split(CHAR_SEPARATOR);
+            let backgroundRepeat = data.backgroundRepeat.split(CHAR_SEPARATOR),
+                backgroundSize = data.backgroundSize.split(CHAR_SEPARATOR),
+                length = 0;
             if (backgroundImage) {
                 const svgInstance = this._resourceSvgInstance;
                 const q = backgroundImage.length;
@@ -754,8 +755,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 backgroundSize = fillBackgroundAttribute(backgroundSize, q);
                 let modified = false;
                 for (let i = 0; i < q; ++i) {
-                    let value = backgroundImage[i];
-                    let valid = false;
+                    let value = backgroundImage[i],
+                        valid = false;
                     if (typeof value === 'string') {
                         if (value !== 'initial') {
                             if (svgInstance) {
@@ -908,9 +909,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 const position = backgroundPosition[i];
                 const padded = position.orientation.length === 4;
                 const size = backgroundSize[i];
-                let repeat = backgroundRepeat[i];
-                let dimension = imageDimensions[i];
-                let dimenWidth = NaN,
+                let repeat = backgroundRepeat[i],
+                    dimension = imageDimensions[i],
+                    dimenWidth = NaN,
                     dimenHeight = NaN;
                 if (dimension) {
                     if (!dimension.width || !dimension.height) {
@@ -931,13 +932,13 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                     posTop = NaN,
                     posRight = NaN,
                     posBottom = NaN,
-                    posLeft = NaN;
-                let tileModeX = '',
+                    posLeft = NaN,
+                    tileModeX = '',
                     tileModeY = '',
                     gravityX = '',
                     gravityY = '',
-                    gravityAlign = '';
-                let offsetX = false,
+                    gravityAlign = '',
+                    offsetX = false,
                     offsetY = false;
                 if (repeat.includes(' ')) {
                     const [x, y] = repeat.split(' ');
@@ -1094,9 +1095,9 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                         }
                         break;
                 }
-                let bitmap = svg[i] !== true;
-                let autoFit = node.is(CONTAINER_NODE.IMAGE) || typeof value !== 'string';
-                let resizedWidth = false,
+                let bitmap = svg[i] !== true,
+                    autoFit = node.is(CONTAINER_NODE.IMAGE) || typeof value !== 'string',
+                    resizedWidth = false,
                     resizedHeight = false,
                     unsizedWidth = false,
                     unsizedHeight = false,
@@ -1124,7 +1125,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                             }
                         }
                     }
-                    const ratioWidth = dimenWidth / fittedWidth, ratioHeight = dimenHeight / fittedHeight;
+                    const ratioWidth = dimenWidth / fittedWidth;
+                    const ratioHeight = dimenHeight / fittedHeight;
                     const getImageWidth = () => dimenWidth * height / dimenHeight;
                     const getImageHeight = () => dimenHeight * width / dimenWidth;
                     const getImageRatioWidth = () => fittedWidth * (ratioWidth / ratioHeight);
@@ -1653,7 +1655,8 @@ export default class ResourceBackground<T extends View> extends squared.base.Ext
                 }
             }
             return result.sort((a, b) => {
-                const orderA = a.order, orderB = b.order;
+                const orderA = a.order;
+                const orderB = b.order;
                 if (orderA === orderB) {
                     return 0;
                 }

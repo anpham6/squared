@@ -34,10 +34,10 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
     public processNode(node: T, parent: T) {
         const children = node.children.filter((item: T) => outsideX(item, node)) as T[];
         const container = (this.controller as android.base.Controller<T>).createNodeWrapper(node, parent, { children, containerType: CONTAINER_NODE.CONSTRAINT });
-        node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
-        let firstChild: Undef<T>;
         let left = NaN,
-            right = NaN;
+            right = NaN,
+            firstChild: Undef<T>;
+        node.resetBox(BOX_STANDARD.MARGIN_TOP | BOX_STANDARD.MARGIN_BOTTOM, container);
         const length = children.length;
         let i = 0;
         while (i < length) {
@@ -144,7 +144,8 @@ export default class NegativeX<T extends View> extends squared.base.ExtensionUI<
         for (const node of this.subscribers) {
             const mainData: NegativeXData = node.data(this.name, 'mainData');
             if (mainData) {
-                const translateX = node.android('translationX'), translateY = node.android('translationY');
+                const translateX = node.android('translationX');
+                const translateY = node.android('translationY');
                 if (translateX !== '' || translateY !== '') {
                     const x = parseInt(translateX);
                     const y = parseInt(translateY);

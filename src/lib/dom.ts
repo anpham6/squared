@@ -98,9 +98,9 @@ export function getRangeClientRect(element: Element) {
     let bounds: BoxRectDimension;
     length = domRect.length;
     if (length) {
+        let numberOfLines = 1,
+            overflow = false;
         bounds = assignRect(domRect[0]);
-        let numberOfLines = 1;
-        let overflow = false;
         i = 0;
         while (++i < length) {
             const { left, right, top, bottom, width } = domRect[i];
@@ -145,8 +145,8 @@ export function getElementsBetweenSiblings(elementStart: Null<Element>, elementE
     if (!elementStart || elementStart.parentElement === elementEnd.parentElement) {
         const parent = elementEnd.parentElement;
         if (parent) {
-            let startIndex = elementStart ? -1 : 0;
-            let endIndex = -1;
+            let startIndex = elementStart ? -1 : 0,
+                endIndex = -1;
             iterateArray(parent.childNodes, (element: Element, index: number) => {
                 if (element === elementEnd) {
                     endIndex = index;

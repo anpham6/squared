@@ -53,22 +53,26 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                     ? ['top', 'left', 'right', 'intersectY']
                     : ['left', 'top', 'bottom', 'intersectX'];
             children.sort((a, b) => {
-                const linearA = a.linear,  linearB = b.linear;
+                const linearA = a.linear;
+                const linearB = b.linear;
                 if (!a[method](b.bounds, 'bounds')) {
                     return linearA[align] < linearB[align] ? -1 : 1;
                 }
                 else {
-                    const posA = linearA[sort], posB = linearB[sort];
+                    const posA = linearA[sort];
+                    const posB = linearB[sort];
                     if (!withinRange(posA, posB)) {
                         return posA < posB ? -1 : 1;
                     }
                 }
                 return 0;
             });
-            let rowStart = children[0];
-            let row: T[] = [rowStart];
+            let rowStart = children[0],
+                row: T[] = [rowStart],
+                length = children.length,
+                maxCount = 0,
+                offset: number;
             const rows: T[][] = [row];
-            let length = children.length;
             let i = 1;
             while (i < length) {
                 const item = children[i++];
@@ -82,8 +86,6 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                 }
             }
             node.clear();
-            let maxCount = 0;
-            let offset: number;
             length = rows.length;
             i = 0;
             if (length > 1) {
@@ -128,7 +130,8 @@ export default abstract class Flexbox<T extends NodeUI> extends ExtensionUI<T> {
                         ? [-1, 1]
                         : [1, -1];
                 children.sort((a, b) => {
-                    const orderA = a.flexbox.order, orderB = b.flexbox.order;
+                    const orderA = a.flexbox.order;
+                    const orderB = b.flexbox.order;
                     if (orderA === orderB) {
                         return 0;
                     }

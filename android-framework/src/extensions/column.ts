@@ -102,13 +102,13 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                 }
                 else {
                     const columns: T[][] = [];
-                    let columnMin = Math.min(q, columnSized, columnCount || Infinity);
-                    let percentGap = 0;
+                    let columnMin = Math.min(q, columnSized, columnCount || Infinity),
+                        percentGap = 0;
                     if (columnMin > 1) {
                         const maxHeight = Math.floor(row.reduce((a, b) => a + b.bounds.height, 0) / columnMin);
-                        let perRowCount = q >= columnMin ? Math.ceil(q / columnMin) : 1;
-                        let rowReduce = multiline || perRowCount > 1 && (q % perRowCount !== 0 || !isNaN(columnCount) && perRowCount * columnCount % q > 1);
-                        let excessCount = rowReduce && q % columnMin !== 0 ? q - columnMin : Infinity;
+                        let perRowCount = q >= columnMin ? Math.ceil(q / columnMin) : 1,
+                            rowReduce = multiline || perRowCount > 1 && (q % perRowCount !== 0 || !isNaN(columnCount) && perRowCount * columnCount % q > 1),
+                            excessCount = rowReduce && q % columnMin !== 0 ? q - columnMin : Infinity;
                         for (let j = 0, k = 0, l = 0; j < q; ++j, ++l) {
                             const item = row[j];
                             const iteration = l % perRowCount === 0;
@@ -219,8 +219,8 @@ export default class <T extends View> extends squared.base.extensions.Column<T> 
                         columnHeight[j] = height;
                     }
                     let anchorTop!: T,
-                        anchorBottom!: T;
-                    let maxHeight = 0;
+                        anchorBottom!: T,
+                        maxHeight = 0;
                     for (let j = 0; j < r; ++j) {
                         const value = columnHeight[j];
                         if (value >= maxHeight) {

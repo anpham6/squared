@@ -136,8 +136,8 @@ const getFileExt = (value: string) => value.includes('.') ? fromLastIndexOf(valu
 export default class File<T extends chrome.base.View> extends squared.base.File<T> implements chrome.base.File<T> {
     public static parseUri(uri: string, options: UriOptions = {}): Undef<ChromeAsset> {
         let { saveAs, format, preserve } = options;
-        let value = trimEnd(uri, '/');
-        let relocate: Undef<string>;
+        let value = trimEnd(uri, '/'),
+            relocate: Undef<string>;
         const local = value.startsWith(trimEnd(location.origin, '/'));
         if (saveAs) {
             saveAs = trimEnd(saveAs.replace(/\\/g, '/'), '/');
@@ -157,13 +157,15 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         }
         const match = FILE.PROTOCOL.exec(value);
         if (match) {
-            const host = match[2], port = match[3], path = match[4] || '';
+            const host = match[2];
+            const port = match[3];
+            const path = match[4] || '';
             const extension = getFileExt(uri);
-            let rootDir: Undef<string>;
-            let moveTo: Undef<string>;
             let pathname = '',
                 filename = '',
-                prefix = '';
+                prefix = '',
+                rootDir: Undef<string>,
+                moveTo: Undef<string>;
             const getDirectory = (start: number) => path.substring(start, path.lastIndexOf('/'));
             if (!local) {
                 if (options.saveTo && relocate) {
@@ -264,11 +266,11 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
 
     public getHtmlPage(options?: FileActionAttribute) {
         const result: ChromeAsset[] = [];
-        const href = location.href;
         const element = document.querySelector('html');
+        const href = location.href;
         const saveAs = options?.saveAs?.html;
-        let file: Undef<string>;
-        let format: Undef<string>;
+        let file: Undef<string>,
+            format: Undef<string>;
         if (element) {
             file = element.dataset.chromeFile;
         }
@@ -300,8 +302,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public getScriptAssets(options?: FileActionAttribute) {
-        let preserveCrossOrigin: Undef<boolean>;
-        let saveAs: Undef<SaveAsOptions>;
+        let preserveCrossOrigin: Undef<boolean>,
+            saveAs: Undef<SaveAsOptions>;
         if (options) {
             preserveCrossOrigin = options.preserveCrossOrigin;
             saveAs = options.saveAs?.script;
@@ -312,15 +314,15 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             const src = element.src.trim();
             let file = element.dataset.chromeFile;
             if (file !== 'exclude') {
-                let format: Undef<string>;
-                let outerHTML: Undef<string>;
-                let preserve: Undef<boolean>;
+                let format: Undef<string>,
+                    outerHTML: Undef<string>,
+                    preserve: Undef<boolean>,
+                    data: Undef<ChromeAsset>;
                 if (!isString(file) && saveAs?.filename) {
                     file = appendSeparator(saveAs.pathname || '', saveAs.filename);
                     format = saveAs.format;
                     outerHTML = element.outerHTML;
                 }
-                let data: Undef<ChromeAsset>;
                 if (src !== '') {
                     data = File.parseUri(resolvePath(src), { preserveCrossOrigin, saveAs: file, format });
                 }
@@ -351,9 +353,9 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public getLinkAssets(options?: FileActionAttribute) {
-        let preserveCrossOrigin: Undef<boolean>;
-        let saveAs: Undef<SaveAsOptions>;
-        let rel: Undef<string>;
+        let preserveCrossOrigin: Undef<boolean>,
+            saveAs: Undef<SaveAsOptions>,
+            rel: Undef<string>;
         if (options) {
             ({ rel, preserveCrossOrigin } = options);
             saveAs = options.saveAs?.link;
@@ -363,11 +365,11 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
         document.querySelectorAll((rel ? `link[rel="${rel}"]` : 'link') + ', style').forEach((element: HTMLLinkElement | HTMLStyleElement) => {
             let file = element.dataset.chromeFile;
             if (file !== 'exclude') {
-                let data: Undef<ChromeAsset>;
-                let mimeType: Undef<string>;
-                let format: Undef<string>;
-                let preserve: Undef<boolean>;
-                let outerHTML: Undef<string>;
+                let data: Undef<ChromeAsset>,
+                    mimeType: Undef<string>,
+                    format: Undef<string>,
+                    preserve: Undef<boolean>,
+                    outerHTML: Undef<string>;
                 if (!isString(file) && saveAs?.filename && (mimeType === 'text/css' || element instanceof HTMLStyleElement)) {
                     file = appendSeparator(saveAs.pathname || '', saveAs.filename);
                     format = saveAs.format;
@@ -429,8 +431,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
     }
 
     public getImageAssets(options?: FileActionAttribute) {
-        let preserveCrossOrigin: Undef<boolean>;
-        let saveAs: Undef<SaveAsOptions>;
+        let preserveCrossOrigin: Undef<boolean>,
+            saveAs: Undef<SaveAsOptions>;
         if (options) {
             preserveCrossOrigin = options.preserveCrossOrigin;
             saveAs = options.saveAs?.base64;
@@ -486,8 +488,8 @@ export default class File<T extends chrome.base.View> extends squared.base.File<
             }
             else {
                 const { base64, filename } = rawData;
-                let mimeType = rawData.mimeType;
-                let data: Undef<ChromeAsset>;
+                let mimeType = rawData.mimeType,
+                    data: Undef<ChromeAsset>;
                 if (base64) {
                     if (saveAs) {
                         const format = saveAs.format;

@@ -44,8 +44,8 @@ const isInlineVertical = (value: string) => /^(inline|table-cell)/.test(value);
 function setNaturalChildren(node: T): T[] {
     let children: T[];
     if (node.naturalElement) {
-        const sessionId = node.sessionId;
         children = [];
+        const sessionId = node.sessionId;
         let i = 0;
         (node.element as HTMLElement).childNodes.forEach((element: Element) => {
             const item = getElementAsNode<T>(element, sessionId);
@@ -94,7 +94,7 @@ function setDimension(node: T, styleMap: StringMap, attr: DimensionAttr, attrMin
     const baseValue = node.parseUnit(valueA, options);
     let value = Math.max(baseValue, node.parseUnit(styleMap[attrMin], options));
     if (value === 0 && node.styleElement) {
-        const element =  node.element as HTMLInputElement;
+        const element = node.element as HTMLInputElement;
         switch (element.tagName) {
             case 'IMG':
             case 'INPUT':
@@ -1147,8 +1147,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (options) {
             ({ startSelf, initial } = options);
         }
-        let parent = startSelf ? this : this.actualParent;
-        let value: string;
+        let parent = startSelf ? this : this.actualParent,
+            value: string;
         while (parent) {
             value = initial ? parent.cssInitial(attr) : parent.css(attr);
             if (value !== '') {
@@ -1172,8 +1172,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         const byFloat = options.byFloat === true;
         const byInt = !byFloat && options.byInt === true;
         return (options.duplicate ? this.duplicate() : this.children).sort((a, b) => {
-            let valueA: string | number;
-            let valueB: string | number;
+            let valueA: string | number,
+                valueB: string | number;
             if (byFloat) {
                 valueA = a.toFloat(attr, a.childIndex), valueB = b.toFloat(attr, b.childIndex);
             }
@@ -1448,11 +1448,11 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                     }
                     else {
                         SELECTOR_G.lastIndex = 0;
-                        let adjacent: Undef<string>;
-                        let match: Null<RegExpExecArray>;
+                        let adjacent: Undef<string>,
+                            match: Null<RegExpExecArray>;
                         while (match = SELECTOR_G.exec(query)) {
-                            let segment = match[1];
-                            let all = false;
+                            let segment = match[1],
+                                all = false;
                             if (segment.length === 1) {
                                 const ch = segment.charAt(0);
                                 switch (ch) {
@@ -1489,19 +1489,19 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                                 selectors.push({ all: true });
                             }
                             else {
-                                let tagName: Undef<string>;
-                                let id: Undef<string>;
-                                let classList: Undef<string[]>;
-                                let attrList: Undef<QueryAttribute[]>;
-                                let pseudoList: Undef<string[]>;
-                                let notList: Undef<string[]>;
-                                let subMatch: Null<RegExpExecArray>;
+                                let tagName: Undef<string>,
+                                    id: Undef<string>,
+                                    classList: Undef<string[]>,
+                                    attrList: Undef<QueryAttribute[]>,
+                                    pseudoList: Undef<string[]>,
+                                    notList: Undef<string[]>,
+                                    subMatch: Null<RegExpExecArray>;
                                 while (subMatch = SELECTOR_ATTR.exec(segment)) {
                                     if (attrList === undefined) {
                                         attrList = [];
                                     }
-                                    let key = subMatch[1].replace('\\:', ':');
-                                    let endsWith = false;
+                                    let key = subMatch[1].replace('\\:', ':'),
+                                        endsWith = false;
                                     switch (key.indexOf('|')) {
                                         case -1:
                                             break;
@@ -1993,8 +1993,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
         if (result === undefined) {
             result = 0;
             if (!this.imageElement && !this.svgElement) {
-                let hasOwnStyle = this.has('lineHeight');
-                let value = 0;
+                let hasOwnStyle = this.has('lineHeight'),
+                    value = 0;
                 if (hasOwnStyle) {
                     const lineHeight = this.css('lineHeight');
                     if (isPercent(lineHeight)) {
@@ -2460,8 +2460,8 @@ export default abstract class Node extends squared.lib.base.Container<T> impleme
                         let top = Infinity,
                             right = -Infinity,
                             bottom = -Infinity,
-                            left = Infinity;
-                        let numberOfLines = 0;
+                            left = Infinity,
+                            numberOfLines = 0;
                         let i = 0;
                         while (i < length) {
                             const node = children[i++];
