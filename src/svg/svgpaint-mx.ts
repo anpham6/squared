@@ -3,9 +3,8 @@ import SvgBuild from './svgbuild';
 import { calculateStyle, getAttribute } from './lib/util';
 
 type SvgElement = squared.svg.SvgElement;
+type SvgUse = squared.svg.SvgUse;
 type SvgShapePattern = squared.svg.SvgShapePattern;
-type SvgUseShape = squared.svg.SvgUseShape;
-type SvgUseSymbol = squared.svg.SvgUseSymbol;
 
 const { parseColor } = squared.lib.color;
 const { extractURL, getFontSize, hasCalc, isCustomProperty, isLength, isPercent, parseUnit, parseVar } = squared.lib.css;
@@ -38,7 +37,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
         public clipPath!: string;
         public clipRule!: string;
         public patternParent?: SvgShapePattern;
-        public useParent?: SvgUseShape | SvgUseSymbol;
+        public useParent?: SvgUse;
 
         protected _retainStyle = true;
 
@@ -63,7 +62,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             this.setAttribute('stroke-dasharray');
             this.setAttribute('stroke-dashoffset');
             this.setAttribute('clip-rule');
-            const clipPath = this.getAttribute('clip-path', true);
+            const clipPath = this.getAttribute('clip-path');
             if (clipPath !== '' && clipPath !== 'none') {
                 const url = extractURL(clipPath);
                 if (url !== '') {
@@ -162,15 +161,16 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             }
         }
 
-        public setAttribute(attr: string, computed = false, inherited = true) {
-            let value = this.getAttribute(attr, computed, inherited);
+        public setAttribute(attr: string) {
+            const element = this.element;
+            let value = this.getAttribute(attr);
             attr = convertCamelCase(attr);
             if (isString(value)) {
                 if (hasCalc(value)) {
-                    value = calculateStyle(this.element, attr, value) || getComputedStyle(this.element)[attr];
+                    value = calculateStyle(element, attr, value) || getComputedStyle(element)[attr];
                 }
                 else if (isCustomProperty(value)) {
-                    value = parseVar(this.element, value) || getComputedStyle(this.element)[attr];
+                    value = parseVar(element, value) || getComputedStyle(element)[attr];
                 }
                 switch (attr) {
                     case 'strokeDasharray':
@@ -196,7 +196,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                                     break;
                                 case 'currentcolor':
                                 case 'currentColor':
-                                    color = parseColor(this.color || getAttribute(this.element, 'color', true));
+                                    color = parseColor(this.color || getAttribute(element, 'color', true));
                                     break;
                                 default:
                                     color = parseColor(value);
@@ -216,9 +216,9 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
             }
         }
 
-        public getAttribute(attr: string, computed = false, inherited = true) {
-            let value = getAttribute(this.element, attr, computed);
-            if (inherited && !isString(value)) {
+        public getAttribute(attr: string) {
+            let value = getAttribute(this.element, attr);
+            if (!isString(value)) {
                 if (this.patternParent) {
                     switch (attr) {
                         case 'fill-opacity':
@@ -230,7 +230,7 @@ export default <T extends Constructor<SvgElement>>(Base: T) => {
                 }
                 let current = this.useParent || this.parent;
                 while (current) {
-                    value = getAttribute(current.element, attr, computed);
+                    value = getAttribute(SvgBuild.isUse(current) ? current.useElement : current.element, attr);
                     if (isString(value)) {
                         break;
                     }

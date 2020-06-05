@@ -1,14 +1,13 @@
-import SvgBaseVal$MX from './svgbaseval-mx';
-import SvgViewRect$MX from './svgviewrect-mx';
-import SvgG from './svgg';
+import SvgPaint$MX from './svgpaint-mx';
+import Svg from './svg';
 
 import { INSTANCE_TYPE } from './lib/constant';
 
-export default class SvgUseG extends SvgViewRect$MX(SvgBaseVal$MX(SvgG)) implements squared.svg.SvgUseG {
+export default class SvgUseSvg extends SvgPaint$MX(Svg) implements squared.svg.SvgUseSvg {
     protected _retainStyle = false;
 
     constructor(
-        public readonly element: SVGGElement,
+        public readonly element: SVGSVGElement,
         public useElement: SVGUseElement)
     {
         super(element);
@@ -17,11 +16,11 @@ export default class SvgUseG extends SvgViewRect$MX(SvgBaseVal$MX(SvgG)) impleme
     }
 
     public build(options?: SvgBuildOptions) {
-        this.setRect();
         super.build(options);
+        this.setPaint(this.getPathAll(), options?.precision);
     }
 
     get instanceType() {
-        return INSTANCE_TYPE.SVG_USE_G;
+        return INSTANCE_TYPE.SVG_USE_SVG;
     }
 }

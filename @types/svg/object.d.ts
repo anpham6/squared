@@ -118,21 +118,28 @@ interface SvgOffsetPath extends NumberValue<DOMPoint> {
     rotate: number;
 }
 
+interface SvgDefinitions {
+    clipPath: Map<string, SVGClipPathElement>;
+    pattern: Map<string, SVGPatternElement>;
+    gradient: Map<string, SvgGradient>;
+    contentMap?: StringMap;
+}
+
 interface SvgBuildOptions {
     exclude?: SvgTransformExclude;
     transforms?: SvgTransform[];
-    residual?: SvgTransformResidual;
+    residualHandler?: SvgTransformResidualHandler;
     precision?: number;
-    element?: SVGGeometryElement;
-    targetElement?: SVGSymbolElement | SVGPatternElement | SVGGElement;
     initialize?: boolean;
+    targetElement?: SVGSymbolElement | SVGPatternElement | SVGGElement;
+    contentMap?: StringMap;
 }
 
 interface SvgSynchronizeOptions {
     keyTimeMode?: number;
     framesPerSecond?: number;
     precision?: number;
-    element?: SVGGeometryElement;
+    element?: SVGGraphicsElement;
 }
 
 interface SvgPathExtendData {
@@ -164,4 +171,4 @@ interface SvgAnimationIntervalValue<T> {
     animation?: T;
 }
 
-type SvgTransformResidual = (e: SVGGraphicsElement, t: SvgTransform[], rx?: number, ry?: number) => [SvgTransform[][], SvgTransform[]];
+type SvgTransformResidualHandler = (e: SVGGraphicsElement, t: SvgTransform[], rx?: number, ry?: number) => [SvgTransform[][], SvgTransform[]];

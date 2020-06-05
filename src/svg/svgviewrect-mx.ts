@@ -16,6 +16,8 @@ function hasUnsupportedAccess(element: SVGElement) {
 
 export default <T extends Constructor<SvgBaseVal>>(Base: T) => {
     return class extends Base implements squared.svg.SvgViewRect {
+        public rectElement?: SVGSVGElement | SVGUseElement | SVGImageElement;
+
         private _x?: number;
         private _y?: number;
         private _width?: number;
@@ -37,7 +39,7 @@ export default <T extends Constructor<SvgBaseVal>>(Base: T) => {
         }
 
         protected getRectElement() {
-            const element = this.element;
+            const element = this.rectElement || this.element;
             switch (element.tagName) {
                 case 'svg':
                 case 'use':

@@ -19,6 +19,7 @@ import SvgSynchronize from './svgsynchronize-mx';
 import SvgUseG from './svguseg';
 import SvgUseShape from './svguseshape';
 import SvgUseShapePattern from './svguseshapepattern';
+import SvgUseSvg from './svgusesvg';
 import SvgUseSymbol from './svgusesymbol';
 import SvgView from './svgview-mx';
 import SvgViewRect from './svgviewrect-mx';
@@ -53,6 +54,7 @@ export {
     SvgUseG,
     SvgUseShape,
     SvgUseShapePattern,
+    SvgUseSvg,
     SvgUseSymbol,
     SvgView,
     SvgViewRect,

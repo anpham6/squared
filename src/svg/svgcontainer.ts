@@ -215,11 +215,11 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
     }
 
     public build(options?: SvgBuildOptions) {
-        let element: SVGGraphicsElement | SVGSymbolElement | SVGPatternElement | SVGGElement, precision: Undef<number>;
+        let element: SVGSVGElement | SVGGElement | SVGGraphicsElement | SVGSymbolElement | SVGPatternElement, precision: Undef<number>;
         if (options) {
-            element = options.targetElement || options.element || this.element;
+            element = options.targetElement || this.element;
             precision = options.precision;
-            options = { ...options, targetElement: undefined, element: undefined };
+            options = { ...options, targetElement: undefined };
         }
         else {
             element = this.element;
@@ -245,7 +245,7 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                 const target = getTargetElement(item);
                 if (target) {
                     if (SVG.symbol(target)) {
-                        svg = new squared.svg.SvgUseSymbol(item, target);
+                        svg = new squared.svg.SvgUseSymbol(target, item);
                         setAspectRatio(container, svg as SvgGroup, target.viewBox.baseVal, target);
                         requireClip = true;
                     }
@@ -255,15 +255,15 @@ export default class SvgContainer extends squared.lib.base.Container<SvgView> im
                     else if (SVG.shape(target)) {
                         const pattern = getFillPattern(item, viewport);
                         if (pattern) {
-                            svg = new squared.svg.SvgUseShapePattern(item, target, pattern);
+                            svg = new squared.svg.SvgUseShapePattern(target, item, pattern);
                             setAspectRatio(container, svg as SvgGroup);
                         }
                         else {
-                            svg = new squared.svg.SvgUseShape(item, target, initialize);
+                            svg = new squared.svg.SvgUseShape(target, item, initialize);
                         }
                     }
                     else if (SVG.g(target)) {
-                        svg = new squared.svg.SvgUseG(item, target);
+                        svg = new squared.svg.SvgUseG(target, item);
                         setAspectRatio(container, svg as SvgGroup);
                     }
                 }

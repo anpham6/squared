@@ -10,34 +10,32 @@ import { INSTANCE_TYPE } from './lib/constant';
 export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgShape))) implements squared.svg.SvgUseShape {
     protected _retainStyle = false;
 
-    private __get_transforms = false;
-    private __get_animations = false;
-
     constructor(
-        public readonly element: SVGUseElement,
-        public shapeElement: SVGGeometryElement,
+        public readonly element: SVGGeometryElement,
+        public readonly useElement: SVGUseElement,
         initialize = true)
     {
         super(element, false);
+        this.useParent = this;
+        this.rectElement = useElement;
         if (initialize) {
             this.setPath();
         }
     }
 
     public setPath() {
-        const path = new SvgPath(this.shapeElement);
+        const path = new SvgPath(this.element);
         path.useParent = this;
         this.path = path;
     }
 
     public build(options?: SvgBuildOptions) {
         super.build(options);
-        const path = this.path;
-        this.setPaint(path && [path.value], options?.precision);
+        this.setPaint(this.path && [this.path.value], options?.precision);
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {
-        options = { ...options, element: this.shapeElement };
+        options = { ...options, element: this.element };
         if (this.animations.length) {
             this.animateSequentially(this.getAnimateViewRect(), this.getAnimateTransform(options), undefined, options);
         }
@@ -45,23 +43,17 @@ export default class SvgUseShape extends SvgPaint$MX(SvgViewRect$MX(SvgBaseVal$M
     }
 
     get transforms() {
-        let result = super.transforms;
-        if (!this.__get_transforms) {
-            result = result.concat(this.getTransforms(this.shapeElement));
-            this._transforms = result;
-            this.__get_transforms = true;
-        }
-        return result;
+        return this._transforms ?? (() => {
+            this._transforms = this.getTransforms(this.useElement).concat(super.transforms);
+            return this._transforms;
+        })();
     }
 
     get animations() {
-        let result = super.animations as SvgAnimation[];
-        if (!this.__get_animations) {
-            result = result.concat(this.getAnimations(this.shapeElement) as SvgAnimation[]);
-            this._animations = result;
-            this.__get_animations = true;
-        }
-        return result;
+        return this._animations ?? (() => {
+            this._animations = (this.getAnimations(this.useElement) as SvgAnimation[]).concat(super.animations);
+            return this._animations;
+        })();
     }
 
     get instanceType() {

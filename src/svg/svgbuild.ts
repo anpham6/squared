@@ -15,6 +15,7 @@ type SvgPattern = squared.svg.SvgPattern;
 type SvgShape = squared.svg.SvgShape;
 type SvgShapePattern = squared.svg.SvgShapePattern;
 type SvgUse = squared.svg.SvgUse;
+type SvgUseSvg = squared.svg.SvgUseSvg;
 type SvgUseG = squared.svg.SvgUseG;
 type SvgUseShape = squared.svg.SvgUseShape;
 type SvgUseShapePattern = squared.svg.SvgUseShapePattern;
@@ -42,6 +43,7 @@ export default class SvgBuild implements squared.svg.SvgBuild {
     public static asPattern = (object: SvgElement): object is SvgPattern => object.instanceType === INSTANCE_TYPE.SVG_PATTERN;
     public static asShapePattern = (object: SvgElement): object is SvgShapePattern => object.instanceType === INSTANCE_TYPE.SVG_SHAPE_PATTERN;
     public static asImage = (object: SvgElement): object is SvgImage => object.instanceType === INSTANCE_TYPE.SVG_IMAGE;
+    public static asUseSvg = (object: SvgElement): object is SvgUseSvg => object.instanceType === INSTANCE_TYPE.SVG_USE_SVG;
     public static asUseG = (object: SvgElement): object is SvgUseG => object.instanceType === INSTANCE_TYPE.SVG_USE_G;
     public static asUseSymbol = (object: SvgElement): object is SvgUseSymbol => object.instanceType === INSTANCE_TYPE.SVG_USE_SYMBOL;
     public static asUseShape = (object: SvgElement): object is SvgUseShape => object.instanceType === INSTANCE_TYPE.SVG_USE_SHAPE;

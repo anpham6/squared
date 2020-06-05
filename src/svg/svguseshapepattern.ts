@@ -7,15 +7,13 @@ import { INSTANCE_TYPE } from './lib/constant';
 
 export default class SvgUseShapePattern extends SvgSynchronize$MX(SvgViewRect$MX(SvgShapePattern)) implements squared.svg.SvgUseShapePattern {
     constructor(
-        public readonly element: SVGUseElement,
-        public shapeElement: SVGGeometryElement,
+        public readonly element: SVGGeometryElement,
+        public readonly useElement: SVGUseElement,
         patternElement: SVGPatternElement)
     {
         super(element, patternElement);
-    }
-
-    public build(options?: SvgBuildOptions) {
-        super.build({ ...options, element: this.shapeElement });
+        this.useParent = this;
+        this.rectElement = useElement;
     }
 
     public synchronize(options?: SvgSynchronizeOptions) {

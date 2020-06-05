@@ -9,7 +9,7 @@ export default class SvgShape extends SvgSynchronize$MX(SvgView$MX(SvgElement)) 
     private _path?: SvgPath;
 
     constructor(
-        public element: SVGGeometryElement | SVGUseElement,
+        public element: SVGGeometryElement,
         initialize = true)
     {
         super(element);

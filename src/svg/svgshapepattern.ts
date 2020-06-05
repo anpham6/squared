@@ -21,10 +21,8 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     public readonly patternUnits: number;
     public readonly patternContentUnits: number;
 
-    private __get_transforms = false;
-
     constructor(
-        public element: SVGGeometryElement | SVGUseElement,
+        public element: SVGGeometryElement,
         public readonly patternElement: SVGPatternElement)
     {
         super(element);
@@ -33,7 +31,7 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     public build(options?: SvgBuildOptions) {
-        const element = options?.element || this.element as SVGGeometryElement;
+        const element = this.element as SVGGeometryElement;
         const path: SvgPath = new SvgPath(element);
         path.build({ ...options });
         const pathValue = path.value;
@@ -158,12 +156,12 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
     }
 
     get transforms() {
-        if (!this.__get_transforms) {
-            const patternElement = this.patternElement;
-            const transforms = SvgBuild.convertTransforms(patternElement.patternTransform.baseVal);
+        if (this._transforms === undefined) {
+            this._transforms = super.transforms
+            const transforms = SvgBuild.convertTransforms(this.patternElement.patternTransform.baseVal);
             const length = transforms.length;
             if (length) {
-                const rotateOrigin = TRANSFORM.rotateOrigin(patternElement, 'patternTransform');
+                const rotateOrigin = TRANSFORM.rotateOrigin(this.patternElement, 'patternTransform');
                 const x = this.patternWidth / 2;
                 const y = this.patternHeight / 2;
                 let i = 0;
@@ -191,11 +189,10 @@ export default class SvgShapePattern extends SvgPaint$MX(SvgBaseVal$MX(SvgView$M
                             break;
                     }
                 }
-                this._transforms = super.transforms.concat(SvgBuild.filterTransforms(transforms));
+                this._transforms = this._transforms.concat(SvgBuild.filterTransforms(transforms));
             }
-            this.__get_transforms = true;
         }
-        return super.transforms;
+        return this._transforms;
     }
 
     get offsetX() {

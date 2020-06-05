@@ -11,11 +11,7 @@ const { resolvePath } = squared.lib.util;
 
 export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgElement))) implements squared.svg.SvgImage {
     public rotateAngle?: number;
-    public translationOffset?: Point;
     public readonly imageElement: Null<SVGImageElement> = null;
-
-    private __get_transforms = false;
-    private __get_animations = false;
 
     constructor(
         public readonly element: SVGImageElement | SVGUseElement,
@@ -24,6 +20,7 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         super(element);
         if (imageElement) {
             this.imageElement = imageElement;
+            this.rectElement = imageElement;
         }
     }
 
@@ -32,8 +29,8 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
     }
 
     public extract(exclude?: number[]) {
+        let { x, y, width, height, parent: container } = this;
         const transforms = exclude ? SvgBuild.filterTransforms(this.transforms, exclude) : this.transforms;
-        let { x, y, width, height } = this;
         const length = transforms.length;
         if (length) {
             transforms.reverse();
@@ -77,16 +74,35 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
             }
             this.transformed = transforms;
         }
-        const { parent, translationOffset } = this;
-        if (parent) {
-            x = parent.refitX(x);
-            y = parent.refitY(y);
-            width = parent.refitSize(width);
-            height = parent.refitSize(height);
-        }
-        if (translationOffset) {
-            x += translationOffset.x;
-            y += translationOffset.y;
+        if (container) {
+            if (this.imageElement) {
+                const element = this.element as SVGUseElement;
+                x += element.x.baseVal.value;
+                y += element.y.baseVal.value;
+            }
+            x = container.refitX(x);
+            y = container.refitY(y);
+            width = container.refitSize(width);
+            height = container.refitSize(height);
+            do {
+                if (SvgBuild.asSvg(container) || SvgBuild.isUse(container)) {
+                    const offsetX = container.x;
+                    const offsetY = container.y;
+                    container = container.parent;
+                    if (container) {
+                        if (offsetX !== 0) {
+                            x += container.refitX(offsetX);
+                        }
+                        if (offsetY !== 0) {
+                            y += container.refitY(offsetY);
+                        }
+                    }
+                }
+                else {
+                    container = container.parent;
+                }
+            }
+            while (container);
         }
         this.setBaseValue('x', x);
         this.setBaseValue('y', y);
@@ -98,90 +114,53 @@ export default class SvgImage extends SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(Sv
         super.x = value;
     }
     get x() {
-        const result = super.x;
-        if (result === 0) {
-            const imageElement = this.imageElement;
-            if (imageElement) {
-                return imageElement.x.baseVal.value;
-            }
-        }
-        return result;
+        return super.x || this.imageElement?.x.baseVal.value || 0;
     }
 
     set y(value) {
         super.y = value;
     }
     get y() {
-        const result = super.y;
-        if (result === 0) {
-            const imageElement = this.imageElement;
-            if (imageElement) {
-                return imageElement.y.baseVal.value;
-            }
-        }
-        return result;
+        return super.y || this.imageElement?.y.baseVal.value || 0;
     }
 
     set width(value) {
         super.width = value;
     }
     get width() {
-        const result = super.width;
-        if (result === 0) {
-            const imageElement = this.imageElement;
-            if (imageElement) {
-                return imageElement.width.baseVal.value;
-            }
-        }
-        return result;
+        return super.width || this.imageElement?.width.baseVal.value || 0;
     }
 
     set height(value) {
         super.height = value;
     }
     get height() {
-        const result = super.height;
-        if (result === 0) {
-            const imageElement = this.imageElement;
-            if (imageElement) {
-                return imageElement.height.baseVal.value;
-            }
-        }
-        return result;
+        return super.height || this.imageElement?.height.baseVal.value || 0;
     }
 
     get href() {
         const element = this.imageElement || this.element;
-        if (SVG.image(element)) {
-            return resolvePath(element.href.baseVal);
-        }
-        return '';
+        return SVG.image(element) ? resolvePath(element.href.baseVal) : '';
     }
 
     get transforms() {
-        let result = super.transforms;
-        if (!this.__get_transforms) {
-            const imageElement = this.imageElement;
-            if (imageElement) {
-                result = result.concat(this.getTransforms(imageElement));
-                this._transforms = result;
+        return this._transforms ?? (() => {
+            this._transforms = super.transforms;
+            if (this.imageElement) {
+                this._transforms = this._transforms.concat(this.getTransforms(this.imageElement));
             }
-            this.__get_transforms = true;
-        }
-        return result;
+            return this._transforms;
+        })();
     }
 
     get animations() {
-        let result = super.animations;
-        if (!this.__get_animations) {
-            const imageElement = this.imageElement;
-            if (imageElement) {
-                result = result.concat(this.getAnimations(imageElement));
-                this._animations = result;
+        return this._animations ?? (() => {
+            this._animations = super.animations;
+            if (this.imageElement) {
+                this._animations = this._animations.concat(this.getAnimations(this.imageElement));
             }
-            this.__get_animations = true;
-        }
-        return result;
+            return this._animations;
+        })();
     }
 
     get instanceType() {

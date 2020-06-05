@@ -21,25 +21,6 @@ const { isPlainText } = squared.lib.xml;
 
 const TEXT_STYLE = NodeUI.TEXT_STYLE.concat(['fontSize']);
 
-function getCounterValue(value: string, counterName: string, fallback = 1) {
-    if (value !== 'none') {
-        const pattern = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
-        let match: Null<RegExpExecArray>;
-        while (match = pattern.exec(value)) {
-            if (match[1] === counterName) {
-                return parseInt(match[2]);
-            }
-        }
-        return fallback;
-    }
-    return undefined;
-}
-
-function getCounterIncrementValue(parent: Element, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) {
-    const counterIncrement = (getElementCache(parent, `styleMap${pseudoElt}`, sessionId) as Undef<CSSStyleDeclaration>)?.counterIncrement;
-    return counterIncrement ? getCounterValue(counterIncrement, counterName, fallback) : undefined;
-}
-
 function prioritizeExtensions<T extends NodeUI>(value: string, extensions: ExtensionUI<T>[]) {
     const included = value.trim().split(/\s*,\s*/);
     const result: ExtensionUI<T>[] = [];
@@ -182,6 +163,22 @@ function setMapDepth(map: LayoutMap, depth: number, node: NodeUI) {
     }
 }
 
+
+function getCounterValue(value: Undef<string>, counterName: string, fallback = 1) {
+    if (value && value !== 'none') {
+        const pattern = /\b([^\-\d][^\-\d]?[^\s]*)\s+(-?\d+)\b/g;
+        let match: Null<RegExpExecArray>;
+        while (match = pattern.exec(value)) {
+            if (match[1] === counterName) {
+                return parseInt(match[2]);
+            }
+        }
+        return fallback;
+    }
+    return undefined;
+}
+
+const getCounterIncrementValue = (parent: HTMLElement, counterName: string, pseudoElt: string, sessionId: string, fallback?: number) => getCounterValue((getElementCache(parent, `styleMap${pseudoElt}`, sessionId) as Undef<CSSStyleDeclaration>)?.counterIncrement, counterName, fallback);
 const extractQuote = (value: string) => /^"(.+)"$/.exec(value)?.[1] || value;
 const isHorizontalAligned = (node: NodeUI) => !node.blockStatic && node.autoMargin.horizontal !== true && !(node.blockDimension && node.css('width') === '100%') && (!(node.plainText && node.multiline) || node.floating);
 const requirePadding = (node: NodeUI, depth?: number): boolean => node.textElement && (node.blockStatic || node.multiline || depth === 1);
@@ -1684,7 +1681,7 @@ export default abstract class ApplicationUI<T extends NodeUI> extends Applicatio
                                     };
                                     const cascadeCounterSibling = (sibling: Element) => {
                                         if (getCounterValue(getStyle(sibling).getPropertyValue('counter-reset'), counterName) === undefined) {
-                                            iterateArray(sibling.children, item => {
+                                            iterateArray(sibling.children, (item: HTMLElement) => {
                                                 if (item.className !== '__squared.pseudo') {
                                                     let increment = getCounterIncrementValue(item, counterName, pseudoElt, sessionId);
                                                     if (increment) {

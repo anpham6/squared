@@ -299,10 +299,9 @@ function getOuterOpacity(target: SvgView) {
     return value;
 }
 
-function partitionTransforms(element: SVGGraphicsElement, transforms: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
-    const length = transforms.length;
-    if (length && (SVG.circle(element) || SVG.ellipse(element))) {
-        if (transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE) && (rx !== ry || length > 1 && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d))) {
+function residualHandler(element: SVGGraphicsElement, transforms: SvgTransform[], rx = 1, ry = 1): [SvgTransform[][], SvgTransform[]] {
+    if ((SVG.circle(element) || SVG.ellipse(element)) && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_ROTATE)) {
+        if (rx !== ry || transforms.length > 1 && transforms.some(item => item.type === SVGTransform.SVG_TRANSFORM_SCALE && item.matrix.a !== item.matrix.d)) {
             return groupTransforms(element, transforms);
         }
     }
@@ -667,13 +666,8 @@ const getFillData = (ordering = ''): FillData => ({ ordering, objectAnimator: []
 export default class ResourceSvg<T extends View> extends squared.base.ExtensionUI<T> {
     public readonly options: ResourceSvgOptions = {
         transformExclude: {
-            path: [],
-            line: [],
-            rect: [],
             ellipse: [SVGTransform.SVG_TRANSFORM_SKEWX, SVGTransform.SVG_TRANSFORM_SKEWY],
             circle: [SVGTransform.SVG_TRANSFORM_SKEWX, SVGTransform.SVG_TRANSFORM_SKEWY],
-            polyline: [],
-            polygon: [],
             image: [SVGTransform.SVG_TRANSFORM_SKEWX, SVGTransform.SVG_TRANSFORM_SKEWY]
         },
         floatPrecisionKeyTime: 5,
@@ -699,6 +693,12 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
 
     public afterResources() {
         if (SvgBuild) {
+            const contentMap: StringMap = {};
+            for (const [uri, data] of Resource.ASSETS.rawData.entries()) {
+                if (data.mimeType === 'image/svg+xml' && data.content) {
+                    contentMap[uri] = data.content;
+                }
+            }
             let parentElement: Undef<HTMLElement>;
             let element: Undef<SVGSVGElement>;
             this.cacheProcessing.each(node => {
@@ -709,7 +709,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                     element = node.element as SVGSVGElement;
                 }
                 if (element) {
-                    const drawable = this.createSvgDrawable(node, element);
+                    const drawable = this.createSvgDrawable(node, element, contentMap);
                     if (drawable) {
                         if (node.api >= BUILD_ANDROID.LOLLIPOP) {
                             node.android('src', getDrawableSrc(drawable));
@@ -778,9 +778,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         return [];
     }
 
-    public createSvgDrawable(node: T, element: SVGSVGElement) {
-        const { floatPrecisionValue: precision, floatPrecisionKeyTime } = this.options;
+    public createSvgDrawable(node: T, element: SVGSVGElement, contentMap?: StringMap) {
+        const { transformExclude: exclude, floatPrecisionValue: precision, floatPrecisionKeyTime } = this.options;
         const svg = new Svg(element);
+        svg.contentMap = contentMap;
         const supportedKeyFrames = node.api >= BUILD_ANDROID.MARSHMALLOW;
         const keyTimeMode = SYNCHRONIZE_MODE.FROMTO_ANIMATE | (supportedKeyFrames ? SYNCHRONIZE_MODE.KEYTIME_TRANSFORM : SYNCHRONIZE_MODE.IGNORE_TRANSFORM);
         const animateData = this._animateData;
@@ -793,8 +794,17 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         this._namespaceAapt = false;
         this._synchronizeMode = keyTimeMode;
         const templateName = (node.tagName + '_' + convertWord(node.controlId, true) + '_viewbox').toLowerCase();
-        svg.build({ exclude: this.options.transformExclude, residual: partitionTransforms, precision });
-        svg.synchronize({ keyTimeMode, framesPerSecond: this.controller.userSettings.framesPerSecond, precision });
+        svg.build({
+            contentMap,
+            exclude,
+            residualHandler,
+            precision
+        });
+        svg.synchronize({
+            keyTimeMode,
+            framesPerSecond: this.controller.userSettings.framesPerSecond,
+            precision
+        });
         this.queueAnimations(svg, svg.name, item => item.attributeName === 'opacity');
         const vectorData = this.parseVectorData(svg);
         const imageLength = imageData.length;
@@ -1483,8 +1493,10 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
                 const scaleX = svg.width / box.width;
                 const scaleY = svg.height / box.height;
                 const offset = getParentOffset(image.element, svg.element);
-                let x = image.getBaseValue('x', 0) as number * scaleX, y = image.getBaseValue('y', 0) as number * scaleY;
-                let w: number = image.getBaseValue('width', 0), h: number = image.getBaseValue('height', 0);
+                let x: number = image.getBaseValue('x', 0) * scaleX;
+                let y: number = image.getBaseValue('y', 0) * scaleY;
+                let w: number = image.getBaseValue('width', 0);
+                let h: number = image.getBaseValue('height', 0);
                 x += offset.x;
                 y += offset.y;
                 w *= scaleX;
@@ -1624,9 +1636,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             transformData.translateX = target.x.toString();
             transformData.translateY = target.y.toString();
         }
-        if (target.clipRegion !== '') {
-            this.createClipPath(target, clipMain, target.clipRegion);
-        }
+        this.createClipPath(target, clipMain, target.clipRegion);
         if (clipMain.length || hasKeys(transformData)) {
             Object.assign(groupMain, transformData);
             result.push(groupMain);
@@ -1635,7 +1645,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
             const baseData: TransformData = {};
             const [transforms] = groupTransforms(target.element, target.transforms, true);
             const groupName = getVectorName(target, 'animate');
-            if ((SvgBuild.asG(target) || SvgBuild.asUseSymbol(target)) && isString(target.clipPath) && this.createClipPath(target, clipBox, target.clipPath)) {
+            if ((SvgBuild.asG(target) || SvgBuild.asUseSymbol(target)) && this.createClipPath(target, clipBox, target.clipPath)) {
                 baseData.name = groupName;
             }
             if (this.queueAnimations(target, groupName, item => SvgBuild.asAnimateTransform(item))) {
@@ -1668,15 +1678,16 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         const groupName = getVectorName(target, 'group');
         const opacity = getOuterOpacity(target);
         const useTarget = SvgBuild.asUseShape(target);
-        if (SvgBuild.asUseShape(target) && isString(target.clipPath)) {
-            this.createClipPath(target, clipElement, target.clipPath);
-        }
-        if (isString(path.clipPath)) {
-            const precision = this.options.floatPrecisionValue;
+        const clipPath = path.clipPath;
+        if (isString(clipPath)) {
+            const { transformExclude: exclude, floatPrecisionValue: precision } = this.options;
             const shape = new SvgShape(path.element);
-            shape.build({ exclude: this.options.transformExclude, residual: partitionTransforms, precision });
+            shape.build({ exclude, residualHandler, precision });
             shape.synchronize({ keyTimeMode: this._synchronizeMode, precision });
-            this.createClipPath(shape, clipElement, path.clipPath);
+            this.createClipPath(shape, clipElement, clipPath);
+        }
+        if (SvgBuild.asUseShape(target) && target.clipPath !== clipPath) {
+            this.createClipPath(target, clipElement, target.clipPath);
         }
         if (this.queueAnimations(target, groupName, item => SvgBuild.isAnimateTransform(item), '', target.name)) {
             baseData.name = groupName;
@@ -1697,7 +1708,7 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         path.transformResidual?.forEach(item => renderData.push(createTransformData(item)));
         for (let i = 0; i < PATH_ATTRIBUTES.length; ++i) {
             let attr = PATH_ATTRIBUTES[i];
-            let value: string = useTarget && target[attr] || path[attr];
+            let value: string = path[attr] || useTarget && target[attr];
             if (value) {
                 switch (attr) {
                     case 'name':
@@ -1930,14 +1941,15 @@ export default class ResourceSvg<T extends View> extends squared.base.ExtensionU
         if (isString(clipPath)) {
             const definitions = this._svgInstance.definitions;
             const keyTimeMode = this._synchronizeMode;
+            const { transformExclude: exclude, floatPrecisionValue: precision } = this.options;
             let valid = false;
             clipPath.split(';').forEach((value, index, array) => {
                 if (value.charAt(0) === '#') {
                     const element = (definitions.clipPath.get(value) as unknown) as SVGGElement;
                     if (element) {
                         const g = new SvgG(element);
-                        g.build({ exclude: this.options.transformExclude, residual: partitionTransforms, precision: this.options.floatPrecisionValue });
-                        g.synchronize({ keyTimeMode, precision: this.options.floatPrecisionValue });
+                        g.build({ exclude, residualHandler, precision });
+                        g.synchronize({ keyTimeMode, precision });
                         g.each((child: SvgShape) => {
                             const path = child.path;
                             if (path) {

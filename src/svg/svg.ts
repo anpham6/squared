@@ -41,7 +41,7 @@ function getBaseValue(element: SVGElement, ...attrs: string[]) {
 
 export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(SvgView$MX(SvgContainer)))) implements squared.svg.Svg {
     public precision?: number;
-    public readonly definitions = {
+    public readonly definitions: SvgDefinitions = {
         clipPath: new Map<string, SVGClipPathElement>(),
         pattern: new Map<string, SVGPatternElement>(),
         gradient: new Map<string, SvgGradient>()
@@ -84,12 +84,12 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         element.querySelectorAll('defs').forEach(def => this.setDefinitions(def));
     }
 
-    protected setDefinitions(item: SVGElement) {
+    protected setDefinitions(item: SVGSVGElement | SVGDefsElement) {
         const definitions = this.definitions;
         item.querySelectorAll('clipPath, pattern, linearGradient, radialGradient').forEach((element: SVGElement) => {
-            let id = element.id;
-            if (id) {
-                id = `#${id}`;
+            let id = element.id.trim();
+            if (id !== '') {
+                id = '#' + id;
                 if (SVG.clipPath(element)) {
                     definitions.clipPath.set(id, element);
                 }
@@ -118,8 +118,15 @@ export default class Svg extends SvgSynchronize$MX(SvgViewRect$MX(SvgBaseVal$MX(
         });
     }
 
+    set contentMap(value) {
+        this.definitions.contentMap = value;
+    }
+    get contentMap() {
+        return this.definitions.contentMap;
+    }
+
     get viewBox() {
-        return this.element.viewBox.baseVal || getDOMRect(this.element);
+        return (this.element as SVGSVGElement).viewBox.baseVal || getDOMRect(this.element);
     }
 
     get instanceType() {

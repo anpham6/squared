@@ -19,7 +19,7 @@ const { image: ASSET_IMAGE, rawData: ASSET_RAWDATA } = Resource.ASSETS;
 const REGEXP_DATAURI = new RegExp(`url\\("?(${STRING.DATAURI})"?\\),?\\s*`, 'g');
 
 function addImageSrc(uri: string, width = 0, height = 0) {
-    if (uri) {
+    if (isString(uri)) {
         const image = ASSET_IMAGE.get(uri);
         if (width > 0 && height > 0 || !image || image.width === 0 || image.height === 0) {
             ASSET_IMAGE.set(uri, { width, height, uri });
@@ -28,7 +28,7 @@ function addImageSrc(uri: string, width = 0, height = 0) {
 }
 
 function parseSrcSet(value: string) {
-    if (value) {
+    if (isString(value)) {
         for (const uri of value.split(',')) {
             addImageSrc(resolvePath(uri.trim().split(' ')[0]));
         }
@@ -194,6 +194,15 @@ export default abstract class Application<T extends Node> implements squared.bas
             element.querySelectorAll('object').forEach((source: HTMLObjectElement) => {
                 if (source.type.startsWith('image/') || parseMimeType(source.data).startsWith('image/')) {
                     addImageSrc(source.data.trim());
+                }
+            });
+            element.querySelectorAll('svg use').forEach((use: SVGUseElement) => {
+                const href = use.href.baseVal;
+                if (href.indexOf('#') > 0) {
+                    const src = resolvePath(href.split('#')[0]);
+                    if (isSvg(src)) {
+                        addImageSrc(src);
+                    }
                 }
             });
         }
